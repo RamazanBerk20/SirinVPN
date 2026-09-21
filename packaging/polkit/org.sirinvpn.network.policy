@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN" "http://www.freedesktop.org/standards/PolicyKit/1/policyconfig.dtd">
+<policyconfig>
+  <vendor>SirinVPN</vendor>
+  <action id="org.sirinvpn.network">
+    <description>Configure the local SirinVPN tunnel</description>
+    <message>Authentication is required to change VPN routes and firewall rules</message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/lib/sirinvpn/sirinvpn-helper</annotate>
+    <annotate key="org.freedesktop.policykit.exec.argv1">install-system</annotate>
+    <annotate key="org.freedesktop.policykit.exec.allow_gui">true</annotate>
+  </action>
+  <action id="org.sirinvpn.network.connect">
+    <description>Control the SirinVPN connection</description>
+    <message>Authentication is required to control the VPN connection</message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/lib/sirinvpn/sirinvpn-helper</annotate>
+    <annotate key="org.freedesktop.policykit.exec.argv1">connect</annotate>
+  </action>
+  <action id="org.sirinvpn.network.connect-managed">
+    <description>Control the SirinVPN connection</description>
+    <message>Authentication is required to control the VPN connection</message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/lib/sirinvpn/sirinvpn-helper</annotate>
+    <annotate key="org.freedesktop.policykit.exec.argv1">connect-managed</annotate>
+  </action>
+  <action id="org.sirinvpn.network.disconnect">
+    <description>Control the SirinVPN connection</description>
+    <message>Authentication is required to control the VPN connection</message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/lib/sirinvpn/sirinvpn-helper</annotate>
+    <annotate key="org.freedesktop.policykit.exec.argv1">disconnect</annotate>
+  </action>
+  <action id="org.sirinvpn.network.pause-for-key-rotation">
+    <description>Control the SirinVPN connection</description>
+    <message>Authentication is required to control the VPN connection</message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/lib/sirinvpn/sirinvpn-helper</annotate>
+    <annotate key="org.freedesktop.policykit.exec.argv1">pause-for-key-rotation</annotate>
+  </action>
+  <action id="org.sirinvpn.network.resume">
+    <description>Control the SirinVPN connection</description>
+    <message>Authentication is required to control the VPN connection</message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/lib/sirinvpn/sirinvpn-helper</annotate>
+    <annotate key="org.freedesktop.policykit.exec.argv1">resume</annotate>
+  </action>
+  <action id="org.sirinvpn.network.pause-session">
+    <description>Control the SirinVPN connection</description>
+    <message>Authentication is required to control the VPN connection</message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/lib/sirinvpn/sirinvpn-helper</annotate>
+    <annotate key="org.freedesktop.policykit.exec.argv1">pause-session</annotate>
+  </action>
+  <action id="org.sirinvpn.network.reconnect-session">
+    <description>Control the SirinVPN connection</description>
+    <message>Authentication is required to control the VPN connection</message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/lib/sirinvpn/sirinvpn-helper</annotate>
+    <annotate key="org.freedesktop.policykit.exec.argv1">reconnect-session</annotate>
+  </action>
+  <action id="org.sirinvpn.network.switch-session">
+    <description>Control the SirinVPN connection</description>
+    <message>Authentication is required to control the VPN connection</message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/lib/sirinvpn/sirinvpn-helper</annotate>
+    <annotate key="org.freedesktop.policykit.exec.argv1">switch-session</annotate>
+  </action>
+  <action id="org.sirinvpn.network.apply-endpoint-checkpoint">
+    <description>Control the SirinVPN connection</description>
+    <message>Authentication is required to control the VPN connection</message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/lib/sirinvpn/sirinvpn-helper</annotate>
+    <annotate key="org.freedesktop.policykit.exec.argv1">apply-endpoint-checkpoint</annotate>
+  </action>
+  <action id="org.sirinvpn.network.publish-endpoint-checkpoint">
+    <description>Control the SirinVPN connection</description>
+    <message>Authentication is required to control the VPN connection</message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/lib/sirinvpn/sirinvpn-helper</annotate>
+    <annotate key="org.freedesktop.policykit.exec.argv1">publish-endpoint-checkpoint</annotate>
+  </action>
+  <action id="org.sirinvpn.network.disconnect-session">
+    <description>Control the SirinVPN connection</description>
+    <message>Authentication is required to control the VPN connection</message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/lib/sirinvpn/sirinvpn-helper</annotate>
+    <annotate key="org.freedesktop.policykit.exec.argv1">disconnect-session</annotate>
+  </action>
+  <action id="org.sirinvpn.network.authorize-user">
+    <description>Remember permission to control SirinVPN</description>
+    <message>Allow this account to control SirinVPN without future password prompts</message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/lib/sirinvpn/sirinvpn-helper</annotate>
+    <annotate key="org.freedesktop.policykit.exec.argv1">authorize-user</annotate>
+  </action>
+  <action id="org.sirinvpn.network.launch-application">
+    <description>Launch an application through SirinVPN</description>
+    <message>Authentication is required to launch an application through VPN routing</message>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/lib/sirinvpn/sirinvpn-helper</annotate>
+    <annotate key="org.freedesktop.policykit.exec.argv1">launch-application</annotate>
+    <annotate key="org.freedesktop.policykit.exec.allow_gui">true</annotate>
+  </action>
+</policyconfig>

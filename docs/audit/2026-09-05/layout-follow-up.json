@@ -1,0 +1,161 @@
+{
+  "scope": "Interface refinements after the app settings update; existing invitation semantics preserved",
+  "rust_tests_passed": 277,
+  "frontend_tests_passed": 55,
+  "browser_scenarios_passed": 11,
+  "automated_accessibility_findings": [],
+  "native_linux_checks": [
+    "WebKitGTK home has centered boxed icons and no connection controls",
+    "Full-width native device rows expand; invitations and port forwarding start collapsed",
+    "Onboarding actions share a baseline with no overlap at 958px"
+  ],
+  "rust_clippy_warnings_denied": "passed",
+  "privacy_invariants": "passed",
+  "server_deployment": "Not performed; existing servers need Repair VPS for new optional metric fields",
+  "source_inventory": {
+    "files": 295,
+    "lines": 77017,
+    "over_limit": [],
+    "largest": [
+      {
+        "path": "crates/transport/src/tcp.rs",
+        "lines": 998
+      },
+      {
+        "path": "apps/desktop/src/App.android.test.tsx",
+        "lines": 980
+      },
+      {
+        "path": "crates/release/src/installed_release.rs",
+        "lines": 976
+      },
+      {
+        "path": "crates/release/src/main.rs",
+        "lines": 968
+      },
+      {
+        "path": "crates/transport/src/lib.rs",
+        "lines": 943
+      },
+      {
+        "path": "crates/release/src/lib.rs",
+        "lines": 935
+      },
+      {
+        "path": "crates/transport/src/relay.rs",
+        "lines": 918
+      },
+      {
+        "path": "crates/server/src/authorization.rs",
+        "lines": 904
+      },
+      {
+        "path": "crates/core/src/key_rotation.rs",
+        "lines": 900
+      },
+      {
+        "path": "crates/release/src/trust.rs",
+        "lines": 874
+      },
+      {
+        "path": "crates/release/src/linux_debian_update.rs",
+        "lines": 870
+      },
+      {
+        "path": "tests/integration/linux-outbound-audit-vps.sh",
+        "lines": 853
+      },
+      {
+        "path": "tests/integration/linux-impairment-vps.sh",
+        "lines": 767
+      },
+      {
+        "path": "crates/installer/src/install_script.rs",
+        "lines": 733
+      },
+      {
+        "path": "apps/desktop/src-tauri/src/release_update.rs",
+        "lines": 713
+      },
+      {
+        "path": "crates/core/src/backup.rs",
+        "lines": 713
+      },
+      {
+        "path": "tests/integration/linux-dns-fault-vps.sh",
+        "lines": 693
+      },
+      {
+        "path": "crates/core/src/endpoint_transition.rs",
+        "lines": 690
+      },
+      {
+        "path": "crates/android-secure-storage/src/profile.rs",
+        "lines": 688
+      },
+      {
+        "path": "crates/core/src/invitation.rs",
+        "lines": 685
+      },
+      {
+        "path": "apps/desktop/src/features/android/useAndroidController.ts",
+        "lines": 680
+      },
+      {
+        "path": "crates/installer/src/lib.rs",
+        "lines": 653
+      },
+      {
+        "path": "crates/core/src/network_policy.rs",
+        "lines": 606
+      },
+      {
+        "path": "tests/integration/linux-fallback-vps.sh",
+        "lines": 606
+      },
+      {
+        "path": "crates/installer/src/validation.rs",
+        "lines": 584
+      },
+      {
+        "path": "tests/integration/android-fallback-vps.sh",
+        "lines": 579
+      },
+      {
+        "path": "apps/desktop/src-tauri/src/android_enrollment.rs",
+        "lines": 566
+      },
+      {
+        "path": "crates/core/src/server_backup.rs",
+        "lines": 542
+      },
+      {
+        "path": "tests/integration/p1b2-vps.sh",
+        "lines": 542
+      },
+      {
+        "path": "tests/vm/debian13-release-update.sh",
+        "lines": 531
+      }
+    ]
+  },
+  "artifacts": [
+    {
+      "path": "target/release/bundle/deb/SirinVPN_0.1.0_amd64.deb",
+      "bytes": 16024464,
+      "sha256": "1c35b189a1aea1e7c740d27c87fad4895e9fb7da68e62dc9f3dd2d119f299246"
+    },
+    {
+      "path": "target/release/bundle/appimage/SirinVPN_0.1.0_amd64.AppImage",
+      "bytes": 109226488,
+      "sha256": "e49a671fe179acf907f62658aa97a93d6d782eba641c35a520dbe89dc5836730"
+    },
+    {
+      "path": "apps/desktop/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk",
+      "bytes": 481345807,
+      "sha256": "c583248e5efa137f6960aa92b4874de2fd03b656d35dde9b6a3b804270d2db52"
+    }
+  ],
+  "final_android_apk_native_smoke": "passed",
+  "android_apk_payload_and_privacy_check": "passed"
+}

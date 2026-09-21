@@ -1,0 +1,505 @@
+{
+  "completed_at_utc": "2026-09-04T21:31:45.417681+00:00",
+  "baseline_commit": "9a6b14b15366b67f44b6c85d94072dcb2c847bdc",
+  "implementation_commits": [
+    "dbf7462f8a278f88d95d3da1df03e1f9985f0f4c",
+    "469b2c7352fb2c25bfb31eaf1afc6aebfe22f6b0",
+    "a5837741c9b66ba717a35d09b8e57b7b0effd3b5"
+  ],
+  "completion": {
+    "passed": 23,
+    "total": 24,
+    "percent": 95.8,
+    "partial_items": [
+      22
+    ],
+    "scope": "Defined overhaul acceptance items, not security probability or complete product roadmap"
+  },
+  "existing_vps_contacted": false,
+  "source": {
+    "limit": 1000,
+    "current": {
+      "files": 271,
+      "lines": 73531,
+      "over_limit": [],
+      "largest": [
+        {
+          "path": "crates/transport/src/tcp.rs",
+          "lines": 998
+        },
+        {
+          "path": "crates/release/src/installed_release.rs",
+          "lines": 976
+        },
+        {
+          "path": "apps/desktop/src/App.android.test.tsx",
+          "lines": 968
+        },
+        {
+          "path": "crates/release/src/main.rs",
+          "lines": 968
+        },
+        {
+          "path": "crates/transport/src/lib.rs",
+          "lines": 943
+        },
+        {
+          "path": "crates/release/src/lib.rs",
+          "lines": 935
+        },
+        {
+          "path": "crates/transport/src/relay.rs",
+          "lines": 918
+        },
+        {
+          "path": "crates/server/src/authorization.rs",
+          "lines": 903
+        },
+        {
+          "path": "crates/core/src/key_rotation.rs",
+          "lines": 900
+        },
+        {
+          "path": "crates/release/src/trust.rs",
+          "lines": 874
+        },
+        {
+          "path": "crates/release/src/linux_debian_update.rs",
+          "lines": 870
+        },
+        {
+          "path": "tests/integration/linux-outbound-audit-vps.sh",
+          "lines": 853
+        },
+        {
+          "path": "tests/integration/linux-impairment-vps.sh",
+          "lines": 767
+        },
+        {
+          "path": "crates/installer/src/install_script.rs",
+          "lines": 733
+        },
+        {
+          "path": "apps/desktop/src-tauri/src/release_update.rs",
+          "lines": 713
+        },
+        {
+          "path": "crates/core/src/backup.rs",
+          "lines": 713
+        },
+        {
+          "path": "tests/integration/linux-dns-fault-vps.sh",
+          "lines": 693
+        },
+        {
+          "path": "crates/core/src/endpoint_transition.rs",
+          "lines": 690
+        },
+        {
+          "path": "crates/android-secure-storage/src/profile.rs",
+          "lines": 688
+        },
+        {
+          "path": "crates/core/src/invitation.rs",
+          "lines": 685
+        },
+        {
+          "path": "apps/desktop/src/features/android/useAndroidController.ts",
+          "lines": 680
+        },
+        {
+          "path": "crates/installer/src/lib.rs",
+          "lines": 653
+        },
+        {
+          "path": "crates/core/src/network_policy.rs",
+          "lines": 606
+        },
+        {
+          "path": "tests/integration/linux-fallback-vps.sh",
+          "lines": 606
+        },
+        {
+          "path": "apps/desktop/src/features/devices/AccessPanel.tsx",
+          "lines": 585
+        },
+        {
+          "path": "crates/installer/src/validation.rs",
+          "lines": 584
+        },
+        {
+          "path": "tests/integration/android-fallback-vps.sh",
+          "lines": 579
+        },
+        {
+          "path": "apps/desktop/src-tauri/src/android_enrollment.rs",
+          "lines": 554
+        },
+        {
+          "path": "crates/core/src/server_backup.rs",
+          "lines": 542
+        },
+        {
+          "path": "tests/integration/p1b2-vps.sh",
+          "lines": 542
+        }
+      ]
+    },
+    "baseline_revision": "9a6b14b15366b67f44b6c85d94072dcb2c847bdc",
+    "baseline": {
+      "files": 101,
+      "lines": 66519,
+      "over_limit": [
+        {
+          "path": "apps/desktop/src-tauri/src/lib.rs",
+          "lines": 3463
+        },
+        {
+          "path": "apps/desktop/src/App.test.tsx",
+          "lines": 1075
+        },
+        {
+          "path": "apps/desktop/src/App.tsx",
+          "lines": 5710
+        },
+        {
+          "path": "apps/desktop/src/styles.css",
+          "lines": 4369
+        },
+        {
+          "path": "crates/android-secure-storage/src/profile.rs",
+          "lines": 2258
+        },
+        {
+          "path": "crates/cli/src/main.rs",
+          "lines": 2260
+        },
+        {
+          "path": "crates/core/src/invitation.rs",
+          "lines": 1013
+        },
+        {
+          "path": "crates/installer/src/lib.rs",
+          "lines": 4666
+        },
+        {
+          "path": "crates/linux-helper/src/lib.rs",
+          "lines": 4268
+        },
+        {
+          "path": "crates/protocol/src/lib.rs",
+          "lines": 1581
+        },
+        {
+          "path": "crates/release/src/installed_release.rs",
+          "lines": 1631
+        },
+        {
+          "path": "crates/release/src/lib.rs",
+          "lines": 1286
+        },
+        {
+          "path": "crates/release/src/linux_debian_update.rs",
+          "lines": 1535
+        },
+        {
+          "path": "crates/release/src/main.rs",
+          "lines": 1241
+        },
+        {
+          "path": "crates/server/src/authorization.rs",
+          "lines": 1830
+        },
+        {
+          "path": "crates/server/src/lib.rs",
+          "lines": 4664
+        },
+        {
+          "path": "crates/transport/src/relay.rs",
+          "lines": 1156
+        },
+        {
+          "path": "crates/transport/src/tcp.rs",
+          "lines": 1649
+        }
+      ],
+      "largest": [
+        {
+          "path": "apps/desktop/src/App.tsx",
+          "lines": 5710
+        },
+        {
+          "path": "crates/installer/src/lib.rs",
+          "lines": 4666
+        },
+        {
+          "path": "crates/server/src/lib.rs",
+          "lines": 4664
+        },
+        {
+          "path": "apps/desktop/src/styles.css",
+          "lines": 4369
+        },
+        {
+          "path": "crates/linux-helper/src/lib.rs",
+          "lines": 4268
+        },
+        {
+          "path": "apps/desktop/src-tauri/src/lib.rs",
+          "lines": 3463
+        },
+        {
+          "path": "crates/cli/src/main.rs",
+          "lines": 2260
+        },
+        {
+          "path": "crates/android-secure-storage/src/profile.rs",
+          "lines": 2258
+        },
+        {
+          "path": "crates/server/src/authorization.rs",
+          "lines": 1830
+        },
+        {
+          "path": "crates/transport/src/tcp.rs",
+          "lines": 1649
+        },
+        {
+          "path": "crates/release/src/installed_release.rs",
+          "lines": 1631
+        },
+        {
+          "path": "crates/protocol/src/lib.rs",
+          "lines": 1581
+        },
+        {
+          "path": "crates/release/src/linux_debian_update.rs",
+          "lines": 1535
+        },
+        {
+          "path": "crates/release/src/lib.rs",
+          "lines": 1286
+        },
+        {
+          "path": "crates/release/src/main.rs",
+          "lines": 1241
+        },
+        {
+          "path": "crates/transport/src/relay.rs",
+          "lines": 1156
+        },
+        {
+          "path": "apps/desktop/src/App.test.tsx",
+          "lines": 1075
+        },
+        {
+          "path": "crates/core/src/invitation.rs",
+          "lines": 1013
+        },
+        {
+          "path": "crates/transport/src/lib.rs",
+          "lines": 943
+        },
+        {
+          "path": "crates/core/src/key_rotation.rs",
+          "lines": 900
+        },
+        {
+          "path": "crates/release/src/trust.rs",
+          "lines": 874
+        },
+        {
+          "path": "tests/integration/linux-outbound-audit-vps.sh",
+          "lines": 849
+        },
+        {
+          "path": "tests/integration/linux-impairment-vps.sh",
+          "lines": 763
+        },
+        {
+          "path": "apps/desktop/src-tauri/src/release_update.rs",
+          "lines": 713
+        },
+        {
+          "path": "crates/core/src/backup.rs",
+          "lines": 713
+        },
+        {
+          "path": "tests/integration/linux-dns-fault-vps.sh",
+          "lines": 691
+        },
+        {
+          "path": "crates/core/src/endpoint_transition.rs",
+          "lines": 690
+        },
+        {
+          "path": "crates/core/src/network_policy.rs",
+          "lines": 606
+        },
+        {
+          "path": "tests/integration/linux-fallback-vps.sh",
+          "lines": 604
+        },
+        {
+          "path": "tests/integration/android-fallback-vps.sh",
+          "lines": 573
+        }
+      ]
+    }
+  },
+  "tests": {
+    "rust_passed": 265,
+    "frontend_passed": 45,
+    "shell_tests_passed": 2,
+    "shell_subcases": 20,
+    "android_instrumented_passed": 6,
+    "ui_scenarios": 8,
+    "automated_wcag_violations": 0,
+    "shellcheck_diagnostics": 0,
+    "native_android_smoke": "pass",
+    "debian_provisioning_vm": "pass",
+    "offline_debian_release": "pass",
+    "native_android_display": {
+      "system_themes": [
+        "light",
+        "dark"
+      ],
+      "readable_system_bars": true,
+      "keyboard": "pass",
+      "landscape_navigation_in_viewport": "pass",
+      "horizontal_overflow": false
+    }
+  },
+  "dependencies": {
+    "cargo": {
+      "packages": 587,
+      "vulnerabilities": 0,
+      "warnings": {
+        "unmaintained": 16,
+        "unsound": 1
+      },
+      "database": {
+        "advisory-count": 1239,
+        "last-commit": "5a0ebedfe8bdd2e295b171f4162f8c977bcad9a5",
+        "last-updated": "2026-09-02T11:13:32+02:00"
+      }
+    },
+    "pnpm": {
+      "vulnerabilities": {
+        "info": 0,
+        "low": 0,
+        "moderate": 0,
+        "high": 0,
+        "critical": 0
+      },
+      "dependencies": 36,
+      "devDependencies": 191,
+      "optionalDependencies": 81,
+      "totalDependencies": 227
+    },
+    "maven": {
+      "packages": 79,
+      "affected_packages": 0,
+      "jackson": "2.18.10"
+    }
+  },
+  "gitleaks": {
+    "version": "8.30.1",
+    "findings": 0,
+    "scope": "Current first-party tree; no Git history scan"
+  },
+  "artifacts": {
+    "debian_payloads_verified": [
+      "usr/bin/sirinvpn",
+      "usr/lib/sirinvpn/sirinvpn-helper",
+      "usr/lib/sirinvpn/sirinvpn-release",
+      "usr/lib/sirinvpn/sirinvpn-release-fetch",
+      "usr/lib/sirinvpn/sirinvpn-server"
+    ],
+    "artifacts": [
+      {
+        "path": "target/release/bundle/deb/SirinVPN_0.1.0_amd64.deb",
+        "bytes": 15515476,
+        "sha256": "657280c4a3886af2eae1ecf060a21e93233391dc013116491597c195f04cec93"
+      },
+      {
+        "path": "target/release/bundle/appimage/SirinVPN_0.1.0_amd64.AppImage",
+        "bytes": 108763640,
+        "sha256": "6748c13eb440ef0fafefb69dad1b590cd02559e46f63a0291f1b9eaf1cb0e454"
+      },
+      {
+        "path": "apps/desktop/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk",
+        "bytes": 478251479,
+        "sha256": "079d92e07921ef7ce12da533a9c00ee9832010db422124ae7928751d4818e3ec"
+      }
+    ]
+  },
+  "evidence_files": [
+    {
+      "path": ".cache/overhaul/logs/android-build.log",
+      "sha256": "d2b23295144e4c69b1fb041fde63f4e782582ee512b2955fac1101687f026b8b"
+    },
+    {
+      "path": ".cache/overhaul/logs/android-display.log",
+      "sha256": "1e8faee6b98d661e401d438fe22fd290a40ff74a9c5b56b3a633fa93f9d4ae15"
+    },
+    {
+      "path": ".cache/overhaul/logs/android-instrumentation.log",
+      "sha256": "6d78aad549f476908bde382d7bb93a9e750bb853fd90142285da0f972f5c0b19"
+    },
+    {
+      "path": ".cache/overhaul/logs/android-native-ui.log",
+      "sha256": "0922ad120d47702624efa2d05072dc9f28168871b93da46c0e2bcd65a990b311"
+    },
+    {
+      "path": ".cache/overhaul/logs/android-payload-build.log",
+      "sha256": "d2b23295144e4c69b1fb041fde63f4e782582ee512b2955fac1101687f026b8b"
+    },
+    {
+      "path": ".cache/overhaul/logs/artifact-inspection.log",
+      "sha256": "87df8882f935061de40c777ca2bd01a2584609aadde8655e64a5e6de2e75362f"
+    },
+    {
+      "path": ".cache/overhaul/logs/baseline-local-gate.log",
+      "sha256": "279fce6fb355e405e0e318aaa7cc0307cdf4e5c215c5d3a489d4e484266f2346"
+    },
+    {
+      "path": ".cache/overhaul/logs/debian-release.log",
+      "sha256": "40c6b2ee69b08d991f0ed82cf0b950ffb39502dfc7904287f53e8578a5463b35"
+    },
+    {
+      "path": ".cache/overhaul/logs/debian-vm.log",
+      "sha256": "50d296a7c9f73dc8eb825c20df916de59409967e41de2a0a782d1093a566ce55"
+    },
+    {
+      "path": ".cache/overhaul/logs/gitleaks.log",
+      "sha256": "e068045eb630cb5346cd2cc455d8cd62177672ffb86c9067c03032c486e424d4"
+    },
+    {
+      "path": ".cache/overhaul/logs/linux-package.log",
+      "sha256": "181c0ed141052c7a8c025bbc57f2bd4534ae2addd5b9964510a9d487bcb1d369"
+    },
+    {
+      "path": ".cache/overhaul/logs/local-gate.log",
+      "sha256": "cbd8c6d4b74ca05ed47603cd644b6554232d64c63df8d8f9c9f38bd97da371eb"
+    },
+    {
+      "path": ".cache/overhaul/logs/prettier.log",
+      "sha256": "8ab7aec1fa62916fa303fafbbf5c215083308c744b21326a3fab818392db65a3"
+    },
+    {
+      "path": ".cache/overhaul/logs/shell-regressions.log",
+      "sha256": "fa9e549b5282129682c1e092d18a744554c02e5f67a8689ec77210fa65a4947e"
+    },
+    {
+      "path": ".cache/overhaul/logs/visual-accessibility.log",
+      "sha256": "67bf3b57504132c04f843cd2f90bf287effa6e831cc472c0c8315a0999d07841"
+    }
+  ],
+  "remaining": [
+    "Complete live transport/privacy fault matrix",
+    "Physical-device and signed ARM64 Android release qualification",
+    "Two-version full-package power-cut gate and production signing/publication qualification",
+    "Upstream GTK/glib and related Rust warnings; bundled native/OS SBOM review"
+  ]
+}

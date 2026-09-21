@@ -1,0 +1,26 @@
+[package]
+name = "sirinvpn-installer"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+base64.workspace = true
+hex.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+sirinvpn-core = { path = "../core" }
+sirinvpn-protocol = { path = "../protocol" }
+sirinvpn-release = { path = "../release" }
+sirinvpn-release-fetch = { path = "../release-fetch" }
+ssh2.workspace = true
+subtle.workspace = true
+thiserror.workspace = true
+uuid.workspace = true
+zeroize.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true

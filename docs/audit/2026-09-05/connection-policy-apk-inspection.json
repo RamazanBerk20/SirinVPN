@@ -1,0 +1,13 @@
+{
+  "apk": "/home/ramazan/Belgeler/AI/Code/SirinVPN/apps/desktop/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk",
+  "sha256": "f3bd126dc923003d18a52bff6ddd9ca61289d263bb4e60f002db7489a65f5db6",
+  "debug": true,
+  "automatic_backup": false,
+  "libraries": [
+    "lib/x86_64/libsirinvpn_desktop_lib.so"
+  ],
+  "server_payload_sha256": {
+    "x86_64": "4e6d2317b88f523741361ce74d7ed63ab2464b86047a0df1beb67773444b9f91",
+    "aarch64": "394ce04104cd2aa8487e3cd5d773b42d2b67d09232ab7e002ba8c352195248f5"
+  }
+}

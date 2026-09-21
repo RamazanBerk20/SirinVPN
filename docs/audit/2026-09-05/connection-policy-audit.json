@@ -1,0 +1,2294 @@
+{
+  "recorded_at_utc": "2026-09-05T17:50:57.113023+00:00",
+  "scope": "Typography roles and independent Linux kill switch / reconnect / transport / boot policy; Android capability compatibility",
+  "source_state": {
+    "base_commit": "5668e678761690f4283451a0d226b1662d91de15",
+    "working_tree_contains_prior_and_current_changes": true
+  },
+  "configuration": {
+    "helper_protocol": 11,
+    "request_schema": 7,
+    "preferences_schema": 2,
+    "desired_schema": 2,
+    "runtime_schema": 3,
+    "legacy_enabled_migration": {
+      "kill_switch": true,
+      "automatic_reconnect": true,
+      "connect_on_startup": true
+    },
+    "legacy_disabled_or_missing_defaults": {
+      "kill_switch": false,
+      "automatic_reconnect": false,
+      "connect_on_startup": false
+    },
+    "scope": "Saved per server; one acknowledged active device policy",
+    "application": "Saved changes apply on a new connection; Resume preserves the current acknowledged policy",
+    "manual_disconnect": "Stop recovery, release the owned guard, clear boot intent; retain saved preferences",
+    "gui_exit": "Does not disconnect the helper-owned session",
+    "observation_freshness_seconds": 15,
+    "android": "Independent combinations rejected; existing platform protection retained"
+  },
+  "validation": {
+    "rust_unit_tests": 296,
+    "frontend_tests": 74,
+    "python_unit_tests": 2,
+    "workspace_clippy_warnings_denied": "passed",
+    "format": "passed",
+    "git_diff_check": "passed",
+    "privacy": "passed",
+    "policy_xml": "passed",
+    "shellcheck_new_network_test": "passed in isolated container",
+    "kernel": {
+      "isolated_container_network_none": true,
+      "packet_matrix_checks": 133,
+      "rule_replacements": 30,
+      "ipv4_continuous_attempts": 513345,
+      "ipv6_continuous_attempts": 492554,
+      "total_continuous_attempts": 1005899,
+      "observed_escapes": 0,
+      "unrelated_firewall_preserved": true,
+      "failed_transaction_preserves_guard": true,
+      "manual_disconnect_releases_guard": true,
+      "scope": "Real nftables guard and packets; full VPN handshake and systemd boot are not exercised"
+    },
+    "four_policy_combinations": "passed with mock runner, plus separate real guard packet checks",
+    "native_fonts": {
+      "compositor": "private virtual KWin, real Tauri/WebKitGTK",
+      "scales": [
+        1,
+        1.25
+      ],
+      "metrics_per_scale": 13,
+      "connection_controls_per_scale": 4,
+      "local_inter_weights": [
+        400,
+        500,
+        600
+      ],
+      "english_and_turkish_coverage": true,
+      "runtime_remote_fonts": false,
+      "ui_measurements": "synthetic fixtures only",
+      "real_host_output_scale_unchanged": 1
+    },
+    "wayland_window_and_storage": [
+      "KDE Wayland: native decoration removed; 38px title bar with centered, accessible controls",
+      "KDE Wayland: maximize, restore and resize-edge visibility follow native state",
+      "KDE Wayland: minimize and single-instance reopen retain the window",
+      "Window controls preserve an open settings dialog",
+      "Custom close reaches native close-to-tray handling; reopen restores the same dialog",
+      "Native preferences are private, validate routes and IDs, and preserve the previous save on rejection",
+      "Connection preferences survive an actual app exit and restart"
+    ],
+    "browser_scenarios": 11,
+    "browser_accessibility_violations": 0,
+    "android_instrumentation": [
+      {
+        "module": "android-vpn",
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "cases": [
+          "obfuscatedConfigurationAcceptsOnlyTheFixedLoopbackRelay",
+          "directConfigurationAndUserspaceBackendAreAvailable",
+          "tcpConfigurationAcceptsOnlyTheFixedLoopbackRelay",
+          "tlsConfigurationAcceptsOnlyTheFixedLoopbackRelay",
+          "persistentDesiredStateIsEncryptedBoundedTamperEvidentAndInitialized"
+        ]
+      },
+      {
+        "module": "android-secure-storage",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "cases": [
+          "encryptedRoundTripRejectsTamperingAndLeavesNoSelfTestValue"
+        ]
+      }
+    ],
+    "android_native": {
+      "platform": "android",
+      "vpn": {
+        "permission_granted": true,
+        "state": "disconnected",
+        "transport": null,
+        "active_profile_id": null,
+        "rx_bytes": 0,
+        "tx_bytes": 0,
+        "protection_status_known": false,
+        "ipv6_blocked": false,
+        "backend_version": "f333402",
+        "persistence_state": "disabled",
+        "persistent_profile_id": null,
+        "always_on_supported": true,
+        "always_on": false,
+        "lockdown_enabled": false
+      },
+      "notification_permission": null,
+      "desktop_title_bar_absent": true,
+      "header_respects_safe_area": true,
+      "unguarded_notification_delivery_blocked": true,
+      "connection_preferences": {
+        "retained_after_reload": true,
+        "unsupported_preferences_rejected": true,
+        "independent_policy_rejected": true,
+        "save_does_not_arm_vpn": true,
+        "retained_after_process_restart": true,
+        "deleted_profile_unavailable": true
+      }
+    },
+    "android_preferences": [
+      "Native Android commands reject unsupported desktop preferences",
+      "Permission-aware preference switch and native Android notification delivery",
+      "Preferences restored after a full Android process restart"
+    ],
+    "android_install": {
+      "installed_apk_matches_built": true,
+      "sha256": "f3bd126dc923003d18a52bff6ddd9ca61289d263bb4e60f002db7489a65f5db6",
+      "active_transports_after_tests": [
+        "CELLULAR",
+        "WIFI"
+      ],
+      "no_vpn_connected": true
+    },
+    "linux_package_inspection": {
+      "debian_root_owned_executables": 6,
+      "debian_tray_runtime_dependency": true,
+      "debian_payload_sha256": {
+        "usr/bin/sirinvpn-desktop": "5a6d76a6564eafbbbcfc42ad66814911e58f661ef04933548a2fa3bac52193a9",
+        "usr/bin/sirinvpn": "4d786727a33d4224c372c4f9a761b4831da5371cec1147e30fa91540f7057ca6",
+        "usr/lib/sirinvpn/sirinvpn-helper": "9a81375e43063a5e90a310843412b99b085c4cfe9cbd0b6741be7d149c904524",
+        "usr/lib/sirinvpn/sirinvpn-server": "e8e735620d654afe58f127f736158ebe562077e0498d26a7d950c7791b7d089f",
+        "usr/lib/sirinvpn/sirinvpn-release": "12439e6913900db18b2bae5fb75fd7bc25df339d1b535923f08a3748ff5463ad",
+        "usr/lib/sirinvpn/sirinvpn-release-fetch": "e1dbf706382c086703af07e8c21f396ccd74718beb5af191e5e1f67c823571a5"
+      },
+      "font_license_paths_embedded": {
+        "Inter-OFL.txt": true,
+        "JetBrains-Mono-OFL.txt": true
+      },
+      "helper_protocol": "11",
+      "cli_independent_flags": true,
+      "appimage_extraction": "passed",
+      "appimage_helper_protocol": "11",
+      "appimage_helper_text_matches_debian": true,
+      "appimage_helper_binary_sha256": "4603aa7cbebcac7437236879dc0cd94bb8c5a2d84fd13a571f86d368c94d6e76",
+      "appimage_helper_difference": "AppImage packaging adds $ORIGIN RUNPATH; executable .text section is identical to Debian",
+      "appimage_server_matches_debian": true
+    },
+    "apk_inspection": {
+      "apk": "/home/ramazan/Belgeler/AI/Code/SirinVPN/apps/desktop/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk",
+      "sha256": "f3bd126dc923003d18a52bff6ddd9ca61289d263bb4e60f002db7489a65f5db6",
+      "debug": true,
+      "automatic_backup": false,
+      "libraries": [
+        "lib/x86_64/libsirinvpn_desktop_lib.so"
+      ],
+      "server_payload_sha256": {
+        "x86_64": "4e6d2317b88f523741361ce74d7ed63ab2464b86047a0df1beb67773444b9f91",
+        "aarch64": "394ce04104cd2aa8487e3cd5d773b42d2b67d09232ab7e002ba8c352195248f5"
+      }
+    }
+  },
+  "dependencies": {
+    "font": "@fontsource-variable/inter 5.3.0 replaces Manrope; local licensed assets",
+    "ssh_binding": "libssh2-sys 0.3.2 -> 0.3.3, only Rust dependency changed in this pass",
+    "rust_vulnerability_entries": 0,
+    "rust_warnings": {
+      "unmaintained": 16,
+      "unsound": 1
+    },
+    "rust_yanked": 0,
+    "frontend_production_vulnerabilities": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 0,
+      "critical": 0
+    }
+  },
+  "dependency_lock_sha256": {
+    "Cargo.lock": "23466be43e5aaee9cb4cd7a8f9c68d5682a9566392b5eeeab573bc41ad4f8aa1",
+    "apps/desktop/pnpm-lock.yaml": "4dcf4b91f0d89c2f028b9e7fa29756e532eb5196b01529a01d9bbe6da7cb23ad"
+  },
+  "completion": {
+    "original_overhaul_checklist_done": 23,
+    "original_overhaul_checklist_total": 24,
+    "percent": 95.8,
+    "meaning": "Percentage of the original acceptance checklist only; not all possible features or a security guarantee",
+    "focused_implementation": "complete",
+    "full_release_qualification": "remaining"
+  },
+  "remaining": [
+    "Disposable VM/VPS live transport and privacy fault matrix, including actual boot/systemd ordering and updates",
+    "Real handshake and recovery across all supported transports and physical-network changes",
+    "Interrupted maintenance/key-rotation recovery against disposable live infrastructure",
+    "Upstream GTK maintenance and GLib unsoundness warnings",
+    "Previously documented Android administration, selected-routing, packet-reporting, and maintenance feature gaps"
+  ],
+  "source_inventory": {
+    "files": 341,
+    "lines": 83850,
+    "over_limit": [],
+    "largest": [
+      {
+        "path": "crates/transport/src/tcp.rs",
+        "lines": 998
+      },
+      {
+        "path": "crates/release/src/installed_release.rs",
+        "lines": 976
+      },
+      {
+        "path": "crates/release/src/main.rs",
+        "lines": 968
+      },
+      {
+        "path": "crates/transport/src/lib.rs",
+        "lines": 944
+      },
+      {
+        "path": "crates/release/src/lib.rs",
+        "lines": 935
+      },
+      {
+        "path": "crates/transport/src/relay.rs",
+        "lines": 918
+      },
+      {
+        "path": "crates/server/src/authorization.rs",
+        "lines": 904
+      },
+      {
+        "path": "crates/release/src/trust.rs",
+        "lines": 874
+      },
+      {
+        "path": "crates/release/src/linux_debian_update.rs",
+        "lines": 870
+      },
+      {
+        "path": "tests/integration/linux-outbound-audit-vps.sh",
+        "lines": 853
+      },
+      {
+        "path": "tests/integration/linux-impairment-vps.sh",
+        "lines": 767
+      },
+      {
+        "path": "crates/core/src/key_rotation.rs",
+        "lines": 737
+      },
+      {
+        "path": "crates/installer/src/install_script.rs",
+        "lines": 733
+      },
+      {
+        "path": "crates/core/src/backup.rs",
+        "lines": 714
+      },
+      {
+        "path": "apps/desktop/src-tauri/src/release_update.rs",
+        "lines": 713
+      },
+      {
+        "path": "tests/integration/linux-dns-fault-vps.sh",
+        "lines": 693
+      },
+      {
+        "path": "crates/core/src/endpoint_transition.rs",
+        "lines": 691
+      },
+      {
+        "path": "apps/desktop/src/features/android/useAndroidController.ts",
+        "lines": 689
+      },
+      {
+        "path": "crates/android-secure-storage/src/profile.rs",
+        "lines": 688
+      },
+      {
+        "path": "crates/core/src/invitation.rs",
+        "lines": 687
+      },
+      {
+        "path": "crates/installer/src/lib.rs",
+        "lines": 653
+      },
+      {
+        "path": "crates/core/src/network_policy.rs",
+        "lines": 606
+      },
+      {
+        "path": "tests/integration/linux-fallback-vps.sh",
+        "lines": 606
+      },
+      {
+        "path": "apps/desktop/src/App.android.test.tsx",
+        "lines": 590
+      },
+      {
+        "path": "crates/installer/src/validation.rs",
+        "lines": 584
+      },
+      {
+        "path": "apps/desktop/src/styles/operational-layout.css",
+        "lines": 581
+      },
+      {
+        "path": "tests/integration/android-fallback-vps.sh",
+        "lines": 579
+      },
+      {
+        "path": "apps/desktop/src-tauri/src/android_enrollment.rs",
+        "lines": 567
+      },
+      {
+        "path": "crates/linux-helper/src/lib.rs",
+        "lines": 549
+      },
+      {
+        "path": "crates/core/src/server_backup.rs",
+        "lines": 542
+      }
+    ]
+  },
+  "source_fingerprints": [
+    {
+      "path": "Cargo.lock",
+      "sha256": "23466be43e5aaee9cb4cd7a8f9c68d5682a9566392b5eeeab573bc41ad4f8aa1"
+    },
+    {
+      "path": "Cargo.toml",
+      "sha256": "bdb008b54a37f85f9c6d077431ed0e4c7a8b5cb25d559c22ecd1f8846e41892a"
+    },
+    {
+      "path": "apps/desktop/android/MainActivity.kt",
+      "sha256": "0163c29d1fa59c79742b73f197954a364924a9deb8d370c902905f0d85257413"
+    },
+    {
+      "path": "apps/desktop/index.html",
+      "sha256": "b768ddda4169de216538b0c3c092f7cda9ff5440cfef3fc23b840d898b28cf71"
+    },
+    {
+      "path": "apps/desktop/package.json",
+      "sha256": "335cd1a94766a5abe1d81949d1352f4b67f4d557ae665c1e2b211d5b288d3bbf"
+    },
+    {
+      "path": "apps/desktop/pnpm-lock.yaml",
+      "sha256": "4dcf4b91f0d89c2f028b9e7fa29756e532eb5196b01529a01d9bbe6da7cb23ad"
+    },
+    {
+      "path": "apps/desktop/public/licenses/Inter-OFL.txt",
+      "sha256": "3b0a5fca3d17942cde889069889dedbbbd075e9b599968c82a95f4d944e9b345"
+    },
+    {
+      "path": "apps/desktop/public/licenses/JetBrains-Mono-OFL.txt",
+      "sha256": "403581b69dac5cff4079205e01c6b467e56af449ecbd7247693ddb1baafa005b"
+    },
+    {
+      "path": "apps/desktop/src-tauri/Cargo.toml",
+      "sha256": "5d1f570e203e9daf056b93771a0bda6b08de4916f5fa855f0e7b393c5fb55cf0"
+    },
+    {
+      "path": "apps/desktop/src-tauri/build.rs",
+      "sha256": "119da47b44963dc7d5a342c294f46ad2c9fb4296593a0b87b282d0a32153a412"
+    },
+    {
+      "path": "apps/desktop/src-tauri/capabilities/default.json",
+      "sha256": "8d1d05c9c54b497720181f898cd24eebe16a8bae57d34fe1453ef069411b54be"
+    },
+    {
+      "path": "apps/desktop/src-tauri/capabilities/desktop-window.json",
+      "sha256": "63fc395741434183019d5184c854cdf323c1f6d3cfe80bbedb0ea99630a60eb5"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/128x128.png",
+      "sha256": "ff71183b5d783aea8423ed20e61e7a6d45fe50a4dc6aceee9898b957d0f4dc7d"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/128x128@2x.png",
+      "sha256": "a405228624922e22da6823de330a69093e221c3900d4591f804ecbf45c53687d"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/32x32.png",
+      "sha256": "839638adc99e38cba3b9b2e891985227b8423f6a12a60ab38580862bc33a3917"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/64x64.png",
+      "sha256": "f1fea56fb28fb1d6bdbdab83fdc1ade9613219713ef59a539b80a0738f8d83d7"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/Square107x107Logo.png",
+      "sha256": "b401cac6f2b5dbefd89a3e3b0e77b73d4c8d74fa00ffe8fa5ab825a165494817"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/Square142x142Logo.png",
+      "sha256": "f0a8a77f7877a456ec369e02a0028b7f05b8ff597de3ee2ee57d9cae6eb5cae0"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/Square150x150Logo.png",
+      "sha256": "0aca11e31de777c39b55a190200974d791749db9c7527902549d81c0fae9f92a"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/Square284x284Logo.png",
+      "sha256": "1c08c91542a8a289efc6034ef5f71f582c640c363f621c9c2030dbe77ab4ff29"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/Square30x30Logo.png",
+      "sha256": "50c9192c9df0f4e7b7238de5447da739a69831df8f1a6c9a5ef3d86781d62824"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/Square310x310Logo.png",
+      "sha256": "87bc8a6125074cc88afefafdc0a651e416e7635db9350c3651ebd490d7881b1f"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/Square44x44Logo.png",
+      "sha256": "59529fddf02cf56be471f5f20b0925ce23b5d11a0c071a71a3209144293bd8e9"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/Square71x71Logo.png",
+      "sha256": "d1f8951a261ddb37511f75749cb3e1e64cf5241114643791d6c3d37abef85570"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/Square89x89Logo.png",
+      "sha256": "bb60ea344ffd946defe4d856d2616330161c0bf05550ef8b6dacc26b7ccfaaad"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/StoreLogo.png",
+      "sha256": "f3298698c5eecc2bf6897a391e54a6aa939e185e6e7d65ca2f5d8df46189c800"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/android/mipmap-anydpi-v26/ic_launcher.xml",
+      "sha256": "760d4b8a06bf7163dd010c33ad2cac9e4a75fa0177afaba042f83e311eef0c3e"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/android/mipmap-hdpi/ic_launcher.png",
+      "sha256": "818c4914e1a7da16b0a5d77d4ab01ecc88bca5adbca758f1d3da10b0d456f319"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/android/mipmap-hdpi/ic_launcher_foreground.png",
+      "sha256": "845f256b064c12e5bcbcfb03b8e567f05926ec1c71c59689e9b1a8c908918619"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/android/mipmap-hdpi/ic_launcher_round.png",
+      "sha256": "80db45529e41ee3eec6cab05029c2987946533433a1f852f083aed87b88ea5c1"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/android/mipmap-mdpi/ic_launcher.png",
+      "sha256": "9caaa54b911a1030670b06ecb164757e68ddb7983ce7f0c14c3933000aae4f26"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/android/mipmap-mdpi/ic_launcher_foreground.png",
+      "sha256": "b943700282425eb192d1ec825235e0afeec26b48ff940e0d602f135b5a89411d"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/android/mipmap-mdpi/ic_launcher_round.png",
+      "sha256": "fcec7467eec59f7fddd23e47035d32d4a5147836ce303314f2ee14b0b974735c"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/android/mipmap-xhdpi/ic_launcher.png",
+      "sha256": "cd249c0428943da0ef0b81a8b2c022c4a3efaf06f2b1cabd0705484823af8d40"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/android/mipmap-xhdpi/ic_launcher_foreground.png",
+      "sha256": "0d526848144b03802d3d92c4b9a244208feb83943c1d3fd14687dba5cde9a1e7"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/android/mipmap-xhdpi/ic_launcher_round.png",
+      "sha256": "d5ce381c7d50a256ec119c267192ba191edc862531b5c64069dcfdc99648390a"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/android/mipmap-xxhdpi/ic_launcher.png",
+      "sha256": "875446bc9e974fa52c9b3e89a159a4b34be5ef50eae61849637b91babd958724"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/android/mipmap-xxhdpi/ic_launcher_foreground.png",
+      "sha256": "8457b565275ab48e91cf7544c82387c61e5b22bb597e6c1428d420855165ee9e"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/android/mipmap-xxhdpi/ic_launcher_round.png",
+      "sha256": "0578910af3c8f3e6f27dc08da97449d1aa2250bd825bb0bdd30b4be974aef2d1"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/android/mipmap-xxxhdpi/ic_launcher.png",
+      "sha256": "4bce2942afc151b6351e3ce50783865a3673623c4585f1643d13a2cf4c911365"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/android/mipmap-xxxhdpi/ic_launcher_foreground.png",
+      "sha256": "f563413b9a539fa73a4b92dd74f4a8e487d0920099a68ea44c0feaa1fefdcad3"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/android/mipmap-xxxhdpi/ic_launcher_round.png",
+      "sha256": "cd67f93a39b31804f19ecb4c426e60d5a599f64875353869780acf3c422605e9"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/android/values/ic_launcher_background.xml",
+      "sha256": "0687336f0ccc6f7ee09c7c95110667c63b75931238df779a21af401fb864cd34"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/icon.icns",
+      "sha256": "b267ae4f539461ad48a22a2e7c61ae3bfd6ad39e4a756c2bc5deade4710d16ea"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/icon.ico",
+      "sha256": "1a6fea3eb8d323b5ca73f54582fa69a38cc5156f74c92aa7f1eb8dbbb49a661f"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/icon.png",
+      "sha256": "8c92df87abc073b2a256924b8a398dcbfb17d41bd54f4119c23fb663b64ac04c"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/ios/AppIcon-20x20@1x.png",
+      "sha256": "68f31f11bdae07e6c1c57c83d9741d9b3cd7137a1311f88fe09d6975114bb74b"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/ios/AppIcon-20x20@2x-1.png",
+      "sha256": "020163b687e6a71231d4fae68ae1d4f3ea02fb3e659dc3632e70da3b4e0a101d"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/ios/AppIcon-20x20@2x.png",
+      "sha256": "020163b687e6a71231d4fae68ae1d4f3ea02fb3e659dc3632e70da3b4e0a101d"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/ios/AppIcon-20x20@3x.png",
+      "sha256": "4493069f404a6c5a76cf591d8795b0df6b8b5561ed322b6f74baffa121c4f378"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/ios/AppIcon-29x29@1x.png",
+      "sha256": "af4786bcaadddd44cbb44f33b7139d47610d536c4bf316c155d4b29ea7bae8da"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/ios/AppIcon-29x29@2x-1.png",
+      "sha256": "8fce1efcfa12b942e4a6706d036bd4651c816ef3e8ac7b3a3cca9f2ff2d4776d"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/ios/AppIcon-29x29@2x.png",
+      "sha256": "8fce1efcfa12b942e4a6706d036bd4651c816ef3e8ac7b3a3cca9f2ff2d4776d"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/ios/AppIcon-29x29@3x.png",
+      "sha256": "ea24e67f7b3fa72a6702cf64b46ed29eb6806a4347d8cebb425ad2695b11613b"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/ios/AppIcon-40x40@1x.png",
+      "sha256": "020163b687e6a71231d4fae68ae1d4f3ea02fb3e659dc3632e70da3b4e0a101d"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/ios/AppIcon-40x40@2x-1.png",
+      "sha256": "e5e78784972553ae82441ddd9fce80c88de8512707d5e43fc39a9a7abe124080"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/ios/AppIcon-40x40@2x.png",
+      "sha256": "e5e78784972553ae82441ddd9fce80c88de8512707d5e43fc39a9a7abe124080"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/ios/AppIcon-40x40@3x.png",
+      "sha256": "0c26a952cebc476b9175688c68776e69ea4dd25de29e65d24ce3674da3d725c2"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/ios/AppIcon-512@2x.png",
+      "sha256": "626d1c44ca87b5c3e5aa477f1ffabc639a8ef0a8db2cc602c286c022a9e54d6e"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/ios/AppIcon-60x60@2x.png",
+      "sha256": "0c26a952cebc476b9175688c68776e69ea4dd25de29e65d24ce3674da3d725c2"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/ios/AppIcon-60x60@3x.png",
+      "sha256": "bf73b2abfe6b69378a114b848aeb2a6445f0465061a2c6be45cc23310fc0bff5"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/ios/AppIcon-76x76@1x.png",
+      "sha256": "acffa8365ae73cb929efd7ad8b2bb3108a75f007c2e98ef25a1a663d0a665ab8"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/ios/AppIcon-76x76@2x.png",
+      "sha256": "866bbcfd4cf6a1d38d825c8285d1b7cfcce91f7ccb6d552bc6aaaee920144fd2"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/ios/AppIcon-83.5x83.5@2x.png",
+      "sha256": "3fc136ede2adc9ebf1b035adc9481caf3e9b2a491645468fbff46240c90a1ab8"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/sirinvpn-icon.svg",
+      "sha256": "bbdd1865570d8afb9ddd41593132b2689b9d4047f0f241c63aea6e4e07718e0d"
+    },
+    {
+      "path": "apps/desktop/src-tauri/icons/sirinvpn-master.png",
+      "sha256": "c42a398a81072be72c295cb6c47a0159baa17017835b59300ae14cb8f103c63a"
+    },
+    {
+      "path": "apps/desktop/src-tauri/src/android_enrollment.rs",
+      "sha256": "43fbf9d620bcf5e507d673e75f4690466e55d2d3b7f3a387fd7e0c56f8597cdc"
+    },
+    {
+      "path": "apps/desktop/src-tauri/src/android_profiles.rs",
+      "sha256": "c930e463e69ad43613d65c6965f683418e63027bd4db2a33043925953c14c905"
+    },
+    {
+      "path": "apps/desktop/src-tauri/src/android_tunnel.rs",
+      "sha256": "a23ad8a921fcb7ddf43723585a560ccad438eebee55584f102b14ea4fb5ef216"
+    },
+    {
+      "path": "apps/desktop/src-tauri/src/app_preferences.rs",
+      "sha256": "178698b3ee37ba041f31d08b78d8fb1755936bafb98bbd6390cf92ec263a2501"
+    },
+    {
+      "path": "apps/desktop/src-tauri/src/app_preferences/store.rs",
+      "sha256": "6bf7b4efd3889e7b9ea14b1a28c9de4424089653efc0fb520563d388f337faec"
+    },
+    {
+      "path": "apps/desktop/src-tauri/src/backups.rs",
+      "sha256": "005e8ad1fb41000ea1f9618c1522b68efe0bf9fda18bc01bfdebfbcd9e604799"
+    },
+    {
+      "path": "apps/desktop/src-tauri/src/command_types.rs",
+      "sha256": "ec58ee8a2505355795792880fdd738fd8e7bf3412b62b8cdbf9a950e12650e32"
+    },
+    {
+      "path": "apps/desktop/src-tauri/src/connection.rs",
+      "sha256": "d26960183ce59a4fba5780d34c14de0524b0b7de3dcf4fdc77d0b9720544f2a9"
+    },
+    {
+      "path": "apps/desktop/src-tauri/src/connection_notifications.rs",
+      "sha256": "f8220080cebf70460df2f79e2873080a019024f907445eaf56bdeb358c08229f"
+    },
+    {
+      "path": "apps/desktop/src-tauri/src/connection_policy.rs",
+      "sha256": "ca1e13451f8fee51df9fbbb18101eec2ce6d61b0cf679aefc5cd67055b03c78b"
+    },
+    {
+      "path": "apps/desktop/src-tauri/src/connection_preferences.rs",
+      "sha256": "d4eb4e99358de7b686c55d6805a6a6f8f4f77b7c2530b5422e68f5ae3697f773"
+    },
+    {
+      "path": "apps/desktop/src-tauri/src/connection_preferences/store.rs",
+      "sha256": "3c7e8103d08dc50fa713d0151645ed030d1a56ea3e6765084307f872416037c7"
+    },
+    {
+      "path": "apps/desktop/src-tauri/src/connection_preferences/store/tests.rs",
+      "sha256": "fa24ae141f857e7532d1ab31e7a2040bd8ab671d31552cced2b0f0f57f971d96"
+    },
+    {
+      "path": "apps/desktop/src-tauri/src/desktop_lifecycle.rs",
+      "sha256": "db8e07826379586596174a6a6066517401fcb4100be2317f1542e3906fd62975"
+    },
+    {
+      "path": "apps/desktop/src-tauri/src/desktop_startup.rs",
+      "sha256": "f62ec0a23fbfb24b79999e2548175e8d25f224846b83c7c0723af82a9cc42999"
+    },
+    {
+      "path": "apps/desktop/src-tauri/src/endpoints.rs",
+      "sha256": "ceab6b37219c89fa4b3ffcb21ac198ef86ece2dfce25216e9a37ce1d46e9cc3b"
+    },
+    {
+      "path": "apps/desktop/src-tauri/src/helper.rs",
+      "sha256": "735ea07c89c4d02893d81070dc944baba38128844297684ee71a71d635471a1e"
+    },
+    {
+      "path": "apps/desktop/src-tauri/src/identity.rs",
+      "sha256": "13fc1aeba997dd354ce04f34f6adae6da8869e68dff5a9a80d785f39cb1f172b"
+    },
+    {
+      "path": "apps/desktop/src-tauri/src/lib.rs",
+      "sha256": "220c66556bd5ef7f88d58f4d0bb4f3d271b30105025ec94451f566e734bee468"
+    },
+    {
+      "path": "apps/desktop/src-tauri/src/main.rs",
+      "sha256": "c8797d9a7ee48da01c992f2af92e2d87e670e14a44b92d0606b298a0f2ff3da6"
+    },
+    {
+      "path": "apps/desktop/src-tauri/src/management.rs",
+      "sha256": "7d37367335918956d0604e82cff7943fad25aee6d88d7b70e38edef61c89cae8"
+    },
+    {
+      "path": "apps/desktop/src-tauri/src/provisioning.rs",
+      "sha256": "5962341048cb281bd8f8e7d307dbe538682ea8749cbf84f1606d520b89f1fde1"
+    },
+    {
+      "path": "apps/desktop/src-tauri/src/release_update.rs",
+      "sha256": "ec2d25cc5fbf1deb5f06f9dbf40189993df0632132bdaa6505823a9224a3635b"
+    },
+    {
+      "path": "apps/desktop/src-tauri/tauri.conf.json",
+      "sha256": "dea3ce160750628d7c9887c4ce5b3ca1c02e01cf785d6ba18d2d8145923a4f66"
+    },
+    {
+      "path": "apps/desktop/src/App.android-vpn.test.tsx",
+      "sha256": "ddc872fb349c5e1a36df8a5f72cc24c7cb2337345fdc89405183788b3f2ac2db"
+    },
+    {
+      "path": "apps/desktop/src/App.android.test.tsx",
+      "sha256": "4ff05785735663b00e1310c8e3990130cebc8854e45ae4f5f7be8351dd51a9d3"
+    },
+    {
+      "path": "apps/desktop/src/App.release.test.tsx",
+      "sha256": "ffd75489d82d312cb690a9068824a37f5ab4c7c3a457a6afd8707ca6085874b3"
+    },
+    {
+      "path": "apps/desktop/src/App.tsx",
+      "sha256": "49430b41bcac528c70d28ffd31eae45a2d5e06cbd287cc26bba14f5aea17e253"
+    },
+    {
+      "path": "apps/desktop/src/access.test.ts",
+      "sha256": "a01b9e04af06130abf1072cadcc376319ecced7bb318758da19cb9784004498c"
+    },
+    {
+      "path": "apps/desktop/src/access.ts",
+      "sha256": "a72e129db400dbe1e45b36b9fbacdd9d2a2b7e5863472885c732224517775209"
+    },
+    {
+      "path": "apps/desktop/src/api.ts",
+      "sha256": "4b4267eb92c772ebc7603f30a914896ae4152e63644c09f5a0332f90e5ee2920"
+    },
+    {
+      "path": "apps/desktop/src/assets/mountains.svg",
+      "sha256": "b392173c48d34b0c04e973315cfe373a4172a52783f05c6017a8b68adbba2fc9"
+    },
+    {
+      "path": "apps/desktop/src/assets/sirin-mark.png",
+      "sha256": "8e1c1f6c6bcacb12347284f252085b6f464b2dbdaea28478382b50418dc30bc2"
+    },
+    {
+      "path": "apps/desktop/src/components/ActionMenu.tsx",
+      "sha256": "78591d787a312246a6d2e036eff1acf942930264520e5c40a47b32854c8c9440"
+    },
+    {
+      "path": "apps/desktop/src/components/Brand.tsx",
+      "sha256": "0b62fddb2fc66ccb2e68883786029df3004e57556f0a36bc81ef7c7f5b2d4e90"
+    },
+    {
+      "path": "apps/desktop/src/components/CopyValue.tsx",
+      "sha256": "5c4851b5c9d2c85921cabd3123926a7c96e6ce8a824c4ecea75c4eeca2e384fe"
+    },
+    {
+      "path": "apps/desktop/src/components/DesktopTitleBar.tsx",
+      "sha256": "0c4dbc0f268092c847167a2015e5132960c9189b96d4440993c7e35b297a918d"
+    },
+    {
+      "path": "apps/desktop/src/components/DialogContent.tsx",
+      "sha256": "ce5ec54e9994255160dffef5886781d430f5a9f4a22d75a2a853b675fa3c3f1a"
+    },
+    {
+      "path": "apps/desktop/src/components/InfrastructureArt.tsx",
+      "sha256": "bad8e4c3db16db5d2fb3cc98931af7ee1281a264271117bc6662ac70ff3f4708"
+    },
+    {
+      "path": "apps/desktop/src/components/Navigation.tsx",
+      "sha256": "1ec2bcf0ded691d56c31ec1c3a6be3c67821dc6de742eb68e4b81b6f9880f7fe"
+    },
+    {
+      "path": "apps/desktop/src/components/ui.tsx",
+      "sha256": "82804c56a84efdd856a689d57b7c81764c6bb3295267ed8d54dc50e5382aa063"
+    },
+    {
+      "path": "apps/desktop/src/dns.test.ts",
+      "sha256": "eaec1a0748ebefce94f53805242bf0620f20433697cb8e1202648bbd462d1f49"
+    },
+    {
+      "path": "apps/desktop/src/dns.ts",
+      "sha256": "78490f14bf7ee5c4a272153681f89512170c8893f75caf253441e59f7d54ac6c"
+    },
+    {
+      "path": "apps/desktop/src/features/android/AndroidBackupExportPanel.tsx",
+      "sha256": "928ff884ef6a4f96d9167d95879d010a9753262a963eaa2eabdec133e7b1f342"
+    },
+    {
+      "path": "apps/desktop/src/features/android/AndroidBackupImportPanel.tsx",
+      "sha256": "aa0ba42f94293edcb2d077add1d0029202a46d6c9126fc30b7a81522a0983f48"
+    },
+    {
+      "path": "apps/desktop/src/features/android/AndroidEnrollmentPanel.tsx",
+      "sha256": "2db56ff15948c6bc5fa575dd33c998e30765e701bebe3bd4754ac7cd7716d949"
+    },
+    {
+      "path": "apps/desktop/src/features/android/AndroidFoundation.tsx",
+      "sha256": "fcbcd67adea2a04a669a3ae40d8fa51c419cfcf9bde6ca81956473f36acf60a7"
+    },
+    {
+      "path": "apps/desktop/src/features/android/AndroidOwnerUninstallPanel.tsx",
+      "sha256": "9594c66cb11f69fa23270868047508e1767fa6a950092659a46cef5db87d39f0"
+    },
+    {
+      "path": "apps/desktop/src/features/android/AndroidProfilesPanel.tsx",
+      "sha256": "2f0e8855b8359bf70ba78abf26953a4463193ccebb44fefe812ea162c008c84d"
+    },
+    {
+      "path": "apps/desktop/src/features/android/AndroidProtectionPanel.tsx",
+      "sha256": "a8d8a6fad05d795148d0754f88934fe9e5f4cbb8a212eafeaec8ae209277b321"
+    },
+    {
+      "path": "apps/desktop/src/features/android/AndroidSecurityPanel.tsx",
+      "sha256": "646e9be4c8530dedf0e383cb0c11da5ad08db8e6f4c6b79c78405cc16eaef992"
+    },
+    {
+      "path": "apps/desktop/src/features/android/AndroidSettings.tsx",
+      "sha256": "46ba6757f29f27b891e61d336b91267cd435e78f733faa8eaea33ba70f19f351"
+    },
+    {
+      "path": "apps/desktop/src/features/android/AndroidTraffic.tsx",
+      "sha256": "6ecd28d48db0f5a8312a30f29fce838fdc470a231debe8710fcffd94cb19d468"
+    },
+    {
+      "path": "apps/desktop/src/features/android/AndroidTransportPanel.tsx",
+      "sha256": "9c8a9bb08870b7881302f042becb84f4781f02424aa0537beb608260aa9fd3f8"
+    },
+    {
+      "path": "apps/desktop/src/features/android/useAndroidController.ts",
+      "sha256": "33e10bd55df1eb599a0456eff42f0b896c45e3fb3be66cf906c158eaf656acb7"
+    },
+    {
+      "path": "apps/desktop/src/features/android/validation.ts",
+      "sha256": "eb696913cdb5c68d51d10baae8d9981c5ef889c7b4e8c3742f4e2c7cc7fe8191"
+    },
+    {
+      "path": "apps/desktop/src/features/connection/ConnectionHero.tsx",
+      "sha256": "d91a9666c7ee363c425423f4ca0aff27eca3d1dc37893efc7b08e867cc54bef5"
+    },
+    {
+      "path": "apps/desktop/src/features/connection/ConnectionOptions.tsx",
+      "sha256": "8f124cf6eeeef96e1f70e8b8a296402126c4d3a5f9e725fd0f0cb307a8946054"
+    },
+    {
+      "path": "apps/desktop/src/features/connection/DeviceTraffic.tsx",
+      "sha256": "a4a4ce5256b94109b8b01e169380dd21a4427900d03166f8de5881ee7e8b9139"
+    },
+    {
+      "path": "apps/desktop/src/features/connection/MaintenanceReview.tsx",
+      "sha256": "2eb97177c64fc8219da0f933155cbd639846f7f5fea2ca0c4755482e0b93d4fc"
+    },
+    {
+      "path": "apps/desktop/src/features/connection/MaintenanceTools.tsx",
+      "sha256": "85676bd66a13526c58fa7d7bed1e46f1a2790642e6b8d3a29dc095e58dda314b"
+    },
+    {
+      "path": "apps/desktop/src/features/connection/PreferenceSaveBar.tsx",
+      "sha256": "9a34f82412d29ab302c5a062ed8864c47c1b19561eb3cd8ecb18b4a316295248"
+    },
+    {
+      "path": "apps/desktop/src/features/connection/RoutingSettings.tsx",
+      "sha256": "8cb6159b5ae05ba2840a68f72e7ecfb23fb6da9e27699dd8850122a12f95bb1b"
+    },
+    {
+      "path": "apps/desktop/src/features/connection/ServerMetrics.tsx",
+      "sha256": "09d41331110525402dc8e096572bceca3a3392d80e2fe99b9d24df405bc72e71"
+    },
+    {
+      "path": "apps/desktop/src/features/connection/ServerWorkspace.tsx",
+      "sha256": "d73810a383c88f952abd6e951dbf90b2e16351674ad7958f05160ff32db3ed29"
+    },
+    {
+      "path": "apps/desktop/src/features/connection/SystemHealth.tsx",
+      "sha256": "e52c204842eb8ceea09733071e759c641a4be174814f49d11c47f03fd2217577"
+    },
+    {
+      "path": "apps/desktop/src/features/connection/WorkspaceDialogs.tsx",
+      "sha256": "75d8386f3c0e6dd6e909acb0b96c5881a133d5fafa691ddd7fe4038a08c6fbf0"
+    },
+    {
+      "path": "apps/desktop/src/features/connection/connectionPreferences.ts",
+      "sha256": "49fa4b08dfe92a053100f4e5bbab23452f23c65103c33a743d34ac21660c3618"
+    },
+    {
+      "path": "apps/desktop/src/features/connection/connectionState.test.ts",
+      "sha256": "c92aa373935cccec21c9185e196f9c6e512f8316671615f5c9299e581da94f0f"
+    },
+    {
+      "path": "apps/desktop/src/features/connection/connectionState.ts",
+      "sha256": "9aa53412aed7f062cedbd21eb4b3b6888c120009e3ecb34a7e6d5ed77aa037e3"
+    },
+    {
+      "path": "apps/desktop/src/features/connection/useConnectionPreferences.test.ts",
+      "sha256": "80f2fbccbc8ac492be66db527a6d463f5e5d06ad25798ddee8ebccf1559fad5b"
+    },
+    {
+      "path": "apps/desktop/src/features/connection/useConnectionPreferences.ts",
+      "sha256": "aa29cc66329434d246aa28b467ab65b000bdf5fd82fa69a7d456be46e7538d8b"
+    },
+    {
+      "path": "apps/desktop/src/features/connection/useServerWorkspace.test.ts",
+      "sha256": "0d2015368b882ba387ab92b7d6eb59a98c6ccaccb9f2551025eaa8509d826ed1"
+    },
+    {
+      "path": "apps/desktop/src/features/connection/useServerWorkspace.ts",
+      "sha256": "b8df5da493197c27db3d21e77bd42ed3fc9961f9fc0d6735971118471f03b6bd"
+    },
+    {
+      "path": "apps/desktop/src/features/devices/AccessPanel.tsx",
+      "sha256": "fd223c06bbe8188723d9fad616048363bda1c84a2930656c8cca8bd03978d5c3"
+    },
+    {
+      "path": "apps/desktop/src/features/devices/ActiveInvitations.tsx",
+      "sha256": "d734f51a618944636fb845fa290dc11afdb84b1bb1cb072f76590e52f503afe1"
+    },
+    {
+      "path": "apps/desktop/src/features/devices/DeviceList.test.tsx",
+      "sha256": "adf0d6c2bca4ff544e9e81fe649c10556747117795c4276f55d27e05b3b8e873"
+    },
+    {
+      "path": "apps/desktop/src/features/devices/DeviceList.tsx",
+      "sha256": "8fc1007360d43adb489828aa728f6c61bbb074a9c0357ad77f728e9875259b31"
+    },
+    {
+      "path": "apps/desktop/src/features/devices/InvitationDialog.tsx",
+      "sha256": "fe27f05b1f1133beb62bce5bcc89e84321169c0a373698a36f9e88f4c41df714"
+    },
+    {
+      "path": "apps/desktop/src/features/devices/PortForwardPanel.tsx",
+      "sha256": "d75ce24869f6155c49e2b3cef8fdff0eaf6030dcb822b60a4f07c1b324a4ecad"
+    },
+    {
+      "path": "apps/desktop/src/features/devices/PortForwardSettings.tsx",
+      "sha256": "20564601ce81e6df2d91e893963dce42c03ab6d0e7800ce5924bb09b086501c7"
+    },
+    {
+      "path": "apps/desktop/src/features/devices/useAccessController.ts",
+      "sha256": "fd53ad717fe5b363bd29041b6f370cebb65f5b03835203dd62692ed7e0a199ae"
+    },
+    {
+      "path": "apps/desktop/src/features/dns/DnsFields.tsx",
+      "sha256": "c5074ea5b651780abfc23860d9a224aec1fe523a9b68a883da202c363bf82fa9"
+    },
+    {
+      "path": "apps/desktop/src/features/onboarding/AddServerFlow.tsx",
+      "sha256": "08260cdaaaf8da2b5d081ffb75359b4d87dfad591813a7790c223c96e7ff23a1"
+    },
+    {
+      "path": "apps/desktop/src/features/onboarding/ImportBackupFlow.tsx",
+      "sha256": "cacd4632ea96533e19c3e1af0ab5460720d8059ce62fa5cf3889b6ae1e012cd0"
+    },
+    {
+      "path": "apps/desktop/src/features/onboarding/JoinFlow.tsx",
+      "sha256": "4ba85992d61c77e8733492fc3f09f1190a45280a9e24e120e72facb41bf88a3d"
+    },
+    {
+      "path": "apps/desktop/src/features/onboarding/SetupFlow.tsx",
+      "sha256": "4b7f94e37293ba14feb576e7b07ea35490dc13678a470385046d13d95455bbd3"
+    },
+    {
+      "path": "apps/desktop/src/features/servers/ServerCollection.tsx",
+      "sha256": "21bfaff02e28569839df8b7c433f21f32bc433c6ebc415e001fee4cfa2ee23ca"
+    },
+    {
+      "path": "apps/desktop/src/features/settings/EndpointUpdateDialog.tsx",
+      "sha256": "521afe8e9c8144d377916cf9c0ddaa5c0afb5211c7e984e7a3aac30dfa2dfde3"
+    },
+    {
+      "path": "apps/desktop/src/features/settings/ExportBackupDialog.tsx",
+      "sha256": "140bb8935906b11df3778d151d6147449933bcd52c0e806cbc0563927ed962f2"
+    },
+    {
+      "path": "apps/desktop/src/features/settings/GeneralSettings.test.tsx",
+      "sha256": "7f267a56df15e44a3cfeca079d43030d44af502636bbb25e1398db2c9007a094"
+    },
+    {
+      "path": "apps/desktop/src/features/settings/GeneralSettings.tsx",
+      "sha256": "79139c2157061a21960a946861c780b4c56c4e9b05da1fecb1bd7b6ead52c050"
+    },
+    {
+      "path": "apps/desktop/src/features/settings/KeyRotationDialog.tsx",
+      "sha256": "10b75710b4018d2ab455a8698c74232cb09a1816bc3ea1aec6b56ed31d638163"
+    },
+    {
+      "path": "apps/desktop/src/features/settings/LocalComponentUpdate.tsx",
+      "sha256": "5f5403c9810926dbeee86e486a3720b747e7a1ef2a95fb402b67128d2ce0a887"
+    },
+    {
+      "path": "apps/desktop/src/features/settings/PreferencesProvider.tsx",
+      "sha256": "53a23fa7e18a335b548a307833473b042281beba64cd1d4a35a2752f208684bc"
+    },
+    {
+      "path": "apps/desktop/src/features/settings/ReleaseUpdateDialog.tsx",
+      "sha256": "69cd03b8e31e24e5f0d87dd9e0b93374ee702ee15ad0500be5e9c8a3f2f0918f"
+    },
+    {
+      "path": "apps/desktop/src/features/settings/RemoveServerDialog.tsx",
+      "sha256": "46c6c5e8a3d30483a6deaa0d1dc2aea0af99f9ef4bb1c183f4c14d6b6909d7ed"
+    },
+    {
+      "path": "apps/desktop/src/features/settings/RepairServerDialog.tsx",
+      "sha256": "395efd9694146e4f36dbed58dfde84b0beb11e4be8a8fa2e942c14747223ed6a"
+    },
+    {
+      "path": "apps/desktop/src/features/settings/SettingsLayout.tsx",
+      "sha256": "27ac461288f72c92c70fded4ace913f10a6bc48f707d0992462e75436c3b0c95"
+    },
+    {
+      "path": "apps/desktop/src/features/settings/VpsBackupDialog.tsx",
+      "sha256": "4d768100e5ed1d0943fef8295247a412f353766f26c281070808ee9cec122c2e"
+    },
+    {
+      "path": "apps/desktop/src/features/settings/VpsRestoreDialog.tsx",
+      "sha256": "fcf173214c98e2ee77930ee64520ccc7366353c50d40fbb79dc0d6e1b0632b15"
+    },
+    {
+      "path": "apps/desktop/src/features/settings/preferences.ts",
+      "sha256": "8cdd9b3ad60f7a04f390edd293df6d14b1864a333f59812c0da559af9ea8c511"
+    },
+    {
+      "path": "apps/desktop/src/format.test.ts",
+      "sha256": "b3b2b2db1eb4c3d1c5c1669de562f25a4e55e5c9060963e5d32c4b1a6b74101d"
+    },
+    {
+      "path": "apps/desktop/src/format.ts",
+      "sha256": "7ec99ddf044e29af2f16dde389fd3ad9988b671b5b63d0596c56dd6f72483bfb"
+    },
+    {
+      "path": "apps/desktop/src/hooks/trafficSample.test.ts",
+      "sha256": "4c32cbdeb6b1d30e48268f19e93686150b160ab7e7c0c76b1878e885e44327ec"
+    },
+    {
+      "path": "apps/desktop/src/hooks/trafficSample.ts",
+      "sha256": "8437324ecad02bd17df0a84e39e1171904786044bbbce0f343ded5adf16141a3"
+    },
+    {
+      "path": "apps/desktop/src/hooks/useDesktopStatus.test.ts",
+      "sha256": "8200f7ff32e503b11e3c821a04b885dd29cf0b9177c64a097300a2e93ca6b62e"
+    },
+    {
+      "path": "apps/desktop/src/hooks/useDesktopStatus.ts",
+      "sha256": "4c6bea7b7b9768372a4ea4dd11673f81d25d31c3894506d1de2d2638bf4e696e"
+    },
+    {
+      "path": "apps/desktop/src/hooks/usePageNavigation.ts",
+      "sha256": "746be725ebc263d437fbb78f3012eeab567dce061b7dfe3002ee6bf326b9db53"
+    },
+    {
+      "path": "apps/desktop/src/hooks/usePageTransition.ts",
+      "sha256": "b5305039673827e4d471ebf1bb60285cebab2b035e8ceed3df01930c7712d518"
+    },
+    {
+      "path": "apps/desktop/src/lib/backupPaths.ts",
+      "sha256": "5d66a536c2acb0dc8ebbece3cf4c57ff9b7865d36a8806f27e4b09505b7b3888"
+    },
+    {
+      "path": "apps/desktop/src/lib/errors.ts",
+      "sha256": "6e491be7462a5f72990bd6fd88c22c28b29c8942996d6255bb425a5a7a9f512d"
+    },
+    {
+      "path": "apps/desktop/src/main.tsx",
+      "sha256": "404e4419e1c4bbc4270e15b9c5d3328f4606755b698b3e323deaef6fe712fd86"
+    },
+    {
+      "path": "apps/desktop/src/styles.css",
+      "sha256": "90eb6a2fb4a844331f0b9e2631c08ac923495ed9147ab3493aa6110f2131c01e"
+    },
+    {
+      "path": "apps/desktop/src/styles/android-enrollment.css",
+      "sha256": "5d688d6c9ed5edda43ff57c1f39ba9dd36c90d645dfc432080de25a2ac19ce3e"
+    },
+    {
+      "path": "apps/desktop/src/styles/android-platform.css",
+      "sha256": "940d01ee0c2531b42dcaa9a4d502653abf4b47198d26f59fdde7443ce8cba6a0"
+    },
+    {
+      "path": "apps/desktop/src/styles/android-profiles.css",
+      "sha256": "14d72e6d54a8280396ceb2a3b3b1760af2295e03a7d3c3d333e36d42fc208016"
+    },
+    {
+      "path": "apps/desktop/src/styles/android-vpn.css",
+      "sha256": "bbfd5af6eded6314057e1420d8a6be93e27f257545551af91b52a2ba0db66ff5"
+    },
+    {
+      "path": "apps/desktop/src/styles/base.css",
+      "sha256": "107dc57fb6321490f169a1055440f7c9c26adc2c09796d51d901c1079e23782f"
+    },
+    {
+      "path": "apps/desktop/src/styles/connection-controls.css",
+      "sha256": "d9c8a1cf34b50e4dbe90336fbaf4b6d844191abcaaafa7cd51254b4bea439085"
+    },
+    {
+      "path": "apps/desktop/src/styles/connection-hero.css",
+      "sha256": "d2b894f7a3aba54c5fb3753502fadc7ee92879f08e90b0c8e14bec21b21ba5f3"
+    },
+    {
+      "path": "apps/desktop/src/styles/devices.css",
+      "sha256": "16e03c47a71222acfcf131e5b02a24b8d9e13cf34cc29186e9f3f15f36c43afd"
+    },
+    {
+      "path": "apps/desktop/src/styles/dialogs.css",
+      "sha256": "f7741ffd571c32ad2805c12fce1a992579d460aa70db41c970c056bc28666507"
+    },
+    {
+      "path": "apps/desktop/src/styles/forms.css",
+      "sha256": "8cd9bab041500657cd6b2313b10b7a419b0c3fc9db3c628f54ac187169b803eb"
+    },
+    {
+      "path": "apps/desktop/src/styles/interactions.css",
+      "sha256": "a6ec63caebee82501b5911c06aed2ddd3c3726c88fb7c53942623f3470cd3dd7"
+    },
+    {
+      "path": "apps/desktop/src/styles/invitations.css",
+      "sha256": "0049b94f2639fec0647d25804ae75820614cfcc207855c528c10488f7a7420b6"
+    },
+    {
+      "path": "apps/desktop/src/styles/layout-polish.css",
+      "sha256": "17725330bde45b489c9215986161a6bd38d1b305df7df5a02436f1f8575a2ad2"
+    },
+    {
+      "path": "apps/desktop/src/styles/maintenance.css",
+      "sha256": "6aed1653b52901c1cb904e4af3dfcc5b3b90a86c18a8deaf6311421a4e529d28"
+    },
+    {
+      "path": "apps/desktop/src/styles/metrics.css",
+      "sha256": "bd4ae7e971bebf09e0601612a8fab6df56df836b8660ddd37dab2a0401f313a0"
+    },
+    {
+      "path": "apps/desktop/src/styles/motion.css",
+      "sha256": "fa0150125ffe46ec4ec60531e3567102eb2b1b549c4d065af69d899b5aad60a7"
+    },
+    {
+      "path": "apps/desktop/src/styles/onboarding.css",
+      "sha256": "817407f666410fc1c58f5de3b14e6adbff75b4a4093517e956fa1ddf41c7a6f6"
+    },
+    {
+      "path": "apps/desktop/src/styles/operational-layout.css",
+      "sha256": "2e1925c9029a99e81b38fcf6a92b47172a3a8260ae91b7425085bda853371480"
+    },
+    {
+      "path": "apps/desktop/src/styles/reduced-motion.css",
+      "sha256": "d93ac485b3bee2157b63be95f4eb40e170d38cbeee72c73e3c9690180f5a0a66"
+    },
+    {
+      "path": "apps/desktop/src/styles/responsive.css",
+      "sha256": "6d7cf0b021c3974e9bec0f310317cfbf2b13392713926dd73059481a8bfa652f"
+    },
+    {
+      "path": "apps/desktop/src/styles/settings.css",
+      "sha256": "2dfc16b13c58383b8c151cb1ccf05e848b9fe17e9f753242b38ee20aa1865ab8"
+    },
+    {
+      "path": "apps/desktop/src/styles/shell.css",
+      "sha256": "e8999af700ef59315927f06ffb96b2f28e66a99b7b886d016f0321b1ecd4f0a2"
+    },
+    {
+      "path": "apps/desktop/src/styles/theme-android.css",
+      "sha256": "bbbcbee3da329835ede18889be3c9f6f87c3b7f79329d323029ce4b2a7970da7"
+    },
+    {
+      "path": "apps/desktop/src/styles/theme-connection.css",
+      "sha256": "cb79387aabc63f0a3acb800515006da00c7db9ba4d6a78db8a1891ee6b7d07a7"
+    },
+    {
+      "path": "apps/desktop/src/styles/theme-foundation.css",
+      "sha256": "6beafa9d5b264c22298874ccf7fb2ad9f4c55678d33b0e149ae12f6a69439738"
+    },
+    {
+      "path": "apps/desktop/src/styles/theme-layout.css",
+      "sha256": "cece967ada608b772f17ed1da8856cfa293b25f363d998c746030af78f1f768e"
+    },
+    {
+      "path": "apps/desktop/src/styles/theme-responsive.css",
+      "sha256": "d632343b658075231279fd16cb5dcef196157d94c9b62966f1c68a6163f9275e"
+    },
+    {
+      "path": "apps/desktop/src/styles/theme-screens.css",
+      "sha256": "2451bb3cb9909a3c5f00cb7ea8098fe7681139364127b1ecdab822bba11cb7e9"
+    },
+    {
+      "path": "apps/desktop/src/styles/typography.css",
+      "sha256": "3224629eea02cbd6cdcb9bcc4f75dd64fc408426ecca6685d5596bc4ac4d5bdd"
+    },
+    {
+      "path": "apps/desktop/src/styles/window.css",
+      "sha256": "b95b3034a25ebaceee42f7d102732f98a82f12a4f68b30514e9f238eb89c93c3"
+    },
+    {
+      "path": "apps/desktop/src/test/androidFixture.ts",
+      "sha256": "f4bf564936f5eeabcc3be5131d080f589e78db484908f1e914a31c59fe031d5b"
+    },
+    {
+      "path": "apps/desktop/src/types.ts",
+      "sha256": "cb911911f67ff30498480288acc093598694b4d6713c9a6d16d2ca7d97e3a8b3"
+    },
+    {
+      "path": "apps/desktop/src/vite-env.d.ts",
+      "sha256": "65996936fbb042915f7b74a200fcdde7e410f32a669b1ab9597cfaa4b0faddb5"
+    },
+    {
+      "path": "apps/desktop/tsconfig.app.json",
+      "sha256": "8a52ab11999ef4448140e46b44567e10a8966bc2d131445b2bf48adb98d39a2d"
+    },
+    {
+      "path": "apps/desktop/tsconfig.json",
+      "sha256": "770b4140bbb581e2dfd9ea9946ffc9c75a1d86ba7d2db5f77c83e37cbdf9d808"
+    },
+    {
+      "path": "apps/desktop/tsconfig.node.json",
+      "sha256": "3dc28b63563e20fab0d9f652f3039ed50e6c46bbdec66631a14822e8309b230d"
+    },
+    {
+      "path": "apps/desktop/vite.config.ts",
+      "sha256": "94a561f2a0223764a2371f362aeee508a16a7557752bbfcf99835407b0b03357"
+    },
+    {
+      "path": "crates/android-secure-storage/Cargo.toml",
+      "sha256": "17b0f1b9f5df7d2a38d21b66fada757cb7337048f0b0fbbd89408e14e72b86fc"
+    },
+    {
+      "path": "crates/android-secure-storage/android/build.gradle.kts",
+      "sha256": "8e926112cb35f8f762c190396ce07904ea505dd804eea533e20782e79967c147"
+    },
+    {
+      "path": "crates/android-secure-storage/android/consumer-rules.pro",
+      "sha256": "7c43f46475f95302499f6002a31d1f47ac763e86742f7b4d72c7ab92c0004fc3"
+    },
+    {
+      "path": "crates/android-secure-storage/android/proguard-rules.pro",
+      "sha256": "757a4ac8116551baf7c09667a4ca70bb3e4171096fb48a6a10e8ba176bdacab8"
+    },
+    {
+      "path": "crates/android-secure-storage/android/settings.gradle",
+      "sha256": "50ae42d0a8ae3e46df71a80dd70c08cc3301a803db30fc136c2cb2982572f43e"
+    },
+    {
+      "path": "crates/android-secure-storage/android/src/androidTest/java/org/sirinvpn/plugin/securestorage/SecureStorageInstrumentedTest.kt",
+      "sha256": "0413310f0843a9164607367fd46daf83f0f4e216b153d0c552508fcf973a9f48"
+    },
+    {
+      "path": "crates/android-secure-storage/android/src/main/AndroidManifest.xml",
+      "sha256": "0b5fc6424d6c406f9fcdbe10d6a54b6a733d2ff07bace171ec29e4dce8fcbad9"
+    },
+    {
+      "path": "crates/android-secure-storage/android/src/main/java/org/sirinvpn/plugin/securestorage/SecureStorage.kt",
+      "sha256": "b2be92bc4374559b05f1badab3083e5a7c2b0e331e50fb410685e905c7558d10"
+    },
+    {
+      "path": "crates/android-secure-storage/android/src/main/java/org/sirinvpn/plugin/securestorage/SecureStoragePlugin.kt",
+      "sha256": "271ac8957c29c5ebe3e5fe9d3b3f2ab0c151989f5d402b316adfcf08d1ed73cc"
+    },
+    {
+      "path": "crates/android-secure-storage/android/src/main/res/xml/sirinvpn_data_extraction_rules.xml",
+      "sha256": "9268fd7f8baa2251fab6a7afaac6357f5af874eea54537f6751c9c359a4c1804"
+    },
+    {
+      "path": "crates/android-secure-storage/build.rs",
+      "sha256": "3b28cb02fbbd793f6710a701a727714b4487da66c8a51e426c8e1fa1f71991e3"
+    },
+    {
+      "path": "crates/android-secure-storage/src/desktop.rs",
+      "sha256": "fb5a99b3952d925ae1d4f2728d83303624bbe81b6ad8f51d96f5183d9d1fba03"
+    },
+    {
+      "path": "crates/android-secure-storage/src/error.rs",
+      "sha256": "9f784d3b1884b154383fa10ff50f77dfe61cbc37cc163ea1d7dfc126c48ea45f"
+    },
+    {
+      "path": "crates/android-secure-storage/src/identity.rs",
+      "sha256": "2c05f6a328036f0a2df0c3fab0db5a70904aa057816bc32d5977914eb48052f2"
+    },
+    {
+      "path": "crates/android-secure-storage/src/lib.rs",
+      "sha256": "f0f9ffa534edfeb7c467105316bffab8fbe2ea78023e7b18d7556fc63b1be478"
+    },
+    {
+      "path": "crates/android-secure-storage/src/mobile.rs",
+      "sha256": "f87e8dd9ab0a4bd950225d4a1263b209129a8ed446ee2b769743ffd807f19f4b"
+    },
+    {
+      "path": "crates/android-secure-storage/src/models.rs",
+      "sha256": "3d8578d71526f5ef4fe071120d2f96e1a14962234aff64139505761dde052ec8"
+    },
+    {
+      "path": "crates/android-secure-storage/src/profile.rs",
+      "sha256": "7cbb1dd27f89cd97daa4b0cecd21c7f68c445139e5d375b0060f185e9f9bedb1"
+    },
+    {
+      "path": "crates/android-secure-storage/src/profile/backup.rs",
+      "sha256": "03832e302893d91ca8ee5d4571983b19e712e635faf7245ffe2a3f12c246bd5e"
+    },
+    {
+      "path": "crates/android-secure-storage/src/profile/recovery.rs",
+      "sha256": "dc2b4b91b8b1f3e8235b0858eef8dd52d3fc93d55815687e2ac7551a72f4e86f"
+    },
+    {
+      "path": "crates/android-secure-storage/src/profile/tests/failed_authoritative_commit_leaves_the_same_draft_retryable.rs",
+      "sha256": "9fb3bfd304a535b6d2059b582dff37c75db8b400d31a9dae3bf5059e3fd8135a"
+    },
+    {
+      "path": "crates/android-secure-storage/src/profile/tests/mod.rs",
+      "sha256": "3bc942a156da7b43d1d86a80743a16a3725d4fd07f1cdcf395be7c30fb2ba406"
+    },
+    {
+      "path": "crates/android-secure-storage/src/profile/tests/retained_profiles_round_trip_without_exposing_identity_material.rs",
+      "sha256": "6f5863048e656b438d4c76f98a4944819f4b44f4d82bb0436bcfc0e4f887452d"
+    },
+    {
+      "path": "crates/android-secure-storage/src/profile/validation.rs",
+      "sha256": "e66020b1504eb41fd30b67712399892e1831dce856b96d4695a6606b7233434c"
+    },
+    {
+      "path": "crates/android-vpn/Cargo.toml",
+      "sha256": "675a0dd296b3203ea8addfb909aab1478d629a13db5d10d82c3a771e1ceb4808"
+    },
+    {
+      "path": "crates/android-vpn/android/build.gradle.kts",
+      "sha256": "b880728214afc08d588e43b6e45742909fe5c0ff3ff84229490add2de1c6b411"
+    },
+    {
+      "path": "crates/android-vpn/android/consumer-rules.pro",
+      "sha256": "096872d1baa3770542cfb01eb45415e764de5d99d21d3221d0861e0d8b31701e"
+    },
+    {
+      "path": "crates/android-vpn/android/proguard-rules.pro",
+      "sha256": "de6934f0d95cdc10b61ddafabfa4da3889412a8cbe5d3071dceb9abf3f365cab"
+    },
+    {
+      "path": "crates/android-vpn/android/settings.gradle",
+      "sha256": "29f7e274e0ec27064a52572a7c8c1f4532043d70c44e27f55b1db53784f15df2"
+    },
+    {
+      "path": "crates/android-vpn/android/src/androidTest/java/org/sirinvpn/plugin/vpn/SirinVpnInstrumentedTest.kt",
+      "sha256": "58b799206d8be4abc61daf06ea61bf6ad41a7759bf0ce0881e1434962184a182"
+    },
+    {
+      "path": "crates/android-vpn/android/src/main/AndroidManifest.xml",
+      "sha256": "ea6829edd52007254fa063363ea8e8a857494a005bb1adbefb5b29c3c1a2b880"
+    },
+    {
+      "path": "crates/android-vpn/android/src/main/java/org/sirinvpn/plugin/vpn/PersistentProcessService.kt",
+      "sha256": "95d72a59fab648114bd1b06bb7eeedb38d760e3ee78d072996082052b09aa014"
+    },
+    {
+      "path": "crates/android-vpn/android/src/main/java/org/sirinvpn/plugin/vpn/PersistentTunnelStore.kt",
+      "sha256": "8f31fbe1f10cb60e031d8a2efb6b30357488cdfa7ece1331b52b7f912dfc904a"
+    },
+    {
+      "path": "crates/android-vpn/android/src/main/java/org/sirinvpn/plugin/vpn/SirinVpnInitializer.kt",
+      "sha256": "cc583198b20906227ed4f1984b683ee70957785258bc6e3ec7a0b18bfb671a8c"
+    },
+    {
+      "path": "crates/android-vpn/android/src/main/java/org/sirinvpn/plugin/vpn/SirinVpnPlugin.kt",
+      "sha256": "07a191cf37cffb9c1bcfa71493c39ea26490178bd72c6a651612ece6403d6ea2"
+    },
+    {
+      "path": "crates/android-vpn/android/src/main/java/org/sirinvpn/plugin/vpn/TunnelController.kt",
+      "sha256": "be19e3ec8b7f7db91e4a6100996487fb5b19887f76a336d5ca253358464a23c3"
+    },
+    {
+      "path": "crates/android-vpn/build.rs",
+      "sha256": "3b28cb02fbbd793f6710a701a727714b4487da66c8a51e426c8e1fa1f71991e3"
+    },
+    {
+      "path": "crates/android-vpn/src/config.rs",
+      "sha256": "1c1a6e21e310f6180ffdaa61a6831a85817e14b3a3d680f6d905b50cc63ad1cd"
+    },
+    {
+      "path": "crates/android-vpn/src/desktop.rs",
+      "sha256": "08b403fe9ef2ec1e1459377feed1f91853b2dc1a42b31f7fbf28368b19b99dda"
+    },
+    {
+      "path": "crates/android-vpn/src/error.rs",
+      "sha256": "02c164f74fcac8c4227e1477722f51473d0c4a9c26ebaa97450e3811dfe55e84"
+    },
+    {
+      "path": "crates/android-vpn/src/lib.rs",
+      "sha256": "8fc27c8d82c981acd53961e6d669a4b511f4eca83fb7fda9eb6001372ebd4db1"
+    },
+    {
+      "path": "crates/android-vpn/src/mobile.rs",
+      "sha256": "7a494545f289b3975d79ca0a2bfaed00d00f14358998b66a0ba487b401828924"
+    },
+    {
+      "path": "crates/android-vpn/src/models.rs",
+      "sha256": "5c45317cd11f98d133d173c1986d468d9ba3ba6331d2c01952f3f764daf48a3c"
+    },
+    {
+      "path": "crates/cli/Cargo.toml",
+      "sha256": "e296619d460685fe2f054476a4f7bd23a3bd40220c9e81b755ee4f4d14363fdb"
+    },
+    {
+      "path": "crates/cli/src/arguments.rs",
+      "sha256": "1687e1130fb00bcfde8c4927a252019dbd758a4723cd9d5213b2492ea846c8f9"
+    },
+    {
+      "path": "crates/cli/src/connection.rs",
+      "sha256": "f4e9047ad591d19a3ba6503f8b2112ed165ec590cfbfbb70259e9bf6a6d94f8a"
+    },
+    {
+      "path": "crates/cli/src/connection_policy.rs",
+      "sha256": "9044b2156f6020dccb027a22103f315e7fe710908e99aceba67785fa8cdd9151"
+    },
+    {
+      "path": "crates/cli/src/helper.rs",
+      "sha256": "6b59c744044c020d533a18c72df56ec9ab996d3039e0feb7592dc55760c7dd01"
+    },
+    {
+      "path": "crates/cli/src/main.rs",
+      "sha256": "01a402ab59062acee34c1c46324f63bb446ef8effc865f7d8c2ec40fe738c865"
+    },
+    {
+      "path": "crates/cli/src/maintenance.rs",
+      "sha256": "cf3c49eb6315f981fd00098463b35ebba5fd2398b3d9424bcf8c8888dc857358"
+    },
+    {
+      "path": "crates/cli/src/membership.rs",
+      "sha256": "148a9a560940912c277d124d2fbd5c6ddb27ea262d9ed1c4be87315bb4aeceed"
+    },
+    {
+      "path": "crates/cli/src/output.rs",
+      "sha256": "4561a844849bd8f51a8e51b13308a8ef39834a238a78063668d9dd953b4e2b82"
+    },
+    {
+      "path": "crates/cli/src/profiles.rs",
+      "sha256": "ee3f2626c8828ff76b14276133073c4226465913b0dacd1126e044bf1661736a"
+    },
+    {
+      "path": "crates/cli/src/provisioning.rs",
+      "sha256": "4a2fe5fd32f7d401ae7f26df122274b441e58ff933bf57995ef7b51949b16d94"
+    },
+    {
+      "path": "crates/core/Cargo.toml",
+      "sha256": "0c10dda25e20012c1d99fa74403d3e652e7b68f22425776304a46ad9bc91af05"
+    },
+    {
+      "path": "crates/core/src/backup.rs",
+      "sha256": "c512d78037bf571ed5df875d7e06da04241d2f45210af0aca9fb7f95f4afb59d"
+    },
+    {
+      "path": "crates/core/src/encrypted_backup.rs",
+      "sha256": "90e160385ed29b748e015fcad0af998efa68f2cf4a4705381a7c71c85b03ced1"
+    },
+    {
+      "path": "crates/core/src/endpoint_transition.rs",
+      "sha256": "b6ad7f871db6b139be02e320a5be34f7d5d887d38a909997bce9f428f16ac36c"
+    },
+    {
+      "path": "crates/core/src/identity.rs",
+      "sha256": "ef744725a9a57016f3d9ac9ca5e15d3d479121662051c0296365f2ec2340a7d8"
+    },
+    {
+      "path": "crates/core/src/invitation.rs",
+      "sha256": "25bb106c58e8b550281939784cd71b82c3fb25f3328d91deb3c64118b19d8c80"
+    },
+    {
+      "path": "crates/core/src/invitation/tests/mod.rs",
+      "sha256": "c37ae9d3ede2199bd8a930b33948d734c356b65b6f48b9c84ea8c6bc9f136f51"
+    },
+    {
+      "path": "crates/core/src/invitation/tests/signed_long_code_round_trip_preserves_only_bootstrap_secret.rs",
+      "sha256": "1f4aaff82e97702cc7449eb678df5176a38dacb40ceeae6788bfa0c9da231898"
+    },
+    {
+      "path": "crates/core/src/key_rotation.rs",
+      "sha256": "f54bd218e76c5b57b6b0224b7d6111e9150a47bef8c531c23b5f72b9127485b6"
+    },
+    {
+      "path": "crates/core/src/key_rotation/policy.rs",
+      "sha256": "806041f2e657d46b4c072acd59f0706bcb61a60a1b489b18b5460187d21359eb"
+    },
+    {
+      "path": "crates/core/src/key_rotation/tests.rs",
+      "sha256": "8f39a2af5a069db07f760dc4befe5173182f0ba461da3e8c52aab7eb962a35ac"
+    },
+    {
+      "path": "crates/core/src/lib.rs",
+      "sha256": "05f79ce7615616196223302b37e605dddb965683ddbd14bd85170d2f27b20da4"
+    },
+    {
+      "path": "crates/core/src/management.rs",
+      "sha256": "c0c41216c7f290208aa0af58b91b3326ed96d6a63f62127acb3f7a397535fed1"
+    },
+    {
+      "path": "crates/core/src/management/tests.rs",
+      "sha256": "ce44f0e3eb0a957a2d9d35d81d4b8a49d913d54d07522821f3cc9caf2a2a5b25"
+    },
+    {
+      "path": "crates/core/src/network_policy.rs",
+      "sha256": "8899706a0b2b4b837e84a13c0e05ce8444b55da506ad4b74a3d141e5552df54d"
+    },
+    {
+      "path": "crates/core/src/secrets.rs",
+      "sha256": "087202f32aba809290d490e4c6bfcc21a3180422f669481c80069523b051236a"
+    },
+    {
+      "path": "crates/core/src/server_backup.rs",
+      "sha256": "b428631cc4ec0cee06a9995b7340438df4286e7c470f5e292ec9285d0ceba99e"
+    },
+    {
+      "path": "crates/core/src/store.rs",
+      "sha256": "4c6c2182f97aa1441c3c663360868ca9dc1f577302a2db058b6ea2e38089316e"
+    },
+    {
+      "path": "crates/installer/Cargo.toml",
+      "sha256": "2ff8a32c77fcd617f2bf4dcd0138fd37205598c43fad204c7d614daf8080064f"
+    },
+    {
+      "path": "crates/installer/src/dns.rs",
+      "sha256": "004d410a779793edd189f401e8dde654a947a23d58fc4a8a77051cf2fd68f4f6"
+    },
+    {
+      "path": "crates/installer/src/install_script.rs",
+      "sha256": "55c5cf8ee09740b3b40c75fc5be804f0be9640b41687d1e2314c21788edb5e9c"
+    },
+    {
+      "path": "crates/installer/src/lib.rs",
+      "sha256": "a8c77cf69d1e8c49f2587011f3640e2b285d1535ca7b38eb5678e93846b8b60f"
+    },
+    {
+      "path": "crates/installer/src/ssh.rs",
+      "sha256": "c6249986f45e87cd9b35f5fddf587d4b7fc5952be9ef4612f5457f243023b34c"
+    },
+    {
+      "path": "crates/installer/src/tests/mod.rs",
+      "sha256": "d618d5c3b4bcb8b59e6655144926d10cdcd10da5a5982d4b468211b681cdafd2"
+    },
+    {
+      "path": "crates/installer/src/tests/repair_requires_intact_matching_identity_and_compatible_state.rs",
+      "sha256": "2350063de0b058806db4c52fe141985d2380183b83ab57d1e977ba01547d0d4f"
+    },
+    {
+      "path": "crates/installer/src/tests/script_has_scoped_firewall_ownership_and_docker_interop.rs",
+      "sha256": "2eb9e2ea4a529955c4c2c62520303973fd990dd8dc25a71179dd66b37cf35455"
+    },
+    {
+      "path": "crates/installer/src/tests/server_restore_is_profile_bound_stdin_only_and_guarded_before_identity_replacement.rs",
+      "sha256": "74fe6a59524f71bb82e30ef4dac93daccf942cf4f5943abd4e9e18229af95bd9"
+    },
+    {
+      "path": "crates/installer/src/tests/shell_quoting_does_not_allow_substitution.rs",
+      "sha256": "cc0875e3c415df0e5e7f090678445dc0b3a108f099acddd9ca2d5e09ebe8ebc7"
+    },
+    {
+      "path": "crates/installer/src/tests/ssh_output.rs",
+      "sha256": "2db594630b70d30bee75c3e6b8aae75cb4bc909cef249a2059a7d19cb7b88333"
+    },
+    {
+      "path": "crates/installer/src/transaction.rs",
+      "sha256": "3ebab37dd84b45ab7f123add67de20eb4e336c6ee8431c1838b8c92495c1db77"
+    },
+    {
+      "path": "crates/installer/src/uninstall.rs",
+      "sha256": "a888c117e2021cf2223d0f62b7a11768701becc0e67b9e04361ac0589339715a"
+    },
+    {
+      "path": "crates/installer/src/validation.rs",
+      "sha256": "7f2832a2594e3f146e4b8cb14e16f7f4284c33b251741508394e64c7c7c84e54"
+    },
+    {
+      "path": "crates/installer/src/verification.rs",
+      "sha256": "8396c43f83cc0fc5e0fa4aef204e8f97c5192f3ae495b3c153c5345932c67c74"
+    },
+    {
+      "path": "crates/linux-helper/Cargo.toml",
+      "sha256": "29c2b9b035adc05c8f74f36b207890b280cf70ccbe83ffd1e8009aa75f0dcab2"
+    },
+    {
+      "path": "crates/linux-helper/src/cleanup.rs",
+      "sha256": "d83f61b0641c180ac201120f149dbb124987d8ce7e2bfc482b2bdb2b5baae939"
+    },
+    {
+      "path": "crates/linux-helper/src/enforcement.rs",
+      "sha256": "df3b1a5e4ff63125f6777979efb5d1740db09e32be1570b8da7b1bbef45776d8"
+    },
+    {
+      "path": "crates/linux-helper/src/lib.rs",
+      "sha256": "4015b38107c3d1a3c9bfdc4bbaa2c10bddd7ef47d4ed73ec4e6aaa7026078663"
+    },
+    {
+      "path": "crates/linux-helper/src/lifecycle.rs",
+      "sha256": "777b1bcb17db96e7c3bc3bd04195f7a23a0955878095b9ddda1d6cc159587587"
+    },
+    {
+      "path": "crates/linux-helper/src/main.rs",
+      "sha256": "a6190bf1e09d11cea9016cde8230516196bebd5514fac3d74d49e3f1f7efa617"
+    },
+    {
+      "path": "crates/linux-helper/src/ownership.rs",
+      "sha256": "5129bc3c5e1832b3113addbc46c546c2cb886093044de17c69906499c7acd511"
+    },
+    {
+      "path": "crates/linux-helper/src/persistence.rs",
+      "sha256": "c95589187e9f2e0768f41d949ce570f4a9d095f2ef4bb6f1bb6f1992140fc0ed"
+    },
+    {
+      "path": "crates/linux-helper/src/policy.rs",
+      "sha256": "f716e116e13b78c520237c37c917e47efce96917703b46d0b6dd6a9bf177dbb1"
+    },
+    {
+      "path": "crates/linux-helper/src/policy_lifecycle.rs",
+      "sha256": "f94319b04f5cc8131affc3de914d78ef51f81e1ac2725ab32c110b944b57d2b3"
+    },
+    {
+      "path": "crates/linux-helper/src/policy_supervision.rs",
+      "sha256": "7629356b9380bd08b2ed0e33adbf878dbc96042e8b7b61130a0da40a96b26ea5"
+    },
+    {
+      "path": "crates/linux-helper/src/reconnect.rs",
+      "sha256": "2c48e599f18c052a85c8d7205449e929a60f32c8aec1ae7e17871bb6fd9b7105"
+    },
+    {
+      "path": "crates/linux-helper/src/routing.rs",
+      "sha256": "a6830f335b36ca29d46eb5de41ac169066a2231f0f9c1cf510a5b4ac1de99632"
+    },
+    {
+      "path": "crates/linux-helper/src/system.rs",
+      "sha256": "174552ec027c30a29cf1e8d65b524018211837b69403c113ad28bea60171a569"
+    },
+    {
+      "path": "crates/linux-helper/src/tests/kernel_policy.rs",
+      "sha256": "401129b9d2f7d5c7465f956abcd2670f08b0037e33ecd5eaa520bdb520181010"
+    },
+    {
+      "path": "crates/linux-helper/src/tests/mod.rs",
+      "sha256": "87b95a20c646b6735e479fe6566c81ff56f19c823ef63e0c8d450a073471a12c"
+    },
+    {
+      "path": "crates/linux-helper/src/tests/policy_tests.rs",
+      "sha256": "bb2b6b4127be32bf3ee5eeeebc162d2ec2006e9b53237cd554bf7accd1737572"
+    },
+    {
+      "path": "crates/linux-helper/src/tests/private_key_is_only_sent_over_stdin.rs",
+      "sha256": "70c3e31148c17e2b0ed893464a6f7840e46a314ece0feb19204ea950827195b2"
+    },
+    {
+      "path": "crates/linux-helper/src/tests/route_transition_allows_roaming_then_cycles_automatic_transport.rs",
+      "sha256": "48935a9df45420a115eeea9b8d5945007c08187d1d424611a4125e9d2b8838d4"
+    },
+    {
+      "path": "crates/linux-helper/src/tests/stale_automatic_attempts_cycle_candidates_and_replace_the_guard_atomically.rs",
+      "sha256": "58307a688ba549f84481cb59c6bafae2add9ef4bfb7f83943198848abc47f0ce"
+    },
+    {
+      "path": "crates/linux-helper/src/tests/tcp_transport_uses_a_tagged_runtime_config_that_legacy_helpers_reject.rs",
+      "sha256": "d2be789beebe6c5c91b08161f8cbb85172a06885b9dbb07b4af0e98b36c3389c"
+    },
+    {
+      "path": "crates/linux-helper/src/tunnel.rs",
+      "sha256": "fb5f9eda75c66bacf24d41e866baa5040317e46c770478a8e8d92b11aff9c4f1"
+    },
+    {
+      "path": "crates/protocol/Cargo.toml",
+      "sha256": "c26ff0f8e3a73af306e4efa053fa2221a22787f5277d32d26985d525ee57bde9"
+    },
+    {
+      "path": "crates/protocol/src/dns.rs",
+      "sha256": "e50d3d0d58c4c69449bd2fc13c9b4207b038524621e03d1717f6ee5813f1e0ac"
+    },
+    {
+      "path": "crates/protocol/src/lib.rs",
+      "sha256": "35d17232c5e02d5e7eee19211d60a77920e2caa98fab093b460731dc32094a44"
+    },
+    {
+      "path": "crates/protocol/src/management.rs",
+      "sha256": "9eccd1f6e5c4f8efa15efa8c70eef0f56ae951e08d97f60ee8be5596bd834952"
+    },
+    {
+      "path": "crates/protocol/src/tests/legacy_configuration_defaults_new_capability_flags_off.rs",
+      "sha256": "e24ef5ee4cad75812b69f7ce44489de0d51e4ed8456b679d454a35e06a4db660"
+    },
+    {
+      "path": "crates/protocol/src/tests/mod.rs",
+      "sha256": "2214051d9fccb44740a7a51dc30d0c7fd3cdcfff45b2d5a80a4c95ff1973f920"
+    },
+    {
+      "path": "crates/protocol/src/tests/rejects_command_shaped_hosts.rs",
+      "sha256": "889c9bfc14d306e7f720bbcf3a7065a698f41f6eef34508ee27519e4361cb73a"
+    },
+    {
+      "path": "crates/release-fetch/Cargo.toml",
+      "sha256": "42185b061786573d7b17bce6af0b2c963ea69ef1b5c03e08c59a7204c3bbbd4a"
+    },
+    {
+      "path": "crates/release-fetch/src/lib.rs",
+      "sha256": "419a3a5255e97aecb3c5ea049c732e1594b906c6ea240d91707356b34ad7b9d2"
+    },
+    {
+      "path": "crates/release-fetch/src/main.rs",
+      "sha256": "7a5aa3410d1797ed5a530136baeeb9e3a9a7afb4391f56c1f3975a1dee334f34"
+    },
+    {
+      "path": "crates/release-fetch/src/tests.rs",
+      "sha256": "39e93c79738c76c256acce2c178d53c2a5f1566bfa47ed1c861682b3ca67df18"
+    },
+    {
+      "path": "crates/release/Cargo.toml",
+      "sha256": "f40a8f308bb0c9f1254ccc76e647ee31222a2e23b8bbc0cf8583b2642f56d968"
+    },
+    {
+      "path": "crates/release/src/installed_release.rs",
+      "sha256": "d195de452e894d9bad477515f8e2cd45b922412ca2fabceadbb08f8de6c5afc5"
+    },
+    {
+      "path": "crates/release/src/installed_release/tests/absent_state_plans_without_writing_and_first_commit_is_private.rs",
+      "sha256": "9a25ee6910176d6a93eb994f874e6fac1efa724be8e06cffa27f41bb6a5125e1"
+    },
+    {
+      "path": "crates/release/src/installed_release/tests/mod.rs",
+      "sha256": "6d0638507e6c21b0480f1febfd503e3327d8905c20be54de0047e2138a90dfaa"
+    },
+    {
+      "path": "crates/release/src/installed_release/tests/same_signed_release_can_rebind_to_another_declared_artifact.rs",
+      "sha256": "a7a94ca74ed54229101aaab9e235b9be6d8e731846030f7cae04b611d80cca35"
+    },
+    {
+      "path": "crates/release/src/lib.rs",
+      "sha256": "4cfcc83533852f0d5eb3f1a29de1dd9f3d8abd4edfe526efce8272284694b903"
+    },
+    {
+      "path": "crates/release/src/linux_debian_update.rs",
+      "sha256": "b49d6c1d36508b875929eaf2f31a3125ef6423e995a2503875a47df7b8653491"
+    },
+    {
+      "path": "crates/release/src/linux_debian_update/tests/mod.rs",
+      "sha256": "c872c870cfa6c41ff2be07b763c807d2a017b68e6b3b34182545cd69859fbafd"
+    },
+    {
+      "path": "crates/release/src/linux_debian_update/tests/successful_update_commits_receipt_only_after_candidate_health.rs",
+      "sha256": "3278b2fb7bbff6ea99d1f577482fa6e9fb0cbc19e601341b3b38d0aba4bbd0d1"
+    },
+    {
+      "path": "crates/release/src/main.rs",
+      "sha256": "b9fa2a01de9862435d26042e4913dd879b4bc3580325009d58fe934bd9be6062"
+    },
+    {
+      "path": "crates/release/src/main_tests/artifact_input_preserves_commas_in_path.rs",
+      "sha256": "bee0421fcf1e908c32d09c7f360b8768645a531afba62e9f538716975a1c190d"
+    },
+    {
+      "path": "crates/release/src/main_tests/mod.rs",
+      "sha256": "083484844ac42d0e2f36774f0dbddfe9159b39934ef4e01790bad91f9d246674"
+    },
+    {
+      "path": "crates/release/src/tests/mod.rs",
+      "sha256": "f75c7d4b4c9248584d741177f74779da158e19b64eb86d62d7898940a3cff3ec"
+    },
+    {
+      "path": "crates/release/src/tests/signed_release_verifies_every_artifact.rs",
+      "sha256": "e0c40dea1b0dd68a10437e1142bed74bcd8f22ff33c74511e7428b588a671018"
+    },
+    {
+      "path": "crates/release/src/trust.rs",
+      "sha256": "df87703b12b71de190f6195d34f8d123ea6c701515b247fe1cbe39ed4f1e9505"
+    },
+    {
+      "path": "crates/server/Cargo.toml",
+      "sha256": "e3eb9c1c89df5c7df72c7aaf5dd714f07a3e85a0defa04321e7e4cb16260da93"
+    },
+    {
+      "path": "crates/server/src/access.rs",
+      "sha256": "f5eb714d4be5d1d309414c760065e81105406255bef194e0b75017f989db747c"
+    },
+    {
+      "path": "crates/server/src/api.rs",
+      "sha256": "e7fc29894df10fe85fda3271378b31838d5e8d979f64b8f958a6be77319396d4"
+    },
+    {
+      "path": "crates/server/src/authorization.rs",
+      "sha256": "e614d3d28fa0067483690365623df5ce76d24ada5f6c35953fd0433be57125b3"
+    },
+    {
+      "path": "crates/server/src/authorization/tests/mod.rs",
+      "sha256": "35b5eb70257dd98e250303d26026d4ab12684536f537d711cfe23739a7fbb7c1"
+    },
+    {
+      "path": "crates/server/src/authorization/tests/owner_state_is_valid_and_uses_the_legacy_address.rs",
+      "sha256": "02044c9ea7ec32f6a68237766c415e1bf590db7f8c931e8a6de10730d8539176"
+    },
+    {
+      "path": "crates/server/src/authorization/tests/ownership_transfer_is_atomic_and_keeps_a_single_owner.rs",
+      "sha256": "4fc016b8169f17c1cad4138b589125d99038822db84c1b45f29b84e2927c09d9"
+    },
+    {
+      "path": "crates/server/src/authorization/validation.rs",
+      "sha256": "53d2f8a29267a128bdee7851621ce82fcfa68bf5c35858e863b6f5c17118f850"
+    },
+    {
+      "path": "crates/server/src/backup.rs",
+      "sha256": "89dfdb33b2c78334f2c58e3ccfcb6f36268ce34bd399643494e052505b9e75a0"
+    },
+    {
+      "path": "crates/server/src/configuration.rs",
+      "sha256": "5c50d93351ed140a87463fed7a6d8d6e8fe419c46eb8d21bf1116b95bf47e46e"
+    },
+    {
+      "path": "crates/server/src/doh_proxy.rs",
+      "sha256": "08c04891e5788e76133c42cd19321fdb9e465a474f4e631f80dff2e6c0ba4378"
+    },
+    {
+      "path": "crates/server/src/endpoint_transition.rs",
+      "sha256": "019059e544c61a376c124d136f6f7858df51b80776c8450cd48f72453dd8d804"
+    },
+    {
+      "path": "crates/server/src/enrollment.rs",
+      "sha256": "85c5a44accea67bddf8626704bc31b1dda3581f2a1823db097bf41cfc1f5f1ce"
+    },
+    {
+      "path": "crates/server/src/forwarding_api.rs",
+      "sha256": "d9bc03eb8595b063a023075944a178f4242f8d7c0ea4d30449a84822747776e4"
+    },
+    {
+      "path": "crates/server/src/initialization.rs",
+      "sha256": "b4ff699c0298a52cba52e4ac38d806e8f8be66692d5563bc5edb6a8ff6aa060d"
+    },
+    {
+      "path": "crates/server/src/lib.rs",
+      "sha256": "f61bfffbd0be41b2a5b9a42d44b0a6527b844efec934887883397dbc7ca46239"
+    },
+    {
+      "path": "crates/server/src/main.rs",
+      "sha256": "dabc2dd4ba3fb6f7b1e62ddfcf9271dfb06d3e795c68ed9929fdf2392eb88d58"
+    },
+    {
+      "path": "crates/server/src/membership.rs",
+      "sha256": "5ece80faa304a6a8220df4588cc9bf12ff7cf8eeeb8d26ed9550e4b05517ffc4"
+    },
+    {
+      "path": "crates/server/src/metrics.rs",
+      "sha256": "6289f85bb6ce6458802f3d2b92e81110d319b4ae505546ec00374e673da56969"
+    },
+    {
+      "path": "crates/server/src/network_policy.rs",
+      "sha256": "d776a00adbfbd2531ca953f7f10bf38903f8e60e412b341dbb3000d7a0981b8a"
+    },
+    {
+      "path": "crates/server/src/runtime.rs",
+      "sha256": "559f2570b4847adbc4edb725142aab88b6181a64d112fe5a309a40c13ab66020"
+    },
+    {
+      "path": "crates/server/src/service_metrics.rs",
+      "sha256": "f9dbb5b2cf602eb72c7ffdcf947f1cfa75cc3350e6585446578768addf2685de"
+    },
+    {
+      "path": "crates/server/src/tests/dns_policy_migration_is_reversible_and_preserves_server_identity.rs",
+      "sha256": "e74f8222de6971146387fe6ed891809e060431783cf26b97436759d7a6d54da4"
+    },
+    {
+      "path": "crates/server/src/tests/management_permissions_keep_owner_admin_and_member_boundaries_separate.rs",
+      "sha256": "fa3cfb46c6d13591242ad36aab50a35af4e48b7c7bcc54bc221e549f0cb72517"
+    },
+    {
+      "path": "crates/server/src/tests/mod.rs",
+      "sha256": "68957db661d25382a1344be4e18ecdda7bc12c8d4dd37a9d1d10589032cf8f19"
+    },
+    {
+      "path": "crates/server/src/tests/runtime_authorization_load_does_not_require_the_root_wireguard_private_key.rs",
+      "sha256": "e29059b78052b87c967e43aa24281b66deb717a81498bb03f88d23e3441932e0"
+    },
+    {
+      "path": "crates/server/src/tests/slow_handshake.rs",
+      "sha256": "17ae4589d7712bf265b59668f596c9f327583fa8ba942eb2679c18b45654d4fb"
+    },
+    {
+      "path": "crates/transport/Cargo.toml",
+      "sha256": "bfa376cce581c4d149f9d8cff7d762cb8d2766a32aa4d40dab100f4c502f8eec"
+    },
+    {
+      "path": "crates/transport/src/lib.rs",
+      "sha256": "3ad6ffccb969b07223b960f263df17989a5006a8fe054b106b3e0cc3b0cfeb0d"
+    },
+    {
+      "path": "crates/transport/src/relay.rs",
+      "sha256": "9ba66271b5156ff3db87c4ec1397296ad5efaa9fbd6c54d2688445f775dfd321"
+    },
+    {
+      "path": "crates/transport/src/relay/tests/mod.rs",
+      "sha256": "8f29caf711eb5038fc3169ad596e5263b474a26f2b82a74c9791d22f8504d4d3"
+    },
+    {
+      "path": "crates/transport/src/relay/tests/replay_window_accepts_reordering_once_and_rejects_old_packets.rs",
+      "sha256": "b8ac8166b646aa1bd16354d121b50ddaa479d5fcba9d618ea1aa81d0c055bac1"
+    },
+    {
+      "path": "crates/transport/src/tcp.rs",
+      "sha256": "d4bca5e6f7b3f18b9f1affccc236d98a935e94d22f2f5517f0e3cca603d5e79e"
+    },
+    {
+      "path": "crates/transport/src/tcp/tests/authorized_tcp_relay_round_trips_udp_datagrams.rs",
+      "sha256": "5ae836fbdde626e8b512d3af7e7e804209e650884afd17382c38aa829682028a"
+    },
+    {
+      "path": "crates/transport/src/tcp/tests/mod.rs",
+      "sha256": "b64fe17faa399d4c083f360e6c1377e075d02607fbab31a66a28c07734674e0b"
+    },
+    {
+      "path": "crates/transport/src/tcp/tests/server_relay_preserves_a_fragmented_inbound_frame_during_outbound_traffic.rs",
+      "sha256": "7bcff77c72def296b169a75cd049efee964f80f6219989f7e703c72603da003c"
+    },
+    {
+      "path": "packaging/Dockerfile.linux",
+      "sha256": "70b24413cad1052085334869cee75507518117f151c4182648597756a080c3af"
+    },
+    {
+      "path": "packaging/Dockerfile.server-payloads",
+      "sha256": "58620fc2a1ec52722f8582c11570c5f15d3ddce8ce3c5197ad4bd91c7514aefb"
+    },
+    {
+      "path": "packaging/polkit/org.sirinvpn.network.policy",
+      "sha256": "a69190866283c30e5f241e2e92b7ad2ce79be164eaf3de5d528b58a2b50dab3e"
+    },
+    {
+      "path": "packaging/systemd/sirinvpn-killswitch.service",
+      "sha256": "bf95b184f8c0c811abc62532efa8535be626960fdd1ca1f64a995120d2054352"
+    },
+    {
+      "path": "packaging/systemd/sirinvpn-reconnect.service",
+      "sha256": "90e6b9a3a882d18b71668776a234aad8477fa27bd4034adf8de593076f9ab3f6"
+    },
+    {
+      "path": "packaging/systemd/sirinvpn-transport.service",
+      "sha256": "230c13026558c6fca3385f57226bfd011b71265729e4bc37ef8abca1833af137"
+    },
+    {
+      "path": "rust-toolchain.toml",
+      "sha256": "8e390d6a0838315f972690f46ef8bae8b7ecc9ee6c1ed70140ef852869c2482e"
+    },
+    {
+      "path": "scripts/audit-android-dependencies.py",
+      "sha256": "f5c299bda3db167398580e069c154ce0d7cb871170f4c74ee9e54064be55c01e"
+    },
+    {
+      "path": "scripts/build-android-emulator.sh",
+      "sha256": "9c375a1e16cc605e06a59e534e660f4fb8389af915fb6d3acace9451d67040a8"
+    },
+    {
+      "path": "scripts/build-android-server-payloads.sh",
+      "sha256": "d2e283d1fa6fc55ac4ea034784b6ea8b26a599033cd4122b26a09ad4a0185c52"
+    },
+    {
+      "path": "scripts/build-release-fault-tool-container.sh",
+      "sha256": "1ddb0445c0198580e2596a22455fda61bcd6a82e71994b690c7fa95fcd9c9ecd"
+    },
+    {
+      "path": "scripts/check-android-apk.py",
+      "sha256": "f4132c94c1176162914fcc5ed28e6fe7300a7fb2b32aa4d61287cf6d1224ff57"
+    },
+    {
+      "path": "scripts/check-maintainability.py",
+      "sha256": "ebd17d6159ba6ad8488cceb91dc60c086afa06a7d2d8564a19702dae663f6dd3"
+    },
+    {
+      "path": "scripts/check-privacy.sh",
+      "sha256": "65839bd7c7316a500687630f3d07346a52187404021863b68c5ce29cb58d64e7"
+    },
+    {
+      "path": "scripts/package-linux-container.sh",
+      "sha256": "76550569dd0cad7950bca07f928be4a9c29a095ac1d95bb7ffeb1842f1f47ca5"
+    },
+    {
+      "path": "scripts/package-linux.sh",
+      "sha256": "33612797c11c756bdb9852ab5392b959c7059020041f21002722c6d4716191c0"
+    },
+    {
+      "path": "scripts/pkgconf-appimage-compat.sh",
+      "sha256": "047bd5643230eb0dde50e6589129dc4bed561b802fe392025a84edc4909c503b"
+    },
+    {
+      "path": "scripts/sign-linux-release.sh",
+      "sha256": "b7a1eb30d5edd1ec5c76ab4b702fd34a080949991699b642cbc3cb3868c04800"
+    },
+    {
+      "path": "scripts/test.sh",
+      "sha256": "54e83bfb1158f5a1bd5db213294ebfa7b24a72d1b8705d60cf6fc24c2a3fc830"
+    },
+    {
+      "path": "tests/integration/android-cdp.mjs",
+      "sha256": "b008724a3f5cd0ecb1e5567f3a77d82ea4333fb83dc47c5611908b7ff5316a33"
+    },
+    {
+      "path": "tests/integration/android-fallback-proxy.py",
+      "sha256": "66b51e36f057f18e2e6fcd919cfa5dd6c130a4a3d2d0023e9708783e9496a8cd"
+    },
+    {
+      "path": "tests/integration/android-fallback-vps.sh",
+      "sha256": "331fcbcd19c8cc49ee3c64c53ab7f81e6fdee586d2517932a63e4b493645985f"
+    },
+    {
+      "path": "tests/integration/debian13-vps.sh",
+      "sha256": "7b39a2fd0d75addf8091480d6efe227029edd72ebdf6a47ae2f9ebc15c402a63"
+    },
+    {
+      "path": "tests/integration/linux-dns-fault-rollback.py",
+      "sha256": "878a038bf8f172c21b1927a194dd8a2bd0f0983b2cf5d3953a473f5dfe238c3c"
+    },
+    {
+      "path": "tests/integration/linux-dns-fault-vps.sh",
+      "sha256": "2badd6eb7f57c7957915654dfb42a032ee1313c7c440714e8e598f9291f5bf19"
+    },
+    {
+      "path": "tests/integration/linux-fallback-vps.sh",
+      "sha256": "43ef7413399425701182cb4b11ae873f3f382b173dbeee78a4b2fdfd200c22a7"
+    },
+    {
+      "path": "tests/integration/linux-impairment-netem.py",
+      "sha256": "c679628a8592014aefda28dbab5c3ea00839cebad9a643d85044db830987e8df"
+    },
+    {
+      "path": "tests/integration/linux-impairment-vps.sh",
+      "sha256": "4166fdb7681816b980ac80450f4f98a3bf61eee983d3bb27d48b9b59e62cff9c"
+    },
+    {
+      "path": "tests/integration/linux-outbound-audit-rollback.py",
+      "sha256": "5acc5d8b8a6e0d82b4ff6d23f00a71f1b928a83aab428489ed5e395bef644025"
+    },
+    {
+      "path": "tests/integration/linux-outbound-audit-vps.sh",
+      "sha256": "4b2b4b3f477a491550bd46833fe92f777c731982185dda58f2c87e9ee1838a37"
+    },
+    {
+      "path": "tests/integration/linux-release-debian-container.sh",
+      "sha256": "0353dd6f1e9ab8e222a8e16a04ef2a5b9c6653e0698b8b9e9fed0f6305cc897e"
+    },
+    {
+      "path": "tests/integration/p1b2-vps.sh",
+      "sha256": "e56af123780e58e75505b7d36b681751ba12b5b848c116dbda4ba2f1486d7eab"
+    },
+    {
+      "path": "tests/integration/release-fetch-https.sh",
+      "sha256": "732c44e765f146a37bc0426be54b2d6078fc12405eaae2728d1e550eb5c1ee42"
+    },
+    {
+      "path": "tests/integration/release-trust-root.sh",
+      "sha256": "c5edd0d89cc020957f773031b74d2aef10379e3fd251337e0d46fd00e395b7e7"
+    },
+    {
+      "path": "tests/integration/release_https_server.py",
+      "sha256": "38cb32318fadc4866219681bac9693e6fd583c9cc5bea54c4e4d1a7a95d6ec26"
+    },
+    {
+      "path": "tests/network/Dockerfile.policy",
+      "sha256": "2be385f5ac8ad49d98d66097044a0cfb332ea5904977ea4be3d972ef157b3a3d"
+    },
+    {
+      "path": "tests/network/README.md",
+      "sha256": "8d0f8088dcf57d40dce5b37647df2916ce7b84efe75a1ef2e22197045bb8e3b3"
+    },
+    {
+      "path": "tests/network/policy_packets.py",
+      "sha256": "8bfab9d41d6a68e29acc6b54ea491493a90b49c1f277b4331e853f121f58e37f"
+    },
+    {
+      "path": "tests/network/run-policy-kernel.sh",
+      "sha256": "3a841f382d857ed9e41eb1035e1bc07e27794d382d7ef5e3c9b666ac8eeaa838"
+    },
+    {
+      "path": "tests/ui/android_native_smoke.py",
+      "sha256": "9f733620893a8b3450c78fceb57c8c62bd263677323060d57e071773333a3dcc"
+    },
+    {
+      "path": "tests/ui/android_preferences_smoke.py",
+      "sha256": "5461ecca5185f58018bd000c50a81fbfaf6131171ef84f295412c37af68ea4b9"
+    },
+    {
+      "path": "tests/ui/desktop_native_layout.py",
+      "sha256": "0fa6e51b44e96449c636abab4fe8bd005078928e25e15f68eb9d629d3e8d724a"
+    },
+    {
+      "path": "tests/ui/desktop_native_settings.py",
+      "sha256": "eccf8ee08b9b589810bc7f152a64edbf3458ded8d2ab8d69bf5c8f8973026ff9"
+    },
+    {
+      "path": "tests/ui/desktop_window_smoke.py",
+      "sha256": "dabe7edd2aba3de91db879ab4a23f4787c46a33cc145af5fb0764926da7521b6"
+    },
+    {
+      "path": "tests/ui/fixtures.js",
+      "sha256": "fc015daada14b7b5519d17368acb5cf7915d561f5e7bb541459591c81dc1e5c6"
+    },
+    {
+      "path": "tests/ui/kwin_window_state.py",
+      "sha256": "b85ee294b3e526e1e71b6e39c2421d3d94bc6286a4b887bdc6b0493bcbf62f73"
+    },
+    {
+      "path": "tests/ui/operational_smoke.py",
+      "sha256": "890caf87f6bb82cefbcc840e0b33ab1f8855127829841ae87f845b158c63aaa2"
+    },
+    {
+      "path": "tests/ui/refinement_smoke.py",
+      "sha256": "6de842c57ab592810bd796ce9317e5d657c3f957ac45e440d9f50064d5441531"
+    },
+    {
+      "path": "tests/ui/typography_native.py",
+      "sha256": "b628faba1dd3c78f4d9d733db40c6ada2ade91be1b6114e42ce81ff5b028b0e0"
+    },
+    {
+      "path": "tests/ui/visual_smoke.py",
+      "sha256": "cbc7c8170883b623eadd729dc687376111bb4db0c1fc0d5aedbcebe5dd7c58a0"
+    },
+    {
+      "path": "tests/ui/webkit_inspector.py",
+      "sha256": "ea11578b1d37f09dd308adbcf04f4e9a3032fca972494c028a946fe3d12c8ab3"
+    },
+    {
+      "path": "tests/unit/test_shell_cleanup.py",
+      "sha256": "6c37037440ad9df9c1b85970d5d46a8630616582972e6b0e70e209df35520f61"
+    },
+    {
+      "path": "tests/vm/debian13-release-update.sh",
+      "sha256": "10a6c30ceef63e76d1f435a8628d0a5baff09499e52c6eeb2fbd8a7f5d959b54"
+    },
+    {
+      "path": "tests/vm/debian13.sh",
+      "sha256": "cbb02c369a710dc337c1fc8efdf9261520dc9d5125b7f61fdb4377c5f8539714"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "target/release/bundle/deb/SirinVPN_0.1.0_amd64.deb",
+      "kind": "Linux amd64 Debian package",
+      "bytes": 16276402,
+      "sha256": "cb16551a6ab8f329b43cdc76bcf589a7dcb4aed92c17fc97d68f93c6d78d51e2"
+    },
+    {
+      "path": "target/release/bundle/appimage/SirinVPN_0.1.0_amd64.AppImage",
+      "kind": "Linux amd64 AppImage",
+      "bytes": 109472248,
+      "sha256": "c01d44a91c22c8dc15371d1b99c0d844b353f9f17969b00de2c92ffc57d91aa5"
+    },
+    {
+      "path": "apps/desktop/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk",
+      "kind": "Android x86_64 debug emulator APK",
+      "bytes": 489063631,
+      "sha256": "f3bd126dc923003d18a52bff6ddd9ca61289d263bb4e60f002db7489a65f5db6"
+    }
+  ],
+  "evidence": [
+    {
+      "path": "docs/audit/2026-09-05/connection-policy-accessibility.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": "docs/audit/2026-09-05/connection-policy-android-install.json",
+      "sha256": "38654ee41b8394d3c48272aa6c145bc5203da9d183d9ee9ae835159177e2b518"
+    },
+    {
+      "path": "docs/audit/2026-09-05/connection-policy-android-instrumentation.json",
+      "sha256": "01cf2e5eb2c4e7f7a73c562b32b710a573d3d99bd572b487eda5a91febf1f15f"
+    },
+    {
+      "path": "docs/audit/2026-09-05/connection-policy-android-instrumentation.log",
+      "sha256": "14bd1ca440f9e9a0f8e01bfb4b32ffaa3a62b1acb92c837f5fc61ccc6f347931"
+    },
+    {
+      "path": "docs/audit/2026-09-05/connection-policy-android-native.json",
+      "sha256": "77ecf2628af89902f47a0faad4bbddc555f955cd772a922adb0cb720b100b039"
+    },
+    {
+      "path": "docs/audit/2026-09-05/connection-policy-android-native.log",
+      "sha256": "0922ad120d47702624efa2d05072dc9f28168871b93da46c0e2bcd65a990b311"
+    },
+    {
+      "path": "docs/audit/2026-09-05/connection-policy-android-preferences.json",
+      "sha256": "f6c9bb7d7c61082462bf6b4b9970f3e4a5c50445918b36433294d6f9f08c43a9"
+    },
+    {
+      "path": "docs/audit/2026-09-05/connection-policy-android-preferences.log",
+      "sha256": "b1efbf447e8cdde292e9c8828b6afea34b0269d76223b9a3faf02b37396a9c9d"
+    },
+    {
+      "path": "docs/audit/2026-09-05/connection-policy-android-profile.png",
+      "sha256": "af7f7e90e97b82d0c2fcbbb42a40bbfa4daf0a60faa016cbdc90918598658be9"
+    },
+    {
+      "path": "docs/audit/2026-09-05/connection-policy-android-settings.png",
+      "sha256": "b10236d8287b23826fee572b14b4f157e988435cd6401af1c4dc388e40544252"
+    },
+    {
+      "path": "docs/audit/2026-09-05/connection-policy-apk-inspection.json",
+      "sha256": "93194528620bec17da95894ed51ab82c1a663d5873dde603f703aeedb348e162"
+    },
+    {
+      "path": "docs/audit/2026-09-05/connection-policy-browser.log",
+      "sha256": "a1ee6491458ff54fc8e9fbd8cda108311a004b8a1a05a73c69fcf65962d58128"
+    },
+    {
+      "path": "docs/audit/2026-09-05/connection-policy-font-before.json",
+      "sha256": "daf983ee37055a707dc4b0803f7e4af4a30acd2adfc20fd09bb7d88cba36e0fb"
+    },
+    {
+      "path": "docs/audit/2026-09-05/connection-policy-frontend-advisories.json",
+      "sha256": "3e6c4be2ba2b5f03cfe430c68bb42e8af4575fe545ad5267f1bde1e1fc535a26"
+    },
+    {
+      "path": "docs/audit/2026-09-05/connection-policy-gates.log",
+      "sha256": "8179e9f8e8fb46f04dfa83a36a5559536e2c85d73bc04f199a369b649308c9f9"
+    },
+    {
+      "path": "docs/audit/2026-09-05/connection-policy-glyph-coverage.json",
+      "sha256": "92607315f0cf0a84cacd5c22d8ac2f9312f021541da85e388b1fa1c3b76aefd8"
+    },
+    {
+      "path": "docs/audit/2026-09-05/connection-policy-helper-clippy.log",
+      "sha256": "6b21d0ba3cc3d81cfceac7ec42b985b23630c3863bc225033aa46a342b581d75"
+    },
+    {
+      "path": "docs/audit/2026-09-05/connection-policy-kernel.log",
+      "sha256": "529f60769fdb16ad25580ab2b511f0a14bdfd16730bfc89c396ad032376540de"
+    },
+    {
+      "path": "docs/audit/2026-09-05/connection-policy-linux-packages.json",
+      "sha256": "9512bc5d1a091c35234a9cec3ad9b81304993d7feaffa9eb70cabc6a068991c2"
+    },
+    {
+      "path": "docs/audit/2026-09-05/connection-policy-native-controls-100.json",
+      "sha256": "1c53a1b18162079af79b6aedda8faba1feb297d1837a104f48abd1bfe387afba"
+    },
+    {
+      "path": "docs/audit/2026-09-05/connection-policy-native-controls-125.json",
+      "sha256": "1c53a1b18162079af79b6aedda8faba1feb297d1837a104f48abd1bfe387afba"
+    },
+    {
+      "path": "docs/audit/2026-09-05/connection-policy-native-font-100.json",
+      "sha256": "7c7264095711583745f8804dad0cf609aab28ddc7a20228c066df6d19c056360"
+    },
+    {
+      "path": "docs/audit/2026-09-05/connection-policy-native-font-100.log",
+      "sha256": "a16792765c5addb9c7aa56721b0da25c70b3a5db3b966d5b438945427443e683"
+    },
+    {
+      "path": "docs/audit/2026-09-05/connection-policy-native-font-125.json",
+      "sha256": "ac6bebf49cf8d37c86b6fcd6f9b8a8828a20b68870ba72b1368d3bf55df1fbe7"
+    },
+    {
+      "path": "docs/audit/2026-09-05/connection-policy-native-font-125.log",
+      "sha256": "3cfaf556cb7f6bd070a2c7925a3442e851af3943c9c003eefd67b34a9b200f92"
+    },
+    {
+      "path": "docs/audit/2026-09-05/connection-policy-native-glyphs-125.png",
+      "sha256": "c0f27ed9b0cfd43ecc35d19f30c896d470ac3ff5d242d2008629f7e3763c10a7"
+    },
+    {
+      "path": "docs/audit/2026-09-05/connection-policy-native-home.png",
+      "sha256": "361b4ae4b65b705f75ec13c267b3f89b1f4d611501b678ff2662c6d29b070972"
+    },
+    {
+      "path": "docs/audit/2026-09-05/connection-policy-native-output-100.txt",
+      "sha256": "bb7562e6476cb55c9325ebf1f9086070d8a659b2ed6ef193238a20f065f8a28a"
+    },
+    {
+      "path": "docs/audit/2026-09-05/connection-policy-native-output-125.txt",
+      "sha256": "22682d2bc94bccd57e5005db7960109edb9e380ad27f028d6b9308f4ad57045d"
+    },
+    {
+      "path": "docs/audit/2026-09-05/connection-policy-native-settings-125.png",
+      "sha256": "be8f5253cd7b9383e6c298f4dff348d44f36b94251360ed26463bebf80500c97"
+    },
+    {
+      "path": "docs/audit/2026-09-05/connection-policy-rust-advisories.json",
+      "sha256": "fd198af3c43dc5fe8a4358667538c160b891ba6ada674d2faeb3003faaef8159"
+    },
+    {
+      "path": "docs/audit/2026-09-05/connection-policy-source-inventory.json",
+      "sha256": "d2882869d069e90ee62e97823b99a45e0c179acc41a20e2c1ae4155e5ae011cb"
+    },
+    {
+      "path": "docs/audit/2026-09-05/connection-policy-ssh-update.json",
+      "sha256": "33f22010aeef382bc3719f9d191c879430a2c5dab0ab41cbe95848e7c0537d9e"
+    },
+    {
+      "path": "docs/audit/2026-09-05/connection-policy-wayland.png",
+      "sha256": "1fd141c4b48778f64160594bacc06667604984b2cfbf0e54e6ca5de25ec38992"
+    },
+    {
+      "path": "docs/audit/2026-09-05/connection-policy-window.json",
+      "sha256": "4737086524a6ffdfae9805a71e1616c2658fcfff19cd67a80ad7364d5191bf60"
+    }
+  ],
+  "deployment": {
+    "linux_production_install": false,
+    "live_vps_modified": false,
+    "host_network_modified_for_testing": false,
+    "emulator_apk_installed": true,
+    "temporary_android_profile_deleted": true,
+    "app_preferences_and_notification_permission_restored": true
+  }
+}

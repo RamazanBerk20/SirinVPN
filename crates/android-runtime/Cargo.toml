@@ -1,0 +1,37 @@
+[package]
+name = "sirinvpn-android-runtime"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+anyhow.workspace = true
+base64.workspace = true
+hex.workspace = true
+ipnet.workspace = true
+qrcode.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+semver.workspace = true
+tempfile.workspace = true
+sirinvpn-core = { path = "../core" }
+sirinvpn-installer = { path = "../installer" }
+sirinvpn-platform = { path = "../platform" }
+sirinvpn-protocol = { path = "../protocol" }
+sirinvpn-tunnel-model = { path = "../tunnel-model" }
+sirinvpn-transport = { path = "../transport" }
+sirinvpn-release = { path = "../release" }
+sirinvpn-release-fetch = { path = "../release-fetch" }
+tokio.workspace = true
+zeroize.workspace = true
+
+[target.'cfg(target_os = "android")'.dependencies]
+jni = "0.21.1"
+
+[dev-dependencies]
+tempfile.workspace = true

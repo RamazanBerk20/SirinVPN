@@ -1,0 +1,228 @@
+/* Concept-aligned visual system. All assets are bundled with the application. */
+:root {
+  --bg: #040815;
+  --surface: #080f22;
+  --surface-2: #0b1429;
+  --surface-3: #102348;
+  --line: #203456;
+  --line-strong: #35548e;
+  --muted: #a7b8de;
+  --quiet: #91a5ce;
+  --accent: #4059ff;
+  --cyan: #13dcff;
+  --violet: #ad33ff;
+  --success: #00ebad;
+  --radius: 14px;
+  --gradient: linear-gradient(110deg, #03cdf4 0%, #3437ff 48%, #be19f0 100%);
+}
+[hidden] {
+  display: none !important;
+}
+button {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: not-allowed;
+}
+button,
+a,
+input,
+select,
+textarea,
+summary {
+  -webkit-tap-highlight-color: transparent;
+}
+summary {
+  cursor: pointer;
+}
+.brand-mark {
+  object-fit: contain;
+  width: 54px;
+  height: 54px;
+}
+.brand strong {
+  font-size: 24px;
+  font-weight: 800;
+}
+.brand small {
+  font-size: 10px;
+  line-height: 1.5;
+}
+.app-shell {
+  grid-template-columns: 228px minmax(0, 1fr);
+  background: var(--bg);
+}
+.sidebar {
+  background: #080e1e;
+  border-right: 1px solid #293b60;
+  padding: 26px 14px 18px;
+  gap: 14px;
+  min-height: 100dvh;
+}
+.sidebar > .brand {
+  padding: 0 5px 18px;
+}
+.sidebar .brand-mark {
+  width: 45px;
+  height: 45px;
+}
+.sidebar .brand strong {
+  font-size: 23px;
+}
+.sidebar .brand small {
+  display: none;
+}
+.primary-navigation {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+.primary-navigation button {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 69px;
+  padding: 12px 15px;
+  text-align: left;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  color: #bdcbed;
+}
+.primary-navigation button span {
+  display: grid;
+  gap: 3px;
+}
+.primary-navigation strong {
+  font-size: 13px;
+  color: #f6f6ff;
+}
+.primary-navigation small {
+  font-size: 10px;
+}
+.primary-navigation button:hover {
+  background: #101c39;
+}
+.primary-navigation button[aria-current] {
+  border-color: #365ee9;
+  border-left-color: var(--cyan);
+  background: linear-gradient(110deg, #102854, #172753 70%, #12388c);
+  box-shadow:
+    inset 3px 0 0 -1px var(--cyan),
+    0 0 16px #143df225;
+}
+.primary-navigation button[aria-current] > svg {
+  color: var(--cyan);
+  filter: drop-shadow(0 0 7px #00caff70);
+}
+.sidebar-heading {
+  padding: 0 12px;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+}
+.server-list {
+  flex: initial;
+}
+.sidebar-update-wrap {
+  margin-top: auto;
+  padding-top: 170px;
+}
+.sidebar-foot {
+  font-size: 10px;
+  border: 0;
+  padding-left: 13px;
+}
+.workspace {
+  padding: 24px 30px 28px;
+  overflow: hidden;
+}
+.workspace::before {
+  background: radial-gradient(ellipse at 70% 0, #123e8420, transparent 65%);
+}
+.workspace-topline {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid #23365b;
+  margin: 0 -30px 30px;
+  padding: 18px 30px;
+  color: #a3bae7;
+  font-size: 9px;
+  letter-spacing: 0.22em;
+}
+.workspace-topline b {
+  color: #46759e;
+  margin: 0 8px;
+}
+.topline-status {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  letter-spacing: 0;
+  font-size: 11px;
+}
+.online-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: var(--success);
+  border-radius: 50%;
+  box-shadow: 0 0 12px #00ecaa65;
+}
+.workspace-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+.workspace-header > div:first-child {
+  flex: 1;
+}
+.workspace-header h1 {
+  font-size: 1.65rem;
+  line-height: 1.2;
+  letter-spacing: -0.035em;
+}
+.workspace-status {
+  font-size: 11px;
+  border-radius: 20px;
+  padding: 7px 13px;
+}
+.endpoint {
+  margin-top: 9px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.section-label {
+  font-size: 9px;
+  color: #829eff;
+  letter-spacing: 0.22em;
+}
+.primary-button,
+.connect-button {
+  background: var(--gradient);
+  border: 1px solid #6f98ff;
+  border-radius: 9px;
+  box-shadow: 0 0 17px #313aff28;
+  min-height: 43px;
+}
+.primary-button:hover:not(:disabled) {
+  filter: brightness(1.13);
+  background: var(--gradient);
+}
+.secondary-button {
+  background: linear-gradient(140deg, #091830, #10102e);
+  border-color: #344973;
+  border-radius: 8px;
+}
+.secondary-button:hover:not(:disabled) {
+  border-color: var(--cyan);
+  background: #101d37;
+}
+.segmented-control button[aria-pressed="true"] {
+  background: var(--gradient);
+  box-shadow: 0 0 13px #443cff40;
+  border-radius: 6px;
+}

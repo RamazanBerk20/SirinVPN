@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "product": "SirinVPN",
+  "version": "0.1.0",
+  "recorded_at_utc": "2026-09-08T11:24:03.400297+00:00",
+  "purpose": "VPS repair staging correction and safe failure details",
+  "release_provenance": "Engineering checksum inventory; not a signed update manifest",
+  "source": {
+    "base_commit": "5668e678761690f4283451a0d226b1662d91de15",
+    "includes_uncommitted_implementation": true,
+    "build_input_file_count": 810,
+    "build_input_snapshot_sha256": "7d9ba3f074e04085819e228ea83964a0f1c9c1f7f30dd5bc40cd2cff813d1cbc"
+  },
+  "artifacts": [
+    {
+      "filename": "SirinVPN_0.1.0_amd64.AppImage",
+      "kind": "Linux x64 AppImage",
+      "sha256": "08f046fb2a24da62495ddc877a497acdbeba808742340b3b3fbc73b23ff24797",
+      "bytes": 112146936,
+      "build": "release, unsigned"
+    },
+    {
+      "filename": "SirinVPN_0.1.0_amd64.deb",
+      "kind": "Linux x64 Debian",
+      "sha256": "59bd9ac384d7c47d886e2d7362e1ec15e6d6e5e66c5d3fc792dee8b127ce2ba3",
+      "bytes": 19425428,
+      "build": "release, unsigned"
+    },
+    {
+      "filename": "SirinVPN_0.1.0_x64-setup.exe",
+      "kind": "Windows x64 NSIS",
+      "sha256": "c3b4d21efe0a6fe6dbd88257e78f2f87237e5e6d274869f299a23efd9e240b7b",
+      "bytes": 231980982,
+      "build": "GNU LLVM debug, unsigned"
+    },
+    {
+      "filename": "SirinVPN_0.1.0_x86_64-debug.apk",
+      "kind": "Android x86_64",
+      "sha256": "b5406bde1b49ded2fbec4e36cbf67ea3510be6b452c2194566a7ca419abc272d",
+      "bytes": 417229702,
+      "build": "debug signing; development only"
+    },
+    {
+      "filename": "SirinVPN_0.1.0_aarch64-debug.apk",
+      "kind": "Android aarch64",
+      "sha256": "72d0d6d7ac1618a5260711655e34b92dcb79afc55452191f4dc5722400b5d47b",
+      "bytes": 411827845,
+      "build": "debug signing; development only"
+    },
+    {
+      "filename": "sirinvpn-server-x86_64",
+      "kind": "Linux x86_64 VPS payload",
+      "sha256": "ad25d65ccfe179f2dee8978ab9b5c92407b16e645b02751f19997d91f0e24cbe",
+      "bytes": 6674496,
+      "build": "release, unsigned"
+    },
+    {
+      "filename": "sirinvpn-server-aarch64",
+      "kind": "Linux aarch64 VPS payload",
+      "sha256": "607d873b6809049372f1559e21f6b7f064fcaf12668ddbcf3bcbe830ed19ec7b",
+      "bytes": 5707664,
+      "build": "release, unsigned"
+    },
+    {
+      "filename": "sirinvpn-app-routing.sys",
+      "kind": "Windows x64 routing driver",
+      "sha256": "2f4e9be1c09a9f369d5ec2574c110dc5abcbc5f147c5590ced446c3f2b9f9ba2",
+      "bytes": 3584,
+      "build": "unchanged WDK/Clang build, unsigned"
+    }
+  ],
+  "fixes": [
+    "Stage verified VPS executables in a root-private executable directory",
+    "Support /run mounted noexec without altering mount options",
+    "Preserve fixed installer failure step and exit status without exposing remote output"
+  ],
+  "includes_prior_feature_and_gui_fixes": true,
+  "live_vps_repaired": true,
+  "live_vps_identity_preserved": true,
+  "live_vps_deployed_sha256": "ad25d65ccfe179f2dee8978ab9b5c92407b16e645b02751f19997d91f0e24cbe",
+  "vps_payloads_and_windows_driver_unchanged_from_previous_handoff": true,
+  "pending": [
+    "Connection and diagnostic review in the new GUI",
+    "Microsoft kernel signing before Windows executable routing can enable",
+    "Publisher signatures, signed release manifests and native acceptance"
+  ],
+  "production_published": false
+}

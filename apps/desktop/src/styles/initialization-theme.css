@@ -1,0 +1,44 @@
+.initialization-shell {
+  padding-bottom: calc(100px + env(safe-area-inset-bottom));
+  gap: 14px;
+  background:
+    radial-gradient(ellipse at 50% 15%, #143aa82e, transparent 45%), var(--bg);
+}
+.initialization-brand {
+  display: flex;
+  justify-content: center;
+}
+.initialization-brand .brand {
+  flex-direction: column;
+  text-align: center;
+  gap: 4px;
+}
+.initialization-brand .brand-mark {
+  width: 66px;
+  height: 66px;
+}
+.initialization-brand .brand strong {
+  font-size: 23px;
+}
+.initialization-brand .brand small {
+  font-size: 11px;
+}
+.initialization-card {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 10px 0;
+  width: min(100%, 680px);
+}
+.initialization-card > h1 {
+  font-size: 26px;
+  line-height: 1.2;
+}
+.initialization-summary {
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+.initialization-shell .bottom-navigation {
+  display: flex;
+}

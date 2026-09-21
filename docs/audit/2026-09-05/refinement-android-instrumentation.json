@@ -1,0 +1,24 @@
+[
+  {
+    "module": "android-vpn",
+    "tests": 5,
+    "failures": 0,
+    "errors": 0,
+    "cases": [
+      "obfuscatedConfigurationAcceptsOnlyTheFixedLoopbackRelay",
+      "directConfigurationAndUserspaceBackendAreAvailable",
+      "tcpConfigurationAcceptsOnlyTheFixedLoopbackRelay",
+      "tlsConfigurationAcceptsOnlyTheFixedLoopbackRelay",
+      "persistentDesiredStateIsEncryptedBoundedTamperEvidentAndInitialized"
+    ]
+  },
+  {
+    "module": "android-secure-storage",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "cases": [
+      "encryptedRoundTripRejectsTamperingAndLeavesNoSelfTestValue"
+    ]
+  }
+]

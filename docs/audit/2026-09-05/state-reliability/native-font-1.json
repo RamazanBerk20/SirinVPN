@@ -1,0 +1,172 @@
+{
+  "body": {
+    "text": "\n    \n    \n  \n\nSirinVPNSkip to contentSirinVPNUltra-private. Self-hosted.HomeServersDevicesSettingsMy ServersMy private VPSConnectedNo account. No telemetry.My private VPSVPN endpointvpn.example.com:51820DisconnectConnected to My private VPSInternet traffic is routed through this tunnel.TransportDirect UDPRoutingFull tunnelKill switchDisabledManagement response<1 msThis deviceCurrent tunnel \u00b7 resets on reconnectDownloadSampling\u2026224 MB receivedUploadSampling\u202633 MB sentTunnel duration1:12:01Current connection durationVPS overviewUpdated just nowCPU12.4%CPU usageMemory23%429 MB of 1.9 GBStorage13%12 GB of 93 GB \u00b7 rootVPS uptime42d 4hSince host bootDevices2 / 3Recently active / authorizedServer traffic & technical details Server inbound15 MB/sServer outbound5.1 MB/sVPS received224 MBVPS sent33 MBVPS received packets12,458,392VPS sent packets8,911,732Management response<1 msDNS serviceRunningVPS traffic combines all devices since the server VPN interface started. Management response measures an authenticated status request, not tunnel latency. Recently active means a handshake within three minutes; current presence is not guaranteed. Missing measurements stay unavailable.Device counters & connection details Received packets412,890Sent packets86,712Assigned VPN address10.77.0.2IPv6 handlingBlock configured \u00b7 enforcement unverifiedAutomatic reconnectDisabled for this connectionTransport fallbackDisabled for this connectionPackets and bytes belong to this device's current tunnel interface. Rates use the latest two local readings; no activity history is saved.T\u00fcrk\u00e7e \u00b7 English\u0130\u0131 \u015e\u015f \u011e\u011f \u00c7\u00e7 \u00d6\u00f6 \u00dc\u00fc \u00b7 Connection preferences12.45 MB/sWaiting for measurement1 authorizedUnavailableNot connectedDevice name Ramazan\u2019\u0131n uzun adl\u0131 masa\u00fcst\u00fc bilgisayar\u01312001:db8::1HomeServersDevicesSettings",
+    "family": "\"Inter Variable\", ui-sans-serif, system-ui, sans-serif",
+    "size": "15px",
+    "weight": "400",
+    "numeric": "normal",
+    "spacing": "normal",
+    "zoom": "1"
+  },
+  "metrics": [
+    {
+      "text": "Sampling\u2026",
+      "family": "\"Inter Variable\", ui-sans-serif, system-ui, sans-serif",
+      "size": "15px",
+      "weight": "500",
+      "numeric": "normal",
+      "spacing": "normal",
+      "zoom": "1"
+    },
+    {
+      "text": "Sampling\u2026",
+      "family": "\"Inter Variable\", ui-sans-serif, system-ui, sans-serif",
+      "size": "15px",
+      "weight": "500",
+      "numeric": "normal",
+      "spacing": "normal",
+      "zoom": "1"
+    },
+    {
+      "text": "1:12:01",
+      "family": "\"Inter Variable\", ui-sans-serif, system-ui, sans-serif",
+      "size": "25px",
+      "weight": "600",
+      "numeric": "lining-nums tabular-nums",
+      "spacing": "normal",
+      "zoom": "1"
+    },
+    {
+      "text": "12.4%",
+      "family": "\"Inter Variable\", ui-sans-serif, system-ui, sans-serif",
+      "size": "25px",
+      "weight": "600",
+      "numeric": "lining-nums tabular-nums",
+      "spacing": "normal",
+      "zoom": "1"
+    },
+    {
+      "text": "23%",
+      "family": "\"Inter Variable\", ui-sans-serif, system-ui, sans-serif",
+      "size": "25px",
+      "weight": "600",
+      "numeric": "lining-nums tabular-nums",
+      "spacing": "normal",
+      "zoom": "1"
+    },
+    {
+      "text": "13%",
+      "family": "\"Inter Variable\", ui-sans-serif, system-ui, sans-serif",
+      "size": "25px",
+      "weight": "600",
+      "numeric": "lining-nums tabular-nums",
+      "spacing": "normal",
+      "zoom": "1"
+    },
+    {
+      "text": "42d 4h",
+      "family": "\"Inter Variable\", ui-sans-serif, system-ui, sans-serif",
+      "size": "25px",
+      "weight": "600",
+      "numeric": "lining-nums tabular-nums",
+      "spacing": "normal",
+      "zoom": "1"
+    },
+    {
+      "text": "2 / 3",
+      "family": "\"Inter Variable\", ui-sans-serif, system-ui, sans-serif",
+      "size": "25px",
+      "weight": "600",
+      "numeric": "lining-nums tabular-nums",
+      "spacing": "normal",
+      "zoom": "1"
+    },
+    {
+      "text": "12.45 MB/s",
+      "family": "\"Inter Variable\", ui-sans-serif, system-ui, sans-serif",
+      "size": "25px",
+      "weight": "600",
+      "numeric": "lining-nums tabular-nums",
+      "spacing": "normal",
+      "zoom": "1"
+    },
+    {
+      "text": "Waiting for measurement",
+      "family": "\"Inter Variable\", ui-sans-serif, system-ui, sans-serif",
+      "size": "15px",
+      "weight": "500",
+      "numeric": "normal",
+      "spacing": "normal",
+      "zoom": "1"
+    },
+    {
+      "text": "1 authorized",
+      "family": "\"Inter Variable\", ui-sans-serif, system-ui, sans-serif",
+      "size": "15px",
+      "weight": "500",
+      "numeric": "normal",
+      "spacing": "normal",
+      "zoom": "1"
+    },
+    {
+      "text": "Unavailable",
+      "family": "\"Inter Variable\", ui-sans-serif, system-ui, sans-serif",
+      "size": "15px",
+      "weight": "500",
+      "numeric": "normal",
+      "spacing": "normal",
+      "zoom": "1"
+    },
+    {
+      "text": "Not connected",
+      "family": "\"Inter Variable\", ui-sans-serif, system-ui, sans-serif",
+      "size": "15px",
+      "weight": "500",
+      "numeric": "normal",
+      "spacing": "normal",
+      "zoom": "1"
+    }
+  ],
+  "select": {
+    "text": "Ramazan\u2019\u0131n uzun adl\u0131 masa\u00fcst\u00fc bilgisayar\u0131",
+    "family": "\"Inter Variable\", ui-sans-serif, system-ui, sans-serif",
+    "size": "15px",
+    "weight": "400",
+    "numeric": "normal",
+    "spacing": "normal",
+    "zoom": "1"
+  },
+  "identifier": {
+    "text": "2001:db8::1",
+    "family": "\"JetBrains Mono Variable\", ui-monospace, monospace",
+    "size": "14px",
+    "weight": "400",
+    "numeric": "normal",
+    "spacing": "normal",
+    "zoom": "1"
+  },
+  "faces": [
+    {
+      "family": "Inter Variable",
+      "weight": "100 900",
+      "range": "U+100-2ba, U+2bd-2c5, U+2c7-2cc, U+2ce-2d7, U+2dd-2ff, U+304, U+308, U+329, U+1d00-1dbf, U+1e00-1e9f, U+1ef2-1eff, U+2020, U+20a0-20ab, U+20ad-20c0, U+2113, U+2c60-2c7f, U+a720-a7ff"
+    },
+    {
+      "family": "Inter Variable",
+      "weight": "100 900",
+      "range": "U+0-ff, U+131, U+152-153, U+2bb-2bc, U+2c6, U+2da, U+2dc, U+304, U+308, U+329, U+2000-206f, U+20ac, U+2122, U+2191, U+2193, U+2212, U+2215, U+feff, U+fffd"
+    },
+    {
+      "family": "JetBrains Mono Variable",
+      "weight": "100 800",
+      "range": "U+0-ff, U+131, U+152-153, U+2bb-2bc, U+2c6, U+2da, U+2dc, U+304, U+308, U+329, U+2000-206f, U+20ac, U+2122, U+2191, U+2193, U+2212, U+2215, U+feff, U+fffd"
+    }
+  ],
+  "dpr": 1,
+  "width": 1220,
+  "scrollWidth": 1220,
+  "titleBar": true,
+  "border": "1px",
+  "remoteFonts": [],
+  "isolated_output_scale": "1"
+}

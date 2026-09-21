@@ -1,0 +1,174 @@
+{
+  "scope": "Debian 13 guest kernel; each check in a fresh network-none guest container",
+  "host_privileged_networking": false,
+  "host_root": false,
+  "limits": {
+    "host_memory_bytes": 4294967296,
+    "host_cpu_percent": 150,
+    "guest_memory_mib": 2048,
+    "swap_bytes": 0,
+    "test_threads": 1
+  },
+  "base_image_sha256": "85a969b7e99d7c817414136033df18c58d5c45ac8d27bb36e8ccb67173d2d4e3",
+  "runtime_image_archive_sha256": "fd95995a813f71a8aefefa596b2001c9197cb452dfdfa0425db17c5265234ee0",
+  "inputs": {
+    "sha256": {
+      "binaries/sirinvpn_linux_helper": "feda6373b3ec402017c55c0d5efe944a136573cff32bba9a68641e0a416141ce",
+      "binaries/sirinvpn_server": "3633a20e395db0bd7ed9bbdc92c449ba0a71f1d8bf087e2b0f42983c28a076d3",
+      "binaries/sirinvpn_installer": "db961a9be82783af827953ba0a2b5fd77b979c376d09699c3080628c5ee315da",
+      "binaries/sirinvpn-helper": "9ba59c2875fb7b33372ad4aa7deb5faa88b86e47ed9ac1cacb1de3f9de76f6f6",
+      "tests/network/application_routing.py": "8588de751c507123ff48ee12d72a85bb3d774abf141b30ee9d8ec603bf3be8ff",
+      "tests/network/endpoint_handoff.py": "b3feb91c433be86188eec4c23864c747e3c1c1ea85a3cd1365d672cb68a5f806",
+      "tests/network/endpoint_packets.py": "e944225ce48cf6df76d367e0e688b6af46868cac3ed269fa0465621dadce4307",
+      "tests/network/invitation_policy.py": "3567c94a2a99895db5be8619f23a7d528e75e51fba96d0be3503d07619ca4df0",
+      "tests/network/member_lifecycle.py": "70f1a6a5369746dc0d4e13a6e91972b8360fd8c607cdeae1a527334635cd8a26",
+      "tests/network/mtu_path.py": "0f2b626e840b258f132a60698750ae64ba23d1f064c5e00c978682174ee13f72",
+      "tests/network/peer_activity.py": "3f05c4b2bdba7153e9b1882d9b457c55b52a2a969686debb3c41bc6e882b9a12",
+      "tests/network/policy_packets.py": "4b370d68503866daedbc92c3ee6fe2a0d1655aabad129d718ceeba20faa782ab",
+      "tests/network/split_dns.py": "8f5ad4c746dd31eed5c8eb039533248019269d63625d05a257ccb07bb089b9a7"
+    },
+    "test_binaries": [
+      "sirinvpn_installer",
+      "sirinvpn_linux_helper",
+      "sirinvpn_server"
+    ]
+  },
+  "tests": [
+    {
+      "binary": "sirinvpn_installer",
+      "name": "preflight::tests::kernel_preflight_reads_real_addresses_routes_and_listeners_without_modification",
+      "initial_ipv6_forwarding": 0,
+      "passed": true,
+      "exit_code": 0,
+      "seconds": 0.38
+    },
+    {
+      "binary": "sirinvpn_installer",
+      "name": "release_guard::tests::isolated_root_staging_rejects_policy_races_and_artifact_swaps_before_execution",
+      "initial_ipv6_forwarding": 0,
+      "passed": true,
+      "exit_code": 0,
+      "seconds": 0.39
+    },
+    {
+      "binary": "sirinvpn_installer",
+      "name": "release_guard::tests::isolated_root_staging_runs_when_run_is_noexec",
+      "initial_ipv6_forwarding": 0,
+      "passed": true,
+      "exit_code": 0,
+      "seconds": 0.34
+    },
+    {
+      "binary": "sirinvpn_installer",
+      "name": "tests::maintenance_recovery::generated_recovery_units_have_no_systemd_ordering_cycle",
+      "initial_ipv6_forwarding": 0,
+      "passed": true,
+      "exit_code": 0,
+      "seconds": 0.38
+    },
+    {
+      "binary": "sirinvpn_installer",
+      "name": "tests::split_dns::kernel_split_dns_uses_the_most_specific_zone_and_never_falls_back_after_failure",
+      "initial_ipv6_forwarding": 0,
+      "passed": true,
+      "exit_code": 0,
+      "seconds": 0.6
+    },
+    {
+      "binary": "sirinvpn_linux_helper",
+      "name": "applications::tests::kernel::kernel_application_packet_dns_privilege_and_disconnect_matrix",
+      "initial_ipv6_forwarding": 0,
+      "passed": true,
+      "exit_code": 0,
+      "seconds": 8.65
+    },
+    {
+      "binary": "sirinvpn_linux_helper",
+      "name": "applications::tests::kernel::kernel_application_packet_dns_privilege_and_disconnect_matrix",
+      "initial_ipv6_forwarding": 1,
+      "passed": true,
+      "exit_code": 0,
+      "seconds": 5.03
+    },
+    {
+      "binary": "sirinvpn_linux_helper",
+      "name": "mtu::tests::kernel_mtu_probe_recovers_packet_delivery_without_changing_routing_or_firewall",
+      "initial_ipv6_forwarding": 0,
+      "passed": true,
+      "exit_code": 0,
+      "seconds": 7.51
+    },
+    {
+      "binary": "sirinvpn_linux_helper",
+      "name": "quality::tests::kernel_quality_measures_the_private_wireguard_path_and_reports_blocked_icmp",
+      "initial_ipv6_forwarding": 0,
+      "passed": true,
+      "exit_code": 0,
+      "seconds": 4.9
+    },
+    {
+      "binary": "sirinvpn_linux_helper",
+      "name": "tests::endpoint_kernel::kernel_endpoint_ipv6_dns",
+      "initial_ipv6_forwarding": 0,
+      "passed": true,
+      "exit_code": 0,
+      "seconds": 17.98
+    },
+    {
+      "binary": "sirinvpn_linux_helper",
+      "name": "tests::kernel_policy::kernel_guard_packet_matrix_and_atomic_replacement",
+      "initial_ipv6_forwarding": 0,
+      "passed": true,
+      "exit_code": 0,
+      "seconds": 41.86
+    },
+    {
+      "binary": "sirinvpn_server",
+      "name": "service_metrics::kernel_tests::kernel_peer_activity_uses_actual_handshakes",
+      "initial_ipv6_forwarding": 1,
+      "passed": true,
+      "exit_code": 0,
+      "seconds": 0.43
+    },
+    {
+      "binary": "sirinvpn_server",
+      "name": "tests::endpoints::kernel::kernel_published_source_blocks_data_but_retains_control_across_restart",
+      "initial_ipv6_forwarding": 1,
+      "passed": true,
+      "exit_code": 0,
+      "seconds": 13.45
+    },
+    {
+      "binary": "sirinvpn_server",
+      "name": "tests::member_lifecycle::kernel::kernel_member_lifecycle_updates_access_and_rolls_back_failed_storage",
+      "initial_ipv6_forwarding": 1,
+      "passed": true,
+      "exit_code": 0,
+      "seconds": 23.29
+    },
+    {
+      "binary": "sirinvpn_server",
+      "name": "tests::member_lifecycle::policy_enrollment::kernel_reusable_enrollment_quarantines_bootstrap_and_enforces_limits_atomically",
+      "initial_ipv6_forwarding": 1,
+      "passed": true,
+      "exit_code": 0,
+      "seconds": 5.11
+    },
+    {
+      "binary": "sirinvpn_server",
+      "name": "tests::member_lifecycle::recovery::kernel_offline_recovery_consumes_authority_and_revokes_all_previous_owner_keys",
+      "initial_ipv6_forwarding": 1,
+      "passed": true,
+      "exit_code": 0,
+      "seconds": 4.92
+    }
+  ],
+  "kernel": "6.12.107+deb13-cloud-amd64",
+  "runtime_image_id": "sha256:b96fe3ace97817af459d7dd520847b626f561e8a9c36b468ff0d39637174ef02",
+  "discovered": 15,
+  "selected": 15,
+  "cases": 16,
+  "passed": 16,
+  "failed": 0,
+  "guest_cleanup": "complete"
+}

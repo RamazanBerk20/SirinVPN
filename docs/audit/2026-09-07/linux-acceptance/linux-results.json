@@ -1,0 +1,262 @@
+{
+  "scope": "Packaged Linux CLI, Polkit helper and real WireGuard VPS in two Debian 13 VMs",
+  "host_root": false,
+  "host_privileged_networking": false,
+  "limits": {
+    "memory_bytes": 4294967296,
+    "swap_bytes": 0,
+    "cpu_percent": 150,
+    "server_memory_mib": 1024,
+    "client_memory_mib": 1536
+  },
+  "package_sha256": "0a9909f03b4cceade1d9453bfda12398c0dd9e8bd03a52761ceee3c519e0fbf2",
+  "base_image_sha256": "85a969b7e99d7c817414136033df18c58d5c45ac8d27bb36e8ccb67173d2d4e3",
+  "checks": [
+    {
+      "name": "Fresh disposable VPS",
+      "passed": true,
+      "evidence": {
+        "kernel": "6.12.107+deb13-cloud-amd64"
+      },
+      "seconds": 17.23
+    },
+    {
+      "name": "Release-record and artifact guards under guest root",
+      "passed": true,
+      "evidence": {
+        "test_executable_sha256": "2b48ed0f76769ef4c843210bbadb35452740a6ff9056f7e767de13c2ea950154",
+        "absent_empty_oversized_symlink_and_race_checks": "passed"
+      },
+      "seconds": 1.79
+    },
+    {
+      "name": "Install exact Debian package and guest-only Polkit authorization",
+      "passed": true,
+      "evidence": {
+        "kernel": "6.12.107+deb13-cloud-amd64"
+      },
+      "seconds": 107.66
+    },
+    {
+      "name": "Provision and enroll through the packaged CLI",
+      "passed": true,
+      "evidence": {
+        "profile_created": true,
+        "server_id": "c88f7506-f351-4bd4-86b6-82199d044752"
+      },
+      "seconds": 9.13
+    },
+    {
+      "name": "Verify physical IPv4, IPv6 and leak-counter baselines",
+      "passed": true,
+      "evidence": {
+        "physical_ipv4_exit": "direct",
+        "physical_ipv6_exit": "physical-v6",
+        "baseline_counters": {
+          "dns": 1,
+          "ipv6": 6
+        }
+      },
+      "seconds": 1.63
+    },
+    {
+      "name": "direct: encrypted exit, native DNS and leak prevention",
+      "passed": true,
+      "evidence": {
+        "transport": "direct_udp",
+        "exit": "vps",
+        "dns_exit": "vps",
+        "kill_switch": "armed",
+        "physical_leak_counters": {
+          "dns": 0,
+          "ipv6": 0
+        }
+      },
+      "seconds": 11.96
+    },
+    {
+      "name": "Reach public HTTPS through the tunnel",
+      "passed": true,
+      "evidence": {
+        "https_status": 200,
+        "physical_leak_counters": {
+          "dns": 0,
+          "ipv6": 0
+        }
+      },
+      "seconds": 1.11
+    },
+    {
+      "name": "Resolver failure retains the tunnel and prevents DNS fallback",
+      "passed": true,
+      "evidence": {
+        "numeric_path_survived": true,
+        "resolver_recovered": true,
+        "physical_leak_counters": {
+          "dns": 0,
+          "ipv6": 0
+        }
+      },
+      "seconds": 2.13
+    },
+    {
+      "name": "direct: explicit disconnect restores networking",
+      "passed": true,
+      "evidence": {
+        "physical_routes_restored": true,
+        "owned_firewall_removed": true,
+        "owned_dns_link_removed": true
+      },
+      "seconds": 2.33
+    },
+    {
+      "name": "obfuscated: encrypted exit, native DNS and leak prevention",
+      "passed": true,
+      "evidence": {
+        "transport": "obfuscated_udp",
+        "exit": "vps",
+        "dns_exit": "vps",
+        "kill_switch": "armed",
+        "physical_leak_counters": {
+          "dns": 0,
+          "ipv6": 0
+        }
+      },
+      "seconds": 11.96
+    },
+    {
+      "name": "obfuscated: explicit disconnect restores networking",
+      "passed": true,
+      "evidence": {
+        "physical_routes_restored": true,
+        "owned_firewall_removed": true,
+        "owned_dns_link_removed": true
+      },
+      "seconds": 2.23
+    },
+    {
+      "name": "tls: encrypted exit, native DNS and leak prevention",
+      "passed": true,
+      "evidence": {
+        "transport": "tls_like",
+        "exit": "vps",
+        "dns_exit": "vps",
+        "kill_switch": "armed",
+        "physical_leak_counters": {
+          "dns": 0,
+          "ipv6": 0
+        }
+      },
+      "seconds": 11.76
+    },
+    {
+      "name": "Recover from abrupt transport-process termination",
+      "passed": true,
+      "evidence": {
+        "transport": "tls_like",
+        "exit": "vps"
+      },
+      "seconds": 7.96
+    },
+    {
+      "name": "tls: explicit disconnect restores networking",
+      "passed": true,
+      "evidence": {
+        "physical_routes_restored": true,
+        "owned_firewall_removed": true,
+        "owned_dns_link_removed": true
+      },
+      "seconds": 2.33
+    },
+    {
+      "name": "tcp: encrypted exit, native DNS and leak prevention",
+      "passed": true,
+      "evidence": {
+        "transport": "tcp_fallback",
+        "exit": "vps",
+        "dns_exit": "vps",
+        "kill_switch": "armed",
+        "physical_leak_counters": {
+          "dns": 0,
+          "ipv6": 0
+        }
+      },
+      "seconds": 12.36
+    },
+    {
+      "name": "tcp: explicit disconnect restores networking",
+      "passed": true,
+      "evidence": {
+        "physical_routes_restored": true,
+        "owned_firewall_removed": true,
+        "owned_dns_link_removed": true
+      },
+      "seconds": 2.84
+    },
+    {
+      "name": "Automatic fallback with both UDP transports blocked",
+      "passed": true,
+      "evidence": {
+        "udp_blocked": true,
+        "dropped_udp_packets": 10,
+        "selected_transport": "tls_like",
+        "exit": "vps"
+      },
+      "seconds": 57.95
+    },
+    {
+      "name": "Power loss, persistent blocking and automatic recovery",
+      "passed": true,
+      "evidence": {
+        "blocked_after_restart": true,
+        "recovered_exit": "vps",
+        "transport": "direct_udp",
+        "physical_leak_counters": {
+          "dns": 0,
+          "ipv6": 0
+        }
+      },
+      "seconds": 34.57
+    },
+    {
+      "name": "Disconnect clears persistent protection and restores networking",
+      "passed": true,
+      "evidence": {
+        "physical_routes_restored": true,
+        "owned_firewall_removed": true,
+        "owned_dns_link_removed": true
+      },
+      "seconds": 2.64
+    },
+    {
+      "name": "Removing an active client restores networking",
+      "passed": true,
+      "evidence": {
+        "removed_while_connected": true,
+        "physical_network_restored": true,
+        "same_package_reinstalled_for_vps_cleanup": true
+      },
+      "seconds": 10.89
+    },
+    {
+      "name": "Uninstall VPS through pinned SSH",
+      "passed": true,
+      "evidence": {
+        "vps_owned_files_removed": true,
+        "vps_firewall_removed": true
+      },
+      "seconds": 5.13
+    },
+    {
+      "name": "Remove the client package after disconnect",
+      "passed": true,
+      "evidence": {
+        "package_removed": true,
+        "physical_network_available": true
+      },
+      "seconds": 2.11
+    }
+  ],
+  "passed": true,
+  "guest_cleanup": "complete"
+}

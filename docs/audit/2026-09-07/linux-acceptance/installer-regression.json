@@ -1,0 +1,18 @@
+{
+  "installer_unit_tests": {
+    "passed": 31,
+    "failed": 0,
+    "ignored": 4
+  },
+  "installer_clippy": {
+    "all_targets": true,
+    "warnings_denied": true,
+    "passed": true
+  },
+  "frontend_tests_during_package_build": {
+    "passed": 157,
+    "failed": 0
+  },
+  "formatting": "passed",
+  "change": "Explicitly frame an absent optional VPS release record without accepting empty required binary responses."
+}

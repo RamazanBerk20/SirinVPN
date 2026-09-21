@@ -1,0 +1,12 @@
+{
+  "sender": "SirinVPN",
+  "icon": "file:///home/ramazan/Belgeler/AI/Code/SirinVPN/.cache/notification-tests/%C5%9Eirin%20VPN%209cf2g86y/cache/org.sirinvpn.client/notifications/sirinvpn.png",
+  "title": "SirinVPN",
+  "body": "Notifications are ready. Connection alerts will appear here.",
+  "desktop_entry": "SirinVPN",
+  "notification_id": 184,
+  "bundled_icon_matches": true,
+  "unicode_cache_path_supported": true,
+  "delivery_failure_reported": true,
+  "disabled_preference_blocks_delivery": true
+}

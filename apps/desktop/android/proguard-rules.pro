@@ -1,0 +1,5 @@
+-keep class org.sirinvpn.client.Native { *; }
+-keep class org.sirinvpn.client.NativePlatform { *; }
+-keep class org.sirinvpn.client.WireGuard { *; }
+-keep class org.sirinvpn.client.SirinPlugin { *; }
+-keepattributes RuntimeVisibleAnnotations,AnnotationDefault

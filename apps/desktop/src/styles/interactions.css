@@ -1,0 +1,64 @@
+@keyframes panel-reveal {
+  from {
+    opacity: 0.45;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes dialog-reveal {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+details[open] > :not(summary),
+.device-row[data-expanded="true"] > .device-row-details {
+  animation: panel-reveal 160ms ease-out;
+}
+.dialog-overlay[data-state="open"] {
+  animation: dialog-reveal 140ms ease-out;
+}
+.dialog-content[data-state="open"] {
+  animation: dialog-reveal 180ms ease-out;
+}
+button,
+input[role="switch"] {
+  transition:
+    color 150ms ease,
+    background-color 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    transform 150ms ease;
+}
+button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.settings-action:hover:not(:disabled) > svg:last-child {
+  transform: translateX(2px);
+}
+.settings-action > svg:last-child {
+  transition: transform 150ms ease;
+}
+:root[data-motion="reduced"] *,
+:root[data-motion="reduced"] *::before,
+:root[data-motion="reduced"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

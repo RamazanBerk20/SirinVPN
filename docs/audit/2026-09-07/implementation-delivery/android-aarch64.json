@@ -1,0 +1,22 @@
+{
+  "apk": "target/android-packages/SirinVPN_0.1.0_aarch64-debug.apk",
+  "sha256": "d3e14c03cf9e3dc7bae31adecdfd9ec17bea3b170a06f2ffd28770d7128e157f",
+  "debug": true,
+  "automatic_backup": false,
+  "libraries": [
+    "lib/arm64-v8a/libsirinvpn_desktop_lib.so"
+  ],
+  "server_payload_sha256": {
+    "x86_64": "43185be22269e409c250154e9716b85ec8cf96ae0f28d66e15bfdc9331746400",
+    "aarch64": "3348122980773eca01ac975f4032506b309a111e62e4666dea91be1ee55c2d8c"
+  },
+  "native_transport_sha256": {
+    "arm64-v8a": "ecf39b5b9ed32a89feb9ce56ba59ceb1491cc7e25eb8bf622dee1f8411863790"
+  },
+  "signature": {
+    "apk_v2": "verified",
+    "certificate": "Android Debug",
+    "certificate_sha256": "d2aa1cc007ddcd2cc286af89ad5fa1ede0eaec490ed7f5df33e6c8696778f634",
+    "production_signing": false
+  }
+}

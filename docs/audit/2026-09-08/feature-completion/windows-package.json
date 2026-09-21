@@ -1,0 +1,22 @@
+{
+  "installer": "SirinVPN_0.1.0_x64-setup.exe",
+  "sha256": "8df060c56da2ca63f16f5ca1eb846bf3bebcd726fc6387d57cbb4f66679c059d",
+  "target": "x86_64-pc-windows-gnullvm",
+  "profile": "debug",
+  "all_configured_payloads_match_current_builds": true,
+  "wireguard_nt_vendor_pin": "passed",
+  "runtime_dependency_inspection": "passed",
+  "routing_driver": {
+    "sha256": "2f4e9be1c09a9f369d5ec2574c110dc5abcbc5f147c5590ced446c3f2b9f9ba2",
+    "architecture": "x86_64",
+    "native_subsystem": true,
+    "entry_point": "0x1000",
+    "unwind_metadata": true,
+    "signed": false,
+    "kernel_imports": [
+      "ntoskrnl.exe",
+      "fwpkclnt.sys"
+    ]
+  },
+  "inspection": "static extraction; no installer or native Windows execution"
+}

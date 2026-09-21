@@ -1,0 +1,82 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "SirinVPN",
+  "version": "0.1.0",
+  "identifier": "org.sirinvpn.client",
+  "build": {
+    "beforeDevCommand": "pnpm dev",
+    "devUrl": "http://127.0.0.1:1420",
+    "beforeBuildCommand": "pnpm build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "security": {
+      "csp": "default-src 'self' ipc: http://ipc.localhost; connect-src ipc: http://ipc.localhost; img-src 'self' asset: http://asset.localhost data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:"
+    },
+    "windows": [
+      {
+        "title": "SirinVPN",
+        "width": 1220,
+        "height": 780,
+        "minWidth": 760,
+        "minHeight": 620,
+        "resizable": true,
+        "fullscreen": false,
+        "center": true
+      }
+    ]
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["deb", "appimage"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.png"
+    ],
+    "category": "Utility",
+    "shortDescription": "Private self-hosted VPN client",
+    "longDescription": "Provision and connect directly to a private VPN on your own VPS.",
+    "linux": {
+      "deb": {
+        "postInstallScript": "../../../packaging/debian/postinst.sh",
+        "preRemoveScript": "../../../packaging/debian/prerm.sh",
+        "postRemoveScript": "../../../packaging/debian/postrm.sh",
+        "depends": [
+          "iproute2",
+          "iputils-ping",
+          "libayatana-appindicator3-1",
+          "libdbus-1-3",
+          "nftables",
+          "pkexec",
+          "polkitd",
+          "systemd-resolved",
+          "wireguard-tools"
+        ],
+        "files": {
+          "/usr/bin/sirinvpn": "binaries/sirinvpn",
+          "/usr/lib/sirinvpn/sirinvpn-helper": "binaries/sirinvpn-helper",
+          "/usr/lib/sirinvpn/sirinvpn-release": "binaries/sirinvpn-release",
+          "/usr/lib/sirinvpn/sirinvpn-release-fetch": "binaries/sirinvpn-release-fetch",
+          "/usr/lib/sirinvpn/sirinvpn-server": "binaries/sirinvpn-server",
+          "/usr/share/polkit-1/actions/org.sirinvpn.network.policy": "../../../packaging/polkit/org.sirinvpn.network.policy",
+          "/usr/lib/NetworkManager/conf.d/90-sirinvpn-probe.conf": "../../../packaging/networkmanager/90-sirinvpn-probe.conf",
+          "/usr/lib/systemd/system/sirinvpn-killswitch.service": "../../../packaging/systemd/sirinvpn-killswitch.service",
+          "/usr/lib/systemd/system/sirinvpn-reconnect.service": "../../../packaging/systemd/sirinvpn-reconnect.service",
+          "/usr/lib/systemd/system/sirinvpn-transport.service": "../../../packaging/systemd/sirinvpn-transport.service",
+          "/usr/lib/systemd/system/sirinvpn-transport@.service": "../../../packaging/systemd/sirinvpn-transport@.service"
+        }
+      },
+      "appimage": {
+        "files": {
+          "/usr/bin/sirinvpn": "binaries/sirinvpn",
+          "/usr/lib/sirinvpn/sirinvpn-helper": "binaries/sirinvpn-helper",
+          "/usr/lib/sirinvpn/sirinvpn-release": "binaries/sirinvpn-release",
+          "/usr/lib/sirinvpn/sirinvpn-release-fetch": "binaries/sirinvpn-release-fetch",
+          "/usr/lib/sirinvpn/sirinvpn-server": "binaries/sirinvpn-server"
+        }
+      }
+    }
+  }
+}

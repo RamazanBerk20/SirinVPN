@@ -1,0 +1,57 @@
+{
+  "first_attempt_stopped_at": {
+    "name": "Tunnel interruption: kill switch=True, reconnect=False",
+    "passed": false,
+    "error": "CalledProcessError: Command '['runuser', '-u', 'sirin', '--', 'env', 'SSH_AUTH_SOCK=/home/sirin/acceptance-agent.sock', 'python3', '/opt/sirin-acceptance.py', 'dns']' returned non-zero exit status 1.",
+    "seconds": 12.45
+  },
+  "correction": "Record specific socket route or policy denials; still require zero escaped physical DNS packets",
+  "unexpected_socket_errors_still_fail": true,
+  "product_network_code_changed": false,
+  "same_debian_package_in_both_attempts": true,
+  "final_probe_evidence": [
+    {
+      "name": "Tunnel interruption: kill switch=True, reconnect=False",
+      "passed": true,
+      "evidence": {
+        "kill_switch": true,
+        "automatic_reconnect": false,
+        "fault": "VPS ports blocked and the guest tunnel interface removed",
+        "dns_probe": {
+          "send": "kernel_denied",
+          "errno": 1,
+          "reason": "EPERM"
+        },
+        "exit_during_fault": null,
+        "waiting_for_user": true,
+        "physical_counters": {
+          "dns": 0,
+          "ipv6": 0
+        },
+        "recovered_after": "explicit Resume"
+      },
+      "seconds": 27.66
+    },
+    {
+      "name": "Tunnel interruption: kill switch=True, reconnect=True",
+      "passed": true,
+      "evidence": {
+        "kill_switch": true,
+        "automatic_reconnect": true,
+        "fault": "VPS ports blocked and the guest tunnel interface removed",
+        "dns_probe": {
+          "send": "accepted_by_socket"
+        },
+        "helper_restart_preserved_block": true,
+        "exit_during_fault": null,
+        "waiting_for_user": false,
+        "physical_counters": {
+          "dns": 0,
+          "ipv6": 0
+        },
+        "recovered_after": "network restored"
+      },
+      "seconds": 23.14
+    }
+  ]
+}

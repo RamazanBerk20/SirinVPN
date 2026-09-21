@@ -1,0 +1,25 @@
+{
+  "command": "cargo clippy --workspace --all-targets --locked --keep-going -- -D warnings; cargo test --workspace --locked",
+  "format": "passed",
+  "clippy": "passed with warnings denied",
+  "passed": 451,
+  "failed": 0,
+  "ignored": 14,
+  "ignored_tests": [
+    "test preflight::tests::kernel_preflight_reads_real_addresses_routes_and_listeners_without_modification ... ignored, requires disposable networking; use tests/network/run-installer-preflight.sh",
+    "test release_guard::tests::isolated_root_staging_rejects_policy_races_and_artifact_swaps_before_execution ... ignored, runs only in the disposable root container",
+    "test tests::maintenance_recovery::generated_recovery_units_have_no_systemd_ordering_cycle ... ignored, requires systemd-analyze; reads unit definitions without starting services",
+    "test tests::split_dns::kernel_split_dns_uses_the_most_specific_zone_and_never_falls_back_after_failure ... ignored, requires disposable networking and Unbound; use tests/network/run-split-dns.sh",
+    "test applications::tests::kernel::kernel_application_packet_dns_privilege_and_disconnect_matrix ... ignored, requires a disposable, capped network-namespace container",
+    "test mtu::tests::kernel_mtu_probe_recovers_packet_delivery_without_changing_routing_or_firewall ... ignored, requires a disposable network namespace; use tests/network/run-mtu-path.sh",
+    "test quality::tests::kernel_quality_measures_the_private_wireguard_path_and_reports_blocked_icmp ... ignored, requires a disposable network namespace; use tests/network/run-transport-quality.sh",
+    "test tests::endpoint_kernel::kernel_endpoint_ipv6_dns ... ignored, requires disposable networking; tests/network/run-policy-kernel.sh kernel_endpoint_ipv6_dns",
+    "test tests::kernel_policy::kernel_guard_packet_matrix_and_atomic_replacement ... ignored, requires a disposable network namespace; use tests/network/run-policy-kernel.sh",
+    "test service_metrics::kernel_tests::kernel_peer_activity_uses_actual_handshakes ... ignored, requires disposable networking; use tests/network/run-peer-activity.sh",
+    "test tests::endpoints::kernel::kernel_published_source_blocks_data_but_retains_control_across_restart ... ignored, requires disposable networking; use tests/network/run-endpoint-handoff.sh",
+    "test tests::member_lifecycle::kernel::kernel_member_lifecycle_updates_access_and_rolls_back_failed_storage ... ignored, requires disposable networking; use tests/network/run-member-lifecycle.sh",
+    "test tests::member_lifecycle::policy_enrollment::kernel_reusable_enrollment_quarantines_bootstrap_and_enforces_limits_atomically ... ignored, requires disposable networking; use tests/network/run-invitation-policy.sh",
+    "test tests::member_lifecycle::recovery::kernel_offline_recovery_consumes_authority_and_revokes_all_previous_owner_keys ... ignored, requires disposable networking; use tests/network/run-recovery-policy.sh"
+  ],
+  "runtime_acceptance": "not run"
+}

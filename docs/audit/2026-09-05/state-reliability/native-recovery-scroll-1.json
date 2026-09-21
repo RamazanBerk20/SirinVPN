@@ -1,0 +1,49 @@
+{
+  "before": {
+    "sidebar": {
+      "x": 0,
+      "y": 38,
+      "height": 742,
+      "width": 200
+    },
+    "logo": {
+      "x": 14,
+      "y": 56,
+      "height": 72,
+      "width": 171
+    },
+    "title": {
+      "x": 0,
+      "y": 0,
+      "height": 38,
+      "width": 1220
+    },
+    "height": 780,
+    "outer": 0,
+    "scroll": 0
+  },
+  "after": {
+    "sidebar": {
+      "x": 0,
+      "y": 38,
+      "height": 742,
+      "width": 200
+    },
+    "logo": {
+      "x": 14,
+      "y": 56,
+      "height": 72,
+      "width": 171
+    },
+    "title": {
+      "x": 0,
+      "y": 0,
+      "height": 38,
+      "width": 1220
+    },
+    "height": 780,
+    "outer": 0,
+    "scroll": 5
+  },
+  "focus_visible": true
+}

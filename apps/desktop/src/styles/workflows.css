@@ -1,0 +1,298 @@
+/* Shared dialog structure uses the same type roles as the main application. */
+.dialog-content.dialog-layout {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+  max-height: calc(100dvh - 48px);
+  outline: none;
+}
+html[data-window-chrome="custom"] .dialog-content.dialog-layout {
+  top: calc(50% + var(--titlebar-height) / 2);
+}
+.dialog-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex: 0 0 auto;
+  gap: 20px;
+  padding: 24px 24px 20px;
+  border-bottom: 1px solid var(--line);
+}
+.dialog-header > div {
+  min-width: 0;
+}
+.dialog-header h2 {
+  margin: 0;
+  font-size: 1.4375rem;
+  line-height: 1.3;
+  letter-spacing: -0.025em;
+}
+.dialog-header h2:focus {
+  outline: none;
+}
+.dialog-header p {
+  margin: 8px 0 0;
+  max-width: 60ch;
+  color: var(--muted);
+  font-size: var(--text-secondary);
+  line-height: 1.5;
+}
+.dialog-header .dialog-close {
+  position: static;
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  color: var(--text);
+}
+.dialog-body {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  padding: 22px 24px;
+  scroll-padding-block: 20px;
+}
+.dialog-body > .uninstall-form,
+.dialog-body > .release-update-form,
+.dialog-body > .release-candidate,
+.dialog-body > .invite-form {
+  margin-top: 0;
+}
+.dialog-footer {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+  border-top: 1px solid var(--line);
+  padding: 16px 24px;
+}
+.dialog-footer p {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-secondary);
+}
+.dialog-layout .segmented-control button,
+.dialog-layout .replacement-option strong,
+.dialog-layout .preference-checkbox,
+.dialog-layout .field-help,
+.dialog-layout .field-label,
+.dialog-layout .field > span,
+.dialog-layout .field-hint,
+.dialog-layout .field small,
+.dialog-layout .uninstall-progress p,
+.dialog-layout .backup-success p {
+  font-size: var(--text-secondary);
+  line-height: 1.5;
+}
+.dialog-layout .segmented-control button {
+  min-height: 40px;
+  padding: 8px;
+  white-space: normal;
+}
+.dialog-layout .uninstall-target code,
+.dialog-layout .fingerprint-value,
+.dialog-layout .fingerprint-value code {
+  font-size: var(--text-secondary);
+}
+.copy-value-button,
+.diagnostic-summary .text-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+.repair-result,
+.result-section {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.repair-result {
+  gap: 24px;
+}
+.repair-result-heading {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 4px 0 6px;
+  text-align: center;
+}
+.result-check {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  color: var(--success);
+  background: rgb(32 228 157 / 9%);
+  border: 1px solid rgb(32 228 157 / 28%);
+}
+.repair-result h3,
+.repair-result p,
+.result-facts,
+.result-facts dd {
+  margin: 0;
+}
+.repair-result-heading h3,
+.result-section h3,
+.network-preflight h3 {
+  font-size: var(--text-section);
+  line-height: 1.4;
+}
+.repair-result-heading p {
+  max-width: 48ch;
+  color: var(--muted);
+  font-size: var(--text-secondary);
+}
+.result-section + .result-section {
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+.result-facts {
+  display: grid;
+  gap: 12px;
+}
+.result-facts > div {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.6fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+.result-facts dt,
+.result-identity > span:first-child {
+  color: var(--muted);
+}
+.result-list {
+  display: grid;
+  gap: 8px;
+  list-style: disc;
+  margin: 0;
+  padding-left: 20px;
+}
+.result-identity {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.result-disclosure {
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+}
+.result-disclosure > summary,
+.network-preflight summary {
+  cursor: pointer;
+  font-size: var(--text-secondary);
+}
+.result-disclosure[open] > summary,
+.network-preflight details[open] > summary {
+  margin-bottom: 16px;
+}
+.result-next-step {
+  color: var(--muted);
+  font-size: var(--text-secondary);
+}
+.network-preflight {
+  display: grid;
+  gap: 14px;
+  text-align: left;
+  min-width: 0;
+  margin-top: 16px;
+}
+.network-preflight p,
+.network-preflight h3 {
+  margin: 0;
+  max-width: none;
+}
+.network-address {
+  display: grid;
+  gap: 6px;
+}
+.network-address > span {
+  color: var(--muted);
+}
+.network-address code {
+  overflow-wrap: anywhere;
+}
+.network-port-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.network-port-list li {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-variant-numeric: tabular-nums;
+}
+.network-port-list li > span {
+  color: var(--muted);
+  font-size: var(--text-secondary);
+}
+.network-notes,
+.network-conflicts,
+.network-address-list {
+  display: grid;
+  gap: 12px;
+  padding-left: 20px;
+  margin: 0;
+  list-style: disc;
+  font-size: var(--text-secondary);
+}
+.network-conflicts {
+  color: var(--danger);
+}
+.update-workflow { display: grid; gap: 24px; }
+.update-workflow h3 { font-size: var(--text-section); margin: 0 0 10px; }
+.update-workflow p { margin: 0; line-height: 1.55; }
+.update-workflow p + p { margin-top: 10px; }
+.setup-progress { display: flex; flex-wrap: wrap; gap: 12px 24px; margin: 0; padding-left: 22px; color: var(--muted); font-size: var(--text-secondary); }
+.setup-progress [data-complete="true"] { color: var(--success); }
+.setup-progress [aria-current="step"] { color: var(--text); }
+.update-versions { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 0; }
+.update-versions dt { color: var(--muted); font-size: var(--text-secondary); margin-bottom: 8px; }
+.update-versions dd { margin: 0; font-size: 22px; line-height: 1.3; overflow-wrap: anywhere; }
+.update-source-saved { display: grid; gap: 8px; justify-items: start; min-width: 0; }
+.update-source-saved > span { color: var(--muted); }
+.update-source-saved p { overflow-wrap: anywhere; }
+.update-review, .update-schedule { display: grid; gap: 14px; border-top: 1px solid var(--line); padding-top: 22px; }
+.update-review h3, .update-schedule h3 { margin: 0; }
+.workflow-progress { width: 100%; display: grid; gap: 6px; }
+.workflow-progress strong { font-size: var(--text-secondary); }
+.workflow-message { margin: 20px 0 0; color: var(--success); }
+.dialog-layout .diagnostic-summary { margin-top: 0; }
+.diagnostic-summary > p, .diagnostic-loading { font-size: var(--text-secondary); }
+.diagnostic-groups { display: grid; gap: 24px; }
+.diagnostic-group h3 { display: flex; align-items: baseline; gap: 10px; font-size: var(--text-section); margin: 0 0 12px; }
+.diagnostic-group h3 > span { color: var(--muted); font-size: var(--text-secondary); font-weight: 400; }
+.diagnostic-groups .diagnostic-list { margin-top: 0; gap: 0; }
+.diagnostic-groups .diagnostic-row { padding: 16px 0; background: transparent; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; }
+.diagnostic-row strong { font-size: var(--text-body); line-height: 1.45; }
+.diagnostic-row p { font-size: var(--text-secondary); margin-top: 6px; line-height: 1.55; }
+.diagnostic-evidence { display: inline-block; color: var(--muted); font-size: var(--text-secondary); margin-top: 10px; }
+.diagnostic-row.unavailable > span { color: var(--muted); background: rgb(140 158 188 / 8%); }
+.diagnostic-row.fail > span { color: var(--danger); background: rgb(245 108 108 / 9%); }
+.diagnostic-passed > summary { cursor: pointer; padding: 14px 0; font-size: var(--text-body); }
+.diagnostic-passed > .settings-note { margin: 0 0 12px; }
+.wifi-paused { padding: 12px 14px; border-left: 2px solid var(--warning); background: rgb(239 189 99 / 5%); font-size: var(--text-secondary); line-height: 1.5; }
+.port-forward-form select { font-family: inherit; }
+.mtu-details { margin-top: 18px; }
+.recovery-target { display: grid; gap: 10px; min-width: 0; padding: 16px; border: 1px solid var(--line); border-radius: 8px; overflow-wrap: anywhere; }
+.recovery-target p { margin: 0; color: var(--muted); }
+.dialog-layout .inline-error { font-size: var(--text-secondary); line-height: 1.5; }
+@media (max-width: 600px) {
+  .dialog-header { padding: 18px 18px 16px; gap: 12px; }
+  .dialog-body { padding: 18px; }
+  .dialog-footer { padding: 14px 18px; }
+  .dialog-footer > button { flex: 1 1 auto; }
+  .result-facts > div { grid-template-columns: 1fr; gap: 4px; }
+  .dialog-layout .dns-segmented.with-preserve { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

@@ -1,0 +1,172 @@
+{
+  "recorded_at_utc": "2026-09-05T12:24:07.236133+00:00",
+  "scope": "Operational interface and truthful status revision; final working-tree builds, no VPS deployment",
+  "baseline_commit": "5668e678761690f4283451a0d226b1662d91de15",
+  "source_state": "Uncommitted working tree; existing user changes retained",
+  "frontend_source_sha256": "f1fd987ceef33ea00190f46b1efbb2794e2ace1b465ac59f9f8a8bf2da6132a8",
+  "dependency_lock_sha256": {
+    "Cargo.lock": "e0451fe028d5011463de37237d14d43aea7f631fdd2bf016445b2ee5ba46260d",
+    "apps/desktop/pnpm-lock.yaml": "c290830c96ec2716c2d0c5205009dafdd95dcab89db3dd47a4cfc9f98ce7069d"
+  },
+  "validation": {
+    "rust_tests_passed": 279,
+    "frontend_tests_passed": 63,
+    "python_tests_passed": 2,
+    "clippy_warnings_denied": true,
+    "rust_formatting": "passed",
+    "frontend_production_build": "passed",
+    "privacy_invariants": "passed",
+    "policy_xml": "passed",
+    "shellcheck": "not installed; optional check skipped",
+    "browser_scenarios_passed": 11,
+    "operational_checks_passed": 14,
+    "automated_accessibility_findings": 0,
+    "browser_data": "Synthetic native/VPS responses; includes unknown local status, management failure, failed saves, changed selection, 200% text, and 18 long-named devices",
+    "native_linux_layout": [
+      "Notification initialization can read permission; unguarded plugin delivery remains blocked",
+      "WebKitGTK home has centered boxed icons and no connection controls",
+      "Full-width native device rows expand; empty invitations are compact and forwarding is in Network settings",
+      "Onboarding actions share a baseline with no overlap at 958px"
+    ],
+    "native_linux_scope": "Real WebKitGTK renderer with synthetic UI API responses, private D-Bus session, temporary preferences",
+    "android_instrumentation": [
+      {
+        "module": "android-vpn",
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "cases": [
+          "obfuscatedConfigurationAcceptsOnlyTheFixedLoopbackRelay",
+          "directConfigurationAndUserspaceBackendAreAvailable",
+          "tcpConfigurationAcceptsOnlyTheFixedLoopbackRelay",
+          "tlsConfigurationAcceptsOnlyTheFixedLoopbackRelay",
+          "persistentDesiredStateIsEncryptedBoundedTamperEvidentAndInitialized"
+        ]
+      },
+      {
+        "module": "android-secure-storage",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "cases": [
+          "encryptedRoundTripRejectsTamperingAndLeavesNoSelfTestValue"
+        ]
+      }
+    ],
+    "final_android_apk_native_smoke": "passed; actual native commands, notification capability boundary, Keystore, unknown protection, compact Settings and Android Back",
+    "android_native_preferences": [
+      "Native Android commands reject unsupported desktop preferences",
+      "Permission-aware preference switch and native Android notification delivery",
+      "Preferences restored after a full Android process restart"
+    ],
+    "android_preferences_restored": true,
+    "android_apk_privacy_and_dual_vps_payload_check": "passed",
+    "git_diff_whitespace": "passed",
+    "notification_capability_boundary": "passed on native Linux and final Android APK; permission read allowed, direct plugin notification delivery denied",
+    "installed_apk_sha256": "6e2139fb0c2c497ae292ed79ffd891679774708e411f82f632e4248dec89a29a"
+  },
+  "api_preservation": {
+    "comparison": "HEAD vs working source; direct UI API references, excluding tests",
+    "baseline_operations": 53,
+    "current_operations": 58,
+    "missing": [],
+    "added": [
+      "getAppPreferences",
+      "requestNotificationPermission",
+      "setAppPreferences",
+      "testNotification",
+      "updateServerPresentation"
+    ],
+    "baseline_commit": "5668e678761690f4283451a0d226b1662d91de15"
+  },
+  "source_inventory": {
+    "files": 312,
+    "lines": 79517,
+    "over_1000_lines": 0,
+    "detail": "operational-source-inventory.json"
+  },
+  "dependency_audit": {
+    "scope": "Earlier same-day audit; no additional dependencies introduced by this revision",
+    "detail": "results.json",
+    "rust_vulnerability_entries": 0,
+    "rust_upstream_warnings": 17,
+    "maven_packages_scanned": 79,
+    "maven_affected_packages": 0,
+    "note": "GTK3 maintenance and GLib unsoundness warnings remain unresolved"
+  },
+  "completion": {
+    "basis": "docs/overhaul-checklist.md",
+    "passed": 23,
+    "total": 24,
+    "percentage": 95.8,
+    "interpretation": "Documented acceptance checklist, not percentage of product completeness or security",
+    "remaining": [
+      "Full live-network fault qualification on disposable systems",
+      "Independent effective Linux firewall inspection",
+      "Production ARM64 Android signing and physical-phone qualification",
+      "Pre-existing Android membership/network/maintenance parity gaps"
+    ]
+  },
+  "artifacts": [
+    {
+      "path": "target/release/bundle/deb/SirinVPN_0.1.0_amd64.deb",
+      "bytes": 16039236,
+      "sha256": "5517d0624997b84ac93c69cc60344d41c9a060acd927d19bcc2653cc1c9d82fd"
+    },
+    {
+      "path": "target/release/bundle/appimage/SirinVPN_0.1.0_amd64.AppImage",
+      "bytes": 109234680,
+      "sha256": "1425ffa95cdd702b2212495745e35bb8ef25e9b6f3e463f52c3105de30965910"
+    },
+    {
+      "path": "apps/desktop/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk",
+      "bytes": 481406999,
+      "sha256": "6e2139fb0c2c497ae292ed79ffd891679774708e411f82f632e4248dec89a29a"
+    }
+  ],
+  "vps_modified": false,
+  "logs": [
+    {
+      "path": ".cache/operational-ux/logs/android-build.log",
+      "sha256": "546fffb2756bdbed9cf28a88a6dab9599bdeb23a5a94f6b12a7efeb3fc0bd942"
+    },
+    {
+      "path": ".cache/operational-ux/logs/android-instrumentation.log",
+      "sha256": "2770eff4c992ab6a78db52260638546aa922e88480f0d781f41784ebb85c37d8"
+    },
+    {
+      "path": ".cache/operational-ux/logs/browser-layout.log",
+      "sha256": "a1ee6491458ff54fc8e9fbd8cda108311a004b8a1a05a73c69fcf65962d58128"
+    },
+    {
+      "path": ".cache/operational-ux/logs/final-gate.log",
+      "sha256": "bb0d0e9fd1286165b4a667db284f74356f1399d624a82d667d98fd6790a5a7c3"
+    },
+    {
+      "path": ".cache/operational-ux/logs/linux-packaging.log",
+      "sha256": "3c27c39e66869057de8ff9b2488aab0ebe0fcf04cc62b3511721a43ec12c7a3b"
+    },
+    {
+      "path": ".cache/operational-ux/logs/native-android-preferences.log",
+      "sha256": "b1efbf447e8cdde292e9c8828b6afea34b0269d76223b9a3faf02b37396a9c9d"
+    },
+    {
+      "path": ".cache/operational-ux/logs/native-android.log",
+      "sha256": "1823be0037467e77b5a0c9284d86b161aff5d094a22b5dee995f17ce89a78e96"
+    },
+    {
+      "path": ".cache/operational-ux/logs/native-linux-build.log",
+      "sha256": "ce159b90b2b47b18a2ed05b401e6017cd82160fe996e065e2d727474e2c1673b"
+    },
+    {
+      "path": ".cache/operational-ux/logs/native-linux-layout.log",
+      "sha256": "422624f3e61f933ed22179f974b2c7708c579cc667d889ebaf3e91e70830973a"
+    },
+    {
+      "path": ".cache/operational-ux/logs/operational-states.log",
+      "sha256": "cf12a760472848a4e0eb57d3720a3c291c8f08cd23a5d7cc8828274806d35b93"
+    }
+  ],
+  "screenshots": ".cache/operational-ux/screenshots",
+  "tauri_capabilities_sha256": "8d1d05c9c54b497720181f898cd24eebe16a8bae57d34fe1453ef069411b54be"
+}

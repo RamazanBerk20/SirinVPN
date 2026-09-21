@@ -1,0 +1,6 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="1000" android:viewportHeight="1000">
+    <!-- The brand's curved ribbon and keyhole, simplified for monochrome system surfaces. -->
+    <group android:translateX="-140" android:translateY="-110">
+        <path android:fillColor="#FFFFFFFF" android:pathData="M1042,200L879,423H553C510,423 479,440 479,465C479,488 512,498 565,510L829,582C925,608 994,694 994,794C994,937 855,1020 694,1020L653,914C670,899 679,883 679,866C679,838 656,817 628,817C601,817 576,840 576,869C576,890 585,907 601,918L558,1020H236L386,822H671C723,822 756,814 756,795C756,776 729,765 692,754L457,685C331,650 275,588 275,484C275,320 407,200 571,200Z" />
+    </group>
+</vector>

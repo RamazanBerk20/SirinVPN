@@ -1,0 +1,20 @@
+{
+  "checks": [
+    "Device rates derive from consecutive local counters",
+    "Management failure preserves connected tunnel and device metrics",
+    "Network settings distinguish unavailable DNS measurements from a disconnected tunnel",
+    "Unknown local state does not become disconnected or protection Off",
+    "Reconnecting reports configured protection without claiming firewall verification",
+    "Failed preference save keeps prior value and explains failure beside control",
+    "Collection rename and favorite actions use native API, independent of connection",
+    "Selecting another profile does not change or mislabel the existing tunnel",
+    "Home: 200% text has no clipped operational controls or metrics",
+    "Devices: 200% text has no clipped operational controls or metrics",
+    "Settings: 200% text has no clipped operational controls or metrics",
+    "Servers: 200% text has no clipped operational controls or metrics",
+    "18 long-named devices, full fingerprint, and action menu fit mobile width",
+    "Dismissal restores detail controls; menu background cannot trigger partly covered actions",
+    "The last device's menu opens above its row and stays clear of bottom navigation"
+  ],
+  "accessibility": []
+}

@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "product": "SirinVPN",
+  "version": "0.1.0",
+  "handoff_date_local": "2026-09-08",
+  "timezone": "Europe/Istanbul",
+  "recorded_at_utc": "2026-09-07T21:32:06.535355+00:00",
+  "purpose": "Corrected Linux artifacts after isolated Debian CLI/helper acceptance",
+  "release_provenance": "Engineering checksum inventory; not a signed update manifest",
+  "source": {
+    "base_commit": "5668e678761690f4283451a0d226b1662d91de15",
+    "includes_uncommitted_implementation": true,
+    "build_input_file_count": 721,
+    "build_input_snapshot_sha256": "4dc56f4333e71ac3fb6fbdfc9900d49b8d5a559299f325184684a4d9c0f615df"
+  },
+  "artifacts": [
+    {
+      "filename": "SirinVPN_0.1.0_amd64.deb",
+      "sha256": "0a9909f03b4cceade1d9453bfda12398c0dd9e8bd03a52761ceee3c519e0fbf2",
+      "bytes": 19369584,
+      "build": "release, unsigned",
+      "qualification": "22-check packaged CLI/helper acceptance in Debian 13 VMs"
+    },
+    {
+      "filename": "SirinVPN_0.1.0_amd64.AppImage",
+      "sha256": "ddd4fb6b7c1e5191f1631ab03ffafad9676494d39e8c8ec66fcc05341f774dd8",
+      "bytes": 112118264,
+      "build": "release, unsigned",
+      "qualification": "Static inspection; AppImage runtime and GUI acceptance pending"
+    }
+  ],
+  "fixed_bugs": [
+    "Fresh VPS optional release-record handling",
+    "Reconnect service persistent-state write access",
+    "Restore networking before Debian package removal"
+  ],
+  "kernel_cases_passed": 15,
+  "packaged_checks_passed": 22,
+  "host_privileged_networking": false,
+  "host_root": false,
+  "guest_cleanup": "complete",
+  "pending": [
+    "Desktop GUI and AppImage runtime acceptance",
+    "Physical-network acceptance",
+    "Windows and Android rebuilds containing the shared installer fix and platform acceptance",
+    "Remaining platform features, dependency review and production release qualification"
+  ]
+}

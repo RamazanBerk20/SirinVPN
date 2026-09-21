@@ -1,0 +1,140 @@
+:root {
+  --font-ui: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
+  font-family: var(--font-ui);
+  color: #f4f7ff;
+  background: #020817;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  --bg: #020817;
+  --surface: #061229;
+  --surface-2: #091831;
+  --surface-3: #0c2142;
+  --line: #142d52;
+  --line-strong: #214a7f;
+  --text: #f4f7ff;
+  --muted: #9aa9c7;
+  --quiet: #687b9f;
+  --accent: #2864ff;
+  --accent-strong: #35d9f6;
+  --accent-ink: #ffffff;
+  --cyan: #23dcf4;
+  --violet: #8d42ff;
+  --success: #20e49d;
+  --warning: #f6b84d;
+  --danger: #ff617a;
+  --radius: 10px;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-width: 320px;
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  min-height: 100dvh;
+  overflow-x: hidden;
+  background: var(--bg);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  color: inherit;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent-strong);
+  outline-offset: 2px;
+}
+
+button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.mono,
+code {
+  font-family: var(--font-mono);
+}
+
+.loading-screen {
+  position: relative;
+  min-height: 100dvh;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 18px;
+  color: var(--muted);
+  background:
+    radial-gradient(circle at 50% 45%, rgb(31 99 255 / 18%), transparent 27%),
+    var(--bg);
+}
+
+.loading-screen p {
+  margin: 0;
+  font-size: 13px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+
+.brand > div:last-child {
+  display: grid;
+  gap: 2px;
+}
+
+.brand strong {
+  font-size: 19px;
+  letter-spacing: -0.035em;
+}
+
+.brand small {
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: 0.01em;
+}
+
+.brand-mark {
+  width: 54px;
+  height: 54px;
+  flex: 0 0 auto;
+  overflow: visible;
+  filter: drop-shadow(0 0 13px rgb(45 115 255 / 34%));
+}
+
+.initialization-shell {
+  position: relative;
+  min-height: 100dvh;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  justify-items: center;
+  gap: 28px;
+  padding: max(24px, env(safe-area-inset-top))
+    max(18px, env(safe-area-inset-right)) max(28px, env(safe-area-inset-bottom))
+    max(18px, env(safe-area-inset-left));
+  overflow-x: hidden;
+  overflow-y: auto;
+  background:
+    radial-gradient(circle at 50% 35%, rgb(34 112 255 / 20%), transparent 34%),
+    radial-gradient(circle at 85% 92%, rgb(136 55 255 / 11%), transparent 28%),
+    var(--bg);
+}

@@ -1,0 +1,59 @@
+/* Audit refinements retain the application's existing palette and type system. */
+.invitation-qr-frame, .invitation-qr-frame img { background: #fff; color-scheme: light; }
+.invitation-qr-frame img { image-rendering: pixelated; }
+.invitation-qr-enlarged { width: min(100%, calc(100dvh - 220px)); }
+.startup-recovery { display: grid; gap: 12px; padding: 18px; border: 1px solid var(--line); }
+.startup-recovery { content-visibility: visible; opacity: 1; visibility: visible; }
+.preference-checkbox, .checkbox-row, .confirmation-row { display: flex; align-items: flex-start; gap: 12px; min-height: 44px; padding: 10px 0; line-height: 1.5; cursor: pointer; }
+.preference-checkbox input, .checkbox-row input, .confirmation-row input { flex: 0 0 20px; width: 20px; height: 20px; margin: 2px 0 0; accent-color: var(--cyan); }
+.preference-checkbox:focus-within, .checkbox-row:focus-within, .confirmation-row:focus-within { outline: 2px solid var(--cyan); outline-offset: 4px; }
+.access-disclosure { margin-top: 24px; }
+.access-disclosure > button { display: block; margin-top: 16px; }
+.access-disclosure p { max-width: 65ch; line-height: 1.6; }
+.field [aria-invalid="true"] { border-color: #ed9696; }
+.field-error { color: #ed9696; display: block; font-size: var(--text-secondary); line-height: 1.5; }
+.menu-action-scope { display: block; color: var(--muted); font-size: 0.75rem; }
+.action-menu-panel [aria-disabled="true"] { opacity: .7; cursor: default; }
+.action-menu-panel small { white-space: normal; }
+.release-verification-details { overflow-wrap: anywhere; }
+.server-sidebar .server-name, .server-list-item strong, .server-item-copy strong { white-space: normal; overflow-wrap: anywhere; line-clamp: 2; }
+.maintenance-target { position: sticky; top: 0; z-index: 2; padding: 12px; background: var(--panel, #071326); border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
+.operation-result { display: grid; gap: 14px; padding: 20px 0; }
+.operation-result h3, .operation-result p { margin: 0; }
+.weekly-access-rows { display: grid; gap: 12px; }
+.weekly-access-row { display: grid; grid-template-columns: minmax(100px, 1fr) 1fr 1fr auto; gap: 10px; align-items: end; }
+.weekly-access-row label { min-width: 0; }
+@media (max-height: 600px) {
+  .dialog-content.dialog-layout { max-height: calc(100dvh - 16px); }
+  .dialog-header { padding: 10px 16px; }
+  .invitation-dialog-ready .dialog-header p { display: none; }
+  .dialog-header h2 { font-size: 1.125rem; }
+  .dialog-footer { padding: 8px 16px; flex-shrink: 0; }
+  .dialog-body { min-height: 0; padding: 10px 16px; }
+  .invitation-dialog-ready .invitation-share-grid { grid-template-columns: minmax(0, 1fr) minmax(160px, 1fr); }
+  .invitation-dialog-ready .invitation-qr-frame { width: min(100%, calc(100dvh - 200px)); }
+  .invitation-qr-dialog .invitation-qr-frame { width: min(100%, calc(100dvh - 180px)); }
+  .invitation-dialog-ready .qr-share { padding: 0; border: 0; }
+  .invitation-dialog-ready .qr-share small { display: none; }
+  .invitation-dialog-ready .invitation-result { gap: 8px; }
+  .invitation-dialog-ready .code-share .secret-code-output { min-height: 80px; }
+}
+@media (max-width: 680px) {
+  .weekly-access-row { grid-template-columns: 1fr 1fr; }
+  .initialization-shell.compact-header .initialization-brand { padding-block: 12px; }
+  .initialization-shell.compact-header .initialization-card { padding-top: 16px; }
+  .initialization-card > h1 { margin-bottom: 16px; }
+  .initialization-card .settings-card > h2 { margin-top: 0; }
+}
+.server-row { min-height: 64px; }
+.server-row > span:not(.server-glyph) { min-width: 0; }
+.server-row strong { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; line-height: 1.4; }
+.setup-mode-tabs, .add-server-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.segmented-control.add-mode { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.port-forward-panel .field-error { color: #ed9696; }
+.port-forward-form [aria-invalid="true"] { border-color: #ed9696; }
+.release-candidate .settings-note { overflow-wrap: anywhere; }
+.dns-change-review { padding-block: 1rem; }
+.dns-change-review dt { margin-top: .75rem; font-weight: 600; }
+.dns-change-review dd { margin: .25rem 0 0; overflow-wrap: anywhere; }
+.dns-change-review pre { white-space: pre-wrap; font: inherit; }

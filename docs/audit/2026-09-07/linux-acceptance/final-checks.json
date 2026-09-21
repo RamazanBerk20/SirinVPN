@@ -1,0 +1,9 @@
+{
+  "privacy_gate": "passed",
+  "rust_formatting": "passed",
+  "diff_whitespace": "passed",
+  "python_syntax": "passed",
+  "debian_maintainer_script_syntax": "passed",
+  "source_files": 664,
+  "files_above_1000_lines": 0
+}

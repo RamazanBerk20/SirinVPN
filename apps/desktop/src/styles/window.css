@@ -1,0 +1,197 @@
+/* Desktop-only chrome. Dialogs and sticky navigation leave the title bar reachable. */
+html[data-window-chrome="custom"] {
+  --titlebar-height: 38px;
+  padding-top: var(--titlebar-height);
+  scroll-padding-top: calc(var(--titlebar-height) + 80px);
+}
+html[data-window-chrome="custom"]::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  border: 1px solid var(--line-strong);
+  pointer-events: none;
+}
+.desktop-titlebar {
+  position: fixed;
+  z-index: 1000;
+  inset: 0 0 auto;
+  height: var(--titlebar-height);
+  display: flex;
+  align-items: stretch;
+  background: #080f20;
+  border-bottom: 1px solid #24314b;
+  user-select: none;
+  pointer-events: auto;
+}
+.titlebar-drag-region {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding-inline: 16px;
+  font-size: 13px;
+  font-weight: 550;
+  color: #c1cee5;
+}
+.titlebar-error {
+  color: #ffd294;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.titlebar-controls {
+  display: flex;
+  flex-shrink: 0;
+}
+.titlebar-controls button {
+  width: 46px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  display: grid;
+  place-items: center;
+  color: #d0dcf0;
+}
+.titlebar-controls button:hover {
+  background: #21304c;
+}
+.titlebar-controls .titlebar-close:hover {
+  background: #a63450;
+  color: white;
+}
+.titlebar-controls button:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: -4px;
+}
+html[data-window-chrome="custom"] .app-shell,
+html[data-window-chrome="custom"] .onboarding-shell {
+  min-height: calc(100dvh - var(--titlebar-height));
+}
+html[data-window-chrome="custom"] .sidebar {
+  top: var(--titlebar-height);
+  height: calc(100dvh - var(--titlebar-height));
+  min-height: 0;
+}
+html[data-window-chrome="custom"] .settings-tabs {
+  top: var(--titlebar-height);
+}
+html[data-window-chrome="custom"] .dialog-overlay {
+  top: var(--titlebar-height);
+}
+html[data-window-chrome="custom"] .dialog-content {
+  max-height: calc(100dvh - var(--titlebar-height) - 32px);
+}
+html[data-window-chrome="custom"] .skip-link:focus {
+  top: calc(var(--titlebar-height) + 6px);
+}
+/* The shell never participates in page scrolling on desktop. Each long panel
+   scrolls inside the available window area, including keyboard focus movement. */
+@media (min-width: 761px) {
+  html:has(.app-shell) {
+    height: 100dvh;
+    padding-top: 0;
+    overflow: hidden;
+  }
+  body:has(.app-shell) {
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .app-shell,
+  html[data-window-chrome="custom"] .app-shell {
+    position: fixed;
+    inset: var(--titlebar-height, 0px) 0 0;
+    min-height: 0;
+    grid-template-rows: minmax(0, 1fr);
+  }
+  .app-shell .sidebar,
+  html[data-window-chrome="custom"] .app-shell .sidebar {
+    position: relative;
+    top: 0;
+    height: 100%;
+    min-height: 0;
+    overscroll-behavior: contain;
+  }
+  .app-shell .workspace {
+    min-height: 0;
+    padding-top: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scroll-padding-block: 80px 24px;
+  }
+  .app-shell .workspace > .page-content {
+    padding-top: 24px;
+  }
+  html[data-window-chrome="custom"] .app-shell .settings-tabs {
+    top: 0;
+  }
+}
+.settings-panel :is(button, input, textarea, select, summary, [tabindex]) {
+  scroll-margin-top: calc(var(--titlebar-height, 0px) + 90px);
+  scroll-margin-bottom: 90px;
+}
+.window-resize-edge {
+  position: fixed;
+  z-index: 1100;
+  pointer-events: auto;
+}
+.window-resize-edge[data-edge="North"] {
+  top: 0;
+  left: 8px;
+  right: 8px;
+  height: 4px;
+  cursor: n-resize;
+}
+.window-resize-edge[data-edge="South"] {
+  bottom: 0;
+  left: 8px;
+  right: 8px;
+  height: 4px;
+  cursor: s-resize;
+}
+.window-resize-edge[data-edge="East"] {
+  right: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 4px;
+  cursor: e-resize;
+}
+.window-resize-edge[data-edge="West"] {
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 4px;
+  cursor: w-resize;
+}
+.window-resize-edge[data-edge="NorthEast"] {
+  top: 0;
+  right: 0;
+  width: 8px;
+  height: 8px;
+  cursor: ne-resize;
+}
+.window-resize-edge[data-edge="NorthWest"] {
+  top: 0;
+  left: 0;
+  width: 8px;
+  height: 8px;
+  cursor: nw-resize;
+}
+.window-resize-edge[data-edge="SouthEast"] {
+  bottom: 0;
+  right: 0;
+  width: 8px;
+  height: 8px;
+  cursor: se-resize;
+}
+.window-resize-edge[data-edge="SouthWest"] {
+  bottom: 0;
+  left: 0;
+  width: 8px;
+  height: 8px;
+  cursor: sw-resize;
+}

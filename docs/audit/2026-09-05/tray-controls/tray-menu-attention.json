@@ -1,0 +1,86 @@
+[
+  {
+    "id": 0,
+    "children-display": "submenu"
+  },
+  {
+    "id": 33,
+    "enabled": 0,
+    "label": "Connection status unavailable"
+  },
+  {
+    "id": 34,
+    "enabled": 0,
+    "label": "Kill switch: Status unknown"
+  },
+  {
+    "id": 35,
+    "enabled": 1,
+    "type": "separator"
+  },
+  {
+    "id": 36,
+    "label": "Open SirinVPN"
+  },
+  {
+    "id": 37,
+    "children-display": "submenu",
+    "label": "Connect to server"
+  },
+  {
+    "id": 38,
+    "enabled": 0,
+    "toggle-state": 0,
+    "toggle-type": "checkmark",
+    "label": "Tray VPS 1"
+  },
+  {
+    "id": 39,
+    "enabled": 0,
+    "toggle-state": 0,
+    "toggle-type": "checkmark",
+    "label": "Tray VPS 2"
+  },
+  {
+    "id": 40,
+    "enabled": 0,
+    "toggle-state": 0,
+    "toggle-type": "checkmark",
+    "label": "Tray VPS 8"
+  },
+  {
+    "id": 41,
+    "enabled": 1,
+    "type": "separator"
+  },
+  {
+    "id": 42,
+    "label": "Manage servers\u2026"
+  },
+  {
+    "id": 43,
+    "enabled": 1,
+    "type": "separator"
+  },
+  {
+    "id": 44,
+    "label": "Connection settings\u2026"
+  },
+  {
+    "id": 45,
+    "label": "Settings\u2026"
+  },
+  {
+    "id": 46,
+    "label": "Diagnostics\u2026"
+  },
+  {
+    "id": 47,
+    "enabled": 1,
+    "type": "separator"
+  },
+  {
+    "id": 48,
+    "label": "Quit app (VPN status unknown)\u2026"
+  }
+]

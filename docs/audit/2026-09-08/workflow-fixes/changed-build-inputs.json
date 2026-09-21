@@ -1,0 +1,285 @@
+{
+  "previous_handoff": "../repair-fixes",
+  "files": [
+    {
+      "path": "apps/desktop/src-tauri/src/command_types.rs",
+      "before_sha256": "2b6ef0531a58861b050e028d16c1a4bb2f60a3d23db33772209080292f7e865a",
+      "after_sha256": "5c273083feda9d6e5b917a67e898f8148ab4f6473cb054106e43b2ccc4251491"
+    },
+    {
+      "path": "apps/desktop/src-tauri/src/desktop_tray/mod.rs",
+      "before_sha256": "da6ba6105d2d383ede42575eadc1a89f0a65cf67bb23ab2a95e30dfbb1225723",
+      "after_sha256": "d73fe220e5f9049e83530862d0a73c4384b5a762bd155c8ca1bcbb3e3d959a3e"
+    },
+    {
+      "path": "apps/desktop/src-tauri/src/provisioning.rs",
+      "before_sha256": "57276cc22d0373546dca60de086001b83b04fb985bfe3a4d1ad6e287c876fb24",
+      "after_sha256": "54121d9ab4be61b313eb9af66627eb36873cbca0639ad8d5c1e4f232152c039f"
+    },
+    {
+      "path": "apps/desktop/src/components/CopyValue.tsx",
+      "before_sha256": "5c4851b5c9d2c85921cabd3123926a7c96e6ce8a824c4ecea75c4eeca2e384fe",
+      "after_sha256": "b55f861e3779b2634081f2ffd904f2edd5209a9d8f3d6ae79911db9003cf804a"
+    },
+    {
+      "path": "apps/desktop/src/components/DiagnosticResults.test.tsx",
+      "before_sha256": "eb6dc3f918106548e5e91eb8fe186641634034f813030c931107c49d829d744b",
+      "after_sha256": "d8500cd1f44f9675ee33d9f9efd5b22b3bcb2d596ad2160fea896a29a53c8697"
+    },
+    {
+      "path": "apps/desktop/src/components/DiagnosticResults.tsx",
+      "before_sha256": "d20c700bccf772046db6c1ec2ed744560ce782279a648f4db59fc448ce89ce1a",
+      "after_sha256": "13f3da789ee82275e5e5dc2df2c64d8f7c175d6ca8c7010799946a67302dab3b"
+    },
+    {
+      "path": "apps/desktop/src/components/DialogContent.tsx",
+      "before_sha256": "ce5ec54e9994255160dffef5886781d430f5a9f4a22d75a2a853b675fa3c3f1a",
+      "after_sha256": "0cc578f36b1ee05858a0e2d6ddcc901a1675b6a25720b17bdb3f1266283e0f34"
+    },
+    {
+      "path": "apps/desktop/src/components/diagnosticEvidence.ts",
+      "before_sha256": null,
+      "after_sha256": "41fe653a3f8e2cf016af92f0ab6c96daa331926e5479852d91a15267388db8f6"
+    },
+    {
+      "path": "apps/desktop/src/features/connection/ConnectionOptions.tsx",
+      "before_sha256": "56a73c38810ff120292d35ffa695f06d091ab5edd5be981aea04a8d35c8cceee",
+      "after_sha256": "233b0849d174a72d7d739582d4fb16c51f19abc89f1954ce1a9e954ea1b05885"
+    },
+    {
+      "path": "apps/desktop/src/features/connection/DeviceTraffic.tsx",
+      "before_sha256": "3cc6e48a1a196f9d14a1ff44c6a74a266ae167918cf69e2c1343b21ca8f1dcf5",
+      "after_sha256": "6f3c1e35ce1ab66bb44945089670891d04a83d65b533378d443885745374b7d5"
+    },
+    {
+      "path": "apps/desktop/src/features/connection/MaintenanceReview.tsx",
+      "before_sha256": "39e2d476bb75cb6fc84b120fafffb0ff1063fae4b20ebf707d5a09359501290e",
+      "after_sha256": "d85396f4c0f372c70aa57047c95f67da9ec3d1b1a9de4923bdd0d3a9eebf6106"
+    },
+    {
+      "path": "apps/desktop/src/features/connection/MtuSettings.tsx",
+      "before_sha256": "c2abf0758b1bab4ed5ecdf1487102c5a35c7b01b82b8e1bc0a52423976bddedf",
+      "after_sha256": "dcc42336d857b0f87bf4408e376eb38b375a187682aba6ae6b19522322f37d49"
+    },
+    {
+      "path": "apps/desktop/src/features/connection/RoutingSettings.tsx",
+      "before_sha256": "7c59530f86b7279f4ecbe5c1afde049cfd83a818b2f6e14482e979dfbf6604d4",
+      "after_sha256": "6e481922fd8e42983a1700769489ad34c69ffb6f0c6570f1a863dfb29f55f0b6"
+    },
+    {
+      "path": "apps/desktop/src/features/connection/ServerWorkspace.tsx",
+      "before_sha256": "3ac451dde02bdf7523b4508fb4f27ac88d720ab5cc100df5560e1ec696349806",
+      "after_sha256": "5e3b2590437b1aa64d94402933f0194659866a6a377936860b4c8b096a1acaf6"
+    },
+    {
+      "path": "apps/desktop/src/features/connection/StartupConnectionState.tsx",
+      "before_sha256": "411b3f810173fcdbb862333186c8a5fdb3473f6c24dea4720c88b7d9e819146a",
+      "after_sha256": "f0b5dabcbf22fee36be60554826e5ff30532eb139a884cb6eb046ed6578a8c90"
+    },
+    {
+      "path": "apps/desktop/src/features/connection/TransportQuality.tsx",
+      "before_sha256": "ef10268fb875e0d95c1b5a7032b493ed07646fd13f0ace6cdbb850048de7bf67",
+      "after_sha256": "652b394676e8060ccad488705fd854491e0eeec9292ae793067a54a46d7cdbdf"
+    },
+    {
+      "path": "apps/desktop/src/features/connection/WorkspaceDialogs.tsx",
+      "before_sha256": "3cfbe6316d4fe021867a37ee8fdb18a50e33b2fbeb53430fb4ea13348730043d",
+      "after_sha256": "86c42009dae70672fc19c9b59d04b2daf173309a53c3aea556dbda9dfe82f8b7"
+    },
+    {
+      "path": "apps/desktop/src/features/connection/connectionState.ts",
+      "before_sha256": "5905c1c310c01ddbee7e2a6b6fb1ac0db384ac891cefbfc49abf2a45a8bb7cc3",
+      "after_sha256": "8df0196416aa4c8115c4b786271aaa16d69c72f5dc391777e700301715fbd263"
+    },
+    {
+      "path": "apps/desktop/src/features/connection/measurementEvidence.test.tsx",
+      "before_sha256": null,
+      "after_sha256": "17c9369de9819b58eaed6cf8beac178f541b5ae1b082c108dfc479b8918434c6"
+    },
+    {
+      "path": "apps/desktop/src/features/connection/protectionEvidence.test.ts",
+      "before_sha256": "96d985ca9386994ec9ecdde1ea89e0722f1f38417a7d73f9c81c4519037ee679",
+      "after_sha256": "085b0cf1d8c8d8a8a21d60d188d2c3b54caad6000989c2e44492ed6fc30f1c0e"
+    },
+    {
+      "path": "apps/desktop/src/features/devices/DeviceList.tsx",
+      "before_sha256": "9e2c354c22d8156d7b1b72dd1e4da22d3d8b618ce9b31d2b9954c5cfd2beab24",
+      "after_sha256": "b58970b5554314f03f4499af584e7bcc1bcc90d9a05e54f6a344edb291ace94c"
+    },
+    {
+      "path": "apps/desktop/src/features/devices/InvitationDialog.tsx",
+      "before_sha256": "bbdf6108929fa32dfa122fa6f7d6c2eddebe72868472bb8a74a867793def6df3",
+      "after_sha256": "16a5329dab1e73b3b6943f1f9e160a3a0873796bb5ceee929a688d05b5ac37f0"
+    },
+    {
+      "path": "apps/desktop/src/features/devices/MemberPolicyDialog.tsx",
+      "before_sha256": "f121083d66d69b84fbd2b5a49f799a4c251224a272194219d1447dddc9ad655d",
+      "after_sha256": "36fc1b3bf1f0bce6d030f554b38a364de5b926c8332b1ee8d155a264d0bf4f7f"
+    },
+    {
+      "path": "apps/desktop/src/features/onboarding/RecoverAccessFlow.tsx",
+      "before_sha256": "d5db2e9c7cb5e0c2e0a35a9e0e9c4dd864a6d82e1719dedcb7ee276f86b01545",
+      "after_sha256": "4e146333cc41f8ace739e20fc3dfd9c8e4b116089a8d9a5cdb6d84dd40c82137"
+    },
+    {
+      "path": "apps/desktop/src/features/settings/EndpointUpdateDialog.tsx",
+      "before_sha256": "afd3ffab08aa22d3ead6c29388b3aaff4dc6e1f7861736fa792782f97de548ef",
+      "after_sha256": "1f9b7ed61f53e463ee2dd70fadf16b75c82f149b03b03dc221fef339df4a9a71"
+    },
+    {
+      "path": "apps/desktop/src/features/settings/ExportBackupDialog.tsx",
+      "before_sha256": "140bb8935906b11df3778d151d6147449933bcd52c0e806cbc0563927ed962f2",
+      "after_sha256": "b18345e0b4fc73be9a992bb793b9909f4c6ec20d3568912aedd7ac950ed360fb"
+    },
+    {
+      "path": "apps/desktop/src/features/settings/KeyRotationDialog.tsx",
+      "before_sha256": "10b75710b4018d2ab455a8698c74232cb09a1816bc3ea1aec6b56ed31d638163",
+      "after_sha256": "bdc26f10ffd80c30e303ab25a512d4c649ce35800597a7bc33d6c9301c2aec16"
+    },
+    {
+      "path": "apps/desktop/src/features/settings/LocalComponentUpdate.tsx",
+      "before_sha256": "f242ddaa4da36b56cf3c4782d1c8d22bf2d4258440cd9e1d670a68878b9cdd3b",
+      "after_sha256": "22edbfa2202ad4dceeebff7936d1ea9755b3fd700553a0a77ca1222d9c2d736e"
+    },
+    {
+      "path": "apps/desktop/src/features/settings/RecoveryKeys.tsx",
+      "before_sha256": "9e8034343607de614ec3ec4b4deacc7be8db942f545753d7a3e45148e85dfb49",
+      "after_sha256": "257bc51feace5ac4f7b2486a9678d943ff39a0566863716ea75214af6f6768ae"
+    },
+    {
+      "path": "apps/desktop/src/features/settings/ReleaseUpdateDialog.test.tsx",
+      "before_sha256": "e978b645ecd6a11f83b90989733423b537f4640102f1cd2d0431f3a31198c000",
+      "after_sha256": "7076bd1e566958c497dfe61aacef5dacc3dafa8344c9ff1795652afcb77c2f6c"
+    },
+    {
+      "path": "apps/desktop/src/features/settings/ReleaseUpdateDialog.tsx",
+      "before_sha256": "6ad944a79c593eac3e737d81871d5d831d5e80c303c3e4ae4faf371880b3525b",
+      "after_sha256": "fde82460af536ccad7e693c11178b77d04eb6b746343df874118835c325b62af"
+    },
+    {
+      "path": "apps/desktop/src/features/settings/RemoveServerDialog.tsx",
+      "before_sha256": "e342bf3e3bba0a216737b2c7f5e24f94d9702eb099f890e3afa15d952d7cd6d8",
+      "after_sha256": "bc1638dd14224274ed84bb002d1be274fa43ad1cbd3e72b99be12bf42e8d5d32"
+    },
+    {
+      "path": "apps/desktop/src/features/settings/RepairServerDialog.tsx",
+      "before_sha256": "cf854ed67ef1af690590fbf277c10ff7162ec12afc4959b6240666ffa8347545",
+      "after_sha256": "8fd1dc30f2b6946e8af9ac1f1baf13b2427788b490d3a98310647d86af2fba5c"
+    },
+    {
+      "path": "apps/desktop/src/features/settings/RepairSummary.test.tsx",
+      "before_sha256": null,
+      "after_sha256": "41cc86f8c90763fd159463f912ad989a5dfa53113381f885dee6f2b1f147aa59"
+    },
+    {
+      "path": "apps/desktop/src/features/settings/RepairSummary.tsx",
+      "before_sha256": null,
+      "after_sha256": "61a74437bdeb9834d5f1096f6c6a8b1e299fc606fc569f3873c2c911c30b0792"
+    },
+    {
+      "path": "apps/desktop/src/features/settings/ServerNetworkPreflight.test.tsx",
+      "before_sha256": "0dcc3876d9f1958af40c5ca23c5b4c343f7b3ed42d83831f1605924a86f3ba19",
+      "after_sha256": "cf1831ac58f7758cd2826e1460b01e5958f54da0de07435e681a1467cb9ef275"
+    },
+    {
+      "path": "apps/desktop/src/features/settings/ServerNetworkPreflight.tsx",
+      "before_sha256": "21e913b856788ade9fc082f629865b8253e7c3826f18cda3ff003870ae424104",
+      "after_sha256": "2c686763d1de08d862e6f9c76757a9def33fa80135d3f3af915df9511a999a6d"
+    },
+    {
+      "path": "apps/desktop/src/features/settings/VpsBackupDialog.tsx",
+      "before_sha256": "e70356f087a05a2f3f0ac855e928ba08d83938f397805970ac0d50fb965b950a",
+      "after_sha256": "a5d170997fbe439d8764c1fa6a50c345665e1b0c366f1396e57828d6e0c52377"
+    },
+    {
+      "path": "apps/desktop/src/features/settings/VpsRestoreDialog.tsx",
+      "before_sha256": "1b43e04bea844d8592853de66efbcf1ec2eb349beec47df0fd65c18deaabf9b8",
+      "after_sha256": "3f2a8f6b1e21b565808c9bd45de98014f299d61d62bf35508a4c2ee22863bfb3"
+    },
+    {
+      "path": "apps/desktop/src/features/settings/VpsUpdateDialog.test.tsx",
+      "before_sha256": "fc9bd37991c05b5a67a560524aac0ce5b3681d44d36e07e81e8f49827cd9ee83",
+      "after_sha256": "4de77887c5d131e1b5ab54148b2aefa82a647209b6689a7f44fac302527ff52f"
+    },
+    {
+      "path": "apps/desktop/src/features/settings/VpsUpdateDialog.tsx",
+      "before_sha256": "8e0221b7a4bb2e2af3277940633ef63f4f622bcd7a9adcb8c07da5998f073596",
+      "after_sha256": "3e0c65c388a7d3a7425e95eeb65feb418ac3db9a09dadb1438edf58a83798a86"
+    },
+    {
+      "path": "apps/desktop/src/features/settings/WifiSettings.test.tsx",
+      "before_sha256": "bcd64636b7f7619f3dc6078b51872ab83e442e9590ce8d66b38eaacabc9a66ba",
+      "after_sha256": "7ac79c547f4ef23de3bbadb17b80cda39290877e8ef37802e1ee3b06cf6bde94"
+    },
+    {
+      "path": "apps/desktop/src/features/settings/WifiSettings.tsx",
+      "before_sha256": "7069c7e962685a27dcd1bbb2a2387269dd22878005c5858ae6f5f58de7237c1a",
+      "after_sha256": "5239402bf865e48484cc3b1535eb8bfe73ad77b12060554fb56d5af0c51bebce"
+    },
+    {
+      "path": "apps/desktop/src/features/settings/vpsRelease.ts",
+      "before_sha256": "5b776ed80b7da9d789e9251e713870e82f341f8a75e6f8c862a29fa6e0ddc99d",
+      "after_sha256": "314acbc8b43afe150f711ef77e9018fe1437e98ee2261d913000d0134ca2af25"
+    },
+    {
+      "path": "apps/desktop/src/styles.css",
+      "before_sha256": "90eb6a2fb4a844331f0b9e2631c08ac923495ed9147ab3493aa6110f2131c01e",
+      "after_sha256": "50695cbee710baad7314dcc15314453014febe407b56a1f9cfb32fcca3d2d83b"
+    },
+    {
+      "path": "apps/desktop/src/styles/workflows.css",
+      "before_sha256": null,
+      "after_sha256": "18d4fbcf7aeadde06b2110241b496c55b17f20263de0379740d3a4a5d6a655db"
+    },
+    {
+      "path": "apps/desktop/src/types.ts",
+      "before_sha256": "0d4263e144bfd968602f4b54fce2c73ca6c807c7f65066c5141e0d4381749591",
+      "after_sha256": "d190c604a1c80d6d8dac73eedd023a4ed425b071d1968f9ea782786317227102"
+    },
+    {
+      "path": "scripts/check-privacy.sh",
+      "before_sha256": "b948166e521c93dfd3f75abed7a2a2a8c86b59f571afd2162091692fa07d346e",
+      "after_sha256": "7d5b7614d930393cfc4b3901ae593fd740d827d85be3c3525ad569fc2647e2e5"
+    },
+    {
+      "path": "tests/ui/desktop_tray_smoke.py",
+      "before_sha256": "27daaee5efa12181b9328002fbcd8d88128765750ccb1ab7ce45bad21e40e62b",
+      "after_sha256": "761b7700451a6dd5464bee7fb4dc3c27fdbb4c280c5847bddefaa341947a207a"
+    },
+    {
+      "path": "tests/ui/maintenance_fixtures.js",
+      "before_sha256": null,
+      "after_sha256": "e69d7e14b9a65b8645f35993360162532f2e5ed47e970d6788d864d37cdfc838"
+    },
+    {
+      "path": "tests/ui/maintenance_workflows_smoke.py",
+      "before_sha256": null,
+      "after_sha256": "7b61e244c37324665aea2eb974c789aa72bb6ffe9b5d27bd0811b2d19f497aec"
+    },
+    {
+      "path": "tests/ui/tray_helper_fixture.py",
+      "before_sha256": "11ad0a31c235736fb6b913ea90e6d0de8b48551a7d1437faa963de157aee36dd",
+      "after_sha256": "0f9aa32ec22c9136068fade3f88597faa2caf2a816eda6b1e694dc26d0972a28"
+    },
+    {
+      "path": "tests/vm/README.md",
+      "before_sha256": "5d0488fb58e89a84633b9aa03a612e2cddf03feb9a1ccffa8cb38f4208a4fbb3",
+      "after_sha256": "bdb30f706d604a0eba74da05f2964d7d0cac5fe07233705675a27a2c7ce22782"
+    },
+    {
+      "path": "tests/vm/acceptance_guest.py",
+      "before_sha256": "05dae12da2044360d794c83e918c0190eaa3bc59fba387f6dcaac8dc3da29b6a",
+      "after_sha256": "46f204be85166e3626b32e69a52f261b1e6e721abb8cf25107465f41ee477077"
+    },
+    {
+      "path": "tests/vm/kernel_acceptance.py",
+      "before_sha256": "5954a80cad7c8e7b73a54cf9a6afffa2ef0b9b04a4d9ac56103d923c29105f48",
+      "after_sha256": "0d7e80fb5b1c4f13a9f50b8558b274131a148c50d654568b4194092f0d2cb789"
+    },
+    {
+      "path": "tests/vm/linux_acceptance.py",
+      "before_sha256": "915f682f21f9881d4d2c15d50bd393dcddfe35a91752ba34c6922d27c6c7fcd8",
+      "after_sha256": "beb1a0d912c5d5b280b871e5d3bee4ad450cdb9880d39623da396c56ca072310"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "commit": "1abdbdb031cfea7e9e3dca7980ea36845bba1da8",
+  "message": "bump libssh2-sys version to release crate with fixed vendored libssh2 codebase",
+  "url": "https://github.com/rust-lang/ssh2-rs/commit/1abdbdb031cfea7e9e3dca7980ea36845bba1da8",
+  "changed_files": [
+    ".cargo_vcs_info.json",
+    "Cargo.lock",
+    "Cargo.toml",
+    "Cargo.toml.orig",
+    "libssh2/src/packet.c",
+    "libssh2/src/sftp.c",
+    "libssh2/src/transport.c"
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "identifier": "android",
+  "description": "SirinVPN Android presentation shell",
+  "windows": ["main"],
+  "platforms": ["android"],
+  "permissions": ["core:default"]
+}

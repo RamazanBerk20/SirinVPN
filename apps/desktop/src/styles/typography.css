@@ -1,0 +1,107 @@
+/* Shared UI roles. Rem units follow text enlargement without changing layout scale. */
+:root {
+  --text-page: 1.75rem;
+  --text-section: 1rem;
+  --text-body: 0.9375rem;
+  --text-secondary: 0.875rem;
+  --text-caption: 0.8125rem;
+  --text-metric: 1.5625rem;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+}
+body {
+  font-family: var(--font-ui);
+  font-size: var(--text-body);
+  font-weight: var(--weight-regular);
+  font-optical-sizing: auto;
+  line-height: 1.5;
+}
+button,
+input,
+select,
+textarea,
+option {
+  font-family: var(--font-ui);
+  letter-spacing: normal;
+}
+button,
+label > span,
+.field > span,
+.choice-row strong,
+.primary-navigation strong,
+.setting-row strong,
+.preference-row strong {
+  font-weight: var(--weight-medium);
+}
+.workspace-header h1,
+.server-collection h1,
+.initialization-card > h1,
+.dialog-title {
+  font-size: var(--text-page);
+  font-weight: var(--weight-semibold);
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+h2,
+.section-heading h2,
+.settings-card h2,
+.settings-category-intro h2 {
+  font-size: var(--text-section);
+  font-weight: var(--weight-semibold);
+  line-height: 1.4;
+  letter-spacing: normal;
+}
+.field,
+.setting-row,
+.preference-row,
+.settings-note,
+.choice-row,
+.primary-navigation strong,
+.connection-explanation {
+  font-size: var(--text-body);
+  line-height: 1.5;
+}
+.field small,
+.setting-row small,
+.preference-row small,
+.settings-note,
+.choice-row small,
+.metric .metric-detail,
+.section-meta {
+  font-size: var(--text-secondary);
+  font-weight: var(--weight-regular);
+  line-height: 1.5;
+  letter-spacing: normal;
+}
+.metric .metric-value,
+.metric .metric-state {
+  font-family: var(--font-ui);
+  line-height: 1.35;
+  letter-spacing: normal;
+}
+.metric .metric-value {
+  font-size: var(--text-metric);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: lining-nums tabular-nums;
+  white-space: nowrap;
+}
+.metric .metric-state {
+  font-size: var(--text-body);
+  font-weight: var(--weight-medium);
+  white-space: normal;
+}
+.mono,
+code,
+.endpoint .mono {
+  font-family: var(--font-mono);
+  font-size: var(--text-secondary);
+  letter-spacing: normal;
+}
+.endpoint,
+.workspace-status,
+.connection-facts,
+.port-forward-route {
+  font-family: var(--font-ui);
+  letter-spacing: normal;
+}

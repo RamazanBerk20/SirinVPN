@@ -1,0 +1,87 @@
+{
+  "date": "2026-09-05",
+  "scope": "First native desktop tray milestone",
+  "helper_protocol": 13,
+  "host_helper_version_observed": 12,
+  "host_helper_installed_by_this_task": false,
+  "live_vps_changed": false,
+  "original_overhaul_checklist": {
+    "completed": 23,
+    "total": 24,
+    "percentage": 95.8,
+    "meaning": "Original acceptance checklist; not an overall security or feature percentage"
+  },
+  "verification": {
+    "rust_workspace_tests": 306,
+    "frontend_tests": 79,
+    "native_tray_scenarios": 9,
+    "kernel_packet_checks": 500,
+    "continuous_atomic_update_probes": 1057443,
+    "observed_escapes": 0,
+    "independent_policy_combinations": 4,
+    "systemd_in_container": "Doubled; actual boot ordering remains unqualified",
+    "resolved_in_container": "Doubled; DNS packet blocking uses real nftables",
+    "source_inventory": {
+      "files": 365,
+      "lines": 86875,
+      "over_1000_lines": 0
+    },
+    "clippy": "passed with warnings denied",
+    "privacy": "passed",
+    "formatting": "passed",
+    "packaged_helper": {
+      "debian_helper_sha256": "e6df03f308f8c2978d4a963779aa7c998955bdc1ca78d05e64bfafe3547c9c00",
+      "appimage_helper_sha256": "a6959e0334e580ec903c895cc72d84bb36275981ed8cb197f74c2f3e50901b16",
+      "helper_protocol": 13,
+      "executable_sections": {
+        "text": "ee4ff5bb9dc4edc7bf27685cc64bac3e64c7670a5a67631534303f4d4e5e7233",
+        "rodata": "9957783899f3eb49dfb5c599d22b3be5c189a89529a649955819c4ccb9bc4e6a"
+      },
+      "note": "AppImage ELF search-path patching changes file bytes; code and read-only data match the release helper."
+    }
+  },
+  "evidence": [
+    "docs/audit/2026-09-05/tray-controls/rust-tests.log",
+    "docs/audit/2026-09-05/tray-controls/final-targeted-tests.log",
+    "docs/audit/2026-09-05/tray-controls/frontend-tests.log",
+    "docs/audit/2026-09-05/tray-controls/clippy.log",
+    "docs/audit/2026-09-05/tray-controls/privacy.log",
+    "docs/audit/2026-09-05/tray-controls/maintainability.log",
+    "docs/audit/2026-09-05/tray-controls/kernel.log",
+    "docs/audit/2026-09-05/tray-controls/native-test.log",
+    "docs/audit/2026-09-05/tray-controls/native-tray.json",
+    "docs/audit/2026-09-05/tray-controls/native-tray-calls.json",
+    "docs/audit/2026-09-05/tray-controls/native-tray.log",
+    "docs/audit/2026-09-05/tray-controls/linux-package.log",
+    "docs/audit/2026-09-05/tray-controls/tray-menu-disconnected.json",
+    "docs/audit/2026-09-05/tray-controls/tray-menu-connected.json",
+    "docs/audit/2026-09-05/tray-controls/tray-menu-blocked.json",
+    "docs/audit/2026-09-05/tray-controls/tray-menu-attention.json",
+    "docs/audit/2026-09-05/tray-controls/tray-icon-disconnected.png",
+    "docs/audit/2026-09-05/tray-controls/tray-icon-connected.png",
+    "docs/audit/2026-09-05/tray-controls/tray-icon-blocked.png",
+    "docs/audit/2026-09-05/tray-controls/tray-icon-attention.png"
+  ],
+  "packages": [
+    {
+      "path": "target/release/sirinvpn-desktop",
+      "bytes": 13934424,
+      "sha256": "5c878ccbd89e24843ad2c3ed08dea933a60b425acfdbd16c6ca109c2798fec5c"
+    },
+    {
+      "path": "target/release/sirinvpn-helper",
+      "bytes": 2854672,
+      "sha256": "e6df03f308f8c2978d4a963779aa7c998955bdc1ca78d05e64bfafe3547c9c00"
+    },
+    {
+      "path": "target/release/bundle/deb/SirinVPN_0.1.0_amd64.deb",
+      "bytes": 16343226,
+      "sha256": "83c00f9270c2e709f2d34ba1b51755b99478e5be61fce5acfce6931b3b7ca49b"
+    },
+    {
+      "path": "target/release/bundle/appimage/SirinVPN_0.1.0_amd64.AppImage",
+      "bytes": 109541880,
+      "sha256": "6640ba515c136441499a2dbfe1b63cd7d74d4c7bd53adae6e89182543ad54f12"
+    }
+  ]
+}

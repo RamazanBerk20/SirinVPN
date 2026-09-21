@@ -1,0 +1,29 @@
+[package]
+name = "sirinvpn-transport"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+base64.workspace = true
+futures-util.workspace = true
+httparse.workspace = true
+rand.workspace = true
+rustls.workspace = true
+serde.workspace = true
+sha2.workspace = true
+sirinvpn-protocol = { path = "../protocol" }
+snow.workspace = true
+socket2.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+tokio-rustls.workspace = true
+tokio-tungstenite.workspace = true
+zeroize.workspace = true
+
+[target.'cfg(windows)'.dependencies]
+sirinvpn-platform = { path = "../platform" }
+
+[dev-dependencies]
+rcgen.workspace = true

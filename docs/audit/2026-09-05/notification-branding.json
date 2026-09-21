@@ -1,0 +1,75 @@
+{
+  "recorded_at_utc": "2026-09-05T18:15:51.897003+00:00",
+  "scope": "Linux notification sender name, icon and delivery acknowledgement",
+  "native_verification": {
+    "sender": "SirinVPN",
+    "icon": "file:///home/ramazan/Belgeler/AI/Code/SirinVPN/.cache/notification-tests/%C5%9Eirin%20VPN%209cf2g86y/cache/org.sirinvpn.client/notifications/sirinvpn.png",
+    "title": "SirinVPN",
+    "body": "Notifications are ready. Connection alerts will appear here.",
+    "desktop_entry": "SirinVPN",
+    "notification_id": 184,
+    "bundled_icon_matches": true,
+    "unicode_cache_path_supported": true,
+    "delivery_failure_reported": true,
+    "disabled_preference_blocks_delivery": true
+  },
+  "visual_verification": "Actual Plasma popup showed SirinVPN and the S logo; full-desktop capture deleted after inspection",
+  "validation": {
+    "desktop_rust_tests": 19,
+    "clippy": "passed with warnings denied",
+    "native_integration": "passed",
+    "linux_packages": "rebuilt successfully",
+    "frontend_tests_during_packaging": 74,
+    "format": "passed",
+    "diff_check": "passed"
+  },
+  "source_fingerprints": [
+    {
+      "path": "apps/desktop/src-tauri/src/app_notifications.rs",
+      "sha256": "d9f4779ea6491d5458747db847b72af0ec265bf1619c8889a1af3f45a9f15f39"
+    },
+    {
+      "path": "apps/desktop/src-tauri/src/connection_notifications.rs",
+      "sha256": "fe8d376a455151d062997d0cd87e0cdbbb681a12569b2987af6fb436bcd32c15"
+    },
+    {
+      "path": "apps/desktop/src-tauri/src/app_preferences.rs",
+      "sha256": "e21a1ee7ebd46caf8cef30010cd05809543f79687aec527ce7f8292204a46cd8"
+    },
+    {
+      "path": "apps/desktop/src-tauri/src/lib.rs",
+      "sha256": "c96fe2de8dafc3b7eb5774b328b7bcffeebb2b25e42b9b450e0716c5a45a751e"
+    },
+    {
+      "path": "apps/desktop/src-tauri/Cargo.toml",
+      "sha256": "cb1df15b55aa1be14df58a1242199af7f60a617dabc9a40729cc1d5d4d48b237"
+    },
+    {
+      "path": "Cargo.lock",
+      "sha256": "dbd14f2a37ab2f747dd802d4e31a9dfdfefcf1228d0386de26373ed06470ccbb"
+    },
+    {
+      "path": "tests/ui/desktop_notifications.py",
+      "sha256": "2b53bfc8d79bbb908ef8b4b6f4e36894b4a9ca859a162c8fe49eab6e84b8530d"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "target/release/sirinvpn-desktop",
+      "sha256": "89e2a8b51ff317844b3e9e24dd0e470e411aef3d37254ad3c6681e234ffbf7be",
+      "bytes": 13857112
+    },
+    {
+      "path": "target/release/bundle/deb/SirinVPN_0.1.0_amd64.deb",
+      "sha256": "0d48f1f44d29930b12307e0a5c1c6453a787617e0c6f2b674ae712fad28cdad7",
+      "bytes": 16300052
+    },
+    {
+      "path": "target/release/bundle/appimage/SirinVPN_0.1.0_amd64.AppImage",
+      "sha256": "7db935de91de7289a71263ba61b05b631336ecddad45900bfbcf92c2a042bfb9",
+      "bytes": 109492728
+    }
+  ],
+  "runtime": "Existing user GUI left running; quit/reopen loads the new binary. Active VPN, helper and VPS unchanged.",
+  "dependency": "notify-rust 4.18.0 was already locked transitively; now also used directly on Linux"
+}

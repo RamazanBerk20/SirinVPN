@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "product": "SirinVPN",
+  "version": "0.1.0",
+  "date": "2026-09-07",
+  "purpose": "implementation handoff for acceptance testing",
+  "release_provenance": "engineering checksum inventory; not a signed update manifest",
+  "source": {
+    "base_commit": "5668e678761690f4283451a0d226b1662d91de15",
+    "includes_uncommitted_implementation": true,
+    "build_input_file_count": 709,
+    "build_input_snapshot_sha256": "cafeaf72cbf4dbba403ff3523861f54313edb52fc149b2d9183fcceaecc741f8"
+  },
+  "artifacts": [
+    {
+      "label": "Linux Debian",
+      "platform": "linux",
+      "architecture": "x86_64",
+      "build": "release, unsigned",
+      "filename": "SirinVPN_0.1.0_amd64.deb",
+      "bytes": 19369370,
+      "sha256": "6b88c1974a88d8db8684cc373449456d798caea6e0c30ee3995f464802cabf52"
+    },
+    {
+      "label": "Linux AppImage",
+      "platform": "linux",
+      "architecture": "x86_64",
+      "build": "release, unsigned",
+      "filename": "SirinVPN_0.1.0_amd64.AppImage",
+      "bytes": 112122360,
+      "sha256": "cc1117f7f29427b4096d6d8f25325bb18a4f09e254c37b26979ea4873eec9789"
+    },
+    {
+      "label": "Windows installer",
+      "platform": "windows",
+      "architecture": "x86_64",
+      "build": "GNU LLVM cross-build, unsigned debug",
+      "filename": "SirinVPN_0.1.0_x64-setup.exe",
+      "bytes": 231193498,
+      "sha256": "6ee4c6902dd2fa55fb080210c4d43e67d9d1af04fca38a578bcab89f9791af7c"
+    },
+    {
+      "label": "Android emulator",
+      "platform": "android",
+      "architecture": "x86_64",
+      "build": "debug, Android development certificate",
+      "filename": "SirinVPN_0.1.0_x86_64-debug.apk",
+      "bytes": 533196768,
+      "sha256": "c1f048db43276d965480d6e257f384806fe31c6e4cb3029ea0e369db516a1ce6"
+    },
+    {
+      "label": "Android phone",
+      "platform": "android",
+      "architecture": "aarch64",
+      "build": "debug, Android development certificate",
+      "filename": "SirinVPN_0.1.0_aarch64-debug.apk",
+      "bytes": 400555521,
+      "sha256": "d3e14c03cf9e3dc7bae31adecdfd9ec17bea3b170a06f2ffd28770d7128e157f"
+    },
+    {
+      "label": "Debian VPS x86_64",
+      "platform": "linux-vps",
+      "architecture": "x86_64",
+      "build": "Debian container release, unsigned",
+      "filename": "vps/sirinvpn-server-x86_64",
+      "bytes": 6674624,
+      "sha256": "43185be22269e409c250154e9716b85ec8cf96ae0f28d66e15bfdc9331746400"
+    },
+    {
+      "label": "Debian VPS aarch64",
+      "platform": "linux-vps",
+      "architecture": "aarch64",
+      "build": "Debian container release, unsigned",
+      "filename": "vps/sirinvpn-server-aarch64",
+      "bytes": 5707664,
+      "sha256": "3348122980773eca01ac975f4032506b309a111e62e4666dea91be1ee55c2d8c"
+    }
+  ],
+  "checks": {
+    "rust": {
+      "passed": 451,
+      "failed": 0,
+      "opt_in_ignored": 14
+    },
+    "clippy": "workspace/all targets passed with warnings denied",
+    "rust_format": "passed",
+    "frontend": {
+      "files": 32,
+      "passed": 157,
+      "typescript_and_vite": "passed"
+    },
+    "android_native_jvm": {
+      "passed": 7,
+      "device_execution": false,
+      "evidence": "docs/current-diagnostics-2026-09-07.md"
+    },
+    "privacy": "passed",
+    "source_size": "Source inventory: 653 files, 133029 lines, 0 files over 1000 lines.",
+    "shell_fixtures": {
+      "passed": 2
+    },
+    "shell_syntax": "passed for packaging/test scripts",
+    "package_inspection": "all seven artifacts passed; static extraction, no installation",
+    "platform_acceptance": "pending"
+  }
+}

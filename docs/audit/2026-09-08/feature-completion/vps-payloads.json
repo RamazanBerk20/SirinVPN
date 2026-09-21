@@ -1,0 +1,8 @@
+{
+  "sha256": {
+    "x86_64": "5ac437748c098c1d44dda920ac627f56a919fb63557bd1e68ee7eb6797ffd7b2",
+    "aarch64": "f4e056858e3c0fa7f6af0b9176906d7626f9a624a931948a36bf4a3dc0353510"
+  },
+  "embedded_in_both_android_apks_and_windows_installer": true,
+  "x86_64_matches_linux_packages": true
+}

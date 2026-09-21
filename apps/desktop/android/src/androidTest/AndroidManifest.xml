@@ -1,0 +1,10 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Used by the ordinary-UID routing checks; CatalogActivity blocks networking. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <application>
+        <!-- Fictional, offline renderer. This Activity is absent from the application APK. -->
+        <activity android:name="org.sirinvpn.client.CatalogActivity" android:exported="true"
+            android:theme="@android:style/Theme.Material.NoActionBar"
+            android:configChanges="orientation|screenSize|keyboardHidden" />
+    </application>
+</manifest>

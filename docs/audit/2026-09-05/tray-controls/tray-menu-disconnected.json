@@ -1,0 +1,87 @@
+[
+  {
+    "id": 0,
+    "children-display": "submenu"
+  },
+  {
+    "id": 13,
+    "enabled": 0,
+    "label": "Disconnected"
+  },
+  {
+    "id": 14,
+    "enabled": 0,
+    "label": "Kill switch: Off"
+  },
+  {
+    "id": 15,
+    "enabled": 1,
+    "type": "separator"
+  },
+  {
+    "id": 16,
+    "label": "Open SirinVPN"
+  },
+  {
+    "id": 17,
+    "label": "Connect to Tray VPS 1"
+  },
+  {
+    "id": 18,
+    "children-display": "submenu",
+    "label": "Connect to server"
+  },
+  {
+    "id": 19,
+    "toggle-state": 0,
+    "toggle-type": "checkmark",
+    "label": "Tray VPS 1"
+  },
+  {
+    "id": 20,
+    "toggle-state": 0,
+    "toggle-type": "checkmark",
+    "label": "Tray VPS 2"
+  },
+  {
+    "id": 21,
+    "toggle-state": 0,
+    "toggle-type": "checkmark",
+    "label": "Tray VPS 8"
+  },
+  {
+    "id": 22,
+    "enabled": 1,
+    "type": "separator"
+  },
+  {
+    "id": 23,
+    "label": "Manage servers\u2026"
+  },
+  {
+    "id": 24,
+    "enabled": 1,
+    "type": "separator"
+  },
+  {
+    "id": 25,
+    "label": "Connection settings\u2026"
+  },
+  {
+    "id": 26,
+    "label": "Settings\u2026"
+  },
+  {
+    "id": 27,
+    "label": "Diagnostics\u2026"
+  },
+  {
+    "id": 28,
+    "enabled": 1,
+    "type": "separator"
+  },
+  {
+    "id": 29,
+    "label": "Quit app"
+  }
+]

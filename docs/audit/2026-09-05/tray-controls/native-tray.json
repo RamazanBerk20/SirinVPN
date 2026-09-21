@@ -1,0 +1,11 @@
+[
+  "Native menu connects using saved preferences while the window is hidden",
+  "Reconnect targets the active server, not the GUI selection; no Disconnect is sent",
+  "Native server handoff confirms its consequences and preserves the active policy",
+  "Stopping retries retains the block and exposes Resume plus explicit Disconnect",
+  "Diagnostics opens its local result workflow without a repair action",
+  "Failed Disconnect and quit keeps the process open and displays the failure",
+  "Successful Disconnect and quit waits for acknowledged disconnection before exit",
+  "Helper status failure removes connection claims and uses the attention state",
+  "Plain Quit exits the GUI without sending any connection mutation"
+]

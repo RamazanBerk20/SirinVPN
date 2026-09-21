@@ -1,0 +1,9 @@
+[
+  "KDE Wayland: native decoration removed; 38px title bar with centered, accessible controls",
+  "KDE Wayland: maximize, restore and resize-edge visibility follow native state",
+  "KDE Wayland: minimize and single-instance reopen retain the window",
+  "Window controls preserve an open settings dialog",
+  "Custom close reaches native close-to-tray handling; reopen restores the same dialog",
+  "Native preferences are private, validate routes and IDs, and preserve the previous save on rejection",
+  "Connection preferences survive an actual app exit and restart"
+]

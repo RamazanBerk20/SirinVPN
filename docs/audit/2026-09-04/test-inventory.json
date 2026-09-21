@@ -1,0 +1,13 @@
+{
+  "baseline_test_functions": 259,
+  "current_test_functions": 265,
+  "removed": {},
+  "added": {
+    "remote_output_is_bounded_before_reading_an_unlimited_stream": 1,
+    "remote_output_accepts_empty_exact_limit_and_non_utf8_binary_data": 1,
+    "stalled_management_tls_handshake_expires_without_authenticating": 1,
+    "valid_envelopes_and_protocol_rejection_still_work": 1,
+    "oversized_bodies_are_rejected_with_and_without_a_content_length": 1,
+    "pinned_tls_accepts_only_the_enrolled_certificate_and_never_follows_redirects": 1
+  }
+}

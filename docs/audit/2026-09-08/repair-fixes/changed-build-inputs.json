@@ -1,0 +1,35 @@
+{
+  "previous_handoff": "../gui-fixes",
+  "files": [
+    {
+      "path": "crates/installer/src/install_failure.rs",
+      "before_sha256": null,
+      "after_sha256": "3bfc5a7c88bdf8417e55e32b1b3b684c14e9135825d3155d0ec87b1553693437"
+    },
+    {
+      "path": "crates/installer/src/install_script.rs",
+      "before_sha256": "a31a481631de6966d48849b9ed4b1c500018b28aee7c78a0d96437637aa10318",
+      "after_sha256": "e70efc56216b30b3c3243b79c9e9de4b7bd0b0d7092600c5ef19d17fb2a18e58"
+    },
+    {
+      "path": "crates/installer/src/lib.rs",
+      "before_sha256": "dc95e71edc29b25b6747f92947f2312bcbad175a837ab6246a0f25267c777794",
+      "after_sha256": "dd11fcda61407a9630e64f92c4491992d5d440882f417d79f5c77c39b9b73c55"
+    },
+    {
+      "path": "crates/installer/src/release_guard.rs",
+      "before_sha256": "fca6dc43102fb2cc14413b058af9d8ee40c6a05d49fca6f3fefde443488c77ab",
+      "after_sha256": "ad7d86e383e734aee41ac6aea61771b27a5e4bba5c65662346fed7a9710a8ae7"
+    },
+    {
+      "path": "crates/installer/src/release_guard/tests.rs",
+      "before_sha256": "d90a19fa39fd28ec6e6970a6aba56f95e06acff3c11d6c2911af27d03ff99c44",
+      "after_sha256": "c48ec7d0d865701211acb9f40fc1da9c7fd59caa2d001a6f18187ea5ff448276"
+    },
+    {
+      "path": "crates/installer/src/ssh.rs",
+      "before_sha256": "35baff68d8b140016824133f5d89bfe31d79d63cf9e75af33c9a184173f754de",
+      "after_sha256": "0d030d5c2e44764d80e83cc862656ec7feed8b90dc5617da2c7d349c635228fe"
+    }
+  ]
+}

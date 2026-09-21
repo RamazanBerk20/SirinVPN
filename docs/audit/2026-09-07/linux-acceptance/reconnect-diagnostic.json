@@ -1,0 +1,54 @@
+{
+  "scope": "Continuation of linux-3 in the same two owned, capped guests",
+  "host_root": false,
+  "host_privileged_networking": false,
+  "limits": {
+    "memory_bytes": 4294967296,
+    "swap_bytes": 0,
+    "cpu_percent": 150,
+    "server_memory_mib": 1024,
+    "client_memory_mib": 1536
+  },
+  "package_sha256": "18c1df919d63348e2759186b40a6e7699691a7b5d2cc345d32ed261dd26da3c3",
+  "base_image_sha256": "85a969b7e99d7c817414136033df18c58d5c45ac8d27bb36e8ccb67173d2d4e3",
+  "checks": [
+    {
+      "name": "Disconnect before the controlled sandbox retry",
+      "passed": true,
+      "evidence": {
+        "physical_routes_restored": true,
+        "owned_firewall_removed": true,
+        "owned_dns_link_removed": true
+      },
+      "seconds": 3.1
+    },
+    {
+      "name": "Automatic fallback after correcting the fixture rule syntax",
+      "passed": true,
+      "evidence": {
+        "udp_blocked": true,
+        "dropped_udp_packets": 10,
+        "selected_transport": "tls_like",
+        "exit": "vps"
+      },
+      "seconds": 58.32
+    },
+    {
+      "name": "Disconnect after automatic fallback",
+      "passed": true,
+      "evidence": {
+        "physical_routes_restored": true,
+        "owned_firewall_removed": true,
+        "owned_dns_link_removed": true
+      },
+      "seconds": 3.02
+    },
+    {
+      "name": "Remove an actively connected client package",
+      "passed": false,
+      "error": "AssertionError: removing the active client left networking blocked",
+      "seconds": 7.74
+    }
+  ],
+  "guest_override": "Reconnect service ReadWritePaths=/var/lib/sirinvpn; requires a final package rebuild"
+}

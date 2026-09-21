@@ -1,0 +1,44 @@
+{
+  "installer_rust": {
+    "passed": 33,
+    "failed": 0,
+    "opt_in_tests_ignored": 5
+  },
+  "isolated_root_staging": {
+    "passed": 2,
+    "failed": 0,
+    "profile": "release",
+    "run_tmpfs_noexec": true,
+    "remaining_opt_in_tests_not_run": 3
+  },
+  "frontend": {
+    "files_passed": 36,
+    "tests_passed": 168,
+    "execution": "Linux package container"
+  },
+  "typescript_and_vite": "passed",
+  "affected_native_clippy_all_targets_warnings_denied": "passed",
+  "windows_cross_clippy_test_targets_warnings_denied": "passed",
+  "privacy": "passed",
+  "rust_format": "passed",
+  "diff_whitespace": "passed",
+  "source_size": {
+    "files": 691,
+    "lines": 138515,
+    "files_above_1000_lines": 0
+  },
+  "new_native_platform_acceptance": "not run",
+  "new_browser_checks": "not run; UI source unchanged from previous handoff",
+  "live_vps_repair_and_read_only_health_verification": "passed",
+  "application_package_inspection": {
+    "passed": 5,
+    "execution": "static extraction"
+  },
+  "build_limits": {
+    "sequential": true,
+    "cargo_jobs": 2,
+    "memory_max_gib": 4,
+    "extra_swap": 0,
+    "cpu_quota_percent": 150
+  }
+}

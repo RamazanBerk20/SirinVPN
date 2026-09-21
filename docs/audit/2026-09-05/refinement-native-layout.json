@@ -1,0 +1,9 @@
+[
+  "Notification initialization can read permission; unguarded plugin delivery remains blocked",
+  "WebKitGTK Home has centered boxed icons and no inline connection-settings panel",
+  "Full-width native device rows expand; empty invitations are compact and forwarding is in Network settings",
+  "Onboarding actions share a baseline with no overlap at 958px",
+  "Native pointer dragging moves the undecorated window using its title bar",
+  "Native double-click maximizes; the keyboard-operated Restore button restores",
+  "Native pointer resize from the custom corner changes the actual window dimensions"
+]

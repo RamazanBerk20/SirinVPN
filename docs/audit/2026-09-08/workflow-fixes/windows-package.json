@@ -1,0 +1,12 @@
+{
+  "filename": "SirinVPN_0.1.0_x64-setup.exe",
+  "sha256": "0854c853d5abf5ccf8715054058e2f510cd2716fe620fef06e61fcfe58b857bf",
+  "target": "x86_64-pc-windows-gnullvm",
+  "profile": "debug",
+  "all_configured_payloads_match_current_builds": true,
+  "wireguard_nt_vendor_pin": "passed",
+  "runtime_dependency_inspection": "passed",
+  "routing_driver_sha256": "2f4e9be1c09a9f369d5ec2574c110dc5abcbc5f147c5590ced446c3f2b9f9ba2",
+  "routing_driver_rebuilt": false,
+  "inspection": "static extraction; no native Windows execution"
+}

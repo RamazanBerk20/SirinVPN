@@ -1,0 +1,36 @@
+# Rust, frontend, Tauri, and local build outputs
+/target/
+/apps/desktop/node_modules/
+/apps/desktop/dist/
+/apps/desktop/src-tauri/gen/
+/apps/desktop/src-tauri/binaries/
+/apps/desktop/vite.config.js
+/apps/desktop/vite.config.d.ts
+*.tsbuildinfo
+__pycache__/
+/.cache/
+
+# Local configuration and secret material (at any depth)
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.key
+*.pem
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.sirinvpn-backup
+*.sirrec
+invite-code.txt
+*.log
+
+# Local editor and operating-system metadata
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db

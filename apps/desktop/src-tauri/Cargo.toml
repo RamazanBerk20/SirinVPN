@@ -1,0 +1,50 @@
+[package]
+name = "sirinvpn-desktop"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[lib]
+name = "sirinvpn_desktop_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.6", features = [] }
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+tauri = { version = "2.11", features = [] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+nix.workspace = true
+keyring = { workspace = true, features = ["linux-native-sync-persistent"] }
+sirinvpn-linux-helper = { path = "../../../crates/linux-helper" }
+notify-rust = "4.18"
+
+
+[target.'cfg(windows)'.dependencies]
+keyring = { workspace = true, features = ["windows-native"] }
+sirinvpn-windows-service = { path = "../../../crates/windows-service" }
+
+[target.'cfg(not(target_os = "android"))'.dependencies]
+anyhow.workspace = true
+keyring.workspace = true
+qrcode.workspace = true
+semver.workspace = true
+sirinvpn-core = { path = "../../../crates/core" }
+sirinvpn-platform = { path = "../../../crates/platform" }
+sirinvpn-installer = { path = "../../../crates/installer" }
+sirinvpn-protocol = { path = "../../../crates/protocol" }
+sirinvpn-tunnel-model = { path = "../../../crates/tunnel-model" }
+sirinvpn-release = { path = "../../../crates/release" }
+sirinvpn-release-fetch = { path = "../../../crates/release-fetch" }
+sirinvpn-transport = { path = "../../../crates/transport" }
+tempfile.workspace = true
+tokio.workspace = true
+zeroize.workspace = true
+tauri = { version = "2.11", features = ["tray-icon"] }
+tauri-plugin-single-instance = "2.4.2"
+tauri-plugin-dialog = "2.7.2"
+tauri-plugin-notification = "2.3.3"

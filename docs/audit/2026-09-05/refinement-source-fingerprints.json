@@ -1,0 +1,19 @@
+{
+  "algorithm": "SHA-256 of sorted UTF-8 relative path + NUL + lowercase file SHA-256 + newline for each Git-visible file in the scope",
+  "frontend": {
+    "files": 121,
+    "sha256": "e29a24458d4b763dfb9bc4f25305eb1e73a79c803b2cb7a9705041778b42d08f"
+  },
+  "native_app": {
+    "files": 27,
+    "sha256": "511ba508916228352a218056fdc394bd906797aa87985a13569ce01f3e0d07a8"
+  },
+  "crates": {
+    "files": 162,
+    "sha256": "7601b53b9ea9bb7a49dbe43ababbb007543c12f100f4c771c2f2aa74549254bf"
+  },
+  "ui_verification": {
+    "files": 11,
+    "sha256": "89366baf96d9b9dd73c0fff0c1b2074f42a4f09fff75ce481c007ab022db0d48"
+  }
+}

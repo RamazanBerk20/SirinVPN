@@ -1,0 +1,5 @@
+{
+  "build": { "frontendDist": "../dist" },
+  "app": { "windows": [{ "title": "SirinVPN", "fullscreen": false }] },
+  "bundle": { "targets": [], "android": { "minSdkVersion": 29 } }
+}

@@ -1,0 +1,5 @@
+[
+  "Native Android commands reject unsupported desktop preferences",
+  "Permission-aware preference switch and native Android notification delivery",
+  "Preferences restored after a full Android process restart"
+]

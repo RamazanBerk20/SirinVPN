@@ -1,0 +1,14 @@
+{
+  "comparison": "HEAD vs working source; direct UI API references, excluding tests",
+  "baseline_operations": 53,
+  "current_operations": 58,
+  "missing": [],
+  "added": [
+    "getAppPreferences",
+    "requestNotificationPermission",
+    "setAppPreferences",
+    "testNotification",
+    "updateServerPresentation"
+  ],
+  "baseline_commit": "5668e678761690f4283451a0d226b1662d91de15"
+}

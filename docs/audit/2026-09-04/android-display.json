@@ -1,0 +1,10 @@
+{
+  "system_themes": [
+    "light",
+    "dark"
+  ],
+  "readable_system_bars": true,
+  "keyboard": "pass",
+  "landscape_navigation_in_viewport": "pass",
+  "horizontal_overflow": false
+}

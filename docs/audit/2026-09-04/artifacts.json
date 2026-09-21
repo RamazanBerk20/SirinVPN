@@ -1,0 +1,26 @@
+{
+  "debian_payloads_verified": [
+    "usr/bin/sirinvpn",
+    "usr/lib/sirinvpn/sirinvpn-helper",
+    "usr/lib/sirinvpn/sirinvpn-release",
+    "usr/lib/sirinvpn/sirinvpn-release-fetch",
+    "usr/lib/sirinvpn/sirinvpn-server"
+  ],
+  "artifacts": [
+    {
+      "path": "target/release/bundle/deb/SirinVPN_0.1.0_amd64.deb",
+      "bytes": 15515476,
+      "sha256": "657280c4a3886af2eae1ecf060a21e93233391dc013116491597c195f04cec93"
+    },
+    {
+      "path": "target/release/bundle/appimage/SirinVPN_0.1.0_amd64.AppImage",
+      "bytes": 108763640,
+      "sha256": "6748c13eb440ef0fafefb69dad1b590cd02559e46f63a0291f1b9eaf1cb0e454"
+    },
+    {
+      "path": "apps/desktop/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk",
+      "bytes": 478251479,
+      "sha256": "079d92e07921ef7ce12da533a9c00ee9832010db422124ae7928751d4818e3ec"
+    }
+  ]
+}

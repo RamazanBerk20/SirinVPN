@@ -1,0 +1,35 @@
+[package]
+name = "sirinvpn-linux-helper"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[[bin]]
+name = "sirinvpn-helper"
+path = "src/main.rs"
+
+[dependencies]
+anyhow.workspace = true
+base64.workspace = true
+clap.workspace = true
+fs2.workspace = true
+ipnet.workspace = true
+nix.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sirinvpn-protocol = { path = "../protocol" }
+sirinvpn-tunnel-model = { path = "../tunnel-model" }
+sirinvpn-core = { path = "../core" }
+socket2.workspace = true
+hickory-proto = { version = "0.26.2", default-features = false, features = ["std"] }
+sirinvpn-transport = { path = "../transport" }
+thiserror.workspace = true
+tempfile.workspace = true
+tokio.workspace = true
+zeroize.workspace = true
+
+[dev-dependencies]
+sirinvpn-server = { path = "../server" }
+ed25519-dalek.workspace = true
+uuid.workspace = true

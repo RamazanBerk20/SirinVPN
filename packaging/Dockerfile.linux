@@ -1,0 +1,25 @@
+FROM node:26-bookworm AS node
+
+FROM rust:1.97-bookworm
+
+COPY --from=node /usr/local/ /usr/local/
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+      build-essential \
+      curl \
+      file \
+      libayatana-appindicator3-dev \
+      libdbus-1-dev \
+      librsvg2-dev \
+      libssl-dev \
+      libwebkit2gtk-4.1-dev \
+      libxdo-dev \
+      patchelf \
+      wget \
+    && rm -rf /var/lib/apt/lists/* \
+    && npm install --global pnpm@11.3.0
+
+ENV CARGO_HOME=/var/cache/sirinvpn/cargo
+ENV PNPM_HOME=/var/cache/sirinvpn/pnpm
+ENV PATH=$PNPM_HOME:$PATH

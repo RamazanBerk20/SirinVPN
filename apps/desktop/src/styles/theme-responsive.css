@@ -1,0 +1,215 @@
+@media (max-width: 1150px) {
+  .app-shell {
+    grid-template-columns: 198px minmax(0, 1fr);
+  }
+  .workspace {
+    padding-left: 22px;
+    padding-right: 22px;
+  }
+  .workspace-topline {
+    margin-left: -22px;
+    margin-right: -22px;
+    padding-left: 22px;
+    padding-right: 22px;
+  }
+  .primary-navigation button {
+    gap: 10px;
+    padding: 11px;
+  }
+  .primary-navigation small {
+    font-size: 9px;
+  }
+  .sidebar .brand strong {
+    font-size: 20px;
+  }
+  .connection-panel {
+    gap: 15px;
+    grid-template-columns: 1fr 1fr;
+  }
+  .home-intro {
+    grid-column: 1;
+  }
+  .connection-visual {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .connection-copy {
+    grid-column: 1/-1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 25px;
+  }
+  .connection-copy .status-line,
+  .connection-copy h2 {
+    grid-column: 1;
+  }
+  .connection-copy > p {
+    grid-column: 1;
+  }
+  .connection-copy .connection-endpoint {
+    grid-column: 2;
+  }
+  .connection-copy .connection-endpoint:nth-last-child(2) {
+    grid-row: 1/3;
+  }
+  .connection-copy .connection-endpoint:last-child {
+    grid-row: 3;
+  }
+  .metrics-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .transport-picker {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .header-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 760px) {
+  .app-shell {
+    display: block;
+  }
+  .sidebar {
+    display: none;
+  }
+  .workspace {
+    padding: 0 20px 105px;
+  }
+  .workspace-topline {
+    padding: 17px 20px;
+    margin: 0 -20px 24px;
+    letter-spacing: 0.1em;
+  }
+  .topline-status {
+    font-size: 9px;
+  }
+  .bottom-navigation {
+    display: flex;
+  }
+  .workspace-header h1 {
+    font-size: 25px;
+  }
+  .server-card-grid {
+    grid-template-columns: 1fr;
+  }
+  .server-card {
+    padding: 22px;
+  }
+  .onboarding-shell {
+    --onboarding-gutter: 20px;
+    --onboarding-gap: 20px;
+    grid-template-columns: 1fr;
+    padding: 30px 20px;
+    gap: 22px;
+  }
+  .onboarding-copy {
+    padding-top: 0;
+    text-align: center;
+  }
+  .onboarding-copy h1 {
+    font-size: 32px;
+  }
+  .onboarding-copy .infrastructure-art {
+    display: none;
+  }
+  .onboarding-copy .privacy-promises {
+    justify-content: center;
+  }
+  .onboarding-copy > p:not(.section-label) {
+    font-size: 12px;
+  }
+  .onboarding-form-wrap {
+    padding: 20px;
+  }
+  .dialog-content {
+    width: calc(100vw - 26px);
+    max-height: calc(100dvh - 36px);
+    padding: 24px 20px;
+  }
+  .header-actions > button {
+    padding: 14px;
+    font-size: 11px;
+  }
+  .maintenance-tools {
+    padding: 18px;
+  }
+  .metrics-grid {
+    gap: 8px;
+  }
+  .metric {
+    padding: 12px 9px;
+    min-height: 94px;
+  }
+  .metric strong {
+    font-size: 13px;
+  }
+}
+@media (max-width: 430px) {
+  .home-intro h2 {
+    font-size: 24px;
+  }
+  .home-intro > p:not(.section-label) {
+    font-size: 11px;
+  }
+  .privacy-badge {
+    font-size: 9px;
+    line-height: 1.7;
+  }
+  .power-control {
+    width: 104px;
+    height: 104px;
+  }
+  .connection-visual .hero-brand-mark {
+    width: 60px;
+    height: 60px;
+  }
+  .power-state {
+    font-size: 14px;
+  }
+  .connection-panel {
+    gap: 12px;
+  }
+  .connection-visual {
+    min-height: 240px;
+  }
+  .connection-copy {
+    padding: 14px;
+    gap: 8px 14px;
+  }
+  .connection-copy h2 {
+    font-size: 14px;
+  }
+  .connection-copy > p {
+    font-size: 9px;
+  }
+  .connection-endpoint {
+    gap: 7px;
+  }
+  .connection-endpoint strong {
+    font-size: 10px;
+  }
+  .connection-endpoint small {
+    font-size: 9px;
+  }
+  .transport-picker {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .workspace-topline > span:first-child {
+    font-size: 8px;
+  }
+  .workspace-topline b {
+    margin: 0 3px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,33 @@
+[package]
+name = "sirinvpn-release-fetch"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[lib]
+name = "sirinvpn_release_fetch"
+path = "src/lib.rs"
+
+[[bin]]
+name = "sirinvpn-release-fetch"
+path = "src/main.rs"
+
+[dependencies]
+anyhow.workspace = true
+clap.workspace = true
+sirinvpn-platform = { path = "../platform" }
+reqwest.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sirinvpn-release = { path = "../release" }
+tempfile.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+
+[target.'cfg(unix)'.dependencies]
+nix = { workspace = true, features = ["fs"] }
+
+[dev-dependencies]
+rcgen.workspace = true
+rustls.workspace = true

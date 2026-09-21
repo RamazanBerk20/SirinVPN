@@ -1,0 +1,30 @@
+{
+  "platform": "android",
+  "vpn": {
+    "permission_granted": true,
+    "state": "disconnected",
+    "transport": null,
+    "active_profile_id": null,
+    "rx_bytes": 0,
+    "tx_bytes": 0,
+    "protection_status_known": false,
+    "ipv6_blocked": false,
+    "backend_version": "f333402",
+    "persistence_state": "disabled",
+    "persistent_profile_id": null,
+    "always_on_supported": true,
+    "always_on": false,
+    "lockdown_enabled": false
+  },
+  "notification_permission": null,
+  "desktop_title_bar_absent": true,
+  "header_respects_safe_area": true,
+  "unguarded_notification_delivery_blocked": true,
+  "connection_preferences": {
+    "retained_after_reload": true,
+    "unsupported_preferences_rejected": true,
+    "save_does_not_arm_vpn": true,
+    "retained_after_process_restart": true,
+    "deleted_profile_unavailable": true
+  }
+}

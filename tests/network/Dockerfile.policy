@@ -1,0 +1,4 @@
+FROM sirinvpn-linux-builder
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    iproute2 nftables wireguard-tools python3 iputils-ping \
+    && rm -rf /var/lib/apt/lists/*

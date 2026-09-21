@@ -1,0 +1,42 @@
+{
+  "synthetic_native_replies": true,
+  "checks": [
+    {
+      "width": 1220,
+      "height": 780,
+      "repair_result_and_busy_guard": true,
+      "setup_review_and_routine_update": true,
+      "schedule_failure_visible": true,
+      "persistent_header_and_focus_trap": true,
+      "diagnostics_order_and_focus_return": true,
+      "private_tunnel_latency": true,
+      "wifi_pause_and_network_change_guard": true,
+      "fresh_client_recovery_without_existing_credentials": true
+    },
+    {
+      "width": 1024,
+      "height": 680,
+      "repair_result_and_busy_guard": true,
+      "setup_review_and_routine_update": true,
+      "schedule_failure_visible": true,
+      "persistent_header_and_focus_trap": true,
+      "diagnostics_order_and_focus_return": true,
+      "private_tunnel_latency": true,
+      "wifi_pause_and_network_change_guard": true,
+      "fresh_client_recovery_without_existing_credentials": true
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "repair_result_and_busy_guard": true,
+      "setup_review_and_routine_update": true,
+      "schedule_failure_visible": true,
+      "persistent_header_and_focus_trap": true,
+      "diagnostics_order_and_focus_return": true,
+      "private_tunnel_latency": true,
+      "wifi_pause_and_network_change_guard": true,
+      "fresh_client_recovery_without_existing_credentials": true
+    }
+  ],
+  "page_errors": []
+}

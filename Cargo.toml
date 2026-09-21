@@ -1,0 +1,79 @@
+[workspace]
+members = [
+  "crates/android-runtime",
+  "crates/protocol",
+  "crates/platform",
+  "crates/tunnel-model",
+  "crates/windows-service",
+  "crates/release",
+  "crates/release-fetch",
+  "crates/transport",
+  "crates/core",
+  "crates/server",
+  "crates/installer",
+  "crates/linux-helper",
+  "crates/cli",
+  "apps/desktop/src-tauri",
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "AGPL-3.0-only"
+rust-version = "1.89"
+
+[workspace.dependencies]
+anyhow = "1.0"
+argon2 = "0.5"
+axum = { version = "0.8", features = ["json"] }
+base64 = "0.22"
+chacha20poly1305 = "0.11"
+clap = { version = "4.5", features = ["derive", "env"] }
+directories = "6.0"
+ed25519-dalek = { version = "2.2", features = ["pem", "pkcs8"] }
+flate2 = "1.1"
+fs2 = "0.4"
+futures-util = { version = "0.3", features = ["sink"] }
+hex = "0.4"
+http = "1.3"
+http-body-util = "0.1"
+hyper = { version = "1.7", features = ["server"] }
+hyper-util = { version = "0.1", features = ["server-auto", "service", "tokio"] }
+ipnet = "2.12"
+keyring = { version = "3.6", default-features = false }
+libc = "0.2"
+nix = { version = "0.30", features = ["user", "fs", "sched"] }
+qrcode = { version = "0.14", default-features = false, features = ["svg"] }
+rand = "0.8"
+rcgen = { version = "0.13", features = ["pem", "x509-parser"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls-native-roots"] }
+rpassword = "7.4"
+rustls = "0.23"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+semver = "1.0"
+sha2 = "0.10"
+snow = { version = "0.10", default-features = false, features = ["std", "default-resolver", "use-chacha20poly1305", "use-curve25519", "use-getrandom", "use-sha2"] }
+socket2 = { version = "0.6", features = ["all"] }
+ssh2 = { version = "0.9", features = ["vendored-openssl"] }
+subtle = "2.6"
+tempfile = "3.21"
+thiserror = "2.0"
+tokio = { version = "1.47", features = ["io-util", "macros", "net", "process", "rt-multi-thread", "signal", "sync", "time"] }
+tokio-rustls = "0.26"
+tokio-tungstenite = { version = "0.30", default-features = false, features = ["handshake"] }
+httparse = "1.10"
+tower = "0.5"
+uuid = { version = "1.18", features = ["serde", "v4"] }
+x25519-dalek = { version = "2.0", features = ["static_secrets"] }
+x509-parser = "0.16"
+zeroize = { version = "1.8", features = ["derive"] }
+windows-sys = "0.61.2"
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+panic = "abort"
+strip = "symbols"

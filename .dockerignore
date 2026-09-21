@@ -1,0 +1,13 @@
+target
+.cache
+apps/desktop/node_modules
+apps/desktop/dist
+apps/desktop/src-tauri/gen
+apps/desktop/src-tauri/binaries
+.git
+*.key
+*.pem
+*.p12
+*.pfx
+.env
+.env.*

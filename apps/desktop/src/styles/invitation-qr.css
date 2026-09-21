@@ -1,0 +1,123 @@
+/* Keep dense, signed invitations large enough for another device's camera. */
+.dialog-content.invitation-dialog {
+  width: min(720px, calc(100vw - 32px));
+}
+
+.dialog-content.invitation-dialog-ready {
+  width: min(900px, calc(100vw - 32px));
+}
+
+.invitation-result {
+  margin-top: 0;
+}
+
+.invitation-result > .warning-note {
+  margin: 0;
+}
+
+.invitation-dialog-ready .invitation-result-actions {
+  width: 100%;
+}
+
+.invitation-share-grid {
+  grid-template-columns: minmax(0, 1.6fr) minmax(220px, 1fr);
+  align-items: stretch;
+  gap: 20px;
+}
+
+.qr-share {
+  width: 100%;
+  justify-items: center;
+}
+
+.invitation-qr-button {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  cursor: zoom-in;
+}
+
+.invitation-qr-frame {
+  display: grid;
+  justify-items: center;
+  width: min(100%, max(314px, calc(100dvh - 380px)), 520px);
+  background: white;
+}
+
+.invitation-qr-frame img {
+  display: block;
+  max-width: 100%;
+  aspect-ratio: 1;
+  border-radius: 0;
+}
+
+.invitation-qr-button > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-secondary);
+}
+
+.invitation-qr-button:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 5px;
+  border-radius: 4px;
+}
+
+.invitation-qr-overlay {
+  z-index: 60;
+}
+
+.dialog-content.invitation-qr-dialog {
+  z-index: 70;
+  width: min(1000px, calc(100vw - 32px));
+}
+
+html[data-window-chrome="custom"] .dialog-content.invitation-qr-dialog {
+  max-height: calc(100dvh - var(--titlebar-height) - 16px);
+}
+
+.invitation-qr-dialog .dialog-header {
+  padding: 14px 16px;
+}
+
+.invitation-qr-dialog .dialog-body {
+  display: grid;
+  justify-items: center;
+  padding: 12px 16px;
+  scrollbar-gutter: auto;
+}
+
+.invitation-qr-enlarged {
+  width: min(100%, calc(100dvh - 144px));
+}
+
+@media (max-width: 680px) {
+  .invitation-dialog-ready .dialog-body {
+    padding: 16px;
+    scrollbar-gutter: auto;
+  }
+
+  .invitation-dialog-ready .qr-share {
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+
+  .invitation-share-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .invitation-qr-button .invitation-qr-frame {
+    width: 100%;
+  }
+
+  .code-share .secret-code-output {
+    min-height: 120px;
+  }
+}

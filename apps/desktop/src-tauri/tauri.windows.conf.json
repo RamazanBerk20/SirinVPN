@@ -1,0 +1,32 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "bundle": {
+    "targets": ["nsis"],
+    "icon": ["icons/icon.ico"],
+    "resources": {
+      "binaries/windows/sirinvpn-windows-service.exe": "sirinvpn-windows-service.exe",
+      "binaries/windows/sirinvpn.exe": "sirinvpn.exe",
+      "binaries/windows/wireguard.dll": "wireguard.dll",
+      "binaries/windows/sirinvpn-app-routing.sys": "sirinvpn-app-routing.sys",
+      "binaries/sirinvpn-server-x86_64": "resources/vps/sirinvpn-server",
+      "binaries/sirinvpn-server-aarch64": "resources/vps/sirinvpn-server-aarch64",
+      "../../../packaging/windows/third-party/wireguard-nt-LICENSE.txt": "licenses/wireguard-nt.txt",
+      "../../../packaging/windows/third-party/tauri-MIT.txt": "licenses/tauri-MIT.txt",
+      "../../../packaging/windows/third-party/webview2-sdk-LICENSE.txt": "licenses/webview2-sdk-LICENSE.txt",
+      "../../../packaging/windows/third-party/webview2-sdk-NOTICE.txt": "licenses/webview2-sdk-NOTICE.txt",
+      "../../../crates/windows-service/THIRD-PARTY-NOTICES": "licenses/windows-service-API.txt"
+    },
+    "windows": {
+      "allowDowngrades": true,
+      "webviewInstallMode": { "type": "skip" },
+      "nsis": {
+        "template": "../../../packaging/windows/installer.nsi",
+        "installMode": "perMachine",
+        "installerHooks": "../../../packaging/windows/installer-hooks.nsh",
+        "installerIcon": "icons/icon.ico",
+        "languages": ["English", "Turkish"],
+        "displayLanguageSelector": false
+      }
+    }
+  }
+}

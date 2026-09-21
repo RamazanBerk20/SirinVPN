@@ -1,0 +1,11 @@
+{
+  "sha256": "6ee4c6902dd2fa55fb080210c4d43e67d9d1af04fca38a578bcab89f9791af7c",
+  "target": "x86_64-pc-windows-gnullvm",
+  "profile": "debug",
+  "payload_bytes": "passed; exact configured files with the one expected GUI UNK to NSS marker",
+  "architectures": "x64 PE and x86_64/aarch64 VPS ELF passed",
+  "wireguardnt_vendor_pin": "passed",
+  "runtime_dependencies": "passed",
+  "installer_execution": "not run",
+  "authenticode": "unsigned"
+}

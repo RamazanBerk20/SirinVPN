@@ -1,0 +1,26 @@
+[
+  {
+    "text": "Choose transport automatically",
+    "family": "\"Inter Variable\", ui-sans-serif, system-ui, sans-serif",
+    "size": "15px",
+    "weight": "500"
+  },
+  {
+    "text": "Kill switch",
+    "family": "\"Inter Variable\", ui-sans-serif, system-ui, sans-serif",
+    "size": "15px",
+    "weight": "500"
+  },
+  {
+    "text": "Automatic reconnect",
+    "family": "\"Inter Variable\", ui-sans-serif, system-ui, sans-serif",
+    "size": "15px",
+    "weight": "500"
+  },
+  {
+    "text": "Connect on system startup",
+    "family": "\"Inter Variable\", ui-sans-serif, system-ui, sans-serif",
+    "size": "15px",
+    "weight": "500"
+  }
+]

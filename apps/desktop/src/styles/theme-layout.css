@@ -1,0 +1,125 @@
+/* Layout review adjustments: labels must remain legible at the minimum width. */
+h1,
+h2,
+h3 {
+  font-weight: 750;
+}
+.primary-navigation {
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.primary-navigation button {
+  min-height: 60px;
+}
+.sidebar-update-wrap {
+  padding-top: 45px;
+}
+.server-list {
+  min-height: 90px;
+  max-height: 200px;
+  flex: 0 1 auto;
+}
+.metric {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+.metric > span {
+  display: grid;
+  place-items: center;
+}
+.metric > div {
+  width: 100%;
+}
+.metric strong,
+.metric .mono {
+  white-space: normal;
+  text-overflow: clip;
+  overflow: visible;
+}
+.metric > div > span {
+  letter-spacing: 0.02em;
+}
+.metric strong {
+  display: block;
+  font-size: 14px;
+}
+@media (max-height: 800px) and (min-width: 761px) {
+  .sidebar {
+    padding-top: 18px;
+  }
+  .sidebar > .brand {
+    padding-bottom: 8px;
+  }
+  .sidebar-update-wrap {
+    padding-top: 15px;
+  }
+  .primary-navigation {
+    gap: 3px;
+  }
+  .primary-navigation button {
+    min-height: 54px;
+  }
+}
+.onboarding-copy {
+  align-self: start;
+  padding-top: 80px;
+}
+.field-grid {
+  align-items: start;
+}
+.setup-advanced {
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 16px;
+}
+.setup-advanced > summary {
+  color: var(--muted);
+  font-size: 12px;
+}
+.setup-advanced[open] > summary {
+  margin-bottom: 20px;
+}
+.setup-advanced .replacement-option {
+  margin-top: 0;
+}
+.setup-advanced-content {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+.advanced-fields > :not(summary) {
+  margin-top: 16px;
+}
+.device-search {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  color: var(--muted);
+  margin: 0 0 20px;
+  font-size: 12px;
+}
+.device-search input {
+  flex: 1;
+  min-width: 0;
+  padding: 13px 16px;
+  border-radius: 10px;
+  background: #09152a;
+  border: 1px solid #2b4772;
+  color: var(--text);
+}
+.access-section > .settings-note {
+  margin: 12px 0 16px;
+}
+@media (max-width: 760px) {
+  .onboarding-copy {
+    padding-top: 0;
+  }
+  .device-search {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 7px;
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "synthetic_native_responses": true,
+  "checks": [
+    {
+      "width": 1220,
+      "height": 780,
+      "wifi_error_absent": true,
+      "component_update_confirmed": true,
+      "release_fields_styled": true,
+      "ssh_fields_stable": true,
+      "network_review_before_install": true
+    },
+    {
+      "width": 1024,
+      "height": 680,
+      "wifi_error_absent": true,
+      "component_update_confirmed": true,
+      "release_fields_styled": true,
+      "ssh_fields_stable": true,
+      "network_review_before_install": true
+    }
+  ],
+  "page_errors": []
+}

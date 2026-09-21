@@ -1,0 +1,456 @@
+{
+  "schema_version": 1,
+  "states": [
+    {
+      "state": "android_identity_record",
+      "reads": {
+        "minimum": 1,
+        "maximum": 1
+      },
+      "writes": {
+        "minimum": 1,
+        "maximum": 1
+      }
+    },
+    {
+      "state": "android_key_rotation",
+      "reads": {
+        "minimum": 1,
+        "maximum": 1
+      },
+      "writes": {
+        "minimum": 1,
+        "maximum": 1
+      }
+    },
+    {
+      "state": "android_owner_recovery",
+      "reads": {
+        "minimum": 1,
+        "maximum": 1
+      },
+      "writes": {
+        "minimum": 1,
+        "maximum": 1
+      }
+    },
+    {
+      "state": "android_persistent_tunnel",
+      "reads": {
+        "minimum": 1,
+        "maximum": 4
+      },
+      "writes": {
+        "minimum": 2,
+        "maximum": 4
+      }
+    },
+    {
+      "state": "android_profile_journal",
+      "reads": {
+        "minimum": 1,
+        "maximum": 6
+      },
+      "writes": {
+        "minimum": 1,
+        "maximum": 6
+      }
+    },
+    {
+      "state": "android_profile_registry",
+      "reads": {
+        "minimum": 1,
+        "maximum": 6
+      },
+      "writes": {
+        "minimum": 1,
+        "maximum": 6
+      }
+    },
+    {
+      "state": "android_profile_update",
+      "reads": {
+        "minimum": 5,
+        "maximum": 6
+      },
+      "writes": {
+        "minimum": 5,
+        "maximum": 6
+      }
+    },
+    {
+      "state": "android_wifi_trust",
+      "reads": {
+        "minimum": 1,
+        "maximum": 1
+      },
+      "writes": {
+        "minimum": 1,
+        "maximum": 1
+      }
+    },
+    {
+      "state": "android_wifi_tunnel",
+      "reads": {
+        "minimum": 2,
+        "maximum": 4
+      },
+      "writes": {
+        "minimum": 2,
+        "maximum": 4
+      }
+    },
+    {
+      "state": "client_pending_enrollment",
+      "reads": {
+        "minimum": 1,
+        "maximum": 1
+      },
+      "writes": {
+        "minimum": 1,
+        "maximum": 1
+      }
+    },
+    {
+      "state": "client_release_transaction",
+      "reads": {
+        "minimum": 1,
+        "maximum": 1
+      },
+      "writes": {
+        "minimum": 1,
+        "maximum": 1
+      }
+    },
+    {
+      "state": "desktop_app_preferences",
+      "reads": {
+        "minimum": 1,
+        "maximum": 1
+      },
+      "writes": {
+        "minimum": 1,
+        "maximum": 1
+      }
+    },
+    {
+      "state": "desktop_connection_preferences",
+      "reads": {
+        "minimum": 1,
+        "maximum": 5
+      },
+      "writes": {
+        "minimum": 2,
+        "maximum": 5
+      }
+    },
+    {
+      "state": "desktop_ssh_trust",
+      "reads": {
+        "minimum": 1,
+        "maximum": 1
+      },
+      "writes": {
+        "minimum": 1,
+        "maximum": 1
+      }
+    },
+    {
+      "state": "device_backup_envelope",
+      "reads": {
+        "minimum": 1,
+        "maximum": 1
+      },
+      "writes": {
+        "minimum": 1,
+        "maximum": 1
+      }
+    },
+    {
+      "state": "device_backup_payload",
+      "reads": {
+        "minimum": 1,
+        "maximum": 2
+      },
+      "writes": {
+        "minimum": 2,
+        "maximum": 2
+      }
+    },
+    {
+      "state": "linux_client_profiles",
+      "reads": {
+        "minimum": 1,
+        "maximum": 1
+      },
+      "writes": {
+        "minimum": 1,
+        "maximum": 1
+      }
+    },
+    {
+      "state": "linux_desired_connection",
+      "reads": {
+        "minimum": 1,
+        "maximum": 6
+      },
+      "writes": {
+        "minimum": 2,
+        "maximum": 6
+      }
+    },
+    {
+      "state": "linux_identity_record",
+      "reads": {
+        "minimum": 1,
+        "maximum": 1
+      },
+      "writes": {
+        "minimum": 1,
+        "maximum": 1
+      }
+    },
+    {
+      "state": "linux_key_rotation_journal",
+      "reads": {
+        "minimum": 1,
+        "maximum": 4
+      },
+      "writes": {
+        "minimum": 1,
+        "maximum": 4
+      }
+    },
+    {
+      "state": "linux_network_policy",
+      "reads": {
+        "minimum": 1,
+        "maximum": 2
+      },
+      "writes": {
+        "minimum": 1,
+        "maximum": 2
+      }
+    },
+    {
+      "state": "linux_release_receipt",
+      "reads": {
+        "minimum": 1,
+        "maximum": 1
+      },
+      "writes": {
+        "minimum": 1,
+        "maximum": 1
+      }
+    },
+    {
+      "state": "linux_release_transaction",
+      "reads": {
+        "minimum": 1,
+        "maximum": 1
+      },
+      "writes": {
+        "minimum": 1,
+        "maximum": 1
+      }
+    },
+    {
+      "state": "linux_release_trust",
+      "reads": {
+        "minimum": 1,
+        "maximum": 1
+      },
+      "writes": {
+        "minimum": 1,
+        "maximum": 1
+      }
+    },
+    {
+      "state": "linux_runtime_connection",
+      "reads": {
+        "minimum": 1,
+        "maximum": 5
+      },
+      "writes": {
+        "minimum": 1,
+        "maximum": 5
+      }
+    },
+    {
+      "state": "linux_tunnel_request",
+      "reads": {
+        "minimum": 1,
+        "maximum": 11
+      },
+      "writes": {
+        "minimum": 2,
+        "maximum": 11
+      }
+    },
+    {
+      "state": "owner_recovery_key",
+      "reads": {
+        "minimum": 1,
+        "maximum": 2
+      },
+      "writes": {
+        "minimum": 1,
+        "maximum": 2
+      }
+    },
+    {
+      "state": "owner_recovery_package",
+      "reads": {
+        "minimum": 1,
+        "maximum": 1
+      },
+      "writes": {
+        "minimum": 1,
+        "maximum": 1
+      }
+    },
+    {
+      "state": "server_authorization",
+      "reads": {
+        "minimum": 1,
+        "maximum": 5
+      },
+      "writes": {
+        "minimum": 1,
+        "maximum": 5
+      }
+    },
+    {
+      "state": "server_backup_envelope",
+      "reads": {
+        "minimum": 1,
+        "maximum": 1
+      },
+      "writes": {
+        "minimum": 1,
+        "maximum": 1
+      }
+    },
+    {
+      "state": "server_backup_snapshot",
+      "reads": {
+        "minimum": 1,
+        "maximum": 2
+      },
+      "writes": {
+        "minimum": 1,
+        "maximum": 2
+      }
+    },
+    {
+      "state": "server_configuration",
+      "reads": {
+        "minimum": 1,
+        "maximum": 8
+      },
+      "writes": {
+        "minimum": 1,
+        "maximum": 8
+      }
+    },
+    {
+      "state": "server_handoff_guard",
+      "reads": {
+        "minimum": 1,
+        "maximum": 1
+      },
+      "writes": {
+        "minimum": 1,
+        "maximum": 1
+      }
+    },
+    {
+      "state": "server_maintenance_guard",
+      "reads": {
+        "minimum": 1,
+        "maximum": 1
+      },
+      "writes": {
+        "minimum": 1,
+        "maximum": 1
+      }
+    },
+    {
+      "state": "server_operational_configuration",
+      "reads": {
+        "minimum": 1,
+        "maximum": 1
+      },
+      "writes": {
+        "minimum": 1,
+        "maximum": 1
+      }
+    },
+    {
+      "state": "server_release_transaction",
+      "reads": {
+        "minimum": 1,
+        "maximum": 1
+      },
+      "writes": {
+        "minimum": 1,
+        "maximum": 1
+      }
+    },
+    {
+      "state": "server_security_update_policy",
+      "reads": {
+        "minimum": 1,
+        "maximum": 1
+      },
+      "writes": {
+        "minimum": 1,
+        "maximum": 1
+      }
+    },
+    {
+      "state": "signed_endpoint_checkpoint",
+      "reads": {
+        "minimum": 1,
+        "maximum": 2
+      },
+      "writes": {
+        "minimum": 1,
+        "maximum": 2
+      }
+    },
+    {
+      "state": "signed_invitation_claims",
+      "reads": {
+        "minimum": 1,
+        "maximum": 3
+      },
+      "writes": {
+        "minimum": 1,
+        "maximum": 3
+      }
+    },
+    {
+      "state": "windows_service_session",
+      "reads": {
+        "minimum": 1,
+        "maximum": 2
+      },
+      "writes": {
+        "minimum": 1,
+        "maximum": 2
+      }
+    },
+    {
+      "state": "windows_update_transaction",
+      "reads": {
+        "minimum": 1,
+        "maximum": 1
+      },
+      "writes": {
+        "minimum": 1,
+        "maximum": 1
+      }
+    }
+  ]
+}

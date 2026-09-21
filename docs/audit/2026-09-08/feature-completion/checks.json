@@ -1,0 +1,47 @@
+{
+  "rust": {
+    "passed": 465,
+    "failed": 0,
+    "opt_in_network_tests_ignored": 14
+  },
+  "frontend": {
+    "files_passed": 33,
+    "tests_passed": 162,
+    "typescript_and_vite": "passed",
+    "linux_container_repeat": "passed; asynchronous select readiness fixed in test"
+  },
+  "release_library_tests": 55,
+  "windows_host_policy_tests": 14,
+  "host_clippy_all_targets_warnings_denied": "passed",
+  "windows_cross_clippy_test_targets_warnings_denied": "passed",
+  "android_x86_64_app_and_jni_clippy_warnings_denied": "passed",
+  "android_native_jvm": {
+    "passed": 7,
+    "failed": 0,
+    "instrumentation_sources": "compiled",
+    "device_execution": false
+  },
+  "python_unit_tests": 2,
+  "privacy": "passed",
+  "rust_format": "passed",
+  "diff_whitespace": "passed",
+  "shell_and_python_script_syntax": "passed",
+  "source_size": {
+    "files": 685,
+    "lines": 137788,
+    "files_above_1000_lines": 0
+  },
+  "application_package_inspection": {
+    "passed": 5,
+    "execution": "static extraction only"
+  },
+  "build_limits": {
+    "sequential": true,
+    "cargo_jobs": 2,
+    "memory_max_gib": 4,
+    "extra_swap": 0,
+    "cpu_quota_percent": 150
+  },
+  "gui_review": "left to user",
+  "new_native_platform_acceptance": "not run"
+}

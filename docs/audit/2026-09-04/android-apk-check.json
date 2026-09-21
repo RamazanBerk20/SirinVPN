@@ -1,0 +1,13 @@
+{
+  "apk": "apps/desktop/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk",
+  "sha256": "079d92e07921ef7ce12da533a9c00ee9832010db422124ae7928751d4818e3ec",
+  "debug": true,
+  "automatic_backup": false,
+  "libraries": [
+    "lib/x86_64/libsirinvpn_desktop_lib.so"
+  ],
+  "server_payload_sha256": {
+    "x86_64": "41344fd2beb6e6dcc60313caddd9cd9bde4bc05da0421ce2214e463d11c12a1e",
+    "aarch64": "7ac50b19a42ff77a73a700ecc712030b4f0cb6d1bc079a62dbacf86c82a448e6"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "debian_root_owned_executables": 6,
+  "debian_tray_runtime_dependency": true,
+  "debian_payload_sha256": {
+    "usr/bin/sirinvpn-desktop": "5a6d76a6564eafbbbcfc42ad66814911e58f661ef04933548a2fa3bac52193a9",
+    "usr/bin/sirinvpn": "4d786727a33d4224c372c4f9a761b4831da5371cec1147e30fa91540f7057ca6",
+    "usr/lib/sirinvpn/sirinvpn-helper": "9a81375e43063a5e90a310843412b99b085c4cfe9cbd0b6741be7d149c904524",
+    "usr/lib/sirinvpn/sirinvpn-server": "e8e735620d654afe58f127f736158ebe562077e0498d26a7d950c7791b7d089f",
+    "usr/lib/sirinvpn/sirinvpn-release": "12439e6913900db18b2bae5fb75fd7bc25df339d1b535923f08a3748ff5463ad",
+    "usr/lib/sirinvpn/sirinvpn-release-fetch": "e1dbf706382c086703af07e8c21f396ccd74718beb5af191e5e1f67c823571a5"
+  },
+  "font_license_paths_embedded": {
+    "Inter-OFL.txt": true,
+    "JetBrains-Mono-OFL.txt": true
+  },
+  "helper_protocol": "11",
+  "cli_independent_flags": true,
+  "appimage_extraction": "passed",
+  "appimage_helper_protocol": "11",
+  "appimage_helper_text_matches_debian": true,
+  "appimage_helper_binary_sha256": "4603aa7cbebcac7437236879dc0cd94bb8c5a2d84fd13a571f86d368c94d6e76",
+  "appimage_helper_difference": "AppImage packaging adds $ORIGIN RUNPATH; executable .text section is identical to Debian",
+  "appimage_server_matches_debian": true
+}

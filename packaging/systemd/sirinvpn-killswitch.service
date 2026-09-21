@@ -1,0 +1,39 @@
+[Unit]
+Description=SirinVPN persistent kill switch
+DefaultDependencies=no
+After=local-fs.target
+Before=network-pre.target
+Wants=network-pre.target
+ConditionPathExists=/var/lib/sirinvpn/desired-connection.json
+
+[Service]
+Type=oneshot
+ExecStart=/usr/lib/sirinvpn/sirinvpn-helper restore-kill-switch
+RemainAfterExit=yes
+User=root
+Group=root
+RuntimeDirectory=sirinvpn
+RuntimeDirectoryMode=0755
+RuntimeDirectoryPreserve=yes
+UMask=0077
+CapabilityBoundingSet=CAP_NET_ADMIN
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectControlGroups=yes
+ProtectKernelLogs=yes
+ProtectKernelTunables=yes
+ProtectClock=yes
+ProtectHostname=yes
+PrivateTmp=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+RestrictAddressFamilies=AF_UNIX AF_INET AF_NETLINK
+ReadWritePaths=/run/sirinvpn
+StandardOutput=null
+StandardError=null
+
+[Install]
+WantedBy=network-pre.target

@@ -1,0 +1,7 @@
+{"command": "connect", "server_id": "123e4567-e89b-42d3-a456-426614174001", "policy": {"kill_switch": true, "automatic_reconnect": true, "connect_on_startup": false}, "routing": {"mode": "full_tunnel", "included_routes": [], "allow_lan": false}}
+{"command": "reconnect-session", "server_id": "123e4567-e89b-42d3-a456-426614174001"}
+{"command": "switch-session", "server_id": "123e4567-e89b-42d3-a456-426614174002", "policy": {"kill_switch": true, "automatic_reconnect": true, "connect_on_startup": false}, "routing": {"mode": "full_tunnel", "included_routes": [], "allow_lan": false}}
+{"command": "pause-session", "server_id": "123e4567-e89b-42d3-a456-426614174002"}
+{"command": "reconnect-session", "server_id": "123e4567-e89b-42d3-a456-426614174002"}
+{"command": "disconnect-session", "server_id": "123e4567-e89b-42d3-a456-426614174002", "failed": true}
+{"command": "disconnect-session", "server_id": "123e4567-e89b-42d3-a456-426614174002"}

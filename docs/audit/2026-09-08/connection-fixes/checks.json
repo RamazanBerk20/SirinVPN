@@ -1,0 +1,40 @@
+{
+  "desktop_rust": {
+    "passed": 41,
+    "failed": 0
+  },
+  "server_rust": {
+    "passed": 72,
+    "failed": 0,
+    "opt_in_network_tests_ignored": 5
+  },
+  "frontend": {
+    "files_passed": 36,
+    "tests_passed": 168,
+    "linux_container_repeat": "passed"
+  },
+  "typescript_and_vite": "passed",
+  "affected_native_clippy_all_targets_warnings_denied": "passed",
+  "windows_cross_clippy_test_targets_warnings_denied": "passed",
+  "privacy": "passed",
+  "rust_format": "passed",
+  "diff_whitespace": "passed",
+  "source_size": {
+    "files": 690,
+    "lines": 138345,
+    "files_above_1000_lines": 0
+  },
+  "browser_checks": "synthetic native responses, Chromium, two laptop sizes",
+  "new_native_platform_acceptance": "not run",
+  "application_package_inspection": {
+    "passed": 5,
+    "execution": "static extraction"
+  },
+  "build_limits": {
+    "sequential": true,
+    "cargo_jobs": 2,
+    "memory_max_gib": 4,
+    "extra_swap": 0,
+    "cpu_quota_percent": 150
+  }
+}

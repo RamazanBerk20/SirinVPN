@@ -1,0 +1,14 @@
+{
+  "installed": {
+    "bytes": 3849568,
+    "sha256": "9ba59c2875fb7b33372ad4aa7deb5faa88b86e47ed9ac1cacb1de3f9de76f6f6"
+  },
+  "canonical": {
+    "bytes": 3849568,
+    "sha256": "9ba59c2875fb7b33372ad4aa7deb5faa88b86e47ed9ac1cacb1de3f9de76f6f6"
+  },
+  "appimage_staging": {
+    "bytes": 3874592,
+    "sha256": "aff22465d25c86206c0fce0bdc3bcb235a23c1a7c4a303d38a004159a5740742"
+  }
+}

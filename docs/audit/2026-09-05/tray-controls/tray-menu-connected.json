@@ -1,0 +1,96 @@
+[
+  {
+    "id": 0,
+    "children-display": "submenu"
+  },
+  {
+    "id": 50,
+    "enabled": 0,
+    "label": "Connected to Tray VPS 1"
+  },
+  {
+    "id": 51,
+    "enabled": 0,
+    "label": "Kill switch: Armed"
+  },
+  {
+    "id": 52,
+    "enabled": 1,
+    "type": "separator"
+  },
+  {
+    "id": 53,
+    "label": "Open SirinVPN"
+  },
+  {
+    "id": 54,
+    "label": "Disconnect\u2026"
+  },
+  {
+    "id": 55,
+    "label": "Reconnect"
+  },
+  {
+    "id": 56,
+    "children-display": "submenu",
+    "label": "Switch server"
+  },
+  {
+    "id": 57,
+    "enabled": 0,
+    "toggle-state": 1,
+    "toggle-type": "checkmark",
+    "label": "Tray VPS 1"
+  },
+  {
+    "id": 58,
+    "toggle-state": 0,
+    "toggle-type": "checkmark",
+    "label": "Tray VPS 2"
+  },
+  {
+    "id": 59,
+    "toggle-state": 0,
+    "toggle-type": "checkmark",
+    "label": "Tray VPS 8"
+  },
+  {
+    "id": 60,
+    "enabled": 1,
+    "type": "separator"
+  },
+  {
+    "id": 61,
+    "label": "Manage servers\u2026"
+  },
+  {
+    "id": 62,
+    "enabled": 1,
+    "type": "separator"
+  },
+  {
+    "id": 63,
+    "label": "Connection settings\u2026"
+  },
+  {
+    "id": 64,
+    "label": "Settings\u2026"
+  },
+  {
+    "id": 65,
+    "label": "Diagnostics\u2026"
+  },
+  {
+    "id": 66,
+    "enabled": 1,
+    "type": "separator"
+  },
+  {
+    "id": 67,
+    "label": "Quit app (VPN keeps running)"
+  },
+  {
+    "id": 68,
+    "label": "Disconnect and quit\u2026"
+  }
+]

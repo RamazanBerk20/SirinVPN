@@ -1,0 +1,300 @@
+{
+  "recorded_at_utc": "2026-09-05T15:29:06.702946+00:00",
+  "scope": "Custom desktop title bar and operational refinements; source and packaged builds, no VPS deployment",
+  "source_state": "Uncommitted working tree; preceding work preserved",
+  "desktop_session": {
+    "toolkit": "Tauri 2 / WebKitGTK",
+    "desktop": "KDE Plasma",
+    "session": "Wayland"
+  },
+  "validation": {
+    "rust_tests_passed": 281,
+    "frontend_tests_passed": 67,
+    "python_tests_passed": 2,
+    "repository_gate": "passed",
+    "clippy_warnings_denied": true,
+    "privacy_invariants": "passed",
+    "shellcheck": "not installed; optional check skipped",
+    "browser_scenarios_passed": 11,
+    "operational_checks_passed": 14,
+    "refinement_checks_passed": 9,
+    "automated_accessibility_findings": 0,
+    "native_wayland_checks": [
+      "KDE Wayland: native decoration removed; 38px title bar with centered, accessible controls",
+      "KDE Wayland: maximize, restore and resize-edge visibility follow native state",
+      "KDE Wayland: minimize and single-instance reopen retain the window",
+      "Window controls preserve an open settings dialog",
+      "Custom close reaches native close-to-tray handling; reopen restores the same dialog",
+      "Native preferences are private, validate routes and IDs, and preserve the previous save on rejection",
+      "Connection preferences survive an actual app exit and restart"
+    ],
+    "native_webkit_and_pointer_checks": [
+      "Notification initialization can read permission; unguarded plugin delivery remains blocked",
+      "WebKitGTK Home has centered boxed icons and no inline connection-settings panel",
+      "Full-width native device rows expand; empty invitations are compact and forwarding is in Network settings",
+      "Onboarding actions share a baseline with no overlap at 958px",
+      "Native pointer dragging moves the undecorated window using its title bar",
+      "Native double-click maximizes; the keyboard-operated Restore button restores",
+      "Native pointer resize from the custom corner changes the actual window dimensions"
+    ],
+    "desktop_frame": {
+      "width": "1px",
+      "color": "rgb(53, 84, 142)",
+      "pointerEvents": "none",
+      "position": "fixed",
+      "insets": [
+        "0px",
+        "0px",
+        "0px",
+        "0px"
+      ]
+    },
+    "android_instrumented_tests_passed": 6,
+    "android_native_smoke": {
+      "platform": "android",
+      "vpn": {
+        "permission_granted": true,
+        "state": "disconnected",
+        "transport": null,
+        "active_profile_id": null,
+        "rx_bytes": 0,
+        "tx_bytes": 0,
+        "protection_status_known": false,
+        "ipv6_blocked": false,
+        "backend_version": "f333402",
+        "persistence_state": "disabled",
+        "persistent_profile_id": null,
+        "always_on_supported": true,
+        "always_on": false,
+        "lockdown_enabled": false
+      },
+      "notification_permission": null,
+      "desktop_title_bar_absent": true,
+      "header_respects_safe_area": true,
+      "unguarded_notification_delivery_blocked": true,
+      "connection_preferences": {
+        "retained_after_reload": true,
+        "unsupported_preferences_rejected": true,
+        "save_does_not_arm_vpn": true,
+        "retained_after_process_restart": true,
+        "deleted_profile_unavailable": true
+      }
+    },
+    "android_preference_checks": [
+      "Native Android commands reject unsupported desktop preferences",
+      "Permission-aware preference switch and native Android notification delivery",
+      "Preferences restored after a full Android process restart"
+    ],
+    "final_android_apk_privacy_and_payload_check": "passed",
+    "installed_apk": {
+      "package": "org.sirinvpn.client",
+      "device": "emulator-5554",
+      "built_apk_sha256": "f2d0efc40ffd769015ff012a1a5943c432634559aa10c4dbb9f5788728527489",
+      "installed_apk_sha256": "f2d0efc40ffd769015ff012a1a5943c432634559aa10c4dbb9f5788728527489",
+      "matches_built_apk": true
+    },
+    "linux_package_inspection": {
+      "debian_root_owned_executables": 6,
+      "debian_tray_runtime_dependency": true,
+      "debian_payload_sha256": {
+        "usr/bin/sirinvpn-desktop": "b3ddec8417bbef1eb64513c307901573b3df27fad5a5f10eb46817553476637a",
+        "usr/bin/sirinvpn": "d8b468c39b00d8edb75c5a436d05c753073e94aae4d211a05e4126b7e16c4119",
+        "usr/lib/sirinvpn/sirinvpn-helper": "438cebaaf301e63c68ea3213b0b059fc47bd64eb8cec2f87a4b283c27227514d",
+        "usr/lib/sirinvpn/sirinvpn-server": "e8e735620d654afe58f127f736158ebe562077e0498d26a7d950c7791b7d089f",
+        "usr/lib/sirinvpn/sirinvpn-release": "78912a2c7f0473ad06917974e485ffa62ac1ef844970c1ac9c646c10cf3680be",
+        "usr/lib/sirinvpn/sirinvpn-release-fetch": "0f26774b013c7b86aa66075b55aff478de42cb86230e60df74a132f29e826a06"
+      },
+      "appimage_extraction": "passed",
+      "appimage_server_matches_debian": true,
+      "appimage_helper_present": true
+    },
+    "final_package_builds": "Linux DEB/AppImage and Android x86_64 debug APK: passed",
+    "late_style_checks": "Final package builds include the 1px frame, sidebar height correction, and Android safe-area padding. Formatting, browser layout, real Wayland controls, and final emulator header/touch checks passed."
+  },
+  "dependency_lock_sha256": {
+    "Cargo.lock": "e0451fe028d5011463de37237d14d43aea7f631fdd2bf016445b2ee5ba46260d",
+    "apps/desktop/pnpm-lock.yaml": "c290830c96ec2716c2d0c5205009dafdd95dcab89db3dd47a4cfc9f98ce7069d"
+  },
+  "dependencies": "No lock changes from the preceding operational-UX audit. Existing upstream advisories remain open.",
+  "completion": {
+    "basis": "Original overhaul acceptance checklist",
+    "completed": 23,
+    "total": 24,
+    "percent": 95.8,
+    "partial_item": 22
+  },
+  "remaining": [
+    "Install the updated local Linux package to replace legacy helper metrics; use the VPS update review for older server measurements.",
+    "Complete the disposable live transport/privacy fault matrix before production release qualification.",
+    "Android membership administration, selected routing, packet counters, and broad VPS maintenance remain pre-existing gaps.",
+    "Resolve or explicitly accept the upstream Rust/GTK advisory warnings recorded by the earlier dependency audit."
+  ],
+  "source_fingerprints": {
+    "algorithm": "SHA-256 of sorted UTF-8 relative path + NUL + lowercase file SHA-256 + newline for each Git-visible file in the scope",
+    "frontend": {
+      "files": 121,
+      "sha256": "e29a24458d4b763dfb9bc4f25305eb1e73a79c803b2cb7a9705041778b42d08f"
+    },
+    "native_app": {
+      "files": 27,
+      "sha256": "511ba508916228352a218056fdc394bd906797aa87985a13569ce01f3e0d07a8"
+    },
+    "crates": {
+      "files": 162,
+      "sha256": "7601b53b9ea9bb7a49dbe43ababbb007543c12f100f4c771c2f2aa74549254bf"
+    },
+    "ui_verification": {
+      "files": 11,
+      "sha256": "89366baf96d9b9dd73c0fff0c1b2074f42a4f09fff75ce481c007ab022db0d48"
+    }
+  },
+  "source_inventory": {
+    "files": 326,
+    "lines": 81481,
+    "over_limit": [],
+    "largest": [
+      {
+        "path": "crates/transport/src/tcp.rs",
+        "lines": 998
+      },
+      {
+        "path": "crates/release/src/installed_release.rs",
+        "lines": 976
+      },
+      {
+        "path": "crates/release/src/main.rs",
+        "lines": 968
+      },
+      {
+        "path": "crates/transport/src/lib.rs",
+        "lines": 944
+      },
+      {
+        "path": "crates/release/src/lib.rs",
+        "lines": 935
+      },
+      {
+        "path": "crates/transport/src/relay.rs",
+        "lines": 918
+      },
+      {
+        "path": "crates/server/src/authorization.rs",
+        "lines": 904
+      },
+      {
+        "path": "crates/core/src/key_rotation.rs",
+        "lines": 901
+      },
+      {
+        "path": "crates/release/src/trust.rs",
+        "lines": 874
+      },
+      {
+        "path": "crates/release/src/linux_debian_update.rs",
+        "lines": 870
+      },
+      {
+        "path": "tests/integration/linux-outbound-audit-vps.sh",
+        "lines": 853
+      },
+      {
+        "path": "tests/integration/linux-impairment-vps.sh",
+        "lines": 767
+      },
+      {
+        "path": "crates/installer/src/install_script.rs",
+        "lines": 733
+      },
+      {
+        "path": "crates/core/src/backup.rs",
+        "lines": 714
+      },
+      {
+        "path": "apps/desktop/src-tauri/src/release_update.rs",
+        "lines": 713
+      },
+      {
+        "path": "tests/integration/linux-dns-fault-vps.sh",
+        "lines": 693
+      },
+      {
+        "path": "crates/core/src/endpoint_transition.rs",
+        "lines": 691
+      },
+      {
+        "path": "crates/android-secure-storage/src/profile.rs",
+        "lines": 688
+      },
+      {
+        "path": "crates/core/src/invitation.rs",
+        "lines": 687
+      },
+      {
+        "path": "apps/desktop/src/features/android/useAndroidController.ts",
+        "lines": 684
+      },
+      {
+        "path": "crates/installer/src/lib.rs",
+        "lines": 653
+      },
+      {
+        "path": "crates/core/src/network_policy.rs",
+        "lines": 606
+      },
+      {
+        "path": "tests/integration/linux-fallback-vps.sh",
+        "lines": 606
+      },
+      {
+        "path": "apps/desktop/src/App.android.test.tsx",
+        "lines": 590
+      },
+      {
+        "path": "apps/desktop/src/styles/operational-layout.css",
+        "lines": 584
+      },
+      {
+        "path": "crates/installer/src/validation.rs",
+        "lines": 584
+      },
+      {
+        "path": "tests/integration/android-fallback-vps.sh",
+        "lines": 579
+      },
+      {
+        "path": "apps/desktop/src-tauri/src/android_enrollment.rs",
+        "lines": 567
+      },
+      {
+        "path": "crates/core/src/server_backup.rs",
+        "lines": 542
+      },
+      {
+        "path": "tests/integration/p1b2-vps.sh",
+        "lines": 542
+      }
+    ]
+  },
+  "artifacts": [
+    {
+      "path": "target/release/bundle/deb/SirinVPN_0.1.0_amd64.deb",
+      "kind": "Linux amd64 Debian package",
+      "bytes": 16066904,
+      "sha256": "93a714a9b263b9fdea4ed578f20c37eb215a7402d91495e720f71b67c1182fd8"
+    },
+    {
+      "path": "target/release/bundle/appimage/SirinVPN_0.1.0_amd64.AppImage",
+      "kind": "Linux amd64 AppImage",
+      "bytes": 109263352,
+      "sha256": "20653600854b3aa38c6c77c209a382376825d2eb5ee4e1bb77e92a5c8118a4e3"
+    },
+    {
+      "path": "apps/desktop/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk",
+      "kind": "Android x86_64 debug emulator APK",
+      "bytes": 488078911,
+      "sha256": "f2d0efc40ffd769015ff012a1a5943c432634559aa10c4dbb9f5788728527489"
+    }
+  ],
+  "deployment": "Updated debug APK installed on Pixel 10 emulator. No Linux system package installation or VPS deployment performed.",
+  "remaining_security_boundary": "Configured protection is not represented as independently verified firewall enforcement. Live transport/leak and reboot qualification remains partial."
+}

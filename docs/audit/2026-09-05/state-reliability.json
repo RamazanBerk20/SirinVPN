@@ -1,0 +1,216 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "2026-09-05T19:14:46.390439+00:00",
+  "baseline_revision": "5668e678761690f4283451a0d226b1662d91de15",
+  "working_tree_changes_preserved": true,
+  "helper_protocol": 12,
+  "request_schema": 7,
+  "validations": {
+    "rust_workspace_excluding_desktop": 278,
+    "updated_helper_tests": 54,
+    "desktop_tests": 19,
+    "distinct_rust_tests": 298,
+    "frontend_tests": 79,
+    "kernel_packet_checks": 247,
+    "atomic_update_probes": 1157564,
+    "observed_escapes": 0,
+    "actual_wireguard_activity": "0 then 1/2; missing and unauthorized peers distinguished",
+    "new_ui_checks": 6,
+    "operational_ui_checks": 15,
+    "automated_accessibility_findings": 0,
+    "native_scales": [
+      1,
+      1.25
+    ],
+    "native_window_storage_checks": 7,
+    "clippy_warnings_denied": true,
+    "privacy_and_maintainability": true
+  },
+  "source_inventory": {
+    "files": 352,
+    "lines": 84957,
+    "over_limit": [],
+    "largest": [
+      {
+        "path": "crates/transport/src/tcp.rs",
+        "lines": 998
+      },
+      {
+        "path": "crates/release/src/installed_release.rs",
+        "lines": 976
+      },
+      {
+        "path": "crates/release/src/main.rs",
+        "lines": 968
+      },
+      {
+        "path": "crates/transport/src/lib.rs",
+        "lines": 944
+      },
+      {
+        "path": "crates/release/src/lib.rs",
+        "lines": 935
+      },
+      {
+        "path": "crates/transport/src/relay.rs",
+        "lines": 918
+      },
+      {
+        "path": "crates/server/src/authorization.rs",
+        "lines": 904
+      },
+      {
+        "path": "crates/release/src/trust.rs",
+        "lines": 874
+      },
+      {
+        "path": "crates/release/src/linux_debian_update.rs",
+        "lines": 870
+      },
+      {
+        "path": "tests/integration/linux-outbound-audit-vps.sh",
+        "lines": 853
+      },
+      {
+        "path": "tests/integration/linux-impairment-vps.sh",
+        "lines": 767
+      },
+      {
+        "path": "crates/core/src/key_rotation.rs",
+        "lines": 737
+      },
+      {
+        "path": "crates/installer/src/install_script.rs",
+        "lines": 733
+      },
+      {
+        "path": "crates/core/src/backup.rs",
+        "lines": 714
+      },
+      {
+        "path": "apps/desktop/src-tauri/src/release_update.rs",
+        "lines": 713
+      },
+      {
+        "path": "tests/integration/linux-dns-fault-vps.sh",
+        "lines": 693
+      },
+      {
+        "path": "crates/core/src/endpoint_transition.rs",
+        "lines": 691
+      },
+      {
+        "path": "apps/desktop/src/features/android/useAndroidController.ts",
+        "lines": 689
+      },
+      {
+        "path": "crates/android-secure-storage/src/profile.rs",
+        "lines": 688
+      },
+      {
+        "path": "crates/core/src/invitation.rs",
+        "lines": 687
+      },
+      {
+        "path": "crates/installer/src/lib.rs",
+        "lines": 653
+      },
+      {
+        "path": "crates/core/src/network_policy.rs",
+        "lines": 606
+      },
+      {
+        "path": "tests/integration/linux-fallback-vps.sh",
+        "lines": 606
+      },
+      {
+        "path": "apps/desktop/src/App.android.test.tsx",
+        "lines": 590
+      },
+      {
+        "path": "apps/desktop/src/styles/operational-layout.css",
+        "lines": 586
+      },
+      {
+        "path": "crates/installer/src/validation.rs",
+        "lines": 584
+      },
+      {
+        "path": "tests/integration/android-fallback-vps.sh",
+        "lines": 579
+      },
+      {
+        "path": "apps/desktop/src-tauri/src/android_enrollment.rs",
+        "lines": 567
+      },
+      {
+        "path": "crates/linux-helper/src/lib.rs",
+        "lines": 555
+      },
+      {
+        "path": "crates/core/src/server_backup.rs",
+        "lines": 542
+      }
+    ]
+  },
+  "boundaries": {
+    "host_vpn_mutated": false,
+    "installed_helper_upgraded": false,
+    "live_vps_changed": false,
+    "desktop_settings_changed": false,
+    "actual_vm_reboot_qualified": false,
+    "all_transport_failure_matrix_qualified": false,
+    "android_apk_rebuilt_this_pass": false
+  },
+  "original_acceptance_checklist": {
+    "complete": 23,
+    "total": 24,
+    "percent": 95.8
+  },
+  "evidence": {
+    "docs/audit/2026-09-05/state-reliability/rust-tests.log": "6f1357ac2e226ef62807948434402be3195eb2ca11c9442bc02544ad52523f0c",
+    "docs/audit/2026-09-05/state-reliability/desktop-helper-tests.log": "9b90de4bf1ec9488950ec1a535d07ed7e9361ae7b24acc8036e42506093e38b7",
+    "docs/audit/2026-09-05/state-reliability/frontend-tests.log": "c39d925e95751e52051f802e1fd5a5684613c07ca905b241112b7da339c74c49",
+    "docs/audit/2026-09-05/state-reliability/frontend-build.log": "eb021d0c05be1d564768480053455ce8c16723fad5e5801667f8015410448e4d",
+    "docs/audit/2026-09-05/state-reliability/clippy.log": "a58922907a137bd02a3732bfdb4286769c41778c8e166d98248911b8f8951a49",
+    "docs/audit/2026-09-05/state-reliability/privacy.log": "401d2b875504d6cff98c376a89329c0e56b96eef0c915a6a588c114d3d2bdc61",
+    "docs/audit/2026-09-05/state-reliability/maintainability.log": "c2119cbd462f03cf9611a57fa6c3a25df331a9973cdf2dd304f9495be5b340ed",
+    "docs/audit/2026-09-05/state-reliability/source-inventory.json": "cf4c97ffa922c33a73ee0be33d097816860ae82aa8d95e475222d2b00dba3db0",
+    "docs/audit/2026-09-05/state-reliability/source-fingerprints.json": "40c8d2f360644493fd46a62636245d203fe47f8541ba23f3f7af3dccd323373d",
+    "docs/audit/2026-09-05/state-reliability/kernel-packets.log": "aa035beb86e5703bb2cdb82dfe880cd6c42d4045d0218b68d52e6c6831a589df",
+    "docs/audit/2026-09-05/state-reliability/peer-activity.log": "2a049d7e0896f3c54b0687e40fcde8d4c065c736e160940f5c70752052e9567f",
+    "docs/audit/2026-09-05/state-reliability/ui-state-checks.json": "5e2fb9a5f06ea7494eea06d7fd786ed3335f4363d8d94baeef109da3d6f49ddc",
+    "docs/audit/2026-09-05/state-reliability/operational-checks.json": "e8648d5bed1778c37a70e869cb105e769ec4795f81ee70b12861ef24672526fe",
+    "docs/audit/2026-09-05/state-reliability/native-window-checks.log": "4737086524a6ffdfae9805a71e1616c2658fcfff19cd67a80ad7364d5191bf60",
+    "docs/audit/2026-09-05/state-reliability/native-1.log": "a16792765c5addb9c7aa56721b0da25c70b3a5db3b966d5b438945427443e683",
+    "docs/audit/2026-09-05/state-reliability/native-1.25.log": "3cfaf556cb7f6bd070a2c7925a3442e851af3943c9c003eefd67b34a9b200f92",
+    "docs/audit/2026-09-05/state-reliability/native-font-1.json": "c4373a61b30287a17d9bae86bfa958a901cbc20f45772d4cc169d0de250dc27e",
+    "docs/audit/2026-09-05/state-reliability/native-font-1.25.json": "0e3021b28551b70a4b170c6a845b1e3826f8ca279f6c88dd4f021549637dae2f",
+    "docs/audit/2026-09-05/state-reliability/native-recovery-scroll-1.json": "d25a015a156a14fc62329ea9cfea4860f93cd318f3f3ae5977fd649934557055",
+    "docs/audit/2026-09-05/state-reliability/native-recovery-scroll-1.25.json": "d25a015a156a14fc62329ea9cfea4860f93cd318f3f3ae5977fd649934557055",
+    "docs/audit/2026-09-05/state-reliability/native-menu-1.json": "4384fadc21022a621cef624a77b9cf9e197e788852a44bd388c2eb2063c2d7a3",
+    "docs/audit/2026-09-05/state-reliability/linux-packaging.log": "adff6e517ed96bc6b547dfc98ddfb34bcf86195e6f6d62ab795734290b11a0a7"
+  },
+  "artifacts": {
+    "target/release/sirinvpn-desktop": {
+      "sha256": "0ddae882c234262c1496dfa2b8211544e7937e146bd5955d3b0cb2d2833aaa35",
+      "bytes": 13865560
+    },
+    "target/release/sirinvpn-helper": {
+      "sha256": "cb6389b21945fd7e15fe86f7e62d5029ce134bb0f3e9dc0c21cc9140986d0712",
+      "bytes": 2841584
+    },
+    "target/release/sirinvpn-server": {
+      "sha256": "b79a95ec3e841e3c49d06af2c139a27061c83fdbfca5b9c65d4aabf48b6653b9",
+      "bytes": 5513568
+    },
+    "target/release/bundle/deb/SirinVPN_0.1.0_amd64.deb": {
+      "sha256": "461edad47861cd0a2359c64401f624d93e026cf1eeed79d143d478623499b3b7",
+      "bytes": 16304434
+    },
+    "target/release/bundle/appimage/SirinVPN_0.1.0_amd64.AppImage": {
+      "sha256": "541550b1f6ebca937c334090465aab7b9edd4bb189ad5ae8713aeb11d1b942be",
+      "bytes": 109496824
+    }
+  }
+}

@@ -1,0 +1,331 @@
+{
+  "limit": 1000,
+  "current": {
+    "files": 271,
+    "lines": 73531,
+    "over_limit": [],
+    "largest": [
+      {
+        "path": "crates/transport/src/tcp.rs",
+        "lines": 998
+      },
+      {
+        "path": "crates/release/src/installed_release.rs",
+        "lines": 976
+      },
+      {
+        "path": "apps/desktop/src/App.android.test.tsx",
+        "lines": 968
+      },
+      {
+        "path": "crates/release/src/main.rs",
+        "lines": 968
+      },
+      {
+        "path": "crates/transport/src/lib.rs",
+        "lines": 943
+      },
+      {
+        "path": "crates/release/src/lib.rs",
+        "lines": 935
+      },
+      {
+        "path": "crates/transport/src/relay.rs",
+        "lines": 918
+      },
+      {
+        "path": "crates/server/src/authorization.rs",
+        "lines": 903
+      },
+      {
+        "path": "crates/core/src/key_rotation.rs",
+        "lines": 900
+      },
+      {
+        "path": "crates/release/src/trust.rs",
+        "lines": 874
+      },
+      {
+        "path": "crates/release/src/linux_debian_update.rs",
+        "lines": 870
+      },
+      {
+        "path": "tests/integration/linux-outbound-audit-vps.sh",
+        "lines": 853
+      },
+      {
+        "path": "tests/integration/linux-impairment-vps.sh",
+        "lines": 767
+      },
+      {
+        "path": "crates/installer/src/install_script.rs",
+        "lines": 733
+      },
+      {
+        "path": "apps/desktop/src-tauri/src/release_update.rs",
+        "lines": 713
+      },
+      {
+        "path": "crates/core/src/backup.rs",
+        "lines": 713
+      },
+      {
+        "path": "tests/integration/linux-dns-fault-vps.sh",
+        "lines": 693
+      },
+      {
+        "path": "crates/core/src/endpoint_transition.rs",
+        "lines": 690
+      },
+      {
+        "path": "crates/android-secure-storage/src/profile.rs",
+        "lines": 688
+      },
+      {
+        "path": "crates/core/src/invitation.rs",
+        "lines": 685
+      },
+      {
+        "path": "apps/desktop/src/features/android/useAndroidController.ts",
+        "lines": 680
+      },
+      {
+        "path": "crates/installer/src/lib.rs",
+        "lines": 653
+      },
+      {
+        "path": "crates/core/src/network_policy.rs",
+        "lines": 606
+      },
+      {
+        "path": "tests/integration/linux-fallback-vps.sh",
+        "lines": 606
+      },
+      {
+        "path": "apps/desktop/src/features/devices/AccessPanel.tsx",
+        "lines": 585
+      },
+      {
+        "path": "crates/installer/src/validation.rs",
+        "lines": 584
+      },
+      {
+        "path": "tests/integration/android-fallback-vps.sh",
+        "lines": 579
+      },
+      {
+        "path": "apps/desktop/src-tauri/src/android_enrollment.rs",
+        "lines": 554
+      },
+      {
+        "path": "crates/core/src/server_backup.rs",
+        "lines": 542
+      },
+      {
+        "path": "tests/integration/p1b2-vps.sh",
+        "lines": 542
+      }
+    ]
+  },
+  "baseline_revision": "9a6b14b15366b67f44b6c85d94072dcb2c847bdc",
+  "baseline": {
+    "files": 101,
+    "lines": 66519,
+    "over_limit": [
+      {
+        "path": "apps/desktop/src-tauri/src/lib.rs",
+        "lines": 3463
+      },
+      {
+        "path": "apps/desktop/src/App.test.tsx",
+        "lines": 1075
+      },
+      {
+        "path": "apps/desktop/src/App.tsx",
+        "lines": 5710
+      },
+      {
+        "path": "apps/desktop/src/styles.css",
+        "lines": 4369
+      },
+      {
+        "path": "crates/android-secure-storage/src/profile.rs",
+        "lines": 2258
+      },
+      {
+        "path": "crates/cli/src/main.rs",
+        "lines": 2260
+      },
+      {
+        "path": "crates/core/src/invitation.rs",
+        "lines": 1013
+      },
+      {
+        "path": "crates/installer/src/lib.rs",
+        "lines": 4666
+      },
+      {
+        "path": "crates/linux-helper/src/lib.rs",
+        "lines": 4268
+      },
+      {
+        "path": "crates/protocol/src/lib.rs",
+        "lines": 1581
+      },
+      {
+        "path": "crates/release/src/installed_release.rs",
+        "lines": 1631
+      },
+      {
+        "path": "crates/release/src/lib.rs",
+        "lines": 1286
+      },
+      {
+        "path": "crates/release/src/linux_debian_update.rs",
+        "lines": 1535
+      },
+      {
+        "path": "crates/release/src/main.rs",
+        "lines": 1241
+      },
+      {
+        "path": "crates/server/src/authorization.rs",
+        "lines": 1830
+      },
+      {
+        "path": "crates/server/src/lib.rs",
+        "lines": 4664
+      },
+      {
+        "path": "crates/transport/src/relay.rs",
+        "lines": 1156
+      },
+      {
+        "path": "crates/transport/src/tcp.rs",
+        "lines": 1649
+      }
+    ],
+    "largest": [
+      {
+        "path": "apps/desktop/src/App.tsx",
+        "lines": 5710
+      },
+      {
+        "path": "crates/installer/src/lib.rs",
+        "lines": 4666
+      },
+      {
+        "path": "crates/server/src/lib.rs",
+        "lines": 4664
+      },
+      {
+        "path": "apps/desktop/src/styles.css",
+        "lines": 4369
+      },
+      {
+        "path": "crates/linux-helper/src/lib.rs",
+        "lines": 4268
+      },
+      {
+        "path": "apps/desktop/src-tauri/src/lib.rs",
+        "lines": 3463
+      },
+      {
+        "path": "crates/cli/src/main.rs",
+        "lines": 2260
+      },
+      {
+        "path": "crates/android-secure-storage/src/profile.rs",
+        "lines": 2258
+      },
+      {
+        "path": "crates/server/src/authorization.rs",
+        "lines": 1830
+      },
+      {
+        "path": "crates/transport/src/tcp.rs",
+        "lines": 1649
+      },
+      {
+        "path": "crates/release/src/installed_release.rs",
+        "lines": 1631
+      },
+      {
+        "path": "crates/protocol/src/lib.rs",
+        "lines": 1581
+      },
+      {
+        "path": "crates/release/src/linux_debian_update.rs",
+        "lines": 1535
+      },
+      {
+        "path": "crates/release/src/lib.rs",
+        "lines": 1286
+      },
+      {
+        "path": "crates/release/src/main.rs",
+        "lines": 1241
+      },
+      {
+        "path": "crates/transport/src/relay.rs",
+        "lines": 1156
+      },
+      {
+        "path": "apps/desktop/src/App.test.tsx",
+        "lines": 1075
+      },
+      {
+        "path": "crates/core/src/invitation.rs",
+        "lines": 1013
+      },
+      {
+        "path": "crates/transport/src/lib.rs",
+        "lines": 943
+      },
+      {
+        "path": "crates/core/src/key_rotation.rs",
+        "lines": 900
+      },
+      {
+        "path": "crates/release/src/trust.rs",
+        "lines": 874
+      },
+      {
+        "path": "tests/integration/linux-outbound-audit-vps.sh",
+        "lines": 849
+      },
+      {
+        "path": "tests/integration/linux-impairment-vps.sh",
+        "lines": 763
+      },
+      {
+        "path": "apps/desktop/src-tauri/src/release_update.rs",
+        "lines": 713
+      },
+      {
+        "path": "crates/core/src/backup.rs",
+        "lines": 713
+      },
+      {
+        "path": "tests/integration/linux-dns-fault-vps.sh",
+        "lines": 691
+      },
+      {
+        "path": "crates/core/src/endpoint_transition.rs",
+        "lines": 690
+      },
+      {
+        "path": "crates/core/src/network_policy.rs",
+        "lines": 606
+      },
+      {
+        "path": "tests/integration/linux-fallback-vps.sh",
+        "lines": 604
+      },
+      {
+        "path": "tests/integration/android-fallback-vps.sh",
+        "lines": 573
+      }
+    ]
+  }
+}

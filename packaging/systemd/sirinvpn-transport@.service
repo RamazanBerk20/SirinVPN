@@ -1,0 +1,27 @@
+[Unit]
+Description=SirinVPN authenticated local transport relay
+After=network-online.target
+
+[Service]
+Type=notify
+NotifyAccess=all
+ExecStart=/usr/lib/sirinvpn/sirinvpn-helper relay --transport %i
+Restart=on-failure
+RestartSec=3s
+TimeoutStartSec=12s
+NoNewPrivileges=yes
+PrivateDevices=yes
+PrivateTmp=yes
+ProtectHome=yes
+ProtectSystem=strict
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+CapabilityBoundingSet=CAP_NET_ADMIN
+AmbientCapabilities=CAP_NET_ADMIN
+StandardOutput=null
+StandardError=null

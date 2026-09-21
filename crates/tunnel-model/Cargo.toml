@@ -1,0 +1,23 @@
+[package]
+name = "sirinvpn-tunnel-model"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+base64.workspace = true
+ipnet.workspace = true
+serde.workspace = true
+sirinvpn-core = { path = "../core" }
+sirinvpn-protocol = { path = "../protocol" }
+sirinvpn-transport = { path = "../transport" }
+thiserror.workspace = true
+zeroize.workspace = true
+
+serde_json.workspace = true
+sirinvpn-platform = { path = "../platform" }
+
+[dev-dependencies]
+tempfile.workspace = true

@@ -1,0 +1,48 @@
+{
+  "baseline": "5668e678761690f4283451a0d226b1662d91de15",
+  "artifacts": [
+    {
+      "path": "target/release/bundle/deb/SirinVPN_0.1.0_amd64.deb",
+      "bytes": 16007650,
+      "sha256": "91ad6a88115dd2f726c2f7eb19fc13418a345ebb9f0c1757fc54915612315642"
+    },
+    {
+      "path": "target/release/bundle/appimage/SirinVPN_0.1.0_amd64.AppImage",
+      "bytes": 109210104,
+      "sha256": "606ac82cbbd7c5f9c2d228c540b22d9908402c3f5c4c6ac1f2c267fdea9e6cdd"
+    },
+    {
+      "path": "apps/desktop/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk",
+      "bytes": 481317735,
+      "sha256": "eb8c7970ce31afbc1b3a286fa55058bf367f4b2fdd531a4e7227e438214da43a"
+    }
+  ],
+  "validation": {
+    "rust_tests_passed": 274,
+    "frontend_tests_passed": 52,
+    "browser_scenarios_passed": 8,
+    "automated_accessibility_violations": 0,
+    "desktop_native_checks": [
+      "Safe defaults and disabled-notification guard",
+      "Native preference persistence and quoted XDG startup entry",
+      "Startup rollback after a real filesystem write failure",
+      "Native desktop notification delivered to the session notification service",
+      "Close to tray keeps the process alive; a second launch restores the same window",
+      "Preferences and minimized tray launch survive a process restart",
+      "Minimized launch without close-to-tray stays in the taskbar",
+      "System launcher accepts the quoted executable; disabling startup removes the entry"
+    ],
+    "android_native_preferences": [
+      "Native Android commands reject unsupported desktop preferences",
+      "Permission-aware preference switch and native Android notification delivery",
+      "Preferences restored after a full Android process restart"
+    ],
+    "maven_packages_scanned": 79,
+    "maven_packages_with_advisories": 0,
+    "rust_vulnerabilities": 0,
+    "rust_upstream_warnings": 17,
+    "source_files_over_1000_lines": 0,
+    "final_android_apk_native_smoke": "passed",
+    "debian_tray_runtime_dependency": "libayatana-appindicator3-1"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "installed_apk_matches_built": true,
+  "sha256": "f3bd126dc923003d18a52bff6ddd9ca61289d263bb4e60f002db7489a65f5db6",
+  "active_transports_after_tests": [
+    "CELLULAR",
+    "WIFI"
+  ],
+  "no_vpn_connected": true
+}

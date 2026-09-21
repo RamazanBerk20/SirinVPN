@@ -1,0 +1,12 @@
+{
+  "width": "1px",
+  "color": "rgb(53, 84, 142)",
+  "pointerEvents": "none",
+  "position": "fixed",
+  "insets": [
+    "0px",
+    "0px",
+    "0px",
+    "0px"
+  ]
+}

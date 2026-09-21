@@ -1,0 +1,31 @@
+[package]
+name = "sirinvpn-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[[bin]]
+name = "sirinvpn"
+path = "src/main.rs"
+
+[dependencies]
+anyhow.workspace = true
+clap.workspace = true
+rpassword.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sirinvpn-core = { path = "../core" }
+sirinvpn-installer = { path = "../installer" }
+sirinvpn-protocol = { path = "../protocol" }
+sirinvpn-tunnel-model = { path = "../tunnel-model" }
+sirinvpn-transport = { path = "../transport" }
+tokio.workspace = true
+zeroize.workspace = true
+
+[target.'cfg(target_os = "linux")'.dependencies]
+nix.workspace = true
+sirinvpn-linux-helper = { path = "../linux-helper" }
+
+[target.'cfg(windows)'.dependencies]
+sirinvpn-windows-service = { path = "../windows-service" }

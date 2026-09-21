@@ -1,0 +1,7 @@
+{
+  "package": "org.sirinvpn.client",
+  "device": "emulator-5554",
+  "built_apk_sha256": "f2d0efc40ffd769015ff012a1a5943c432634559aa10c4dbb9f5788728527489",
+  "installed_apk_sha256": "f2d0efc40ffd769015ff012a1a5943c432634559aa10c4dbb9f5788728527489",
+  "matches_built_apk": true
+}

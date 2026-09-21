@@ -1,0 +1,29 @@
+{
+  "debian": {
+    "path": "SirinVPN_0.1.0_amd64.deb",
+    "sha256": "5007f0d78206176c7f3ce554430245f6a5898001d28720bbc964f5a7b081894b",
+    "version": "0.1.0",
+    "architecture": "amd64",
+    "root_owned_executables": 6,
+    "current_payload_sha256": {
+      "usr/bin/sirinvpn-desktop": "8b8137a9b7f3087ab2fb24af2f4a599221bce47529c7d8b13d54641be40a15d9",
+      "usr/bin/sirinvpn": "dba0ec0bcc8ccfeb0b4d702f3f7e4acfc19f04f81f037c27c57e5adc90850c17",
+      "usr/lib/sirinvpn/sirinvpn-helper": "9ba59c2875fb7b33372ad4aa7deb5faa88b86e47ed9ac1cacb1de3f9de76f6f6",
+      "usr/lib/sirinvpn/sirinvpn-server": "ad25d65ccfe179f2dee8978ab9b5c92407b16e645b02751f19997d91f0e24cbe",
+      "usr/lib/sirinvpn/sirinvpn-release": "c191c05790638880a09235ac3e12ac4a577a9de589e21d2bdcbf55b4f7852776",
+      "usr/lib/sirinvpn/sirinvpn-release-fetch": "4fdbd11eddfa381edbc3cbb2df542c14ef41580f68c97204357b68012fd318b3"
+    },
+    "integration_files": "passed",
+    "maintainer_scripts": "postinst, prerm and postrm verified",
+    "gui_bundle_marker": "only the expected UNK to DEB replacement"
+  },
+  "appimage": {
+    "path": "SirinVPN_0.1.0_amd64.AppImage",
+    "sha256": "5d58685a45aecb4eaaa5c2ce2b07ac0ccf66d728dadac1869c445939a74057e7",
+    "executables": "present; x64 ELF",
+    "server_matches_debian": true,
+    "helper_matches_debian": true,
+    "bundled_wayland_libraries": false
+  },
+  "inspection": "static extraction only; no installation or executable launch"
+}

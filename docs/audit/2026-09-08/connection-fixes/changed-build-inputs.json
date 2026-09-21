@@ -1,0 +1,118 @@
+[
+  {
+    "path": "apps/desktop/src-tauri/src/connection_policy.rs",
+    "kind": "changed"
+  },
+  {
+    "path": "apps/desktop/src-tauri/src/helper.rs",
+    "kind": "changed"
+  },
+  {
+    "path": "apps/desktop/src-tauri/src/lib.rs",
+    "kind": "changed"
+  },
+  {
+    "path": "apps/desktop/src-tauri/src/local_component.rs",
+    "kind": "added"
+  },
+  {
+    "path": "apps/desktop/src/api.ts",
+    "kind": "changed"
+  },
+  {
+    "path": "apps/desktop/src/components/ui.tsx",
+    "kind": "changed"
+  },
+  {
+    "path": "apps/desktop/src/features/connection/ConnectionHero.tsx",
+    "kind": "changed"
+  },
+  {
+    "path": "apps/desktop/src/features/connection/ServerWorkspace.tsx",
+    "kind": "changed"
+  },
+  {
+    "path": "apps/desktop/src/features/connection/useServerWorkspace.ts",
+    "kind": "changed"
+  },
+  {
+    "path": "apps/desktop/src/features/onboarding/SetupFlow.test.tsx",
+    "kind": "added"
+  },
+  {
+    "path": "apps/desktop/src/features/onboarding/SetupFlow.tsx",
+    "kind": "changed"
+  },
+  {
+    "path": "apps/desktop/src/features/settings/GeneralSettings.tsx",
+    "kind": "changed"
+  },
+  {
+    "path": "apps/desktop/src/features/settings/LocalComponentUpdate.test.tsx",
+    "kind": "added"
+  },
+  {
+    "path": "apps/desktop/src/features/settings/LocalComponentUpdate.tsx",
+    "kind": "changed"
+  },
+  {
+    "path": "apps/desktop/src/features/settings/RepairServerDialog.test.tsx",
+    "kind": "changed"
+  },
+  {
+    "path": "apps/desktop/src/features/settings/SshLoginFields.test.tsx",
+    "kind": "added"
+  },
+  {
+    "path": "apps/desktop/src/features/settings/SshLoginFields.tsx",
+    "kind": "changed"
+  },
+  {
+    "path": "apps/desktop/src/features/settings/VpsUpdateDialog.test.tsx",
+    "kind": "changed"
+  },
+  {
+    "path": "apps/desktop/src/features/settings/VpsUpdateDialog.tsx",
+    "kind": "changed"
+  },
+  {
+    "path": "apps/desktop/src/features/settings/WifiSettings.test.tsx",
+    "kind": "changed"
+  },
+  {
+    "path": "apps/desktop/src/styles/dialogs.css",
+    "kind": "changed"
+  },
+  {
+    "path": "crates/server/src/diagnostics.rs",
+    "kind": "changed"
+  },
+  {
+    "path": "crates/server/src/dns_diagnostics.rs",
+    "kind": "changed"
+  },
+  {
+    "path": "scripts/check-linux-package.py",
+    "kind": "changed"
+  },
+  {
+    "path": "scripts/package-linux.sh",
+    "kind": "changed"
+  },
+  {
+    "path": "tests/ui/connection_fix_smoke.py",
+    "kind": "added"
+  },
+  {
+    "path": "tests/ui/fixtures.js",
+    "kind": "changed"
+  },
+  {
+    "path": "tests/ui/visual_smoke.py",
+    "kind": "changed"
+  },
+  {
+    "path": "tests/ui/vps_follow_up_smoke.py",
+    "kind": "changed"
+  }
+]

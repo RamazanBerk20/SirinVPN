@@ -1,0 +1,45 @@
+[package]
+name = "sirinvpn-windows-service"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+base64.workspace = true
+fs2.workspace = true
+ipnet.workspace = true
+hex.workspace = true
+hickory-proto = { version = "0.26.2", default-features = false, features = ["std"] }
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+uuid.workspace = true
+sirinvpn-core = { path = "../core" }
+sirinvpn-platform = { path = "../platform" }
+sirinvpn-protocol = { path = "../protocol" }
+sirinvpn-transport = { path = "../transport" }
+sirinvpn-tunnel-model = { path = "../tunnel-model" }
+socket2.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+zeroize.workspace = true
+
+[target.'cfg(windows)'.dependencies]
+semver.workspace = true
+tempfile.workspace = true
+sirinvpn-release = { path = "../release" }
+sirinvpn-release-fetch = { path = "../release-fetch" }
+windows-sys = { workspace = true, features = [
+  "Win32_Foundation", "Win32_Security", "Win32_Security_Authorization",
+  "Win32_Storage_FileSystem", "Win32_System_IO", "Win32_System_LibraryLoader",
+  "Win32_System_Pipes", "Win32_System_Threading", "Win32_System_Services",
+  "Win32_Networking_WinSock", "Win32_NetworkManagement_Ndis",
+  "Win32_NetworkManagement_IpHelper", "Win32_NetworkManagement_WindowsFilteringPlatform",
+  "Win32_System_Rpc", "Win32_System_Registry", "Win32_System_Com", "Win32_UI_Shell",
+  "Win32_System_WindowsProgramming",
+] }
+
+[dev-dependencies]
+tempfile.workspace = true

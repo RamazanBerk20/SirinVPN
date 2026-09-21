@@ -1,0 +1,15 @@
+{
+  "debian_root_owned_executables": 6,
+  "debian_tray_runtime_dependency": true,
+  "debian_payload_sha256": {
+    "usr/bin/sirinvpn-desktop": "b3ddec8417bbef1eb64513c307901573b3df27fad5a5f10eb46817553476637a",
+    "usr/bin/sirinvpn": "d8b468c39b00d8edb75c5a436d05c753073e94aae4d211a05e4126b7e16c4119",
+    "usr/lib/sirinvpn/sirinvpn-helper": "438cebaaf301e63c68ea3213b0b059fc47bd64eb8cec2f87a4b283c27227514d",
+    "usr/lib/sirinvpn/sirinvpn-server": "e8e735620d654afe58f127f736158ebe562077e0498d26a7d950c7791b7d089f",
+    "usr/lib/sirinvpn/sirinvpn-release": "78912a2c7f0473ad06917974e485ffa62ac1ef844970c1ac9c646c10cf3680be",
+    "usr/lib/sirinvpn/sirinvpn-release-fetch": "0f26774b013c7b86aa66075b55aff478de42cb86230e60df74a132f29e826a06"
+  },
+  "appimage_extraction": "passed",
+  "appimage_server_matches_debian": true,
+  "appimage_helper_present": true
+}

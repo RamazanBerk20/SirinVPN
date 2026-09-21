@@ -1,0 +1,44 @@
+{
+  "repaired": true,
+  "identity_preserved": true,
+  "verified_at_utc": "2026-09-08T11:14:00+00:00",
+  "server_artifact_sha256": "ad25d65ccfe179f2dee8978ab9b5c92407b16e645b02751f19997d91f0e24cbe",
+  "authentication": "saved SSH login with pinned host key",
+  "original_failure": {
+    "step": "executing staged server",
+    "exit_status": 126,
+    "run_mounted_noexec": true
+  },
+  "mount_configuration_changed": false,
+  "services": {
+    "sirinvpn-server": {
+      "Result": "success",
+      "ExecMainStatus": "0",
+      "ActiveState": "active",
+      "SubState": "running"
+    },
+    "sirinvpn-network": {
+      "Result": "success",
+      "ExecMainStatus": "0",
+      "ActiveState": "active",
+      "SubState": "exited"
+    },
+    "sirinvpn-firewall": {
+      "Result": "success",
+      "ExecMainStatus": "0",
+      "ActiveState": "active",
+      "SubState": "exited"
+    },
+    "unbound": {
+      "Result": "success",
+      "ExecMainStatus": "0",
+      "ActiveState": "active",
+      "SubState": "running"
+    }
+  },
+  "loopback_private_dns_tcp_reply_valid": true,
+  "unbound_config_valid": true,
+  "pending_rollback_scripts": 0,
+  "pending_release_transaction": false,
+  "new_gui_connection_and_diagnostics": "pending user review"
+}

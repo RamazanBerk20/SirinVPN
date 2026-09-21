@@ -1,0 +1,68 @@
+{
+  "frontend": {
+    "files_passed": 38,
+    "tests_passed": 182,
+    "execution": "Linux package container"
+  },
+  "native_rust": {
+    "passed": 329,
+    "failed": 0,
+    "core": 52,
+    "desktop": 41,
+    "installer": 33,
+    "linux_helper": 76,
+    "release": 55,
+    "server": 72,
+    "deferred_opt_in_tests": 15
+  },
+  "kernel_vm": {
+    "deferred_tests": 15,
+    "cases_passed": 16,
+    "failed": 0,
+    "execution": "Real guest kernel in isolated containers; external network disabled"
+  },
+  "packaged_linux_vm": {
+    "checks_passed": 26,
+    "failed": 0,
+    "exact_debian_package_sha256": "93d7ade9c5a198b47f4d69657a1e49d299a1202eae02018bf7359548597a45d0",
+    "execution": "Fresh VPS and client VMs, packaged CLI/helper and GUI window close"
+  },
+  "browser_workflows": {
+    "viewports": [
+      "1220x780",
+      "1024x680",
+      "390x844"
+    ],
+    "screenshots": 42,
+    "page_errors": 0,
+    "native_replies": "synthetic"
+  },
+  "native_tray": {
+    "checks_passed": 10,
+    "helper": "isolated synthetic fixture"
+  },
+  "typescript_and_vite": "passed",
+  "affected_native_clippy_all_targets_warnings_denied": "passed",
+  "windows_cross_clippy_test_targets_warnings_denied": "passed",
+  "privacy": "passed",
+  "rust_format": "passed",
+  "diff_whitespace": "passed",
+  "source_size": {
+    "files": 698,
+    "lines": 139640,
+    "files_above_1000_lines": 0
+  },
+  "new_windows_and_android_native_acceptance": "not run",
+  "live_vps_or_host_vpn_modified": false,
+  "application_package_inspection": {
+    "passed": 5,
+    "execution": "static extraction"
+  },
+  "build_limits": {
+    "sequential": true,
+    "cargo_jobs": 2,
+    "memory_max_gib": 4,
+    "extra_swap": 0,
+    "cpu_quota_percent": 150
+  }
+}

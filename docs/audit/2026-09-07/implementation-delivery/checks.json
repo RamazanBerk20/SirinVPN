@@ -1,0 +1,27 @@
+{
+  "rust": {
+    "passed": 451,
+    "failed": 0,
+    "opt_in_ignored": 14
+  },
+  "clippy": "workspace/all targets passed with warnings denied",
+  "rust_format": "passed",
+  "frontend": {
+    "files": 32,
+    "passed": 157,
+    "typescript_and_vite": "passed"
+  },
+  "android_native_jvm": {
+    "passed": 7,
+    "device_execution": false,
+    "evidence": "docs/current-diagnostics-2026-09-07.md"
+  },
+  "privacy": "passed",
+  "source_size": "Source inventory: 653 files, 133029 lines, 0 files over 1000 lines.",
+  "shell_fixtures": {
+    "passed": 2
+  },
+  "shell_syntax": "passed for packaging/test scripts",
+  "package_inspection": "all seven artifacts passed; static extraction, no installation",
+  "platform_acceptance": "pending"
+}
