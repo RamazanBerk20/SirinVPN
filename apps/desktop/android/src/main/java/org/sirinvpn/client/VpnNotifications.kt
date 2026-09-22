@@ -88,10 +88,12 @@ object VpnNotifications {
         val elapsed=(sampledAt-lastSample)/1000.0
         val traffic=if(state==lastState && lastSample>0 && elapsed>0 && elapsed<=20 && rx>=lastRx && tx>=lastTx && status.optBoolean("byte_counters_available")) " · ↓ ${rate(rx-lastRx,elapsed)} · ↑ ${rate(tx-lastTx,elapsed)}" else ""
         lastState=state;lastRx=rx;lastTx=tx;lastSample=sampledAt
-        val label = if (policy) "VPN settings" else if (phase == "connected") "Disconnect" else "Stop attempts"
+        val monitoring=snapshot.optBoolean("wifi_automation_enabled") && phase in setOf("paused", "disconnected", "failed", "permission_required")
+        val label = if (policy) "VPN settings" else if (phase == "connected") "Disconnect" else if (monitoring) "Stop Wi-Fi automation" else "Stop attempts"
         val action = if (policy) PendingIntent.getActivity(service, 2, Intent(android.provider.Settings.ACTION_VPN_SETTINGS),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         else PendingIntent.getBroadcast(service, 3, Intent(service, VpnActionReceiver::class.java)
+            .setAction(if(monitoring) "org.sirinvpn.STOP_AUTOMATION" else "org.sirinvpn.STOP")
             .setData(android.net.Uri.parse("sirin-control://stop/${snapshot.getLong("generation")}"))
             .putExtra("generation", snapshot.getLong("generation")), PendingIntent.FLAG_IMMUTABLE)
         service.getSystemService(NotificationManager::class.java).notify(VPN_ID,
@@ -107,6 +109,7 @@ object VpnNotifications {
             }).addAction(controlAction(service, label, action)).build())
     }
     fun failed(context:Context,snapshot:JSONObject) {
+        if(!context.getSharedPreferences("application-preferences",0).getBoolean("notifications",true)) return
         val action=PendingIntent.getBroadcast(context,4,Intent(context,VpnActionReceiver::class.java)
             .setAction("org.sirinvpn.CONNECT").setData(android.net.Uri.parse("sirin-control://retry/${snapshot.getLong("generation")}"))
             .putExtra("generation",snapshot.getLong("generation")),PendingIntent.FLAG_IMMUTABLE)

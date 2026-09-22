@@ -24,6 +24,8 @@ object Controller {
     private lateinit var context: Context
     private val worker = java.util.concurrent.ThreadPoolExecutor(1,1,0,TimeUnit.MILLISECONDS,java.util.concurrent.ArrayBlockingQueue(2))
     private val readers = java.util.concurrent.ThreadPoolExecutor(2,2,0,TimeUnit.MILLISECONDS,java.util.concurrent.ArrayBlockingQueue(32))
+    // Local settings must not wait behind network requests or an interrupted connection.
+    private val preferenceWorker = Executors.newSingleThreadExecutor()
     private val monitor = Executors.newSingleThreadScheduledExecutor()
     // Monotonic across process recreation as well as within this process.
     private val epoch = AtomicLong(SystemClock.elapsedRealtime() * 1000)
@@ -57,10 +59,18 @@ object Controller {
     private var tileState = ""
     private var wifiPolicy: JSONObject? = null
     private var wifiAttempt: String? = null
+    private var wifiAttemptNetwork: Network? = null
     private val wifiReading = java.util.concurrent.atomic.AtomicBoolean(false)
     private var lastCommand = "connect_saved"
     private var lastArguments = "{}"
     private var retryEnabled = false
+    private var reconnectOverride: Boolean? = null
+    private var pendingServer: String? = null
+    private var wifiRequested = false
+    private var settingsUpdating = false
+    private var wifiRevision = 0L
+    private var wifiRefreshPending = false
+    private var pausedNetwork: Network? = null
     private var systemStartRequested = false
     private fun retryRequested() = retryEnabled || systemStartRequested || SirinVpnService.instance?.isAlwaysOn == true
     private val requests = LinkedHashMap<String, String>()
@@ -73,6 +83,13 @@ object Controller {
         context = application.applicationContext
         check(Native.initialize(context.noBackupFilesDir.absolutePath, NativePlatform(context)))
         paused = preferences.getBoolean("paused", false)
+        wifiRequested = preferences.getBoolean("wifi_requested", false)
+        val appPrefs = context.getSharedPreferences("application-preferences", 0)
+        if (!appPrefs.contains("notifications")) {
+            val legacy = context.getSharedPreferences("presentation", 0)
+            check(appPrefs.edit().putBoolean("notifications", legacy.getBoolean("notifications", true))
+                .putBoolean("animations", legacy.getBoolean("animations", true)).commit())
+        }
         if (preferences.contains("maintenance")) {
             error = "A server operation was interrupted. Review its current state and retry the same operation."
             operationState=JSONObject().put("command",preferences.getString("maintenance","")).put("phase","interrupted")
@@ -124,9 +141,11 @@ object Controller {
 
     @Synchronized fun prepareConnection(args:JSONObject,generation:Long) {
         check(current(generation))
-        lastCommand="connect_server_with_policy";lastArguments=args.toString()
+        pendingServer=args.getString("serverId")
+        reconnectOverride?.let { args.getJSONObject("preferences").getJSONObject("policy").put("automatic_reconnect",it) }
+        lastCommand="connect_saved";lastArguments=args.toString()
         retryEnabled=args.getJSONObject("preferences").getJSONObject("policy").optBoolean("automatic_reconnect")
-        preferences.edit().putString("requested_arguments",lastArguments).commit()
+        preferences.edit().putString("requested_arguments",lastArguments).putString("active_profile",pendingServer).commit()
     }
     @Synchronized fun effectiveMtu(config:JSONObject):Int {
         val measured=measuredMtu
@@ -154,7 +173,7 @@ object Controller {
     }
 
     @Synchronized private fun startSampling() {
-        if (sampling == null) sampling = monitor.scheduleWithFixedDelay({ sample() }, 1, 1, TimeUnit.SECONDS)
+        if (sampling == null && !paused && preferences.getBoolean("requested",false)) sampling = monitor.scheduleWithFixedDelay({ sample() }, 1, 1, TimeUnit.SECONDS)
     }
     fun current(generation: Long) = epoch.get() == generation
     fun generation() = epoch.get()
@@ -171,7 +190,7 @@ object Controller {
             "waiting_for_network", "reconnecting" -> "connecting"
             "paused", "permission_required" -> "disconnected"
             else -> phase
-        }).put("interface_name", "SirinVPN").put("server_id", active ?: JSONObject.NULL)
+        }).put("interface_name", "SirinVPN").put("server_id", active ?: pendingServer ?: JSONObject.NULL)
             .put("rx_bytes", rx ?: 0).put("tx_bytes", tx ?: 0)
             .put("byte_counters_available", rx != null && tx != null)
             .put("counter_sampled_at_ms", if (rx != null && tx != null) counterSampledAt else JSONObject.NULL)
@@ -183,7 +202,7 @@ object Controller {
             .put("kill_switch_enabled", lockdown).put("kill_switch_state", if (lockdown) "blocking" else "off")
             .put("always_on",service?.isAlwaysOn==true).put("lockdown",lockdown)
             .put("supervisor_status_known",true).put("endpoint_updates_supported",true)
-            .put("auto_reconnect_enabled", config?.optBoolean("automatic_reconnect") == true)
+            .put("auto_reconnect_enabled", retryEnabled)
             .put("transport_fallback_enabled", config?.optBoolean("automatic_transport") == true)
             .put("routing_mode", config?.optString("routing_mode") ?: "full_tunnel")
             .put("allow_lan", config?.optBoolean("allow_lan") ?: false)
@@ -208,6 +227,7 @@ object Controller {
         active = config.getString("server_id")
         // Never retain WireGuard configuration (contains a private key) as presentation state.
         tunnelConfiguration = JSONObject(config.toString()).apply { remove("wireguard") }
+        reconnectOverride?.let { tunnelConfiguration!!.put("automatic_reconnect",it) }
         started = SystemClock.elapsedRealtime(); rx = null; tx = null; handshake = null
         phase = "connecting"; error = null
         quality=null;mtu=null
@@ -241,8 +261,30 @@ object Controller {
         SirinVpnService.instance?.let { VpnNotifications.update(it, snapshot()) }
     }
 
-    fun execute(command: String, arguments: String, requestId: String, expected: Long, callback: IResult) {
+    fun execute(command: String, arguments: String, requestId: String, expected: Long, callback: IResult,
+                retry: Boolean = false, wifi: Boolean = false) {
         if (arguments.length > 131072 || requestId.length > 80) { callback.complete(failure("Request too large.")); return }
+        if (command in setOf("get_app_preferences", "set_app_preferences")) {
+            try {
+                val prefs = context.getSharedPreferences("application-preferences", 0)
+                synchronized(this) {
+                    if (command == "set_app_preferences") {
+                        val value = JSONObject(arguments).getJSONObject("preferences")
+                        check(prefs.edit().putBoolean("notifications", value.getBoolean("notifications"))
+                            .putBoolean("animations", value.getBoolean("animations")).commit())
+                        if (!value.getBoolean("notifications")) VpnNotifications.clearFailure(context)
+                    }
+                    callback.complete(success(JSONObject().put("preferences", JSONObject()
+                        .put("notifications", prefs.getBoolean("notifications", true))
+                        .put("animations", prefs.getBoolean("animations", true))
+                        .put("start_on_login", false).put("launch_minimized", false).put("close_to_tray", false))
+                        .put("startup_available", false).put("tray_available", false)
+                        .put("notification_permission", if (context.getSystemService(android.app.NotificationManager::class.java).areNotificationsEnabled()) "granted" else "denied")
+                        .put("font_scale", context.resources.configuration.fontScale)))
+                }
+            } catch (_: Exception) { callback.complete(failure("App preferences could not be saved or read.")) }
+            return
+        }
         if(command=="android_dismiss_operation") {
             synchronized(this) {
                 if(!operation) {operationState=null;preferences.edit().remove("maintenance").commit();publish()}
@@ -268,39 +310,54 @@ object Controller {
             requests[requestId]?.let { callback.complete(it); return }
         }
         if (command in setOf("disconnect_server", "cancel_connection")) {
+            synchronized(this) {
             if (SirinVpnService.instance?.isAlwaysOn == true) { callback.complete(failure("Android Always-on controls this connection. Open VPN settings.")); return }
             if (expected >= 0 && !current(expected)) { callback.complete(failure("The connection changed. Refresh its status.")); return }
             if (operation && (protectedTransition || phase !in setOf("connecting", "reconnecting", "waiting_for_network"))) { callback.complete(failure("Finish the current protected operation before stopping.")); return }
             stop(true); callback.complete(success(snapshot().getJSONObject("status"))); return
+            }
         }
         if (command == "local_status") { callback.complete(success(snapshot().getJSONObject("status"))); return }
         val transition=command in setOf("rotate_device_keys","apply_endpoint_update","publish_endpoint_update")
         val connection = transition || command in setOf("connect_server", "connect_server_with_policy", "connect_saved", "reconnect_server", "resume_server", "join_server", "recover_owner_access")
         val maintenance = transition || command in setOf("provision_server","repair_server","uninstall_server","export_server_backup","import_server_backup","export_vps_backup","restore_vps_backup","export_recovery_package","import_recovery_package","inspect_server_network","check_release_update","install_release_update","prepare_vps_baseline","install_vps_baseline","manage_vps_release","save_ssh_login")
         val readOnly = command in setOf("list_servers", "get_connection_preferences", "key_rotation_pending", "server_status", "server_configuration", "membership", "get_ssh_login", "get_wifi_policy", "recovery_settings", "available_endpoint_update", "local_component_update_status", "current_network_profile")
+        val setting = command in setOf("set_connection_preferences", "android_set_reconnect", "set_wifi_policy", "disable_wifi_automation", "trust_current_wifi", "forget_trusted_wifi")
+        val wifiSetting = setting && command !in setOf("set_connection_preferences", "android_set_reconnect")
         var previousHandle=-1
         var previousPhase="unknown"
+        val generation: Long
         synchronized(this) {
-            if (operation && !readOnly) { callback.complete(failure("Another operation is in progress.")); return }
-            if(switching && !connection && !readOnly) {callback.complete(failure("A transport handoff is being verified. Retry in a moment."));return}
+            if ((operation && !readOnly && (!setting || protectedTransition || phase !in setOf("connecting", "reconnecting", "waiting_for_network"))) || settingsUpdating && !readOnly) {
+                callback.complete(failure("Another operation is in progress.")); return
+            }
+            if (retry && (paused || !preferences.getBoolean("requested", false) || !retryRequested())) { callback.complete(success()); return }
+            if (wifi && (paused || !wifiEnabled() || wifiPolicy?.optString("current_network") != "untrusted_wifi")) { callback.complete(success()); return }
+            if(switching && !connection && !readOnly && !setting) {callback.complete(failure("A transport handoff is being verified. Retry in a moment."));return}
             if (expected >= 0 && !current(expected)) { callback.complete(failure("The connection changed. Refresh its status.")); return }
             if (connection && VpnService.prepare(context) != null) {
                 phase = "permission_required"; publish(); callback.complete(failure("VPN permission is required.")); return
             }
-            if (!readOnly) {operation = true;protectedTransition=transition}
+            if (setting) { settingsUpdating=true; if(wifiSetting) wifiRevision++ }
+            else if (!readOnly) {operation = true;protectedTransition=transition}
             if (connection) {
                 previousHandle=handle;previousPhase=phase
                 if(callback !== ignoreResult) {
                     attempts=0;measuredMtu=null
                     if(SirinVpnService.instance?.isAlwaysOn!=true) systemStartRequested=false
                 }
-                retryEnabled=false
+                if (callback !== ignoreResult) wifiRequested=false
+                if (wifi) wifiRequested=true
+                pendingServer=try { JSONObject(arguments).optString("serverId").takeIf { it.isNotEmpty() }
+                    ?: preferences.getString("profile", null) } catch (_: Exception) { null }
+                retryAt=0; retryEnabled=false; reconnectOverride=null
                 Native.generation(epoch.incrementAndGet()); paused = false; error = null
                 phase = if (network == null) "waiting_for_network" else "connecting"
-                preferences.edit().putBoolean("paused", false).putBoolean("requested", true).putLong("request_time_ms",System.currentTimeMillis()).commit()
+                preferences.edit().putBoolean("paused", false).putBoolean("requested", true).putBoolean("wifi_requested",wifiRequested)
+                    .putLong("request_time_ms",System.currentTimeMillis()).commit()
             }
+            generation = epoch.get()
         }
-        val generation = epoch.get()
         if (connection) startSampling()
         if(connection) VpnNotifications.clearFailure(context)
         if (maintenance) try {
@@ -318,7 +375,7 @@ object Controller {
             callback.complete(failure("Open SirinVPN to start the VPN.")); return
         }
         publish()
-        try { (if (readOnly) readers else worker).execute {
+        try { (if (setting) preferenceWorker else if (readOnly) readers else worker).execute {
             val result = try {
                 if (connection) {
                     val deadline = SystemClock.elapsedRealtime() + 4000
@@ -331,6 +388,20 @@ object Controller {
                     "connect_saved"
                 } else command
                 var response = Native.call(effective, args.toString(), generation)
+                if (setting && JSONObject(response).has("ok")) synchronized(this) {
+                    if (wifiSetting) {
+                        // Apply stored policy before acknowledging the switch; older reads cannot restore it.
+                        val enabledBefore=wifiEnabled()
+                        if (command == "set_wifi_policy") wifiPolicy?.put("policy", args.getJSONObject("policy"))
+                        if (wifiEnabled() && !enabledBefore) {
+                            paused=false; pausedNetwork=null
+                            preferences.edit().putBoolean("paused", false).remove("paused_wifi").commit()
+                        }
+                        if (command == "disable_wifi_automation") wifiPolicy?.getJSONObject("policy")?.put("enabled", false)
+                        wifiAttempt=null
+                        if (!wifiEnabled() && wifiRequested && phase != "connected" && !protectedTransition && SirinVpnService.instance?.isAlwaysOn != true) stop(true)
+                    } else applyReconnectPreference(args.getString("serverId"), JSONObject(response).getJSONObject("ok").getJSONObject("policy").getBoolean("automatic_reconnect"))
+                }
                 if(command=="android_set_quick_profile" && JSONObject(response).has("ok")) preferences.edit().putString("profile",args.getString("serverId")).commit()
                 if(command=="remove_server" && JSONObject(response).has("ok")) {
                     val removed=args.getString("serverId")
@@ -353,8 +424,8 @@ object Controller {
                     }
                     response = protected.toString()
                 }
-                if (connection && JSONObject(response).has("ok") && current(generation)) {
-                    synchronized(this) {
+                if (connection && JSONObject(response).has("ok")) synchronized(this) {
+                    if (current(generation)) {
                         active?.let {
                             val update = preferences.edit().putString("active_profile",it)
                             if (!preferences.contains("profile")) update.putString("profile",it)
@@ -371,7 +442,7 @@ object Controller {
                 if (connection && !transition && effective !in setOf("join_server", "recover_owner_access") && JSONObject(response).has("ok")) success(snapshot().getJSONObject("status")) else response
             } catch (_: Exception) { failure("The operation could not finish. Check permissions, configuration and network access.") }
             synchronized(this) {
-                if (!readOnly) operation = false
+                if (setting) settingsUpdating=false else if (!readOnly) operation = false
                 if (maintenance) {
                     operationState=JSONObject().put("command",command).put("phase",if(JSONObject(result).has("error")) "failed" else "completed")
                     preferences.edit().remove("maintenance").commit()
@@ -384,10 +455,10 @@ object Controller {
                         phase=previousPhase;error=null
                         retryEnabled=tunnelConfiguration?.optBoolean("automatic_reconnect")==true
                     } else {
-                        val retry=retryRequested()
+                        val shouldRetry=retryRequested()
                         phase = "failed"; error = JSONObject(result).optString("error")
                         synchronized(engineLock) { stopEngine() }
-                        if (retry && !paused && attempts < 8) {
+                        if (shouldRetry && !paused && attempts < 8) {
                             phase = if (network == null) "waiting_for_network" else "reconnecting"
                             retryAt = SystemClock.elapsedRealtime() + (1000L shl attempts.coerceAtMost(5)); attempts++
                         } else {
@@ -403,11 +474,13 @@ object Controller {
                     while (requests.size > 32) requests.remove(requests.keys.first())
                 }
                 publish()
+                finishIfIdle()
             }
-            if (command in setOf("set_wifi_policy","trust_current_wifi","forget_trusted_wifi")) refreshWifi()
+            if (setting || command == "remove_server") refreshWifi()
             try { callback.complete(result) } catch (_: Exception) { /* UI lifetime does not own this operation. */ }
         } } catch (_:java.util.concurrent.RejectedExecutionException) {
-            synchronized(this) { if(!readOnly) operation=false }
+            synchronized(this) { if(setting) settingsUpdating=false else if(!readOnly) operation=false }
+            if (wifiSetting) refreshWifi()
             callback.complete(failure("Too many pending requests. Retry after the current operation finishes."))
         }
     }
@@ -415,19 +488,41 @@ object Controller {
         operationState?.put("phase","interrupted");publish()
     }
 
-    fun stop(user: Boolean) {
-        Native.generation(epoch.incrementAndGet())
-        synchronized(this) {
-            paused = user; phase = "disconnecting"; retryAt = 0;systemStartRequested=false
-            sampling?.cancel(false); sampling = null
-            preferences.edit().putBoolean("requested", false).putBoolean("paused", user)
-                .putString("paused_wifi",if(user) wifiPolicy?.optString("current_network_token") else null).commit()
+    @Synchronized private fun applyReconnectPreference(id: String, enabled: Boolean) {
+        if (id != (pendingServer ?: active)) return
+        retryEnabled=enabled; reconnectOverride=enabled
+        tunnelConfiguration?.put("automatic_reconnect", enabled)
+        val arguments=JSONObject(lastArguments)
+        arguments.optJSONObject("preferences")?.getJSONObject("policy")?.put("automatic_reconnect", enabled)
+        lastArguments=arguments.toString()
+        preferences.edit().putString("requested_arguments", lastArguments).commit()
+        if (!retryRequested()) {
+            val wasWaiting=retryAt>0 || phase in setOf("connecting", "reconnecting", "waiting_for_network")
+            retryAt=0
+            if (wasWaiting && !protectedTransition) stop(true)
+        } else if (!paused && preferences.getBoolean("requested",false) && !operation && phase in setOf("unknown", "waiting_for_network", "reconnecting")) {
+            attempts=0; retryAt=SystemClock.elapsedRealtime()+1000; startSampling()
         }
-        synchronized(engineLock) { stopEngine() }
-        synchronized(this) { active = null; tunnelConfiguration = null; rx = null; tx = null; phase = if (user) "paused" else "disconnected"; publish() }
-        if (wifiPolicy?.optJSONObject("policy")?.optBoolean("enabled") != true) SirinVpnService.instance?.finishSession()
     }
-    fun restart(systemStart:Boolean=false) {
+    private fun wifiEnabled() = wifiPolicy?.optJSONObject("policy")?.optBoolean("enabled") == true
+    @Synchronized fun finishIfIdle() {
+        if (handle<0 && !operation && !preferences.getBoolean("requested",false) && !wifiEnabled()) SirinVpnService.instance?.finishSession()
+    }
+    @Synchronized fun stop(user: Boolean) {
+        Native.generation(epoch.incrementAndGet())
+        paused=user; pausedNetwork=network; phase="disconnecting"; retryAt=0; retryEnabled=false; systemStartRequested=false
+        pendingServer=null; wifiRequested=false; reconnectOverride=null; lastArguments="{}"; lastCommand="connect_saved"
+        sampling?.cancel(false); sampling=null
+        preferences.edit().putBoolean("requested", false).putBoolean("paused", user).putBoolean("wifi_requested",false)
+            .remove("requested_arguments")
+            .putString("paused_wifi", if(user && wifiPolicy?.optBoolean("can_trust_current")==true) wifiPolicy?.optString("current_network_token") else null).commit()
+        stopEngine()
+        active=null; tunnelConfiguration=null; rx=null; tx=null; phase=if(user) "paused" else "disconnected"
+        VpnNotifications.clearFailure(context)
+        publish()
+        finishIfIdle()
+    }
+    @Synchronized fun restart(systemStart:Boolean=false) {
         // Android 10's isAlwaysOn() is false until the caller has established a
         // TUN. The permission-protected OS start is itself an explicit request.
         // Null sticky restarts still obey the persisted pause/connection intent.
@@ -442,8 +537,13 @@ object Controller {
         }
         if(operation || handle>=0) return
         val id = preferences.getString("active_profile",null) ?: preferences.getString("profile",null)
-        val arguments=preferences.getString("requested_arguments",null) ?: JSONObject().put("serverId",id).toString()
-        execute("connect_saved", arguments, UUID.randomUUID().toString(), -1, ignoreResult)
+        val arguments=JSONObject(preferences.getString("requested_arguments",null) ?: JSONObject().put("serverId",id).toString())
+        // Recovery must not revive a retry preference disabled since this intent was recorded.
+        val saved=JSONObject(Native.call("get_connection_preferences",JSONObject().put("serverId",id).toString(),epoch.get())).optJSONObject("ok")
+        val reconnect=saved?.optJSONObject("policy")?.optBoolean("automatic_reconnect")==true
+        if (!reconnect && !systemStartRequested && SirinVpnService.instance?.isAlwaysOn!=true) { stop(true); return }
+        arguments.optJSONObject("preferences")?.optJSONObject("policy")?.put("automatic_reconnect",reconnect)
+        execute("connect_saved", arguments.toString(), UUID.randomUUID().toString(), epoch.get(), ignoreResult)
     }
     private fun networkChanged() {
         SirinVpnService.instance?.setUnderlyingNetworks(network?.let { arrayOf(it) })
@@ -468,43 +568,51 @@ object Controller {
         VpnService.prepare(context)!=null -> "needs_authorization"
         else -> "waiting_for_wifi"
     }
-    private fun refreshWifi() {
-        if (!initialized || !wifiReading.compareAndSet(false,true)) return
-        try {readers.execute {
+    @Synchronized private fun refreshWifi() {
+        if (!initialized) return
+        wifiRevision++
+        if (settingsUpdating || !wifiReading.compareAndSet(false,true)) { wifiRefreshPending=true; return }
+        val revision=wifiRevision
+        val observedNetwork=network
+        wifiRefreshPending=false
+        try { readers.execute {
             try {
                 val state=JSONObject(Native.call("get_wifi_policy","{}",epoch.get())).optJSONObject("ok") ?: return@execute
                 synchronized(this) {
+                    if(revision!=wifiRevision || observedNetwork!=network) return@synchronized
                     wifiPolicy=state
-                    if(!state.getJSONObject("policy").optBoolean("enabled")) {
-                        if(handle<0 && !operation && !preferences.getBoolean("requested",false)) SirinVpnService.instance?.finishSession()
-                        publish();return@synchronized
-                    }
+                    if(!wifiEnabled()) { finishIfIdle(); publish(); return@synchronized }
+                    if(wifiRequested && state.optString("current_network")=="trusted_wifi" && phase!="connected" && !protectedTransition && SirinVpnService.instance?.isAlwaysOn!=true) stop(true)
                     val token=state.optString("current_network_token")
-                    if(paused && preferences.contains("paused_wifi") && token!="null" && token!=preferences.getString("paused_wifi",null)) {
+                    // Redaction or late identity availability on the same connection never undoes Stop.
+                    if(paused && pausedNetwork!=network && state.optBoolean("can_trust_current") && preferences.contains("paused_wifi") && token!=preferences.getString("paused_wifi",null)) {
                         paused=false;preferences.edit().putBoolean("paused",false).remove("paused_wifi").commit()
                     }
                     if(SirinVpnService.instance==null && VpnService.prepare(context)==null && !paused) {
                         try { context.startForegroundService(Intent(context,SirinVpnService::class.java).setAction("org.sirinvpn.WIFI")) } catch (_:Exception) { return@synchronized }
                     }
-                    if(!paused && handle<0 && !operation && wifiAttempt!=token && state.optString("current_network")=="untrusted_wifi") {
-                        // A redacted identity is never an exception to connection protection.
+                    if(!paused && handle<0 && !operation && !settingsUpdating && !preferences.getBoolean("requested",false) && (wifiAttempt!=token || wifiAttemptNetwork!=network) && state.optString("current_network")=="untrusted_wifi") {
                         val id=state.getJSONObject("policy").optString("server_id")
-                        wifiAttempt=token
-                        execute("connect_saved",JSONObject().put("serverId",id).toString(),UUID.randomUUID().toString(),-1,ignoreResult)
+                        wifiAttempt=token; wifiAttemptNetwork=network
+                        execute("connect_saved",JSONObject().put("serverId",id).toString(),UUID.randomUUID().toString(),epoch.get(),ignoreResult,wifi=true)
                     }
+                    publish()
                 }
             } catch (_:Exception) { /* Missing identity or permission cannot become trusted. */ }
-            finally { wifiReading.set(false) }
-        }} catch (_:java.util.concurrent.RejectedExecutionException) {wifiReading.set(false)}
+            finally { synchronized(this) {
+                wifiReading.set(false)
+                if(wifiRefreshPending && !settingsUpdating) refreshWifi()
+            } }
+        }} catch (_:java.util.concurrent.RejectedExecutionException) { wifiReading.set(false) }
     }
     private fun sample() {
         try {
             val retry = synchronized(this) {
-                if (!operation && !paused && retryAt > 0 && network != null && SystemClock.elapsedRealtime() >= retryAt) {
-                    retryAt = 0; true
-                } else false
+                if (!operation && !settingsUpdating && !paused && retryRequested() && preferences.getBoolean("requested",false) && retryAt > 0 && network != null && SystemClock.elapsedRealtime() >= retryAt) {
+                    retryAt = 0; Triple(lastCommand,lastArguments,epoch.get())
+                } else null
             }
-            if (retry) { execute(lastCommand,lastArguments,UUID.randomUUID().toString(),epoch.get(),ignoreResult); return }
+            if (retry != null) { execute(retry.first,retry.second,UUID.randomUUID().toString(),retry.third,ignoreResult,retry=true); return }
             val data = synchronized(engineLock) { if (handle >= 0) WireGuard.statistics(handle) else null }
             synchronized(this) {
                 if (data != null) {

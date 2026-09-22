@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "../../api";
+import { invoke } from "../../platform";
 import { errorMessage } from "../../lib/errors";
 import {
   defaultConnectionPreferences,
@@ -111,6 +112,24 @@ export function useConnectionPreferences(serverId: string | undefined) {
       setSaving(false);
     }
   };
+  const setReconnect = async (enabled: boolean) => {
+    if (!serverId || !ready || inFlight.current) return;
+    const request = generation.current;
+    inFlight.current = true;
+    setSaving(true); setError(null); setNotice("");
+    try {
+      const value = normalize(await invoke<ConnectionPreferences>("android_set_reconnect", { serverId, enabled }));
+      if (request !== generation.current) return;
+      setSaved(value);
+      // This switch saves only its own value, not incomplete routing or transport drafts.
+      setDraft(current => ({ ...current, policy: { ...current.policy, automatic_reconnect: value.policy.automatic_reconnect } }));
+      setNotice(`Automatic reconnect ${enabled ? "enabled" : "disabled"}.`);
+    } catch (reason) {
+      if (request === generation.current) setError(errorMessage(reason, "Automatic reconnect could not be changed."));
+    } finally {
+      inFlight.current = false; setSaving(false);
+    }
+  };
   const discard = () => {
     if (!saved || saving) return;
     setDraft(saved);
@@ -131,6 +150,7 @@ export function useConnectionPreferences(serverId: string | undefined) {
     change,
     route,
     save,
+    setReconnect,
     discard,
     reload: load,
   };

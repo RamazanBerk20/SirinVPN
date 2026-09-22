@@ -171,12 +171,12 @@ export function WifiSettings() {
         const osName = snapshot.network_names?.[network.id];
         const friendly = network.label !== "Wi-Fi exception" ? network.label : "";
         const name = osName || friendly || `Saved Wi-Fi (${network.id.slice(0, 8)})`;
-        return <li key={network.id} className="settings-action-row">
+        return <li key={network.id} className="settings-action-row trusted-wifi-row">
           <div><strong>{name}</strong>
             {osName && friendly && friendly !== osName && <p className="settings-note">Label: {friendly}</p>}
             <p className="settings-note">{network.id === snapshot.current_network_token ? "Current network" : "Saved Wi-Fi connection"}{!osName && " · OS name unavailable"}</p>
           </div>
-          <button className="text-button" aria-label={`Remove trust for ${name}`} disabled={busy} onClick={() => void action(() => api.forgetTrustedWifi(network.id))}>Remove trust</button>
+          <button className={isAndroid ? "secondary-button" : "text-button"} aria-label={`Remove trust for ${name}`} disabled={busy} onClick={() => void action(() => api.forgetTrustedWifi(network.id))}>Remove trust</button>
         </li>;
       })}</ul>}
     </>}
@@ -187,7 +187,7 @@ export function WifiSettings() {
     </div>}
     <p className="settings-note">Trust is your exception to automatic connection, not a network security assessment. It applies to a saved Wi-Fi connection and stores no history of networks visited.</p>
     <p className="settings-note">OS Wi-Fi names are read only for display on this device. They are not stored by SirinVPN or sent to the VPS.</p>
-    <p className="settings-note">{isAndroid ? "An Android notification keeps enabled automation visible while the app is closed. Disconnect pauses it on the current network; Android’s Stop app control ends monitoring." : "Monitoring continues while SirinVPN is hidden in the tray. Quit app stops monitoring, even if an existing VPN tunnel stays connected."}</p>
+    <p className="settings-note">{isAndroid ? "An Android notification keeps enabled automation visible while the app is closed. Disconnect pauses it on the current network. Stop Wi-Fi automation in the notification turns this option off and ends monitoring." : "Monitoring continues while SirinVPN is hidden in the tray. Quit app stops monitoring, even if an existing VPN tunnel stays connected."}</p>
     <InlineError message={error} />
   </section>;
 }

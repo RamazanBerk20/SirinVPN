@@ -1,3 +1,4 @@
+import { isAndroid } from "../../platform";
 import { InlineError } from "../../components/ui";
 import type { useConnectionPreferences } from "./useConnectionPreferences";
 import { preferenceDifferences } from "./connectionPreferences";
@@ -26,7 +27,7 @@ export function PreferenceSaveBar({
               ? "Unsaved connection preferences"
               : preferences.notice ||
                 (preferences.ready
-                  ? "Saved on this device. Applies when you next connect."
+                  ? isAndroid ? "Reconnect applies immediately; other saved preferences apply on your next connection." : "Saved on this device. Applies when you next connect."
                   : "Loading connection preferences…")}
         </span>
         {preferences.dirty && (

@@ -112,6 +112,12 @@ html.android { min-width: 0; --bg: #080f1d; --surface: #111d30; --line: #26364d;
 .android .settings-card h2 { font-size: 1.0625rem; }
 .android .settings-card p { font-size: .875rem; line-height: 1.6; }
 .android .settings-action-row, .android .native-settings-actions { display: flex; align-items: stretch; flex-direction: column; gap: 12px; }
+.android .settings-action-row.trusted-wifi-row { flex-direction: row; align-items: center; }
+.android .trusted-wifi-row > div { flex: 1; }
+.android .trusted-wifi-row .settings-note { margin-top: 4px; }
+.android .trusted-wifi-row > .secondary-button { flex: 0 0 auto; max-width: 50%; padding: 10px 12px; border-radius: 10px; background: transparent; font-size: .8125rem; white-space: normal; }
+.android[data-font-scale=large] .trusted-wifi-row { flex-direction: column; align-items: flex-start; }
+.android[data-font-scale=large] .trusted-wifi-row > .secondary-button { max-width: 100%; }
 .android .preference-row { gap: 14px; padding: 16px 0; min-height: 64px; }
 .android .condition-choices, .android .transport-choices { grid-template-columns: 1fr; }
 .android .choice-row { border-radius: 14px; min-height: 64px; }

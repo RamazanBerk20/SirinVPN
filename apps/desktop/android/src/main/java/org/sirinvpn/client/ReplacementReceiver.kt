@@ -13,7 +13,7 @@ class ReplacementReceiver:BroadcastReceiver() {
         VpnNotifications.channels(context)
         val prefs=context.getSharedPreferences("connection-intent",Context.MODE_PRIVATE)
         if(!prefs.getBoolean("requested",false) || prefs.getBoolean("paused",false) || VpnService.prepare(context)!=null) return
-        try {context.startForegroundService(Intent(context,SirinVpnService::class.java).setAction(VpnService.SERVICE_INTERFACE))}
+        try {context.startForegroundService(Intent(context,SirinVpnService::class.java).setAction("org.sirinvpn.RECOVER"))}
         catch (_:Exception) { /* Android can require the user to reopen the app; retain intent. */ }
     }
 }

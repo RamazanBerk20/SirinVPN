@@ -34,10 +34,10 @@ class NativePlatform(private val context: Context) {
         val locationEnabled=context.getSystemService(android.location.LocationManager::class.java).isLocationEnabled
         @Suppress("DEPRECATION") val info=if(wifi && permitted) context.getSystemService(android.net.wifi.WifiManager::class.java).connectionInfo else null
         val name=info?.ssid?.takeIf { it.isNotBlank() && it != "<unknown ssid>" }
-        val bssid=info?.bssid?.takeIf { it.matches(Regex("[0-9A-Fa-f:]{17}")) && it != "02:00:00:00:00:00" && it != "00:00:00:00:00:00" }
-        val trustable=locationEnabled && name!=null && bssid!=null && (info?.networkId ?: -1)>=0
+        val identifier=savedWifiIdentifier(info)
+        val trustable=locationEnabled && identifier!=null
         return JSONObject().put("wifi",wifi).put("trustable",trustable)
-            .put("identifier",if(trustable) "${name!!.length}:$name:$bssid" else "unknown:${underlying.networkHandle}")
+            .put("identifier",if(trustable) identifier else "unknown:${underlying.networkHandle}")
             .put("name",name?.removeSurrounding("\"") ?: JSONObject.NULL).put("permission_required",wifi && !permitted)
             .put("location_enabled",locationEnabled).toString()
     }
@@ -157,4 +157,11 @@ class NativePlatform(private val context: Context) {
     fun deactivate(generation: Long) = synchronized(Controller.engineLock) {
         if (Controller.current(generation)) Controller.stopEngine()
     }
+}
+
+/** Bind trust to Android's saved configuration, not a roaming access point or transient Network. */
+internal fun savedWifiIdentifier(info: android.net.wifi.WifiInfo?): String? {
+    val name=info?.ssid?.takeIf { it.isNotBlank() && it != "<unknown ssid>" } ?: return null
+    val id=info.networkId.takeIf { it>=0 } ?: return null
+    return "saved:v1:$id:${name.length}:$name"
 }

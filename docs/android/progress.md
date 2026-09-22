@@ -31,6 +31,69 @@ the app launched successfully. Physical QR retesting remains pending.
 This is a **debug-signed, debuggable development build**, not a production release.
 Existing desktop changes and the existing signing identity were retained.
 
+## Android option handling, 22 September
+
+Reconnect saves previously left the running service's retry state and saved
+restart arguments unchanged. Wi-Fi reads could also apply an older enabled
+policy after it had been disabled. Settings now commit through a separate local
+worker, update the service before confirming success, and invalidate stale reads.
+Stop invalidates pending connection callbacks and retries under the same lock.
+Ordinary recovery reads the current saved reconnect setting; package replacement
+uses ordinary recovery rather than claiming an Android Always-on request.
+
+| Option | Result of the audit |
+| --- | --- |
+| Automatic reconnect | Android switch saves immediately, updates the active session, and cancels pending attempts when disabled. Both switch-only and full preference saves use the same service path. |
+| Wi-Fi automation and server selection | Saves update the live policy immediately. Disabling cancels a pending connection started by that rule. An established VPN remains connected until Disconnect. |
+| Trust and remove trust | Trust uses the saved Android network ID and SSID, with the existing local salt. Roaming access points and Wi-Fi off/on no longer change its fingerprint. |
+| Notifications and animations | Preferences belong to the VPN process, with one-time migration from the UI. Failure alerts honor the notification switch. Older UI refreshes cannot overwrite a newer save. |
+| Transport, network conditions, MTU, routes, LAN bypass and app routing | Retain explicit validated saves and apply on the next connection. Reconnect-only saves preserve these fields and unfinished UI drafts. |
+| Quick Settings server | Existing validated native save persists the selected profile; removal clears references. |
+| Always-on and blocking outside VPN | Remain Android-owned settings. App preference changes do not override them. |
+
+The paused notification now offers **Stop Wi-Fi automation**, which turns the
+rule off and ends monitoring. **Stop attempts** cancels a pending connection.
+Old trusted entries must be explicitly trusted once again after upgrading;
+old access-point fingerprints cannot safely be converted to saved-network trust.
+Precise/background location rules and treatment of hidden identities are unchanged.
+
+Validation includes **204 passing frontend tests**, the universal APK build,
+signature/ABI/16 KB package checks, Rust formatting, the privacy guard and the
+source-size check. Native option checks passed on isolated API 29 and API 36
+emulators: cancellation during connection, stale generation rejection, saved
+routing/MTU preservation, invalid-save rollback, trusted Wi-Fi off/on, disabled
+automation after network changes, notification stop-monitoring and suppressed
+failure alerts. The API 36 check also changes synthetic BSSIDs while keeping the
+saved network constant. These use temporary loopback profiles and no real VPS;
+physical campus roaming and OEM background restrictions remain device retests.
+[Frontend results](../../target/android-evidence/options/frontend-tests.log),
+[API 29](../../target/android-evidence/options/instrumentation-api29.log),
+[API 36](../../target/android-evidence/options/instrumentation-api36.log),
+[package check](../../target/android-evidence/options/package.json).
+The final package-replacement regression also passed: an update requests ordinary
+recovery and preserves a paused connection. Android lint reports **0 errors,
+94 warnings and 1 hint**; no severity was suppressed for this fix.
+[Replacement check](../../target/android-evidence/options/replacement.log),
+[build and lint](../../target/android-evidence/options/build-lint.log).
+The final notification regression passed real SystemUI Disconnect/Stop attempts,
+retention of the shade and unrelated notifications, and locked-action guards.
+[Notification controls](../../target/android-evidence/options/notification-controls.json).
+The APK was installed and launched on the SM_S936B with a matching checksum.
+Android recorded a fresh installation; no prior permission grants were available
+to compare, and the agent did not grant or reset phone permissions.
+[Installation record](../../target/android-evidence/options/phone-install.json).
+
+## Remove trust button layout
+
+The Android trusted-network row keeps its name and removal action together.
+The removal button has a compact outline and a 48 px minimum touch target;
+large system text moves it below the name with left alignment. The action itself
+is unchanged. The 12 Wi-Fi settings tests passed, and Android WebView layout
+checks passed at 390 px, 320 px and 200% system text with long network names.
+[Layout checks](../../target/android-evidence/remove-trust/layout.json),
+[normal preview](../../target/android-evidence/remove-trust/preview.png),
+[large-text preview](../../target/android-evidence/remove-trust/layout-320-2.png).
+
 ## Phone feedback: icon, spacing and permissions
 
 The monochrome system icon now follows the brand's curved ribbon and keyhole.

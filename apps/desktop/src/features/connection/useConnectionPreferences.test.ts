@@ -1,6 +1,8 @@
 import { act, renderHook, waitFor, cleanup } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "../../api";
+import { invoke } from "../../platform";
+vi.mock("../../platform", () => ({ invoke: vi.fn() }));
 import {
   defaultConnectionPreferences as defaults,
   preferenceDifferences,
@@ -123,4 +125,54 @@ describe("saved connection preferences", () => {
       ),
     ).toEqual([]);
   });
+});
+
+it("saves the Android reconnect switch immediately without saving incomplete drafts", async () => {
+  const enabled = { ...defaults, policy: { ...defaults.policy, automatic_reconnect: true } };
+  vi.mocked(api.getConnectionPreferences).mockResolvedValue(enabled);
+  vi.mocked(invoke).mockResolvedValue(defaults);
+  const { result } = renderHook(() => useConnectionPreferences("a"));
+  await waitFor(() => expect(result.current.ready).toBe(true));
+  act(() => {
+    result.current.change({ transport: "tls_like" });
+    result.current.route({ mode: "selected_routes" });
+    result.current.setRoutesText("unfinished route");
+  });
+  await act(() => result.current.setReconnect(false));
+  expect(invoke).toHaveBeenCalledWith("android_set_reconnect", { serverId: "a", enabled: false });
+  expect(api.setConnectionPreferences).not.toHaveBeenCalled();
+  expect(result.current.saved?.policy.automatic_reconnect).toBe(false);
+  expect(result.current.draft.policy.automatic_reconnect).toBe(false);
+  expect(result.current.draft.transport).toBe("tls_like");
+  expect(result.current.routesText).toBe("unfinished route");
+  expect(result.current.dirty).toBe(true);
+});
+
+it("keeps the confirmed reconnect value after a rejected Android switch change", async () => {
+  const enabled = { ...defaults, policy: { ...defaults.policy, automatic_reconnect: true } };
+  vi.mocked(api.getConnectionPreferences).mockResolvedValue(enabled);
+  vi.mocked(invoke).mockRejectedValue(new Error("Could not save preference"));
+  const { result } = renderHook(() => useConnectionPreferences("a"));
+  await waitFor(() => expect(result.current.ready).toBe(true));
+  await act(() => result.current.setReconnect(false));
+  expect(result.current.draft.policy.automatic_reconnect).toBe(true);
+  expect(result.current.saved?.policy.automatic_reconnect).toBe(true);
+  expect(result.current.error).toBe("Could not save preference");
+});
+
+it("does not apply a late reconnect response to another Android server", async () => {
+  let finish!: (value: typeof defaults) => void;
+  vi.mocked(invoke).mockImplementation(() => new Promise(resolve => { finish = resolve; }));
+  const { result, rerender } = renderHook(({ id }) => useConnectionPreferences(id), { initialProps: { id: "a" } });
+  await waitFor(() => expect(result.current.ready).toBe(true));
+  let pending: Promise<void>;
+  act(() => { pending = result.current.setReconnect(true); });
+  rerender({ id: "b" });
+  await waitFor(() => expect(result.current.ready).toBe(true));
+  await act(async () => {
+    finish({ ...defaults, policy: { ...defaults.policy, automatic_reconnect: true } });
+    await pending;
+  });
+  expect(result.current.saved?.policy.automatic_reconnect).toBe(false);
+  expect(result.current.draft.policy.automatic_reconnect).toBe(false);
 });

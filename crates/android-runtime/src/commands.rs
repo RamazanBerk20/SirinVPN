@@ -86,7 +86,11 @@ pub async fn dispatch(
     }
     match command {
         "android_measure_quality" => return crate::quality::measure(runtime, generation).await,
-        "get_wifi_policy" | "set_wifi_policy" | "trust_current_wifi" | "forget_trusted_wifi" => {
+        "get_wifi_policy"
+        | "set_wifi_policy"
+        | "disable_wifi_automation"
+        | "trust_current_wifi"
+        | "forget_trusted_wifi" => {
             let store = runtime.paths.network_policy_store();
             store.initialize_wifi_settings()?;
             let native = runtime.platform.wifi()?;
@@ -104,6 +108,12 @@ pub async fn dispatch(
                     if let Some(id) = policy.server_id {
                         profile(runtime, &id.to_string())?;
                     }
+                    store.set_wifi_automation(policy)?;
+                    return Ok(Value::Null);
+                }
+                "disable_wifi_automation" => {
+                    let mut policy = store.wifi_snapshot(None)?.policy;
+                    policy.enabled = false;
                     store.set_wifi_automation(policy)?;
                     return Ok(Value::Null);
                 }
@@ -163,9 +173,19 @@ pub async fn dispatch(
                     .map_err(anyhow::Error::msg)?,
             );
         }
-        "set_connection_preferences" => {
+        "set_connection_preferences" | "android_set_reconnect" => {
             let profile = profile(runtime, text(&args, "serverId")?)?;
-            let prefs: ConnectionPreferences = serde_json::from_value(args["preferences"].clone())?;
+            let prefs: ConnectionPreferences = if command == "android_set_reconnect" {
+                let mut prefs = preferences(runtime)
+                    .get(profile.id)
+                    .map_err(anyhow::Error::msg)?;
+                prefs.policy.automatic_reconnect = args["enabled"]
+                    .as_bool()
+                    .context("Expected reconnect preference")?;
+                prefs
+            } else {
+                serde_json::from_value(args["preferences"].clone())?
+            };
             return encode(
                 preferences(runtime)
                     .set(profile.id, prefs)

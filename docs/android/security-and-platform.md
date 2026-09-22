@@ -55,6 +55,14 @@ System-requested reconnection also survives an underlying-network change
 during boot. Ordinary recovery uses bounded retries; an explicit Stop cancels
 pending work and pauses automation.
 
+Reconnect changes update both saved preferences and the live retry state before
+the app confirms the save. Turning reconnect off cancels pending attempts;
+turning Wi-Fi automation off cancels a pending connection started by that rule.
+An established VPN stays connected until Disconnect. Pending retries and network
+reads cannot restore settings or connection intent superseded by a newer command.
+The paused monitoring notification offers “Stop Wi-Fi automation,” which disables
+the rule and removes its foreground notification.
+
 Home, Back, UI process loss and task removal do not stop an active service.
 Actual VPN-process loss, reboot and package replacement interrupt traffic;
 permitted reconstruction creates a new session. Force stop, OS Stop and
@@ -68,6 +76,13 @@ containment route is not an external IPv6 leak test. Per-app exclusions remain
 subject to system lockdown. Unknown/redacted Wi-Fi identities are never
 classified as trusted. Fine location is used for Wi-Fi identity; background
 recognition needs the corresponding Android permission/settings.
+Trust fingerprints use Android's saved network ID and SSID, salted locally;
+an access point's BSSID is not part of the identity. Roaming between access points
+of the same saved network preserves trust. Old BSSID-based entries require one
+explicit re-trust after upgrading; hidden identifiers never inherit old trust.
+Notification and animation preferences have one owner in the VPN process, with
+a one-time migration from the older UI preferences. Connection failure alerts
+honor the notification switch; Android still controls the foreground VPN notice.
 
 ## Components, permissions and dependencies
 

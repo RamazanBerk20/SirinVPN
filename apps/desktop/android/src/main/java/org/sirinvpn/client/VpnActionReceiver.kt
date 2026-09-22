@@ -9,7 +9,11 @@ import java.util.UUID
 class VpnActionReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.getLongExtra("generation",-1) < 0) return
-        val command=if(intent.action=="org.sirinvpn.CONNECT") "connect_saved" else "disconnect_server"
+        val command=when(intent.action) {
+            "org.sirinvpn.CONNECT" -> "connect_saved"
+            "org.sirinvpn.STOP_AUTOMATION" -> "disable_wifi_automation"
+            else -> "disconnect_server"
+        }
         if (context.getSystemService(KeyguardManager::class.java).isDeviceLocked) {
             context.startActivity(Intent(context, ControlActionActivity::class.java)
                 .putExtra("command",command)

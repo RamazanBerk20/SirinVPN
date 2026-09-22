@@ -159,13 +159,6 @@ class SirinPlugin(private val activity: Activity) : Plugin(activity) {
         }
         if (command == "register_status") { registerListener(invoke); return }
         if (command == "client_platform") { resolve(invoke, "android"); return }
-        if (command == "get_app_preferences") { resolve(invoke, appPreferences()); return }
-        if (command == "set_app_preferences") {
-            val prefs = args.getJSONObject("preferences")
-            activity.getSharedPreferences("presentation",0).edit().putBoolean("animations",prefs.getBoolean("animations"))
-                .putBoolean("notifications",prefs.getBoolean("notifications")).apply()
-            resolve(invoke, appPreferences()); return
-        }
         if (command == "android_vpn_settings") { activity.startActivity(Intent(Settings.ACTION_VPN_SETTINGS)); resolve(invoke); return }
         if (command == "android_notification_settings") {
             activity.startActivity(Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE,activity.packageName))
@@ -268,11 +261,4 @@ class SirinPlugin(private val activity: Activity) : Plugin(activity) {
     private fun reject(invoke: Invoke, message: String) { invoke.resolve(JSObject().put("error",message)) }
     private fun resolve(invoke: Invoke, value: Any = JSONObject.NULL) { invoke.resolve(JSObject().put("ok",value)) }
     private fun notificationPermission(): String = if (activity.getSystemService(NotificationManager::class.java).areNotificationsEnabled()) "granted" else "denied"
-    private fun appPreferences(): JSONObject {
-        val prefs = activity.getSharedPreferences("presentation",0)
-        return JSONObject().put("preferences",JSONObject().put("start_on_login",false).put("launch_minimized",false)
-            .put("close_to_tray",false).put("notifications",prefs.getBoolean("notifications",true)).put("animations",prefs.getBoolean("animations",true)))
-            .put("startup_available",false).put("tray_available",false).put("notification_permission",notificationPermission())
-            .put("font_scale",activity.resources.configuration.fontScale)
-    }
 }

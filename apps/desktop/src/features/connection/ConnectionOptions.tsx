@@ -184,22 +184,24 @@ export function ConnectionOptions({ model }: { model: ServerWorkspaceModel }) {
           <label className="preference-row" key={key}>
             <span>
               <strong>{label}</strong>
-              <small>{hint}</small>
+              <small>{isAndroid && key === "automatic_reconnect" ? "Saves immediately. Turning this off stops pending reconnect attempts. Android Always-on remains controlled in VPN settings." : hint}</small>
             </span>
             <input
               type="checkbox"
               role="switch"
               aria-label={label}
               checked={connectionPolicy[key]}
-              disabled={disabled}
-              onChange={(e) => setConnectionPolicy(key, e.target.checked)}
+              disabled={isAndroid && key === "automatic_reconnect" ? model.preferences.saving || !model.preferences.ready : disabled}
+              onChange={(e) => isAndroid && key === "automatic_reconnect"
+                ? void model.preferences.setReconnect(e.target.checked)
+                : setConnectionPolicy(key, e.target.checked)}
             />
           </label>
         ))}
         {isAndroid ? <div className="settings-action-row"><p>Always-on VPN and Block connections without VPN are Android settings. Blocking remains active until you change it in Android, including after disconnecting.</p><button className="secondary-button" onClick={() => void invoke("android_vpn_settings")}>Android VPN settings</button></div> : <StartupConnectionState model={model} />}
         <p className="settings-note">
-          Saved per server on this device. Changes apply when you connect again.
-          Opening another server does not change the active connection.
+          {isAndroid ? "Automatic reconnect is saved and applied immediately. Other connection preferences apply when you connect again." : "Saved per server on this device. Changes apply when you connect again."}
+          {" "}Opening another server does not change the active connection.
         </p>
         <details className="inline-disclosure">
           <summary>How automatic selection and recovery work</summary>

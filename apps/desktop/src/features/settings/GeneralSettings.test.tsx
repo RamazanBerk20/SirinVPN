@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import {
   cleanup,
+  act,
   fireEvent,
   render,
   screen,
@@ -105,6 +106,23 @@ it("retains the previous preference when a native save fails", async () => {
   const input = await toggle("Start on system startup");
   expect(await screen.findByText("Startup registration failed")).toBeTruthy();
   expect(input.checked).toBe(false);
+});
+
+it("ignores an older Android refresh after a newer refresh and switch save", async () => {
+  mocks.android = true;
+  setup("android");
+  const input = await screen.findByRole("switch", { name: "Interface animations" }) as HTMLInputElement;
+  await waitFor(() => expect(input.disabled).toBe(false));
+  let resolveOld!: (value: PreferencesSnapshot) => void;
+  mocks.getAppPreferences.mockImplementationOnce(() => new Promise(resolve => { resolveOld = resolve; }));
+  fireEvent(document, new Event("visibilitychange"));
+  fireEvent(document, new Event("visibilitychange"));
+  await waitFor(() => expect(input.disabled).toBe(false));
+  fireEvent.click(input);
+  await waitFor(() => expect(input.checked).toBe(false));
+  await act(async () => { resolveOld(structuredClone(initial)); });
+  expect(input.checked).toBe(false);
+  expect(document.documentElement.dataset.motion).toBe("reduced");
 });
 
 it("requests permission before enabling notifications and never saves a denial", async () => {

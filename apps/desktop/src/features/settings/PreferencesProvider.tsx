@@ -22,15 +22,20 @@ function usePreferencesController() {
     null,
   );
   const inFlight = useRef(false);
+  const generation = useRef(0);
   const refresh = useCallback(async () => {
+    if (inFlight.current) return;
+    const request = ++generation.current;
     setLoading(true);
     try {
-      setSnapshot(await api.getAppPreferences());
+      const next = await api.getAppPreferences();
+      if (request !== generation.current) return;
+      setSnapshot(next);
       setError(null);
     } catch (reason) {
-      setError(errorMessage(reason, "App preferences could not be opened."));
+      if (request === generation.current) setError(errorMessage(reason, "App preferences could not be opened."));
     } finally {
-      setLoading(false);
+      if (request === generation.current) setLoading(false);
     }
   }, []);
 
@@ -55,6 +60,8 @@ function usePreferencesController() {
 
   const change = async (key: keyof AppPreferences, value: boolean) => {
     if (!snapshot || inFlight.current) return;
+    ++generation.current;
+    setLoading(false);
     inFlight.current = true;
     setChangedKey(key);
     setSaving(true);
@@ -94,6 +101,8 @@ function usePreferencesController() {
 
   const testNotification = async () => {
     if (inFlight.current) return;
+    ++generation.current;
+    setLoading(false);
     inFlight.current = true;
     setChangedKey(null);
     setSaving(true);

@@ -29,11 +29,12 @@ class SirinVpnService : VpnService() {
             val generation=intent.getLongExtra("generation",-1)
             if(Controller.current(generation)) {stopping=false;acceptingGeneration=generation}
             else if(Controller.needsReconstruction()) Controller.restart()
+            else Controller.finishIfIdle()
         }
         return START_STICKY
     }
     override fun onTaskRemoved(rootIntent: Intent?) { /* Task removal does not change connection intent. */ }
-    override fun onRevoke() { Controller.stop(true) }
+    override fun onRevoke() { Controller.stop(true); finishSession() }
     fun finishSession() {
         val generation=Controller.generation()
         stopping=true;acceptingGeneration=-1

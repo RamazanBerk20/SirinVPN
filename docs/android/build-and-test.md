@@ -189,6 +189,15 @@ ANDROID_SERIAL=emulator-5560 node tests/android/traffic-sampling.mjs
 adb -s emulator-5560 shell am instrument -w \
   -e class org.sirinvpn.client.NotificationBadgeTest \
   org.sirinvpn.client.test/androidx.test.runner.AndroidJUnitRunner
+# Isolated emulator only: VPN consent, notifications and foreground/background
+# precise location allowed, Location on, Always-on off. Creates and removes a
+# temporary profile pointing only to host-loopback UDP port 9; no VPS is needed.
+# Checks option persistence, pending retry cancellation, Wi-Fi off/on trust,
+# notification stop-monitoring and disabled connection alerts. The synthetic
+# access-point roaming check additionally requires API 30+.
+adb -s emulator-5560 shell am instrument -w \
+  -e class org.sirinvpn.client.OptionHandlingTest \
+  org.sirinvpn.client.test/androidx.test.runner.AndroidJUnitRunner
 
 # Full historical scenario catalog (separate from the focused mobile capture):
 node tests/android/capture.mjs
