@@ -300,6 +300,10 @@ fn checked_in_compatibility_contract_is_canonical() {
     assert_eq!(state("android_persistent_tunnel").reads.maximum, 4);
     assert_eq!(state("android_wifi_trust").reads.maximum, 1);
     assert_eq!(state("android_wifi_tunnel").reads.maximum, 4);
+    assert_eq!(state("windows_identity_record").reads.minimum, 1);
+    assert_eq!(state("windows_identity_record").reads.maximum, 2);
+    assert_eq!(state("windows_identity_record").writes.minimum, 2);
+    assert_eq!(state("windows_identity_record").writes.maximum, 2);
     assert_eq!(contract.states[0].state, "android_identity_record");
     assert!(
         contract

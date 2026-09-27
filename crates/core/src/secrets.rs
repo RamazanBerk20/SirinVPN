@@ -8,6 +8,8 @@ use zeroize::Zeroizing;
 
 #[cfg(not(any(windows, target_os = "android")))]
 mod linux;
+#[cfg(windows)]
+mod windows;
 #[cfg(not(any(windows, target_os = "android")))]
 pub use linux::{StoragePolicy, StorageStatus};
 
@@ -78,6 +80,64 @@ impl HybridSecretStore {
     }
 
     #[cfg(not(target_os = "android"))]
+    fn lock(&self, reference: &str) -> Result<fs::File, SecretStoreError> {
+        validate_reference(reference)?;
+        self.lock_file(&format!("{reference}.lock"))
+    }
+
+    #[cfg(not(target_os = "android"))]
+    fn lock_file(&self, name: &str) -> Result<fs::File, SecretStoreError> {
+        use fs2::FileExt;
+        use sirinvpn_platform::files;
+        if !self.fallback_directory.try_exists()? {
+            files::create_private_directory(&self.fallback_directory)?;
+        }
+        files::validate_private_directory(&self.fallback_directory)?;
+        let lock = files::open_private_lock(&self.fallback_directory.join(name))?;
+        files::validate_private_file(&lock)?;
+        // Status and membership reads can arrive together. Serialize brief operations,
+        // but keep a stalled credential worker from blocking every caller indefinitely.
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(2);
+        loop {
+            match lock.try_lock_exclusive() {
+                Ok(()) => break,
+                Err(error)
+                    if error.raw_os_error() == fs2::lock_contended_error().raw_os_error() =>
+                {
+                    if std::time::Instant::now() >= deadline {
+                        return Err(SecretStoreError::Unavailable(
+                            "credential operation already in progress; retry".into(),
+                        ));
+                    }
+                    std::thread::sleep(std::time::Duration::from_millis(10));
+                }
+                Err(error) => return Err(error.into()),
+            }
+        }
+        Ok(lock)
+    }
+
+    #[cfg(not(target_os = "android"))]
+    fn read_private(&self, name: &str) -> Result<Vec<u8>, SecretStoreError> {
+        use sirinvpn_platform::files;
+        use std::io::Read;
+        let file = files::open_no_follow(&self.fallback_directory.join(name)).map_err(|error| {
+            if error.kind() == io::ErrorKind::NotFound {
+                SecretStoreError::NotFound
+            } else {
+                error.into()
+            }
+        })?;
+        files::validate_private_file(&file)?;
+        let mut bytes = Vec::new();
+        file.take(73729).read_to_end(&mut bytes)?;
+        if bytes.len() > 73728 {
+            return Err(SecretStoreError::InvalidData);
+        }
+        Ok(bytes)
+    }
+
+    #[cfg(not(target_os = "android"))]
     fn fallback_path(&self, reference: &str) -> Result<PathBuf, SecretStoreError> {
         validate_reference(reference)?;
         #[cfg(not(windows))]
@@ -121,77 +181,5 @@ impl SecretStore for HybridSecretStore {
     fn delete(&self, reference: &str) -> Result<(), SecretStoreError> {
         validate_reference(reference)?;
         android_store()?.delete(reference)
-    }
-}
-
-#[cfg(windows)]
-impl SecretStore for HybridSecretStore {
-    fn put(&self, reference: &str, secret: &SecretIdentity) -> Result<(), SecretStoreError> {
-        use sirinvpn_platform::windows::dpapi::{self, Scope};
-        let path = self.fallback_path(reference)?;
-        let plaintext =
-            Zeroizing::new(serde_json::to_vec(secret).map_err(|_| SecretStoreError::InvalidData)?);
-        let encrypted = dpapi::protect(
-            &plaintext,
-            Scope::User,
-            &format!("device-identity:{reference}"),
-        )?;
-        sirinvpn_platform::files::create_private_directory(&self.fallback_directory)?;
-        sirinvpn_platform::files::atomic_write(&path, &encrypted, true)?;
-        Ok(())
-    }
-
-    fn get(&self, reference: &str) -> Result<SecretIdentity, SecretStoreError> {
-        use sirinvpn_platform::windows::dpapi::{self, Scope};
-        let path = self.fallback_path(reference)?;
-        let encrypted = sirinvpn_platform::files::read_bounded(&path, 73728).map_err(|error| {
-            if error.kind() == io::ErrorKind::NotFound {
-                SecretStoreError::NotFound
-            } else {
-                error.into()
-            }
-        })?;
-        let plaintext = dpapi::unprotect(
-            &encrypted,
-            Scope::User,
-            &format!("device-identity:{reference}"),
-        )?;
-        serde_json::from_slice(&plaintext).map_err(|_| SecretStoreError::InvalidData)
-    }
-
-    fn delete(&self, reference: &str) -> Result<(), SecretStoreError> {
-        match fs::remove_file(self.fallback_path(reference)?) {
-            Ok(()) => Ok(()),
-            Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(()),
-            Err(error) => Err(error.into()),
-        }
-    }
-}
-
-#[cfg(all(test, windows))]
-mod windows_tests {
-    use super::*;
-    #[test]
-    fn windows_secrets_never_have_a_plaintext_fallback() {
-        let directory = tempfile::tempdir().unwrap();
-        let store = HybridSecretStore::new(directory.path().join("secrets"));
-        let identity = crate::LocalIdentity::generate("Windows device").unwrap();
-        store.put("test-device", &identity.secret).unwrap();
-        let saved = fs::read(store.fallback_path("test-device").unwrap()).unwrap();
-        assert!(!String::from_utf8_lossy(&saved).contains("PRIVATE KEY"));
-        assert!(!directory.path().join("secrets/test-device.json").exists());
-        assert_eq!(
-            store
-                .get("test-device")
-                .unwrap()
-                .public_identity(&identity.public.management_certificate_pem)
-                .unwrap(),
-            identity.public
-        );
-        store.delete("test-device").unwrap();
-        assert!(matches!(
-            store.get("test-device"),
-            Err(SecretStoreError::NotFound)
-        ));
     }
 }

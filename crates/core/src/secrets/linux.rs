@@ -1,11 +1,9 @@
 //! One authoritative backend per identity. Locks cover all processes, including CLI/UI.
 use super::*;
 use ed25519_dalek::{SigningKey, pkcs8::DecodePrivateKey};
-use fs2::FileExt;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use sirinvpn_platform::files;
-use std::io::Read;
 
 pub(super) trait KeyringBackend: Send + Sync {
     fn put(&self, reference: &str, bytes: &[u8]) -> Result<(), SecretStoreError>;
@@ -92,55 +90,6 @@ fn identity(bytes: &[u8]) -> Result<(SecretIdentity, String), SecretStoreError> 
 }
 
 impl HybridSecretStore {
-    fn lock(&self, reference: &str) -> Result<fs::File, SecretStoreError> {
-        validate_reference(reference)?;
-        self.lock_file(&format!("{reference}.lock"))
-    }
-
-    fn lock_file(&self, name: &str) -> Result<fs::File, SecretStoreError> {
-        if !self.fallback_directory.exists() {
-            files::create_private_directory(&self.fallback_directory)?;
-        }
-        files::validate_private_directory(&self.fallback_directory)?;
-        let lock = files::open_private_lock(&self.fallback_directory.join(name))?;
-        files::validate_private_file(&lock)?;
-        // Status and membership reads can arrive together. Serialize brief operations,
-        // but keep a stalled credential worker from blocking every caller indefinitely.
-        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(2);
-        loop {
-            match lock.try_lock_exclusive() {
-                Ok(()) => break,
-                Err(error) if error.kind() == io::ErrorKind::WouldBlock => {
-                    if std::time::Instant::now() >= deadline {
-                        return Err(SecretStoreError::Unavailable(
-                            "credential operation already in progress; retry".into(),
-                        ));
-                    }
-                    std::thread::sleep(std::time::Duration::from_millis(10));
-                }
-                Err(error) => return Err(error.into()),
-            }
-        }
-        Ok(lock)
-    }
-
-    fn read_private(&self, name: &str) -> Result<Vec<u8>, SecretStoreError> {
-        let file = files::open_no_follow(&self.fallback_directory.join(name)).map_err(|error| {
-            if error.kind() == io::ErrorKind::NotFound {
-                SecretStoreError::NotFound
-            } else {
-                error.into()
-            }
-        })?;
-        files::validate_private_file(&file)?;
-        let mut bytes = Vec::new();
-        file.take(73729).read_to_end(&mut bytes)?;
-        if bytes.len() > 73728 {
-            return Err(SecretStoreError::InvalidData);
-        }
-        Ok(bytes)
-    }
-
     fn record(&self, reference: &str) -> Result<Option<Record>, SecretStoreError> {
         let bytes = match self.read_private(&format!("{reference}.state.json")) {
             Err(SecretStoreError::NotFound) => return Ok(None),

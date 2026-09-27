@@ -3,6 +3,61 @@ use super::*;
 const WINDOWS: &str = "x86_64-pc-windows-msvc";
 
 #[test]
+fn windows_deletion_state_cannot_be_lost_through_upgrade_or_rollback() {
+    let root = tempfile::tempdir().unwrap();
+    let path = root.path().join("SirinVPN-setup.exe");
+    fs::write(&path, b"synthetic installer").unwrap();
+    let artifact =
+        ReleaseArtifact::from_path(ArtifactKind::WindowsInstaller, WINDOWS, &path).unwrap();
+    let states = crate::parse_compatibility_contract(include_bytes!(
+        "../../../../../release/state-compatibility.json"
+    ))
+    .unwrap()
+    .states;
+    let manifest = |version, sequence, states| {
+        build_manifest(
+            version,
+            sequence,
+            ReleaseChannel::Stable,
+            false,
+            vec![artifact.clone()],
+            states,
+        )
+        .unwrap()
+    };
+    let current = manifest("1.1.0", 2, states.clone());
+    let mut legacy = states.clone();
+    legacy.retain(|state| state.state != "windows_identity_record");
+    let legacy = manifest("1.0.0", 1, legacy);
+    for (from, to) in [(&legacy, &current), (&current, &legacy)] {
+        assert!(plan_artifact_transition(from, to, ArtifactKind::WindowsInstaller, true).is_err());
+    }
+    let mut old_reader = states.clone();
+    let identity = old_reader
+        .iter_mut()
+        .find(|state| state.state == "windows_identity_record")
+        .unwrap();
+    identity.reads.maximum = 1;
+    identity.writes = SchemaRange {
+        minimum: 1,
+        maximum: 1,
+    };
+    let old_reader = manifest("1.0.0", 1, old_reader);
+    assert!(matches!(
+        plan_artifact_transition(&old_reader, &current, ArtifactKind::WindowsInstaller, false),
+        Err(ReleaseError::RollbackIncompatible(state)) if state == "windows_identity_record"
+    ));
+    assert!(matches!(
+        plan_artifact_transition(&current, &old_reader, ArtifactKind::WindowsInstaller, true),
+        Err(ReleaseError::ForwardIncompatible(state)) if state == "windows_identity_record"
+    ));
+    let next = manifest("1.2.0", 3, states);
+    assert!(
+        plan_artifact_transition(&current, &next, ArtifactKind::WindowsInstaller, false).is_ok()
+    );
+}
+
+#[test]
 fn windows_installer_receipts_keep_signature_binding_and_rollback_high_watermark() {
     let root = tempfile::tempdir().unwrap();
     let keys = test_keys();
