@@ -133,6 +133,11 @@ class Acceptance:
             guest.ssh(['sudo', '-n', 'tar', '-xzf', '/home/sirin/dependencies.tar.gz',
                        '-C', '/var/cache/apt/archives', '--no-same-owner'], timeout=60)
         packages = "qemu-guest-agent python3 curl iproute2 nftables kmod"
+        # Keep later installer-driven apt refreshes on the same bounded fixture
+        # network settings. Repository signatures and hashes remain enforced.
+        guest.ssh(['sudo', '-n', 'tee', '/etc/apt/apt.conf.d/99sirin-acceptance'],
+                  data=b'Acquire::ForceIPv4 "true";\nAcquire::Languages "none";\nAcquire::Retries "2";\n',
+                  stdout=subprocess.DEVNULL)
         if client:
             packages += " xvfb xauth python3-xlib dbus-x11 gnome-keyring /home/sirin/sirinvpn.deb"
         with (self.logs / f"{guest.name}-setup.log").open("wb") as log:
@@ -200,7 +205,14 @@ class Acceptance:
             return json.loads(guest.run([*USER_PREFIX, 'python3', '/home/sirin/upgrade-guest.py', action], timeout=180).stdout)
         backup_before = check('backup-create')
         before = check('snapshot')
+        self.report['upgrade_before_power_cut'] = {'snapshot': before, 'backup': backup_before}
+        self.save()
         guest.put(self.args.package.resolve(), '/home/sirin/candidate.deb')
+        # Flush only test inputs. Do not sync dpkg's files or the application's
+        # profile/credential directories: their own durability is under test.
+        guest.run(['python3', '-c',
+                   'import os\nfor p in ("/home/sirin/upgrade-guest.py", "/home/sirin/candidate.deb", "/home/sirin"):\n'
+                   ' f=os.open(p,os.O_RDONLY);os.fsync(f);os.close(f)'])
         guest.run(['dpkg', '--unpack', '/home/sirin/candidate.deb'], timeout=120)
         # A real VM power cut between unpack and configure; this is one explicit
         # interruption boundary, not a claim about every possible dpkg failure.
@@ -535,11 +547,12 @@ class Acceptance:
                     if self.args.upgrade_from:
                         self.step("Preserve legacy profile and backup through interrupted upgrade/retry", self.upgrade)
                     self.step("Verify physical IPv4, IPv6 and leak-counter baselines", self.baseline)
+                    from dns_attribution import run
+                    self.step("Attribute DNS before protection and during forced transport fallback", lambda: run(self))
                     if self.args.dns_attribution_only:
-                        from dns_attribution import run
-                        self.step("Attribute DNS before protection and during forced transport fallback", lambda: run(self))
                         self.report["passed"] = True
                         return 0
+                    self.clean_disconnect()
                     for transport in ["direct", "obfuscated", "tls", "tcp"]:
                         self.step(f"{transport}: encrypted exit, native DNS and leak prevention",
                                   lambda transport=transport: self.connected_proof(transport))

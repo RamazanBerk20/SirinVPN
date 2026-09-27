@@ -76,7 +76,8 @@ It records no DNS question or payload. Firewall event timestamps are userspace
 receive times, not exact kernel commit times. The strict packet-counter
 assertion remains; failures retain the timeline for attribution.
 
-`--dns-attribution-only` exercises that recorder with a known process sending
+The full run exercises that recorder; `--dns-attribution-only` stops after the
+attribution controls. They use a known process sending
 synthetic DNS before connection, throughout forced UDP fallback, and through a
 narrowly scoped deliberate firewall exception. It verifies both real drops and
 detection of a protected-interval escape. The exception is removed in cleanup.

@@ -63,6 +63,7 @@ def observe(path):
                         continue
                     ip = packet[14:]
                     offset = (ip[0] & 15) * 4
+                    ip_length = int.from_bytes(ip[2:4], 'big')
                     if ip[9] not in (6, 17) or len(ip) < offset + 8:
                         continue
                     sport, dport = struct.unpack('!HH', ip[offset:offset+4])
@@ -76,7 +77,7 @@ def observe(path):
                     emit('physical_dns', interface=address[0], source=socket.inet_ntoa(ip[12:16]),
                          destination=socket.inet_ntoa(ip[16:20]), protocol=ip[9], source_port=sport,
                          tcp_flags=ip[offset+13] if ip[9] == 6 else None,
-                         payload_bytes=max(0, len(ip)-offset-header), socket_owners=owners,
+                         payload_bytes=max(0, ip_length-offset-header), socket_owners=owners,
                          kernel_unix_ns=timestamp[0]*10**9+timestamp[1] if timestamp else None)
                 try:
                     state = json.loads(Path('/run/sirinvpn/client-state.json').read_text())

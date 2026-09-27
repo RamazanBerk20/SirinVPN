@@ -61,6 +61,14 @@ def backup(create):
         descriptor = os.open(BACKUP / 'password', os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
         with os.fdopen(descriptor, 'w') as output:
             output.write(password)
+            output.flush()
+            os.fsync(output.fileno())
+        for directory in (BACKUP, BACKUP.parent):
+            descriptor = os.open(directory, os.O_RDONLY | os.O_DIRECTORY)
+            try:
+                os.fsync(descriptor)
+            finally:
+                os.close(descriptor)
         prompt(['server', 'export', original['id'], '--output', str(BACKUP / 'identity.sirin'),
                 '--confirm-sensitive-export'], password,
                [b'Backup password (hidden, minimum 12 characters): ', b'Repeat backup password: '], dict(os.environ))

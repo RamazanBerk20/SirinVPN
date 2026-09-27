@@ -16,6 +16,7 @@ cleanup_package_tmp() {
 trap cleanup_package_tmp 0 HUP INT TERM
 
 prepare_appimage_runtime() {
+  [ "$(uname -m)" = x86_64 ] || { echo "The reviewed AppImage runtime is x86_64 only" >&2; return 1; }
   # Match the reviewed type2 runtime at commit 75849dc. The upstream continuous
   # asset may advance; a changed download must fail until explicitly reviewed.
   SIRINVPN_RUNTIME_SHA256=1cc49bcf1e2ccd593c379adb17c9f85a36d619088296504de95b1d06215aebbf

@@ -113,6 +113,16 @@ physical ARM64/16 KB device.
 
 ## Emulator preparation
 
+`scripts/test-android-emulator.py --upgrade-from /absolute/path/to/old.apk`
+adds a same-signer in-place upgrade check to its fresh AVD. It seeds only a
+synthetic profile and encrypted credential, stages the candidate without
+committing it, reboots, verifies the old state, abandons the interrupted session,
+and retries installation. It checks profile/native-read, ciphertext/Keystore,
+deletion-marker and paused-intent preservation before the ordinary native tests.
+Include both APKs and the separate test APK as immutable evidence inputs.
+This checks one PackageInstaller interruption boundary, not physical-device
+power loss or a change from development to production signing.
+
 Create isolated API 29 and API 36 x86_64 AVDs. The exercised devices are
 `emulator-5562` and `emulator-5560`, respectively. The test scripts reject
 non-emulator serial numbers. Use a current Android System WebView: the pinned

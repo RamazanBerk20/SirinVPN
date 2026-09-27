@@ -27,6 +27,7 @@ def main():
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--apk", type=Path, required=True)
     parser.add_argument("--tests", type=Path, required=True)
+    parser.add_argument("--upgrade-from", type=Path, help="Older same-signer development APK for interrupted in-place upgrade checks")
     parser.add_argument("--api", choices=[29, 36], type=int, default=36)
     args = parser.parse_args()
     output = args.output.resolve()
@@ -39,7 +40,7 @@ def main():
     scope = Path("/sys/fs/cgroup") / group.lstrip("/")
     report["resource_limits"] = {name: (scope / name).read_text().strip()
         for name in ["memory.high", "memory.max", "memory.swap.max", "cpu.max", "pids.max"]}
-    for path in [args.apk, args.tests]:
+    for path in [args.apk, args.tests, *([args.upgrade_from] if args.upgrade_from else [])]:
         with path.open("rb") as source:
             report["artifacts"].append({"filename": path.name, "size": path.stat().st_size,
                 "sha256": hashlib.file_digest(source, "sha256").hexdigest(), "signing_category": "development"})
@@ -94,8 +95,44 @@ def main():
             raise TimeoutError("Emulator boot deadline exceeded")
         assert run([*adb, "shell", "getprop", "ro.hardware"]).stdout.strip() in [b"ranchu", b"goldfish"]
         report["build"] = run([*adb, "shell", "getprop", "ro.build.fingerprint"]).stdout.decode().strip()
-        for apk in [args.apk, args.tests]:
-            run([*adb, "install", "--no-streaming", "--no-incremental", "-t", str(apk.resolve())], timeout=300)
+        if args.upgrade_from:
+            for apk in [args.upgrade_from, args.tests]:
+                run([*adb, "install", "--no-streaming", "--no-incremental", "-t", str(apk.resolve())], timeout=300)
+            def upgrade_check(method, expectation):
+                result = run([*adb, "shell", "am", "instrument", "-w", "-r", "-e", "class",
+                    "org.sirinvpn.client.UpgradeAcceptanceTest#"+method, "-e", "expectation", expectation,
+                    "org.sirinvpn.client.test/androidx.test.runner.AndroidJUnitRunner"], timeout=120)
+                (output / ("upgrade-"+method+"-"+expectation+".log")).write_bytes(result.stdout+result.stderr)
+                assert b"OK (1 test)" in result.stdout and b"FAILURES" not in result.stdout, "Upgrade assertion failed"
+            upgrade_check("seed", "old")
+            upgrade_check("verifyPreserved", "old")
+            run([*adb,"push",str(args.apk.resolve()),"/data/local/tmp/sirin-upgrade.apk"],timeout=180)
+            created=run([*adb,"shell","pm","install-create","-r","-t","-S",str(args.apk.stat().st_size)]).stdout
+            match=re.search(rb"Success: created install session \[(\d+)\]",created)
+            assert match, "Could not create isolated upgrade session"
+            session=match[1].decode()
+            written=run([*adb,"shell","pm","install-write",session,"base","/data/local/tmp/sirin-upgrade.apk"]).stdout
+            assert b"Success" in written
+            # Interrupt an actual staged but uncommitted PackageInstaller update.
+            run([*adb,"reboot"])
+            run([*adb,"wait-for-device"],timeout=180)
+            deadline=time.monotonic()+360
+            while time.monotonic()<deadline:
+                if run([*adb,"shell","getprop","sys.boot_completed"]).stdout.strip()==b"1": break
+                time.sleep(2)
+            else: raise TimeoutError("Emulator reboot timed out")
+            upgrade_check("verifyPreserved", "old")
+            assert b"Success" in run([*adb,"shell","pm","install-abandon",session]).stdout
+            run([*adb,"install","--no-streaming","--no-incremental","-r","-t",str(args.apk.resolve())],timeout=300)
+            upgrade_check("verifyPreserved", "candidate")
+            upgrade_check("cleanup", "candidate")
+            report["upgrade"]={"prior_install":args.upgrade_from.name, "interruption":"reboot before PackageInstaller commit",
+                "old_state_after_interruption":True,"retry_installs_candidate":True,"profile_bytes_preserved":True,
+                "native_profile_read":True,"ciphertext_and_keystore_read_preserved":True,"deleted_reference_stays_deleted":True,
+                "paused_connection_intent_preserved":True,"scope":"synthetic profile/storage; no live VPS connection"}
+        else:
+            for apk in [args.apk, args.tests]:
+                run([*adb, "install", "--no-streaming", "--no-incremental", "-t", str(apk.resolve())], timeout=300)
         if args.api >= 33:
             run([*adb, "shell", "pm", "grant", "org.sirinvpn.client", "android.permission.POST_NOTIFICATIONS"])
         # This fresh AVD alone receives fixture consent/permissions. These native
