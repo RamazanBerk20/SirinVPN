@@ -17,7 +17,7 @@ function Invoke-SirinCheck([string]$Program, [string[]]$Arguments) {
 # Git for Windows' MSYS Perl is incomplete for the vendored MSVC OpenSSL build.
 # Use native Windows Perl (for example Strawberry Perl), including these modules.
 Invoke-SirinCheck "perl" @("-MIPC::Cmd", "-MLocale::Maketext::Simple", "-e", 'exit($^O eq q(MSWin32) ? 0 : 1)')
-Invoke-SirinCheck "cargo" @("test", "--locked", "-p", "sirinvpn-platform", "-p", "sirinvpn-protocol", "-p", "sirinvpn-core", "-p", "sirinvpn-tunnel-model", "-p", "sirinvpn-windows-service")
+Invoke-SirinCheck "cargo" @("test", "--locked", "-p", "sirinvpn-platform", "-p", "sirinvpn-protocol", "-p", "sirinvpn-core", "-p", "sirinvpn-release", "-p", "sirinvpn-tunnel-model", "-p", "sirinvpn-windows-service")
 Invoke-SirinCheck "cargo" @("check", "--locked", "-p", "sirinvpn-cli")
 if (-not $DisposableRuntime) {
     Write-Output "Native unit/build checks completed. Privileged service/packet acceptance was NOT RUN."

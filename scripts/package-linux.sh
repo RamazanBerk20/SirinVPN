@@ -15,6 +15,22 @@ cleanup_package_tmp() {
 }
 trap cleanup_package_tmp 0 HUP INT TERM
 
+prepare_appimage_runtime() {
+  # Match the reviewed type2 runtime at commit 75849dc. The upstream continuous
+  # asset may advance; a changed download must fail until explicitly reviewed.
+  SIRINVPN_RUNTIME_SHA256=1cc49bcf1e2ccd593c379adb17c9f85a36d619088296504de95b1d06215aebbf
+  LDAI_RUNTIME_FILE="${XDG_CACHE_HOME:-"$HOME/.cache"}/tauri/runtime-x86_64-$SIRINVPN_RUNTIME_SHA256"
+  if [ ! -f "$LDAI_RUNTIME_FILE" ]; then
+    curl --ipv4 --fail --location --retry 2 --connect-timeout 10 --max-time 120 \
+      https://github.com/AppImage/type2-runtime/releases/download/continuous/runtime-x86_64 \
+      --output "$SIRINVPN_PACKAGE_TMP/runtime"
+    printf '%s  %s\n' "$SIRINVPN_RUNTIME_SHA256" "$SIRINVPN_PACKAGE_TMP/runtime" | sha256sum --check
+    install -D -m 0644 "$SIRINVPN_PACKAGE_TMP/runtime" "$LDAI_RUNTIME_FILE"
+  fi
+  printf '%s  %s\n' "$SIRINVPN_RUNTIME_SHA256" "$LDAI_RUNTIME_FILE" | sha256sum --check
+  export LDAI_RUNTIME_FILE
+}
+
 prepare_appimage_pkgconf_compat() {
   if command -v pkgconf >/dev/null 2>&1; then
     SIRINVPN_REAL_PKGCONF=$(command -v pkgconf)
@@ -144,5 +160,6 @@ fi
 pnpm test
 pnpm build
 prepare_appimage_pkgconf_compat
+prepare_appimage_runtime
 pnpm tauri build
 repair_appimage_runtime

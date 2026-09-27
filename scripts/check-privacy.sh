@@ -98,7 +98,9 @@ if rg -n 'updater|process:allow|shell:allow|http:allow' \
   exit 1
 fi
 
-if rg -n 'reqwest|hyper|TcpStream|UdpSocket|std::net|tokio::net|https?://' \
+# Publisher provenance is data used by the separate packaging script. Its source
+# URLs are never read by the offline release coordinator.
+if rg -n -g '!publisher-notice-sources.json' 'reqwest|hyper|TcpStream|UdpSocket|std::net|tokio::net|https?://' \
   "$PROJECT_ROOT/crates/release" \
   "$PROJECT_ROOT/release"; then
   echo "privacy check failed: the offline release path contains networking code" >&2

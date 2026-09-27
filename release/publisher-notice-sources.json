@@ -1373,7 +1373,9 @@
         "path": "packaging/third-party/AppImage-runtime-LICENSE.txt",
         "url": "https://raw.githubusercontent.com/AppImage/type2-runtime/75849dce7cc37e4319b633df1f116ca895c71a12/LICENSE",
         "sha256": "aa154fc9070614bbe7921f89db11efd1dba7a1f3a41685958110e2230f9c0ca1",
-        "basis": "The current engineering AppImage reports runtime commit 75849dc; runtime LICENSE enumerates additional statically linked dependencies requiring source/notice review."
+        "basis": "Packaging verifies the publisher runtime bytes before use; appimagetool later fills its embedded digest. The runtime reports commit 75849dc. Its LICENSE enumerates additional statically linked dependencies requiring source/notice review.",
+        "runtime_url": "https://github.com/AppImage/type2-runtime/releases/download/continuous/runtime-x86_64",
+        "runtime_sha256": "1cc49bcf1e2ccd593c379adb17c9f85a36d619088296504de95b1d06215aebbf"
       },
       {
         "repository": "linuxdeploy/linuxdeploy-plugin-gtk",
