@@ -75,14 +75,17 @@ fn artifact_changes_and_symlinks_are_rejected() {
         Err(ReleaseError::ArtifactDigestMismatch(_)) | Err(ReleaseError::ArtifactSizeMismatch(_))
     ));
 
-    fs::remove_file(&artifact).unwrap();
-    let target = directory.path().join("target");
-    fs::write(&target, b"release 2").unwrap();
-    symlink(&target, &artifact).unwrap();
-    assert!(matches!(
-        verify_release_directory(&manifest, &signature, &public, directory.path()),
-        Err(ReleaseError::InvalidArtifact(_))
-    ));
+    #[cfg(unix)]
+    {
+        fs::remove_file(&artifact).unwrap();
+        let target = directory.path().join("target");
+        fs::write(&target, b"release 2").unwrap();
+        symlink(&target, &artifact).unwrap();
+        assert!(matches!(
+            verify_release_directory(&manifest, &signature, &public, directory.path()),
+            Err(ReleaseError::InvalidArtifact(_))
+        ));
+    }
 }
 
 #[test]

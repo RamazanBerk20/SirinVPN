@@ -375,6 +375,7 @@ fn handoff_guard_and_bidirectional_schema_support_are_mandatory() {
 
 #[test]
 fn tampered_recovery_cache_cannot_execute_and_keeps_pending_journal() {
+    #[cfg(unix)]
     use std::os::unix::fs::PermissionsExt;
     let fixture = Fixture::new();
     fixture.adopt(&fixture.release(1));
@@ -388,6 +389,7 @@ fn tampered_recovery_cache_cannot_execute_and_keeps_pending_journal() {
         .store
         .cached_artifact_path(&journal.previous.active_artifact)
         .unwrap();
+    #[cfg(unix)]
     fs::set_permissions(&cache, fs::Permissions::from_mode(0o600)).unwrap();
     fs::write(cache, b"tampered").unwrap();
     assert!(fixture.store.recover_server(&fixture.host, false).is_err());

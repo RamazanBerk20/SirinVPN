@@ -30,28 +30,32 @@ fn absent_state_plans_without_writing_and_first_commit_is_private() {
     assert_eq!(committed.action, InstallationDecisionKind::Initialize);
     assert_eq!(committed.state.active_release_sequence, 1);
     assert_eq!(committed.state.highest_accepted_release_sequence, 1);
-    assert_eq!(
-        fs::metadata(&state).unwrap().permissions().mode() & 0o777,
-        0o700
-    );
-    for name in [RECEIPT_FILE_NAME, LOCK_FILE_NAME] {
+    #[cfg(unix)]
+    {
         assert_eq!(
-            fs::metadata(state.join(name)).unwrap().permissions().mode() & 0o777,
-            0o600
+            fs::metadata(&state).unwrap().permissions().mode() & 0o777,
+            0o700
+        );
+        for name in [RECEIPT_FILE_NAME, LOCK_FILE_NAME] {
+            assert_eq!(
+                fs::metadata(state.join(name)).unwrap().permissions().mode() & 0o777,
+                0o600
+            );
+        }
+        assert_eq!(
+            fs::metadata(store.package_directory())
+                .unwrap()
+                .permissions()
+                .mode()
+                & 0o777,
+            0o700
         );
     }
-    assert_eq!(
-        fs::metadata(store.package_directory())
-            .unwrap()
-            .permissions()
-            .mode()
-            & 0o777,
-        0o700
-    );
     let cached = store
         .cached_artifact_path(&committed.state.active_artifact)
         .unwrap();
     assert_eq!(fs::read(&cached).unwrap(), b"first");
+    #[cfg(unix)]
     assert_eq!(
         fs::metadata(cached).unwrap().permissions().mode() & 0o777,
         0o600
@@ -390,31 +394,35 @@ fn receipt_tampering_noncanonical_data_and_unsafe_paths_fail_closed() {
         Err(ReleaseError::InvalidInstalledReceipt)
     ));
 
-    fs::write(&receipt_path, &canonical).unwrap();
-    fs::set_permissions(&receipt_path, fs::Permissions::from_mode(0o644)).unwrap();
-    assert!(matches!(
-        store.inspect(),
-        Err(ReleaseError::UnsafeInstalledState)
-    ));
+    #[cfg(unix)]
+    {
+        fs::write(&receipt_path, &canonical).unwrap();
+        fs::set_permissions(&receipt_path, fs::Permissions::from_mode(0o644)).unwrap();
+        assert!(matches!(
+            store.inspect(),
+            Err(ReleaseError::UnsafeInstalledState)
+        ));
 
-    fs::remove_file(&receipt_path).unwrap();
-    let external = root.path().join("external");
-    fs::write(&external, &canonical).unwrap();
-    fs::set_permissions(&external, fs::Permissions::from_mode(0o600)).unwrap();
-    symlink(&external, &receipt_path).unwrap();
-    assert!(matches!(
-        store.inspect(),
-        Err(ReleaseError::UnsafeInstalledState)
-    ));
+        fs::remove_file(&receipt_path).unwrap();
+        let external = root.path().join("external");
+        fs::write(&external, &canonical).unwrap();
+        fs::set_permissions(&external, fs::Permissions::from_mode(0o600)).unwrap();
+        symlink(&external, &receipt_path).unwrap();
+        assert!(matches!(
+            store.inspect(),
+            Err(ReleaseError::UnsafeInstalledState)
+        ));
 
-    fs::remove_file(&receipt_path).unwrap();
-    fs::hard_link(&external, &receipt_path).unwrap();
-    assert!(matches!(
-        store.inspect(),
-        Err(ReleaseError::UnsafeInstalledState)
-    ));
+        fs::remove_file(&receipt_path).unwrap();
+        fs::hard_link(&external, &receipt_path).unwrap();
+        assert!(matches!(
+            store.inspect(),
+            Err(ReleaseError::UnsafeInstalledState)
+        ));
+    }
 }
 
+#[cfg(unix)]
 #[test]
 fn state_directory_and_lock_must_be_private_regular_owned_paths() {
     let root = tempfile::tempdir().unwrap();

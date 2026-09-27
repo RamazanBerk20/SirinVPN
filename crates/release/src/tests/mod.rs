@@ -1,6 +1,8 @@
 use super::*;
 
-use std::{fs, os::unix::fs::symlink};
+use std::fs;
+#[cfg(unix)]
+use std::os::unix::fs::symlink;
 
 fn compatibility() -> Vec<StateCompatibility> {
     vec![

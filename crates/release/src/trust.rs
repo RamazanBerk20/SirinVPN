@@ -627,6 +627,7 @@ fn check_size(bytes: &[u8], maximum: u64, error: ReleaseError) -> Result<(), Rel
 mod tests {
     use super::*;
     use crate::generate_signing_keypair;
+    #[cfg(unix)]
     use std::os::unix::fs::{PermissionsExt, symlink};
 
     struct KeyPair {
@@ -733,6 +734,7 @@ mod tests {
             .apply_trust_policy_with_root(&first_policy, &first_signature, &root.public)
             .unwrap();
         assert_eq!(initialized.action, TrustPolicyAction::Initialize);
+        #[cfg(unix)]
         assert_eq!(
             fs::metadata(store.trust_path())
                 .unwrap()
@@ -822,14 +824,17 @@ mod tests {
             Err(ReleaseError::NonCanonicalInstalledTrust)
         ));
 
-        fs::remove_file(store.trust_path()).unwrap();
-        let outside = directory.path().join("outside");
-        fs::write(&outside, bytes).unwrap();
-        symlink(&outside, store.trust_path()).unwrap();
-        assert!(matches!(
-            store.read_trust_unlocked_with_root(&root.public),
-            Err(ReleaseError::UnsafeInstalledState)
-        ));
+        #[cfg(unix)]
+        {
+            fs::remove_file(store.trust_path()).unwrap();
+            let outside = directory.path().join("outside");
+            fs::write(&outside, bytes).unwrap();
+            symlink(&outside, store.trust_path()).unwrap();
+            assert!(matches!(
+                store.read_trust_unlocked_with_root(&root.public),
+                Err(ReleaseError::UnsafeInstalledState)
+            ));
+        }
     }
 
     #[test]

@@ -6,6 +6,7 @@ use crate::{
     sign_trust_policy,
 };
 
+#[cfg(unix)]
 use std::os::unix::fs::{PermissionsExt, symlink};
 
 use zeroize::Zeroizing;
