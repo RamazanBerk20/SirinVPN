@@ -132,6 +132,15 @@ class Acceptance:
             guest.ssh(['sudo', '-n', 'mkdir', '-p', '/var/cache/apt/archives'], timeout=10)
             guest.ssh(['sudo', '-n', 'tar', '-xzf', '/home/sirin/dependencies.tar.gz',
                        '-C', '/var/cache/apt/archives', '--no-same-owner'], timeout=60)
+        if self.args.dependency_indexes:
+            with tarfile.open(self.args.dependency_indexes) as archive:
+                assert all(m.isfile() and Path(m.name).name == m.name and
+                           m.name.startswith('_etc_apt_mirrors_') and m.size < 128 * 1024**2
+                           for m in archive), 'Invalid public Debian index cache'
+            self.report['dependency_indexes_sha256'] = digest(self.args.dependency_indexes)
+            guest.put(self.args.dependency_indexes.resolve(), '/home/sirin/indexes.tar.gz')
+            guest.ssh(['sudo', '-n', 'tar', '-xzf', '/home/sirin/indexes.tar.gz',
+                       '-C', '/var/lib/apt/lists', '--no-same-owner'], timeout=60)
         packages = "qemu-guest-agent python3 curl iproute2 nftables kmod"
         # Keep later installer-driven apt refreshes on the same bounded fixture
         # network settings. Repository signatures and hashes remain enforced.
@@ -188,6 +197,11 @@ class Acceptance:
             stdout=subprocess.PIPE, check=True).stdout.decode().split()[1]
         self.ssh_options = ["--username", "sirin", "--ssh-agent", "--host-key", fingerprint,
                             "--passwordless-sudo"]
+        assert self.cli('server', 'list') == [], 'Fixture must have no existing profiles'
+        # Establish durable fixture/OS inputs before creating application state.
+        # No global sync follows profile creation or candidate package unpacking:
+        # the later power cut must still exercise the application's own durability.
+        self.client.run(['sync'])
         self.cli("storage", "allow-private-file")  # Explicit consent inside this disposable headless guest.
         profile = self.cli("server", "add", "--name", "Acceptance", "--host", SERVER,
                            *self.ssh_options, "--server-binary", "/usr/lib/sirinvpn/sirinvpn-server",
@@ -613,6 +627,8 @@ def main():
     parser.add_argument("--keep-failed-seconds", type=int, default=0, choices=range(0, 3601), metavar="0..3600")
     parser.add_argument("--dependency-archives", type=Path,
                         help="Optional tar of cached public .deb downloads; apt verifies repository hashes")
+    parser.add_argument("--dependency-indexes", type=Path,
+                        help="Optional public Debian index cache from a trusted fixture; apt update still authenticates repositories")
     parser.add_argument("--fallback-repeats", type=int, default=1, choices=range(1, 6), metavar="1..5")
     parser.add_argument("--dns-attribution-only", action="store_true",
                         help="Run bounded packet/guard/process attribution with a pre-arm negative control")
