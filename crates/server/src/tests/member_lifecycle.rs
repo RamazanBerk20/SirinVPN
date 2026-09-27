@@ -63,6 +63,7 @@ fn fixture() -> (tempfile::TempDir, AppState) {
     let transport_peers = AuthorizedPeers::default();
     transport_peers.replace(decoded_transport_peers(&document).unwrap());
     let state = AppState {
+        recovery: Default::default(),
         measurement_ready: false,
         configuration: load_configuration(&paths).unwrap(),
         operational_configuration: Some(OperationalConfiguration {

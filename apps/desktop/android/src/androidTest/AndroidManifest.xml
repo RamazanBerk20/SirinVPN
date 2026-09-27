@@ -2,6 +2,10 @@
     <!-- Used by the ordinary-UID routing checks; CatalogActivity blocks networking. -->
     <uses-permission android:name="android.permission.INTERNET" />
     <application>
+        <!-- Explicitly launched, separate-UID foreground target for physical
+             packet checks. It has no access to the real app's private state. -->
+        <activity android:name="org.sirinvpn.client.PhysicalProbeActivity" android:exported="true"
+            android:theme="@android:style/Theme.Material.NoActionBar" />
         <!-- Fictional, offline renderer. This Activity is absent from the application APK. -->
         <activity android:name="org.sirinvpn.client.CatalogActivity" android:exported="true"
             android:theme="@android:style/Theme.Material.NoActionBar"

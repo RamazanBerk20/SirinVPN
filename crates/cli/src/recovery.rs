@@ -164,7 +164,9 @@ async fn recover(
         if let Some(old) = &existing
             && old.identity_reference != profile.identity_reference
         {
-            let _ = secrets.delete(&old.identity_reference);
+            secrets.delete(&old.identity_reference).map_err(|_| anyhow!(
+                "Owner recovery committed; old credential cleanup is incomplete. Unlock the secure store and retry credential cleanup."
+            ))?;
         }
         disconnect_candidate(profile.id)?;
         test_endpoint_automatically(

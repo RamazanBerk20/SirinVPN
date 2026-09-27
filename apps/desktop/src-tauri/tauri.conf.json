@@ -70,6 +70,7 @@
       },
       "appimage": {
         "files": {
+          "/usr/lib/libayatana-appindicator3.so.1": "binaries/libayatana-appindicator3.so.1",
           "/usr/bin/sirinvpn": "binaries/sirinvpn",
           "/usr/lib/sirinvpn/sirinvpn-helper": "binaries/sirinvpn-helper",
           "/usr/lib/sirinvpn/sirinvpn-release": "binaries/sirinvpn-release",

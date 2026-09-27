@@ -124,6 +124,13 @@ def inspect(debian: Path, appimage: Path) -> dict:
                 raise ValueError(f"AppImage must retain the exact system-installable {component} bytes")
         if list((extracted / "usr/lib").glob("libwayland-*.so*")):
             raise ValueError("AppImage contains incompatible bundled Wayland libraries")
+        # dlopen-loaded tray support is invisible to the main executable's ELF
+        # dependencies. Missing it mixes the bundled GLib with newer host GTK.
+        for library in ["libayatana-appindicator3.so.1", "libayatana-indicator3.so.7",
+                        "libayatana-ido3-0.4.so.0", "libdbusmenu-gtk3.so.4", "libdbusmenu-glib.so.4"]:
+            path = extracted / "usr/lib" / library
+            if not path.is_file() or not path.resolve().is_relative_to(extracted):
+                raise ValueError(f"Missing or unsafe AppImage tray library: {library}")
 
     return {
         "debian": {"path": str(debian), "sha256": sha256(debian), "version": version,
@@ -134,6 +141,7 @@ def inspect(debian: Path, appimage: Path) -> dict:
         "appimage": {"path": str(appimage), "sha256": sha256(appimage),
                      "executables": "present; x64 ELF", "server_matches_debian": True,
                      "helper_matches_debian": True,
+                     "bundled_tray_libraries": True,
                      "bundled_wayland_libraries": False},
         "inspection": "static extraction only; no installation or executable launch",
     }

@@ -17,6 +17,7 @@ mod connection_policy;
 use connection::*;
 use connection_policy::*;
 mod output;
+mod storage;
 use output::*;
 #[cfg_attr(windows, path = "helper_windows.rs")]
 mod helper;
@@ -76,6 +77,7 @@ async fn run() -> Result<()> {
     let cli = Cli::parse();
     let paths = ClientPaths::discover()?;
     match cli.command {
+        Commands::Storage { command } => storage::run(&paths, command),
         Commands::HostKey(arguments) => inspect_host_key(arguments),
         Commands::Server { command } => match *command {
             ServerCommand::Release(arguments) => vps_release::run(&paths, arguments, cli.json),

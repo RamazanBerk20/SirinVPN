@@ -1,5 +1,47 @@
 # Privacy
 
+SirinVPN has no mandatory hosted account, analytics endpoint, default update
+source, or traffic-history database. Clients contact the configured VPS, selected
+DNS infrastructure, and user-selected update sources. Providers, the operating
+system, destination services, and independently configured VPS software can keep
+their own records. This is not a promise that no logs exist anywhere.
+
+## Current operational storage
+
+Profiles, trust pins, keys, permissions, saved routing choices, and the current
+native connection intent are necessary operational state. Linux keyring storage
+is required for new identities unless permission-protected file fallback is
+explicitly allowed. Those fallback files are not encrypted by SirinVPN. Android
+uses Keystore encryption; Windows uses DPAPI. See [credential storage](SECURITY.md).
+
+The remediation adds one private server recovery intent containing only a schema,
+generation, and hashes of the previous/next authorization documents. It is removed
+after successful recovery and is not an activity log. Linux stores one provenance
+record per identity, a public-key binding hash, an explicit storage policy, and
+non-secret deletion tombstones/unfinished cleanup obligations. Android retains
+non-secret tombstones to prevent stale writers restoring deleted credentials.
+These records contain no browsing destinations, traffic samples, passwords, or
+private-key copies. They are not a user activity timeline.
+
+Credential cleanup does not remove remote authorizations, copies exported earlier,
+or encrypted backups. Logical file deletion is not forensic secure erasure.
+Read [incomplete-operation recovery](SECURITY.md) before manually changing state.
+
+## Verification evidence
+
+The current [remediation report](docs/remediation.md) uses generated identities,
+fictional UI data, and disposable fixtures. Local raw logs and disks are not public
+artifacts. Workflow uploads name only selected summaries or synthetic logs; no
+profile directories, home directories, VM disks, or production signing material
+are uploaded. Historical reports apply only to their named sources and artifacts.
+
+<details>
+<summary>Historical component-level data inventory from 22 September 2026</summary>
+
+The inventory below is preserved for context. New recovery metadata and storage
+policy are described above; old test results are not current qualification.
+
+
 Linux can remember administrator-approved VPN control for the invoking account
 in a root-owned `/etc/polkit-1/rules.d/49-sirinvpn-user-<uid>.rules` file. It
 contains only that account name and the allowed helper action IDs, never a
@@ -147,3 +189,5 @@ A current Owner may also explicitly repair/update the VPS while disconnected. Th
 A current Owner may explicitly export VPS recovery state while disconnected. This read-only operation stages the locally packaged server executable and public Owner certificate, streams the validated snapshot into client memory, deletes those staged public/candidate files, and encrypts locally. It does not reconfigure or restart the VPS, send the backup password or destination over SSH, or create a remote snapshot file.
 
 A current Owner may explicitly restore that state to a pinned Debian 13 VPS while disconnected. The destination receives the packaged candidate and bounded snapshot bytes over SSH stdin, then writes only SirinVPN-owned state inside the existing rollback transaction. If replacement was explicitly selected, the destination's earlier SirinVPN-owned state is first captured in a root-owned reboot-persistent maintenance directory for rollback; unrelated VPS paths and services remain outside the transaction. The backup password and local source path never reach the VPS. Commit changes the initiating device's local public endpoint only after exact remote verification. Restore itself does not contact or uninstall the old VPS. A later Owner-requested endpoint handoff may publish the public signed transition to that old VPS and let other authorized devices verify the restored endpoint; it retains no history and still does not uninstall either host.
+
+</details>

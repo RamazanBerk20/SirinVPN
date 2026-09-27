@@ -68,6 +68,14 @@ connecting. Guest nftables counters observe synthetic DNS and IPv6 probes after
 the product's output filters; they do not collect packet payloads or browsing
 history. Public HTTPS is also checked through the connected tunnel.
 
+Automatic-fallback diagnostics also run a root-only observer in the synthetic
+client VM for at most 180 seconds and 64 outgoing DNS observations. It records
+interface, destination, question name and whether the guard table is present
+to distinguish disconnected setup traffic from protected traffic. It captures
+no response bodies, runs only in the owned fixture, and is never part of an
+application package. Treat its local diagnostic output separately from sanitized
+public summaries. The packet-counter assertion remains authoritative.
+
 Results and bounded setup/error logs remain in the output directory. Guest
 disks and temporary keys are deleted on normal completion and handled failures.
 For development, `--keep-failed-seconds 1800` retains failed fixtures for at most
@@ -84,6 +92,15 @@ takes `--base`, `--image` (the saved `Dockerfile.kernel` image), `--artifacts`
 enabled; server-policy cases use the forwarding settings installed on a VPS.
 The guest's Docker privileges apply only to its kernel. After guest setup,
 external networking is disabled for these kernel cases.
-The 15 deferred tests produce 16 cases because application routing runs with both
+The 16 deferred tests produce 17 cases because application routing runs with both
 IPv6 forwarding settings. The executable-staging regression gets an actual
 `noexec` mount at `/run` inside its disposable guest container.
+
+The complete kernel launcher also cuts power to its owned QEMU process with
+SIGKILL after authorization forwarding, durable persistence and checkpoint
+publication. A test-only worker pauses at each boundary; after boot, the production
+recovery engine must reconstruct the expected authoritative document and every
+modeled effect. These three cases verify real guest filesystem durability with
+modeled network effects, separately from the 17 packet/kernel cases. Use
+`--power-loss-only` to repeat just those boundaries; `--filter TEXT` selects only
+matching kernel tests. Guest overlays and keys are removed after handled failures.

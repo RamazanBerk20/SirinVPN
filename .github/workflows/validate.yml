@@ -1,0 +1,70 @@
+name: Validate
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: validate-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '26'
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libdbus-1-dev libssl-dev libxdo-dev patchelf shellcheck libxml2-utils ripgrep
+          npm install --prefix .cache/ci-tools --ignore-scripts --no-audit --no-fund "$(node -p "require('./apps/desktop/package.json').packageManager")"
+          echo "$PWD/.cache/ci-tools/node_modules/.bin" >> "$GITHUB_PATH"
+          rustup show active-toolchain
+      - run: pnpm --dir apps/desktop install --frozen-lockfile
+      - run: python3 scripts/check-workflows.py
+      - name: Shared local gates
+        run: python3 scripts/record-evidence.py --suite linux-fast --output target/remediation-evidence --timeout 3000 -- sh scripts/test.sh
+      - name: Preserve synthetic test evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: linux-fast-${{ github.sha }}
+          path: target/remediation-evidence/linux-fast.json
+          if-no-files-found: error
+          retention-days: 14
+  windows-build:
+    runs-on: windows-2025
+    timeout-minutes: 60
+    env:
+      CARGO_BUILD_JOBS: 2
+      RUST_TEST_THREADS: 2
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Native libraries and service compilation
+        shell: pwsh
+        run: |
+          $SirinNativePerl = 'C:\Strawberry\perl\bin'
+          if (Test-Path -LiteralPath "$SirinNativePerl\perl.exe") {
+            $env:PATH = "$SirinNativePerl;" + $env:PATH
+          }
+          python scripts/record-evidence.py --suite windows-native --output target/remediation-evidence --timeout 3300 -- pwsh -File scripts/test-windows.ps1
+          exit $LASTEXITCODE
+      - name: Preserve native check evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: windows-native-${{ github.sha }}
+          path: target/remediation-evidence/windows-native.json
+          if-no-files-found: error
+          retention-days: 14

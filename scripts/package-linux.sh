@@ -138,6 +138,11 @@ install -m 0755 "$PROJECT_ROOT/target/release/sirinvpn-helper" "$BIN_DIR/sirinvp
 install -m 0755 "$PROJECT_ROOT/target/release/sirinvpn" "$BIN_DIR/sirinvpn"
 install -m 0755 "$PROJECT_ROOT/target/release/sirinvpn-release" "$BIN_DIR/sirinvpn-release"
 install -m 0755 "$PROJECT_ROOT/target/release/sirinvpn-release-fetch" "$BIN_DIR/sirinvpn-release-fetch"
+# The tray library is loaded dynamically, so ELF dependency scanning cannot
+# discover it. Bundle the build-host version and let linuxdeploy collect its
+# dependencies; a newer host tray library may require a newer GLib than ours.
+SIRINVPN_TRAY_LIBRARY="$(pkg-config --variable=libdir ayatana-appindicator3-0.1)/libayatana-appindicator3.so.1"
+install -m 0644 "$SIRINVPN_TRAY_LIBRARY" "$BIN_DIR/libayatana-appindicator3.so.1"
 
 cd "$DESKTOP_DIR"
 if [ "${SIRINVPN_DEPENDENCIES_READY:-0}" != 1 ]; then

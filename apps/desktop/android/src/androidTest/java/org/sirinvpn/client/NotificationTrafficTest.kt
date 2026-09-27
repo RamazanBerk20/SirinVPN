@@ -54,7 +54,15 @@ class NotificationTrafficTest {
                 publish()
                 val notice = expectText("Connected · ↓ $expected")
                 assertEquals("Disconnect", notice.notification.actions.single().title)
-                assertTrue(notice.notification.actions.single().actionIntent.isBroadcast)
+                // Lookup proves this is the existing broadcast token on API 29 too;
+                // PendingIntent.isBroadcast() was only added in API 31.
+                val broadcast = android.app.PendingIntent.getBroadcast(context, 3,
+                    android.content.Intent(context, VpnActionReceiver::class.java)
+                        .setAction("org.sirinvpn.STOP")
+                        .setData(android.net.Uri.parse("sirin-control://stop/1")),
+                    android.app.PendingIntent.FLAG_NO_CREATE or android.app.PendingIntent.FLAG_IMMUTABLE)
+                assertNotNull(broadcast)
+                assertEquals(broadcast, notice.notification.actions.single().actionIntent)
                 assertFalse(manager.getNotificationChannel(notice.notification.channelId).canShowBadge())
                 repeat(3) { SystemClock.sleep(40); publish() }
                 assertEquals("Repeated status must not replace the notification", notice.postTime,

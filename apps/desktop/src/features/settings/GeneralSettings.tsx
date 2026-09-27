@@ -1,4 +1,5 @@
 import { WifiSettings } from "./WifiSettings";
+import { CredentialStorage } from "./CredentialStorage";
 import { invoke } from "../../platform";
 import { useEffect, useState } from "react";
 import { api } from "../../api";
@@ -109,6 +110,7 @@ export function GeneralSettings({
         </section>
       )}
       <WifiSettings />
+      {platform === "desktop" && <CredentialStorage />}
       {platform === "android" && <section className="settings-card">
         <h2>Android VPN controls</h2>
         <QuickProfile />

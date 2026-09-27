@@ -115,6 +115,7 @@ pub(super) async fn collect_status_with_peer_count(
         .unwrap_or_default();
 
     ServerStatus {
+        authorization_recovery: None,
         api_version: API_VERSION.to_owned(),
         server_name: configuration.server_name.clone(),
         connection_state: if interface_up {

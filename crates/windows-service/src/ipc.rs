@@ -1,10 +1,11 @@
 //! Local-only pipe transport. No private bytes are sent before SCM, pipe owner,
-//! and process-token authentication agree on the running LocalSystem service.
+//! and pipe PID authentication agree on the running LocalSystem service.
 use crate::{
     MAX_FRAME_BYTES, Operation, PIPE_NAME, Request, Response, SERVICE_NAME, ServiceError,
     protocol::IPC_VERSION,
 };
 use sirinvpn_platform::windows::security::{self, SYSTEM_SID, SecurityDescriptor};
+use sirinvpn_protocol::ConnectionState;
 use sirinvpn_tunnel_model::LocalTunnelStatus;
 use std::{
     io,
@@ -56,15 +57,52 @@ pub fn call_blocking(
     input: Option<&[u8]>,
 ) -> Result<LocalTunnelStatus, ServiceError> {
     let operation = Operation::from_helper(command, input)?;
+    let connecting = matches!(operation, Operation::Connect(_));
     std::thread::spawn(move || {
         tokio::runtime::Builder::new_current_thread()
             .enable_all()
             .build()
             .map_err(|_| ServiceError::Unavailable)?
-            .block_on(call(operation))
+            .block_on(async move {
+                let initial = call(operation).await?;
+                if !connecting {
+                    return Ok(initial);
+                }
+                // Connect acknowledges the saved intent before the controller's
+                // next tick creates the adapter and routes. Synchronous helper
+                // callers immediately use the private management API, so wait
+                // for actual network setup without blocking the service actor.
+                let deadline = Instant::now() + Duration::from_secs(30);
+                let mut current = initial.clone();
+                while !connection_ready(&initial, &current)? {
+                    if Instant::now() >= deadline {
+                        return Err(ServiceError::NetworkOperation);
+                    }
+                    tokio::time::sleep(Duration::from_millis(50)).await;
+                    current = call(Operation::Status).await?;
+                }
+                Ok(current)
+            })
     })
     .join()
     .map_err(|_| ServiceError::Unavailable)?
+}
+
+fn connection_ready(
+    initial: &LocalTunnelStatus,
+    current: &LocalTunnelStatus,
+) -> Result<bool, ServiceError> {
+    if initial.server_id.is_none()
+        || current.server_id != initial.server_id
+        || current.transport != initial.transport
+    {
+        return Err(ServiceError::SessionChanged);
+    }
+    match current.state {
+        ConnectionState::Connected => Ok(true),
+        ConnectionState::Connecting => Ok(current.counter_epoch.is_some()),
+        _ => Err(ServiceError::NetworkOperation),
+    }
 }
 
 async fn connect_authenticated() -> Result<NamedPipeClient, ServiceError> {
@@ -109,19 +147,6 @@ fn authenticate_server(pipe: &NamedPipeClient) -> io::Result<()> {
     if pid == 0 || pid != running_service_pid()? {
         return Err(denied());
     }
-    let process = unsafe { OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, 0, pid) };
-    if process.is_null() {
-        return Err(io::Error::last_os_error());
-    }
-    let process = unsafe { OwnedHandle::from_raw_handle(process) };
-    let mut token = ptr::null_mut();
-    if unsafe { OpenProcessToken(process.as_raw_handle(), TOKEN_QUERY, &mut token) } == 0 {
-        return Err(io::Error::last_os_error());
-    }
-    let token = unsafe { OwnedHandle::from_raw_handle(token) };
-    if security::token_user_sid(&token)? != SYSTEM_SID {
-        return Err(denied());
-    }
     Ok(())
 }
 
@@ -141,11 +166,21 @@ fn running_service_pid() -> io::Result<u32> {
     }
     let manager = ServiceHandle(manager);
     let name = security::wide(SERVICE_NAME)?;
-    let service = unsafe { OpenServiceW(manager.0, name.as_ptr(), SERVICE_QUERY_STATUS) };
+    let service = unsafe {
+        OpenServiceW(
+            manager.0,
+            name.as_ptr(),
+            SERVICE_QUERY_STATUS | SERVICE_QUERY_CONFIG,
+        )
+    };
     if service.is_null() {
         return Err(io::Error::last_os_error());
     }
     let service = ServiceHandle(service);
+    // The existing service DACL grants only read/query access to interactive
+    // users. Bind its administrator-controlled LocalSystem configuration and
+    // live PID to the SYSTEM-owned pipe before sending any private bytes.
+    crate::install::local_system_config(service.0)?;
     let mut status = SERVICE_STATUS_PROCESS::default();
     let mut needed = 0;
     if unsafe {
@@ -322,4 +357,48 @@ fn denied() -> io::Error {
         io::ErrorKind::PermissionDenied,
         "Windows pipe identity could not be verified",
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn queued_connect_waits_for_the_adapter_and_rejects_interrupted_sessions() {
+        let initial: LocalTunnelStatus = serde_json::from_value(serde_json::json!({
+            "state":"connecting", "interface_name":"SirinVPN",
+            "server_id":"123e4567-e89b-42d3-a456-426614174000",
+            "transport":"direct_udp", "rx_bytes":0, "tx_bytes":0,
+            "ipv6_blocked":true, "ipv6_tunneled":false,
+            "kill_switch_enabled":false, "auto_reconnect_enabled":false,
+            "transport_fallback_enabled":false, "routing_mode":"full_tunnel",
+            "allow_lan":false
+        }))
+        .unwrap();
+        assert!(!connection_ready(&initial, &initial).unwrap());
+        let mut ready = initial.clone();
+        ready.counter_epoch = Some(uuid::Uuid::new_v4().to_string());
+        // The adapter and routes may be ready before the peer's first handshake.
+        assert!(connection_ready(&initial, &ready).unwrap());
+        ready.state = ConnectionState::Connected;
+        assert!(connection_ready(&initial, &ready).unwrap());
+        ready.state = ConnectionState::Degraded;
+        assert!(matches!(
+            connection_ready(&initial, &ready),
+            Err(ServiceError::NetworkOperation)
+        ));
+        ready = initial.clone();
+        ready.server_id = None;
+        ready.state = ConnectionState::Disconnected;
+        assert!(matches!(
+            connection_ready(&initial, &ready),
+            Err(ServiceError::SessionChanged)
+        ));
+        ready = initial.clone();
+        ready.transport = Some(sirinvpn_protocol::TransportKind::TcpFallback);
+        assert!(matches!(
+            connection_ready(&initial, &ready),
+            Err(ServiceError::SessionChanged)
+        ));
+    }
 }

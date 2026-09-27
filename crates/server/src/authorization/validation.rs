@@ -3,7 +3,8 @@
 use super::*;
 
 pub(crate) fn load_authorization(path: &Path) -> Result<AuthorizationDocument> {
-    let bytes = fs::read(path).context("authorization state is unavailable")?;
+    let bytes = sirinvpn_platform::files::read_bounded(path, 1024 * 1024)
+        .context("authorization state is unavailable")?;
     let document: AuthorizationDocument =
         serde_json::from_slice(&bytes).context("authorization state is invalid")?;
     document.validate()?;
@@ -13,21 +14,7 @@ pub(crate) fn load_authorization(path: &Path) -> Result<AuthorizationDocument> {
 pub(crate) fn write_authorization(path: &Path, document: &AuthorizationDocument) -> Result<()> {
     document.validate()?;
     let bytes = serde_json::to_vec_pretty(document)?;
-    let temporary = path.with_extension("new");
-    let mut file = fs::OpenOptions::new()
-        .create(true)
-        .write(true)
-        .truncate(true)
-        .mode(0o600)
-        .open(&temporary)
-        .with_context(|| format!("could not stage {}", path.display()))?;
-    io::Write::write_all(&mut file, &bytes)?;
-    file.sync_all()?;
-    fs::set_permissions(&temporary, fs::Permissions::from_mode(0o600))?;
-    fs::rename(&temporary, path)?;
-    if let Some(parent) = path.parent() {
-        fs::File::open(parent)?.sync_all()?;
-    }
+    sirinvpn_platform::files::atomic_write(path, &bytes, true)?;
     Ok(())
 }
 

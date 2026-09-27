@@ -41,6 +41,7 @@ async fn kernel_published_source_blocks_data_but_retains_control_across_restart(
         "devices": [{"index": 0, "ipv4": "10.77.0.2", "ipv6": owner_v6, "private_key_path": owner_key}]
     })).await;
     let state = AppState {
+        recovery: Default::default(),
         measurement_ready: false,
         configuration,
         operational_configuration: Some(OperationalConfiguration {
@@ -76,11 +77,41 @@ async fn kernel_published_source_blocks_data_but_retains_control_across_restart(
             Json(head.clone()),
         )
     };
-    fs::create_dir(state.paths.authorization.with_extension("new")).unwrap();
+    // Prevent replacing the actual authority file. The old fixed .new pathname
+    // no longer exercises persistence failure with private atomic staging.
+    assert!(
+        Command::new("mount")
+            .arg("--bind")
+            .arg(&state.paths.authorization)
+            .arg(&state.paths.authorization)
+            .status()
+            .await
+            .unwrap()
+            .success()
+    );
     assert!(publish().await.is_err());
     assert_eq!(*state.authorization.as_ref().unwrap().read().await, before);
+    assert!(authorization_transaction::needs_recovery(&state.recovery));
+    packets("contained", serde_json::json!({"server_ipv6": server_v6})).await;
+    assert!(
+        Command::new("umount")
+            .arg(&state.paths.authorization)
+            .status()
+            .await
+            .unwrap()
+            .success()
+    );
+    {
+        let mut current = state.authorization.as_ref().unwrap().write().await;
+        authorization_transaction::recover(
+            &authorization_transaction::Host(&state),
+            &state.recovery,
+            &mut current,
+        )
+        .await
+        .unwrap();
+    }
     packets("open", serde_json::json!({"server_ipv6": server_v6})).await;
-    fs::remove_dir(state.paths.authorization.with_extension("new")).unwrap();
     assert!(publish().await.is_ok());
     assert!(publish().await.is_ok());
     packets("source", serde_json::json!({"server_ipv6": server_v6})).await;

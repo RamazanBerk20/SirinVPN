@@ -1,6 +1,4 @@
 use crate::SecretIdentity;
-#[cfg(not(any(windows, target_os = "android")))]
-use keyring::Entry;
 #[cfg(not(target_os = "android"))]
 use std::fs;
 use std::{io, path::PathBuf};
@@ -9,12 +7,34 @@ use thiserror::Error;
 use zeroize::Zeroizing;
 
 #[cfg(not(any(windows, target_os = "android")))]
-const KEYRING_SERVICE: &str = "org.sirinvpn.client";
+mod linux;
+#[cfg(not(any(windows, target_os = "android")))]
+pub use linux::{StoragePolicy, StorageStatus};
+
+pub fn validate_reference(reference: &str) -> Result<(), SecretStoreError> {
+    if reference.is_empty()
+        || reference.len() > 128
+        || !reference
+            .bytes()
+            .all(|c| c.is_ascii_alphanumeric() || c == b'-')
+    {
+        return Err(SecretStoreError::InvalidData);
+    }
+    Ok(())
+}
 
 pub trait SecretStore: Send + Sync {
     fn put(&self, reference: &str, secret: &SecretIdentity) -> Result<(), SecretStoreError>;
     fn get(&self, reference: &str) -> Result<SecretIdentity, SecretStoreError>;
     fn delete(&self, reference: &str) -> Result<(), SecretStoreError>;
+    /// Preflight for a freshly generated random reference; put must still validate it.
+    fn new_reference_available(&self, reference: &str) -> Result<bool, SecretStoreError> {
+        match self.get(reference) {
+            Err(SecretStoreError::NotFound) => Ok(true),
+            Ok(_) => Ok(false),
+            Err(error) => Err(error),
+        }
+    }
 }
 
 #[derive(Debug, Error)]
@@ -25,6 +45,18 @@ pub enum SecretStoreError {
     Unavailable(String),
     #[error("secret storage data is invalid")]
     InvalidData,
+    #[error("credential cleanup is incomplete; unlock the secure store and retry cleanup")]
+    CleanupPending,
+    #[error("credential deletion was requested; this identity cannot be used or rewritten")]
+    Deleted,
+    #[error(
+        "credential storage transition is incomplete; retry the operation or credential cleanup"
+    )]
+    TransitionPending,
+    #[error(
+        "secure storage is required; unlock the keyring or explicitly allow permission-protected file storage"
+    )]
+    SecureStoreRequired,
     #[error("secret file operation failed: {0}")]
     Io(#[from] io::Error),
 }
@@ -32,29 +64,22 @@ pub enum SecretStoreError {
 pub struct HybridSecretStore {
     #[cfg_attr(target_os = "android", allow(dead_code))]
     fallback_directory: PathBuf,
+    #[cfg(not(any(windows, target_os = "android")))]
+    backend: Box<dyn linux::KeyringBackend>,
 }
 
 impl HybridSecretStore {
     pub fn new(fallback_directory: PathBuf) -> Self {
-        Self { fallback_directory }
-    }
-
-    #[cfg(not(any(windows, target_os = "android")))]
-    fn entry(reference: &str) -> Result<Entry, SecretStoreError> {
-        Entry::new(KEYRING_SERVICE, reference)
-            .map_err(|error| SecretStoreError::Unavailable(error.to_string()))
+        Self {
+            fallback_directory,
+            #[cfg(not(any(windows, target_os = "android")))]
+            backend: Box::new(linux::SystemKeyring),
+        }
     }
 
     #[cfg(not(target_os = "android"))]
     fn fallback_path(&self, reference: &str) -> Result<PathBuf, SecretStoreError> {
-        if reference.is_empty()
-            || reference.len() > 128
-            || !reference
-                .chars()
-                .all(|character| character.is_ascii_alphanumeric() || character == '-')
-        {
-            return Err(SecretStoreError::InvalidData);
-        }
+        validate_reference(reference)?;
         #[cfg(not(windows))]
         let extension = "json";
         #[cfg(windows)]
@@ -62,58 +87,6 @@ impl HybridSecretStore {
         Ok(self
             .fallback_directory
             .join(format!("{reference}.{extension}")))
-    }
-
-    #[cfg(not(any(windows, target_os = "android")))]
-    fn put_fallback(&self, reference: &str, bytes: &[u8]) -> Result<(), SecretStoreError> {
-        sirinvpn_platform::files::create_private_directory(&self.fallback_directory)?;
-        let path = self.fallback_path(reference)?;
-        sirinvpn_platform::files::atomic_write(&path, bytes, true)?;
-        Ok(())
-    }
-}
-
-#[cfg(not(any(windows, target_os = "android")))]
-impl SecretStore for HybridSecretStore {
-    fn put(&self, reference: &str, secret: &SecretIdentity) -> Result<(), SecretStoreError> {
-        let bytes =
-            Zeroizing::new(serde_json::to_vec(secret).map_err(|_| SecretStoreError::InvalidData)?);
-        if let Ok(entry) = Self::entry(reference)
-            && entry.set_secret(&bytes).is_ok()
-        {
-            return Ok(());
-        }
-        self.put_fallback(reference, &bytes)
-    }
-
-    fn get(&self, reference: &str) -> Result<SecretIdentity, SecretStoreError> {
-        if let Ok(entry) = Self::entry(reference)
-            && let Ok(bytes) = entry.get_secret()
-        {
-            let bytes = Zeroizing::new(bytes);
-            return serde_json::from_slice(&bytes).map_err(|_| SecretStoreError::InvalidData);
-        }
-        let path = self.fallback_path(reference)?;
-        let bytes = Zeroizing::new(fs::read(path).map_err(|error| {
-            if error.kind() == io::ErrorKind::NotFound {
-                SecretStoreError::NotFound
-            } else {
-                SecretStoreError::Io(error)
-            }
-        })?);
-        serde_json::from_slice(&bytes).map_err(|_| SecretStoreError::InvalidData)
-    }
-
-    fn delete(&self, reference: &str) -> Result<(), SecretStoreError> {
-        if let Ok(entry) = Self::entry(reference) {
-            let _ = entry.delete_credential();
-        }
-        let path = self.fallback_path(reference)?;
-        match fs::remove_file(path) {
-            Ok(()) => Ok(()),
-            Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(()),
-            Err(error) => Err(error.into()),
-        }
     }
 }
 
@@ -138,12 +111,15 @@ fn android_store() -> Result<&'static dyn SecretStore, SecretStoreError> {
 #[cfg(target_os = "android")]
 impl SecretStore for HybridSecretStore {
     fn put(&self, reference: &str, secret: &SecretIdentity) -> Result<(), SecretStoreError> {
+        validate_reference(reference)?;
         android_store()?.put(reference, secret)
     }
     fn get(&self, reference: &str) -> Result<SecretIdentity, SecretStoreError> {
+        validate_reference(reference)?;
         android_store()?.get(reference)
     }
     fn delete(&self, reference: &str) -> Result<(), SecretStoreError> {
+        validate_reference(reference)?;
         android_store()?.delete(reference)
     }
 }

@@ -22,15 +22,10 @@ pub(super) async fn sync_wireguard_peers(
         }
     }
 
-    let output = Command::new("wg")
-        .args(["show", &configuration.interface_name, "peers"])
-        .output()
+    let output = diagnostics::output("wg", &["show", &configuration.interface_name, "peers"])
         .await
-        .context("could not inspect WireGuard peers")?;
-    if !output.status.success() {
-        bail!("could not inspect WireGuard peers");
-    }
-    let current: HashSet<_> = String::from_utf8_lossy(&output.stdout)
+        .context("could not inspect WireGuard peers within its bounds")?;
+    let current: HashSet<_> = output
         .lines()
         .map(str::trim)
         .filter(|line| !line.is_empty())
@@ -67,14 +62,10 @@ pub(super) async fn sync_wireguard_peers(
     if arguments.len() == 2 {
         return Ok(());
     }
-    let output = Command::new("wg")
-        .args(arguments)
-        .output()
+    let arguments: Vec<&str> = arguments.iter().map(String::as_str).collect();
+    diagnostics::output("wg", &arguments)
         .await
-        .context("could not update WireGuard peers")?;
-    if !output.status.success() {
-        bail!("could not update WireGuard peers");
-    }
+        .context("could not update WireGuard peers within its bounds")?;
     Ok(())
 }
 
@@ -185,8 +176,17 @@ pub(super) fn handoff_guard_nft_batch(configuration: &ServerConfiguration, sourc
 /// Install before bringing up WireGuard, including on a migrated source reboot.
 pub async fn install_network_guard(paths: &ServerPaths) -> Result<()> {
     let configuration = load_configuration(paths)?;
+    if paths.authorization_required.exists() || fs::symlink_metadata(&paths.authorization).is_ok() {
+        apply_nft_batch(
+            &authorization_transaction::containment(&configuration, true),
+            "startup authorization containment",
+        )
+        .await?;
+    }
     let authorization = load_runtime_authorization(paths)?;
-    let source = authorization.is_some_and(|document| document.endpoint_transition_source);
+    let source = authorization
+        .as_ref()
+        .is_some_and(|document| document.endpoint_transition_source);
     apply_nft_batch(
         &handoff_guard_nft_batch(&configuration, source),
         "handoff guard",
@@ -331,31 +331,35 @@ pub(super) async fn sync_port_forwards(
 }
 
 pub(super) async fn apply_nft_batch(batch: &str, description: &str) -> Result<()> {
-    let mut child = Command::new("nft")
-        .args(["-f", "-"])
-        .stdin(Stdio::piped())
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .kill_on_drop(true)
-        .spawn()
-        .with_context(|| format!("could not stage {description}"))?;
-    let mut stdin = child
-        .stdin
-        .take()
-        .with_context(|| format!("could not open {description} input"))?;
-    stdin
-        .write_all(batch.as_bytes())
-        .await
-        .with_context(|| format!("could not apply {description}"))?;
-    drop(stdin);
-    let status = child
-        .wait()
-        .await
-        .with_context(|| format!("could not finish {description}"))?;
-    if !status.success() {
-        bail!("could not apply {description}");
-    }
-    Ok(())
+    tokio::time::timeout(Duration::from_secs(5), async {
+        let mut child = Command::new("nft")
+            .args(["-f", "-"])
+            .stdin(Stdio::piped())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .kill_on_drop(true)
+            .spawn()
+            .with_context(|| format!("could not stage {description}"))?;
+        let mut stdin = child
+            .stdin
+            .take()
+            .with_context(|| format!("could not open {description} input"))?;
+        stdin
+            .write_all(batch.as_bytes())
+            .await
+            .with_context(|| format!("could not apply {description}"))?;
+        drop(stdin);
+        let status = child
+            .wait()
+            .await
+            .with_context(|| format!("could not finish {description}"))?;
+        if !status.success() {
+            bail!("could not apply {description}");
+        }
+        Ok(())
+    })
+    .await
+    .context("firewall operation timed out")?
 }
 
 pub(super) fn peer_allowed_ips(

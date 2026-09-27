@@ -10,7 +10,10 @@ acceptance; the platform scenarios below belong to the later acceptance pass.
 - `sirinvpn-windows-service.exe` owns the adapter, routes, DNS, firewall and
   background transports. Its bounded command queue serializes changes. Status
   reads use a separate current snapshot so they do not wait for connection trials.
-- Local named-pipe clients verify the server's SYSTEM identity and SCM process.
+- Local named-pipe clients verify the SYSTEM pipe owner, the SCM LocalSystem
+  own-process configuration, and the running service PID against the pipe PID.
+  SCM queries use the existing read permissions; clients need no privileged
+  process handle. Administrators remain trusted to configure the service.
   The service impersonates each client to obtain its SID. An existing session
   belongs to that SID; another interactive user cannot inspect or replace it.
   Remote clients and additional unprivileged pipe instances are rejected.

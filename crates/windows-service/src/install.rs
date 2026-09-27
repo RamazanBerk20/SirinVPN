@@ -323,28 +323,37 @@ fn require_current_program(service: &Handle) -> io::Result<()> {
     require_owned(service, &format!("\"{path}\" --service")).map(|_| ())
 }
 fn require_owned(service: &Handle, command: &str) -> io::Result<bool> {
+    let (path, auto_start) = local_system_config(service.0)?;
+    if !path.eq_ignore_ascii_case(command) {
+        return Err(invalid());
+    }
+    Ok(auto_start)
+}
+
+/// SCM configuration is readable by interactive clients; process/token handles
+/// for the LocalSystem service are not. Only administrators may change it.
+pub(crate) fn local_system_config(service: SC_HANDLE) -> io::Result<(String, bool)> {
     let mut length = 0;
     unsafe {
-        QueryServiceConfigW(service.0, ptr::null_mut(), 0, &mut length);
+        QueryServiceConfigW(service, ptr::null_mut(), 0, &mut length);
     }
     if !(size_of::<QUERY_SERVICE_CONFIGW>() as u32..=16384).contains(&length) {
         return Err(invalid());
     }
     let mut buffer = vec![0u64; (length as usize).div_ceil(8)];
     let config = buffer.as_mut_ptr().cast::<QUERY_SERVICE_CONFIGW>();
-    if unsafe { QueryServiceConfigW(service.0, config, length, &mut length) } == 0 {
+    if unsafe { QueryServiceConfigW(service, config, length, &mut length) } == 0 {
         return Err(io::Error::last_os_error());
     }
     let config = unsafe { &*config };
     let path = bounded_string(config.lpBinaryPathName, &buffer)?;
     let account = bounded_string(config.lpServiceStartName, &buffer)?;
     if config.dwServiceType != SERVICE_WIN32_OWN_PROCESS
-        || !path.eq_ignore_ascii_case(command)
         || !account.eq_ignore_ascii_case("LocalSystem")
     {
         return Err(invalid());
     }
-    Ok(config.dwStartType == SERVICE_AUTO_START)
+    Ok((path, config.dwStartType == SERVICE_AUTO_START))
 }
 
 pub(crate) fn registered_auto_start() -> io::Result<bool> {

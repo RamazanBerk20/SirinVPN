@@ -97,7 +97,11 @@ pub(super) fn add_server(
     let outcome = match Provisioner::install(request) {
         Ok(outcome) => outcome,
         Err(error) => {
-            let _ = secrets.delete(&identity_reference);
+            if secrets.delete(&identity_reference).is_err() {
+                bail!(
+                    "Provisioning failed; credential cleanup is incomplete. Unlock the secure store and retry credential cleanup."
+                );
+            }
             return Err(error.into());
         }
     };

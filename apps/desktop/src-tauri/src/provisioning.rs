@@ -95,7 +95,9 @@ pub(super) fn provision_blocking(
     let outcome = match Provisioner::install(request) {
         Ok(outcome) => outcome,
         Err(error) => {
-            let _ = secrets.delete(&identity_reference);
+            if secrets.delete(&identity_reference).is_err() {
+                return Err("Provisioning failed; credential cleanup is incomplete. Unlock the secure store and retry credential cleanup.".into());
+            }
             return Err(error.to_string());
         }
     };

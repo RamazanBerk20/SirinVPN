@@ -62,17 +62,23 @@ Availability and verification vary by platform. The
 
 ## Platform status
 
-| Platform | Current implementation | Build output |
+| Platform | Implementation / build path | Verification and limits |
 | --- | --- | --- |
-| **Linux** | Desktop app and CLI; privileged helper, systemd, and nftables. Selected flows have disposable VM and kernel acceptance coverage. | Debian package and AppImage |
-| **Android 10+** | Mobile interface, separate native VPN process, Keystore-protected storage, QR scanner, notification and Quick Settings controls. Emulator coverage and development installs on a physical phone. | ARM64 and x86_64 development APK |
-| **Windows** | Desktop app and CLI with a LocalSystem service, WireGuardNT, WFP, and DPAPI. Native runtime qualification remains incomplete; executable routing requires a signed driver. | Native MSVC/NSIS build tooling |
-| **VPS** | Debian 13 on x86_64 or ARM64; WireGuard, private management API, DNS, and transport relays. | Server executable bundled with client builds |
+| **Linux** | Desktop, CLI, privileged helper, systemd and nftables; Debian/AppImage packaging. | Disposable kernel and exact Debian package acceptance passed. Two earlier fallback DNS observations remain unresolved; AppImage runtime and wider desktops need qualification. |
+| **Android 10+** | Separate VPN process, Keystore, QR, notifications and Quick Settings; ARM64/x86_64 APK build paths. | Debug APK, API 29/36 instrumentation and Samsung S25+ lifecycle/lockdown checks passed. Other OEMs, overnight power behavior and physical 16 KB pages remain unqualified. No home-screen widget is implemented. |
+| **Windows** | LocalSystem service, WireGuardNT, WFP and DPAPI; MSVC/NSIS tooling. | Native Windows 11 units, cross-user controls, four transports and crash/reboot checks passed; exact scope is in the remediation ledger. Broader release qualification remains open. Executable routing requires a signed, qualified driver. |
+| **VPS** | Debian 13 x86_64/ARM64 server payloads with private management, DNS and relays. | Cross-architecture builds do not establish ARM64 native runtime acceptance. |
 
 macOS and iOS clients are not implemented. Android parity, device-specific power
 behavior, and several recovery/update workflows still need broader verification;
 see the [Android verification report](docs/android/progress.md). Historical test
 reports apply to their named builds, not every subsequent change.
+
+The [26 September remediation report](docs/remediation.md) records exact current
+results, local evidence paths, configured CI, and release blockers. New Linux
+credentials require the system keyring. Permission-protected, unencrypted file
+fallback requires explicit consent in Settings → General → Credential storage
+or `sirinvpn storage allow-private-file`; existing legacy profiles remain readable.
 
 ## Getting started
 

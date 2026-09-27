@@ -126,6 +126,7 @@ pub(super) fn check_firewalls_and_links(
                     "sirinvpn_nat",
                     "sirinvpn_nat6",
                     "sirinvpn_handoff",
+                    "sirinvpn_measurement",
                 ]
                 .contains(&name)
             })

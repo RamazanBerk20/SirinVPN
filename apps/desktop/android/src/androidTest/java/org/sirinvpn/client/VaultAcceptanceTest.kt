@@ -10,6 +10,32 @@ import java.util.UUID
 
 @RunWith(AndroidJUnit4::class)
 class VaultAcceptanceTest {
+    @Test fun missingKeyDoesNotReplaceEncryptedIdentity() {
+        assertTrue(BuildConfig.DEBUG)
+        assertTrue(android.os.Build.HARDWARE in setOf("ranchu", "goldfish"))
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val directory = File(context.noBackupFilesDir, "credentials")
+        val vault = SecretVault(context)
+        // Only the fresh AVD fixture may invalidate this app's key.
+        check(directory.listFiles()!!.none { it.name.endsWith(".enc") })
+        val reference = "acceptance-${UUID.randomUUID()}"
+        val replacement = "acceptance-${UUID.randomUUID()}"
+        vault.put(reference, "synthetic invalidation test".toByteArray())
+        val file = File(directory, "$reference.enc")
+        val original = file.readBytes()
+        try {
+            java.security.KeyStore.getInstance("AndroidKeyStore").apply { load(null) }
+                .deleteEntry("sirinvpn.credentials.v1")
+            assertTrue(runCatching { vault.get(reference) }.isFailure)
+            assertTrue(runCatching { vault.put(replacement, byteArrayOf(1)) }.isFailure)
+            assertArrayEquals(original, file.readBytes())
+            assertFalse(File(directory, "$replacement.enc").exists())
+        } finally {
+            vault.delete(reference)
+            vault.delete(replacement)
+        }
+    }
+
     @Test fun authenticatedStorage() {
         assertTrue(BuildConfig.DEBUG)
         assertTrue(android.os.Build.HARDWARE in setOf("ranchu","goldfish"))
@@ -39,5 +65,25 @@ class VaultAcceptanceTest {
             value.fill(0);vault.delete(first);vault.delete(second)
         }
         assertNull(vault.get(first))
+        assertTrue("Deletion cannot be undone by a stale write", runCatching { vault.put(first, byteArrayOf(1)) }.isFailure)
+    }
+
+    @Test fun incompleteDeletionAndInterruptedWriteAreNotAbsence() {
+        assertTrue(BuildConfig.DEBUG)
+        assertTrue(android.os.Build.HARDWARE in setOf("ranchu", "goldfish"))
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val vault = SecretVault(context)
+        val reference = "acceptance-${UUID.randomUUID()}"
+        val directory = File(context.noBackupFilesDir, "credentials")
+        val blocked = File(directory, "$reference.enc").apply { mkdirs() }
+        val child = File(blocked, "fixture").apply { writeText("synthetic") }
+        try {
+            assertTrue(runCatching { vault.delete(reference) }.isFailure)
+            assertNull(vault.get(reference))
+            assertTrue(runCatching { vault.put(reference, byteArrayOf(1)) }.isFailure)
+        } finally {
+            check(child.delete()); check(blocked.delete()); vault.delete(reference)
+        }
+        vault.delete(reference)
     }
 }

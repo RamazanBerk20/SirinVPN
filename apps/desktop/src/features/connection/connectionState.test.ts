@@ -9,6 +9,24 @@ const connected = {
   ipv6_blocked: true,
 };
 describe("operational connection states", () => {
+  it("reports authorization recovery independently from an established tunnel", () => {
+    const remote = { authorization_recovery: { health: "recovery_failed", generation: 4, committed: true, containment_verified: false } } as ServerStatus;
+    const state = describeConnection(connected, "a", remote);
+    expect(state.connected).toBe(true);
+    expect(state.status).toBe("Server authorization recovery");
+    expect(state.warning).toContain("enforcement is unavailable");
+    expect(state.recoveringAuthorization).toBe(true);
+    expect(state.summary).toContain("must finish");
+    for (const state of ["connecting", "degraded", "disconnected"] as const) {
+      expect(describeConnection({ ...connected, state }, "a", remote).summary).not.toContain("tunnel is established");
+    }
+    expect(describeConnection(connected, "another", remote).recoveringAuthorization).toBe(false);
+  });
+  it("does not promise to release Android lockdown on disconnect", () => {
+    const state = describeConnection({ ...connected, application_routing_backend: "android_packages", kill_switch_enabled: true, lockdown: true }, "a", null);
+    expect(state.action).toBe("Disconnect");
+    expect(state.warning).toContain("remains active after Disconnect");
+  });
   it("reports application scope independently of the optional host kill switch", () => {
     const local = { ...connected, routing_mode: "selected_applications" as const, ipv6_blocked: false,
       application_routing_ready: true, supervisor_status_known: true, kill_switch_enabled: false };

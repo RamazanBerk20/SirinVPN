@@ -2,6 +2,15 @@
 
 use super::*;
 
+// Network teardown, rollback and uninstall share ownership of these runtime
+// tables. Keep quarantine until the tunnel is gone; never delete foreign tables.
+pub(super) const RUNTIME_TABLE_CLEANUP: &str = r#"nft list tables >/dev/null
+for table in sirinvpn_handoff sirinvpn_measurement; do
+  if nft list table inet "$table" >/dev/null 2>&1; then
+    nft delete table inet "$table"
+  fi
+done"#;
+
 pub(super) fn uninstall_script(nonce: &str) -> String {
     format!(
         r#"#!/bin/sh
@@ -75,6 +84,7 @@ fi
 if [ -x /etc/sirinvpn/network.sh ]; then
   /etc/sirinvpn/network.sh down
 fi
+{runtime_table_cleanup}
 for path in $MANAGED_PATHS; do
   rm -rf -- "/$path"
 done
@@ -94,6 +104,7 @@ fi
         rollback_begin = maintenance::rollback_begin(nonce, true),
         rollback_finish = maintenance::rollback_finish(),
         arm_recovery = maintenance::arm(nonce, true),
+        runtime_table_cleanup = RUNTIME_TABLE_CLEANUP,
     )
 }
 
@@ -102,25 +113,39 @@ pub(super) fn uninstall_verification_command() -> String {
         r#"set -eu
 MANAGED_PATHS="{managed_paths}"
 for path in $MANAGED_PATHS; do
-  [ ! -e "/$path" ]
+  if [ -e "/$path" ] || [ -L "/$path" ]; then exit 1; fi
 done
-! ip link show sirinvpn0 >/dev/null 2>&1
-! nft list table inet sirinvpn_filter >/dev/null 2>&1
-! nft list table ip sirinvpn_nat >/dev/null 2>&1
-! nft list table ip6 sirinvpn_nat6 >/dev/null 2>&1
+for tool in ip nft ss systemctl grep; do
+  command -v "$tool" >/dev/null
+done
+# `set -e` does not fail a shell for a negated command. Make every failed
+# absence proof explicit, and do not interpret a failed observer as absence.
+ip link show >/dev/null
+if ip link show sirinvpn0 >/dev/null 2>&1; then exit 1; fi
+nft list tables >/dev/null
+for table in sirinvpn_filter sirinvpn_handoff sirinvpn_measurement; do
+  if nft list table inet "$table" >/dev/null 2>&1; then exit 1; fi
+done
+if nft list table ip sirinvpn_nat >/dev/null 2>&1; then exit 1; fi
+if nft list table ip6 sirinvpn_nat6 >/dev/null 2>&1; then exit 1; fi
 if command -v iptables-save >/dev/null 2>&1; then
-  ! iptables-save | grep -q -- '--comment sirinvpn-forward-'
+  rules=$(iptables-save)
+  if printf '%s\n' "$rules" | grep -q -- '--comment sirinvpn-forward-'; then exit 1; fi
 fi
 if command -v ip6tables-save >/dev/null 2>&1; then
-  ! ip6tables-save | grep -q -- '--comment sirinvpn-forward6-'
+  rules=$(ip6tables-save)
+  if printf '%s\n' "$rules" | grep -q -- '--comment sirinvpn-forward6-'; then exit 1; fi
 fi
-! ss -H -lnt 'sport = :8443' | grep -q 10.77.0.1
+sockets=$(ss -H -lnt 'sport = :8443')
+if printf '%s\n' "$sockets" | grep -q 10.77.0.1; then exit 1; fi
 for unit in sirinvpn-network sirinvpn-firewall sirinvpn-doh sirinvpn-server sirinvpn-security-update.timer; do
-  ! systemctl is-active --quiet "$unit"
-  ! systemctl is-enabled --quiet "$unit"
+  if systemctl is-active --quiet "$unit"; then exit 1; fi
+  if systemctl is-enabled --quiet "$unit"; then exit 1; fi
 done
-! ss -H -lun 'sport = :{doh_proxy_port}' | grep -q '127.0.0.1:{doh_proxy_port}'
-! ss -H -lnt 'sport = :{doh_proxy_port}' | grep -q '127.0.0.1:{doh_proxy_port}'
+sockets=$(ss -H -lun 'sport = :{doh_proxy_port}')
+if printf '%s\n' "$sockets" | grep -q '127.0.0.1:{doh_proxy_port}'; then exit 1; fi
+sockets=$(ss -H -lnt 'sport = :{doh_proxy_port}')
+if printf '%s\n' "$sockets" | grep -q '127.0.0.1:{doh_proxy_port}'; then exit 1; fi
 systemctl is-active --quiet unbound.service
 "#,
         managed_paths = format_args!(

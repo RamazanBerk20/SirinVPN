@@ -1,0 +1,142 @@
+# Version-bound license metadata; no advisory is ignored. Reviewed 2026-09-26.
+ScanGoModVersion = true
+
+[[PackageOverrides]]
+name = "target-lexicon"
+version = "0.12.16"
+ecosystem = "crates.io"
+license.ignore = true
+reason = "Reviewed Apache-2.0 WITH LLVM-exception in the checksum-pinned crate LICENSE (SHA256 268872b9816f90fd8e85db5a28d33f8150ebb8dd016653fb39ef1f94f2686bc5). The exception grants additional redistribution permissions. OSV 2.6.0 rejects compound SPDX expressions in its allowlist; retain actual license metadata and accept only this version's license finding. Advisories remain enabled."
+
+[[PackageOverrides]]
+name = "androidx.appcompat:appcompat"
+version = "1.7.1"
+ecosystem = "Maven"
+license.override = ["Apache-2.0"]
+reason = "Official POM: https://dl.google.com/dl/android/maven2/androidx/appcompat/appcompat/1.7.1/appcompat-1.7.1.pom (SHA256 1f79910cc20de198acf3867b1e93f9ed59ddb643585b2e9c28ee55518af1bc00)."
+
+[[PackageOverrides]]
+name = "androidx.appcompat:appcompat-resources"
+version = "1.7.1"
+ecosystem = "Maven"
+license.override = ["Apache-2.0"]
+reason = "Official POM: https://dl.google.com/dl/android/maven2/androidx/appcompat/appcompat-resources/1.7.1/appcompat-resources-1.7.1.pom (SHA256 2faf922e8c3d706f29d862b3fbb3aa1347705c21c6eae18586d2bb1f7366ea01)."
+
+[[PackageOverrides]]
+name = "androidx.webkit:webkit"
+version = "1.14.0"
+ecosystem = "Maven"
+license.override = ["Apache-2.0"]
+reason = "Official POM: https://dl.google.com/dl/android/maven2/androidx/webkit/webkit/1.14.0/webkit-1.14.0.pom (SHA256 230b7ba1631c5f6baad08f3915f9db6d550d215b3658c82eb38ceb2dff72cad1)."
+
+[[PackageOverrides]]
+name = "com.google.android.material:material"
+version = "1.12.0"
+ecosystem = "Maven"
+license.override = ["Apache-2.0"]
+reason = "Official POM: https://dl.google.com/dl/android/maven2/com/google/android/material/material/1.12.0/material-1.12.0.pom (SHA256 53693b7e8191e9707f1cc0f2788217a6c4d9de0ebcf548151af69ffa7e12b1d4)."
+
+[[PackageOverrides]]
+name = "stdlib"
+version = "1.27.1"
+ecosystem = "Go"
+license.override = ["BSD-3-Clause"]
+reason = "Go distribution LICENSE, https://go.dev/LICENSE; reviewed local toolchain copy SHA256 911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad."
+
+[[PackageOverrides]]
+name = "sirinvpn-android-runtime"
+version = "0.1.0"
+ecosystem = "crates.io"
+license.override = ["AGPL-3.0-only"]
+reason = "Local workspace crate inherits Cargo.toml workspace license; see LICENSE."
+
+[[PackageOverrides]]
+name = "sirinvpn-protocol"
+version = "0.1.0"
+ecosystem = "crates.io"
+license.override = ["AGPL-3.0-only"]
+reason = "Local workspace crate inherits Cargo.toml workspace license; see LICENSE."
+
+[[PackageOverrides]]
+name = "sirinvpn-platform"
+version = "0.1.0"
+ecosystem = "crates.io"
+license.override = ["AGPL-3.0-only"]
+reason = "Local workspace crate inherits Cargo.toml workspace license; see LICENSE."
+
+[[PackageOverrides]]
+name = "sirinvpn-tunnel-model"
+version = "0.1.0"
+ecosystem = "crates.io"
+license.override = ["AGPL-3.0-only"]
+reason = "Local workspace crate inherits Cargo.toml workspace license; see LICENSE."
+
+[[PackageOverrides]]
+name = "sirinvpn-windows-service"
+version = "0.1.0"
+ecosystem = "crates.io"
+license.override = ["AGPL-3.0-only"]
+reason = "Local workspace crate inherits Cargo.toml workspace license; see LICENSE."
+
+[[PackageOverrides]]
+name = "sirinvpn-release"
+version = "0.1.0"
+ecosystem = "crates.io"
+license.override = ["AGPL-3.0-only"]
+reason = "Local workspace crate inherits Cargo.toml workspace license; see LICENSE."
+
+[[PackageOverrides]]
+name = "sirinvpn-release-fetch"
+version = "0.1.0"
+ecosystem = "crates.io"
+license.override = ["AGPL-3.0-only"]
+reason = "Local workspace crate inherits Cargo.toml workspace license; see LICENSE."
+
+[[PackageOverrides]]
+name = "sirinvpn-transport"
+version = "0.1.0"
+ecosystem = "crates.io"
+license.override = ["AGPL-3.0-only"]
+reason = "Local workspace crate inherits Cargo.toml workspace license; see LICENSE."
+
+[[PackageOverrides]]
+name = "sirinvpn-core"
+version = "0.1.0"
+ecosystem = "crates.io"
+license.override = ["AGPL-3.0-only"]
+reason = "Local workspace crate inherits Cargo.toml workspace license; see LICENSE."
+
+[[PackageOverrides]]
+name = "sirinvpn-server"
+version = "0.1.0"
+ecosystem = "crates.io"
+license.override = ["AGPL-3.0-only"]
+reason = "Local workspace crate inherits Cargo.toml workspace license; see LICENSE."
+
+[[PackageOverrides]]
+name = "sirinvpn-installer"
+version = "0.1.0"
+ecosystem = "crates.io"
+license.override = ["AGPL-3.0-only"]
+reason = "Local workspace crate inherits Cargo.toml workspace license; see LICENSE."
+
+[[PackageOverrides]]
+name = "sirinvpn-linux-helper"
+version = "0.1.0"
+ecosystem = "crates.io"
+license.override = ["AGPL-3.0-only"]
+reason = "Local workspace crate inherits Cargo.toml workspace license; see LICENSE."
+
+[[PackageOverrides]]
+name = "sirinvpn-cli"
+version = "0.1.0"
+ecosystem = "crates.io"
+license.override = ["AGPL-3.0-only"]
+reason = "Local workspace crate inherits Cargo.toml workspace license; see LICENSE."
+
+[[PackageOverrides]]
+name = "sirinvpn-desktop"
+version = "0.1.0"
+ecosystem = "crates.io"
+license.override = ["AGPL-3.0-only"]
+reason = "Local workspace crate inherits Cargo.toml workspace license; see LICENSE."

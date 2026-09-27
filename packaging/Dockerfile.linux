@@ -1,6 +1,6 @@
 FROM node:26-bookworm AS node
 
-FROM rust:1.97-bookworm
+FROM rust:1.97.1-bookworm
 
 COPY --from=node /usr/local/ /usr/local/
 

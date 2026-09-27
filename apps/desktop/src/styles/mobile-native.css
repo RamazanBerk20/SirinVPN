@@ -104,6 +104,10 @@ html.android { min-width: 0; --bg: #080f1d; --surface: #111d30; --line: #26364d;
 .android :is(.field-grid,.field-grid.two-column,.connection-panel,.access-grid,.port-forward-form,.server-metrics-grid) { grid-template-columns: minmax(0,1fr); }
 .android .field { gap: 8px; }
 .android .field-hint, .android .field small { font-size: .8125rem; line-height: 1.55; }
+.android .dns-policy { min-width: 0; overflow-wrap: anywhere; }
+.android .dns-segmented:not(.with-preserve) { grid-template-columns: repeat(auto-fit, minmax(min(100%, 6rem), 1fr)); }
+.android .dns-segmented button { height: auto; min-height: 48px; min-width: 0; overflow-wrap: anywhere; }
+.android .field .private-dns-record-input { field-sizing: content; min-width: 0; max-height: 24rem; }
 /* Settings are separate pages. Rows and sections remain full width and readable. */
 .android .settings-panel { padding: 0; }
 .android .settings-sections { gap: 28px; }
@@ -176,6 +180,7 @@ html.android { min-width: 0; --bg: #080f1d; --surface: #111d30; --line: #26364d;
 .android[data-font-scale=large] .workspace { padding-bottom: 140px; }
 .android[data-font-scale=large] .mobile-row-icon { display: none; }
 .android[data-font-scale=large] .device-traffic-grid, .android[data-font-scale=large] .connection-facts { grid-template-columns: 1fr; }
+.android[data-font-scale=large] .dns-segmented { grid-template-columns: minmax(0,1fr); }
 .android[data-font-scale=large] .device-traffic .metric:last-child > div { display: grid; }
 .android[data-font-scale=large] .connection-center .power-control { width: 190px; height: 190px; }
 @media (prefers-reduced-motion: reduce) {

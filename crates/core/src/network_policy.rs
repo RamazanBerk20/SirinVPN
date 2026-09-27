@@ -5,15 +5,14 @@ use sha2::{Digest, Sha256};
 #[cfg(any(not(windows), test))]
 use sirinvpn_protocol::INTERFACE_NAME;
 use sirinvpn_protocol::{NetworkProfile, ServerId, TransportKind};
+#[cfg(any(not(windows), test))]
+use std::fs;
+#[cfg(not(windows))]
+use std::process::{Command, Stdio};
 use std::{
     fmt, io,
     path::{Path, PathBuf},
     time::{SystemTime, UNIX_EPOCH},
-};
-#[cfg(any(not(windows), test))]
-use std::{
-    fs,
-    process::{Command, Stdio},
 };
 use thiserror::Error;
 use zeroize::Zeroizing;
@@ -472,7 +471,6 @@ fn current_utc_day() -> u64 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::os::unix::fs::PermissionsExt;
 
     #[test]
     fn default_route_parser_chooses_the_lowest_metric_physical_route() {
@@ -523,22 +521,11 @@ mod tests {
         let contents = fs::read_to_string(&path).unwrap();
         assert!(!contents.contains("12345678-1234-1234-1234-123456789abc"));
         assert!(!contents.contains("networkmanager"));
-        assert_eq!(
-            fs::metadata(path).unwrap().permissions().mode() & 0o777,
-            0o600
-        );
-        assert_eq!(
-            fs::metadata(directory.path().join("network-policy.lock"))
-                .unwrap()
-                .permissions()
-                .mode()
-                & 0o777,
-            0o600
-        );
-        assert_eq!(
-            fs::metadata(directory.path()).unwrap().permissions().mode() & 0o777,
-            0o700
-        );
+        for file in [path, directory.path().join("network-policy.lock")] {
+            sirinvpn_platform::files::validate_private_file(&fs::File::open(file).unwrap())
+                .unwrap();
+        }
+        sirinvpn_platform::files::validate_private_directory(directory.path()).unwrap();
     }
 
     #[test]

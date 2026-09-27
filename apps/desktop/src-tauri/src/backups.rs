@@ -3,15 +3,22 @@
 use super::*;
 
 #[tauri::command]
-pub(super) fn remove_server(
+pub(super) async fn remove_server(
     app: tauri::AppHandle,
     state: State<'_, AppState>,
     server_id: String,
 ) -> Result<(), String> {
+    let paths = state.paths.clone();
+    tauri::async_runtime::spawn_blocking(move || remove_server_blocking(&app, &paths, &server_id))
+        .await.map_err(|_| "The profile cleanup worker was interrupted.".to_owned())?
+}
+
+fn remove_server_blocking(app: &tauri::AppHandle, paths: &ClientPaths, server_id: &str) -> Result<(), String> {
+    let _operation = crate::connection_controller::acquire()?;
     let id: ServerId = server_id
         .parse()
         .map_err(|_| "The local server ID is invalid.".to_owned())?;
-    if has_pending_key_rotation(&state.paths, id).map_err(safe_error)? {
+    if has_pending_key_rotation(paths, id).map_err(safe_error)? {
         return Err(
             "Complete or resume this device's pending key rotation before removing its profile."
                 .to_owned(),
@@ -21,19 +28,18 @@ pub(super) fn remove_server(
     if status.server_id == Some(id) {
         return Err("Disconnect this server before removing its local profile.".to_owned());
     }
-    let profiles = state.paths.profile_store().load().map_err(safe_error)?;
+    let profiles = paths.profile_store().load().map_err(safe_error)?;
     let profile = profiles
         .into_iter()
         .find(|profile| profile.id == id)
         .ok_or_else(|| "The local server profile was not found.".to_owned())?;
-    crate::connection_preferences::forget(&app, &server_id)?;
-    state
-        .paths
+    crate::connection_preferences::forget(app, server_id)?;
+    paths
         .secret_store()
         .delete(&profile.identity_reference)
         .map_err(safe_error)?;
-    state.paths.profile_store().remove(id).map_err(safe_error)?;
-    let _ = state.paths.network_policy_store().forget_server(id);
+    paths.network_policy_store().forget_server(id).map_err(safe_error)?;
+    paths.profile_store().remove(id).map_err(safe_error)?;
     Ok(())
 }
 

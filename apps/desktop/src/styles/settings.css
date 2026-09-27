@@ -120,7 +120,7 @@
   line-height: 1.65;
   color: var(--muted);
 }
-.preference-row input {
+.preference-row input[role="switch"] {
   appearance: none;
   flex: 0 0 auto;
   width: 38px;
@@ -132,7 +132,7 @@
   margin: 0;
   cursor: pointer;
 }
-.preference-row input::after {
+.preference-row input[role="switch"]::after {
   content: "";
   position: absolute;
   top: 3px;
@@ -145,11 +145,11 @@
     transform 160ms ease,
     background-color 160ms ease;
 }
-.preference-row input:checked {
+.preference-row input[role="switch"]:checked {
   background: #106c84;
   border-color: var(--cyan);
 }
-.preference-row input:checked::after {
+.preference-row input[role="switch"]:checked::after {
   transform: translateX(16px);
   background: #e1fcff;
 }
@@ -298,11 +298,11 @@
 .preference-row:has(input:disabled) {
   opacity: 0.7;
 }
-.preference-row input {
+.preference-row input[role="switch"] {
   width: 44px;
   height: 26px;
 }
-.preference-row input::after {
+.preference-row input[role="switch"]::after {
   width: 18px;
   height: 18px;
 }

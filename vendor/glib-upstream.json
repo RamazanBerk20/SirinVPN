@@ -1,0 +1,17 @@
+{
+  "name": "glib",
+  "version": "0.18.5",
+  "upstream_archive": "https://static.crates.io/crates/glib/glib-0.18.5.crate",
+  "upstream_archive_sha256": "233daaf6e83ae6a12a52055f568f9d7cf4671dabb78ff9560ab6da230ce00ee5",
+  "license": "MIT",
+  "upstream_fix": "https://github.com/gtk-rs/gtk-rs-core/commit/b5a4071e439bef2b5eea76c3aa25e5ae84839e34",
+  "advisories": [
+    "RUSTSEC-2024-0429",
+    "GHSA-wrw7-89jp-8q8g"
+  ],
+  "modifications": [
+    "src/variant_iter.rs: mutable C output pointer, upstream fix backport",
+    "Cargo.lock: pinned upstream regression-test dependencies"
+  ],
+  "tree_sha256": "a1526d77948e61c25edbbff93c104af73c3d7c06b4f34fcc9ea442bba5f1d86a"
+}

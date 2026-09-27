@@ -3,8 +3,8 @@
 set -eu
 ROOT=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 cd "$ROOT"
-export JAVA_HOME=${JAVA_HOME:-/usr/lib/jvm/java-17-openjdk}
-export ANDROID_HOME=${ANDROID_HOME:-$HOME/Android/Sdk}
+export JAVA_HOME="${JAVA_HOME:-/usr/lib/jvm/java-17-openjdk}"
+export ANDROID_HOME="${ANDROID_HOME:-$HOME/Android/Sdk}"
 pnpm --dir apps/desktop exec vite build --config ../../tests/android/catalog.config.ts
 python3 - <<'PY'
 from pathlib import Path

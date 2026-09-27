@@ -37,6 +37,7 @@ window.__TAURI_INTERNALS__ = {
     window.__sirinCommandArguments.push({command, args});
     switch (command) {
       case "client_platform": return window.__sirinPlatform || "desktop";
+      case "credential_storage": return {supported:false};
       case "get_connection_preferences": if (window.__sirinConnectionLoadFails) throw new Error("Saved connection preferences are unavailable"); return connectionPreferences[typeof args === "string" ? args : args.serverId] || defaultConnectionPreferences;
       case "set_connection_preferences": if (window.__sirinConnectionSaveFails) throw new Error("Connection preference save failed"); connectionPreferences[args.serverId] = args.preferences; localStorage.setItem("sirin-fixture-connection-preferences",JSON.stringify(connectionPreferences)); return args.preferences;
       case "get_app_preferences": return preferencesSnapshot();
@@ -46,6 +47,14 @@ window.__TAURI_INTERNALS__ = {
       case "list_servers": return window.__sirinScenario === "onboarding" ? [] : window.__sirinProfiles || [profile];
       case "update_server_presentation": if (args.name !== null) profile.name = args.name; if (args.favorite !== null) profile.favorite = args.favorite; return;
       case "local_status": if (window.__sirinLocalFails) throw new Error("Local status unavailable"); return { ...local(), ...(window.__sirinLocalOverride || {}) };
+      case "subscribe_local_status": {
+        let sequence = 0;
+        const publish = () => args.onEvent.onmessage({generation:1,sequence:++sequence,
+          stale:Boolean(window.__sirinLocalFails),status:{...local(),...(window.__sirinLocalOverride || {})}});
+        statusSubscriptions.set(args.subscriptionId, setInterval(publish, 1000));
+        publish(); return;
+      }
+      case "unsubscribe_local_status": clearInterval(statusSubscriptions.get(args.subscriptionId)); statusSubscriptions.delete(args.subscriptionId); return;
       case "local_component_update_status": return { install_available: true, update_required: !window.__sirinComponentUpdated };
       case "install_local_vpn_component":
         if (!args.confirmed || connected) throw new Error("Disconnect before updating the local VPN component.");

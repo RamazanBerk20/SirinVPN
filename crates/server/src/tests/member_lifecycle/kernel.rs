@@ -1,5 +1,50 @@
 use super::*;
 
+struct FaultHost<'a> {
+    state: &'a AppState,
+    faults: Mutex<VecDeque<(authorization_transaction::Stage, bool)>>,
+}
+impl authorization_transaction::Effects for FaultHost<'_> {
+    fn intent(
+        &self,
+        previous: &AuthorizationDocument,
+        next: &AuthorizationDocument,
+        generation: u64,
+    ) -> Result<()> {
+        authorization_transaction::Host(self.state).intent(previous, next, generation)
+    }
+    fn authority(&self) -> Result<AuthorizationDocument> {
+        authorization_transaction::Host(self.state).authority()
+    }
+    async fn execute(
+        &self,
+        stage: authorization_transaction::Stage,
+        document: &AuthorizationDocument,
+    ) -> Result<()> {
+        let fault = {
+            let mut faults = self.faults.lock().unwrap();
+            if faults
+                .front()
+                .is_some_and(|(candidate, _)| *candidate == stage)
+            {
+                faults.pop_front()
+            } else {
+                None
+            }
+        };
+        if fault == Some((stage, false)) {
+            bail!("fixture failure before effect");
+        }
+        authorization_transaction::Host(self.state)
+            .execute(stage, document)
+            .await?;
+        if fault.is_some() {
+            bail!("fixture failure after effect");
+        }
+        Ok(())
+    }
+}
+
 async fn inspect(program: &str, args: &[&str]) -> String {
     let output = Command::new(program).args(args).output().await.unwrap();
     assert!(output.status.success(), "{program} inspection failed");
@@ -193,16 +238,61 @@ async fn kernel_member_lifecycle_updates_access_and_rolls_back_failed_storage() 
         )
     };
 
-    // Runtime changes occur before storage. A real filesystem failure must restore every projection.
-    fs::create_dir(state.paths.authorization.with_extension("new")).unwrap();
-    assert_eq!(
-        set_suspension(true).await.err().unwrap().status,
-        StatusCode::INTERNAL_SERVER_ERROR
+    // Exercise the real kernel with the production transaction and controlled OS
+    // boundary failures. The former fixed .new staging path is no longer used.
+    use authorization_transaction::{Effects, Stage};
+    let mut current = state.authorization.as_ref().unwrap().write().await;
+    let warm_peers = current.desired_peers(unix_time());
+    let mut next = current.clone();
+    next.devices[2].peer_communication_enabled = false;
+    assert_eq!(warm_peers, next.desired_peers(unix_time()));
+    let faults = FaultHost {
+        state: &state,
+        faults: Mutex::new(VecDeque::from([
+            (Stage::Forwarding, true),
+            (Stage::Isolation, false),
+        ])),
+    };
+    assert!(
+        authorization_transaction::commit(&faults, &state.recovery, &mut current, next)
+            .await
+            .is_err()
     );
-    assert_eq!(*state.authorization.as_ref().unwrap().read().await, before);
+    assert!(authorization_transaction::needs_recovery(&state.recovery));
+    assert_eq!(warm_peers, current.desired_peers(unix_time()));
+    for ipv6 in [false, true] {
+        probe(2, ipv6, false).await;
+    }
+    authorization_transaction::recover(
+        &authorization_transaction::Host(&state),
+        &state.recovery,
+        &mut current,
+    )
+    .await
+    .unwrap();
+    assert_eq!(*current, before);
     assert_runtime(&state, &before).await;
-    fs::remove_dir(state.paths.authorization.with_extension("new")).unwrap();
-    println!("failed storage rolled back");
+    for ipv6 in [false, true] {
+        probe(2, ipv6, true).await;
+    }
+    // Persistence failure before rename still restores all actual networking.
+    let faults = FaultHost {
+        state: &state,
+        faults: Mutex::new(VecDeque::from([(Stage::Persist, false)])),
+    };
+    let mut next = current.clone();
+    next.devices[2].peer_communication_enabled = false;
+    assert!(
+        authorization_transaction::commit(&faults, &state.recovery, &mut current, next)
+            .await
+            .is_err()
+    );
+    assert_runtime(&state, &before).await;
+    assert!(faults.authority().is_ok());
+    drop(current);
+    println!(
+        "warm-cache partial rollback was contained and recovered; failed persistence restored policy"
+    );
 
     assert!(set_suspension(true).await.is_ok());
     let suspended = state.authorization.as_ref().unwrap().read().await.clone();

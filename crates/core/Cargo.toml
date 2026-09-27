@@ -44,3 +44,4 @@ keyring = { workspace = true }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 keyring = { workspace = true, features = ["linux-native-sync-persistent"] }
+dbus-secret-service = "=4.1.0"

@@ -29,6 +29,7 @@ mod vps_baseline;
 mod vps_release;
 use provisioning::*;
 mod backups;
+mod credential_storage;
 use backups::*;
 mod endpoints;
 use endpoints::*;
@@ -143,6 +144,7 @@ fn run_inner() -> tauri::Result<()> {
         .manage(release_update::ReleaseUpdateRuntime::default())
         .manage(vps_baseline::BaselineRuntime::default())
         .invoke_handler(tauri::generate_handler![
+            credential_storage::credential_storage,
             application_routing::launch_vpn_application,
             local_status_stream::subscribe_local_status,
             local_status_stream::unsubscribe_local_status,

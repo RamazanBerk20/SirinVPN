@@ -20,6 +20,7 @@ async fn stream_delivers_repeated_authorized_samples_and_closes_on_revocation() 
         load_authorization(&paths.authorization).unwrap(),
     ));
     let state = AppState {
+        recovery: Default::default(),
         measurement_ready: false,
         configuration: load_configuration(&paths).unwrap(),
         operational_configuration: None,

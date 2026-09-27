@@ -4,6 +4,11 @@ use super::*;
 
 #[derive(Subcommand)]
 pub(super) enum Commands {
+    /// Inspect storage protection, explicitly allow fallback, or retry local cleanup.
+    Storage {
+        #[command(subcommand)]
+        command: StorageCommand,
+    },
     HostKey(HostKeyArguments),
     Server {
         #[command(subcommand)]
@@ -17,6 +22,19 @@ pub(super) enum Commands {
     Resume(ServerSelector),
     Status,
     Diagnose(ServerSelector),
+}
+
+#[derive(Subcommand)]
+pub(super) enum StorageCommand {
+    Status,
+    /// Require secure storage for new credentials (the default).
+    RequireSecure,
+    /// Consent to unencrypted, permission-protected files when the keyring fails.
+    AllowPrivateFile,
+    /// Migrate this profile's credential to the system keyring.
+    Migrate(ServerSelector),
+    /// Retry incomplete local deletions; does not revoke server access.
+    RetryCleanup,
 }
 
 #[derive(Args)]

@@ -37,8 +37,26 @@ if 'testInstrumentationRunner =' not in text:
     text = text.replace('    defaultConfig {','    defaultConfig {\n        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"')
 if 'zxing-android-embedded' not in text:
     text = text.replace('dependencies {','dependencies {\n    implementation("com.journeyapps:zxing-android-embedded:4.3.0")')
+text = text.replace('jackson-bom:2.18.8', 'jackson-bom:2.18.9')
+if 'jackson-bom:2.18.9' not in text:
+    # Compatible 2.x maintenance line fixes advisories in Tauri's 2.15.3 dependency.
+    text = text.replace('dependencies {', 'dependencies {\n    implementation(platform("com.fasterxml.jackson:jackson-bom:2.18.9"))')
 text = text.replace('buildConfig = true', 'buildConfig = true\n        aidl = true') if 'aidl = true' not in text else text
 if 'sourceCompatibility' not in text:
     text = text.replace('    kotlinOptions {', '    compileOptions {\n        sourceCompatibility = JavaVersion.VERSION_17\n        targetCompatibility = JavaVersion.VERSION_17\n    }\n    kotlinOptions {')
 gradle.write_text(text)
+lockfile = source / 'gradle.lockfile'
+if lockfile.exists():
+    shutil.copyfile(lockfile, project / 'app/gradle.lockfile')
+if 'activateDependencyLocking()' not in text:
+    text += '\nconfigurations.matching { it.name.endsWith("ReleaseRuntimeClasspath") }.configureEach {\n    resolutionStrategy.activateDependencyLocking()\n}\n'
+    gradle.write_text(text)
+properties = project / 'gradle.properties'
+settings = properties.read_text().rstrip() + '\n'
+if 'org.gradle.workers.max=' not in settings:
+    settings += 'org.gradle.workers.max=2\n'
+for key, value in [('org.gradle.daemon', 'false'), ('kotlin.compiler.execution.strategy', 'in-process')]:
+    settings = re.sub(rf'(?m)^{re.escape(key)}=.*\n?', '', settings)
+    settings += f'{key}={value}\n'
+properties.write_text(settings)
 print('Android shell prepared from tracked sources')

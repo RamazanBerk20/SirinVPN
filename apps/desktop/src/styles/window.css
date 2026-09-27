@@ -1,4 +1,8 @@
 /* Desktop-only chrome. Dialogs and sticky navigation leave the title bar reachable. */
+html[data-window-chrome="custom"],
+html[data-window-chrome="custom"] * {
+  scrollbar-width: none;
+}
 html[data-window-chrome="custom"] {
   --titlebar-height: 38px;
   padding-top: var(--titlebar-height);

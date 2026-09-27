@@ -152,6 +152,7 @@ fn a_read_only_handoff_backup_binds_old_ports_to_the_signed_predecessor() {
 async fn publishing_the_active_targets_own_checkpoint_never_freezes_its_authority() {
     let (_directory, paths, owner, id, bootstrap) = initial();
     let state = AppState {
+        recovery: Default::default(),
         measurement_ready: false,
         configuration: load_configuration(&paths).unwrap(),
         operational_configuration: None,

@@ -80,14 +80,7 @@ pub(super) async fn create(
     next.measurement_leases
         .retain(|old| old.device != lease.device && old.active(&current, now));
     next.measurement_leases.push(lease);
-    // The same authorization lock serializes leases, revocation and peer sync.
-    sync_wireguard_peers(&state.configuration, &next)
-        .await
-        .map_err(|_| ApiError::internal())?;
-    state
-        .transport_peers
-        .replace(decoded_transport_peers(&next).map_err(|_| ApiError::internal())?);
-    *current = next;
+    commit_authorization(&state, &mut current, next).await?;
     Ok(Json(ApiEnvelope::new(response)))
 }
 
@@ -103,15 +96,7 @@ pub(super) async fn remove(
     next.measurement_leases.retain(|lease| {
         Some(lease.device) != authorized.device_id || lease.public_key != request.public_key
     });
-    // Remove relay authorization first; a partial kernel failure cannot keep
-    // a leased carrier authorized. The expiry pass retries kernel reconciliation.
-    state
-        .transport_peers
-        .replace(decoded_transport_peers(&next).map_err(|_| ApiError::internal())?);
-    *current = next;
-    sync_wireguard_peers(&state.configuration, &current)
-        .await
-        .map_err(|_| ApiError::internal())?;
+    commit_authorization(&state, &mut current, next).await?;
     Ok(Json(ApiEnvelope::new(())))
 }
 

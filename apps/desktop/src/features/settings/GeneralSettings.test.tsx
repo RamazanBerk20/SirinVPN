@@ -46,7 +46,7 @@ beforeEach(() => {
     preferences,
   }));
   mocks.requestNotificationPermission.mockResolvedValue("granted");
-  mocks.invoke.mockResolvedValue({ quick_profile: null });
+  mocks.invoke.mockImplementation(async command => command === "credential_storage" ? { supported: false } : { quick_profile: null });
 });
 afterEach(cleanup);
 function setup(platform: "desktop" | "android" = "desktop") {

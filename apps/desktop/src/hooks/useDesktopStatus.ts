@@ -214,7 +214,7 @@ export function useDesktopStatus(
         cancel();
         trafficUpdates.publish(null);
         setStreamEpoch((previous) => previous + 1);
-        setSnapshot((previous) => previous.remote ? { ...previous, remote: null } : previous);
+        setSnapshot((previous) => ({ local: { ...previous.local, state: "unknown" }, remote: null }));
         setFreshness((previous) => ({ ...previous, management: "idle", updatedAt: null, mode: undefined }));
         return;
       }

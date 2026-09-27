@@ -9,16 +9,17 @@ $ErrorActionPreference = "Stop"
 if ($env:OS -ne "Windows_NT") { throw "Run this script on Windows with the MSVC Rust toolchain." }
 foreach ($SirinTool in @("rustup", "cargo", "pnpm", "perl")) {
     if (-not (Get-Command $SirinTool -ErrorAction SilentlyContinue)) {
-        throw "Install $SirinTool before packaging. Perl is required by the vendored SSH/OpenSSL build."
+        throw "Install $SirinTool before packaging. Native Windows Perl (such as Strawberry Perl) is required by the vendored SSH/OpenSSL build."
     }
 }
-$SirinRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+$SirinRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).ProviderPath
 $SirinTarget = "$Architecture-pc-windows-msvc"
 $SirinBinaries = Join-Path $SirinRoot "apps/desktop/src-tauri/binaries"
 $SirinWindows = Join-Path $SirinBinaries "windows"
 $SirinCache = Join-Path $SirinRoot ".cache/windows-packaging"
 New-Item -ItemType Directory -Force $SirinWindows, $SirinCache | Out-Null
-$SirinDriverSource = (Resolve-Path $RoutingDriver).Path
+# .NET file APIs need a filesystem path, not a PowerShell provider-qualified UNC path.
+$SirinDriverSource = (Resolve-Path $RoutingDriver).ProviderPath
 $SirinDriverBytes = [System.IO.File]::ReadAllBytes($SirinDriverSource)
 if ($SirinDriverBytes.Length -lt 512 -or [BitConverter]::ToUInt16($SirinDriverBytes, 0) -ne 0x5a4d) {
     throw "Pass the matching WDK-built SirinVPN .sys routing driver."
@@ -36,8 +37,9 @@ function Invoke-SirinCommand([string]$Program, [string[]]$Arguments) {
     & $Program @Arguments
     if ($LASTEXITCODE -ne 0) { throw "$Program failed with exit code $LASTEXITCODE" }
 }
+Invoke-SirinCommand "perl" @("-MIPC::Cmd", "-MLocale::Maketext::Simple", "-e", 'exit($^O eq q(MSWin32) ? 0 : 1)')
 function Copy-SirinElf([string]$Source, [string]$Name, [uint16]$Machine) {
-    $SirinSource = (Resolve-Path $Source).Path
+    $SirinSource = (Resolve-Path $Source).ProviderPath
     $SirinBytes = [System.IO.File]::ReadAllBytes($SirinSource)
     if ($SirinBytes.Length -lt 64 -or $SirinBytes.Length -gt 67108864 -or
         $SirinBytes[0] -ne 0x7f -or $SirinBytes[1] -ne 0x45 -or $SirinBytes[2] -ne 0x4c -or $SirinBytes[3] -ne 0x46 -or

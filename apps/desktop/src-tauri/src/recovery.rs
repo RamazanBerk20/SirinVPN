@@ -259,7 +259,9 @@ pub(super) async fn recover_owner_access(
         if let Some(old) = &old_profile
             && old.identity_reference != profile.identity_reference
         {
-            let _ = secrets.delete(&old.identity_reference);
+            secrets.delete(&old.identity_reference).map_err(|_| anyhow!(
+                "Owner recovery committed; old credential cleanup is incomplete. Unlock the secure store and retry credential cleanup."
+            ))?;
         }
         disconnect_candidate(profile.id).map_err(anyhow::Error::msg)?;
         connect_candidate_automatically(profile.clone(), pending.identity.secret.clone())

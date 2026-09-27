@@ -16,6 +16,11 @@ members = [
   "apps/desktop/src-tauri",
 ]
 resolver = "2"
+exclude = ["vendor/glib"]
+
+[patch.crates-io]
+# GTK3 requires the 0.18 ABI. Backport the upstream iterator soundness fix.
+glib = { path = "vendor/glib" }
 
 [workspace.package]
 version = "0.1.0"

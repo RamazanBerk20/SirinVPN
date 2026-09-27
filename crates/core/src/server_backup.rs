@@ -443,7 +443,7 @@ mod tests {
     use serde_json::json;
     use sirinvpn_protocol::{DEFAULT_OBFUSCATED_UDP_PORT, DEFAULT_TCP_FALLBACK_PORT};
     use sirinvpn_protocol::{EndpointTransitionClaims, EndpointTransitionResponse, ServerEndpoint};
-    use std::{fs, os::unix::fs::PermissionsExt};
+    use std::fs;
 
     #[test]
     fn encrypted_server_backup_is_private_bounded_and_domain_separated() {
@@ -454,10 +454,8 @@ mod tests {
 
         write_encrypted_server_backup(&destination, snapshot, password).unwrap();
         let bytes = fs::read(&destination).unwrap();
-        assert_eq!(
-            fs::metadata(&destination).unwrap().permissions().mode() & 0o777,
-            0o600
-        );
+        sirinvpn_platform::files::validate_private_file(&fs::File::open(&destination).unwrap())
+            .unwrap();
         assert!(
             !bytes
                 .windows(23)

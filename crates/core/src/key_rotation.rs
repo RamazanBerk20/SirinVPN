@@ -572,7 +572,9 @@ fn stage_rotation(
     };
     secrets.put(&transition_identity_reference, &transition_secret)?;
     if let Err(error) = secrets.put(&final_identity_reference, &generated.secret) {
-        let _ = secrets.delete(&transition_identity_reference);
+        if secrets.delete(&transition_identity_reference).is_err() {
+            return Err(SecretStoreError::CleanupPending.into());
+        }
         return Err(error.into());
     }
     let journal = RotationJournal {
@@ -604,8 +606,11 @@ fn stage_rotation(
         activated_device_id: None,
     };
     if let Err(error) = journals.create(&journal) {
-        let _ = secrets.delete(&journal.transition_identity_reference);
-        let _ = secrets.delete(&journal.final_identity_reference);
+        let transition = secrets.delete(&journal.transition_identity_reference);
+        let final_identity = secrets.delete(&journal.final_identity_reference);
+        if transition.is_err() || final_identity.is_err() {
+            return Err(SecretStoreError::CleanupPending.into());
+        }
         return Err(error);
     }
     Ok(journal)
@@ -786,10 +791,10 @@ fn ensure_unused_secret_reference(
     secrets: &dyn SecretStore,
     reference: &str,
 ) -> Result<(), KeyRotationError> {
-    match secrets.get(reference) {
-        Err(SecretStoreError::NotFound) => Ok(()),
-        Ok(_) => Err(KeyRotationError::InvalidState),
-        Err(error) => Err(error.into()),
+    if secrets.new_reference_available(reference)? {
+        Ok(())
+    } else {
+        Err(KeyRotationError::InvalidState)
     }
 }
 

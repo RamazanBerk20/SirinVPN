@@ -196,10 +196,8 @@ fn import_device_backup(
 fn unused_identity_reference(secrets: &dyn SecretStore) -> Result<String, BackupError> {
     for _ in 0..8 {
         let reference = format!("restored-{}", ServerId::new());
-        match secrets.get(&reference) {
-            Err(SecretStoreError::NotFound) => return Ok(reference),
-            Ok(_) => {}
-            Err(error) => return Err(error.into()),
+        if secrets.new_reference_available(&reference)? {
+            return Ok(reference);
         }
     }
     Err(BackupError::DuplicateIdentity)
@@ -368,7 +366,7 @@ mod tests {
         LocalIdentity,
         encrypted_backup::{BackupEnvelope, ENVELOPE_SCHEMA_VERSION},
     };
-    use std::{collections::HashMap, fs, net::Ipv4Addr, os::unix::fs::PermissionsExt, sync::Mutex};
+    use std::{collections::HashMap, fs, net::Ipv4Addr, sync::Mutex};
 
     #[derive(Default)]
     struct MemorySecretStore {
@@ -462,10 +460,7 @@ mod tests {
         let directory = tempfile::tempdir().unwrap();
         let (backup, original, secret) = export_fixture(&directory);
         let bytes = fs::read(&backup).unwrap();
-        assert_eq!(
-            fs::metadata(&backup).unwrap().permissions().mode() & 0o777,
-            0o600
-        );
+        sirinvpn_platform::files::validate_private_file(&fs::File::open(&backup).unwrap()).unwrap();
         assert!(
             !bytes
                 .windows(original.name.len())

@@ -1,16 +1,80 @@
 # Build and reproduce Android evidence
 
+The [current remediation ledger](../remediation.md) separates September 26
+development APK, emulator and authorized Samsung S25+ acceptance from historical
+lifecycle results.
+Historical emulator serials below are examples, never authority to attach to
+an existing device. Prefer the fresh-AVD harness:
+
+```sh
+systemd-run --user --scope --quiet \
+  -p MemoryHigh=3G -p MemoryMax=4G -p MemorySwapMax=0 \
+  -p CPUQuota=150% -p TasksMax=256 \
+  python3 scripts/test-android-emulator.py --api 29 \
+    --output .cache/android-remediation-new \
+    --apk apps/desktop/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk \
+    --tests apps/desktop/src-tauri/gen/android/app/build/outputs/apk/androidTest/universal/debug/app-universal-debug-androidTest.apk
+```
+
+Repeat with `--api 36` and a new output directory. The required system image
+must already be installed. Build both APKs first; instrumentation is a separate
+test package. These native checks do not qualify established-tunnel continuity,
+physical devices, OEM battery policy or production signing.
+The harness grants VPN consent and location permissions only inside its fresh
+AVD to exercise the existing native reconnect/Wi-Fi/package-replacement tests.
+It does not qualify the OS consent dialog. Wi-Fi trust uses a synthetic saved
+network; no location coordinates are collected by these tests.
+For the API 36 image, use `MemoryHigh=3500M`: its enforced guest RAM minimum
+plus emulator overhead otherwise causes sustained reclaim at the 3 GiB soft
+threshold. Keep `MemoryMax=4G`, no swap, and the CPU/process limits. The harness
+records the actual limits, peak memory and memory events in its result.
+
 The tracked Android sources are in `apps/desktop/android`. The generated Tauri
 project in `apps/desktop/src-tauri/gen/android` is an output, not the source of
 truth. `scripts/prepare-android.py` reapplies the reviewed overlay.
 
+## Authorized physical-device acceptance
+
+`tests/android/physical-lifecycle.mjs` is separate from the emulator instrumentation
+runner. It requires an explicitly authorized phone, its serial/model, an existing
+Member profile and a disconnected app. It refuses emulator serials, unexpected
+models, busy native state, multiple profiles and pre-existing Always-on/lockdown.
+It does not provision or administer that profile's VPS. A debug APK must already
+be installed with the same signing identity; never uninstall the app or clear data
+to upgrade it. A file backup cannot export Android Keystore keys.
+
+```sh
+node tests/android/physical-lifecycle.mjs --serial "$SIRIN_PHONE_SERIAL" \
+  --model SM-S936B --authorized-member-test --remove-app-task \
+  --cycle-networks --interrupt-vpn-service --samsung-os-policy \
+  --probe-host "$SIRIN_CONTROLLED_LAN_IPV4" --output .cache/physical-new.json
+```
+
+This opt-in run interrupts the phone's network and VPN. It verifies profile-file
+continuity, samples authenticated management and ordinary-UID tunnel traffic,
+removes only the app's verified task, kills the UI/VPN processes, cycles Wi-Fi and
+mobile data, and exercises Android Always-on/lockdown. The Samsung Settings steps
+are guarded for SM-S936B at 1080×2340 and the tested Turkish confirmation dialog;
+other models/languages require reviewing that interaction first. The lockdown
+case needs the separately built test APK: its `PhysicalProbeActivity` refuses
+launch without explicit acceptance opt-in and provides a separate ordinary UID.
+A temporary host LAN endpoint supplies a nonce with positive controls before and
+after the blocked probes. The harness restores OS/network settings, disconnects,
+checks that the profile file is unchanged and removes its own ADB forward.
+Remove the test APK afterwards if it was absent before testing.
+
+The current S25+ run passed 16 checks on Android 16 with 4 KB pages. Sampled
+traffic is not proof of uninterrupted flow. Reboot, physical camera, TalkBack,
+overnight power behavior, other OEMs and physical 16 KB pages remain unqualified.
+
 ## Toolchain used
 
-Linux x86_64; Node 26.9, pnpm 11.3.0; Rust 1.97.1; Tauri 2.11.5 / JS API
+Linux x86_64; Node 26.10, pnpm 11.3.0; Rust 1.97.1; Tauri 2.11.5 / JS API
 2.11.1; React 19.2.8; Go 1.27.1; JDK 17; Gradle 8.14.3; AGP 8.11; Kotlin
 compiler 1.9.25 (resolved runtime stdlib 2.0.21); Android SDK 36; NDK
 30.0.16248370. Minimum API 29, target API 36. The universal APK contains
-`arm64-v8a` and `x86_64`; acceptance suites execute on x86_64 emulators.
+`arm64-v8a` and `x86_64`; native instrumentation executes on x86_64 emulators,
+with the separately authorized lifecycle run on physical ARM64.
 
 Install the matching SDK/NDK with Android's SDK manager, Rust targets
 `aarch64-linux-android` and `x86_64-linux-android`, and project dependencies
@@ -20,10 +84,11 @@ not installed at `.cache/android-tools/go/bin/go`.
 Build the two bundled VPS binaries before preparing the Android project:
 
 ```sh
-docker build -f packaging/Dockerfile.server-payloads -t sirinvpn-server-payload-builder .
-docker run --rm --cpus=2 --memory=4g --user "$(id -u):$(id -g)" \
+docker build --memory 4g --memory-swap 4g --cpu-period 100000 --cpu-quota 150000 \
+  -f packaging/Dockerfile.server-payloads -t sirinvpn-server-payload-builder .
+docker run --rm --cpus=1.5 --memory=4g --memory-swap=4g --pids-limit=256 --user "$(id -u):$(id -g)" \
   -v "$PWD:/workspace" -w /workspace \
-  -e CARGO_HOME=/workspace/.cache/server-payload-cargo \
+  -e CARGO_HOME=/workspace/.cache/server-payload-cargo -e CARGO_BUILD_JOBS=2 \
   -e CARGO_TARGET_DIR=/workspace/target/server-payloads \
   sirinvpn-server-payload-builder \
   cargo build --locked --release -p sirinvpn-server \

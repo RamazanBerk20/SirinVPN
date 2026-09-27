@@ -4,7 +4,7 @@
 !if ${NSIS_PACKEDVERSION} < 0x03011000
   !error "SirinVPN requires NSIS 3.11 or newer."
 !endif
-!define SIRINVPN_HELPER_SOURCE "${__FILEDIR__}/../../apps/desktop/src-tauri/binaries/windows/sirinvpn-windows-service.exe"
+!define SIRINVPN_HELPER_SOURCE "${__FILEDIR__}\..\..\apps\desktop\src-tauri\binaries\windows\sirinvpn-windows-service.exe"
 
 !macro SirinVPNInstallerHelper ARGUMENT
   ; Program Files is writable only by administrators. Create a fresh file there

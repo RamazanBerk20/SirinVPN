@@ -129,7 +129,9 @@ def inspect(arguments: argparse.Namespace, root: Path) -> None:
         for path in directory.iterdir():
             if path.suffix.lower() not in {".exe", ".dll"} or path.name == "uninstall.exe":
                 continue
-            imports = subprocess.check_output([str(arguments.readobj), "--coff-imports", str(path)], text=True)
+            imports = subprocess.check_output([str(arguments.readobj), "--file-headers", "--coff-imports", str(path)], text=True)
+            if path.name == "sirinvpn-desktop.exe" and "IMAGE_SUBSYSTEM_WINDOWS_GUI" not in imports:
+                raise ValueError("The Windows desktop must use the GUI subsystem without a console window")
             for library in re.findall(r"^  Name: (.+)$", imports, re.MULTILINE):
                 name = library.lower()
                 if name not in SYSTEM_DLLS and name not in bundled and not name.startswith(("api-ms-", "ext-ms-")):

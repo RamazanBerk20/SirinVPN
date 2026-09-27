@@ -25,6 +25,7 @@ serde.workspace = true
 serde_json.workspace = true
 sha2.workspace = true
 sirinvpn-protocol = { path = "../protocol" }
+sirinvpn-platform = { path = "../platform" }
 sirinvpn-release = { path = "../release" }
 sirinvpn-release-fetch = { path = "../release-fetch" }
 sirinvpn-transport = { path = "../transport" }

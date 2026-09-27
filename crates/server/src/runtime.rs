@@ -5,39 +5,21 @@ use super::*;
 pub async fn serve(paths: &ServerPaths) -> Result<()> {
     let configuration = load_configuration(paths)?;
     let operational_configuration = load_operational_configuration(paths)?;
+    if paths.authorization_required.exists() || fs::symlink_metadata(&paths.authorization).is_ok() {
+        // Contain before parsing authority: corrupt state must not leave stale peers active.
+        apply_nft_batch(
+            &authorization_transaction::containment(&configuration, true),
+            "startup authorization containment",
+        )
+        .await?;
+    }
     let measurement_ready = measurement::install(&configuration).await.is_ok();
     let transport_peers = AuthorizedPeers::default();
-    let authorization = match load_runtime_authorization(paths)? {
-        Some(mut document) => {
-            document.prune_expired(unix_time());
-            apply_nft_batch(
-                &enrollment_quarantine_nft_batch(&configuration, document.server_id),
-                "enrollment quarantine",
-            )
-            .await?;
-            sync_peer_isolation(&configuration, &document).await?;
-            sync_wireguard_peers(&configuration, &document).await?;
-            sync_port_forwards(
-                &configuration,
-                operational_configuration.as_ref(),
-                &document,
-            )
-            .await?;
-            write_authorization(&paths.authorization, &document)?;
-            transport_peers.replace(decoded_transport_peers(&document)?);
-            transport_peers.publish_endpoint_checkpoint(
-                document
-                    .endpoint_transition
-                    .as_ref()
-                    .map(serde_json::to_vec)
-                    .transpose()?,
-            )?;
-            Some(Arc::new(RwLock::new(document)))
-        }
-        None => None,
-    };
+    let authorization =
+        load_runtime_authorization(paths)?.map(|document| Arc::new(RwLock::new(document)));
     let transport_activity = ActiveTransportRegistry::default();
     let state = AppState {
+        recovery: Default::default(),
         measurement_ready,
         configuration: configuration.clone(),
         operational_configuration,
@@ -48,6 +30,15 @@ pub async fn serve(paths: &ServerPaths) -> Result<()> {
         transport_peers: transport_peers.clone(),
         transport_activity: transport_activity.clone(),
     };
+    if let Some(authorization) = &state.authorization {
+        let mut current = authorization.write().await;
+        authorization_transaction::recover(
+            &authorization_transaction::Host(&state),
+            &state.recovery,
+            &mut current,
+        )
+        .await?;
+    }
     let address = SocketAddr::new(
         configuration.server_tunnel_address,
         configuration.management_port,
@@ -61,39 +52,43 @@ pub async fn serve(paths: &ServerPaths) -> Result<()> {
         let cleanup_state = state.clone();
         tokio::spawn(async move {
             let mut interval = tokio::time::interval(Duration::from_secs(1));
-            let mut applied_peers = None;
+            interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+            let mut applied = None;
+            let mut failures = 0u32;
+            let mut retry_at = Instant::now();
             loop {
                 interval.tick().await;
+                if Instant::now() < retry_at {
+                    continue;
+                }
                 let Some(authorization) = &cleanup_state.authorization else {
                     continue;
                 };
                 let mut current = authorization.write().await;
-                let mut next = current.clone();
-                if next.prune_expired(unix_time()) {
-                    let _ = commit_authorization(&cleanup_state, &mut current, next).await;
-                }
-                let desired = current.desired_peers(unix_time());
-                if applied_peers.as_ref() != Some(&desired) {
-                    // Schedule/expiration changes affect kernel and transport access
-                    // without persisting an activity timestamp or event record.
-                    if sync_wireguard_peers(&cleanup_state.configuration, &current)
-                        .await
-                        .is_ok()
-                        && sync_peer_isolation(&cleanup_state.configuration, &current)
-                            .await
-                            .is_ok()
-                        && sync_port_forwards(
-                            &cleanup_state.configuration,
-                            cleanup_state.operational_configuration.as_ref(),
-                            &current,
-                        )
-                        .await
-                        .is_ok()
-                        && let Ok(peers) = decoded_transport_peers(&current)
-                    {
-                        cleanup_state.transport_peers.replace(peers);
-                        applied_peers = Some(desired);
+                let result = if authorization_transaction::needs_recovery(&cleanup_state.recovery) {
+                    authorization_transaction::recover(
+                        &authorization_transaction::Host(&cleanup_state),
+                        &cleanup_state.recovery,
+                        &mut current,
+                    )
+                    .await
+                } else {
+                    let mut next = current.clone();
+                    next.prune_expired(unix_time());
+                    let key = (next.clone(), next.desired_peers(unix_time()));
+                    if applied.as_ref() == Some(&key) {
+                        continue;
                     }
+                    commit_authorization(&cleanup_state, &mut current, next)
+                        .await
+                        .map_err(|_| anyhow!("authorization reconciliation pending"))
+                };
+                if result.is_ok() {
+                    applied = Some((current.clone(), current.desired_peers(unix_time())));
+                    failures = 0;
+                } else {
+                    failures = failures.saturating_add(1).min(5);
+                    retry_at = Instant::now() + Duration::from_secs(1 << failures);
                 }
             }
         });

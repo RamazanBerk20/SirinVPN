@@ -35,6 +35,7 @@ def inputs(artifacts: Path, destination: Path) -> dict:
     helper = ROOT / "apps/desktop/src-tauri/binaries/sirinvpn-helper"
     paths = {f"binaries/{name}": path for name, path in binaries.items()}
     paths["binaries/sirinvpn-helper"] = helper
+    paths["binaries/sirinvpn-server"] = ROOT / "apps/desktop/src-tauri/binaries/sirinvpn-server"
     for path in sorted((ROOT / "tests/network").glob("*.py")):
         paths[path.relative_to(ROOT).as_posix()] = path
     manifest = {"sha256": {name: digest(path) for name, path in paths.items()},
@@ -62,6 +63,56 @@ def inputs(artifacts: Path, destination: Path) -> dict:
     return manifest
 
 
+def authorization_power_loss(guest, run_prefix: list[str], report: dict, logs: Path,
+                             report_path: Path) -> None:
+    """Cut real VM power; check actual persistence and modeled network reconstruction."""
+    name = "sirin-authorization-power"
+    worker = "authorization_transaction::tests::crash::crash_child"
+    report["power_loss_tests"] = []
+    for stage in ["Forwarding", "Persist", "Checkpoint"]:
+        print(f"Authorization power loss after {stage}", flush=True)
+        row = {"boundary": stage, "passed": False, "committed": stage != "Forwarding",
+               "termination": "SIGKILL to owned QEMU process",
+               "scope": "real private filesystem persistence; modeled network effects"}
+        report["power_loss_tests"].append(row)
+        started = time.monotonic()
+        try:
+            directory = "/opt/sirinvpn-power-" + stage.lower()
+            guest.ssh(["sudo", "-n", "mkdir", "-m", "0700", directory])
+            options = ["--volume", f"{directory}:/power-fixture",
+                       "--env", "SIRINVPN_AUTHORIZATION_CRASH_FIXTURE=/power-fixture",
+                       "--env", f"SIRINVPN_AUTHORIZATION_CRASH_STAGE={stage}"]
+            command = [IMAGE, "/workspace/binaries/sirinvpn_server", "--exact", worker,
+                       "--test-threads=1", "--nocapture"]
+            # Detached fixture survives loss of the SSH session; no outside
+            # networking, host mounts, or production fault injection is used.
+            guest.ssh([*run_prefix, "--detach", "--name", name, *options, "--env",
+                       "SIRINVPN_AUTHORIZATION_POWER_MODE=prepare", *command])
+            deadline = time.monotonic() + 30
+            while True:
+                ready = guest.ssh(["sudo", "-n", "docker", "logs", name]).stdout
+                if f"SIRINVPN_POWER_CUT_READY {stage}".encode() in ready:
+                    break
+                if time.monotonic() >= deadline:
+                    raise RuntimeError("Authorization worker did not reach the power-cut boundary")
+                time.sleep(0.2)
+            guest.stop(crash=True)
+            guest.start(network=False)
+            guest.ssh(["sudo", "-n", "systemctl", "start", "docker"])
+            # --rm may have removed the interrupted container during restart.
+            guest.ssh(["sudo", "-n", "docker", "rm", "-f", name], check=False)
+            result = guest.ssh([*run_prefix, *options, "--env",
+                               "SIRINVPN_AUTHORIZATION_POWER_MODE=recover", *command],
+                              timeout=90, check=False)
+            (logs / f"power-{stage.lower()}.log").write_bytes(result.stdout + result.stderr)
+            row["exit_code"] = result.returncode
+            row["passed"] = result.returncode == 0 and b"1 passed; 0 failed" in result.stdout
+            print("PASS" if row["passed"] else "FAIL", flush=True)
+        finally:
+            row["seconds"] = round(time.monotonic() - started, 2)
+            report_path.write_text(json.dumps(report, indent=2) + "\n")
+
+
 def run(arguments) -> int:
     output = arguments.output.resolve()
     output.mkdir(parents=True, exist_ok=True)
@@ -79,6 +130,7 @@ def run(arguments) -> int:
         "inputs": manifest, "tests": [],
     }
     report_path = output / "kernel-results.json"
+    lab = None
     try:
         with Lab(output) as lab:
             guest = lab.guest(arguments.base, "sirin-kernel", memory=2048)
@@ -117,6 +169,7 @@ def run(arguments) -> int:
                           "--memory=1g", "--memory-swap=1g", "--cpus=1", "--pids-limit=128",
                           "--volume", "/opt/sirinvpn-kernel-input:/workspace:ro",
                           "--workdir", "/workspace", "--env", "SIRINVPN_POLICY_ISOLATED=1",
+                          "--env", "SIRINVPN_TEST_SERVER=/workspace/binaries/sirinvpn-server",
                           "--env", "RUST_TEST_THREADS=1"]
             tests = []
             for binary in manifest["test_binaries"]:
@@ -124,11 +177,11 @@ def run(arguments) -> int:
                                     "--list", "--ignored"], timeout=90).stdout.decode()
                 tests.extend((binary, line.removesuffix(": test")) for line in listed.splitlines()
                              if line.endswith(": test"))
-            if len(tests) != 15:
-                raise RuntimeError(f"Expected the 15 deferred checks, discovered {len(tests)}")
-            selected = [(binary, name) for binary, name in tests
-                        if not arguments.filter or arguments.filter in name]
-            if not selected:
+            if len(tests) != 16:
+                raise RuntimeError(f"Expected the 16 deferred checks, discovered {len(tests)}")
+            selected = [(binary, name) for binary, name in tests if not arguments.power_loss_only
+                        and (not arguments.filter or arguments.filter in name)]
+            if not selected and not arguments.power_loss_only:
                 raise ValueError("The filter selected no deferred tests")
             report["discovered"] = len(tests)
             report["selected"] = len(selected)
@@ -149,6 +202,8 @@ def run(arguments) -> int:
                             f"net.ipv6.conf.all.forwarding={forwarding}"]
                 setup = ("install -D -m 0755 /workspace/binaries/sirinvpn-helper "
                          "/usr/lib/sirinvpn/sirinvpn-helper\nexec \"$@\"")
+                if "kernel_automatic_transport_" in name:
+                    setup = "mount -o remount,rw /proc/sys\n" + setup
                 started = time.monotonic()
                 result = guest.ssh([*run_prefix, *options, IMAGE, "sh", "-ec", setup, "sh",
                                     f"/workspace/binaries/{binary}", "--ignored", "--exact", name,
@@ -164,9 +219,16 @@ def run(arguments) -> int:
             report["passed"] = sum(test["passed"] for test in report["tests"])
             report["failed"] = len(report["tests"]) - report["passed"]
             print(f"Deferred checks: {report['passed']} passed, {report['failed']} failed", flush=True)
+            if not arguments.filter:
+                authorization_power_loss(guest, run_prefix, report, logs, report_path)
         report["guest_cleanup"] = "complete"
-        return 0 if report["failed"] == 0 else 1
+        return 0 if report["failed"] == 0 and all(
+            row["passed"] for row in report.get("power_loss_tests", [])
+        ) else 1
     finally:
+        if lab is not None:
+            complete = not lab.directory.exists() and not lab.socket_directory.exists()
+            report["guest_cleanup"] = "complete" if complete else "incomplete"
         report_path.write_text(json.dumps(report, indent=2) + "\n")
 
 
@@ -176,7 +238,10 @@ def main() -> int:
     parser.add_argument("--image", type=Path, required=True)
     parser.add_argument("--artifacts", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument("--filter", help="Run only deferred tests containing this literal text")
+    selection = parser.add_mutually_exclusive_group()
+    selection.add_argument("--filter", help="Run only deferred tests containing this literal text")
+    selection.add_argument("--power-loss-only", action="store_true",
+                           help="Only cut VM power at the three authorization persistence boundaries")
     return run(parser.parse_args())
 
 

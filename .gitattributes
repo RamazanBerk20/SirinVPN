@@ -6,3 +6,5 @@
 *.woff2 binary
 *.AppImage binary
 *.deb binary
+
+vendor/glib/** -text

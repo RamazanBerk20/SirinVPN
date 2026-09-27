@@ -59,6 +59,8 @@ pub use network_policy::{
 #[cfg(target_os = "android")]
 pub use secrets::install_android_secret_store;
 pub use secrets::{HybridSecretStore, SecretStore, SecretStoreError};
+#[cfg(not(any(windows, target_os = "android")))]
+pub use secrets::{StoragePolicy, StorageStatus};
 pub use server_backup::{
     DecryptedServerBackup, ServerBackupError, ServerBackupMetadata, read_encrypted_server_backup,
     validate_server_backup_password, write_encrypted_server_backup,

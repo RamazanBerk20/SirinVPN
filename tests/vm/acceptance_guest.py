@@ -7,7 +7,9 @@ import http.server
 import json
 import os
 from pathlib import Path
+import re
 import socket
+import struct
 import subprocess
 import tempfile
 import time
@@ -69,6 +71,50 @@ def direct_dns():
             except OSError:
                 pass
     print(json.dumps(outcome))
+
+
+def observe_dns(path="/run/sirin-acceptance-dns.jsonl"):
+    """Bounded metadata from this synthetic VM only; never installed by the app."""
+    assert re.fullmatch(r"/run/sirin-acceptance-dns(?:-[a-f0-9-]{36})?\.jsonl", path)
+    with socket.socket(socket.AF_PACKET, socket.SOCK_RAW, socket.htons(3)) as capture:
+        capture.settimeout(1)
+        descriptor = os.open(path,
+                             os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        with os.fdopen(descriptor, "w") as output:
+            deadline, count = time.monotonic() + 180, 0
+            while time.monotonic() < deadline and count < 64:
+                try:
+                    packet, address = capture.recvfrom(65535)
+                except socket.timeout:
+                    continue
+                if (address[2] != 4 or address[0] in ("lo", "sirinvpn0")
+                        or len(packet) < 34 or packet[12:14] != b"\x08\x00"):
+                    continue
+                ip = packet[14:]
+                offset = (ip[0] & 15) * 4
+                if ip[9] not in (6, 17) or len(ip) < offset + 8:
+                    continue
+                if struct.unpack("!H", ip[offset+2:offset+4])[0] != 53:
+                    continue
+                question = None
+                if ip[9] == 17:
+                    payload, cursor, labels = ip[offset+8:], 12, []
+                    while cursor < len(payload) and 0 < payload[cursor] < 64:
+                        size = payload[cursor]
+                        if cursor + size + 1 >= len(payload):
+                            break
+                        labels.append(payload[cursor+1:cursor+1+size].decode("ascii", "replace"))
+                        cursor += size + 1
+                    question = ".".join(labels)[:255]
+                observed = time.time()
+                tables = json.loads(command("nft", "-j", "list", "tables"))["nftables"]
+                row = {"observed_unix": observed, "interface": address[0],
+                       "protocol": ip[9], "destination": socket.inet_ntoa(ip[16:20]),
+                       "question": question, "guard_present": any(
+                           item.get("table", {}).get("name") == "sirinvpn_guard" for item in tables)}
+                output.write(json.dumps(row) + "\n")
+                output.flush()
+                count += 1
 
 
 def serve_ipv6(identity):
@@ -146,7 +192,7 @@ def main():
     if not Path("/etc/sirinvpn-acceptance-fixture").is_file():
         raise RuntimeError("This helper is only for an owned disposable VM")
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("action", choices=["link", "counters", "reset-counters", "dns", "ipv6", "gui-close", "gui-close-inner"])
+    parser.add_argument("action", choices=["link", "counters", "reset-counters", "dns", "observe-dns", "ipv6", "gui-close", "gui-close-inner"])
     parser.add_argument("values", nargs="*")
     args = parser.parse_args()
     if args.action == "link":
@@ -155,6 +201,8 @@ def main():
         counters(args.action == "reset-counters")
     elif args.action == "dns":
         direct_dns()
+    elif args.action == "observe-dns":
+        observe_dns(*args.values)
     elif args.action == "ipv6":
         serve_ipv6(*args.values)
     elif args.action == "gui-close":

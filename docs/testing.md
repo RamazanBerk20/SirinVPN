@@ -1,11 +1,27 @@
 # Testing
 
+The [26 September remediation ledger](remediation.md) is the current source of
+qualification status. Results below are historical unless explicitly dated
+otherwise; their local `target/` artifacts are not public downloads and do not
+qualify a rebuilt candidate. The current dependency gate has unresolved findings.
+
+Run `sh scripts/test.sh` with the pinned toolchain for shared checks and
+`python3 scripts/check-workflows.py` for workflow validation. Missing required
+tools fail these gates. `scripts/test-keyring.sh` creates a disposable Secret
+Service container. `scripts/test-kernel.sh` uses the isolated Debian guest.
+`scripts/test-android-emulator.py` owns a fresh AVD and separate ADB server;
+it never selects a connected personal phone. `scripts/test-windows.ps1` requires
+native Windows and distinguishes unit/build checks from privileged acceptance.
+Wrap a check with `scripts/record-evidence.py --suite NAME --output
+target/remediation-evidence -- COMMAND` to retain source identity and failures.
+
 The [Linux acceptance report](linux-acceptance-2026-09-07.md) records 15 isolated
 kernel cases and 22 packaged Debian CLI/helper checks, including fault injection,
 reboot recovery and uninstall. It identifies the three product fixes and the
 exact accepted Debian artifact. The [feature map](overhaul-feature-map.md) records
-platform boundaries. Desktop GUI, physical-network, Windows and broader
-release qualification remain pending. Earlier results below belong to their
+platform boundaries. The [current ledger](remediation.md) adds exact-package,
+Samsung S25+ and native Windows results, with their remaining limitations.
+Earlier results below belong to their
 stated checkpoints and do not qualify subsequent changes.
 
 Run one heavy task at a time using the [development resource limits](development.md#resource-limits).
@@ -16,15 +32,18 @@ reboot and installation tests below are acceptance operations, not build steps.
 
 Run the local gate and Linux container packaging sequentially: they share `target`
 and the frontend output directory, and the container restores generated-file
-ownership when it exits. ShellCheck and xmllint skips are printed explicitly when
-those tools are not installed. ShellCheck was additionally exercised in a
-disposable Debian container during the overhaul.
+ownership when it exits. ShellCheck, xmllint and the pinned package manager are
+required; missing tools fail the gate.
 
 The local gate includes two Python cleanup-regression tests, with twenty subcases
 covering successful cleanup, failed status proofs, and individual leftover
 interfaces/services/firewall tables. They run the integration script's actual
 assertion with fake OS commands in both ordinary and conditional shell callers.
 They never create a tunnel or modify the host firewall.
+Two recorder tests cover command failure, timeout, missing tools, output bounds,
+artifact binding and refusal to overwrite evidence. A fifth Python test exercises
+VM setup rejection, interruption and shutdown/file-cleanup failures using fake
+guests; it never launches QEMU.
 
 Run:
 
@@ -32,7 +51,7 @@ Run:
 ./scripts/test.sh
 ```
 
-The gate checks Rust formatting, Clippy with warnings denied, all Rust tests, frontend tests, the production frontend build, privacy invariants, shell syntax, and XML syntax when the corresponding tools are installed.
+The gate checks Rust formatting, Clippy with warnings denied, all default Rust tests, frontend tests, the production frontend build, privacy invariants, ShellCheck, XML syntax and local compatibility contracts. Ignored platform tests require their separate isolated fixtures.
 
 The `sirinvpn-release` tests additionally generate ephemeral Ed25519 root/release keys, create canonical signed manifests and root policies, authenticate bounded artifacts, and plan forward/rollback-compatible transitions. They exercise a missing-state first install, read-only preflight, private atomic receipt/cache/trust creation, exact retries, compatible existing-receipt trust adoption, same-manifest artifact rebinding, normal upgrade, explicit same-key rollback with a retained signed high watermark, overlap rotation to a successor release key, permanent old-key revocation, and restoration of the exact high release. A fake Debian package boundary proves current/candidate preflight, network-operation exclusion, candidate installation, health-before-receipt ordering, root-authorized key transition, authenticated previous-package restoration after install or health failure, retained state after rollback failure, idempotent old-receipt restoration, already-committed candidate finalization, no-op retry, explicit package rollback/high-watermark recovery, and journal/cache cleanup. Tests reject manifest/signature/key/cache/journal/policy tampering, noncanonical or unknown JSON, wrong trust roots, revoked or unauthorized keys, policy downgrade/sequence reuse/un-revocation, key removal without revocation, explicit-key bypass after adoption, unsafe cross-key rollback/rebind, incompatible trust adoption, unsafe paths, symlinks and hard links, incorrect state modes, changed artifact bytes, release-sequence reuse, below-watermark upgrades, implicit downgrade, mismatched version/sequence movement, missing transaction/trust compatibility, forward-incompatible schemas, rollback-incompatible writes, output overwrite, and partial paired output. The checked-in `release/state-compatibility.json` must parse as the exact canonical contract, including `linux_release_receipt`, `linux_release_transaction`, and `linux_release_trust` schema 1. These tests make no network request and retain no key, receipt, policy, journal, or artifact after their temporary directory closes.
 

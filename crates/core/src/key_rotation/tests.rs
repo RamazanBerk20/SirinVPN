@@ -1,7 +1,5 @@
 use super::*;
 use sirinvpn_protocol::{ServerEndpoint, ServerRole};
-#[cfg(unix)]
-use std::os::unix::fs::PermissionsExt;
 use std::{
     collections::HashMap,
     net::{IpAddr, Ipv4Addr},
@@ -95,22 +93,11 @@ fn staged_rotation_journal_contains_no_private_key_and_cleanup_is_atomic() {
     )
     .unwrap();
     assert!(has_pending_key_rotation(&paths, server_id).unwrap());
-    assert_eq!(
-        fs::metadata(journals.path(server_id))
-            .unwrap()
-            .permissions()
-            .mode()
-            & 0o777,
-        0o600
-    );
-    assert_eq!(
-        fs::metadata(&paths.key_rotations_directory)
-            .unwrap()
-            .permissions()
-            .mode()
-            & 0o777,
-        0o700
-    );
+    sirinvpn_platform::files::validate_private_file(
+        &fs::File::open(journals.path(server_id)).unwrap(),
+    )
+    .unwrap();
+    sirinvpn_platform::files::validate_private_directory(&paths.key_rotations_directory).unwrap();
     let journal_bytes = fs::read(journals.path(server_id)).unwrap();
     let journal_shape: serde_json::Value = serde_json::from_slice(&journal_bytes).unwrap();
     assert!(journal_shape.get("transport").is_none());

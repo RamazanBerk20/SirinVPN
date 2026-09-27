@@ -4,7 +4,8 @@ ROOT=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 ANDROID_HOME=${ANDROID_HOME:-$HOME/Android/Sdk}
 NDK_HOME=${NDK_HOME:-$ANDROID_HOME/ndk/30.0.16248370}
 GO_BIN=${GO_BIN:-$ROOT/.cache/android-tools/go/bin/go}
-export CARGO_BUILD_JOBS=${CARGO_BUILD_JOBS:-2}
+export CARGO_BUILD_JOBS="${CARGO_BUILD_JOBS:-2}"
+export GOMAXPROCS="${GOMAXPROCS:-2}"
 TOOLCHAIN="$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin"
 case "${1:-x86_64}" in
   x86_64) TARGET=x86_64-linux-android; ABI=x86_64; GOARCH=amd64 ;;
@@ -23,7 +24,9 @@ export CGO_LDFLAGS='-Wl,-z,max-page-size=16384'
 OUT="$ROOT/apps/desktop/src-tauri/gen/android/app/src/main/jniLibs/$ABI"
 mkdir -p "$OUT"
 cd "$ROOT/apps/desktop/android/wireguard"
-"$GO_BIN" build -trimpath -buildmode=c-shared -ldflags='-s -w' -o "$OUT/libsirin_wireguard.so" .
+expected_go=$(sed -n 's/^go //p' go.mod)
+[ "$("$GO_BIN" env GOVERSION)" = "go$expected_go" ] || { echo "Use pinned Go $expected_go" >&2; exit 1; }
+"$GO_BIN" build -mod=readonly -trimpath -buildmode=c-shared -ldflags='-s -w' -o "$OUT/libsirin_wireguard.so" .
 rm -f "$OUT/libsirin_wireguard.h"
 cd "$ROOT"
 case "${2:-debug}" in

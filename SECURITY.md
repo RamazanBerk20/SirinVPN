@@ -1,5 +1,97 @@
 # Security model
 
+SirinVPN protects the path between an authorized client and a VPS controlled by
+its owner. A compromised client, VPS administrator, provider, destination, or
+platform trust store remains outside that boundary. This is early development
+software; no independent security audit or production qualification is claimed.
+
+## Current implementation and trust boundaries
+
+Native services own privileged networking. The UI reports their snapshots and
+cannot make a saved preference into proof of enforcement. SSH setup requires an
+explicitly checked host fingerprint. Management uses the pinned server identity,
+client certificates, and current server-side authorization. Android Binder calls
+require the same UID; Windows pipes authenticate the service and caller SID.
+
+Authorization changes now retain one protected recovery intent. The on-disk
+authorization document decides recovery, including ambiguous post-rename errors.
+Failed restoration leaves the server degraded and forces retry even when desired
+peers are unchanged. Scoped SirinVPN input/forward chains contain the VPN data
+path while recovery runs; management is permitted only through its authenticated
+endpoint. A failed containment operation is reported as unverified. The
+[transaction and evidence table](docs/remediation.md) defines the tested limits.
+
+## Credential storage by platform
+
+New Linux credentials require the system Secret Service keyring by default.
+Unlock the keyring and retry after a storage failure. Settings → General →
+Credential storage shows actual provenance and offers migration. The CLI exposes
+`sirinvpn storage status`, `require-secure`, `allow-private-file`,
+`migrate <server>`, and `retry-cleanup` under the `storage` command.
+
+`allow-private-file` is explicit consent to unencrypted JSON credentials protected
+by a private directory and file permissions (0700/0600). It is not application
+encryption or a hardware-backed guarantee. Existing legacy files remain accessible
+with unverified provenance; conflicting/corrupt copies fail closed. Once keyring
+provenance commits, a keyring outage cannot activate a stale file. Migration verifies
+the destination before committing authority and removes the source last.
+
+Android uses its Keystore and an authenticated encrypted envelope in no-backup
+storage. Windows uses user-scoped DPAPI for client credentials and machine-scoped
+DPAPI/ACLs for native service intent. Linux fallback policy does not apply to them.
+Keystore/DPAPI availability and hardware backing depend on the named platform.
+
+## Deletion and incomplete operations
+
+Deletion success requires acknowledged cleanup of every possibly used backend.
+Locked/unavailable storage is not confirmed absence. Linux retains a private,
+non-secret cleanup obligation; retry through the storage controls after unlocking
+the keyring. A failed profile removal retains its profile for retry, while a deletion
+tombstone prevents reuse of that identity. Android verifies that AtomicFile's
+credential, backup, and temporary files were removed and retains a tombstone.
+
+Local profile removal, local credential cleanup, server-side revocation, deleting
+backups, and forensic erasure are separate operations. Removing a local credential
+does not revoke a copied credential or erase a backup. Tombstones must not be
+removed to make an error disappear; older clients do not understand them.
+
+## Routing, protection, and updates
+
+Selected routes and deliberately excluded apps may use the ordinary network.
+A live tunnel, reachable management endpoint, configured firewall, and observed
+packet blocking are different evidence. Android owns Always-on and Block
+connections without VPN; Disconnect does not release Android lockdown. Closing
+the UI does not request native disconnection. Force stop and OEM restrictions
+remain OS decisions; see [Android boundaries](docs/android/security-and-platform.md).
+
+Updates remain explicit. The offline root authorizes release-signing keys;
+verified manifests bind exact artifacts, schemas, and rollback limits. No default
+update endpoint, telemetry, production key, or automatic desktop updater is added.
+The new credential/recovery state requires a reviewed upgrade bridge before
+release through the old bidirectional compatibility contract. Existing signatures,
+rollback rules, and trust roots are unchanged. See [release readiness](docs/remediation.md).
+
+## Verification and reporting
+
+[Current remediation results](docs/remediation.md) separate unit, rendered browser,
+real-kernel, emulator, physical Samsung and native Windows evidence. Local reports
+are not public CI runs. Broader Windows enforcement, other Android/OEM behavior,
+hard reboot at every transaction boundary, production signing and independent
+review require separate qualification. GLib's named pointer defect has a verified
+upstream backport; the dependency gate still retains raw advisories and
+maintenance notices; a failed scanner is not a clean audit.
+
+Do not put private keys, profile contents, passwords, or infrastructure details in
+public issues. A private reporting channel has not been verified for this repository;
+request one from the maintainer using a nonsensitive issue before sharing details.
+
+<details>
+<summary>Historical implementation notes from the 22 September 2026 baseline</summary>
+
+These notes preserve the earlier design and evidence. Their test counts and
+storage behavior apply to that baseline; the current sections above take precedence.
+
+
 SirinVPN is designed to protect traffic between authorized Linux, Windows, and Android clients and one user-controlled VPS. It does not make the VPS provider, destination services, upstream DNS infrastructure, or the network path cease to exist.
 
 Android uses a separate native VPN process and same-UID Binder calls, with
@@ -95,3 +187,5 @@ The historical [2026-09-04 overhaul audit](docs/audit-2026-09-04.md) records dep
 Private management now disables built-in CA roots and redirects and bounds streamed replies. SSH command output and artifact reads are bounded before allocation, and remote stderr is omitted from errors even in debug builds. Management TLS handshakes, HTTP headers, and connection concurrency have explicit limits. These changes strengthen the documented boundaries without expanding the threat model to protect against a compromised client or VPS.
 
 Never attach real private keys, passwords, profile files, or VPS addresses to a public vulnerability report. Reproduce with generated test identities and documentation-safe addresses such as `203.0.113.0/24`.
+
+</details>

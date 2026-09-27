@@ -215,6 +215,11 @@ class VirtualMachine:
     def stop(self, *, crash: bool = False) -> None:
         if self.process is None:
             return
+        if crash and self.process.poll() is None:
+            # Terminate the emulator without its shutdown/flush handlers, so a
+            # power-loss test cannot accidentally become a graceful QEMU exit.
+            self.process.kill()
+            self.process.wait(timeout=10)
         if self.process.poll() is None and not crash:
             try:
                 if self.agent_ready:
@@ -251,10 +256,23 @@ class Lab:
         return guest
 
     def close(self) -> None:
+        errors = []
         for guest in reversed(self.guests):
-            guest.stop()
-        shutil.rmtree(self.directory)
-        shutil.rmtree(self.socket_directory)
+            try:
+                guest.stop()
+            except Exception as error:
+                errors.append(error)
+        if errors:
+            # Preserve private disks and control paths if a guest may still be
+            # running, but always attempt to stop every fixture first.
+            raise ExceptionGroup("VM shutdown incomplete", errors)
+        for directory in [self.directory, self.socket_directory]:
+            try:
+                shutil.rmtree(directory)
+            except OSError as error:
+                errors.append(error)
+        if errors:
+            raise ExceptionGroup("VM file cleanup incomplete", errors)
 
     def __enter__(self):
         return self

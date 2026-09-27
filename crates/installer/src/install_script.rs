@@ -331,7 +331,7 @@ nft list table inet sirinvpn_filter >/dev/null 2>&1 && nft delete table inet sir
 nft list table ip sirinvpn_nat >/dev/null 2>&1 && nft delete table ip sirinvpn_nat
 nft list table ip6 sirinvpn_nat6 >/dev/null 2>&1 && nft delete table ip6 sirinvpn_nat6
 ip link show sirinvpn0 >/dev/null 2>&1 && ip link delete sirinvpn0
-nft list table inet sirinvpn_handoff >/dev/null 2>&1 && nft delete table inet sirinvpn_handoff
+{runtime_table_cleanup}
 for path in $MANAGED_PATHS; do
   rm -rf -- "/$path"
 done
@@ -425,8 +425,8 @@ case "${{1:-}}" in
     ip link set mtu 1420 up dev sirinvpn0
     ;;
   down)
-    ip link show sirinvpn0 >/dev/null 2>&1 && ip link delete sirinvpn0 || true
-    nft list table inet sirinvpn_handoff >/dev/null 2>&1 && nft delete table inet sirinvpn_handoff || true
+    if ip link show sirinvpn0 >/dev/null 2>&1; then ip link delete sirinvpn0; fi
+{runtime_table_cleanup}
     ;;
   *) exit 2 ;;
 esac
@@ -779,5 +779,6 @@ systemctl restart sirinvpn-server
         },
         save_committed_binary = artifact.save_committed_binary(),
         restore_committed_binary = artifact.restore_committed_binary(),
+        runtime_table_cleanup = super::uninstall::RUNTIME_TABLE_CLEANUP,
     )
 }

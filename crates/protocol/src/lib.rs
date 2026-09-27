@@ -357,6 +357,8 @@ pub enum NetworkProfile {
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub struct ServerStatus {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub authorization_recovery: Option<AuthorizationRecovery>,
     pub api_version: String,
     pub server_name: String,
     pub connection_state: ConnectionState,
@@ -403,6 +405,24 @@ pub struct ServerStatus {
     pub caller_device_id: Option<DeviceId>,
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub caller_identity_fingerprint: String,
+}
+
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AuthorizationHealth {
+    #[default]
+    Healthy,
+    Applying,
+    RecoveryPending,
+    RecoveryFailed,
+}
+
+#[derive(Clone, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
+pub struct AuthorizationRecovery {
+    pub health: AuthorizationHealth,
+    pub generation: u64,
+    pub containment_verified: bool,
+    pub committed: bool,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]

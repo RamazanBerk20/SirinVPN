@@ -119,76 +119,15 @@ pub(super) fn require_authorization(
 pub(super) async fn commit_authorization(
     state: &AppState,
     current: &mut AuthorizationDocument,
-    mut next: AuthorizationDocument,
+    next: AuthorizationDocument,
 ) -> Result<(), ApiError> {
-    next.schema_version = next.required_schema_version();
-    next.validate().map_err(|_| ApiError::internal())?;
-    apply_nft_batch(
-        &enrollment_quarantine_nft_batch(&state.configuration, next.server_id),
-        "enrollment quarantine",
+    authorization_transaction::commit(
+        &authorization_transaction::Host(state),
+        &state.recovery,
+        current,
+        next,
     )
     .await
-    .map_err(|_| ApiError::internal())?;
-    let transport_peers = decoded_transport_peers(&next).map_err(|_| ApiError::internal())?;
-    let previous = current.clone();
-    if sync_wireguard_peers(&state.configuration, &next)
-        .await
-        .is_err()
-    {
-        // A failed netlink batch may already have removed some peers.
-        let _ = sync_wireguard_peers(&state.configuration, &previous).await;
-        return Err(ApiError::internal());
-    }
-    if sync_peer_isolation(&state.configuration, &next)
-        .await
-        .is_err()
-    {
-        let _ = sync_wireguard_peers(&state.configuration, &previous).await;
-        return Err(ApiError::internal());
-    }
-    if sync_port_forwards(
-        &state.configuration,
-        state.operational_configuration.as_ref(),
-        &next,
-    )
-    .await
-    .is_err()
-    {
-        let _ = sync_port_forwards(
-            &state.configuration,
-            state.operational_configuration.as_ref(),
-            &previous,
-        )
-        .await;
-        let _ = sync_peer_isolation(&state.configuration, &previous).await;
-        let _ = sync_wireguard_peers(&state.configuration, &previous).await;
-        return Err(ApiError::internal());
-    }
-    if write_authorization(&state.paths.authorization, &next).is_err() {
-        let _ = sync_port_forwards(
-            &state.configuration,
-            state.operational_configuration.as_ref(),
-            &previous,
-        )
-        .await;
-        let _ = sync_peer_isolation(&state.configuration, &previous).await;
-        let _ = sync_wireguard_peers(&state.configuration, &previous).await;
-        return Err(ApiError::internal());
-    }
-    *current = next;
-    state.transport_peers.replace(transport_peers);
-    state
-        .transport_peers
-        .publish_endpoint_checkpoint(
-            current
-                .endpoint_transition
-                .as_ref()
-                .map(serde_json::to_vec)
-                .transpose()
-                .map_err(|_| ApiError::internal())?,
-        )
-        .map_err(|_| ApiError::internal())?;
-    Ok(())
 }
 
 pub(super) fn decoded_transport_peers(

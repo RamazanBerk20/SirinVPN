@@ -69,7 +69,6 @@ esac
 exit 0"#,
         );
         for program in [
-            "nft",
             "ip",
             "iptables",
             "ip6tables",
@@ -79,6 +78,8 @@ exit 0"#,
         ] {
             fixture.shim(program, "exit 1");
         }
+        // Enumeration succeeds with an empty ruleset; a specific table is absent.
+        fixture.shim("nft", "[ \"$*\" = 'list tables' ]");
         fixture
     }
     fn backup(&self) -> PathBuf {

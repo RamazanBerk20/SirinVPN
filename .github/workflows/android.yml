@@ -1,0 +1,78 @@
+name: Android build and isolated emulator
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  android:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    env:
+      CARGO_BUILD_JOBS: 2
+      GOMAXPROCS: 2
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '26'
+      - uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
+        with:
+          go-version-file: apps/desktop/android/wireguard/go.mod
+          cache: false
+      - name: Require isolated emulator and pinned tools
+        run: |
+          test -r /dev/kvm && test -w /dev/kvm
+          systemctl --user show-environment >/dev/null
+          npm install --prefix .cache/ci-tools --ignore-scripts --no-audit --no-fund "$(node -p "require('./apps/desktop/package.json').packageManager")"
+          echo "$PWD/.cache/ci-tools/node_modules/.bin" >> "$GITHUB_PATH"
+          echo "GO_BIN=$(command -v go)" >> "$GITHUB_ENV"
+          echo "NDK_HOME=$ANDROID_HOME/ndk/30.0.16248370" >> "$GITHUB_ENV"
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'platforms;android-36' 'build-tools;36.0.0' 'ndk;30.0.16248370' 'system-images;android-29;google_apis;x86_64' 'system-images;android-36;google_apis;x86_64' emulator
+          rustup target add x86_64-linux-android aarch64-linux-android
+      - run: pnpm --dir apps/desktop install --frozen-lockfile
+      - name: Build current VPS payloads
+        run: |
+          docker build --memory 4g --memory-swap 4g --cpu-period 100000 --cpu-quota 150000 -f packaging/Dockerfile.server-payloads -t sirinvpn-server-payload-builder .
+          docker run --rm --cpus 1.5 --memory 4g --memory-swap 4g --pids-limit 256 --user "$(id -u):$(id -g)" --volume "$PWD:/workspace" --workdir /workspace --env CARGO_HOME=/workspace/.cache/payload-cargo --env CARGO_TARGET_DIR=/workspace/target/server-payloads --env CARGO_BUILD_JOBS=2 sirinvpn-server-payload-builder cargo build --locked --release -p sirinvpn-server --target x86_64-unknown-linux-gnu --target aarch64-unknown-linux-gnu
+      - name: Native Go regression checks
+        run: |
+          python3 scripts/record-evidence.py --suite go-native --output target/remediation-evidence --timeout 600 -- systemd-run --user --scope --quiet -p MemoryHigh=3G -p MemoryMax=4G -p MemorySwapMax=0 -p CPUQuota=150% -p TasksMax=256 env "CGO_CFLAGS=-I$JAVA_HOME/include -I$JAVA_HOME/include/linux" "$GO_BIN" -C apps/desktop/android/wireguard test -mod=readonly -count=1 -v -p=2 ./...
+      - name: Build development APKs
+        run: |
+          python3 scripts/record-evidence.py --suite android-build --output target/remediation-evidence --timeout 2400 --artifact apps/desktop/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk --artifact apps/desktop/src-tauri/gen/android/app/build/outputs/apk/androidTest/universal/debug/app-universal-debug-androidTest.apk --signing-category development -- systemd-run --user --scope --quiet -p MemoryHigh=3G -p MemoryMax=4G -p MemorySwapMax=0 -p CPUQuota=150% -p TasksMax=256 sh -ec '
+            sh scripts/build-android.sh all debug
+            sh scripts/build-android-catalog.sh
+            python3 scripts/check-android-package.py apps/desktop/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk > target/remediation-evidence/android-package.json
+            apps/desktop/src-tauri/gen/android/gradlew -p apps/desktop/src-tauri/gen/android :app:lintUniversalDebug -x rustBuildUniversalDebug --no-daemon --max-workers=2
+          '
+      - name: Fresh AVD native checks
+        run: |
+          for api in 29 36; do
+            memory_high=3G
+            if [ "$api" = 36 ]; then memory_high=3500M; fi
+            python3 scripts/record-evidence.py --suite "android-emulator-$api" --output target/remediation-evidence --timeout 1400 -- systemd-run --user --scope --quiet -p "MemoryHigh=$memory_high" -p MemoryMax=4G -p MemorySwapMax=0 -p CPUQuota=150% -p TasksMax=256 python3 scripts/test-android-emulator.py --api "$api" --output ".cache/android-emulator-$api" --apk apps/desktop/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk --tests apps/desktop/src-tauri/gen/android/app/build/outputs/apk/androidTest/universal/debug/app-universal-debug-androidTest.apk
+          done
+      - name: Preserve allowlisted summaries
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: android-evidence-${{ github.sha }}
+          path: |
+            target/remediation-evidence/go-native.json
+            target/remediation-evidence/android-build.json
+            target/remediation-evidence/android-package.json
+            target/remediation-evidence/android-emulator-29.json
+            target/remediation-evidence/android-emulator-36.json
+            .cache/android-emulator-29/results.json
+            .cache/android-emulator-36/results.json
+          if-no-files-found: error
+          retention-days: 14

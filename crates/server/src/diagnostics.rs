@@ -124,7 +124,7 @@ fn condition(
     }
 }
 
-async fn output(program: &str, arguments: &[&str]) -> Option<String> {
+pub(super) async fn output(program: &str, arguments: &[&str]) -> Option<String> {
     let mut child = Command::new(program)
         .args(arguments)
         .env("LC_ALL", "C")

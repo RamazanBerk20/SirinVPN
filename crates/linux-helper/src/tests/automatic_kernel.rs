@@ -492,6 +492,22 @@ fn kernel_automatic_transport_continuity_and_soak() {
         worst_gap.load(Ordering::Relaxed)
     );
     worst_gap.store(0, Ordering::Relaxed);
+    // TLS and raw TCP share one endpoint. Blocking it must try beyond the first
+    // alternate carrier without replacing the established WireGuard session.
+    {
+        let _lock = helper.lock_operations().unwrap();
+        let mut state = helper.read_state().unwrap();
+        let desired = helper.read_persistent().unwrap();
+        let candidate = request
+            .reconnect_candidates
+            .iter()
+            .find(|candidate| candidate.transport == TransportKind::TlsLike)
+            .unwrap();
+        let next = request_for_reconnect_candidate(&request, candidate);
+        helper
+            .change_quality_transport(&desired, &next, &mut state)
+            .unwrap();
+    }
     let before_failure = helper.status().unwrap().transport.unwrap();
     let port = request
         .reconnect_candidates

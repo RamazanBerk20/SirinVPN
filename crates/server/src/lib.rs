@@ -30,6 +30,7 @@ use forwarding_api::*;
 mod enrollment;
 use enrollment::*;
 mod access;
+mod authorization_transaction;
 use access::*;
 mod measurement;
 mod metrics;

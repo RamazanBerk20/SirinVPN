@@ -214,6 +214,17 @@ pub(super) async fn caller_status(
         status.transport = transport;
     }
     status.caller_identity_fingerprint = caller_identity.certificate_fingerprint.clone();
+    status.authorization_recovery = state.authorization.as_ref().map(|_| {
+        state
+            .recovery
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .status
+            .clone()
+    });
+    if authorization_transaction::needs_recovery(&state.recovery) {
+        status.connection_state = ConnectionState::Degraded;
+    }
     Ok(status)
 }
 

@@ -212,6 +212,12 @@ export interface SshHostInspection {
 }
 
 export interface ServerStatus {
+  authorization_recovery?: {
+    health: "healthy" | "applying" | "recovery_pending" | "recovery_failed";
+    generation: number;
+    containment_verified: boolean;
+    committed: boolean;
+  };
   api_version: string;
   server_name: string;
   connection_state: ConnectionState;

@@ -1,5 +1,15 @@
 # Signed releases
 
+This describes the release mechanism, not a currently qualified production
+release. Consult the [remediation release checklist](remediation.md) before
+building or distributing a candidate. The new credential tombstone/provenance
+formats and server recovery intent add state requirements. Existing signed
+manifests with older state families are intentionally incompatible under the
+current bidirectional compatibility check. A reviewed bridge/first-install
+strategy is required; do not weaken validation to force an upgrade or downgrade.
+Local development APK signing and unsigned Linux engineering packages do not
+establish production signing custody or native Windows qualification.
+
 SirinVPN's P2T/P2U/P2V/P2W release coordinator is deliberately offline. It creates and verifies an Ed25519-signed canonical manifest for local release artifacts, authenticates release signing keys beneath a bundled offline root, plans configuration-compatible transitions, maintains root-owned trust and installed-package state, and can transactionally replace an already bound Debian package. P2X adds a separate unprivileged HTTPS fetcher that can create one authenticated local candidate bundle without giving network access to that coordinator. P2Y adds a manual desktop review and Debian-install confirmation around those two existing boundaries. The separate [signed VPS updater](signed-vps-updates-2026-09-06.md) now binds server ELF artifacts, supports compatible rollback, and provides an explicitly enabled security-update schedule on the VPS.
 
 ## Release trust hierarchy

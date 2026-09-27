@@ -1,5 +1,99 @@
 use super::*;
 
+#[cfg(unix)]
+#[test]
+fn uninstall_verification_rejects_leftovers_and_failed_observation() {
+    use std::os::unix::fs::{PermissionsExt, symlink};
+    let directory = tempfile::tempdir().unwrap();
+    let tool = directory.path().join("fixture-tool");
+    std::fs::write(&tool, r#"#!/bin/sh
+case "${0##*/}" in
+  nft)
+    [ "$SIRIN_LEFTOVER" != nft_failure ] || exit 2
+    if [ "$2" = tables ]; then exit 0; fi
+    [ "$SIRIN_LEFTOVER" = "$3:$4" ] ;;
+  ip)
+    [ "$SIRIN_LEFTOVER" != ip_failure ] || exit 2
+    [ "$#" -eq 2 ] && exit 0
+    [ "$SIRIN_LEFTOVER" = interface ] ;;
+  ss)
+    [ "$SIRIN_LEFTOVER" != ss_failure ] || exit 2
+    if [ "$SIRIN_LEFTOVER" = listener ]; then printf '%s\n' '10.77.0.1:8443'; fi ;;
+  systemctl)
+    [ "$SIRIN_LEFTOVER" != service_failure ] || exit 2
+    [ "$3" = unbound.service ] || [ "$SIRIN_LEFTOVER" = service ] ;;
+  iptables-save|ip6tables-save)
+    [ "$SIRIN_LEFTOVER" != iptables_failure ] || exit 2
+    if [ "$SIRIN_LEFTOVER" = docker_rule ]; then printf '%s\n' '--comment sirinvpn-forward-out'; fi ;;
+  *) exit 99 ;;
+esac
+"#).unwrap();
+    std::fs::set_permissions(&tool, std::fs::Permissions::from_mode(0o700)).unwrap();
+    for name in [
+        "nft",
+        "ip",
+        "ss",
+        "systemctl",
+        "iptables-save",
+        "ip6tables-save",
+    ] {
+        symlink(&tool, directory.path().join(name)).unwrap();
+    }
+    symlink("/usr/bin/grep", directory.path().join("grep")).unwrap();
+    let mut script = uninstall_verification_command();
+    // No fixture assertion may inspect real host installation paths.
+    let managed = directory.path().join("managed");
+    let start = script.find("MANAGED_PATHS=").unwrap();
+    let end = start + script[start..].find('\n').unwrap();
+    script.replace_range(
+        start..end,
+        &format!(
+            "MANAGED_PATHS=\"{}\"",
+            managed.strip_prefix("/").unwrap().display()
+        ),
+    );
+    for leftover in [
+        "none",
+        "managed_file",
+        "managed_symlink",
+        "interface",
+        "inet:sirinvpn_filter",
+        "ip:sirinvpn_nat",
+        "ip6:sirinvpn_nat6",
+        "inet:sirinvpn_handoff",
+        "inet:sirinvpn_measurement",
+        "service",
+        "listener",
+        "docker_rule",
+        "nft_failure",
+        "ip_failure",
+        "ss_failure",
+        "service_failure",
+        "iptables_failure",
+    ] {
+        if managed.symlink_metadata().is_ok() {
+            std::fs::remove_file(&managed).unwrap();
+        }
+        if leftover == "managed_file" {
+            std::fs::write(&managed, b"fixture").unwrap();
+        } else if leftover == "managed_symlink" {
+            symlink(directory.path().join("absent"), &managed).unwrap();
+        }
+        let result = std::process::Command::new("/bin/sh")
+            .args(["-c", &script])
+            .env("PATH", directory.path())
+            .env("SIRIN_LEFTOVER", leftover)
+            .output()
+            .unwrap();
+        assert_eq!(
+            result.status.success(),
+            leftover == "none",
+            "{leftover}: {}",
+            String::from_utf8_lossy(&result.stderr)
+        );
+    }
+}
+
 #[test]
 fn server_restore_is_profile_bound_stdin_only_and_guarded_before_identity_replacement() {
     let server = LocalIdentity::generate("Restore server").unwrap();

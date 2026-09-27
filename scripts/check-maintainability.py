@@ -22,6 +22,9 @@ def inventory(reference=None):
         paths = git("ls-files", "-z", "--cached", "--others", "--exclude-standard")
     files = []
     for name in sorted(set(paths.decode().split("\0"))):
+        # This exact third-party tree is separately bound by check-vendored.py.
+        if name.startswith("vendor/glib/"):
+            continue
         path = ROOT / name
         if path.suffix not in EXTENSIONS or (not reference and not path.is_file()):
             continue

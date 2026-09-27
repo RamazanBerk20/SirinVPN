@@ -1,0 +1,55 @@
+name: Disposable Linux runtime acceptance
+on:
+  workflow_dispatch:
+    inputs:
+      debian_image_sha256:
+        description: Verified SHA-256 of the current official Debian 13 genericcloud amd64 image
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: runtime-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  kernel:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Require isolated guest support
+        run: |
+          test -r /dev/kvm && test -w /dev/kvm
+          systemctl --user show-environment >/dev/null
+          sudo apt-get update
+          sudo apt-get install -y qemu-system-x86 qemu-utils xorriso
+      - name: Fetch verified disposable base
+        env:
+          SIRIN_IMAGE_SHA256: ${{ inputs.debian_image_sha256 }}
+        run: |
+          mkdir -p .cache
+          curl --fail --location --max-time 600 https://cloud.debian.org/images/cloud/trixie/latest/debian-13-genericcloud-amd64.qcow2 -o .cache/debian.qcow2
+          python3 - <<'PY'
+          import hashlib, os, re
+          digest = os.environ['SIRIN_IMAGE_SHA256']
+          assert re.fullmatch('[0-9a-f]{64}', digest)
+          with open('.cache/debian.qcow2', 'rb') as image:
+              assert hashlib.file_digest(image, 'sha256').hexdigest() == digest
+          PY
+      - name: Exercise real kernel boundaries
+        run: python3 scripts/record-evidence.py --suite kernel --output target/remediation-evidence --timeout 6600 -- sh scripts/test-kernel.sh .cache/debian.qcow2 .cache/runtime-acceptance
+      - name: Exercise disposable Secret Service
+        run: python3 scripts/record-evidence.py --suite real-keyring --output target/remediation-evidence --timeout 1800 -- sh scripts/test-keyring.sh
+      - name: Preserve summaries only
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: kernel-summary-${{ github.sha }}
+          path: |
+            target/remediation-evidence/kernel.json
+            target/remediation-evidence/real-keyring.json
+            .cache/runtime-acceptance/run/kernel-results.json
+          if-no-files-found: error
+          retention-days: 14

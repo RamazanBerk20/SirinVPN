@@ -24,7 +24,9 @@ import com.journeyapps.barcodescanner.camera.FitCenterStrategy
 
 /** Decode the entire visible preview. The old unmarked centre crop cut off dense QR codes. */
 internal class QrCameraView(context: android.content.Context) : BarcodeView(context) {
-    override fun calculateFramingRect(container: Rect, surface: Rect) = Rect(container).apply { intersect(surface) }
+    override fun calculateFramingRect(container: Rect, surface: Rect) = Rect(container).apply {
+        if (!intersect(surface)) setEmpty()
+    }
 
     init {
         decoderFactory = DecoderFactory { baseHints ->

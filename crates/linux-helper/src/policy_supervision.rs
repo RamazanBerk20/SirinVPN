@@ -154,8 +154,12 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
             return Ok(ReconcileOutcome::AwaitingHandshake);
         }
         if state.has_connected && present && confirmed_failure {
-            let next = next_persistent_request(&desired, state.transport);
-            if next.transport != state.transport {
+            // Multiple advertised carriers can share a blocked port (TLS/raw TCP).
+            // Try the bounded remaining plan before replacing a live interface.
+            let mut candidate = state.transport;
+            for _ in 1..desired.request.reconnect_candidates.len() {
+                let next = next_persistent_request(&desired, candidate);
+                candidate = next.transport;
                 match self.change_quality_transport(&desired, &next, &mut state) {
                     Ok(outcome) => {
                         state
@@ -168,7 +172,18 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
                             .map_err(|_| HelperError::NetworkOperationFailed)?;
                         return Ok(outcome);
                     }
-                    Err(HelperError::NetworkOperationFailed) => {}
+                    Err(HelperError::NetworkOperationFailed) => {
+                        // Never advance with an unverified rollback. The old
+                        // carrier may be unreachable, but its local path/guard
+                        // must still be intact before another preparation.
+                        if !self.carrier_endpoint_matches(&request, desired.endpoint)
+                            || !self.tunnel_configuration_exists(&request)
+                            || (policy.kill_switch
+                                && !self.guard_is_verified(&request, desired.endpoint))
+                        {
+                            return Err(HelperError::NetworkOperationFailed);
+                        }
+                    }
                     Err(error) => return Err(error),
                 }
             }

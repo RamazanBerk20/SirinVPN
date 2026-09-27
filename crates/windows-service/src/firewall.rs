@@ -413,7 +413,7 @@ impl Engine {
             let expected = NativeRule::new(rule, &resources)?;
             if !guid_equal(&found.layerKey, &layer_key(rule.layer))
                 || !guid_equal(&found.subLayerKey, &SUBLAYER)
-                || found.flags != self.flags(rule)
+                || !policy_flags_match(found.flags, self.flags(rule))
                 || found.action.r#type
                     != if rule.bind_address.is_some() {
                         FWP_ACTION_CALLOUT_TERMINATING
@@ -450,6 +450,35 @@ struct Resources {
     app: Allocation,
     system_sd: SecurityDescriptor,
     object_sd: SecurityDescriptor,
+}
+
+fn policy_flags_match(actual: u32, expected: u32) -> bool {
+    // BFE may index a filter after insertion. That lookup optimization does not
+    // change enforcement; disabled, lifetime and action flags must still match.
+    actual & !FWPM_FILTER_FLAG_INDEXED == expected
+}
+
+#[test]
+fn indexed_filters_remain_verified_but_enforcement_flag_changes_do_not() {
+    for expected in [0, FWPM_FILTER_FLAG_PERSISTENT, FWPM_FILTER_FLAG_BOOTTIME] {
+        assert!(policy_flags_match(expected, expected));
+        assert!(policy_flags_match(
+            expected | FWPM_FILTER_FLAG_INDEXED,
+            expected
+        ));
+        for changed in [
+            FWPM_FILTER_FLAG_DISABLED,
+            FWPM_FILTER_FLAG_CLEAR_ACTION_RIGHT,
+            FWPM_FILTER_FLAG_PERMIT_IF_CALLOUT_UNREGISTERED,
+            FWPM_FILTER_FLAG_PERSISTENT,
+            FWPM_FILTER_FLAG_BOOTTIME,
+        ] {
+            assert!(!policy_flags_match(
+                (expected ^ changed) | FWPM_FILTER_FLAG_INDEXED,
+                expected
+            ));
+        }
+    }
 }
 impl Resources {
     fn new() -> io::Result<Self> {

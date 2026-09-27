@@ -19,7 +19,8 @@ HELPER = "/usr/lib/sirinvpn/sirinvpn-helper"
 CLI = "/usr/bin/sirinvpn"
 SERVER = "198.18.10.1"
 USER_PREFIX = ["runuser", "-u", "sirin", "--", "env",
-               "SSH_AUTH_SOCK=/home/sirin/acceptance-agent.sock"]
+               "SSH_AUTH_SOCK=/home/sirin/acceptance-agent.sock",
+               "DBUS_SESSION_BUS_ADDRESS=unix:path=/home/sirin/acceptance-bus"]
 
 
 class Acceptance:
@@ -119,7 +120,7 @@ class Acceptance:
             guest.put(self.args.package.resolve(), "/home/sirin/sirinvpn.deb")
         packages = "qemu-guest-agent python3 curl iproute2 nftables kmod"
         if client:
-            packages += " xvfb xauth python3-xlib dbus-x11 /home/sirin/sirinvpn.deb"
+            packages += " xvfb xauth python3-xlib dbus-x11 gnome-keyring /home/sirin/sirinvpn.deb"
         with (self.logs / f"{guest.name}-setup.log").open("wb") as log:
             guest.ssh(["sudo", "-n", "env", "DEBIAN_FRONTEND=noninteractive", "sh", "-ec",
                        "apt-get -o Acquire::Retries=2 update\n"
@@ -167,6 +168,7 @@ class Acceptance:
             stdout=subprocess.PIPE, check=True).stdout.decode().split()[1]
         self.ssh_options = ["--username", "sirin", "--ssh-agent", "--host-key", fingerprint,
                             "--passwordless-sudo"]
+        self.cli("storage", "allow-private-file")  # Explicit consent inside this disposable headless guest.
         profile = self.cli("server", "add", "--name", "Acceptance", "--host", SERVER,
                            *self.ssh_options, "--server-binary", "/usr/lib/sirinvpn/sirinvpn-server",
                            "--private-dns-record", "probe.test=10.0.2.100",
@@ -331,13 +333,16 @@ class Acceptance:
 
     def relay_crash(self):
         self.counter(reset=True)
+        assert self.local()["transport"] == "tls_like"
+        unit = "sirinvpn-transport@tls_like.service"
+        self.client.run(["systemctl", "is-active", "--quiet", unit])
         self.client.run(["systemctl", "kill", "--kill-whom=main", "--signal=KILL",
-                         "sirinvpn-transport.service"])
+                         unit])
         for _ in range(3):
             assert self.request(timeout=1) != "direct", "transport crash leaked through the ISP"
         local = self.wait_connected("tls_like")
         assert self.counter() == {"dns": 0, "ipv6": 0}, self.counter()
-        return {"transport": local["transport"], "exit": "vps"}
+        return {"transport": local["transport"], "terminated_unit": unit, "exit": "vps"}
 
     def block_server(self, mode):
         self.server.run(["nft", "delete", "table", "inet", "sirin_acceptance_fault"], check=False)
@@ -352,6 +357,33 @@ class Acceptance:
         self.server.run(["nft", "-f", "-"], data=rules.encode())
 
     def automatic_fallback(self):
+        identity = str(uuid.uuid4())
+        unit = "sirin-acceptance-dns-" + identity
+        packet_path = "/run/" + unit + ".jsonl"
+        trace_path = "/run/" + unit + "-trace.txt"
+        trace_unit = unit + "-trace"
+        # Kernel trace records show which chains actually processed each DNS
+        # packet. Reading the current rules after capture cannot prove that.
+        self.client.run(["nft", "-f", "-"], data=b"""table inet sirin_acceptance_trace {
+ chain output {
+  type filter hook output priority -301; policy accept;
+  meta l4proto { tcp, udp } th dport 53 meta nftrace set 1
+ }
+}
+""")
+        self.client.run(["systemd-run", "--unit=" + trace_unit, "--collect",
+                         "--property=RuntimeMaxSec=180", "--property=LimitFSIZE=1048576",
+                         "--property=UMask=0077", "--property=StandardOutput=file:" + trace_path,
+                         "nft", "monitor", "trace"])
+        self.client.run(["systemd-run", "--unit=" + unit, "--collect",
+                         "--property=RuntimeMaxSec=180", "python3", FIXTURE, "observe-dns", packet_path])
+        self.client.run(["sh", "-ec", "until test -f \"$1\"; do sleep 0.1; done", "sh", packet_path], timeout=5)
+        before_connect = self.counter()
+        print(f"Fallback counters while disconnected: {before_connect}", flush=True)
+        observation = {"before_connect": before_connect, "requested_unix": time.time(),
+                       "scope": "bounded outgoing DNS metadata in synthetic disposable guest only"}
+        self.report["automatic_fallback_observation"] = observation
+        self.report.setdefault("automatic_fallback_observations", []).append(observation)
         self.block_server("udp")
         try:
             self.cli("connect", self.server_id, "--transport", "automatic", "--persistent",
@@ -361,7 +393,10 @@ class Acceptance:
             assert local["transport"] in ["tls_like", "tcp_fallback"], local["transport"]
             assert local["auto_reconnect_enabled"] and local["connect_on_startup"]
             assert self.request(host="probe.test") == "vps"
-            assert self.counter() == {"dns": 0, "ipv6": 0}, self.counter()
+            after_connect = self.counter()
+            observation["after_connect"] = after_connect
+            assert after_connect == {"dns": 0, "ipv6": 0}, {
+                "before_connect": before_connect, "after_connect": after_connect}
             rules = json.loads(self.server.run(["nft", "-j", "list", "table", "inet",
                                                "sirin_acceptance_fault"]).stdout)["nftables"]
             drops = sum(expression["counter"]["packets"] for row in rules
@@ -372,6 +407,17 @@ class Acceptance:
                     "selected_transport": local["transport"], "exit": "vps"}
         finally:
             self.block_server(None)
+            self.client.run(["systemctl", "stop", unit, trace_unit])
+            try:
+                observed = self.client.run(["cat", packet_path]).stdout
+                observation["packets"] = [json.loads(line) for line in observed.splitlines()]
+                trace = self.client.run(["cat", trace_path]).stdout
+                assert len(trace) < 1048576, "DNS trace exceeded its diagnostic bound"
+                # nft monitor trace uses text even with -j on Debian 13.
+                observation["kernel_trace"] = trace.decode().splitlines()
+            finally:
+                self.client.run(["nft", "delete", "table", "inet", "sirin_acceptance_trace"])
+            print("Fallback DNS observation: " + json.dumps(observation), flush=True)
 
     def power_loss(self):
         self.block_server("all")
@@ -395,6 +441,16 @@ class Acceptance:
                 "transport": local["transport"], "physical_leak_counters": self.counter()}
 
     def uninstall_server(self):
+        sentinel = ("table inet sirin_acceptance_sentinel {\n chain keep {\n"
+                    "  type filter hook output priority 300; policy accept;\n }\n}\n")
+        self.server.run(["nft", "-f", "-"], data=sentinel.encode())
+        unrelated = self.server.run(["nft", "list", "table", "inet", "sirin_acceptance_sentinel"]).stdout
+        # Earlier headless operations explicitly exercised file fallback. Now make
+        # the owned session store available so deletion can verify both backends.
+        self.client.run([*USER_PREFIX, "dbus-daemon", "--session", "--fork",
+                         "--address=unix:path=/home/sirin/acceptance-bus"])
+        self.client.run([*USER_PREFIX, "gnome-keyring-daemon", "--unlock", "--components=secrets"],
+                        data=b"synthetic-fixture-password\n")
         # The ephemeral SSH agent must be restarted after the power-loss check.
         self.client.run(["rm", "-f", "/home/sirin/acceptance-agent.sock"])
         self.client.run([*USER_PREFIX, "ssh-agent", "-a", "/home/sirin/acceptance-agent.sock"])
@@ -404,7 +460,9 @@ class Acceptance:
         self.server.run(["test", "!", "-e", "/etc/sirinvpn"])
         self.server.run(["test", "!", "-e", "/usr/local/lib/sirinvpn/sirinvpn-server"])
         assert b"sirinvpn" not in self.server.run(["nft", "list", "tables"]).stdout
-        return {"vps_owned_files_removed": True, "vps_firewall_removed": True}
+        assert self.server.run(["nft", "list", "table", "inet", "sirin_acceptance_sentinel"]).stdout == unrelated
+        return {"vps_owned_files_removed": True, "vps_firewall_removed": True,
+                "unrelated_firewall_preserved": True}
 
     def uninstall_active_client(self):
         self.cli("connect", self.server_id, "--transport", "direct", "--persistent")
@@ -472,7 +530,10 @@ class Acceptance:
                             self.step(f"Tunnel interruption: kill switch={kill_switch}, reconnect={reconnect}",
                                       lambda kill_switch=kill_switch, reconnect=reconnect:
                                       self.failure_policy(kill_switch, reconnect))
-                    self.step("Automatic fallback with both UDP transports blocked", self.automatic_fallback)
+                    for attempt in range(self.args.fallback_repeats):
+                        if attempt:
+                            self.clean_disconnect()
+                        self.step(f"Automatic fallback with both UDP transports blocked ({attempt + 1})", self.automatic_fallback)
                     self.step("Power loss, persistent blocking and automatic recovery", self.power_loss)
                     self.step("Disconnect clears persistent protection and restores networking", self.clean_disconnect)
                     self.step("Removing an active client restores networking", self.uninstall_active_client)
@@ -494,8 +555,11 @@ class Acceptance:
             self.report["guest_cleanup"] = "complete"
             return 0
         finally:
-            if lab is not None and not lab.directory.exists():
-                self.report["guest_cleanup"] = "complete"
+            if lab is not None:
+                complete = not lab.directory.exists() and not lab.socket_directory.exists()
+                self.report["guest_cleanup"] = "complete" if complete else "incomplete"
+                if not complete:
+                    self.report["passed"] = False
             self.save()
 
 
@@ -507,6 +571,7 @@ def main():
     parser.add_argument("--installer-tests", type=Path,
                         help="Current installer test executable for the guest-root regression")
     parser.add_argument("--keep-failed-seconds", type=int, default=0, choices=range(0, 3601), metavar="0..3600")
+    parser.add_argument("--fallback-repeats", type=int, default=1, choices=range(1, 6), metavar="1..5")
     return Acceptance(parser.parse_args()).execute()
 
 

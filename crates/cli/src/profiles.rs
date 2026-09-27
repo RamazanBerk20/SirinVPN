@@ -144,15 +144,14 @@ pub(super) fn remove_server(paths: &ClientPaths, selector: &str) -> Result<()> {
     if has_pending_key_rotation(paths, profile.id)? {
         bail!("complete or recover this device's pending key rotation before removing its profile");
     }
-    if let Ok(status) = invoke_helper("status", None)
-        && status.server_id == Some(profile.id)
-        && status.state != ConnectionState::Disconnected
-    {
+    let status = invoke_helper("status", None)
+        .context("Local tunnel status could not be verified; retry before removing this profile")?;
+    if status.server_id == Some(profile.id) && status.state != ConnectionState::Disconnected {
         bail!("disconnect this server before removing its local profile");
     }
     paths.secret_store().delete(&profile.identity_reference)?;
+    paths.network_policy_store().forget_server(profile.id)?;
     store.remove(profile.id)?;
-    let _ = paths.network_policy_store().forget_server(profile.id);
     println!("Removed local profile for {}.", profile.name);
     Ok(())
 }

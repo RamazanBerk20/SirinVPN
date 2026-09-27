@@ -31,7 +31,7 @@ export function ConnectionHero({
   );
   return (
     <section
-      className={`connection-console ${state.connected ? "is-connected" : ""}`}
+      className={`connection-console ${state.connected && !state.recoveringAuthorization ? "is-connected" : ""}`}
       aria-label="VPN connection"
     >
       <div className="connection-center">
@@ -58,7 +58,7 @@ export function ConnectionHero({
         <p className="connection-state" role="status">
           {busy
             ? "Changing connection…"
-            : `${state.status}${state.connected && !isAndroid ? ` to ${profile.name}` : ""}`}
+            : `${state.status}${state.connected && !state.recoveringAuthorization && !isAndroid ? ` to ${profile.name}` : ""}`}
         </p>
         {!systemControlled && (model.connectionOperation === "connecting" || !state.known) && <button className="secondary-button" type="button" onClick={() => void model.cancelConnection()} disabled={model.connectionOperation === "disconnecting"}>Stop VPN</button>}
       </div>

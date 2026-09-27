@@ -25,6 +25,8 @@ class QrScannerTest {
                 val framing = QrCameraView::class.java.getDeclaredMethod("calculateFramingRect", Rect::class.java, Rect::class.java).apply { isAccessible = true }
                 val frame = framing.invoke(camera, Rect(0, 0, 1080, 1920), Rect(0, 0, 1080, 1920)) as Rect
                 assertEquals(Rect(0, 0, 1080, 1920), frame)
+                assertEquals(Rect(5, 5, 10, 10), framing.invoke(camera, Rect(0, 0, 10, 10), Rect(5, 5, 20, 20)))
+                assertTrue((framing.invoke(camera, Rect(0, 0, 10, 10), Rect(20, 20, 30, 30)) as Rect).isEmpty)
                 assertTrue(camera.cameraSettings.isContinuousFocusEnabled)
                 val size = camera.previewScalingStrategy.getBestPreviewSize(mutableListOf(Size(640, 480), Size(1920, 1080)), Size(320, 480))
                 assertEquals(Size(1920, 1080), size)

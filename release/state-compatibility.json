@@ -5,11 +5,11 @@
       "state": "android_identity_record",
       "reads": {
         "minimum": 1,
-        "maximum": 1
+        "maximum": 2
       },
       "writes": {
-        "minimum": 1,
-        "maximum": 1
+        "minimum": 2,
+        "maximum": 2
       }
     },
     {
@@ -189,6 +189,17 @@
       }
     },
     {
+      "state": "linux_credential_policy",
+      "reads": {
+        "minimum": 1,
+        "maximum": 1
+      },
+      "writes": {
+        "minimum": 1,
+        "maximum": 1
+      }
+    },
+    {
       "state": "linux_desired_connection",
       "reads": {
         "minimum": 1,
@@ -203,11 +214,11 @@
       "state": "linux_identity_record",
       "reads": {
         "minimum": 1,
-        "maximum": 1
+        "maximum": 2
       },
       "writes": {
-        "minimum": 1,
-        "maximum": 1
+        "minimum": 2,
+        "maximum": 2
       }
     },
     {
@@ -318,6 +329,17 @@
       "writes": {
         "minimum": 1,
         "maximum": 5
+      }
+    },
+    {
+      "state": "server_authorization_recovery",
+      "reads": {
+        "minimum": 1,
+        "maximum": 1
+      },
+      "writes": {
+        "minimum": 1,
+        "maximum": 1
       }
     },
     {

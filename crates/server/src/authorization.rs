@@ -22,11 +22,12 @@ use sirinvpn_protocol::{
     MemberPolicy, MemberSummary, MembershipSnapshot, PortForward, PortForwardProtocol,
     SERVER_TUNNEL_ADDRESS, ServerId, ServerRole, validate_host,
 };
+#[cfg(test)]
+use std::os::unix::fs::PermissionsExt;
 use std::{
     collections::{BTreeMap, HashSet},
-    fs, io,
+    fs,
     net::{IpAddr, Ipv4Addr},
-    os::unix::fs::{OpenOptionsExt, PermissionsExt},
     path::Path,
 };
 use validation::*;
