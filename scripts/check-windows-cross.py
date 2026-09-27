@@ -16,13 +16,19 @@ def main() -> int:
     parser.add_argument("--toolchain", type=Path, default=root / ".cache/tools/llvm-mingw-20260826-ucrt-ubuntu-22.04-x86_64")
     operation = parser.add_mutually_exclusive_group()
     operation.add_argument("--components", action="store_true", help="Build and stage service and CLI executables")
-    operation.add_argument("--bundle", action="store_true", help="Build a debug desktop installer for packaging checks")
+    operation.add_argument("--bundle", action="store_true", help="Build a desktop installer (debug unless --release)")
     operation.add_argument("--tests", action="store_true", help="Type-check Windows desktop, service and platform tests")
     parser.add_argument("--nsis", type=Path, default=root / ".cache/tools/nsis-3.11", help="Native NSIS installation used by --bundle")
     parser.add_argument("--wireguard-archive", type=Path, default=root / ".cache/tools/wireguard-nt-1.1.zip")
     parser.add_argument("--routing-driver", type=Path, default=root / "target/windows-routing-driver/sirinvpn-app-routing.sys")
     parser.add_argument("--clippy", action="store_true", help="Lint the selected Windows check targets with warnings denied")
+    parser.add_argument("--release", action="store_true", help="Use release binaries for --components and --bundle")
     arguments = parser.parse_args()
+    if arguments.release and not (arguments.components or arguments.bundle):
+        parser.error("--release requires --components or --bundle")
+    profile = "release" if arguments.release else "debug"
+    cargo_profile = ["--release"] if arguments.release else []
+    tauri_profile = [] if arguments.release else ["--debug"]
     binaries = arguments.toolchain.resolve() / "bin"
     if not (binaries / "x86_64-w64-mingw32-clang").is_file():
         parser.error("Pass --toolchain with a verified LLVM-MinGW installation")
@@ -42,14 +48,14 @@ def main() -> int:
     if arguments.components:
         if not arguments.routing_driver.is_file():
             parser.error("Build --routing-driver with scripts/build-windows-routing-driver.py first")
-        result = subprocess.call(["cargo", "build", "--locked", "--target", target,
+        result = subprocess.call(["cargo", "build", *cargo_profile, "--locked", "--target", target,
                                   "-p", "sirinvpn-windows-service", "-p", "sirinvpn-cli"], cwd=root, env=environment)
         if result:
             return result
         destination = root / "apps/desktop/src-tauri/binaries/windows"
         destination.mkdir(parents=True, exist_ok=True)
         for name in ["sirinvpn-windows-service.exe", "sirinvpn.exe"]:
-            shutil.copyfile(root / "target" / target / "debug" / name, destination / name)
+            shutil.copyfile(root / "target" / target / profile / name, destination / name)
         shutil.copyfile(arguments.routing_driver, destination / "sirinvpn-app-routing.sys")
         pins = json.loads((root / "packaging/windows/wireguard-nt.json").read_text())
         archive = arguments.wireguard_archive.read_bytes()
@@ -65,7 +71,7 @@ def main() -> int:
         if not (arguments.nsis / "Bin" / "makensis").is_file():
             parser.error("Pass --nsis with a native NSIS 3.11 or newer installation")
         environment["PATH"] = str(arguments.nsis.resolve() / "Bin") + os.pathsep + environment["PATH"]
-        result = subprocess.call(["pnpm", "exec", "tauri", "build", "--debug", "--target", target,
+        result = subprocess.call(["pnpm", "exec", "tauri", "build", *tauri_profile, "--target", target,
                                   "--no-bundle", "--no-sign", "--ci"],
                                  cwd=root / "apps/desktop", env=environment)
         if result:
@@ -73,10 +79,10 @@ def main() -> int:
         # Tauri adds this loader automatically for -gnu, but its current bundler
         # does not recognize -gnullvm. Use the loader emitted by the locked SDK.
         configuration = {"bundle": {
-            "resources": {f"../../../target/{target}/debug/WebView2Loader.dll": "WebView2Loader.dll"},
+            "resources": {f"../../../target/{target}/{profile}/WebView2Loader.dll": "WebView2Loader.dll"},
             "windows": {"nsis": {"compression": "zlib"}},
         }}
-        return subprocess.call(["pnpm", "exec", "tauri", "bundle", "--debug", "--target", target,
+        return subprocess.call(["pnpm", "exec", "tauri", "bundle", *tauri_profile, "--target", target,
                                 "--bundles", "nsis", "--config", json.dumps(configuration),
                                 "--no-sign", "--ci"], cwd=root / "apps/desktop", env=environment)
     command = ["cargo", "clippy" if arguments.clippy else "check", "--locked", "--target", target,

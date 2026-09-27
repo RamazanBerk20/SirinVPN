@@ -1,0 +1,275 @@
+Publisher source headers, retained verbatim from https://dl.google.com/dl/android/maven2/androidx/appcompat/appcompat/1.7.1/appcompat-1.7.1-sources.jar
+Sources archive SHA-256: d3f8371e7b5b61e36450677af4e911c351c9ec625e9a7fc5b44acbb3fbc3a45d
+
+Files: androidx/appcompat/view/menu/ListMenuItemView.java, androidx/appcompat/view/menu/MenuItemImpl.java, androidx/appcompat/view/menu/MenuView.java, androidx/appcompat/view/menu/SubMenuBuilder.java
+/*
+ * Copyright (C) 2006 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/appcompat/view/ActionMode.java, androidx/appcompat/view/menu/ActionMenuItem.java, androidx/appcompat/view/menu/ActionMenuItemView.java, androidx/appcompat/view/menu/MenuPopupHelper.java, androidx/appcompat/widget/ActionBarContainer.java, androidx/appcompat/widget/ActionBarContextView.java
+/*
+ * Copyright (C) 2010 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/appcompat/view/CollapsibleActionView.java, androidx/appcompat/view/menu/BaseMenuPresenter.java, androidx/appcompat/view/menu/MenuPresenter.java, androidx/appcompat/widget/AbsActionBarView.java, androidx/appcompat/widget/ScrollingTabContainerView.java
+/*
+ * Copyright (C) 2011 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/appcompat/app/ActionBar.java, androidx/appcompat/view/ActionBarPolicy.java, androidx/appcompat/view/menu/BaseMenuWrapper.java, androidx/appcompat/view/menu/MenuBuilder.java, androidx/appcompat/view/menu/MenuItemWrapperICS.java, androidx/appcompat/view/menu/MenuWrapperICS.java, androidx/appcompat/view/menu/SubMenuWrapperICS.java, androidx/appcompat/widget/ActionBarOverlayLayout.java
+/*
+ * Copyright (C) 2012 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/appcompat/app/AppCompatDelegateImpl.java, androidx/appcompat/view/SupportActionModeWrapper.java, androidx/appcompat/view/SupportMenuInflater.java, androidx/appcompat/view/menu/ExpandedMenuView.java, androidx/appcompat/view/menu/ListMenuPresenter.java, androidx/appcompat/view/menu/MenuDialogHelper.java, androidx/appcompat/widget/ActivityChooserModel.java, androidx/appcompat/widget/ActivityChooserView.java, androidx/appcompat/widget/ShareActionProvider.java
+/*
+ * Copyright (C) 2013 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/appcompat/app/ActionBarDrawerToggle.java, androidx/appcompat/app/AppCompatCallback.java, androidx/appcompat/app/AppCompatDelegate.java, androidx/appcompat/app/AppCompatViewInflater.java, androidx/appcompat/app/NavItemSelectedListener.java, androidx/appcompat/app/ToolbarActionBar.java, androidx/appcompat/app/WindowDecorActionBar.java, androidx/appcompat/graphics/drawable/DrawerArrowDrawable.java, androidx/appcompat/text/AllCapsTransformationMethod.java, androidx/appcompat/view/ContextThemeWrapper.java, androidx/appcompat/view/StandaloneActionMode.java, androidx/appcompat/view/ViewPropertyAnimatorCompatSet.java, androidx/appcompat/view/WindowCallbackWrapper.java, androidx/appcompat/widget/ActionMenuPresenter.java, androidx/appcompat/widget/ActionMenuView.java, androidx/appcompat/widget/AppCompatAutoCompleteTextView.java, androidx/appcompat/widget/AppCompatButton.java, androidx/appcompat/widget/AppCompatCheckBox.java, androidx/appcompat/widget/AppCompatCheckedTextView.java, androidx/appcompat/widget/AppCompatDrawableManager.java, androidx/appcompat/widget/AppCompatEditText.java, androidx/appcompat/widget/AppCompatMultiAutoCompleteTextView.java, androidx/appcompat/widget/AppCompatPopupWindow.java, androidx/appcompat/widget/AppCompatRadioButton.java, androidx/appcompat/widget/AppCompatRatingBar.java, androidx/appcompat/widget/AppCompatSeekBar.java, androidx/appcompat/widget/AppCompatSpinner.java, androidx/appcompat/widget/ContentFrameLayout.java, androidx/appcompat/widget/DecorContentParent.java, androidx/appcompat/widget/DecorToolbar.java, androidx/appcompat/widget/FitWindowsFrameLayout.java, androidx/appcompat/widget/FitWindowsLinearLayout.java, androidx/appcompat/widget/FitWindowsViewGroup.java, androidx/appcompat/widget/LinearLayoutCompat.java, androidx/appcompat/widget/ListPopupWindow.java, androidx/appcompat/widget/PopupMenu.java, androidx/appcompat/widget/RtlSpacingHelper.java, androidx/appcompat/widget/SearchView.java, androidx/appcompat/widget/SwitchCompat.java, androidx/appcompat/widget/TintTypedArray.java, androidx/appcompat/widget/Toolbar.java, androidx/appcompat/widget/ToolbarWidgetWrapper.java, androidx/appcompat/widget/ViewStubCompat.java, androidx/appcompat/widget/ViewUtils.java
+/*
+ * Copyright (C) 2014 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/appcompat/widget/DialogTitle.java
+/*
+ * Copyright (C) 2015 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/appcompat/app/AlertController.java, androidx/appcompat/app/AlertDialog.java, androidx/appcompat/app/AppCompatActivity.java, androidx/appcompat/app/AppCompatDialog.java, androidx/appcompat/app/AppCompatDialogFragment.java, androidx/appcompat/app/TwilightCalculator.java, androidx/appcompat/app/TwilightManager.java, androidx/appcompat/view/menu/ShowableListMenu.java, androidx/appcompat/view/menu/StandardMenuPopup.java, androidx/appcompat/widget/ActionBarBackgroundDrawable.java, androidx/appcompat/widget/AppCompatBackgroundHelper.java, androidx/appcompat/widget/AppCompatCompoundButtonHelper.java, androidx/appcompat/widget/AppCompatImageButton.java, androidx/appcompat/widget/AppCompatImageHelper.java, androidx/appcompat/widget/AppCompatImageView.java, androidx/appcompat/widget/AppCompatProgressBarHelper.java, androidx/appcompat/widget/AppCompatSeekBarHelper.java, androidx/appcompat/widget/AppCompatTextHelper.java, androidx/appcompat/widget/AppCompatTextView.java, androidx/appcompat/widget/ButtonBarLayout.java, androidx/appcompat/widget/ThemeUtils.java, androidx/appcompat/widget/ThemedSpinnerAdapter.java
+/*
+ * Copyright (C) 2015 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/appcompat/app/ResourcesFlusher.java, androidx/appcompat/widget/MenuItemHoverListener.java, androidx/appcompat/widget/MenuPopupWindow.java
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License
+ */
+
+Files: androidx/appcompat/view/menu/CascadingMenuPopup.java, androidx/appcompat/view/menu/MenuAdapter.java, androidx/appcompat/view/menu/MenuHelper.java, androidx/appcompat/view/menu/MenuPopup.java, androidx/appcompat/widget/AlertDialogLayout.java, androidx/appcompat/widget/DropDownListView.java, androidx/appcompat/widget/ForwardingListener.java
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/appcompat/widget/AppCompatTextViewAutoSizeHelper.java, androidx/appcompat/widget/TooltipCompat.java, androidx/appcompat/widget/TooltipCompatHandler.java, androidx/appcompat/widget/TooltipPopup.java
+/*
+ * Copyright (C) 2017 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/appcompat/app/LocaleOverlayHelper.java, androidx/appcompat/widget/AppCompatCheckedTextViewHelper.java
+/*
+ * Copyright (C) 2021 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/appcompat/widget/AppCompatHintHelper.java, androidx/appcompat/widget/WithHint.java
+/*
+ * Copyright 2017 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/appcompat/widget/AppCompatTextClassifierHelper.java, androidx/appcompat/widget/AppCompatToggleButton.java
+/*
+ * Copyright 2018 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/appcompat/app/LayoutIncludeDetector.java, androidx/appcompat/widget/AppCompatEmojiEditTextHelper.java, androidx/appcompat/widget/AppCompatEmojiTextHelper.java, androidx/appcompat/widget/AppCompatReceiveContentHelper.java, androidx/appcompat/widget/EmojiCompatConfigurationView.java
+/*
+ * Copyright 2021 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/appcompat/app/AppLocalesMetadataHolderService.java
+/*
+ * Copyright 2022 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+

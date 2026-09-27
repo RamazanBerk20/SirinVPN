@@ -8,3 +8,6 @@
 *.deb binary
 
 vendor/glib/** -text
+
+# Publisher notice hashes bind the original bytes, including upstream line endings.
+packaging/third-party/** -text -whitespace

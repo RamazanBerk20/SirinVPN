@@ -24,3 +24,6 @@ case "$PROFILE" in debug|release) ;; *) echo 'Choose debug or release' >&2; exit
 for target; do sh scripts/build-android-native.sh "$target" "$PROFILE"; done
 if [ "$PROFILE" = debug ]; then set -- --debug --target "$@"; else set -- --target "$@"; fi
 pnpm --dir apps/desktop tauri android build --ci "$@" --apk --config src-tauri/tauri.android.conf.json
+apps/desktop/src-tauri/gen/android/gradlew -p apps/desktop/src-tauri/gen/android \
+  -I "$ROOT/scripts/android-artifact-inputs.gradle" :app:sirinResolvedRuntimeInputs \
+  --offline --no-daemon --max-workers=2

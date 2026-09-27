@@ -1,0 +1,16 @@
+gradle.projectsEvaluated {
+    def app = gradle.rootProject.findProject(':app')
+    if (app == null) return
+    app.tasks.register('sirinResolvedRuntimeInputs') {
+        doLast {
+            def rows = app.configurations.getByName('universalReleaseRuntimeClasspath').incoming.artifactView { componentFilter { it instanceof org.gradle.api.artifacts.component.ModuleComponentIdentifier } }.artifacts.artifacts.collect { a ->
+                [component: a.id.componentIdentifier.toString(), filename: a.file.name,
+                 sha256: java.security.MessageDigest.getInstance('SHA-256').digest(a.file.bytes).encodeHex().toString()]
+            }.sort { it.component }
+            def sha = java.security.MessageDigest.getInstance('SHA-256').digest(app.file('gradle.lockfile').bytes).encodeHex().toString()
+            def report = [configuration: 'universalReleaseRuntimeClasspath', lockfile_sha256: sha, artifacts: rows,
+                          scope: 'Resolved external Maven artifacts; the Tauri project source is covered by its locked Cargo crate.']
+            new File(gradle.rootProject.projectDir, '../../../../../target/android-runtime-inputs.json').text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(report)) + '\n'
+        }
+    }
+}

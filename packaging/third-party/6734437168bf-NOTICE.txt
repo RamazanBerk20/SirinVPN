@@ -1,0 +1,88 @@
+Publisher source headers, retained verbatim from https://repo.maven.apache.org/maven2/com/google/errorprone/error_prone_annotations/2.15.0/error_prone_annotations-2.15.0-sources.jar
+Sources archive SHA-256: c1b58a188fb4eca9ccefbaff21209eb07df87751384e694b908a3df0288bef97
+
+Files: com/google/errorprone/annotations/concurrent/LockMethod.java, com/google/errorprone/annotations/concurrent/UnlockMethod.java, com/google/errorprone/annotations/NoAllocation.java
+/*
+ * Copyright 2014 The Error Prone Authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: com/google/errorprone/annotations/concurrent/LazyInit.java, com/google/errorprone/annotations/Var.java, com/google/errorprone/annotations/RequiredModifiers.java, com/google/errorprone/annotations/SuppressPackageLocation.java, com/google/errorprone/annotations/Immutable.java, com/google/errorprone/annotations/IncompatibleModifiers.java, com/google/errorprone/annotations/ForOverride.java, com/google/errorprone/annotations/CanIgnoreReturnValue.java, com/google/errorprone/annotations/CompileTimeConstant.java
+/*
+ * Copyright 2015 The Error Prone Authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: com/google/errorprone/annotations/FormatString.java, com/google/errorprone/annotations/FormatMethod.java, com/google/errorprone/annotations/CompatibleWith.java, com/google/errorprone/annotations/RestrictedApi.java, com/google/errorprone/annotations/DoNotMock.java, com/google/errorprone/annotations/MustBeClosed.java
+/*
+ * Copyright 2016 The Error Prone Authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: com/google/errorprone/annotations/CheckReturnValue.java, com/google/errorprone/annotations/OverridingMethodsMustInvokeSuper.java, com/google/errorprone/annotations/concurrent/GuardedBy.java, com/google/errorprone/annotations/DoNotCall.java
+/*
+ * Copyright 2017 The Error Prone Authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: com/google/errorprone/annotations/InlineMeValidationDisabled.java, com/google/errorprone/annotations/Modifier.java, com/google/errorprone/annotations/Keep.java, com/google/errorprone/annotations/InlineMe.java
+/*
+ * Copyright 2021 The Error Prone Authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+

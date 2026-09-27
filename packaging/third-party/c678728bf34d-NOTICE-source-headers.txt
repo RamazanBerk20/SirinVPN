@@ -1,0 +1,121 @@
+Publisher source headers retained verbatim from https://codeload.github.com/androidx/constraintlayout/tar.gz/06e8788e7400fecf52278fdac607fc8139081205
+
+Files: constraintlayout/constraintlayout/src/main/java/androidx/constraintlayout/widget/ConstraintLayout.java, constraintlayout/constraintlayout/src/main/java/androidx/constraintlayout/widget/Guideline.java, constraintlayout/solver/src/main/java/androidx/constraintlayout/solver/ArrayRow.java, constraintlayout/solver/src/main/java/androidx/constraintlayout/solver/LinearSystem.java, constraintlayout/solver/src/main/java/androidx/constraintlayout/solver/Pools.java, constraintlayout/solver/src/main/java/androidx/constraintlayout/solver/SolverVariable.java, constraintlayout/solver/src/main/java/androidx/constraintlayout/solver/widgets/ConstraintAnchor.java, constraintlayout/solver/src/main/java/androidx/constraintlayout/solver/widgets/ConstraintWidget.java, constraintlayout/solver/src/main/java/androidx/constraintlayout/solver/widgets/ConstraintWidgetContainer.java, constraintlayout/solver/src/main/java/androidx/constraintlayout/solver/widgets/Guideline.java, constraintlayout/solver/src/test/java/android/support/constraint/solver/Amount.java, constraintlayout/solver/src/test/java/android/support/constraint/solver/AmountTest.java, constraintlayout/solver/src/test/java/android/support/constraint/solver/ArrayBackedVariables.java, constraintlayout/solver/src/test/java/android/support/constraint/solver/EquationVariable.java, constraintlayout/solver/src/test/java/android/support/constraint/solver/EquationVariableTest.java, constraintlayout/solver/src/test/java/android/support/constraint/solver/LinearEquation.java, constraintlayout/solver/src/test/java/android/support/constraint/solver/LinearSystemTest.java, constraintlayout/solver/src/test/java/android/support/constraint/solver/OptimizationsTest.java, constraintlayout/solver/src/test/java/android/support/constraint/solver/OptimizedGoal.java, constraintlayout/solver/src/test/java/android/support/constraint/solver/OriginalGoal.java, constraintlayout/solver/src/test/java/android/support/constraint/solver/WidgetsPositioningTest.java
+/*
+ * Copyright (C) 2015 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: constraintlayout/constraintlayout/src/main/java/androidx/constraintlayout/widget/ConstraintSet.java, constraintlayout/solver/src/main/java/androidx/constraintlayout/solver/ArrayLinkedVariables.java, constraintlayout/solver/src/main/java/androidx/constraintlayout/solver/Cache.java, constraintlayout/solver/src/main/java/androidx/constraintlayout/solver/widgets/Rectangle.java, constraintlayout/solver/src/main/java/androidx/constraintlayout/solver/widgets/WidgetContainer.java, constraintlayout/solver/src/test/java/android/support/constraint/solver/AdvancedChainTest.java, constraintlayout/solver/src/test/java/android/support/constraint/solver/ChainTest.java, constraintlayout/solver/src/test/java/android/support/constraint/solver/ChainWrapContentTest.java, constraintlayout/solver/src/test/java/android/support/constraint/solver/HistogramCounter.java, constraintlayout/solver/src/test/java/android/support/constraint/solver/LayoutTest.java, constraintlayout/solver/src/test/java/android/support/constraint/solver/MatchConstraintTest.java, constraintlayout/solver/src/test/java/android/support/constraint/solver/RandomLayoutTest.java, constraintlayout/solver/src/test/java/android/support/constraint/solver/RatioTest.java, constraintlayout/solver/src/test/java/android/support/constraint/solver/VisibilityTest.java, constraintlayout/solver/src/test/java/android/support/constraint/solver/XmlBasedTest.java, constraintlayout/solver/src/test/java/android/support/constraint/solver/scout/Direction.java, constraintlayout/solver/src/test/java/android/support/constraint/solver/scout/Scout.java, constraintlayout/solver/src/test/java/android/support/constraint/solver/scout/ScoutProbabilities.java, constraintlayout/solver/src/test/java/android/support/constraint/solver/scout/ScoutWidget.java, constraintlayout/solver/src/test/java/android/support/constraint/solver/scout/Utils.java
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: constraintlayout/constraintlayout/src/main/java/androidx/constraintlayout/motion/utils/HyperSpline.java, constraintlayout/constraintlayout/src/main/java/androidx/constraintlayout/widget/Barrier.java, constraintlayout/constraintlayout/src/main/java/androidx/constraintlayout/widget/ConstraintAttribute.java, constraintlayout/constraintlayout/src/main/java/androidx/constraintlayout/widget/Constraints.java, constraintlayout/constraintlayout/src/main/java/androidx/constraintlayout/widget/Placeholder.java, constraintlayout/solver/src/main/java/androidx/constraintlayout/solver/GoalRow.java, constraintlayout/solver/src/main/java/androidx/constraintlayout/solver/widgets/Barrier.java, constraintlayout/solver/src/main/java/androidx/constraintlayout/solver/widgets/Chain.java, constraintlayout/solver/src/test/java/android/support/constraint/solver/CenterWrapTest.java, constraintlayout/solver/src/test/java/android/support/constraint/solver/CircleTest.java
+/*
+ * Copyright (C) 2017 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: constraintlayout/constraintlayout/src/main/java/androidx/constraintlayout/motion/utils/ArcCurveFit.java, constraintlayout/constraintlayout/src/main/java/androidx/constraintlayout/motion/utils/CurveFit.java, constraintlayout/constraintlayout/src/main/java/androidx/constraintlayout/motion/utils/Easing.java, constraintlayout/constraintlayout/src/main/java/androidx/constraintlayout/motion/utils/LinearCurveFit.java, constraintlayout/constraintlayout/src/main/java/androidx/constraintlayout/motion/utils/MonotonicCurveFit.java, constraintlayout/constraintlayout/src/main/java/androidx/constraintlayout/motion/utils/Oscillator.java, constraintlayout/constraintlayout/src/main/java/androidx/constraintlayout/motion/utils/StopLogic.java, constraintlayout/constraintlayout/src/main/java/androidx/constraintlayout/motion/utils/VelocityMatrix.java, constraintlayout/constraintlayout/src/main/java/androidx/constraintlayout/motion/widget/CustomFloatAttributes.java, constraintlayout/constraintlayout/src/main/java/androidx/constraintlayout/motion/widget/Debug.java, constraintlayout/constraintlayout/src/main/java/androidx/constraintlayout/motion/widget/DesignTool.java, constraintlayout/constraintlayout/src/main/java/androidx/constraintlayout/motion/widget/Key.java, constraintlayout/constraintlayout/src/main/java/androidx/constraintlayout/motion/widget/KeyAttributes.java, constraintlayout/constraintlayout/src/main/java/androidx/constraintlayout/motion/widget/KeyCycle.java, constraintlayout/constraintlayout/src/main/java/androidx/constraintlayout/motion/widget/KeyCycleOscillator.java, constraintlayout/constraintlayout/src/main/java/androidx/constraintlayout/motion/widget/KeyFrames.java, constraintlayout/constraintlayout/src/main/java/androidx/constraintlayout/motion/widget/KeyPosition.java, constraintlayout/constraintlayout/src/main/java/androidx/constraintlayout/motion/widget/KeyPositionBase.java, constraintlayout/constraintlayout/src/main/java/androidx/constraintlayout/motion/widget/KeyTimeCycle.java, constraintlayout/constraintlayout/src/main/java/androidx/constraintlayout/motion/widget/KeyTrigger.java, constraintlayout/constraintlayout/src/main/java/androidx/constraintlayout/motion/widget/MotionConstrainedPoint.java, constraintlayout/constraintlayout/src/main/java/androidx/constraintlayout/motion/widget/MotionController.java, constraintlayout/constraintlayout/src/main/java/androidx/constraintlayout/motion/widget/MotionLayout.java, constraintlayout/constraintlayout/src/main/java/androidx/constraintlayout/motion/widget/MotionPaths.java, constraintlayout/constraintlayout/src/main/java/androidx/constraintlayout/motion/widget/MotionScene.java, constraintlayout/constraintlayout/src/main/java/androidx/constraintlayout/motion/widget/SplineSet.java, constraintlayout/constraintlayout/src/main/java/androidx/constraintlayout/motion/widget/TimeCycleSplineSet.java, constraintlayout/constraintlayout/src/main/java/androidx/constraintlayout/motion/widget/TouchResponse.java, constraintlayout/constraintlayout/src/main/java/androidx/constraintlayout/utils/widget/ImageFilterButton.java, constraintlayout/constraintlayout/src/main/java/androidx/constraintlayout/utils/widget/ImageFilterView.java, constraintlayout/constraintlayout/src/main/java/androidx/constraintlayout/utils/widget/MotionTelltales.java, constraintlayout/constraintlayout/src/main/java/androidx/constraintlayout/widget/ConstraintLayoutStates.java, constraintlayout/constraintlayout/src/main/java/androidx/constraintlayout/widget/ConstraintProperties.java, constraintlayout/constraintlayout/src/main/java/androidx/constraintlayout/widget/ConstraintsChangedListener.java, constraintlayout/constraintlayout/src/main/java/androidx/constraintlayout/widget/StateSet.java, constraintlayout/constraintlayout/src/main/java/androidx/constraintlayout/widget/VirtualLayout.java, constraintlayout/solver/src/main/java/androidx/constraintlayout/solver/Metrics.java, constraintlayout/solver/src/main/java/androidx/constraintlayout/solver/widgets/ChainHead.java, constraintlayout/solver/src/main/java/androidx/constraintlayout/solver/widgets/Helper.java, constraintlayout/solver/src/main/java/androidx/constraintlayout/solver/widgets/Optimizer.java, constraintlayout/solver/src/test/java/android/support/constraint/solver/widgets/ChainHeadTest.java
+/*
+ * Copyright (C) 2018 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: constraintlayout/constraintlayout/src/main/java/androidx/constraintlayout/helper/widget/Flow.java, constraintlayout/constraintlayout/src/main/java/androidx/constraintlayout/motion/widget/KeyCache.java, constraintlayout/constraintlayout/src/main/java/androidx/constraintlayout/motion/widget/MotionInterpolator.java, constraintlayout/constraintlayout/src/main/java/androidx/constraintlayout/motion/widget/TransitionBuilder.java, constraintlayout/solver/src/main/java/androidx/constraintlayout/solver/state/ConstraintReference.java, constraintlayout/solver/src/main/java/androidx/constraintlayout/solver/state/Dimension.java, constraintlayout/solver/src/main/java/androidx/constraintlayout/solver/state/HelperReference.java, constraintlayout/solver/src/main/java/androidx/constraintlayout/solver/state/State.java, constraintlayout/solver/src/main/java/androidx/constraintlayout/solver/state/helpers/AlignHorizontallyReference.java, constraintlayout/solver/src/main/java/androidx/constraintlayout/solver/state/helpers/AlignVerticallyReference.java, constraintlayout/solver/src/main/java/androidx/constraintlayout/solver/state/helpers/ChainReference.java, constraintlayout/solver/src/main/java/androidx/constraintlayout/solver/state/helpers/HorizontalChainReference.java, constraintlayout/solver/src/main/java/androidx/constraintlayout/solver/state/helpers/VerticalChainReference.java, constraintlayout/solver/src/main/java/androidx/constraintlayout/solver/widgets/Flow.java, constraintlayout/solver/src/main/java/androidx/constraintlayout/solver/widgets/VirtualLayout.java, constraintlayout/solver/src/main/java/androidx/constraintlayout/solver/widgets/analyzer/BaselineDimensionDependency.java, constraintlayout/solver/src/main/java/androidx/constraintlayout/solver/widgets/analyzer/BasicMeasure.java, constraintlayout/solver/src/main/java/androidx/constraintlayout/solver/widgets/analyzer/ChainRun.java, constraintlayout/solver/src/main/java/androidx/constraintlayout/solver/widgets/analyzer/Dependency.java, constraintlayout/solver/src/main/java/androidx/constraintlayout/solver/widgets/analyzer/DependencyGraph.java, constraintlayout/solver/src/main/java/androidx/constraintlayout/solver/widgets/analyzer/DependencyNode.java, constraintlayout/solver/src/main/java/androidx/constraintlayout/solver/widgets/analyzer/DimensionDependency.java, constraintlayout/solver/src/main/java/androidx/constraintlayout/solver/widgets/analyzer/GuidelineReference.java, constraintlayout/solver/src/main/java/androidx/constraintlayout/solver/widgets/analyzer/HelperReferences.java, constraintlayout/solver/src/main/java/androidx/constraintlayout/solver/widgets/analyzer/HorizontalWidgetRun.java, constraintlayout/solver/src/main/java/androidx/constraintlayout/solver/widgets/analyzer/RunGroup.java, constraintlayout/solver/src/main/java/androidx/constraintlayout/solver/widgets/analyzer/VerticalWidgetRun.java, constraintlayout/solver/src/main/java/androidx/constraintlayout/solver/widgets/analyzer/WidgetRun.java
+/*
+ * Copyright (C) 2019 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: constraintlayout/solver/src/main/java/androidx/constraintlayout/solver/PriorityGoalRow.java, constraintlayout/solver/src/main/java/androidx/constraintlayout/solver/SolverVariableValues.java, constraintlayout/solver/src/test/java/android/support/constraint/solver/SolverVariableValuesTest.java
+/*
+ * Copyright (C) 2020 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: constraintlayout/solver/src/main/java/androidx/constraintlayout/solver/state/Reference.java, constraintlayout/solver/src/main/java/androidx/constraintlayout/solver/state/helpers/BarrierReference.java, constraintlayout/solver/src/main/java/androidx/constraintlayout/solver/state/helpers/GuidelineReference.java
+/*
+ * Copyright 2019 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+

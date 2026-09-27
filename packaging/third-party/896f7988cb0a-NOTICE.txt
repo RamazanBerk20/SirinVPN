@@ -1,0 +1,71 @@
+Publisher source headers, retained verbatim from https://dl.google.com/dl/android/maven2/androidx/transition/transition/1.5.0/transition-1.5.0-sources.jar
+Sources archive SHA-256: 90e0173d6b572f889b4e18718e6391a19b7911178aa9971a6ee0704d013daa1a
+
+Files: androidx/transition/AutoTransition.java, androidx/transition/ChangeBounds.java, androidx/transition/Fade.java, androidx/transition/RectEvaluator.java, androidx/transition/Scene.java, androidx/transition/Transition.java, androidx/transition/TransitionManager.java, androidx/transition/TransitionSet.java, androidx/transition/TransitionValues.java, androidx/transition/TransitionValuesMaps.java, androidx/transition/ViewGroupUtils.java, androidx/transition/ViewUtils.java, androidx/transition/Visibility.java, androidx/transition/WindowIdImpl.java
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/transition/ArcMotion.java, androidx/transition/ChangeClipBounds.java, androidx/transition/ChangeImageTransform.java, androidx/transition/ChangeScroll.java, androidx/transition/ChangeTransform.java, androidx/transition/CircularPropagation.java, androidx/transition/Explode.java, androidx/transition/FloatArrayEvaluator.java, androidx/transition/FragmentTransitionSupport.java, androidx/transition/GhostView.java, androidx/transition/GhostViewPlatform.java, androidx/transition/GhostViewUtils.java, androidx/transition/ImageViewUtils.java, androidx/transition/MatrixUtils.java, androidx/transition/ObjectAnimatorUtils.java, androidx/transition/PathMotion.java, androidx/transition/PathProperty.java, androidx/transition/PatternPathMotion.java, androidx/transition/PropertyValuesHolderUtils.java, androidx/transition/SidePropagation.java, androidx/transition/Slide.java, androidx/transition/Styleable.java, androidx/transition/TransitionInflater.java, androidx/transition/TransitionListenerAdapter.java, androidx/transition/TransitionPropagation.java, androidx/transition/TransitionUtils.java, androidx/transition/TranslationAnimationCreator.java, androidx/transition/ViewUtilsApi19.java, androidx/transition/ViewUtilsApi21.java, androidx/transition/ViewUtilsApi22.java, androidx/transition/VisibilityPropagation.java
+/*
+ * Copyright (C) 2017 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/transition/CanvasUtils.java, androidx/transition/GhostViewHolder.java, androidx/transition/GhostViewPort.java, androidx/transition/ViewUtilsApi23.java, androidx/transition/ViewUtilsApi29.java, androidx/transition/package-info.java
+/*
+ * Copyright 2019 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/transition/TransitionSeekController.java, androidx/transition/VelocityTracker1D.java
+/*
+ * Copyright 2023 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+

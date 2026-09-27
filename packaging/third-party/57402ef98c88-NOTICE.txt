@@ -1,0 +1,35 @@
+Publisher source headers, retained verbatim from https://dl.google.com/dl/android/maven2/androidx/vectordrawable/vectordrawable-animated/1.1.0/vectordrawable-animated-1.1.0-sources.jar
+Sources archive SHA-256: a3880c595965c55fd1bdee0554b99c66e9c28d3311b7ce6242189fc1f554fcf1
+
+Files: androidx/vectordrawable/graphics/drawable/AnimatedVectorDrawableCompat.java
+/*
+ * Copyright (C) 2015 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
+Files: androidx/vectordrawable/graphics/drawable/Animatable2Compat.java, androidx/vectordrawable/graphics/drawable/AnimationUtilsCompat.java, androidx/vectordrawable/graphics/drawable/AnimatorInflaterCompat.java, androidx/vectordrawable/graphics/drawable/ArgbEvaluator.java, androidx/vectordrawable/graphics/drawable/PathInterpolatorCompat.java
+/*
+ * Copyright (C) 2017 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+

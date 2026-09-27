@@ -1,0 +1,275 @@
+Publisher source headers, retained verbatim from https://repo.maven.apache.org/maven2/com/google/zxing/core/3.4.1/core-3.4.1-sources.jar
+Sources archive SHA-256: dbd1f7da3b69deca7478ba2500ef65a47d7eeda6dde91f12873b33825d65129c
+
+Files: com/google/zxing/client/result/ExpandedProductResultParser.java, com/google/zxing/client/result/ExpandedProductParsedResult.java, com/google/zxing/common/StringUtils.java, com/google/zxing/oned/EANManufacturerOrgSupport.java, com/google/zxing/oned/UPCEANExtension5Support.java, com/google/zxing/oned/UPCEANExtensionSupport.java, com/google/zxing/oned/rss/AbstractRSSReader.java, com/google/zxing/oned/rss/expanded/BitArrayBuilder.java, com/google/zxing/oned/rss/expanded/ExpandedRow.java, com/google/zxing/oned/rss/expanded/RSSExpandedReader.java, com/google/zxing/oned/rss/expanded/decoders/AI01AndOtherAIs.java, com/google/zxing/oned/rss/expanded/decoders/AI01392xDecoder.java, com/google/zxing/oned/rss/expanded/decoders/DecodedNumeric.java, com/google/zxing/oned/rss/expanded/decoders/CurrentParsingState.java, com/google/zxing/oned/rss/expanded/decoders/AI013x0x1xDecoder.java, com/google/zxing/oned/rss/expanded/decoders/DecodedInformation.java, com/google/zxing/oned/rss/expanded/decoders/GeneralAppIdDecoder.java, com/google/zxing/oned/rss/expanded/decoders/AI01weightDecoder.java, com/google/zxing/oned/rss/expanded/decoders/AI01320xDecoder.java, com/google/zxing/oned/rss/expanded/decoders/FieldParser.java, com/google/zxing/oned/rss/expanded/decoders/AnyAIDecoder.java, com/google/zxing/oned/rss/expanded/decoders/AI01393xDecoder.java, com/google/zxing/oned/rss/expanded/decoders/AbstractExpandedDecoder.java, com/google/zxing/oned/rss/expanded/decoders/BlockParsedResult.java, com/google/zxing/oned/rss/expanded/decoders/AI013103decoder.java, com/google/zxing/oned/rss/expanded/decoders/DecodedChar.java, com/google/zxing/oned/rss/expanded/decoders/DecodedObject.java, com/google/zxing/oned/rss/expanded/decoders/AI01decoder.java, com/google/zxing/oned/rss/expanded/decoders/AI013x0xDecoder.java, com/google/zxing/oned/rss/expanded/ExpandedPair.java
+/*
+ * Copyright (C) 2010 ZXing authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: com/google/zxing/oned/UPCEANExtension2Support.java
+/*
+ * Copyright (C) 2012 ZXing authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: com/google/zxing/datamatrix/encoder/DataMatrixSymbolInfo144.java, com/google/zxing/datamatrix/encoder/SymbolInfo.java
+/*
+ * Copyright 2006 Jeremias Maerki
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: com/google/zxing/pdf417/encoder/PDF417.java, com/google/zxing/pdf417/encoder/PDF417HighLevelEncoder.java, com/google/zxing/pdf417/encoder/PDF417ErrorCorrection.java
+/*
+ * Copyright 2006 Jeremias Maerki in part, and ZXing Authors in part
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: com/google/zxing/datamatrix/encoder/DefaultPlacement.java, com/google/zxing/datamatrix/encoder/ErrorCorrection.java
+/*
+ * Copyright 2006 Jeremias Maerki.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: com/google/zxing/datamatrix/encoder/Encoder.java, com/google/zxing/datamatrix/encoder/EdifactEncoder.java, com/google/zxing/datamatrix/encoder/X12Encoder.java, com/google/zxing/datamatrix/encoder/ASCIIEncoder.java, com/google/zxing/datamatrix/encoder/TextEncoder.java, com/google/zxing/datamatrix/encoder/HighLevelEncoder.java, com/google/zxing/datamatrix/encoder/EncoderContext.java, com/google/zxing/datamatrix/encoder/Base256Encoder.java, com/google/zxing/datamatrix/encoder/C40Encoder.java
+/*
+ * Copyright 2006-2007 Jeremias Maerki.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: com/google/zxing/datamatrix/encoder/SymbolShapeHint.java
+/*
+ * Copyright 2007 Jeremias Maerki.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: com/google/zxing/pdf417/detector/PDF417DetectorResult.java, com/google/zxing/ChecksumException.java, com/google/zxing/datamatrix/decoder/Decoder.java, com/google/zxing/datamatrix/decoder/BitMatrixParser.java, com/google/zxing/datamatrix/decoder/Version.java, com/google/zxing/datamatrix/DataMatrixReader.java, com/google/zxing/client/result/ProductParsedResult.java, com/google/zxing/client/result/TextParsedResult.java, com/google/zxing/client/result/URIParsedResult.java, com/google/zxing/client/result/ProductResultParser.java, com/google/zxing/client/result/EmailDoCoMoResultParser.java, com/google/zxing/client/result/AddressBookDoCoMoResultParser.java, com/google/zxing/client/result/URIResultParser.java, com/google/zxing/client/result/AbstractDoCoMoResultParser.java, com/google/zxing/client/result/BookmarkDoCoMoResultParser.java, com/google/zxing/client/result/EmailAddressResultParser.java, com/google/zxing/client/result/ParsedResult.java, com/google/zxing/client/result/ResultParser.java, com/google/zxing/client/result/AddressBookParsedResult.java, com/google/zxing/client/result/URLTOResultParser.java, com/google/zxing/client/result/EmailAddressParsedResult.java, com/google/zxing/common/DetectorResult.java, com/google/zxing/common/reedsolomon/ReedSolomonException.java, com/google/zxing/common/reedsolomon/GenericGF.java, com/google/zxing/common/reedsolomon/GenericGFPoly.java, com/google/zxing/common/reedsolomon/ReedSolomonDecoder.java, com/google/zxing/common/GridSampler.java, com/google/zxing/common/DefaultGridSampler.java, com/google/zxing/common/PerspectiveTransform.java, com/google/zxing/common/BitSource.java, com/google/zxing/common/BitArray.java, com/google/zxing/common/DecoderResult.java, com/google/zxing/common/BitMatrix.java, com/google/zxing/qrcode/detector/FinderPatternFinder.java, com/google/zxing/qrcode/detector/AlignmentPattern.java, com/google/zxing/qrcode/detector/AlignmentPatternFinder.java, com/google/zxing/qrcode/detector/FinderPatternInfo.java, com/google/zxing/qrcode/detector/FinderPattern.java, com/google/zxing/qrcode/detector/Detector.java, com/google/zxing/qrcode/decoder/ErrorCorrectionLevel.java, com/google/zxing/qrcode/decoder/FormatInformation.java, com/google/zxing/qrcode/decoder/Mode.java, com/google/zxing/qrcode/decoder/Decoder.java, com/google/zxing/qrcode/decoder/DecodedBitStreamParser.java, com/google/zxing/qrcode/decoder/DataBlock.java, com/google/zxing/qrcode/decoder/DataMask.java, com/google/zxing/qrcode/decoder/BitMatrixParser.java, com/google/zxing/qrcode/decoder/Version.java, com/google/zxing/qrcode/QRCodeReader.java, com/google/zxing/Result.java, com/google/zxing/ResultPoint.java, com/google/zxing/MultiFormatReader.java, com/google/zxing/DecodeHintType.java, com/google/zxing/BarcodeFormat.java, com/google/zxing/Reader.java, com/google/zxing/NotFoundException.java, com/google/zxing/ReaderException.java, com/google/zxing/FormatException.java
+/*
+ * Copyright 2007 ZXing authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: com/google/zxing/datamatrix/detector/Detector.java, com/google/zxing/datamatrix/DataMatrixWriter.java, com/google/zxing/datamatrix/decoder/DecodedBitStreamParser.java, com/google/zxing/datamatrix/decoder/DataBlock.java, com/google/zxing/Writer.java, com/google/zxing/EncodeHintType.java, com/google/zxing/client/result/VCardResultParser.java, com/google/zxing/client/result/AddressBookAUResultParser.java, com/google/zxing/client/result/ISBNResultParser.java, com/google/zxing/client/result/GeoResultParser.java, com/google/zxing/client/result/TelResultParser.java, com/google/zxing/client/result/SMSParsedResult.java, com/google/zxing/client/result/ISBNParsedResult.java, com/google/zxing/client/result/SMSMMSResultParser.java, com/google/zxing/client/result/SMSTOMMSTOResultParser.java, com/google/zxing/client/result/CalendarParsedResult.java, com/google/zxing/client/result/VEventResultParser.java, com/google/zxing/client/result/BizcardResultParser.java, com/google/zxing/client/result/GeoParsedResult.java, com/google/zxing/client/result/TelParsedResult.java, com/google/zxing/ResultMetadataType.java, com/google/zxing/WriterException.java, com/google/zxing/common/reedsolomon/ReedSolomonEncoder.java, com/google/zxing/common/CharacterSetECI.java, com/google/zxing/qrcode/encoder/Encoder.java, com/google/zxing/qrcode/encoder/MaskUtil.java, com/google/zxing/qrcode/encoder/ByteMatrix.java, com/google/zxing/qrcode/encoder/MatrixUtil.java, com/google/zxing/qrcode/encoder/BlockPair.java, com/google/zxing/qrcode/encoder/QRCode.java, com/google/zxing/qrcode/QRCodeWriter.java, com/google/zxing/oned/UPCEReader.java, com/google/zxing/oned/EAN13Reader.java, com/google/zxing/oned/Code128Reader.java, com/google/zxing/oned/Code39Reader.java, com/google/zxing/oned/OneDReader.java, com/google/zxing/oned/CodaBarReader.java, com/google/zxing/oned/EAN8Reader.java, com/google/zxing/oned/MultiFormatOneDReader.java, com/google/zxing/oned/UPCAReader.java, com/google/zxing/oned/UPCEANReader.java, com/google/zxing/oned/ITFReader.java, com/google/zxing/oned/MultiFormatUPCEANReader.java, com/google/zxing/MultiFormatWriter.java
+/*
+ * Copyright 2008 ZXing authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: com/google/zxing/pdf417/PDF417Common.java, com/google/zxing/pdf417/detector/Detector.java, com/google/zxing/pdf417/decoder/DecodedBitStreamParser.java, com/google/zxing/pdf417/PDF417Reader.java, com/google/zxing/BinaryBitmap.java, com/google/zxing/common/GlobalHistogramBinarizer.java, com/google/zxing/common/detector/MonochromeRectangleDetector.java, com/google/zxing/common/HybridBinarizer.java, com/google/zxing/multi/qrcode/detector/MultiDetector.java, com/google/zxing/multi/qrcode/detector/MultiFinderPatternFinder.java, com/google/zxing/multi/qrcode/QRCodeMultiReader.java, com/google/zxing/multi/GenericMultipleBarcodeReader.java, com/google/zxing/multi/MultipleBarcodeReader.java, com/google/zxing/multi/ByQuadrantReader.java, com/google/zxing/ResultPointCallback.java, com/google/zxing/PlanarYUVLuminanceSource.java, com/google/zxing/Binarizer.java, com/google/zxing/LuminanceSource.java, com/google/zxing/RGBLuminanceSource.java, com/google/zxing/oned/UPCEANWriter.java, com/google/zxing/oned/EAN8Writer.java, com/google/zxing/oned/UPCEWriter.java, com/google/zxing/oned/EAN13Writer.java, com/google/zxing/oned/rss/RSS14Reader.java, com/google/zxing/oned/rss/Pair.java, com/google/zxing/oned/rss/RSSUtils.java, com/google/zxing/oned/rss/FinderPattern.java, com/google/zxing/oned/rss/DataCharacter.java
+/*
+ * Copyright 2009 ZXing authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: com/google/zxing/client/result/WifiResultParser.java, com/google/zxing/client/result/WifiParsedResult.java, com/google/zxing/client/result/SMTPResultParser.java, com/google/zxing/client/result/ParsedResultType.java, com/google/zxing/common/detector/WhiteRectangleDetector.java, com/google/zxing/oned/Code93Reader.java, com/google/zxing/oned/ITFWriter.java, com/google/zxing/oned/Code128Writer.java, com/google/zxing/oned/Code39Writer.java, com/google/zxing/oned/UPCAWriter.java, com/google/zxing/aztec/detector/Detector.java, com/google/zxing/aztec/decoder/Decoder.java, com/google/zxing/aztec/AztecDetectorResult.java, com/google/zxing/aztec/AztecReader.java
+/*
+ * Copyright 2010 ZXing authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: com/google/zxing/pdf417/encoder/BarcodeRow.java, com/google/zxing/pdf417/encoder/Compaction.java, com/google/zxing/pdf417/encoder/BarcodeMatrix.java, com/google/zxing/maxicode/MaxiCodeReader.java, com/google/zxing/maxicode/decoder/Decoder.java, com/google/zxing/maxicode/decoder/DecodedBitStreamParser.java, com/google/zxing/maxicode/decoder/BitMatrixParser.java, com/google/zxing/oned/CodaBarWriter.java, com/google/zxing/oned/OneDimensionalCodeWriter.java
+/*
+ * Copyright 2011 ZXing authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: com/google/zxing/pdf417/encoder/Dimensions.java, com/google/zxing/pdf417/decoder/ec/ModulusPoly.java, com/google/zxing/pdf417/decoder/ec/ErrorCorrection.java, com/google/zxing/pdf417/decoder/ec/ModulusGF.java, com/google/zxing/pdf417/PDF417Writer.java, com/google/zxing/common/detector/MathUtils.java, com/google/zxing/Dimension.java
+/*
+ * Copyright 2012 ZXing authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: com/google/zxing/pdf417/PDF417ResultMetadata.java, com/google/zxing/pdf417/decoder/DetectionResultColumn.java, com/google/zxing/pdf417/decoder/PDF417ScanningDecoder.java, com/google/zxing/pdf417/decoder/DetectionResultRowIndicatorColumn.java, com/google/zxing/pdf417/decoder/Codeword.java, com/google/zxing/pdf417/decoder/BarcodeMetadata.java, com/google/zxing/pdf417/decoder/BoundingBox.java, com/google/zxing/pdf417/decoder/BarcodeValue.java, com/google/zxing/pdf417/decoder/PDF417CodewordDecoder.java, com/google/zxing/pdf417/decoder/DetectionResult.java, com/google/zxing/qrcode/decoder/QRCodeDecoderMetaData.java, com/google/zxing/InvertedLuminanceSource.java, com/google/zxing/aztec/encoder/Encoder.java, com/google/zxing/aztec/encoder/State.java, com/google/zxing/aztec/encoder/AztecCode.java, com/google/zxing/aztec/encoder/HighLevelEncoder.java, com/google/zxing/aztec/encoder/BinaryShiftToken.java, com/google/zxing/aztec/encoder/Token.java, com/google/zxing/aztec/encoder/SimpleToken.java, com/google/zxing/aztec/AztecWriter.java
+/*
+ * Copyright 2013 ZXing authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: com/google/zxing/client/result/VINParsedResult.java, com/google/zxing/client/result/VINResultParser.java
+/*
+ * Copyright 2014 ZXing authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: com/google/zxing/oned/Code93Writer.java
+/*
+ * Copyright 2015 ZXing authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+

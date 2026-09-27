@@ -44,12 +44,27 @@ def source_identity():
     }
 
 
+def artifact_record(path, category, role):
+    if not path.is_file() or path.is_symlink():
+        raise OSError('ArtifactMissingOrUnsafe')
+    with path.open('rb') as artifact:
+        digest = hashlib.file_digest(artifact, 'sha256').hexdigest()
+        size = os.fstat(artifact.fileno()).st_size
+    return {'filename': path.name,
+            'path': str(path.resolve().relative_to(ROOT)) if path.resolve().is_relative_to(ROOT) else path.name,
+            'size': size, 'sha256': digest, 'signing_category': category, 'role': role}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--suite", required=True)
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--timeout", type=int, default=1800)
-    parser.add_argument("--artifact", type=Path, action="append", default=[])
+    parser.add_argument("--artifact", type=Path, action="append", default=[], help="Artifact produced by a build")
+    parser.add_argument("--tested-artifact", type=Path, action="append", default=[],
+                        help="Existing input that must have identical bytes before and after the check")
+    parser.add_argument("--frozen-source", action="store_true",
+                        help="Fail qualification if the source is dirty or changes during the command")
     parser.add_argument("--signing-category", default="not-applicable")
     parser.add_argument("--fixture", default="synthetic/local")
     parser.add_argument("command", nargs=argparse.REMAINDER)
@@ -68,6 +83,8 @@ def main():
               "started": datetime.datetime.now(datetime.UTC).isoformat(),
               "limitations": ["Local execution; no independent audit or native-runtime inference."]}
     report["artifacts"] = []
+    report["tested_artifacts_before"] = []
+    report["frozen_source_required"] = args.frozen_source
     report["toolchains"] = {}
     for name, version_command in {"rust": ["rustc", "--version"], "node": ["node", "--version"],
                           "pnpm": ["pnpm", "--version"], "python": ["python3", "--version"]}.items():
@@ -82,6 +99,10 @@ def main():
     output_limit = 16 * 1024 * 1024
     output_errors = []
     try:
+        report['tested_artifacts_before'] = [artifact_record(p, args.signing_category, 'tested-input')
+                                             for p in args.tested_artifact]
+        if args.frozen_source and report['source']['dirty']:
+            raise OSError('SourceNotFrozen')
         with log.open("xb") as output:
             child = subprocess.Popen(command, cwd=ROOT, stdout=subprocess.PIPE,
                                      stderr=subprocess.STDOUT, start_new_session=os.name == "posix")
@@ -118,25 +139,27 @@ def main():
             code, reason = 1, "OutputLimitExceeded"
         result = "passed" if code == 0 else "failed"
     except (OSError, subprocess.TimeoutExpired) as error:
-        code, reason = 1, type(error).__name__
-    for path in args.artifact:
-        if not path.is_file() or path.is_symlink():
+        code = 1
+        reason = str(error) if str(error) in ('ArtifactMissingOrUnsafe', 'SourceNotFrozen') else type(error).__name__
+    for path, role in [(p, 'tested-input') for p in args.tested_artifact] + [(p, 'build-output') for p in args.artifact]:
+        try:
+            report['artifacts'].append(artifact_record(path, args.signing_category, role))
+        except OSError:
             result, code, reason = "failed", 1, "ArtifactMissingOrUnsafe"
-            continue
-        with path.open("rb") as artifact:
-            report["artifacts"].append({"filename": path.name,
-                "path": str(path.resolve().relative_to(ROOT)) if path.resolve().is_relative_to(ROOT) else path.name,
-                "size": path.stat().st_size,
-                "sha256": hashlib.file_digest(artifact, "sha256").hexdigest(),
-                "signing_category": args.signing_category})
+    tested_after = [a for a in report['artifacts'] if a['role'] == 'tested-input']
+    if reason != 'ArtifactMissingOrUnsafe' and tested_after != report['tested_artifacts_before']:
+        result, code, reason = 'failed', 1, 'TestedArtifactChanged'
     report.update(result=result, exit_code=code, reason=reason,
                   ended=datetime.datetime.now(datetime.UTC).isoformat(),
                   elapsed_seconds=round(time.monotonic() - started, 3),
                   log=log.name, log_truncated=output_size > output_limit, source_after=source_identity())
     report["source_changed_during_run"] = report["source"]["source_sha256"] != report["source_after"]["source_sha256"]
     report["verification_source_changed_during_run"] = report["source"]["verification_source_sha256"] != report["source_after"]["verification_source_sha256"]
+    if args.frozen_source and (report['source_after']['dirty'] or report['source_changed_during_run']):
+        report.update(result='failed', exit_code=1, reason='SourceNotFrozen')
+        code = 1
     report_path.write_text(json.dumps(report, indent=2) + "\n")
-    print(f"{args.suite}: {result}; {log}")
+    print(f"{args.suite}: {report['result']}; {log}")
     return code if code > 0 else (1 if code < 0 else 0)
 
 

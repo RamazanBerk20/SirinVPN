@@ -1,0 +1,139 @@
+Publisher source headers, retained verbatim from https://dl.google.com/dl/android/maven2/androidx/core/core-ktx/1.13.1/core-ktx-1.13.1-sources.jar
+Sources archive SHA-256: b6646f76cd2d59210561dffb16b32a4e5fcca6de37ca027f1dae82bfb0cf6493
+
+Files: androidx/core/content/Context.kt, androidx/core/content/SharedPreferences.kt, androidx/core/graphics/Bitmap.kt, androidx/core/graphics/Canvas.kt, androidx/core/graphics/Color.kt, androidx/core/graphics/Point.kt, androidx/core/graphics/Rect.kt, androidx/core/graphics/Region.kt, androidx/core/graphics/Shader.kt, androidx/core/net/Uri.kt, androidx/core/os/Handler.kt, androidx/core/os/Trace.kt, androidx/core/text/SpannableStringBuilder.kt, androidx/core/util/LongSparseArray.kt, androidx/core/util/Pair.kt, androidx/core/util/SparseArray.kt, androidx/core/util/SparseBooleanArray.kt, androidx/core/util/SparseIntArray.kt, androidx/core/util/SparseLongArray.kt
+/*
+ * Copyright (C) 2017 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/core/animation/Animator.kt, androidx/core/transition/Transition.kt, androidx/core/util/AtomicFile.kt, androidx/core/util/Half.kt, androidx/core/view/View.kt, androidx/core/view/ViewGroup.kt
+/*
+ * Copyright (C) 2017 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/core/content/ContentValues.kt, androidx/core/content/res/TypedArray.kt, androidx/core/database/Cursor.kt, androidx/core/database/sqlite/SQLiteDatabase.kt, androidx/core/graphics/ImageDecoder.kt, androidx/core/graphics/Matrix.kt, androidx/core/graphics/Path.kt, androidx/core/graphics/PorterDuff.kt, androidx/core/graphics/drawable/BitmapDrawable.kt, androidx/core/graphics/drawable/ColorDrawable.kt, androidx/core/graphics/drawable/Drawable.kt, androidx/core/graphics/drawable/Icon.kt, androidx/core/location/Location.kt, androidx/core/os/Bundle.kt, androidx/core/os/PersistableBundle.kt, androidx/core/text/CharSequence.kt, androidx/core/text/Html.kt, androidx/core/text/SpannableString.kt, androidx/core/text/SpannedString.kt, androidx/core/text/String.kt, androidx/core/util/Range.kt, androidx/core/util/Size.kt, androidx/core/view/Menu.kt, androidx/core/widget/TextView.kt
+/*
+ * Copyright (C) 2018 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/core/util/LruCache.kt
+/*
+ * Copyright (C) 2018 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/core/graphics/Picture.kt
+/*
+ * Copyright (C) 20188 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/core/graphics/Paint.kt
+/*
+ * Copyright (C) 2019 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/core/text/Locale.kt
+/*
+ * Copyright 2018 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/core/os/OutcomeReceiver.kt, androidx/core/util/AndroidXConsumer.kt, androidx/core/util/PlatformConsumer.kt, androidx/core/util/Runnable.kt
+/*
+ * Copyright 2022 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+

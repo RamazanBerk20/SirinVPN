@@ -15,6 +15,14 @@ def main():
     version = workspace["workspace"]["package"]["version"]
     for name in ["apps/desktop/package.json", "apps/desktop/src-tauri/tauri.conf.json"]:
         assert json.loads((ROOT / name).read_text())["version"] == version, name
+    # The scanner cannot obtain registry license metadata for unpublished local crates.
+    overrides = tomllib.loads((ROOT / "osv-scanner.toml").read_text())["PackageOverrides"]
+    local = {p['name'] for p in tomllib.loads((ROOT / 'Cargo.lock').read_text())['package']
+             if p['name'].startswith('sirinvpn-') and 'source' not in p}
+    metadata = [p for p in overrides if p['name'] in local]
+    assert {p['name'] for p in metadata} == local and len(metadata) == len(local)
+    assert all(p['version'] == version and p['license']['override'] ==
+               [workspace['workspace']['package']['license']] for p in metadata), 'Stale local license metadata'
     compatibility = json.loads((ROOT / "release/state-compatibility.json").read_text())
     names = [item["state"] for item in compatibility["states"]]
     assert names == sorted(set(names)), "Compatibility states must be unique and sorted"

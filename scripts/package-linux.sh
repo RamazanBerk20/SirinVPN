@@ -66,7 +66,6 @@ repair_appimage_runtime() {
     return 1
   fi
 
-  SIRINVPN_REPACK_REQUIRED=0
   # linuxdeploy adds an AppImage-local RUNPATH to every staged executable.
   # These two components are installed outside the AppImage. Preserve their
   # canonical bytes, including the helper used for exact installed-build checks.
@@ -78,23 +77,17 @@ repair_appimage_runtime() {
     fi
     if ! cmp -s "$BIN_DIR/$SIRINVPN_SYSTEM_COMPONENT" "$SIRINVPN_APPDIR_COMPONENT"; then
       install -m 0755 "$BIN_DIR/$SIRINVPN_SYSTEM_COMPONENT" "$SIRINVPN_APPDIR_COMPONENT"
-      SIRINVPN_REPACK_REQUIRED=1
     fi
   done
 
-  SIRINVPN_WAYLAND_LIBRARY_COUNT=0
   for SIRINVPN_LIBRARY in "$SIRINVPN_APPDIR/usr/lib"/libwayland-*.so*; do
     if [ -e "$SIRINVPN_LIBRARY" ] || [ -L "$SIRINVPN_LIBRARY" ]; then
       rm -f -- "$SIRINVPN_LIBRARY"
-      SIRINVPN_WAYLAND_LIBRARY_COUNT=$((SIRINVPN_WAYLAND_LIBRARY_COUNT + 1))
     fi
   done
-  if [ "$SIRINVPN_WAYLAND_LIBRARY_COUNT" -gt 0 ]; then
-    SIRINVPN_REPACK_REQUIRED=1
-  fi
-  if [ "$SIRINVPN_REPACK_REQUIRED" -eq 0 ]; then
-    return 0
-  fi
+  # linuxdeploy discovers bundled libraries only during packaging. Collect their
+  # exact distribution provenance and notices before producing the final bytes.
+  python3 "$PROJECT_ROOT/scripts/collect-appimage-notices.py" "$SIRINVPN_APPDIR"
 
   # Tauri's GTK bundler currently includes Bookworm's libwayland, which is
   # incompatible with newer host Mesa releases. Repack with the host ABI libs.

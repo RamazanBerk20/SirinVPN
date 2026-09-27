@@ -101,6 +101,12 @@
           "signing_category": {
             "type": "string",
             "minLength": 1
+          },
+          "role": {
+            "enum": [
+              "build-output",
+              "tested-input"
+            ]
           }
         }
       }
@@ -144,6 +150,12 @@
     },
     "toolchains": {
       "type": "object"
+    },
+    "tested_artifacts_before": {
+      "$ref": "#/properties/artifacts"
+    },
+    "frozen_source_required": {
+      "type": "boolean"
     }
   }
 }

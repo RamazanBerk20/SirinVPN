@@ -1,0 +1,102 @@
+Publisher source headers, retained verbatim from https://repo.maven.apache.org/maven2/org/jetbrains/kotlin/kotlin-stdlib/2.0.21/kotlin-stdlib-2.0.21-sources.jar
+Sources archive SHA-256: 5995c780c3ac742fb277ced561ebd7b0739227ea7c93a6bd9c7cee6593493fce
+
+Files: jvmMain/kotlin/Any.kt, jvmMain/kotlin/CharSequence.kt, jvmMain/kotlin/Comparable.kt, jvmMain/kotlin/Iterator.kt, jvmMain/kotlin/Nothing.kt, jvmMain/kotlin/Number.kt, jvmMain/kotlin/Throwable.kt, jvmMain/kotlin/reflect/KDeclarationContainer.kt, jvmMain/kotlin/reflect/KParameter.kt, jvmMain/kotlin/Function.kt, jvmMain/kotlin/Unit.kt, jvmMain/kotlin/annotation/Annotations.kt
+/*
+ * Copyright 2010-2015 JetBrains s.r.o.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: jvmMain/kotlin/Library.kt, jvmMain/kotlin/String.kt, jvmMain/kotlin/reflect/KVisibility.kt, jvmMain/kotlin/ArrayIntrinsics.kt, commonMain/InternalAnnotations.kt
+/*
+ * Copyright 2010-2016 JetBrains s.r.o.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: jvmMain/jdk8/kotlin/collections/Collections.kt, jvmMain/jdk8/kotlin/internal/jdk8/JDK8PlatformImplementations.kt, jvmMain/jdk8/kotlin/streams/Streams.kt
+/*
+ * Copyright 2010-2017 JetBrains s.r.o.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: commonMain/kotlin/experimental/ExperimentalNativeApi.kt
+/*
+ * Copyright 2010-2018 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license
+ * that can be found in the LICENSE file.
+ */
+
+Files: jvmMain/kotlin/Annotation.kt, jvmMain/kotlin/Coroutines.kt, jvmMain/jdk8/kotlin/random/jdk8/PlatformThreadLocalRandom.kt, jvmMain/kotlin/collections/ArraysJVM.kt, jvmMain/kotlin/collections/ArraysUtilJVM.java, jvmMain/kotlin/collections/GroupingJVM.kt, jvmMain/kotlin/collections/IteratorsJVM.kt, jvmMain/kotlin/collections/SequencesJVM.kt, jvmMain/kotlin/collections/TypeAliases.kt, jvmMain/kotlin/concurrent/Thread.kt, jvmMain/kotlin/concurrent/Timer.kt, jvmMain/kotlin/coroutines/SafeContinuationJvm.kt, jvmMain/kotlin/coroutines/intrinsics/IntrinsicsJvm.kt, jvmMain/kotlin/coroutines/jvm/internal/ContinuationImpl.kt, jvmMain/kotlin/coroutines/jvm/internal/CoroutineStackFrame.kt, jvmMain/kotlin/coroutines/jvm/internal/DebugMetadata.kt, jvmMain/kotlin/coroutines/jvm/internal/DebugProbes.kt, jvmMain/kotlin/coroutines/jvm/internal/RunSuspend.kt, jvmMain/kotlin/coroutines/jvm/internal/boxing.kt, jvmMain/kotlin/io/Closeable.kt, jvmMain/kotlin/io/Console.kt, jvmMain/kotlin/io/Constants.kt, jvmMain/kotlin/io/Exceptions.kt, jvmMain/kotlin/io/FileReadWrite.kt, jvmMain/kotlin/io/IOStreams.kt, jvmMain/kotlin/io/ReadWrite.kt, jvmMain/kotlin/io/Serializable.kt, jvmMain/kotlin/io/files/FilePathComponents.kt, jvmMain/kotlin/io/files/FileTreeWalk.kt, jvmMain/kotlin/jvm/JvmDefault.kt, jvmMain/kotlin/jvm/internal/unsafe/monitor.kt, jvmMain/kotlin/random/PlatformRandom.kt, jvmMain/kotlin/reflect/KCallable.kt, jvmMain/kotlin/reflect/KFunction.kt, jvmMain/kotlin/system/Process.kt, jvmMain/kotlin/text/Charsets.kt, jvmMain/kotlin/text/StringBuilderJVM.kt, jvmMain/kotlin/text/StringNumberConversionsJVM.kt, jvmMain/kotlin/text/regex/RegexExtensionsJVM.kt, jvmMain/kotlin/util/AssertionsJVM.kt, jvmMain/kotlin/util/BigIntegers.kt, jvmMain/kotlin/util/LazyJVM.kt, jvmMain/kotlin/util/NumbersJVM.kt, jvmMain/kotlin/util/Synchronized.kt, jvmMain/kotlin/KotlinNullPointerException.kt, jvmMain/kotlin/Metadata.kt, jvmMain/kotlin/NoWhenBranchMatchedException.kt, jvmMain/kotlin/TypeAliases.kt, jvmMain/kotlin/TypeCastException.kt, jvmMain/kotlin/UninitializedPropertyAccessException.kt, jvmMain/kotlin/jvm/KotlinReflectionNotSupportedError.kt, jvmMain/kotlin/jvm/PurelyImplements.kt, jvmMain/kotlin/jvm/annotations/JvmFlagAnnotations.kt, jvmMain/kotlin/jvm/annotations/JvmPlatformAnnotations.kt, jvmMain/kotlin/jvm/functions/FunctionN.kt, jvmMain/kotlin/jvm/internal/ArrayIterator.kt, jvmMain/kotlin/jvm/internal/CallableReference.java, jvmMain/kotlin/jvm/internal/ClassBasedDeclarationContainer.kt, jvmMain/kotlin/jvm/internal/ClassReference.kt, jvmMain/kotlin/jvm/internal/CollectionToArray.kt, jvmMain/kotlin/jvm/internal/DefaultConstructorMarker.java, jvmMain/kotlin/jvm/internal/FunctionBase.kt, jvmMain/kotlin/jvm/internal/FunctionImpl.java, jvmMain/kotlin/jvm/internal/FunctionReference.java, jvmMain/kotlin/jvm/internal/FunctionReferenceImpl.java, jvmMain/kotlin/jvm/internal/InlineMarker.java, jvmMain/kotlin/jvm/internal/Intrinsics.java, jvmMain/kotlin/jvm/internal/Lambda.kt, jvmMain/kotlin/jvm/internal/MagicApiIntrinsics.java, jvmMain/kotlin/jvm/internal/MutablePropertyReference.java, jvmMain/kotlin/jvm/internal/MutablePropertyReference0.java, jvmMain/kotlin/jvm/internal/MutablePropertyReference0Impl.java, jvmMain/kotlin/jvm/internal/MutablePropertyReference1.java, jvmMain/kotlin/jvm/internal/MutablePropertyReference1Impl.java, jvmMain/kotlin/jvm/internal/MutablePropertyReference2.java, jvmMain/kotlin/jvm/internal/MutablePropertyReference2Impl.java, jvmMain/kotlin/jvm/internal/PackageReference.kt, jvmMain/kotlin/jvm/internal/PrimitiveCompanionObjects.kt, jvmMain/kotlin/jvm/internal/PrimitiveSpreadBuilders.kt, jvmMain/kotlin/jvm/internal/PropertyReference.java, jvmMain/kotlin/jvm/internal/PropertyReference0.java, jvmMain/kotlin/jvm/internal/PropertyReference0Impl.java, jvmMain/kotlin/jvm/internal/PropertyReference1.java, jvmMain/kotlin/jvm/internal/PropertyReference1Impl.java, jvmMain/kotlin/jvm/internal/PropertyReference2.java, jvmMain/kotlin/jvm/internal/PropertyReference2Impl.java, jvmMain/kotlin/jvm/internal/Ref.java, jvmMain/kotlin/jvm/internal/Reflection.java, jvmMain/kotlin/jvm/internal/ReflectionFactory.java, jvmMain/kotlin/jvm/internal/SpreadBuilder.java, jvmMain/kotlin/jvm/internal/TypeIntrinsics.java, jvmMain/kotlin/jvm/internal/localVariableReferences.kt, jvmMain/kotlin/jvm/internal/markers/KMarkers.kt, jvmMain/kotlin/text/TypeAliases.kt, commonMain/kotlin/JsAnnotationsH.kt, commonMain/kotlin/SequencesH.kt, commonMain/kotlin/ioH.kt, commonMain/kotlin/collections/ArrayList.kt, commonMain/kotlin/collections/CollectionsH.kt, commonMain/kotlin/collections/HashMap.kt, commonMain/kotlin/collections/HashSet.kt, commonMain/kotlin/collections/LinkedHashMap.kt, commonMain/kotlin/collections/LinkedHashSet.kt, commonMain/kotlin/annotations/Multiplatform.kt, commonMain/kotlin/annotations/WasExperimental.kt, commonMain/kotlin/collections/AbstractIterator.kt, commonMain/kotlin/collections/Arrays.kt, commonMain/kotlin/collections/Grouping.kt, commonMain/kotlin/collections/IndexedValue.kt, commonMain/kotlin/collections/Iterables.kt, commonMain/kotlin/collections/Iterators.kt, commonMain/kotlin/collections/MapWithDefault.kt, commonMain/kotlin/collections/Sequence.kt, commonMain/kotlin/collections/SequenceBuilder.kt, commonMain/kotlin/collections/SlidingWindow.kt, commonMain/kotlin/contracts/ContractBuilder.kt, commonMain/kotlin/contracts/Effect.kt, commonMain/kotlin/coroutines/ContinuationInterceptor.kt, commonMain/kotlin/coroutines/CoroutineContext.kt, commonMain/kotlin/coroutines/CoroutinesH.kt, commonMain/kotlin/coroutines/CoroutinesIntrinsicsH.kt, commonMain/kotlin/experimental/bitwiseOperations.kt, commonMain/kotlin/experimental/inferenceMarker.kt, commonMain/kotlin/internal/Annotations.kt, commonMain/kotlin/internal/progressionUtil.kt, commonMain/kotlin/properties/Delegates.kt, commonMain/kotlin/properties/ObservableProperty.kt, commonMain/kotlin/random/XorWowRandom.kt, commonMain/kotlin/ranges/Ranges.kt, commonMain/kotlin/reflect/KCallable.kt, commonMain/kotlin/reflect/KFunction.kt, commonMain/kotlin/reflect/KProperty.kt, commonMain/kotlin/text/StringNumberConversions.kt, commonMain/kotlin/text/Typography.kt, commonMain/kotlin/text/regex/MatchResult.kt, commonMain/kotlin/text/regex/RegexExtensions.kt, commonMain/kotlin/util/HashCode.kt, commonMain/kotlin/util/Lateinit.kt, commonMain/kotlin/util/Lazy.kt, commonMain/kotlin/util/Preconditions.kt, commonMain/kotlin/util/Result.kt, commonMain/kotlin/util/Standard.kt, commonMain/kotlin/util/Suspend.kt, commonMain/kotlin/util/Tuples.kt, commonMain/kotlin/annotations/Unsigned.kt
+/*
+ * Copyright 2010-2018 JetBrains s.r.o. and Kotlin Programming Language contributors.
+ * Use of this source code is governed by the Apache 2.0 license that can be found in the license/LICENSE.txt file.
+ */
+
+Files: jvmMain/kotlin/Array.kt, jvmMain/kotlin/Enum.kt, jvmMain/kotlin/reflect/KAnnotatedElement.kt, jvmMain/kotlin/reflect/KClass.kt, jvmMain/kotlin/reflect/KClassesImpl.kt, jvmMain/kotlin/reflect/KProperty.kt, jvmMain/kotlin/reflect/KType.kt, jvmMain/kotlin/reflect/TypesJVM.kt, jvmMain/kotlin/jvm/internal/KTypeBase.kt, jvmMain/kotlin/jvm/internal/TypeReference.kt, jvmMain/kotlin/Annotations.kt, commonMain/kotlin/collections/ArrayDeque.kt, commonMain/kotlin/collections/UArraySorting.kt, commonMain/kotlin/ranges/Range.kt, commonMain/kotlin/reflect/KClasses.kt, commonMain/kotlin/reflect/KClassifier.kt, commonMain/kotlin/reflect/KTypeParameter.kt, commonMain/kotlin/reflect/KVariance.kt, commonMain/kotlin/reflect/typeOf.kt, commonMain/kotlin/text/Appendable.kt, commonMain/kotlin/text/CharacterCodingException.kt, commonMain/kotlin/time/ExperimentalTime.kt, commonMain/kotlin/util/Numbers.kt
+/*
+ * Copyright 2010-2019 JetBrains s.r.o. and Kotlin Programming Language contributors.
+ * Use of this source code is governed by the Apache 2.0 license that can be found in the license/LICENSE.txt file.
+ */
+
+Files: jvmMain/kotlin/Collections.kt, jvmMain/jdk7/kotlin/internal/jdk7/JDK7PlatformImplementations.kt, jvmMain/jdk7/kotlin/io/path/ExperimentalPathApi.kt, jvmMain/kotlin/collections/AbstractMutableCollection.kt, jvmMain/kotlin/collections/AbstractMutableList.kt, jvmMain/kotlin/collections/AbstractMutableMap.kt, jvmMain/kotlin/collections/AbstractMutableSet.kt, jvmMain/kotlin/collections/MutableCollectionsJVM.kt, jvmMain/kotlin/concurrent/Locks.kt, jvmMain/kotlin/coroutines/cancellation/CancellationException.kt, jvmMain/kotlin/io/files/Utils.kt, jvmMain/kotlin/system/Timing.kt, jvmMain/kotlin/util/BigDecimals.kt, jvmMain/kotlin/util/Exceptions.kt, jvmMain/kotlin/Throws.kt, jvmMain/kotlin/jvm/internal/AdaptedFunctionReference.java, jvmMain/kotlin/jvm/internal/FunInterfaceConstructorReference.java, jvmMain/kotlin/jvm/internal/FunctionAdapter.java, jvmMain/kotlin/jvm/internal/TypeParameterReference.kt, commonMain/kotlin/Comparator.kt, commonMain/kotlin/ExceptionsH.kt, commonMain/kotlin/KotlinH.kt, commonMain/kotlin/collections/AbstractMutableCollection.kt, commonMain/kotlin/collections/AbstractMutableList.kt, commonMain/kotlin/collections/AbstractMutableMap.kt, commonMain/kotlin/collections/AbstractMutableSet.kt, commonMain/kotlin/annotations/Inference.kt, commonMain/kotlin/annotations/Throws.kt, commonMain/kotlin/collections/AbstractCollection.kt, commonMain/kotlin/collections/AbstractList.kt, commonMain/kotlin/collections/AbstractMap.kt, commonMain/kotlin/collections/AbstractSet.kt, commonMain/kotlin/collections/MapAccessors.kt, commonMain/kotlin/collections/MutableCollections.kt, commonMain/kotlin/collections/Sequences.kt, commonMain/kotlin/coroutines/Continuation.kt, commonMain/kotlin/coroutines/CoroutineContextImpl.kt, commonMain/kotlin/coroutines/cancellation/CancellationExceptionH.kt, commonMain/kotlin/coroutines/intrinsics/Intrinsics.kt, commonMain/kotlin/properties/Interfaces.kt, commonMain/kotlin/properties/PropertyReferenceDelegates.kt, commonMain/kotlin/reflect/KClass.kt, commonMain/kotlin/reflect/KType.kt, commonMain/kotlin/reflect/KTypeProjection.kt, commonMain/kotlin/text/CharCategory.kt, commonMain/kotlin/text/StringBuilder.kt, commonMain/kotlin/util/DeepRecursive.kt, commonMain/kotlin/util/KotlinVersion.kt
+/*
+ * Copyright 2010-2020 JetBrains s.r.o. and Kotlin Programming Language contributors.
+ * Use of this source code is governed by the Apache 2.0 license that can be found in the license/LICENSE.txt file.
+ */
+
+Files: jvmMain/jdk7/kotlin/io/path/PathReadWrite.kt, jvmMain/jdk7/kotlin/io/path/PathTreeWalk.kt, jvmMain/jdk7/kotlin/io/path/PathUtils.kt, jvmMain/jdk8/kotlin/annotations/JvmRepeatable.kt, jvmMain/jdk8/kotlin/time/DurationConversions.kt, jvmMain/kotlin/CharCodeJVM.kt, jvmMain/kotlin/collections/builders/ListBuilder.kt, jvmMain/kotlin/collections/builders/MapBuilder.kt, jvmMain/kotlin/collections/builders/SetBuilder.kt, jvmMain/kotlin/text/CharJVM.kt, jvmMain/kotlin/text/StringsJVM.kt, jvmMain/kotlin/text/regex/Regex.kt, jvmMain/kotlin/time/DurationJvm.kt, jvmMain/kotlin/time/DurationUnitJvm.kt, jvmMain/kotlin/jvm/internal/RepeatableContainer.java, jvmMain/kotlin/jvm/internal/SerializedIr.kt, commonMain/kotlin/JvmAnnotationsH.kt, commonMain/kotlin/TextH.kt, commonMain/kotlin/CharCode.kt, commonMain/kotlin/annotations/NativeAnnotations.kt, commonMain/kotlin/comparisons/compareTo.kt, commonMain/kotlin/random/Random.kt, commonMain/kotlin/random/URandom.kt, commonMain/kotlin/text/Char.kt, commonMain/kotlin/text/Strings.kt, commonMain/kotlin/time/Duration.kt, commonMain/kotlin/time/DurationUnit.kt, commonMain/kotlin/UMath.kt, commonMain/kotlin/UNumbers.kt, commonMain/kotlin/UProgressionUtil.kt, commonMain/kotlin/UStrings.kt
+/*
+ * Copyright 2010-2021 JetBrains s.r.o. and Kotlin Programming Language contributors.
+ * Use of this source code is governed by the Apache 2.0 license that can be found in the license/LICENSE.txt file.
+ */
+
+Files: jvmMain/jdk7/kotlin/AutoCloseableJVM.kt, jvmMain/jdk7/kotlin/io/path/CopyActionContext.kt, jvmMain/jdk7/kotlin/io/path/CopyActionResult.kt, jvmMain/jdk7/kotlin/io/path/FileVisitorBuilder.kt, jvmMain/jdk7/kotlin/io/path/OnErrorResult.kt, jvmMain/jdk7/kotlin/io/path/PathRecursiveFunctions.kt, jvmMain/jdk7/kotlin/io/path/PathWalkOption.kt, jvmMain/jdk8/kotlin/jvm/optionals/Optionals.kt, jvmMain/kotlin/concurrent/Volatile.kt, jvmMain/kotlin/enums/EnumEntriesSerializationProxy.kt, jvmMain/kotlin/io/encoding/Base64IOStream.kt, jvmMain/kotlin/text/regex/RegexExtensions.kt, jvmMain/kotlin/time/MonoTimeSource.kt, jvmMain/kotlin/util/MathJVM.kt, jvmMain/kotlin/jvm/JvmClassMapping.kt, jvmMain/kotlin/jvm/internal/SourceDebugExtension.kt, commonMain/kotlin/MathH.kt, commonMain/kotlin/AutoCloseable.kt, commonMain/kotlin/annotations/NativeConcurrentAnnotations.kt, commonMain/kotlin/annotations/OptIn.kt, commonMain/kotlin/comparisons/Comparisons.kt, commonMain/kotlin/concurrent/Volatile.kt, commonMain/kotlin/experimental/ExperimentalObjCName.kt, commonMain/kotlin/experimental/ExperimentalObjCRefinement.kt, commonMain/kotlin/io/encoding/Base64.kt, commonMain/kotlin/time/TimeSource.kt, commonMain/kotlin/time/TimeSources.kt, commonMain/kotlin/time/longSaturatedMath.kt, commonMain/kotlin/time/measureTime.kt
+/*
+ * Copyright 2010-2022 JetBrains s.r.o. and Kotlin Programming Language contributors.
+ * Use of this source code is governed by the Apache 2.0 license that can be found in the license/LICENSE.txt file.
+ */
+
+Files: jvmMain/kotlin/collections/CollectionsJVM.kt, jvmMain/kotlin/collections/MapsJVM.kt, jvmMain/kotlin/collections/SetsJVM.kt, jvmMain/kotlin/enums/EnumEntriesJVM.kt, jvmMain/kotlin/internal/PlatformImplementations.kt, jvmMain/kotlin/io/encoding/Base64JVM.kt, jvmMain/kotlin/text/CharCategoryJVM.kt, jvmMain/kotlin/text/CharDirectionality.kt, jvmMain/kotlin/util/UnsignedJVM.kt, commonMain/generated/_OneToManyTitlecaseMappings.kt, commonMain/kotlin/collections/Collections.kt, commonMain/kotlin/collections/Maps.kt, commonMain/kotlin/collections/ReversedViews.kt, commonMain/kotlin/collections/Sets.kt, commonMain/kotlin/enums/EnumEntries.kt, commonMain/kotlin/io/encoding/ExperimentalEncodingApi.kt, commonMain/kotlin/text/HexExtensions.kt, commonMain/kotlin/text/HexFormat.kt, commonMain/kotlin/text/Indent.kt, commonMain/kotlin/text/UHexExtensions.kt, commonMain/kotlin/uuid/ExperimentalUuidApi.kt, commonMain/kotlin/UnsignedCommon.kt
+/*
+ * Copyright 2010-2023 JetBrains s.r.o. and Kotlin Programming Language contributors.
+ * Use of this source code is governed by the Apache 2.0 license that can be found in the license/LICENSE.txt file.
+ */
+
+Files: jvmMain/kotlin/Arrays.kt, jvmMain/kotlin/Boolean.kt, jvmMain/kotlin/Char.kt, jvmMain/kotlin/Primitives.kt, jvmMain/generated/_ArraysJvm.kt, jvmMain/generated/_CollectionsJvm.kt, jvmMain/generated/_ComparisonsJvm.kt, jvmMain/generated/_MapsJvm.kt, jvmMain/generated/_SequencesJvm.kt, jvmMain/generated/_StringsJvm.kt, jvmMain/generated/_UArraysJvm.kt, jvmMain/kotlin/uuid/UuidJVM.kt, jvmMain/kotlin/jvm/functions/Functions.kt, jvmMain/kotlin/jvm/internal/ArrayIterators.kt, commonMain/generated/_Arrays.kt, commonMain/generated/_Collections.kt, commonMain/generated/_Comparisons.kt, commonMain/generated/_Maps.kt, commonMain/generated/_Ranges.kt, commonMain/generated/_Sequences.kt, commonMain/generated/_Sets.kt, commonMain/generated/_Strings.kt, commonMain/generated/_UArrays.kt, commonMain/generated/_UCollections.kt, commonMain/generated/_UComparisons.kt, commonMain/generated/_URanges.kt, commonMain/generated/_USequences.kt, commonMain/kotlin/annotations/ConsistentCopyVisibility.kt, commonMain/kotlin/collections/PrimitiveIterators.kt, commonMain/kotlin/ranges/PrimitiveRanges.kt, commonMain/kotlin/ranges/ProgressionIterators.kt, commonMain/kotlin/ranges/Progressions.kt, commonMain/kotlin/util/FloorDivMod.kt, commonMain/kotlin/uuid/Uuid.kt, commonMain/kotlin/UByte.kt, commonMain/kotlin/UByteArray.kt, commonMain/kotlin/UInt.kt, commonMain/kotlin/UIntArray.kt, commonMain/kotlin/UIntRange.kt, commonMain/kotlin/ULong.kt, commonMain/kotlin/ULongArray.kt, commonMain/kotlin/ULongRange.kt, commonMain/kotlin/UShort.kt, commonMain/kotlin/UShortArray.kt
+/*
+ * Copyright 2010-2024 JetBrains s.r.o. and Kotlin Programming Language contributors.
+ * Use of this source code is governed by the Apache 2.0 license that can be found in the license/LICENSE.txt file.
+ */
+

@@ -1,0 +1,20 @@
+Publisher source headers, retained verbatim from https://dl.google.com/dl/android/maven2/androidx/recyclerview/recyclerview/1.1.0/recyclerview-1.1.0-sources.jar
+Sources archive SHA-256: 7552c8b621d59b68d2dc962d3bbeee8ccaea5b54cf0085adc85059d37584d93c
+
+Files: androidx/recyclerview/widget/AdapterHelper.java, androidx/recyclerview/widget/AdapterListUpdateCallback.java, androidx/recyclerview/widget/AsyncDifferConfig.java, androidx/recyclerview/widget/AsyncListDiffer.java, androidx/recyclerview/widget/AsyncListUtil.java, androidx/recyclerview/widget/BatchingListUpdateCallback.java, androidx/recyclerview/widget/ChildHelper.java, androidx/recyclerview/widget/DefaultItemAnimator.java, androidx/recyclerview/widget/DiffUtil.java, androidx/recyclerview/widget/DividerItemDecoration.java, androidx/recyclerview/widget/FastScroller.java, androidx/recyclerview/widget/GapWorker.java, androidx/recyclerview/widget/GridLayoutManager.java, androidx/recyclerview/widget/ItemTouchHelper.java, androidx/recyclerview/widget/ItemTouchUIUtil.java, androidx/recyclerview/widget/ItemTouchUIUtilImpl.java, androidx/recyclerview/widget/LayoutState.java, androidx/recyclerview/widget/LinearLayoutManager.java, androidx/recyclerview/widget/LinearSmoothScroller.java, androidx/recyclerview/widget/LinearSnapHelper.java, androidx/recyclerview/widget/ListAdapter.java, androidx/recyclerview/widget/ListUpdateCallback.java, androidx/recyclerview/widget/MessageThreadUtil.java, androidx/recyclerview/widget/OpReorderer.java, androidx/recyclerview/widget/OrientationHelper.java, androidx/recyclerview/widget/PagerSnapHelper.java, androidx/recyclerview/widget/RecyclerView.java, androidx/recyclerview/widget/RecyclerViewAccessibilityDelegate.java, androidx/recyclerview/widget/ScrollbarHelper.java, androidx/recyclerview/widget/SimpleItemAnimator.java, androidx/recyclerview/widget/SnapHelper.java, androidx/recyclerview/widget/SortedList.java, androidx/recyclerview/widget/SortedListAdapterCallback.java, androidx/recyclerview/widget/StaggeredGridLayoutManager.java, androidx/recyclerview/widget/ThreadUtil.java, androidx/recyclerview/widget/TileList.java, androidx/recyclerview/widget/ViewBoundsCheck.java, androidx/recyclerview/widget/ViewInfoStore.java
+/*
+ * Copyright 2018 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+

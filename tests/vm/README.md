@@ -69,12 +69,19 @@ the product's output filters; they do not collect packet payloads or browsing
 history. Public HTTPS is also checked through the connected tunnel.
 
 Automatic-fallback diagnostics also run a root-only observer in the synthetic
-client VM for at most 180 seconds and 64 outgoing DNS observations. It records
-interface, destination, question name and whether the guard table is present
-to distinguish disconnected setup traffic from protected traffic. It captures
-no response bodies, runs only in the owned fixture, and is never part of an
-application package. Treat its local diagnostic output separately from sanitized
-public summaries. The packet-counter assertion remains authoritative.
+client VM for at most 180 seconds and 4 MiB of metadata. It records kernel packet
+timestamps, interface, addresses/ports, TCP flags and payload size, available
+socket ownership, firewall trace/rule events and allowlisted transport state.
+It records no DNS question or payload. Firewall event timestamps are userspace
+receive times, not exact kernel commit times. The strict packet-counter
+assertion remains; failures retain the timeline for attribution.
+
+`--dns-attribution-only` exercises that recorder with a known process sending
+synthetic DNS before connection, throughout forced UDP fallback, and through a
+narrowly scoped deliberate firewall exception. It verifies both real drops and
+detection of a protected-interval escape. The exception is removed in cleanup.
+This proves the recorder works and reproduces a counter-boundary false positive;
+it cannot retrospectively attribute older counter-only observations.
 
 Results and bounded setup/error logs remain in the output directory. Guest
 disks and temporary keys are deleted on normal completion and handled failures.

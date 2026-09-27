@@ -17,7 +17,7 @@ jobs:
       - name: Build unsigned engineering packages
         run: |
           version=$(python3 -c 'import tomllib; print(tomllib.load(open("Cargo.toml", "rb"))["workspace"]["package"]["version"])')
-          python3 scripts/record-evidence.py --suite linux-package --output target/remediation-evidence --timeout 6600 --artifact "target/release/bundle/deb/SirinVPN_${version}_amd64.deb" --artifact "target/release/bundle/appimage/SirinVPN_${version}_amd64.AppImage" --signing-category unsigned-engineering -- sh scripts/package-linux-container.sh
+          python3 scripts/record-evidence.py --frozen-source --suite linux-package --output target/remediation-evidence --timeout 6600 --artifact "target/release/bundle/deb/SirinVPN_${version}_amd64.deb" --artifact "target/release/bundle/appimage/SirinVPN_${version}_amd64.AppImage" --signing-category unsigned-engineering -- sh scripts/package-linux-container.sh
           sudo apt-get update
           sudo apt-get install -y p7zip-full binutils
           python3 scripts/check-linux-package.py "target/release/bundle/deb/SirinVPN_${version}_amd64.deb" "target/release/bundle/appimage/SirinVPN_${version}_amd64.AppImage" --output target/remediation-evidence/linux-package-inspection.json
@@ -28,6 +28,7 @@ jobs:
           name: candidate-evidence-${{ github.sha }}
           path: |
             target/remediation-evidence/linux-package.json
+            target/remediation-evidence/linux-package.log
             target/remediation-evidence/linux-package-inspection.json
           if-no-files-found: error
           retention-days: 14

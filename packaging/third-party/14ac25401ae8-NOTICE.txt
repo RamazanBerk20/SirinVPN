@@ -1,0 +1,442 @@
+Publisher source headers, retained verbatim from https://dl.google.com/dl/android/maven2/androidx/core/core/1.13.1/core-1.13.1-sources.jar
+Sources archive SHA-256: 947cc4b95df57d5d2ed16149458f4d3757da63a019d2d55a740db625bb3efcd6
+
+Files: androidx/core/util/AtomicFile.java, androidx/core/util/Pair.java
+/*
+ * Copyright (C) 2009 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/core/accessibilityservice/AccessibilityServiceInfoCompat.java, androidx/core/app/ActivityCompat.java, androidx/core/app/ServiceCompat.java, androidx/core/app/ShareCompat.java, androidx/core/content/IntentCompat.java, androidx/core/content/PackageManagerCompat.java, androidx/core/content/pm/ActivityInfoCompat.java, androidx/core/database/DatabaseUtilsCompat.java, androidx/core/os/EnvironmentCompat.java, androidx/core/os/ParcelableCompat.java, androidx/core/os/ParcelableCompatCreatorCallbacks.java, androidx/core/util/DebugUtils.java, androidx/core/util/LogWriter.java, androidx/core/util/TimeUtils.java, androidx/core/view/accessibility/AccessibilityEventCompat.java, androidx/core/view/accessibility/AccessibilityManagerCompat.java, androidx/core/view/accessibility/AccessibilityNodeInfoCompat.java, androidx/core/view/accessibility/AccessibilityRecordCompat.java, androidx/core/widget/EdgeEffectCompat.java
+/*
+ * Copyright (C) 2011 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/core/app/ActivityOptionsCompat.java, androidx/core/app/NavUtils.java, androidx/core/app/NotificationCompat.java, androidx/core/app/NotificationCompatJellybean.java, androidx/core/app/TaskStackBuilder.java, androidx/core/content/ContextCompat.java, androidx/core/net/ConnectivityManagerCompat.java, androidx/core/net/TrafficStatsCompat.java, androidx/core/os/CancellationSignal.java, androidx/core/view/accessibility/AccessibilityNodeProviderCompat.java, androidx/core/widget/ScrollerCompat.java
+/*
+ * Copyright (C) 2012 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/core/content/ContentResolverCompat.java, androidx/core/content/FileProvider.java, androidx/core/graphics/drawable/DrawableCompat.java, androidx/core/hardware/display/DisplayManagerCompat.java, androidx/core/internal/view/SupportMenu.java, androidx/core/internal/view/SupportMenuItem.java, androidx/core/internal/view/SupportSubMenu.java, androidx/core/os/OperationCanceledException.java, androidx/core/text/BidiFormatter.java, androidx/core/text/ICUCompat.java, androidx/core/text/TextDirectionHeuristicCompat.java, androidx/core/text/TextDirectionHeuristicsCompat.java, androidx/core/text/TextUtilsCompat.java, androidx/core/util/Pools.kt, androidx/core/widget/AutoScrollHelper.java, androidx/core/widget/ContentLoadingProgressBar.java, androidx/core/widget/ListPopupWindowCompat.java, androidx/core/widget/ListViewAutoScrollHelper.java, androidx/core/widget/PopupMenuCompat.java, androidx/core/widget/PopupWindowCompat.java
+/*
+ * Copyright (C) 2013 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/core/app/ActivityManagerCompat.java, androidx/core/app/NotificationCompatExtras.java, androidx/core/app/NotificationCompatSideChannelService.java, androidx/core/app/NotificationManagerCompat.java, androidx/core/app/RemoteInput.java, androidx/core/app/SharedElementCallback.java, androidx/core/content/res/ResourcesCompat.java, androidx/core/graphics/BitmapCompat.java, androidx/core/graphics/drawable/RoundedBitmapDrawable.java, androidx/core/graphics/drawable/RoundedBitmapDrawable21.java, androidx/core/graphics/drawable/RoundedBitmapDrawableFactory.java
+/*
+ * Copyright (C) 2014 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/core/content/SharedPreferencesCompat.java, androidx/core/hardware/fingerprint/FingerprintManagerCompat.java
+/*
+ * Copyright (C) 2015 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License
+ */
+
+Files: androidx/core/app/AppOpsManagerCompat.java, androidx/core/app/BundleCompat.java, androidx/core/content/PermissionChecker.java, androidx/core/content/res/GrowingArrayUtils.java, androidx/core/content/res/TypedArrayUtils.java, androidx/core/graphics/drawable/WrappedDrawable.java, androidx/core/graphics/drawable/WrappedDrawableApi14.java, androidx/core/graphics/drawable/WrappedDrawableApi21.java, androidx/core/net/DatagramSocketWrapper.java, androidx/core/os/UserManagerCompat.java, androidx/core/view/accessibility/AccessibilityWindowInfoCompat.java, androidx/core/view/animation/PathInterpolatorApi14.java, androidx/core/widget/CompoundButtonCompat.java, androidx/core/widget/NestedScrollView.java, androidx/core/widget/TextViewCompat.java, androidx/core/widget/TintableCompoundButton.java
+/*
+ * Copyright (C) 2015 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/core/view/animation/PathInterpolatorCompat.java
+/*
+ * Copyright (C) 2015 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/core/os/TraceCompat.java
+/*
+ * Copyright (C) 2015 The Android Open Source Project
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/core/app/AlarmManagerCompat.java, androidx/core/app/AppLaunchChecker.java, androidx/core/app/ComponentActivity.kt, androidx/core/content/MimeTypeFilter.java, androidx/core/content/res/ConfigurationHelper.java, androidx/core/graphics/drawable/TintAwareDrawable.java, androidx/core/math/MathUtils.java, androidx/core/os/BuildCompat.kt, androidx/core/text/util/LinkifyCompat.java, androidx/core/util/PatternsCompat.java, androidx/core/view/DragAndDropPermissionsCompat.java, androidx/core/view/DragStartHelper.java, androidx/core/view/inputmethod/EditorInfoCompat.java, androidx/core/view/inputmethod/InputConnectionCompat.java, androidx/core/view/inputmethod/InputContentInfoCompat.java, androidx/core/widget/ListViewCompat.java
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/core/app/FrameMetricsAggregator.java, androidx/core/app/JobIntentService.java, androidx/core/app/NotificationBuilderWithBuilderAccessor.java, androidx/core/app/NotificationCompatBuilder.java, androidx/core/content/res/FontResourcesParserCompat.java, androidx/core/graphics/PaintCompat.java, androidx/core/graphics/PathParser.java, androidx/core/graphics/TypefaceCompat.java, androidx/core/graphics/TypefaceCompatApi21Impl.java, androidx/core/graphics/TypefaceCompatApi24Impl.java, androidx/core/graphics/TypefaceCompatApi26Impl.java, androidx/core/graphics/TypefaceCompatBaseImpl.java, androidx/core/graphics/TypefaceCompatUtil.java, androidx/core/graphics/drawable/IconCompat.java, androidx/core/os/ConfigurationCompat.java, androidx/core/os/LocaleListCompat.java, androidx/core/os/LocaleListInterface.java, androidx/core/provider/FontRequest.java, androidx/core/provider/FontsContractCompat.java, androidx/core/provider/SelfDestructiveThread.java, androidx/core/util/ObjectsCompat.java, androidx/core/util/Preconditions.java, androidx/core/widget/AutoSizeableTextView.java, androidx/core/widget/ImageViewCompat.java, androidx/core/widget/TintableImageSourceView.java
+/*
+ * Copyright (C) 2017 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/core/app/DialogCompat.java, androidx/core/content/res/ColorStateListInflaterCompat.java, androidx/core/content/res/ComplexColorCompat.java, androidx/core/content/res/GradientColorInflaterCompat.java, androidx/core/telephony/mbms/MbmsHelper.java, androidx/core/view/WindowInsetsAnimationControlListenerCompat.java
+/*
+ * Copyright (C) 2018 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/core/graphics/BlendModeCompat.java
+/*
+ * Copyright (C) 2019 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/core/widget/CheckedTextViewCompat.java, androidx/core/widget/TintableCheckedTextView.java
+/*
+ * Copyright (C) 2021 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/core/text/util/LocalePreferences.java
+/*
+ * Copyright (C) 2022 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/core/text/method/LinkMovementMethodCompat.java
+/*
+ * Copyright (C) 2023 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/core/graphics/ColorUtils.java
+/*
+ * Copyright 2015 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/core/graphics/TypefaceCompatApi28Impl.java
+/*
+ * Copyright 2017 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: android/support/v4/os/ResultReceiver.java, androidx/core/app/AppComponentFactory.java, androidx/core/app/CoreComponentFactory.java, androidx/core/app/Person.java, androidx/core/app/RemoteActionCompat.java, androidx/core/content/pm/PackageInfoCompat.java, androidx/core/content/pm/PermissionInfoCompat.java, androidx/core/content/pm/ShortcutInfoCompatSaver.java, androidx/core/database/CursorWindowCompat.java, androidx/core/database/sqlite/SQLiteCursorCompat.java, androidx/core/graphics/PathSegment.java, androidx/core/graphics/PathUtils.java, androidx/core/graphics/TypefaceCompatApi29Impl.java, androidx/core/graphics/drawable/WrappedDrawableState.java, androidx/core/os/HandlerCompat.java, androidx/core/os/LocaleListCompatWrapper.java, androidx/core/os/LocaleListPlatformWrapper.java, androidx/core/os/MessageCompat.java, androidx/core/os/ParcelCompat.java, androidx/core/text/HtmlCompat.java, androidx/core/text/PrecomputedTextCompat.java, androidx/core/text/util/FindAddress.java, androidx/core/util/Consumer.kt, androidx/core/util/Supplier.kt, androidx/core/view/AccessibilityDelegateCompat.java, androidx/core/view/ActionProvider.java, androidx/core/view/DisplayCutoutCompat.java, androidx/core/view/GestureDetectorCompat.java, androidx/core/view/GravityCompat.java, androidx/core/view/InputDeviceCompat.java, androidx/core/view/KeyEventDispatcher.java, androidx/core/view/LayoutInflaterCompat.java, androidx/core/view/LayoutInflaterFactory.java, androidx/core/view/MarginLayoutParamsCompat.java, androidx/core/view/MenuCompat.java, androidx/core/view/MenuItemCompat.java, androidx/core/view/MotionEventCompat.java, androidx/core/view/NestedScrollingChild.java, androidx/core/view/NestedScrollingChild2.java, androidx/core/view/NestedScrollingChild3.java, androidx/core/view/NestedScrollingChildHelper.java, androidx/core/view/NestedScrollingParent.java, androidx/core/view/NestedScrollingParent2.java, androidx/core/view/NestedScrollingParent3.java, androidx/core/view/NestedScrollingParentHelper.java, androidx/core/view/OnApplyWindowInsetsListener.java, androidx/core/view/OneShotPreDrawListener.java, androidx/core/view/PointerIconCompat.java, androidx/core/view/ScaleGestureDetectorCompat.java, androidx/core/view/ScrollingView.java, androidx/core/view/TintableBackgroundView.java, androidx/core/view/VelocityTrackerCompat.java, androidx/core/view/ViewCompat.java, androidx/core/view/ViewConfigurationCompat.java, androidx/core/view/ViewGroupCompat.java, androidx/core/view/ViewParentCompat.java, androidx/core/view/ViewPropertyAnimatorCompat.java, androidx/core/view/ViewPropertyAnimatorListener.java, androidx/core/view/ViewPropertyAnimatorListenerAdapter.java, androidx/core/view/ViewPropertyAnimatorUpdateListener.java, androidx/core/view/WindowCompat.java, androidx/core/view/WindowInsetsCompat.java, androidx/core/view/accessibility/AccessibilityClickableSpanCompat.java, androidx/core/view/accessibility/AccessibilityViewCommand.java, androidx/core/widget/TintableCompoundDrawablesView.java
+/*
+ * Copyright 2018 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/core/app/ActivityRecreator.java, androidx/core/content/ContentProviderCompat.java, androidx/core/graphics/BlendModeColorFilterCompat.java, androidx/core/graphics/BlendModeUtils.java, androidx/core/graphics/Insets.java, androidx/core/location/GnssStatusCompat.java, androidx/core/location/GnssStatusWrapper.java, androidx/core/location/GpsStatusWrapper.java, androidx/core/location/LocationManagerCompat.java, androidx/core/net/UriCompat.java, androidx/core/util/Predicate.java, androidx/core/view/DisplayCompat.java
+/*
+ * Copyright 2019 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/core/app/NotificationChannelCompat.java, androidx/core/app/NotificationChannelGroupCompat.java, androidx/core/content/LocusIdCompat.java, androidx/core/net/MailTo.java, androidx/core/net/ParseException.java, androidx/core/os/ExecutorCompat.java, androidx/core/os/ProcessCompat.java, androidx/core/view/ContentInfoCompat.java, androidx/core/view/OnReceiveContentListener.java, androidx/core/view/OnReceiveContentViewBehavior.java, androidx/core/view/WindowInsetsAnimationCompat.java, androidx/core/view/WindowInsetsAnimationControllerCompat.java, androidx/core/view/WindowInsetsControllerCompat.java, androidx/core/widget/TextViewOnReceiveContentListener.java
+/*
+ * Copyright 2020 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/core/app/OnMultiWindowModeChangedProvider.kt, androidx/core/app/OnNewIntentProvider.kt, androidx/core/app/OnPictureInPictureModeChangedProvider.kt, androidx/core/content/OnConfigurationChangedProvider.kt, androidx/core/content/OnTrimMemoryProvider.kt, androidx/core/content/UnusedAppRestrictionsBackportCallback.java, androidx/core/content/UnusedAppRestrictionsBackportService.java, androidx/core/content/UnusedAppRestrictionsBackportServiceConnection.java, androidx/core/content/UnusedAppRestrictionsConstants.java, androidx/core/content/pm/ShortcutInfoChangeListener.java, androidx/core/content/pm/ShortcutXmlParser.java, androidx/core/content/res/CamColor.java, androidx/core/content/res/CamUtils.java, androidx/core/content/res/ViewingConditions.java, androidx/core/graphics/WeightTypefaceApi14.java, androidx/core/graphics/WeightTypefaceApi21.java, androidx/core/graphics/WeightTypefaceApi26.java, androidx/core/location/LocationCompat.java, androidx/core/location/LocationListenerCompat.java, androidx/core/location/LocationRequestCompat.java, androidx/core/os/UserHandleCompat.java, androidx/core/provider/CallbackWithHandler.java, androidx/core/provider/CalleeHandler.java, androidx/core/provider/DocumentsContractCompat.java, androidx/core/provider/FontProvider.java, androidx/core/provider/FontRequestWorker.java, androidx/core/provider/RequestExecutor.java, androidx/core/telephony/SubscriptionManagerCompat.java, androidx/core/telephony/TelephonyManagerCompat.java, androidx/core/util/SizeFCompat.java, androidx/core/view/MenuHost.java, androidx/core/view/MenuHostHelper.java, androidx/core/view/MenuProvider.java
+/*
+ * Copyright 2021 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/core/app/LocaleManagerCompat.java, androidx/core/app/MultiWindowModeChangedInfo.kt, androidx/core/app/PictureInPictureModeChangedInfo.kt, androidx/core/content/IntentSanitizer.java, androidx/core/content/UriMatcherCompat.java, androidx/core/os/BundleCompat.java
+/*
+ * Copyright 2022 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/core/app/AppLocalesStorageHelper.java, androidx/core/app/GrammaticalInflectionManagerCompat.java, androidx/core/app/OnUserLeaveHintProvider.kt, androidx/core/service/quicksettings/PendingIntentActivityWrapper.java, androidx/core/service/quicksettings/TileServiceCompat.java, androidx/core/util/Function.kt, androidx/core/util/TypedValueCompat.java, androidx/core/view/DifferentialMotionFlingController.java, androidx/core/view/DifferentialMotionFlingTarget.java, androidx/core/view/HapticFeedbackConstantsCompat.java, androidx/core/view/SoftwareKeyboardControllerCompat.java, androidx/core/view/VelocityTrackerFallback.java, androidx/core/view/ViewStructureCompat.java, androidx/core/view/autofill/AutofillIdCompat.java, androidx/core/view/contentcapture/ContentCaptureSessionCompat.java
+/*
+ * Copyright 2023 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/core/app/PendingIntentCompat.java
+/*
+ * Copyright (C) 2022 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/core/content/pm/ShortcutInfoCompat.java, androidx/core/content/pm/ShortcutManagerCompat.java
+/**
+ * Copyright (C) 2017 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+

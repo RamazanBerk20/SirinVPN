@@ -1,0 +1,20 @@
+Publisher source headers, retained verbatim from https://dl.google.com/dl/android/maven2/androidx/tracing/tracing/1.0.0/tracing-1.0.0-sources.jar
+Sources archive SHA-256: a593c115d145df9cb9ae2226960da1d53ff8590eff1c285e7c9de2b6727d3c21
+
+Files: androidx/tracing/Trace.java, androidx/tracing/TraceApi18Impl.java, androidx/tracing/TraceApi29Impl.java
+/*
+ * Copyright 2020 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+

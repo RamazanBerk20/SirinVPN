@@ -1,0 +1,20 @@
+Publisher source headers, retained verbatim from https://dl.google.com/dl/android/maven2/androidx/viewpager/viewpager/1.0.0/viewpager-1.0.0-sources.jar
+Sources archive SHA-256: d4f9a044ab8c23392b12a3f2930d5fd6b5982421a746f2f2a812e9619431fbfd
+
+Files: androidx/viewpager/widget/PagerTitleStrip.java, androidx/viewpager/widget/PagerTabStrip.java, androidx/viewpager/widget/ViewPager.java, androidx/viewpager/widget/PagerAdapter.java
+/*
+ * Copyright 2018 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+

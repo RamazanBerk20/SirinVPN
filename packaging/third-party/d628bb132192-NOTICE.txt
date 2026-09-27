@@ -1,0 +1,71 @@
+Publisher source headers, retained verbatim from https://dl.google.com/dl/android/maven2/androidx/fragment/fragment/1.5.4/fragment-1.5.4-sources.jar
+Sources archive SHA-256: 388140b5e899ea70dceb7de93ebe732b7d534a14ca87014895faf19ef74ac8fe
+
+Files: androidx/fragment/app/BackStackRecord.java, androidx/fragment/app/BackStackRecordState.java, androidx/fragment/app/DialogFragment.java, androidx/fragment/app/Fragment.java, androidx/fragment/app/FragmentActivity.java, androidx/fragment/app/FragmentContainer.java, androidx/fragment/app/FragmentController.java, androidx/fragment/app/FragmentFactory.java, androidx/fragment/app/FragmentHostCallback.java, androidx/fragment/app/FragmentManager.java, androidx/fragment/app/FragmentManagerNonConfig.java, androidx/fragment/app/FragmentManagerState.java, androidx/fragment/app/FragmentManagerViewModel.java, androidx/fragment/app/FragmentPagerAdapter.java, androidx/fragment/app/FragmentState.java, androidx/fragment/app/FragmentStatePagerAdapter.java, androidx/fragment/app/FragmentTabHost.java, androidx/fragment/app/FragmentTransaction.java, androidx/fragment/app/FragmentTransition.java, androidx/fragment/app/FragmentTransitionCompat21.java, androidx/fragment/app/FragmentTransitionImpl.java, androidx/fragment/app/FragmentViewLifecycleOwner.java, androidx/fragment/app/ListFragment.java, androidx/fragment/app/SuperNotCalledException.java
+/*
+ * Copyright 2018 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/fragment/app/DefaultSpecialEffectsController.java, androidx/fragment/app/FragmentAnim.java, androidx/fragment/app/FragmentContainerView.kt, androidx/fragment/app/FragmentLayoutInflaterFactory.java, androidx/fragment/app/FragmentLifecycleCallbacksDispatcher.java, androidx/fragment/app/FragmentManagerImpl.java, androidx/fragment/app/FragmentStateManager.java, androidx/fragment/app/FragmentStore.java, androidx/fragment/app/LogWriter.java, androidx/fragment/app/SpecialEffectsController.java, androidx/fragment/app/SpecialEffectsControllerFactory.java
+/*
+ * Copyright 2019 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/fragment/app/FragmentOnAttachListener.java, androidx/fragment/app/FragmentResultListener.java, androidx/fragment/app/FragmentResultOwner.java
+/*
+ * Copyright 2020 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: androidx/fragment/app/BackStackState.java, androidx/fragment/app/strictmode/FragmentReuseViolation.kt, androidx/fragment/app/strictmode/FragmentStrictMode.kt, androidx/fragment/app/strictmode/FragmentTagUsageViolation.kt, androidx/fragment/app/strictmode/GetRetainInstanceUsageViolation.kt, androidx/fragment/app/strictmode/GetTargetFragmentRequestCodeUsageViolation.kt, androidx/fragment/app/strictmode/GetTargetFragmentUsageViolation.kt, androidx/fragment/app/strictmode/RetainInstanceUsageViolation.kt, androidx/fragment/app/strictmode/SetRetainInstanceUsageViolation.kt, androidx/fragment/app/strictmode/SetTargetFragmentUsageViolation.kt, androidx/fragment/app/strictmode/SetUserVisibleHintViolation.kt, androidx/fragment/app/strictmode/TargetFragmentUsageViolation.kt, androidx/fragment/app/strictmode/Violation.kt, androidx/fragment/app/strictmode/WrongFragmentContainerViolation.kt
+/*
+ * Copyright 2021 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+

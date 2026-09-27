@@ -850,3 +850,42 @@ the scripts deliberately refuse existing services, profiles or installations.
 Historical reports remain intact. Their dates and unavailable/local-only raw
 artifacts do not establish current platform parity, production readiness or an
 independent audit.
+
+## Review follow-up and 0.1.1 qualification boundary
+
+The Windows deletion correction is committed as
+[`f5031fe`](https://github.com/RamazanBerk20/SirinVPN/commit/f5031fef3218724144d1e7db937711d44fe6a647).
+Its native [Validate run](https://github.com/RamazanBerk20/SirinVPN/actions/runs/36336977049)
+and [dependency run](https://github.com/RamazanBerk20/SirinVPN/actions/runs/36336977032)
+both passed. Windows now persists deletion intent/completion, serializes all
+operations on a reference, rejects late writes and supports interrupted cleanup
+retry. Native tests terminate real child processes at deletion boundaries and
+exercise a second-process writer. Existing unmarked DPAPI records remain readable.
+The compatibility manifest includes `windows_identity_record`; missing-family
+and unsupported-rollback regressions retain the strict updater boundary.
+
+The new [candidate policy](release-candidate.md) defines the 0.1.1 first-install
+and development-profile migration scope. It does not authorize bypassing an
+older incompatible signed receipt or replacing the production trust root.
+Evidence recording can now require clean committed source and unchanged tested
+artifact bytes; hosted validation preserves inner test logs as well as summaries.
+
+An exploratory DNS control run against the previous 0.1.0 Debian artifact
+finished in disposable VMs with cleanup confirmed. It began at zero counters,
+recorded nine synthetic packets before protection, 199 traced guard drops during
+forced fallback and three deliberately permitted protected-interval packets.
+There were no physical packets between the observed guard installation and the
+deliberate exception. Kernel packet timestamps and the synthetic process's socket
+identity were retained. The shared recorder now also surrounds ordinary fallback
+checks without relaxing their zero-packet assertion. **The two historical
+counter-only failures remain unattributed.** This experiment proves detector
+sensitivity and a possible measurement-boundary error, not the origin of those
+two packets or qualification of new candidate binaries.
+
+Release-material preparation now resolves the actual Maven runtime artifacts,
+selects platform Rust/production npm inputs and binds supplemental publisher
+notices to dependency hashes. AppImage collection identifies bundled Debian ELF
+files and preserves package copyright/common-license material. Runtime static
+libraries, source-distribution obligations and production signatures remain
+explicit review items. These preparatory checks used old package files to test
+the tooling; they are not same-artifact candidate acceptance.

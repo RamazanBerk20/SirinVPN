@@ -32,13 +32,15 @@ jobs:
       - run: pnpm --dir apps/desktop install --frozen-lockfile
       - run: python3 scripts/check-workflows.py
       - name: Shared local gates
-        run: python3 scripts/record-evidence.py --suite linux-fast --output target/remediation-evidence --timeout 3000 -- sh scripts/test.sh
+        run: python3 scripts/record-evidence.py --frozen-source --suite linux-fast --output target/remediation-evidence --timeout 3000 -- sh scripts/test.sh
       - name: Preserve synthetic test evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: linux-fast-${{ github.sha }}
-          path: target/remediation-evidence/linux-fast.json
+          path: |
+            target/remediation-evidence/linux-fast.json
+            target/remediation-evidence/linux-fast.log
           if-no-files-found: error
           retention-days: 14
   windows-build:
@@ -58,13 +60,15 @@ jobs:
           if (Test-Path -LiteralPath "$SirinNativePerl\perl.exe") {
             $env:PATH = "$SirinNativePerl;" + $env:PATH
           }
-          python scripts/record-evidence.py --suite windows-native --output target/remediation-evidence --timeout 3300 -- pwsh -File scripts/test-windows.ps1
+          python scripts/record-evidence.py --frozen-source --suite windows-native --output target/remediation-evidence --timeout 3300 -- pwsh -File scripts/test-windows.ps1
           exit $LASTEXITCODE
       - name: Preserve native check evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: windows-native-${{ github.sha }}
-          path: target/remediation-evidence/windows-native.json
+          path: |
+            target/remediation-evidence/windows-native.json
+            target/remediation-evidence/windows-native.log
           if-no-files-found: error
           retention-days: 14

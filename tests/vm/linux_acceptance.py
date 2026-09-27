@@ -7,6 +7,7 @@ import argparse
 import json
 from pathlib import Path
 import subprocess
+import tarfile
 import time
 import traceback
 import uuid
@@ -118,16 +119,30 @@ class Acceptance:
         guest.put(ROOT / "tests/vm/acceptance_guest.py", "/home/sirin/acceptance-guest.py")
         if client:
             guest.put(self.args.package.resolve(), "/home/sirin/sirinvpn.deb")
+        if self.args.dependency_archives:
+            # Only public .deb downloads enter apt's cache. Apt still verifies
+            # their signed repository hashes before installing dependencies.
+            with tarfile.open(self.args.dependency_archives) as archive:
+                members = archive.getmembers()
+                assert all((m.isdir() and m.name == '.') or
+                           (m.isfile() and len(Path(m.name).parts) == 1 and
+                            m.name.endswith('.deb') and m.size < 512 * 1024**2)
+                           for m in members), 'Invalid dependency archive'
+            guest.put(self.args.dependency_archives.resolve(), '/home/sirin/dependencies.tar.gz')
+            guest.ssh(['sudo', '-n', 'mkdir', '-p', '/var/cache/apt/archives'], timeout=10)
+            guest.ssh(['sudo', '-n', 'tar', '-xzf', '/home/sirin/dependencies.tar.gz',
+                       '-C', '/var/cache/apt/archives', '--no-same-owner'], timeout=60)
         packages = "qemu-guest-agent python3 curl iproute2 nftables kmod"
         if client:
             packages += " xvfb xauth python3-xlib dbus-x11 gnome-keyring /home/sirin/sirinvpn.deb"
         with (self.logs / f"{guest.name}-setup.log").open("wb") as log:
             guest.ssh(["sudo", "-n", "env", "DEBIAN_FRONTEND=noninteractive", "sh", "-ec",
-                       "apt-get -o Acquire::Retries=2 update\n"
-                       f"apt-get install -y --no-install-recommends {packages}\n"
+                       "sed -i '/^Types:/s/ deb-src//g' /etc/apt/sources.list.d/debian.sources\n"
+                       "apt-get -o Acquire::Retries=2 -o Acquire::ForceIPv4=true -o Acquire::Languages=none update\n"
+                       f"apt-get -o Acquire::ForceIPv4=true install -y --no-install-recommends {packages}\n"
                        "install -m 0755 /home/sirin/acceptance-guest.py /opt/sirin-acceptance.py\n"
                        "systemctl start qemu-guest-agent\nmodprobe wireguard\nmodprobe nf_tables\n"],
-                      timeout=600, stdout=log, stderr=log)
+                      timeout=1800, stdout=log, stderr=log)
         assert guest.run(["id", "-u"]).stdout.strip() == b"0"
         unit = ("[Unit]\nDescription=Disposable acceptance private link\n"
                 "After=network-pre.target\nBefore=network-online.target sirinvpn-reconnect.service\n"
@@ -357,67 +372,38 @@ class Acceptance:
         self.server.run(["nft", "-f", "-"], data=rules.encode())
 
     def automatic_fallback(self):
-        identity = str(uuid.uuid4())
-        unit = "sirin-acceptance-dns-" + identity
-        packet_path = "/run/" + unit + ".jsonl"
-        trace_path = "/run/" + unit + "-trace.txt"
-        trace_unit = unit + "-trace"
-        # Kernel trace records show which chains actually processed each DNS
-        # packet. Reading the current rules after capture cannot prove that.
-        self.client.run(["nft", "-f", "-"], data=b"""table inet sirin_acceptance_trace {
- chain output {
-  type filter hook output priority -301; policy accept;
-  meta l4proto { tcp, udp } th dport 53 meta nftrace set 1
- }
-}
-""")
-        self.client.run(["systemd-run", "--unit=" + trace_unit, "--collect",
-                         "--property=RuntimeMaxSec=180", "--property=LimitFSIZE=1048576",
-                         "--property=UMask=0077", "--property=StandardOutput=file:" + trace_path,
-                         "nft", "monitor", "trace"])
-        self.client.run(["systemd-run", "--unit=" + unit, "--collect",
-                         "--property=RuntimeMaxSec=180", "python3", FIXTURE, "observe-dns", packet_path])
-        self.client.run(["sh", "-ec", "until test -f \"$1\"; do sleep 0.1; done", "sh", packet_path], timeout=5)
-        before_connect = self.counter()
-        print(f"Fallback counters while disconnected: {before_connect}", flush=True)
-        observation = {"before_connect": before_connect, "requested_unix": time.time(),
-                       "scope": "bounded outgoing DNS metadata in synthetic disposable guest only"}
-        self.report["automatic_fallback_observation"] = observation
+        from dns_attribution import capture, mark
+        observation = {"scope": "bounded DNS metadata in synthetic disposable guest only"}
         self.report.setdefault("automatic_fallback_observations", []).append(observation)
-        self.block_server("udp")
-        try:
-            self.cli("connect", self.server_id, "--transport", "automatic", "--persistent",
-                     "--network-profile", "normal",
-                     timeout=240)
-            local = self.wait_connected(timeout=100)
-            assert local["transport"] in ["tls_like", "tcp_fallback"], local["transport"]
-            assert local["auto_reconnect_enabled"] and local["connect_on_startup"]
-            assert self.request(host="probe.test") == "vps"
-            after_connect = self.counter()
-            observation["after_connect"] = after_connect
-            assert after_connect == {"dns": 0, "ipv6": 0}, {
-                "before_connect": before_connect, "after_connect": after_connect}
-            rules = json.loads(self.server.run(["nft", "-j", "list", "table", "inet",
-                                               "sirin_acceptance_fault"]).stdout)["nftables"]
-            drops = sum(expression["counter"]["packets"] for row in rules
-                        for expression in row.get("rule", {}).get("expr", [])
-                        if isinstance(expression.get("counter"), dict))
-            assert drops > 0, "the test did not observe an attempted UDP transport"
-            return {"udp_blocked": True, "dropped_udp_packets": drops,
-                    "selected_transport": local["transport"], "exit": "vps"}
-        finally:
-            self.block_server(None)
-            self.client.run(["systemctl", "stop", unit, trace_unit])
+        with capture(self, observation):
+            before_connect = self.counter()
+            observation["before_connect"] = before_connect
+            self.block_server("udp")
             try:
-                observed = self.client.run(["cat", packet_path]).stdout
-                observation["packets"] = [json.loads(line) for line in observed.splitlines()]
-                trace = self.client.run(["cat", trace_path]).stdout
-                assert len(trace) < 1048576, "DNS trace exceeded its diagnostic bound"
-                # nft monitor trace uses text even with -j on Debian 13.
-                observation["kernel_trace"] = trace.decode().splitlines()
+                mark(self, observation, "connect_requested")
+                self.cli("connect", self.server_id, "--transport", "automatic", "--persistent",
+                         "--network-profile", "normal", timeout=240)
+                local = self.wait_connected(timeout=100)
+                mark(self, observation, "fallback_connected")
+                assert local["transport"] in ["tls_like", "tcp_fallback"], local["transport"]
+                assert local["auto_reconnect_enabled"] and local["connect_on_startup"]
+                assert self.request(host="probe.test") == "vps"
+                after_connect = self.counter()
+                observation["after_connect"] = after_connect
+                # Keep the strict original gate. A future failure has a timeline
+                # for attribution; a zero pre-connect count alone is insufficient.
+                assert after_connect == {"dns": 0, "ipv6": 0}, {
+                    "before_connect": before_connect, "after_connect": after_connect}
+                rules = json.loads(self.server.run(["nft", "-j", "list", "table", "inet",
+                                                   "sirin_acceptance_fault"]).stdout)["nftables"]
+                drops = sum(expression["counter"]["packets"] for row in rules
+                            for expression in row.get("rule", {}).get("expr", [])
+                            if isinstance(expression.get("counter"), dict))
+                assert drops > 0, "the test did not observe an attempted UDP transport"
+                return {"udp_blocked": True, "dropped_udp_packets": drops,
+                        "selected_transport": local["transport"], "exit": "vps"}
             finally:
-                self.client.run(["nft", "delete", "table", "inet", "sirin_acceptance_trace"])
-            print("Fallback DNS observation: " + json.dumps(observation), flush=True)
+                self.block_server(None)
 
     def power_loss(self):
         self.block_server("all")
@@ -515,6 +501,11 @@ class Acceptance:
                               self.prepare_guest(self.client, "198.18.10.2", "52:54:00:78:70:02", True))
                     self.step("Provision and enroll through the packaged CLI", self.provision)
                     self.step("Verify physical IPv4, IPv6 and leak-counter baselines", self.baseline)
+                    if self.args.dns_attribution_only:
+                        from dns_attribution import run
+                        self.step("Attribute DNS before protection and during forced transport fallback", lambda: run(self))
+                        self.report["passed"] = True
+                        return 0
                     for transport in ["direct", "obfuscated", "tls", "tcp"]:
                         self.step(f"{transport}: encrypted exit, native DNS and leak prevention",
                                   lambda transport=transport: self.connected_proof(transport))
@@ -571,7 +562,11 @@ def main():
     parser.add_argument("--installer-tests", type=Path,
                         help="Current installer test executable for the guest-root regression")
     parser.add_argument("--keep-failed-seconds", type=int, default=0, choices=range(0, 3601), metavar="0..3600")
+    parser.add_argument("--dependency-archives", type=Path,
+                        help="Optional tar of cached public .deb downloads; apt verifies repository hashes")
     parser.add_argument("--fallback-repeats", type=int, default=1, choices=range(1, 6), metavar="1..5")
+    parser.add_argument("--dns-attribution-only", action="store_true",
+                        help="Run bounded packet/guard/process attribution with a pre-arm negative control")
     return Acceptance(parser.parse_args()).execute()
 
 

@@ -1,0 +1,445 @@
+Publisher source headers, retained verbatim from https://dl.google.com/dl/android/maven2/com/google/android/material/material/1.12.0/material-1.12.0-sources.jar
+Sources archive SHA-256: 1b9845a2c16ef4c683bee1cf834ff35b21b9a8d5eb849808fa6bc2f0f88b31f4
+
+Files: com/google/android/material/shadow/ShadowDrawableWrapper.java
+/*
+ * Copyright (C) 2014 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: com/google/android/material/shadow/ShadowViewDelegate.java, com/google/android/material/navigation/NavigationView.java, com/google/android/material/internal/NavigationMenuView.java, com/google/android/material/internal/ForegroundLinearLayout.java, com/google/android/material/internal/NavigationMenuItemView.java, com/google/android/material/internal/NavigationSubMenu.java, com/google/android/material/internal/VisibilityAwareImageButton.java, com/google/android/material/internal/NavigationMenuPresenter.java, com/google/android/material/internal/StateListAnimator.java, com/google/android/material/internal/ViewUtils.java, com/google/android/material/internal/ParcelableSparseArray.java, com/google/android/material/internal/DescendantOffsetUtils.java, com/google/android/material/internal/ScrimInsetsFrameLayout.java, com/google/android/material/internal/CollapsingTextHelper.java, com/google/android/material/internal/NavigationMenu.java, com/google/android/material/textfield/TextInputLayout.java, com/google/android/material/appbar/CollapsingToolbarLayout.java, com/google/android/material/appbar/AppBarLayout.java, com/google/android/material/appbar/ViewUtilsLollipop.java, com/google/android/material/appbar/ViewOffsetBehavior.java, com/google/android/material/appbar/ViewOffsetHelper.java, com/google/android/material/appbar/HeaderScrollingViewBehavior.java, com/google/android/material/appbar/HeaderBehavior.java, com/google/android/material/behavior/SwipeDismissBehavior.java, com/google/android/material/tabs/TabLayout.java, com/google/android/material/floatingactionbutton/FloatingActionButtonImplLollipop.java, com/google/android/material/floatingactionbutton/FloatingActionButton.java, com/google/android/material/floatingactionbutton/FloatingActionButtonImpl.java, com/google/android/material/snackbar/BaseTransientBottomBar.java, com/google/android/material/snackbar/SnackbarManager.java, com/google/android/material/snackbar/Snackbar.java, com/google/android/material/bottomsheet/BottomSheetBehavior.java, com/google/android/material/bottomsheet/BottomSheetDialog.java, com/google/android/material/bottomsheet/BottomSheetDialogFragment.java, com/google/android/material/animation/AnimationUtils.java
+/*
+ * Copyright (C) 2015 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: com/google/android/material/navigation/NavigationBarPresenter.java, com/google/android/material/internal/CheckableImageButton.java, com/google/android/material/internal/TextScale.java, com/google/android/material/internal/ViewGroupOverlayApi18.java, com/google/android/material/internal/ViewOverlayApi18.java, com/google/android/material/internal/BaselineLayout.java, com/google/android/material/internal/ViewOverlayApi14.java, com/google/android/material/internal/ViewGroupOverlayImpl.java, com/google/android/material/internal/ViewOverlayImpl.java, com/google/android/material/internal/ViewGroupOverlayApi14.java, com/google/android/material/textfield/TextInputEditText.java, com/google/android/material/tabs/TabItem.java, com/google/android/material/snackbar/SnackbarContentLayout.java, com/google/android/material/bottomnavigation/BottomNavigationMenuView.java, com/google/android/material/bottomnavigation/BottomNavigationView.java, com/google/android/material/bottomnavigation/BottomNavigationItemView.java
+/*
+ * Copyright (C) 2016 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: com/google/android/material/resources/MaterialResources.java, com/google/android/material/internal/ThemeEnforcement.java, com/google/android/material/textfield/CutoutDrawable.java, com/google/android/material/textfield/IndicatorViewController.java, com/google/android/material/canvas/CanvasCompat.java, com/google/android/material/stateful/ExtendableSavedState.java, com/google/android/material/behavior/HideBottomViewOnScrollBehavior.java, com/google/android/material/button/MaterialButton.java, com/google/android/material/button/MaterialButtonHelper.java, com/google/android/material/expandable/ExpandableWidget.java, com/google/android/material/expandable/ExpandableWidgetHelper.java, com/google/android/material/card/MaterialCardView.java, com/google/android/material/card/MaterialCardViewHelper.java, com/google/android/material/snackbar/ContentViewCallback.java
+/*
+ * Copyright (C) 2017 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: com/google/android/material/shadow/ShadowRenderer.java, com/google/android/material/switchmaterial/SwitchMaterial.java, com/google/android/material/resources/CancelableFontCallback.java, com/google/android/material/resources/TextAppearanceFontCallback.java, com/google/android/material/resources/MaterialAttributes.java, com/google/android/material/internal/ContextUtils.java, com/google/android/material/color/MaterialColors.java, com/google/android/material/checkbox/MaterialCheckBox.java, com/google/android/material/floatingactionbutton/BorderDrawable.java, com/google/android/material/radiobutton/MaterialRadioButton.java
+/*
+ * Copyright (C) 2018 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: com/google/android/material/internal/StaticLayoutBuilderCompat.java, com/google/android/material/imageview/ShapeableImageView.java
+/*
+ * Copyright (C) 2019 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
+Files: com/google/android/material/internal/ParcelableSparseIntArray.java, com/google/android/material/internal/ParcelableSparseBooleanArray.java, com/google/android/material/textfield/DropdownMenuEndIconDelegate.java, com/google/android/material/textfield/CustomEndIconDelegate.java, com/google/android/material/textfield/EndIconDelegate.java, com/google/android/material/textfield/ClearTextEndIconDelegate.java, com/google/android/material/textfield/MaterialAutoCompleteTextView.java, com/google/android/material/textfield/PasswordToggleEndIconDelegate.java, com/google/android/material/textfield/NoEndIconDelegate.java, com/google/android/material/appbar/MaterialToolbar.java, com/google/android/material/lists/TwoLineItemViewHolder.java, com/google/android/material/lists/SingleLineItemViewHolder.java, com/google/android/material/lists/ThreeLineItemViewHolder.java, com/google/android/material/slider/Slider.java, com/google/android/material/button/MaterialButtonToggleGroup.java, com/google/android/material/badge/BadgeDrawable.java, com/google/android/material/badge/BadgeUtils.java, com/google/android/material/floatingactionbutton/AnimatorTracker.java, com/google/android/material/floatingactionbutton/ExtendedFloatingActionButton.java, com/google/android/material/floatingactionbutton/BaseMotionStrategy.java, com/google/android/material/floatingactionbutton/MotionStrategy.java, com/google/android/material/elevation/ElevationOverlayProvider.java, com/google/android/material/textview/MaterialTextView.java, com/google/android/material/tooltip/TooltipDrawable.java
+/*
+ * Copyright (C) 2019 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: com/google/android/material/navigation/NavigationBarItemView.java, com/google/android/material/navigation/NavigationBarMenu.java, com/google/android/material/navigation/NavigationBarMenuView.java, com/google/android/material/navigation/NavigationBarView.java, com/google/android/material/internal/ToolbarUtils.java, com/google/android/material/slider/BaseOnChangeListener.java, com/google/android/material/slider/BaseOnSliderTouchListener.java, com/google/android/material/slider/BaseSlider.java, com/google/android/material/tabs/ElasticTabIndicatorInterpolator.java, com/google/android/material/tabs/TabIndicatorInterpolator.java, com/google/android/material/progressindicator/DrawingDelegate.java, com/google/android/material/progressindicator/LinearIndeterminateDisjointAnimatorDelegate.java, com/google/android/material/progressindicator/DrawableWithAnimatedVisibilityChange.java, com/google/android/material/progressindicator/IndeterminateDrawable.java, com/google/android/material/progressindicator/LinearIndeterminateContiguousAnimatorDelegate.java, com/google/android/material/progressindicator/CircularProgressIndicator.java, com/google/android/material/progressindicator/BaseProgressIndicatorSpec.java, com/google/android/material/progressindicator/LinearDrawingDelegate.java, com/google/android/material/progressindicator/DeterminateDrawable.java, com/google/android/material/progressindicator/LinearProgressIndicator.java, com/google/android/material/progressindicator/CircularDrawingDelegate.java, com/google/android/material/progressindicator/BaseProgressIndicator.java, com/google/android/material/progressindicator/IndeterminateAnimatorDelegate.java, com/google/android/material/progressindicator/CircularProgressIndicatorSpec.java, com/google/android/material/progressindicator/LinearProgressIndicatorSpec.java, com/google/android/material/progressindicator/CircularIndeterminateAnimatorDelegate.java, com/google/android/material/progressindicator/AnimatorDurationScaleProvider.java, com/google/android/material/timepicker/TimeModel.java, com/google/android/material/timepicker/ClockHandView.java, com/google/android/material/timepicker/ClockFaceView.java, com/google/android/material/timepicker/TimePickerTextInputPresenter.java, com/google/android/material/timepicker/ChipTextInputComboView.java, com/google/android/material/timepicker/TimePickerTextInputKeyController.java, com/google/android/material/timepicker/TimePickerControls.java, com/google/android/material/timepicker/TimePickerClockPresenter.java, com/google/android/material/timepicker/MaxInputValidator.java, com/google/android/material/timepicker/ClickActionDelegate.java, com/google/android/material/timepicker/TimeFormat.java, com/google/android/material/timepicker/RadialViewGroup.java
+/*
+ * Copyright (C) 2020 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: com/google/android/material/motion/MotionUtils.java, com/google/android/material/color/ColorResourcesTableCreator.java, com/google/android/material/color/ColorRoles.java, com/google/android/material/color/DynamicColors.java, com/google/android/material/color/utilities/ViewingConditions.java, com/google/android/material/color/utilities/Hct.java, com/google/android/material/color/utilities/MathUtils.java, com/google/android/material/color/utilities/ColorUtils.java, com/google/android/material/color/utilities/Blend.java, com/google/android/material/color/utilities/Cam16.java, com/google/android/material/navigationrail/NavigationRailMenuView.java, com/google/android/material/navigationrail/NavigationRailView.java, com/google/android/material/navigationrail/NavigationRailItemView.java, com/google/android/material/tabs/FadeTabIndicatorInterpolator.java, com/google/android/material/badge/BadgeState.java, com/google/android/material/elevation/SurfaceColors.java, com/google/android/material/divider/MaterialDivider.java, com/google/android/material/divider/MaterialDividerItemDecoration.java
+/*
+ * Copyright (C) 2021 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: com/google/android/material/internal/StaticLayoutBuilderConfigurer.java
+/*
+ * Copyright (C) 2022 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
+Files: com/google/android/material/internal/RectEvaluator.java, com/google/android/material/internal/EdgeToEdgeUtils.java, com/google/android/material/internal/FadeThroughUtils.java, com/google/android/material/internal/FadeThroughDrawable.java, com/google/android/material/internal/FadeThroughUpdateListener.java, com/google/android/material/internal/MultiViewUpdateListener.java, com/google/android/material/internal/ExpandCollapseAnimationHelper.java, com/google/android/material/internal/TouchObserverFrameLayout.java, com/google/android/material/internal/ReversableAnimatedValueInterpolator.java, com/google/android/material/internal/ClippableRoundedCornerLayout.java, com/google/android/material/textfield/StartCompoundLayout.java, com/google/android/material/textfield/EditTextUtils.java, com/google/android/material/textfield/EndCompoundLayout.java, com/google/android/material/textfield/IconHelper.java, com/google/android/material/color/ResourcesLoaderUtils.java, com/google/android/material/color/ColorResourcesLoaderCreator.java, com/google/android/material/color/ColorResourcesOverride.java, com/google/android/material/color/HarmonizedColorsOptions.java, com/google/android/material/color/HarmonizedColorAttributes.java, com/google/android/material/color/ThemeUtils.java, com/google/android/material/color/ResourcesLoaderColorResourcesOverride.java, com/google/android/material/color/HarmonizedColors.java, com/google/android/material/color/DynamicColorsOptions.java, com/google/android/material/color/utilities/QuantizerMap.java, com/google/android/material/color/utilities/TonePolarity.java, com/google/android/material/color/utilities/SchemeNeutral.java, com/google/android/material/color/utilities/SchemeContent.java, com/google/android/material/color/utilities/DynamicColor.java, com/google/android/material/color/utilities/PointProviderLab.java, com/google/android/material/color/utilities/Contrast.java, com/google/android/material/color/utilities/CorePalette.java, com/google/android/material/color/utilities/MaterialDynamicColors.java, com/google/android/material/color/utilities/QuantizerWsmeans.java, com/google/android/material/color/utilities/SchemeExpressive.java, com/google/android/material/color/utilities/TemperatureCache.java, com/google/android/material/color/utilities/DislikeAnalyzer.java, com/google/android/material/color/utilities/Scheme.java, com/google/android/material/color/utilities/QuantizerCelebi.java, com/google/android/material/color/utilities/Quantizer.java, com/google/android/material/color/utilities/HctSolver.java, com/google/android/material/color/utilities/TonalPalette.java, com/google/android/material/color/utilities/SchemeVibrant.java, com/google/android/material/color/utilities/DynamicScheme.java, com/google/android/material/color/utilities/QuantizerWu.java, com/google/android/material/color/utilities/SchemeFidelity.java, com/google/android/material/color/utilities/Score.java, com/google/android/material/color/utilities/SchemeMonochrome.java, com/google/android/material/color/utilities/PointProvider.java, com/google/android/material/color/utilities/SchemeTonalSpot.java, com/google/android/material/color/utilities/Variant.java, com/google/android/material/color/utilities/QuantizerResult.java, com/google/android/material/color/MaterialColorUtilitiesHelper.java, com/google/android/material/sidesheet/SideSheetDialog.java, com/google/android/material/sidesheet/SheetDialog.java, com/google/android/material/sidesheet/Sheet.java, com/google/android/material/sidesheet/SideSheetBehavior.java, com/google/android/material/sidesheet/RightSheetDelegate.java, com/google/android/material/sidesheet/SheetDelegate.java, com/google/android/material/sidesheet/SheetUtils.java, com/google/android/material/sidesheet/SideSheetCallback.java, com/google/android/material/sidesheet/SheetCallback.java, com/google/android/material/materialswitch/MaterialSwitch.java, com/google/android/material/animation/AnimatableView.java
+/*
+ * Copyright (C) 2022 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: com/google/android/material/navigation/DrawerLayoutUtils.java, com/google/android/material/internal/WindowUtils.java, com/google/android/material/color/ColorContrastOptions.java, com/google/android/material/color/ColorContrast.java, com/google/android/material/color/utilities/SchemeRainbow.java, com/google/android/material/color/utilities/ContrastCurve.java, com/google/android/material/color/utilities/ToneDeltaPair.java, com/google/android/material/color/utilities/SchemeFruitSalad.java, com/google/android/material/sidesheet/LeftSheetDelegate.java, com/google/android/material/bottomsheet/InsetsAnimationCallback.java
+/*
+ * Copyright (C) 2023 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: com/google/android/material/transformation/FabTransformationSheetBehavior.java, com/google/android/material/transformation/TransformationChildCard.java, com/google/android/material/transformation/TransformationChildLayout.java, com/google/android/material/transformation/FabTransformationBehavior.java, com/google/android/material/transformation/ExpandableBehavior.java, com/google/android/material/transformation/FabTransformationScrimBehavior.java, com/google/android/material/transformation/ExpandableTransformationBehavior.java, com/google/android/material/internal/package-info.java, com/google/android/material/shape/ShapePath.java, com/google/android/material/shape/CornerTreatment.java, com/google/android/material/shape/InterpolateOnScrollPositionChangeHelper.java, com/google/android/material/shape/TriangleEdgeTreatment.java, com/google/android/material/shape/MaterialShapeDrawable.java, com/google/android/material/shape/CutCornerTreatment.java, com/google/android/material/shape/RoundedCornerTreatment.java, com/google/android/material/shape/EdgeTreatment.java, com/google/android/material/math/MathUtils.java, com/google/android/material/circularreveal/CircularRevealRelativeLayout.java, com/google/android/material/circularreveal/coordinatorlayout/CircularRevealCoordinatorLayout.java, com/google/android/material/circularreveal/CircularRevealFrameLayout.java, com/google/android/material/circularreveal/cardview/CircularRevealCardView.java, com/google/android/material/circularreveal/CircularRevealHelper.java, com/google/android/material/circularreveal/CircularRevealWidget.java, com/google/android/material/circularreveal/CircularRevealLinearLayout.java, com/google/android/material/circularreveal/CircularRevealGridLayout.java, com/google/android/material/circularreveal/CircularRevealCompat.java, com/google/android/material/expandable/ExpandableTransformationWidget.java, com/google/android/material/animation/MatrixEvaluator.java, com/google/android/material/animation/AnimatorSetCompat.java, com/google/android/material/animation/ChildrenAlphaProperty.java, com/google/android/material/animation/DrawableAlphaProperty.java, com/google/android/material/animation/ImageMatrixProperty.java, com/google/android/material/animation/ArgbEvaluatorCompat.java, com/google/android/material/animation/MotionTiming.java, com/google/android/material/animation/Positioning.java, com/google/android/material/animation/MotionSpec.java, com/google/android/material/bottomnavigation/LabelVisibilityMode.java, com/google/android/material/bottomappbar/BottomAppBar.java, com/google/android/material/bottomappbar/BottomAppBarTopEdgeTreatment.java
+/*
+ * Copyright 2017 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: com/google/android/material/resources/TextAppearance.java, com/google/android/material/drawable/DrawableUtils.java, com/google/android/material/chip/ChipDrawable.java, com/google/android/material/chip/ChipGroup.java, com/google/android/material/chip/Chip.java, com/google/android/material/ripple/RippleUtils.java
+/*
+ * Copyright 2017 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: com/google/android/material/tabs/TabLayoutMediator.java
+/*
+ * Copyright 2018 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: com/google/android/material/theme/MaterialComponentsViewInflater.java, com/google/android/material/internal/Experimental.java, com/google/android/material/shape/ShapeAppearanceModel.java, com/google/android/material/shape/ShapeAppearancePathProvider.java, com/google/android/material/dialog/InsetDialogOnTouchListener.java, com/google/android/material/dialog/MaterialAlertDialogBuilder.java, com/google/android/material/animation/TransformationCallback.java
+/*
+ * Copyright 2018 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: com/google/android/material/resources/TextAppearanceConfig.java, com/google/android/material/internal/FlowLayout.java, com/google/android/material/shape/CornerFamily.java, com/google/android/material/shape/ShapePathModel.java, com/google/android/material/shape/MaterialShapeUtils.java
+/*
+ * Copyright 2018 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: com/google/android/material/theme/overlay/MaterialThemeOverlay.java, com/google/android/material/internal/ManufacturerUtils.java, com/google/android/material/shape/OffsetEdgeTreatment.java, com/google/android/material/shape/MarkerEdgeTreatment.java, com/google/android/material/shape/CornerSize.java, com/google/android/material/shape/AbsoluteCornerSize.java, com/google/android/material/shape/RelativeCornerSize.java, com/google/android/material/shape/AdjustedCornerSize.java, com/google/android/material/dialog/MaterialDialogs.java, com/google/android/material/datepicker/SmoothCalendarLayoutManager.java, com/google/android/material/datepicker/MaterialPickerOnPositiveButtonClickListener.java, com/google/android/material/datepicker/SingleDateSelector.java, com/google/android/material/datepicker/UtcDates.java, com/google/android/material/datepicker/MaterialStyledDatePickerDialog.java, com/google/android/material/datepicker/CompositeDateValidator.java, com/google/android/material/datepicker/OnSelectionChangedListener.java, com/google/android/material/datepicker/Month.java, com/google/android/material/datepicker/MonthAdapter.java, com/google/android/material/datepicker/MaterialTextInputPicker.java, com/google/android/material/datepicker/YearGridAdapter.java, com/google/android/material/datepicker/MaterialCalendar.java, com/google/android/material/datepicker/PickerFragment.java, com/google/android/material/datepicker/MaterialDatePicker.java, com/google/android/material/datepicker/MonthsPagerAdapter.java, com/google/android/material/datepicker/DateValidatorPointForward.java, com/google/android/material/datepicker/CalendarItemStyle.java, com/google/android/material/datepicker/RangeDateSelector.java, com/google/android/material/datepicker/MaterialCalendarGridView.java, com/google/android/material/datepicker/CalendarConstraints.java, com/google/android/material/datepicker/CalendarStyle.java, com/google/android/material/datepicker/DateSelector.java, com/google/android/material/datepicker/DaysOfWeekAdapter.java, com/google/android/material/datepicker/DateStrings.java, com/google/android/material/datepicker/DateFormatTextWatcher.java
+/*
+ * Copyright 2019 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: com/google/android/material/internal/TextDrawableHelper.java, com/google/android/material/shape/Shapeable.java, com/google/android/material/transition/MaterialFade.java, com/google/android/material/transition/FitModeEvaluators.java, com/google/android/material/transition/Hold.java, com/google/android/material/transition/FadeModeEvaluators.java, com/google/android/material/transition/FitModeResult.java, com/google/android/material/transition/platform/MaterialFade.java, com/google/android/material/transition/platform/FitModeEvaluators.java, com/google/android/material/transition/platform/Hold.java, com/google/android/material/transition/platform/FadeModeEvaluators.java, com/google/android/material/transition/platform/FitModeResult.java, com/google/android/material/transition/platform/FitModeEvaluator.java, com/google/android/material/transition/platform/FadeModeEvaluator.java, com/google/android/material/transition/platform/MaterialFadeThrough.java, com/google/android/material/transition/platform/MaterialArcMotion.java, com/google/android/material/transition/platform/TransitionUtils.java, com/google/android/material/transition/platform/MaterialContainerTransform.java, com/google/android/material/transition/platform/FadeModeResult.java, com/google/android/material/transition/FitModeEvaluator.java, com/google/android/material/transition/FadeModeEvaluator.java, com/google/android/material/transition/MaterialFadeThrough.java, com/google/android/material/transition/MaterialArcMotion.java, com/google/android/material/transition/TransitionUtils.java, com/google/android/material/transition/MaterialContainerTransform.java, com/google/android/material/transition/FadeModeResult.java, com/google/android/material/ripple/RippleDrawableCompat.java
+/*
+ * Copyright 2019 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: com/google/android/material/badge/ExperimentalBadgeUtils.java
+/*
+ * Copyright 2020 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: com/google/android/material/internal/TextWatcherAdapter.java, com/google/android/material/datepicker/DateValidatorPointBackward.java, com/google/android/material/datepicker/TimeSource.java, com/google/android/material/timepicker/TimePickerView.java, com/google/android/material/timepicker/MaterialTimePicker.java
+/*
+ * Copyright 2020 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: com/google/android/material/slider/LabelFormatter.java, com/google/android/material/slider/RangeSlider.java, com/google/android/material/slider/BasicLabelFormatter.java, com/google/android/material/timepicker/TimePickerPresenter.java, com/google/android/material/transition/MaterialSharedAxis.java, com/google/android/material/transition/MaterialElevationScale.java, com/google/android/material/transition/FadeProvider.java, com/google/android/material/transition/FadeThroughProvider.java, com/google/android/material/transition/SlideDistanceProvider.java, com/google/android/material/transition/VisibilityAnimatorProvider.java, com/google/android/material/transition/MaterialVisibility.java, com/google/android/material/transition/platform/MaterialSharedAxis.java, com/google/android/material/transition/platform/MaterialElevationScale.java, com/google/android/material/transition/platform/FadeProvider.java, com/google/android/material/transition/platform/FadeThroughProvider.java, com/google/android/material/transition/platform/SlideDistanceProvider.java, com/google/android/material/transition/platform/VisibilityAnimatorProvider.java, com/google/android/material/transition/platform/MaterialVisibility.java, com/google/android/material/transition/platform/MaterialContainerTransformSharedElementCallback.java, com/google/android/material/transition/platform/ScaleProvider.java, com/google/android/material/transition/platform/MaskEvaluator.java, com/google/android/material/transition/platform/TransitionListenerAdapter.java, com/google/android/material/transition/ScaleProvider.java, com/google/android/material/transition/MaskEvaluator.java, com/google/android/material/transition/TransitionListenerAdapter.java
+/*
+ * Copyright 2020 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: com/google/android/material/datepicker/DayViewDecorator.java, com/google/android/material/bottomsheet/BottomSheetDragHandleView.java
+/*
+ * Copyright 2022 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: com/google/android/material/resources/TypefaceUtils.java, com/google/android/material/internal/MaterialCheckable.java, com/google/android/material/internal/CheckableGroup.java, com/google/android/material/carousel/MultiBrowseCarouselStrategy.java, com/google/android/material/carousel/Maskable.java, com/google/android/material/carousel/OnMaskChangedListener.java, com/google/android/material/carousel/KeylineState.java, com/google/android/material/carousel/Carousel.java, com/google/android/material/carousel/KeylineStateList.java, com/google/android/material/carousel/MaskableFrameLayout.java, com/google/android/material/carousel/CarouselLayoutManager.java, com/google/android/material/carousel/CarouselStrategy.java, com/google/android/material/search/SearchBarAnimationHelper.java, com/google/android/material/search/SearchViewAnimationHelper.java, com/google/android/material/search/SearchView.java, com/google/android/material/search/SearchBar.java
+/*
+ * Copyright 2022 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: com/google/android/material/motion/MaterialBottomContainerBackHelper.java, com/google/android/material/motion/MaterialSideContainerBackHelper.java, com/google/android/material/motion/MaterialBackOrchestrator.java, com/google/android/material/motion/MaterialMainContainerBackHelper.java, com/google/android/material/motion/MaterialBackAnimationHelper.java, com/google/android/material/motion/MaterialBackHandler.java, com/google/android/material/shape/ShapeableDelegateV14.java, com/google/android/material/shape/ShapeableDelegate.java, com/google/android/material/shape/ShapeableDelegateV22.java, com/google/android/material/shape/ClampedCornerSize.java, com/google/android/material/shape/ShapeableDelegateV33.java, com/google/android/material/drawable/ScaledDrawableWrapper.java
+/*
+ * Copyright 2023 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+Files: com/google/android/material/carousel/CarouselOrientationHelper.java, com/google/android/material/carousel/HeroCarouselStrategy.java, com/google/android/material/carousel/Arrangement.java, com/google/android/material/carousel/CarouselStrategyHelper.java, com/google/android/material/carousel/CarouselSnapHelper.java, com/google/android/material/carousel/UncontainedCarouselStrategy.java, com/google/android/material/carousel/FullScreenCarouselStrategy.java
+/*
+ * Copyright 2023 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+

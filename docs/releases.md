@@ -2,7 +2,8 @@
 
 This describes the release mechanism, not a currently qualified production
 release. Consult the [remediation release checklist](remediation.md) before
-building or distributing a candidate. The new credential tombstone/provenance
+building or distributing a candidate and the
+[0.1.1 qualification and migration policy](release-candidate.md). The new credential tombstone/provenance
 formats and server recovery intent add state requirements. Existing signed
 manifests with older state families are intentionally incompatible under the
 current bidirectional compatibility check. A reviewed bridge/first-install

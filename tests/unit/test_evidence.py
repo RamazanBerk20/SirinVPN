@@ -11,6 +11,24 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 class Evidence(unittest.TestCase):
+    def test_changed_or_missing_test_input_cannot_qualify(self):
+        for initial in (None, b'original artifact'):
+            with self.subTest(initial=initial), tempfile.TemporaryDirectory() as directory:
+                artifact = Path(directory) / 'synthetic.bin'
+                if initial is not None:
+                    artifact.write_bytes(initial)
+                result = subprocess.run([sys.executable, str(ROOT / 'scripts/record-evidence.py'),
+                    '--suite', 'immutable', '--output', directory, '--tested-artifact', str(artifact),
+                    '--', sys.executable, '-c',
+                    'import pathlib,sys; pathlib.Path(sys.argv[1]).write_bytes(b"replacement")',
+                    str(artifact)], capture_output=True, timeout=45)
+                self.assertNotEqual(result.returncode, 0)
+                report = json.loads((Path(directory) / 'immutable.json').read_text())
+                self.assertEqual(report['result'], 'failed')
+                self.assertEqual(report['reason'], 'ArtifactMissingOrUnsafe' if initial is None else 'TestedArtifactChanged')
+                if initial is None:
+                    self.assertFalse(artifact.exists(), 'Command ran without its declared test input')
+
     def test_artifact_is_bound_after_the_build(self):
         with tempfile.TemporaryDirectory() as directory:
             artifact = Path(directory) / "synthetic.bin"
