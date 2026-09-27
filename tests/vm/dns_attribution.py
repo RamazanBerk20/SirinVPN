@@ -127,8 +127,9 @@ def capture(test, observation):
     """Retain one bounded timeline, including when the protected test fails."""
     guest = test.client
     script = '/opt/sirin-dns-attribution.py'
-    guest.put(Path(__file__), '/home/sirin/dns-attribution.py')
-    guest.run(['install', '-m', '0755', '/home/sirin/dns-attribution.py', script])
+    # The prior connection may still block SSH. Keep observation independent
+    # of guest networking by transferring this small script over the agent.
+    guest.run(['tee', script], data=Path(__file__).read_bytes())
     name = 'sirin-dns-' + str(uuid.uuid4())
     timeline = '/run/'+name+'.jsonl'
     guest.run(['nft', '-f', '-'], data=b'''table inet sirin_dns_attribution {

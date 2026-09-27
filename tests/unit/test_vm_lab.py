@@ -13,6 +13,25 @@ from linux_acceptance import Acceptance
 
 
 class Cleanup(unittest.TestCase):
+    def test_dns_capture_survives_blocked_guest_ssh(self):
+        from dns_attribution import capture
+        test = Mock()
+        test.client.put.side_effect = RuntimeError('SSH blocked by active protection')
+        transferred = []
+
+        def agent(arguments, **kwargs):
+            if 'data' in kwargs:
+                transferred.append(kwargs['data'])
+            return SimpleNamespace(returncode=0, stdout=b'{"kind":"ready"}\n')
+
+        test.client.run.side_effect = agent
+        observation = {}
+        with capture(test, observation):
+            pass
+        self.assertTrue(any(b'def observe(' in content for content in transferred))
+        self.assertEqual(observation['events'], [{'kind': 'ready'}])
+        test.save.assert_called_once()
+
     def test_fallback_measures_new_packets_and_observes_disconnect(self):
         @contextmanager
         def capture(test, observation):

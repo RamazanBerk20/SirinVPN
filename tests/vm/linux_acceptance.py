@@ -522,12 +522,15 @@ class Acceptance:
         self.assert_routes_removed()
         # Reinstall the same local package so its ordinary owner workflow can
         # remove the VPS and retained user profile after this removal check.
+        package = "/home/sirin/candidate.deb" if self.args.upgrade_from else "/home/sirin/sirinvpn.deb"
+        expected = digest(self.args.package)
+        assert self.client.run(["sha256sum", package]).stdout.decode().split()[0] == expected
         self.run_guest(self.client, ["env", "DEBIAN_FRONTEND=noninteractive", "apt-get",
-                                     "install", "-y", "/home/sirin/sirinvpn.deb"], timeout=180)
+                                     "install", "-y", package], timeout=180)
         assert self.local()["state"] == "disconnected"
         self.counter(reset=True)
         return {"removed_while_connected": True, "physical_network_restored": True,
-                "same_package_reinstalled_for_vps_cleanup": True}
+                "same_package_reinstalled_for_vps_cleanup": True, "reinstalled_package_sha256": expected}
 
     def uninstall_client(self):
         self.run_guest(self.client, ["env", "DEBIAN_FRONTEND=noninteractive", "apt-get",
