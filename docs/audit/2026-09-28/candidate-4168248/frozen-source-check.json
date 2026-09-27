@@ -1,0 +1,142 @@
+{
+  "passed": true,
+  "source_commit": "41682484b9528ddd1183d62806e258698434790a",
+  "records": [
+    {
+      "report": "android-api29-upgrade-runtime.json",
+      "result": "passed"
+    },
+    {
+      "report": "android-api36-native-runtime.json",
+      "result": "failed"
+    },
+    {
+      "report": "android-api36-upgrade-runtime-diagnostic.json",
+      "result": "failed"
+    },
+    {
+      "report": "android-api36-upgrade-runtime-final.json",
+      "result": "failed"
+    },
+    {
+      "report": "android-api36-upgrade-runtime-qualified.json",
+      "result": "failed"
+    },
+    {
+      "report": "android-api36-upgrade-runtime-retry.json",
+      "result": "failed"
+    },
+    {
+      "report": "android-api36-upgrade-runtime.json",
+      "result": "failed"
+    },
+    {
+      "report": "android-build.json",
+      "result": "passed"
+    },
+    {
+      "report": "android-debug-input-verification.json",
+      "result": "passed"
+    },
+    {
+      "report": "android-package-inspection.json",
+      "result": "passed"
+    },
+    {
+      "report": "appimage-notice-export.json",
+      "result": "passed"
+    },
+    {
+      "report": "appimage-runtime-retry.json",
+      "result": "passed"
+    },
+    {
+      "report": "appimage-runtime.json",
+      "result": "failed"
+    },
+    {
+      "report": "distribution-materials.json",
+      "result": "passed"
+    },
+    {
+      "report": "linux-build.json",
+      "result": "passed"
+    },
+    {
+      "report": "linux-package-inspection.json",
+      "result": "passed"
+    },
+    {
+      "report": "linux-upgrade-runtime.json",
+      "result": "passed"
+    },
+    {
+      "report": "vps-payloads.json",
+      "result": "passed"
+    },
+    {
+      "report": "windows-clone-bootstrap-ip.json",
+      "result": "failed"
+    },
+    {
+      "report": "windows-clone-bootstrap-ready.json",
+      "result": "passed"
+    },
+    {
+      "report": "windows-clone-bootstrap.json",
+      "result": "failed"
+    },
+    {
+      "report": "windows-components-build.json",
+      "result": "passed"
+    },
+    {
+      "report": "windows-driver-build.json",
+      "result": "passed"
+    },
+    {
+      "report": "windows-installer-build.json",
+      "result": "passed"
+    },
+    {
+      "report": "windows-installer-upgrade-runtime.json",
+      "result": "passed"
+    },
+    {
+      "report": "windows-native-fixture-inputs-qualified.json",
+      "result": "passed"
+    },
+    {
+      "report": "windows-native-fixture-inputs-retry.json",
+      "result": "failed"
+    },
+    {
+      "report": "windows-native-fixture-inputs.json",
+      "result": "failed"
+    },
+    {
+      "report": "windows-package-inspection.json",
+      "result": "passed"
+    },
+    {
+      "report": "windows-release-boot-cleanup.json",
+      "result": "passed"
+    },
+    {
+      "report": "windows-release-crash-boot.json",
+      "result": "passed"
+    },
+    {
+      "report": "windows-release-runtime.json",
+      "result": "passed"
+    },
+    {
+      "report": "windows-vendor-notice-export.json",
+      "result": "passed"
+    },
+    {
+      "report": "windows-vps-runtime.json",
+      "result": "passed"
+    }
+  ]
+}

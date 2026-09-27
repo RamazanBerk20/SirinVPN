@@ -1,0 +1,47 @@
+{
+  "result": "passed for the five listed upgrade invocations only",
+  "source": {
+    "commit": "41682484b9528ddd1183d62806e258698434790a",
+    "tree": "169bf80e6c3b48ba5f772477d91318b2789825ec",
+    "dirty": false,
+    "source_sha256": "62c9c679e85b7828783c1a1850bfa682edd31f75ec1a0b1a591b16199b8c0c5d",
+    "verification_source_sha256": "2b2bb20eddd8642323590a9c9bdfbbdc22ef86efc2e0eb98fccdc0819d3c4202"
+  },
+  "source_collector": "android-api36-upgrade-runtime-final.json",
+  "source_collector_result": "failed: later native Wi-Fi fixture prerequisite",
+  "raw_upgrade": {
+    "prior_install": "SirinVPN_0.1.0_debug.apk",
+    "interruption": "reboot before PackageInstaller commit",
+    "old_state_after_interruption": true,
+    "retry_installs_candidate": true,
+    "profile_bytes_preserved": true,
+    "native_profile_read": true,
+    "ciphertext_and_keystore_read_preserved": true,
+    "deleted_reference_stays_deleted": true,
+    "paused_connection_intent_preserved": true,
+    "scope": "synthetic profile/storage; no live VPS connection"
+  },
+  "checks": [
+    {
+      "path": "upgrade-1-seed-old.log",
+      "sha256": "8ff7177e1b10430a64271b16b22bf780f6dacdde0dedc5e5a6d2e9c416f08c0d"
+    },
+    {
+      "path": "upgrade-2-verifyPreserved-old.log",
+      "sha256": "accdd26e10169ab2bdd9d142a68a8a9b796223e569c16f1d5b20183dd644ee67"
+    },
+    {
+      "path": "upgrade-3-verifyPreserved-old.log",
+      "sha256": "e753a3b642552d692180a9c65846e625c13731f6ded308d6a9f3c59f44967642"
+    },
+    {
+      "path": "upgrade-4-verifyPreserved-candidate.log",
+      "sha256": "b3a3e1d333a0395072da4bb8b99d428ce6f28b9aaea81435bebdc083cfbe17ba"
+    },
+    {
+      "path": "upgrade-5-cleanup-candidate.log",
+      "sha256": "024fe51646499611179712e7143663d49bac08123708a6cd7e929cda8351f1c6"
+    }
+  ],
+  "scope": "Completed old-state seed/read, post-reboot old-state preservation, candidate install/read and synthetic-state cleanup; later native cases are qualified in a separate fresh AVD against the identical APK."
+}

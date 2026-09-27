@@ -1,0 +1,40 @@
+{
+  "artifacts": [
+    {
+      "filename": "SirinVPN_0.1.1_amd64.deb",
+      "bytes": 20446476,
+      "sha256": "6bbc0f2d36f0ea920ef31b3a5bc89e980caf34745d4d6d1f2150836fbf4733b4",
+      "source_commit": "41682484b9528ddd1183d62806e258698434790a",
+      "category": "unsigned-engineering"
+    },
+    {
+      "filename": "SirinVPN_0.1.1_amd64.AppImage",
+      "bytes": 113646072,
+      "sha256": "18b453139cba5ff4b836ebd4130942b050c229eb6075e707d2655b093175eacf",
+      "source_commit": "41682484b9528ddd1183d62806e258698434790a",
+      "category": "unsigned-engineering"
+    },
+    {
+      "filename": "SirinVPN_0.1.1_x64-setup.exe",
+      "bytes": 17370366,
+      "sha256": "e3068afd3624a4ebabd5199ae9175f7cb14805b7b5bbb59583319ea894a24b21",
+      "source_commit": "41682484b9528ddd1183d62806e258698434790a",
+      "category": "unsigned-engineering"
+    },
+    {
+      "filename": "app-universal-debug.apk",
+      "bytes": 105955967,
+      "sha256": "748b7476d68776a9ebc53bde3113ae6fc30b6865876ad149bce6079780905d72",
+      "source_commit": "41682484b9528ddd1183d62806e258698434790a",
+      "category": "development-signed"
+    },
+    {
+      "filename": "app-universal-debug-androidTest.apk",
+      "bytes": 3581579,
+      "sha256": "6afbe44d685710a28262bd913f76d645068f9b0603121507296edc4a5be798ef",
+      "source_commit": "41682484b9528ddd1183d62806e258698434790a",
+      "category": "development-signed"
+    }
+  ],
+  "supporting_artifacts": "Evidence archive supporting-artifacts.json retains exact server/service executables and unbound development upgrade baselines."
+}

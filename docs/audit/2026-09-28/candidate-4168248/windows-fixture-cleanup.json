@@ -1,0 +1,9 @@
+{
+  "passed": true,
+  "disposable_container_removed": true,
+  "disposable_network_removed": true,
+  "private_clone_storage_and_env_removed": true,
+  "private_vps_and_exports_removed": true,
+  "original_winboat_remains_stopped": true,
+  "scope": "Actions were guarded by fixture ID, labels and exact private mount paths; original Winboat storage was not mounted by this lab."
+}

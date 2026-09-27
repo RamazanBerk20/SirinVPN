@@ -24,10 +24,12 @@ The harness grants VPN consent and location permissions only inside its fresh
 AVD to exercise the existing native reconnect/Wi-Fi/package-replacement tests.
 It does not qualify the OS consent dialog. Wi-Fi trust uses a synthetic saved
 network; no location coordinates are collected by these tests.
-For the API 36 image, use `MemoryHigh=3500M`: its enforced guest RAM minimum
-plus emulator overhead otherwise causes sustained reclaim at the 3 GiB soft
-threshold. Keep `MemoryMax=4G`, no swap, and the CPU/process limits. The harness
-records the actual limits, peak memory and memory events in its result.
+For the API 36 image, use `MemoryHigh=3800M`: the interrupted-upgrade fixture
+showed sustained reclaim and service startup timeouts at lower soft limits.
+Keep `MemoryMax=4G`, no swap, and the CPU/process limits. The harness records
+the actual limits, peak memory and memory events in its result. It waits for
+post-boot broadcasts and verifies connection to the synthetic `AndroidWifi`
+network before the Wi-Fi trust case. Each upgrade invocation keeps its own log.
 
 The tracked Android sources are in `apps/desktop/android`. The generated Tauri
 project in `apps/desktop/src-tauri/gen/android` is an output, not the source of

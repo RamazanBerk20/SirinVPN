@@ -1,0 +1,30 @@
+{
+  "result": "all 8 native test assertions passed; ancillary diagnostic fetch failed",
+  "source": {
+    "commit": "41682484b9528ddd1183d62806e258698434790a",
+    "tree": "169bf80e6c3b48ba5f772477d91318b2789825ec",
+    "dirty": false,
+    "source_sha256": "62c9c679e85b7828783c1a1850bfa682edd31f75ec1a0b1a591b16199b8c0c5d",
+    "verification_source_sha256": "2b2bb20eddd8642323590a9c9bdfbbdc22ef86efc2e0eb98fccdc0819d3c4202"
+  },
+  "artifacts": [
+    {
+      "filename": "app-universal-debug.apk",
+      "size": 105955967,
+      "sha256": "748b7476d68776a9ebc53bde3113ae6fc30b6865876ad149bce6079780905d72",
+      "signing_category": "development"
+    },
+    {
+      "filename": "app-universal-debug-androidTest.apk",
+      "size": 3581579,
+      "sha256": "6afbe44d685710a28262bd913f76d645068f9b0603121507296edc4a5be798ef",
+      "signing_category": "development"
+    }
+  ],
+  "tests": 8,
+  "instrumentation_log_sha256": "cfcad7ef4976ff5063d4b8ba79b2e93951cc5bc3bc6fa7137f356ef62aff9890",
+  "source_collector": "android-api36-native-runtime.json",
+  "source_collector_result": "failed",
+  "cleanup": "owned emulator stopped; AVD and credentials removed",
+  "limitation": "Post-test logcat read exited 255, so this run lacks that extra system-log export. Complete JUnit result, exact APK hashes and fixture cleanup are retained."
+}

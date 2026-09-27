@@ -1,0 +1,49 @@
+{
+  "source_commit": "41682484b9528ddd1183d62806e258698434790a",
+  "candidate_version": "0.1.1",
+  "linux_package_checks": 30,
+  "windows": {
+    "native-installer-result.json": {
+      "passed": true,
+      "checks": 9,
+      "sha256": "0b584aa18192e21a4c83485fd3149547ccad79562e992a1ec600b565e4e2effc"
+    },
+    "release-native-runtime-result.json": {
+      "passed": true,
+      "checks": 15,
+      "sha256": "45cb6b8ea64d09bc5ee01d8484738eb2cf624477a4fb98291da05c86f28908b6"
+    },
+    "native-boot-result.json": {
+      "passed": true,
+      "checks": 8,
+      "sha256": "c8369a123397f79d96b85a340a2180fc4573a737d4da4c0dc9f33b74604cb361"
+    },
+    "native-boot-cleanup.json": {
+      "passed": true,
+      "checks": 0,
+      "sha256": "78d5ffff434d2f5ffbd98438fc3eb139f38de66d3d70876f0cde8f6e98113f98"
+    }
+  },
+  "android": {
+    "api29": "Five upgrade invocations and seven native tests passed.",
+    "api36": "Five upgrade invocations and eight native tests passed in separate fresh AVDs against the same APK; raw collectors retain later Wi-Fi-prerequisite/log-fetch failures.",
+    "physical_device": "Deferred at user request."
+  },
+  "distribution_inputs": {
+    "full_inventory": 959,
+    "missing_full_inventory_notices": 122,
+    "selected_missing_notices": 0,
+    "selected_inputs": {
+      "linux": 401,
+      "windows": 366,
+      "android": 411
+    }
+  },
+  "release_approval": false,
+  "remaining": [
+    "Original two DNS counter-only events cannot be retrospectively attributed.",
+    "Physical Android and broader OEM/hardware/platform fault matrices.",
+    "Production signing, offline trust-root custody, Android signer transition and properly signed Windows application-routing driver.",
+    "Pinned AppImage runtime exact Alpine package revision/patches and complete static relinking-material review."
+  ]
+}

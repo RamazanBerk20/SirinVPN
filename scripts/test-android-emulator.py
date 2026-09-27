@@ -98,11 +98,14 @@ def main():
         if args.upgrade_from:
             for apk in [args.upgrade_from, args.tests]:
                 run([*adb, "install", "--no-streaming", "--no-incremental", "-t", str(apk.resolve())], timeout=300)
+            upgrade_invocation = 0
             def upgrade_check(method, expectation):
+                nonlocal upgrade_invocation
+                upgrade_invocation += 1
                 result = run([*adb, "shell", "am", "instrument", "-w", "-r", "-e", "class",
                     "org.sirinvpn.client.UpgradeAcceptanceTest#"+method, "-e", "expectation", expectation,
                     "org.sirinvpn.client.test/androidx.test.runner.AndroidJUnitRunner"], timeout=120)
-                (output / ("upgrade-"+method+"-"+expectation+".log")).write_bytes(result.stdout+result.stderr)
+                (output / (f"upgrade-{upgrade_invocation}-"+method+"-"+expectation+".log")).write_bytes(result.stdout+result.stderr)
                 assert b"OK (1 test)" in result.stdout and b"FAILURES" not in result.stdout, "Upgrade assertion failed"
             upgrade_check("seed", "old")
             upgrade_check("verifyPreserved", "old")
@@ -121,6 +124,9 @@ def main():
                 if run([*adb,"shell","getprop","sys.boot_completed"]).stdout.strip()==b"1": break
                 time.sleep(2)
             else: raise TimeoutError("Emulator reboot timed out")
+            if args.api == 36:
+                barrier = run([*adb, "shell", "am", "wait-for-broadcast-barrier"], timeout=180)
+                (output / "post-reboot-broadcast-barrier.log").write_bytes(barrier.stdout+barrier.stderr)
             upgrade_check("verifyPreserved", "old")
             assert b"Success" in run([*adb,"shell","pm","install-abandon",session]).stdout
             run([*adb,"install","--no-streaming","--no-incremental","-r","-t",str(args.apk.resolve())],timeout=300)
@@ -141,6 +147,25 @@ def main():
         for permission in ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION", "ACCESS_BACKGROUND_LOCATION"]:
             run([*adb, "shell", "pm", "grant", "org.sirinvpn.client", "android.permission." + permission])
         run([*adb, "shell", "settings", "put", "secure", "location_mode", "3"])
+        if args.api == 36:
+            # Boot completion alone does not mean broadcasts have drained or the
+            # synthetic Wi-Fi is the active underlay after an interrupted update.
+            run([*adb, "shell", "am", "wait-for-broadcast-barrier"], timeout=180)
+            run([*adb, "shell", "cmd", "location", "set-location-enabled", "true"])
+            run([*adb, "shell", "svc", "wifi", "enable"])
+            selected = run([*adb, "shell", "cmd", "wifi", "connect-network", "AndroidWifi", "open"], timeout=60)
+            (output / "wifi-connect.log").write_bytes(selected.stdout+selected.stderr)
+            deadline = time.monotonic() + 90
+            while time.monotonic() < deadline:
+                status = run([*adb, "shell", "cmd", "wifi", "status"], timeout=30)
+                (output / "wifi-before-native.log").write_bytes(status.stdout+status.stderr)
+                if b"Wifi is connected to" in status.stdout and b"AndroidWifi" in status.stdout:
+                    break
+                time.sleep(2)
+            else:
+                raise TimeoutError("Synthetic AndroidWifi fixture did not connect")
+            state = run([*adb, "shell", "dumpsys", "connectivity"], timeout=30)
+            (output / "network-before-native.log").write_bytes(state.stdout+state.stderr)
         cases = ["VaultAcceptanceTest", "NotificationTrafficTest", "QrScannerTest",
                  "OptionHandlingTest#packageReplacementUsesOrdinaryRecovery",
                  "OptionHandlingTest#optionsControlTheRunningService"]

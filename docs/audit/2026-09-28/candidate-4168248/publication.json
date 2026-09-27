@@ -1,0 +1,77 @@
+{
+  "candidate_source": "41682484b9528ddd1183d62806e258698434790a",
+  "release_id": 397855664,
+  "tag": "v0.1.1-candidate.4168248",
+  "url": "https://github.com/RamazanBerk20/SirinVPN/releases/tag/untagged-8e34ac227fdf850c9c7c",
+  "draft": true,
+  "prerelease": true,
+  "published_at": null,
+  "github_asset_digests_match_local": true,
+  "archive": {
+    "name": "SirinVPN-0.1.1-4168248-evidence.zip",
+    "bytes": 321305880,
+    "sha256": "7dffb6f378481f72737b4c51b793876cd2f6cd0ebcf9d23e0846652bcd986144",
+    "manifest_sha256": "2a1d80c8fefaf6913cde6e18f3724653fa494b7e30361d3ec025bea231823379",
+    "files": 317,
+    "zip_crc_verified": true
+  },
+  "assets": [
+    {
+      "name": "SirinVPN-0.1.1-4168248-evidence.zip",
+      "bytes": 321305880,
+      "sha256": "7dffb6f378481f72737b4c51b793876cd2f6cd0ebcf9d23e0846652bcd986144",
+      "github_digest": "sha256:7dffb6f378481f72737b4c51b793876cd2f6cd0ebcf9d23e0846652bcd986144",
+      "url": "https://github.com/RamazanBerk20/SirinVPN/releases/download/untagged-8e34ac227fdf850c9c7c/SirinVPN-0.1.1-4168248-evidence.zip",
+      "id": 594007946
+    },
+    {
+      "name": "SirinVPN_0.1.1_amd64.deb",
+      "bytes": 20446476,
+      "sha256": "6bbc0f2d36f0ea920ef31b3a5bc89e980caf34745d4d6d1f2150836fbf4733b4",
+      "github_digest": "sha256:6bbc0f2d36f0ea920ef31b3a5bc89e980caf34745d4d6d1f2150836fbf4733b4",
+      "url": "https://github.com/RamazanBerk20/SirinVPN/releases/download/untagged-8e34ac227fdf850c9c7c/SirinVPN_0.1.1_amd64.deb",
+      "id": 594007943
+    },
+    {
+      "name": "SirinVPN_0.1.1_amd64.AppImage",
+      "bytes": 113646072,
+      "sha256": "18b453139cba5ff4b836ebd4130942b050c229eb6075e707d2655b093175eacf",
+      "github_digest": "sha256:18b453139cba5ff4b836ebd4130942b050c229eb6075e707d2655b093175eacf",
+      "url": "https://github.com/RamazanBerk20/SirinVPN/releases/download/untagged-8e34ac227fdf850c9c7c/SirinVPN_0.1.1_amd64.AppImage",
+      "id": 594007948
+    },
+    {
+      "name": "SirinVPN_0.1.1_x64-setup.exe",
+      "bytes": 17370366,
+      "sha256": "e3068afd3624a4ebabd5199ae9175f7cb14805b7b5bbb59583319ea894a24b21",
+      "github_digest": "sha256:e3068afd3624a4ebabd5199ae9175f7cb14805b7b5bbb59583319ea894a24b21",
+      "url": "https://github.com/RamazanBerk20/SirinVPN/releases/download/untagged-8e34ac227fdf850c9c7c/SirinVPN_0.1.1_x64-setup.exe",
+      "id": 594007949
+    },
+    {
+      "name": "app-universal-debug.apk",
+      "bytes": 105955967,
+      "sha256": "748b7476d68776a9ebc53bde3113ae6fc30b6865876ad149bce6079780905d72",
+      "github_digest": "sha256:748b7476d68776a9ebc53bde3113ae6fc30b6865876ad149bce6079780905d72",
+      "url": "https://github.com/RamazanBerk20/SirinVPN/releases/download/untagged-8e34ac227fdf850c9c7c/app-universal-debug.apk",
+      "id": 594007978
+    },
+    {
+      "name": "SirinVPN-4168248-source.tar.gz",
+      "bytes": 8030934,
+      "sha256": "51070775caac3a605a7fafca590c3beae2b14c891d3b967e8970cc7a41c5fd6e",
+      "github_digest": "sha256:51070775caac3a605a7fafca590c3beae2b14c891d3b967e8970cc7a41c5fd6e",
+      "url": "https://github.com/RamazanBerk20/SirinVPN/releases/download/untagged-8e34ac227fdf850c9c7c/SirinVPN-4168248-source.tar.gz",
+      "id": 594008116
+    },
+    {
+      "name": "SHA256SUMS",
+      "bytes": 571,
+      "sha256": "162d8dd3ab11de143382558bc47b61e38b1721578574f11a94659b9263c86f8e",
+      "github_digest": "sha256:162d8dd3ab11de143382558bc47b61e38b1721578574f11a94659b9263c86f8e",
+      "url": "https://github.com/RamazanBerk20/SirinVPN/releases/download/untagged-8e34ac227fdf850c9c7c/SHA256SUMS",
+      "id": 594007947
+    }
+  ],
+  "retention": "GitHub release assets do not use the workflow artifact expiry, but repository maintainers can delete them. Keep an independent offline copy."
+}

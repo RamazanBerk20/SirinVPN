@@ -1,0 +1,107 @@
+{
+  "scope": "Actual reproduced counter false positive, current candidate only; the two historical packets remain unattributed",
+  "source_commit": "41682484b9528ddd1183d62806e258698434790a",
+  "linux_package_sha256": "6bbc0f2d36f0ea920ef31b3a5bc89e980caf34745d4d6d1f2150836fbf4733b4",
+  "attempt": 2,
+  "before_connect": {
+    "dns": 1,
+    "ipv6": 0
+  },
+  "after_connect": {
+    "dns": 1,
+    "ipv6": 0
+  },
+  "packet": {
+    "kind": "physical_dns",
+    "mono_ns": 311868256705,
+    "unix_ns": 1790544611433718667,
+    "interface": "ens3",
+    "source": "10.0.2.15",
+    "destination": "10.0.2.3",
+    "protocol": 6,
+    "source_port": 47084,
+    "tcp_flags": 16,
+    "payload_bytes": 0,
+    "socket_owners": [
+      "tcp ESTAB     0      0           10.0.2.15:47084    10.0.2.3:53    users:((\"systemd-resolve\",pid=312,fd=28))"
+    ],
+    "kernel_unix_ns": 1790544611428131546
+  },
+  "timeline": [
+    {
+      "kind": "rules",
+      "mono_ns": 309286808781,
+      "unix_ns": 1790544608852270002,
+      "text": "delete table inet sirinvpn_guard"
+    },
+    {
+      "kind": "rules",
+      "mono_ns": 311736240165,
+      "unix_ns": 1790544611301701386,
+      "text": "add counter inet sirin_acceptance dns { packets 0 bytes 0 } "
+    },
+    {
+      "kind": "rules",
+      "mono_ns": 313268713818,
+      "unix_ns": 1790544612834175954,
+      "text": "add table inet sirinvpn_guard"
+    },
+    {
+      "phase": "counter_baseline_requested",
+      "mono_ns": 311885894285,
+      "unix_ns": 1790544611451356777
+    },
+    {
+      "phase": "connect_requested",
+      "mono_ns": 312895275918,
+      "unix_ns": 1790544612460737864
+    },
+    {
+      "phase": "fallback_connected",
+      "mono_ns": 360016421289,
+      "unix_ns": 1790544659581883798
+    }
+  ],
+  "counter_trace": [
+    {
+      "kind": "trace",
+      "mono_ns": 311868405768,
+      "unix_ns": 1790544611433867009,
+      "text": "trace id 1faf8644 inet sirin_dns_attribution output packet: oif \"ens3\" ip saddr 10.0.2.15 ip daddr 10.0.2.3 ip dscp 0x00 ip ecn 0x0 ip ttl 64 ip id 51223 ip protocol 6 ip length 40 tcp sport 47084 tcp dport 53 tcp flags == 0x10 tcp window 64240 "
+    },
+    {
+      "kind": "trace",
+      "mono_ns": 311868411248,
+      "unix_ns": 1790544611433872472,
+      "text": "trace id 1faf8644 inet sirin_dns_attribution output rule meta l4proto { 6, 17 } th dport 53 meta nftrace set 1 (verdict continue)"
+    },
+    {
+      "kind": "trace",
+      "mono_ns": 311868420192,
+      "unix_ns": 1790544611433881424,
+      "text": "trace id 1faf8644 inet sirin_dns_attribution output policy accept "
+    },
+    {
+      "kind": "trace",
+      "mono_ns": 311868424695,
+      "unix_ns": 1790544611433885920,
+      "text": "trace id 1faf8644 inet sirin_acceptance observe packet: oif \"ens3\" ip saddr 10.0.2.15 ip daddr 10.0.2.3 ip dscp 0x00 ip ecn 0x0 ip ttl 64 ip id 51223 ip protocol 6 ip length 40 tcp sport 47084 tcp dport 53 tcp flags == 0x10 tcp window 64240 "
+    },
+    {
+      "kind": "trace",
+      "mono_ns": 311868429135,
+      "unix_ns": 1790544611433890360,
+      "text": "trace id 1faf8644 inet sirin_acceptance observe rule oifname != { \"lo\", \"sirinvpn0\" } meta l4proto { 6, 17 } th dport 53 counter name \"dns\" (verdict continue)"
+    },
+    {
+      "kind": "trace",
+      "mono_ns": 311868433754,
+      "unix_ns": 1790544611433894976,
+      "text": "trace id 1faf8644 inet sirin_acceptance observe policy accept "
+    }
+  ],
+  "conclusion": "A zero-payload TCP ACK on systemd-resolved socket PID 312 left ens3 after explicit Disconnect and counter reset, before the pre-Connect snapshot. Its nft trace increments the DNS counter. No additional DNS or IPv6 packet was counted through fallback. The old absolute-zero assertion would fail this allowed disconnected packet.",
+  "original_historical_packets_attributed": false,
+  "timing_limit": "Kernel packet timestamps retained; nft rule/trace timestamps are userspace receive times, not exact kernel commit times.",
+  "raw_results_sha256": "efdbb22ada0b82d4aa1b05bde505226183f72770bebe6f5cf3962abf4628f41b"
+}

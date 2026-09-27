@@ -1,9 +1,14 @@
-# Reliability remediation — 26–27 September 2026
+# Reliability remediation — 26–28 September 2026
 
 Base: `709fdf69206f1de18a3ff5c4cf3cd8eeaf812a56`; initially clean working tree.
 This is an implementation and verification record, **not an independent security
 audit or production qualification**.
 Results apply only to the source/artifact identified by each evidence record.
+
+The [28 September frozen-candidate report](audit/2026-09-28/candidate-4168248/README.md)
+records the current `4168248` packages, green hosted CI, native upgrade/crash tests,
+DNS attribution, durable draft assets and remaining production-review boundaries.
+Earlier sections below retain their original source and scope.
 
 The confirmed recovery and credential defects have implementations and regression
 tests. Platform acceptance is incomplete. The initial, explicitly authorized
@@ -19,14 +24,14 @@ and live testing are recorded in the 27 September follow-up below.
 | Finding ID | Validity | Implemented change | Regression test | Actual verification | Remaining limitation |
 |---|---|---|---|---|---|
 | SRV-01 | Confirmed: restoration errors were discarded; peer-only cache hid divergent rules | One transaction/recovery owner, durable bounded intent, scoped containment, complete reconciliation and truthful status | Stage failures, partial effects, warm cache, cancellation, post-rename failure, process termination; real kernel lifecycle test | Shared regressions, 17 kernel cases and three VM power cuts passed | Power cuts verify real persistence with modeled network effects; wider real-network transaction power-cut matrix remains open |
-| SEC-01 | Confirmed: deletion could acknowledge keyring failure | Persistent deletion intent, independent backend attempts, verified absence, sealed references, caller error propagation | Deletion matrix, stale writes, invalid paths, incomplete AtomicFile cleanup, real duplicate keyring entries | Unit, disposable Secret Service, Android and native Windows profile/credential removal checks passed | Windows interrupted-deletion matrix remains open; secure erasure of storage media is not claimed |
+| SEC-01 | Confirmed: deletion could acknowledge keyring failure; Windows lacked a sealed reference | Durable deletion intent/completion, verified cleanup, cross-process serialization and late-write refusal | Backend deletion matrix, real duplicate keyring entries, native Windows child-process termination and competing writer | Historical Secret Service/Android checks; candidate Windows native regressions and exact release CLI tombstone deletion passed | Secure erasure of storage media and arbitrary hardware power-loss durability are not claimed |
 | SEC-02 | Confirmed: silent fallback and missing provenance | Secure storage default, explicit file consent, public-key binding, bounded reads, migration/readback and retryable cleanup | Strict/fallback policy, corruption/conflict, migration, locking, interrupted writes; real keyring interoperability/lock | Real Secret Service fixture passed; current shared gate recorded below | Other Secret Service providers and session restart/login transitions need acceptance |
 | UI-01 | Partly existing: generation filtering was present; recovery/protection states were incomplete | Native storage status, acknowledged migration/cleanup, stale-screen/read rejection, distinct server recovery warning, hidden-view unknown status | Frontend consent/duplicate click/retry/generation/read-failure tests; rendered desktop/mobile recovery fixtures | Final shared gate: 210 frontend tests passed; browser results below | Browser fixtures do not prove native enforcement or screen-reader acceptance |
 | AND-01 | Existing separate VPN process and native controls retained; vault/test compatibility defects confirmed | AtomicFile durability/cleanup checks, deletion tombstones, invalid-key refusal; API 29 notification and QR framing fixed | Native vault authentication/deletion/key-invalidation, notification samples, QR decode and saved-network roaming identity | Both-ABI debug build/lint; API 29: seven tests, API 36: eight; physical S25+: 16 lifecycle/network/OS-policy checks passed | Physical camera, TalkBack, reboot, overnight power behavior, other OEMs and physical 16 KB pages remain open |
-| CI-01 | Confirmed: baseline lacked workflows; reachable Actions API reported no runs | Read-only pinned workflows for shared/native checks, dependency checks, manual kernel/Android/candidate jobs | Actionlint, shellcheck, action-pin/trigger checks, shared scripts | Workflows validated locally; hosted results pending | Hosted runtime prerequisites and retained run/artifact links required |
-| EVD-01 | Confirmed: historical evidence could not qualify current changes | Versioned schema, dirty-source digest, timestamps/toolchains, post-build artifact hashes, bounded recorder; VM cleanup attempts every guest and exposes failure | Missing command, nonzero exit, timeout, output bound, no overwrite, artifact binding, setup/interruption/cleanup failures | Evidence/harness regressions and local JSON records passed; follow-up adds vendored-source and notice-archive checks | Local-only artifacts; no publication/CI artifact URLs; old runs retain their own source identity |
-| PLT-01 | Qualification gap; runtime tests confirmed Linux carrier/uninstall and Windows pipe/WFP verification defects | Bounded carrier recovery, verified uninstall, standard-user service authentication and strict WFP comparison allowing only the INDEXED optimization | Kernel continuity, package uninstall, native Android, Windows cross-user negative controls and four transports | 17 kernel cases, three power cuts, startup; Debian: 28 checks; AppImage launch/close; S25+: 16 checks; Windows: 108 unit tests, debug/release runtime and NSIS acceptance, debug crash/reboot | Signed routing driver, broader leak/fault and desktop/OEM matrix remain open; two earlier Linux DNS counter failures remain unattributed |
-| REL-01 | Source-only release readiness gap confirmed | Pinned toolchains/locks, exact payload checks, verified GLib upstream backport, explicit compatibility block and build-input SBOM/notices | Existing signed release/tamper/rollback tests and package inspection | Local engineering builds only; exact results below | Informational advisories, complete artifact-level notices/SBOM review, production key custody, compatible upgrade strategy and remaining platform acceptance block distribution |
+| CI-01 | Confirmed: baseline lacked workflows | Read-only pinned workflows, shared/native validation, reviewed dependency policy and retained inner logs | Workflow/pin checks and shared suites | Candidate 4168248 Linux, native Windows and dependency Actions passed; links in current report | Runtime coverage remains scoped to the reported fixtures |
+| EVD-01 | Historical evidence could not qualify current changes | Frozen-source and unchanged-artifact checks, explicit failure retention, hash-bound archive and draft assets | Recorder/harness regressions and exact installed-payload checks | All 34 candidate collectors retained clean unchanged source; failed collectors remain failed | Draft assets require maintainer access and are deletable; retain an offline copy |
+| PLT-01 | Native runtime and lifecycle qualification gap | Existing recovery/protection fixes plus measured DNS counter boundary and durable upgrade fixtures | Kernel/package/native checks, negative controls and real process/VM termination | Candidate Debian 30 checks; AppImage FUSE/extract launch; Windows 9 installer, 15 runtime and 8 release crash/reboot checks; scoped API 29/36 emulator assertions | Physical phone deferred; signed driver and wider hardware/fault/accessibility matrices open; original two DNS events remain unattributed |
+| REL-01 | Release-readiness gap confirmed | First-install/development migration policy, strict signed compatibility, artifact-selected notices and source/signing preparation | Interrupted upgrades, tombstone/rollback regressions, package and notice binding | Profile/credential preservation checked on Linux, Windows and Android emulators; selected input notices have zero missing entries | Production signing/custody, Android signer transition and AppImage static runtime source/relink review still require approval |
 | MNT-01 | Focused transaction/store complexity justified improvement | Typed stages/provenance, one lock owner, short OS boundaries, bounded commands, background desktop storage operations | Rust formatting/Clippy, source-size/privacy gates; existing tests retained | Source inventory has no first-party file above 1,000 lines; final gates below | No broad controller rewrite or claim that line count measures correctness |
 | DOC-01 | Current/historical claims needed separation | Updated README/security/privacy/build/test/release guidance and this ledger | Current local link/version/schema/manifest checks | Local contract checks passed | Historical raw artifacts may be unavailable; private vulnerability reporting channel is not verified |
 
@@ -833,17 +838,17 @@ the scripts deliberately refuse existing services, profiles or installations.
 
 | Condition | Status | Next concrete action |
 |---|---|---|
-| Recovery/store regressions and current shared gate | Passed; 452 Rust, 210 frontend, seven final Python tests | Retain source/artifact bindings and failure records with these changes |
+| Recovery/store regressions and current shared gate | Candidate CI passed: 454 Rust, 210 frontend, 16 Python; native Windows 156 Rust | Retain the exact source/artifact and failure records linked in the current report |
 | Linux real keyring | Focused native integration passed | Test other providers and login/restart behavior in owned user sessions |
-| Linux kernel/package runtime | 17 kernel cases, three power cuts, startup; Debian passed all 28 checks; final AppImage launch/close passed | Qualify wider real-network power cuts, desktop sessions/resolvers, suspend, AppImage FUSE/VPN lifecycle and accessibility |
-| Automatic fallback DNS observation | Unresolved in two failed package intervals; later strict assertions passed | Attribute packets relative to guard installation/teardown with controlled timing; retain the zero-leak assertion |
-| Android APK, emulator and S25+ | Debug build/lint, API 29/36 native cases and 16 physical S25+ checks passed | Qualify camera, TalkBack, reboot, overnight power behavior, other OEMs, current API 29 WebView and physical 16 KB pages |
-| Native Windows | 108 MSVC unit tests; 15 debug and 15 release runtime checks; debug crash/reboot; five final NSIS install/repair/uninstall checks passed | Qualify broader IPv6/DNS/fault/update/power-state behavior, including crash/reboot with release binaries |
+| Linux kernel/package runtime | Candidate Debian passed all 30 checks including interrupted upgrade/power loss; AppImage FUSE and extract-run launch/close passed | Wider real-network transaction power cuts, sessions/resolvers, suspend, AppImage VPN lifecycle and accessibility |
+| Automatic fallback DNS observation | Current false positive attributed to a disconnected TCP ACK; baseline-delta gate and escape controls passed; original two packets remain unattributed | Preserve the historical uncertainty; do not infer universal leak prevention |
+| Android APK, emulator and S25+ | Candidate all-ABI debug build/inspection; API 29 upgrade/native passed; API 36 upgrade/native assertions passed with separate collector limitations | Physical phone deferred by user; production signer transition, camera, accessibility, OEM/overnight behavior and physical 16 KB pages remain open |
+| Native Windows | Candidate 156 native CI tests; 9 exact NSIS checks; 15 release runtime and 8 actual release crash/reboot checks passed | Broader IPv6/DNS/fault/power-state and physical hardware qualification |
 | Application routing driver on Windows | Not qualified | Supply and qualify the properly signed driver; keep unsupported capability disabled |
-| Dependencies, notices and SBOM | GLib mitigated; exact advisory dispositions documented with expiry; raw findings retained; build-input inventory/notices exported | Reassess dispositions before expiry and complete exact-artifact notice/SBOM selection and missing publisher materials |
-| State upgrade/downgrade | Incompatible with older manifests by design | Review a bridge/first-install strategy without ignoring tombstones or weakening signed compatibility |
+| Dependencies, notices and SBOM | Candidate gate green under nine expiring dispositions; 959-input SBOM; no missing selected notices; exact SDK/system/toolchain supplements retained | Reassess by 2026-12-27; complete AppImage Alpine patch/relink material and final distribution review |
+| State upgrade/downgrade | Unbound development 0.1.0 upgrades and interruption/retry tested on all three OS families; strict signed-receipt/rollback boundary retained | Separately review any incompatible signed-receipt migration and Android production signer transition |
 | Production signing and key custody | Not performed | Maintainer establishes offline custody/backups and conducts a separate authorized ceremony |
-| GitHub execution | Configured and locally validated; hosted results pending | Inspect hosted results after push, satisfy runtime prerequisites and retain actual run/artifact links |
+| GitHub execution | Candidate Validate and dependency jobs passed; logs and artifacts retained in draft candidate assets | Maintainer reviews draft; keep an independent offline copy before public release |
 | Public disclosure channel | Private channel unverified | Maintainer configures and verifies a private reporting channel before soliciting sensitive reports |
 | Independent security review | Not performed | Arrange external review before broad distribution |
 
@@ -889,3 +894,27 @@ files and preserves package copyright/common-license material. Runtime static
 libraries, source-distribution obligations and production signatures remain
 explicit review items. These preparatory checks used old package files to test
 the tooling; they are not same-artifact candidate acceptance.
+
+## 28 September frozen candidate results
+
+The [candidate report](audit/2026-09-28/candidate-4168248/README.md) and its compact
+JSON records are the current result. Exact 0.1.1 packages from clean commit
+`41682484b9528ddd1183d62806e258698434790a` passed the scoped Linux/Windows checks
+and Android emulator assertions recorded there. The Windows release binaries
+now have actual process-crash and reboot evidence, including recovery before
+login. All owned VM/AVD fixtures and private exports were removed. The user's
+original Winboat remains stopped and untouched; physical-phone work is deferred.
+
+The current DNS trace attributes a reproduced counter error to an allowed
+disconnected systemd-resolved ACK before the pre-Connect snapshot. The assertion
+now requires zero new DNS packets through fallback, rejects counter decreases,
+and retains zero IPv6 and deliberate-escape sensitivity checks. The two original
+counter-only observations cannot be retrospectively attributed and remain open.
+
+The draft release retains exact packages, supporting executables/baselines,
+source, hosted logs, failed attempts, notices and a manifest beyond CI artifact
+expiry. It is not production publication. The following report/fixture commit
+ports the observed emulator readiness controls into the reusable harness; it
+does not relabel the tested package source. Production custody/signatures,
+physical and broader platform acceptance, and AppImage static-runtime
+corresponding-source/relink review remain explicit boundaries.

@@ -58,7 +58,7 @@ jobs:
         run: |
           for api in 29 36; do
             memory_high=3G
-            if [ "$api" = 36 ]; then memory_high=3500M; fi
+            if [ "$api" = 36 ]; then memory_high=3800M; fi
             python3 scripts/record-evidence.py --frozen-source --suite "android-emulator-$api" --output target/remediation-evidence --timeout 1400 --tested-artifact apps/desktop/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk --tested-artifact apps/desktop/src-tauri/gen/android/app/build/outputs/apk/androidTest/universal/debug/app-universal-debug-androidTest.apk --signing-category development -- systemd-run --user --scope --quiet -p "MemoryHigh=$memory_high" -p MemoryMax=4G -p MemorySwapMax=0 -p CPUQuota=150% -p TasksMax=256 python3 scripts/test-android-emulator.py --api "$api" --output ".cache/android-emulator-$api" --apk apps/desktop/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk --tests apps/desktop/src-tauri/gen/android/app/build/outputs/apk/androidTest/universal/debug/app-universal-debug-androidTest.apk
           done
       - name: Preserve allowlisted summaries
@@ -74,5 +74,10 @@ jobs:
             target/remediation-evidence/android-emulator-36.json
             .cache/android-emulator-29/results.json
             .cache/android-emulator-36/results.json
+            .cache/android-emulator-29/instrumentation.log
+            .cache/android-emulator-36/instrumentation.log
+            .cache/android-emulator-36/wifi-connect.log
+            .cache/android-emulator-36/wifi-before-native.log
+            .cache/android-emulator-36/network-before-native.log
           if-no-files-found: error
           retention-days: 14

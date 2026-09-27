@@ -1,0 +1,43 @@
+{
+  "source_commit": "41682484b9528ddd1183d62806e258698434790a",
+  "jobs": [
+    {
+      "name": "linux",
+      "result": "passed",
+      "report_sha256": "bbec1d7a3713612295a3759c57866b19ad14cf9019bb5c8214125b98d9c46b87",
+      "log_sha256": "bdff92cb2b13f66daa70b8177d10f1deaa5cf2e5529875fb7b73bbd126fce398",
+      "rust_tests": 454,
+      "frontend_tests": 210,
+      "python_tests": 16
+    },
+    {
+      "name": "windows",
+      "result": "passed",
+      "report_sha256": "e551ec04a1d86d000ac061bbb7fe01a243d6ee557187158c3f7cecf6edc322ff",
+      "log_sha256": "e0532bdfe5c9c5b3887457dc8222e56e7dbfa409c94a56160f74e1be0955957c",
+      "rust_tests": 156,
+      "frontend_tests": 0,
+      "python_tests": 0
+    },
+    {
+      "name": "dependencies",
+      "result": "passed",
+      "report_sha256": "e81d71a2efe5bf9d2c9909782cebaa4bc078fb8a7eea19bd44cca2d9ff693559",
+      "log_sha256": "876eea49411b191a0254f67546a36e3a37b2dcd95b1be5c1baccc83ab81126b2",
+      "rust_tests": 0,
+      "frontend_tests": 0,
+      "python_tests": 0,
+      "disposition_summary": "Dependency scan: 959 packages; 0 blocking findings; 9 reviewed notices.\n\nRaw OSV exit code: 1. The JSON artifact retains every finding.\n\n- REVIEWED: crates.io/glib@0.18.5: RUSTSEC-2024-0429 \u2014 verified backport (review expires 2026-12-27)\n- REVIEWED: crates.io/glib@0.18.5: GHSA-wrw7-89jp-8q8g \u2014 verified backport (review expires 2026-12-27)\n- REVIEWED: crates.io/proc-macro-error@1.0.4: RUSTSEC-2024-0370 \u2014 unmaintained (review expires 2026-12-27)\n- REVIEWED: crates.io/unic-char-property@0.9.0: RUSTSEC-2025-0081 \u2014 unmaintained (review expires 2026-12-27)\n- REVIEWED: crates.io/unic-char-range@0.9.0: RUSTSEC-2025-0075 \u2014 unmaintained (review expires 2026-12-27)\n- REVIEWED: crates.io/unic-common@0.9.0: RUSTSEC-2025-0080 \u2014 unmaintained (review expires 2026-12-27)\n- REVIEWED: crates.io/unic-ucd-ident@0.9.0: RUSTSEC-2025-0100 \u2014 unmaintained (review expires 2026-12-27)\n- REVIEWED: crates.io/unic-ucd-version@0.9.0: RUSTSEC-2025-0098 \u2014 unmaintained (review expires 2026-12-27)\n- REVIEWED: Go/golang.org/x/crypto@0.56.0: GO-2026-5932 \u2014 OpenPGP not imported (review expires 2026-12-27)\n"
+    }
+  ],
+  "validate-run": {
+    "id": 36351092541,
+    "url": "https://github.com/RamazanBerk20/SirinVPN/actions/runs/36351092541",
+    "conclusion": "success"
+  },
+  "dependency-run": {
+    "id": 36351092524,
+    "url": "https://github.com/RamazanBerk20/SirinVPN/actions/runs/36351092524",
+    "conclusion": "success"
+  }
+}
