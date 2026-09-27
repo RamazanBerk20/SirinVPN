@@ -83,6 +83,14 @@ detection of a protected-interval escape. The exception is removed in cleanup.
 This proves the recorder works and reproduces a counter-boundary false positive;
 it cannot retrospectively attribute older counter-only observations.
 
+`--upgrade-from /absolute/path/to/older.deb` provisions a synthetic profile using
+that older development package first. It verifies an encrypted backup, cuts VM
+power after unpacking the candidate but before configuration, retries package
+configuration and compares profile/credential bytes. The candidate must restore
+the old backup and repair the fixture VPS with its own payload before the normal
+network tests run. This covers unbound development installations and one real
+interruption boundary. It does not declare older signed manifests compatible.
+
 Results and bounded setup/error logs remain in the output directory. Guest
 disks and temporary keys are deleted on normal completion and handled failures.
 For development, `--keep-failed-seconds 1800` retains failed fixtures for at most

@@ -118,7 +118,7 @@ class Acceptance:
         guest.start()
         guest.put(ROOT / "tests/vm/acceptance_guest.py", "/home/sirin/acceptance-guest.py")
         if client:
-            guest.put(self.args.package.resolve(), "/home/sirin/sirinvpn.deb")
+            guest.put((self.args.upgrade_from or self.args.package).resolve(), "/home/sirin/sirinvpn.deb")
         if self.args.dependency_archives:
             # Only public .deb downloads enter apt's cache. Apt still verifies
             # their signed repository hashes before installing dependencies.
@@ -191,6 +191,38 @@ class Acceptance:
         self.server_id = profile["id"]
         assert not profile.get("ipv6_tunnel_enabled", False), "the fixture needs an IPv4-only profile"
         return {"profile_created": True, "server_id": self.server_id}
+
+    def upgrade(self):
+        """Qualify an unbound development upgrade, without rewriting signed receipts."""
+        guest = self.client
+        guest.put(ROOT / 'tests/vm/upgrade_guest.py', '/home/sirin/upgrade-guest.py')
+        def check(action):
+            return json.loads(guest.run([*USER_PREFIX, 'python3', '/home/sirin/upgrade-guest.py', action], timeout=180).stdout)
+        backup_before = check('backup-create')
+        before = check('snapshot')
+        guest.put(self.args.package.resolve(), '/home/sirin/candidate.deb')
+        guest.run(['dpkg', '--unpack', '/home/sirin/candidate.deb'], timeout=120)
+        # A real VM power cut between unpack and configure; this is one explicit
+        # interruption boundary, not a claim about every possible dpkg failure.
+        guest.stop(crash=True)
+        guest.start(via_agent=True)
+        guest.run(['dpkg', '--configure', 'sirin-vpn'], timeout=120)
+        assert not guest.run(['dpkg', '--audit']).stdout.strip()
+        assert check('snapshot') == before, 'Upgrade changed profile or credential bytes'
+        backup_after = check('backup-verify')
+        assert self.local()['state'] == 'disconnected'
+        guest.run(['rm', '-f', '/home/sirin/acceptance-agent.sock'])
+        guest.run([*USER_PREFIX, 'ssh-agent', '-a', '/home/sirin/acceptance-agent.sock'])
+        guest.run([*USER_PREFIX, 'ssh-add', '/home/sirin/vps-fixture-key'])
+        self.cli('server', 'repair', self.server_id, *self.ssh_options,
+                 '--server-binary', '/usr/lib/sirinvpn/sirinvpn-server', '--confirm-repair',
+                 '--private-dns-record', 'probe.test=10.0.2.100',
+                 '--private-dns-record', 'dns-failure.test=10.0.2.100', timeout=600)
+        return {'previous_package_sha256': digest(self.args.upgrade_from),
+                'candidate_package_sha256': digest(self.args.package),
+                'profile_and_credentials_preserved': before, 'backup_before': backup_before,
+                'backup_after': backup_after, 'power_cut_after_unpack': True,
+                'configure_retry': 'passed', 'vps_repair_with_candidate_payload': 'passed'}
 
     def release_guard_regression(self):
         executable = "/home/sirin/installer-regression"
@@ -500,6 +532,8 @@ class Acceptance:
                     self.step("Install exact Debian package and guest-only Polkit authorization", lambda:
                               self.prepare_guest(self.client, "198.18.10.2", "52:54:00:78:70:02", True))
                     self.step("Provision and enroll through the packaged CLI", self.provision)
+                    if self.args.upgrade_from:
+                        self.step("Preserve legacy profile and backup through interrupted upgrade/retry", self.upgrade)
                     self.step("Verify physical IPv4, IPv6 and leak-counter baselines", self.baseline)
                     if self.args.dns_attribution_only:
                         from dns_attribution import run
@@ -558,6 +592,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--base", type=Path, required=True)
     parser.add_argument("--package", type=Path, required=True)
+    parser.add_argument("--upgrade-from", type=Path,
+                        help="Install/provision this older unbound development package before interrupted candidate upgrade")
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--installer-tests", type=Path,
                         help="Current installer test executable for the guest-root regression")

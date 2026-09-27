@@ -49,6 +49,7 @@ docker run --rm \
   --volume "$PROJECT_ROOT:/workspace" \
   --workdir /workspace \
   --env NO_STRIP=1 \
+  --env "RUSTUP_TOOLCHAIN=$(sed -n 's/^channel = "\(.*\)"/\1/p' "$PROJECT_ROOT/rust-toolchain.toml")" \
   --env CARGO_BUILD_JOBS=2 --env RUST_TEST_THREADS=2 \
   --env "SIRINVPN_DEPENDENCIES_READY=${SIRINVPN_DEPENDENCIES_READY:-0}" \
   "$@" \
