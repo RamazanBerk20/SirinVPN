@@ -14,8 +14,10 @@ output cannot enter the reviewed tree. On the recorded Linux/Rust 1.97.1 run,
 the pristine optimized test crashed with SIGSEGV and the patched run passed all
 11 iterator tests. See `docs/remediation.md` for evidence and limits.
 
-The package retains version 0.18.5. Raw advisory reports may therefore still list
-it; no advisory is suppressed. This backport mitigates the named pointer defect,
+The package retains version 0.18.5. Raw advisory reports therefore still list
+it. The dependency gate applies the exact, time-bounded disposition documented
+in [the dependency policy](../docs/dependency-policy.md) only after source and
+Cargo-selection verification. This backport mitigates the named pointer defect,
 not unrelated future findings. Remove the patch when the supported GTK/Tauri
 dependency chain carries the upstream fix. Treat vendor updates as source review,
 including license, provenance, tree hash and the negative binding regression.

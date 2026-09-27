@@ -758,10 +758,18 @@ its own source snapshot and does not qualify these later changes.
 
 ## Dependency disposition
 
+The first hosted scan on `8cea53c` reproduced the nine raw advisory records below
+and found no license violations. The subsequent [dependency policy](dependency-policy.md)
+classifies only those reviewed IDs and versions, with an expiry date, while
+retaining raw findings. Each run verifies the GLib backport and both Android
+import graphs. New findings, failed verification and scanner errors still block.
+The historical raw scanner failures below remain part of the evidence.
+
 The pinned OSV scanner checks Cargo, pnpm, Go (including stdlib version) and the
 tracked Gradle release-runtime lock. The inventory currently covers 959 package
 records, including development/target-specific dependencies; that is not a
-count of production vulnerabilities. Scanner failures and findings return nonzero.
+count of production vulnerabilities. The raw scanner returns nonzero for findings;
+the dependency gate separately evaluates the documented dispositions.
 No advisory has a blanket ignore.
 
 Rustls was updated from 0.23.43 to 0.23.45 for
@@ -832,7 +840,7 @@ the scripts deliberately refuse existing services, profiles or installations.
 | Android APK, emulator and S25+ | Debug build/lint, API 29/36 native cases and 16 physical S25+ checks passed | Qualify camera, TalkBack, reboot, overnight power behavior, other OEMs, current API 29 WebView and physical 16 KB pages |
 | Native Windows | 108 MSVC unit tests; 15 debug and 15 release runtime checks; debug crash/reboot; five final NSIS install/repair/uninstall checks passed | Qualify broader IPv6/DNS/fault/update/power-state behavior, including crash/reboot with release binaries |
 | Application routing driver on Windows | Not qualified | Supply and qualify the properly signed driver; keep unsupported capability disabled |
-| Dependencies, notices and SBOM | GLib mitigated and metadata reviewed; raw advisory gate remains nonzero; build-input inventory/notices exported | Review informational findings and complete exact-artifact notice/SBOM selection and missing publisher materials |
+| Dependencies, notices and SBOM | GLib mitigated; exact advisory dispositions documented with expiry; raw findings retained; build-input inventory/notices exported | Reassess dispositions before expiry and complete exact-artifact notice/SBOM selection and missing publisher materials |
 | State upgrade/downgrade | Incompatible with older manifests by design | Review a bridge/first-install strategy without ignoring tombstones or weakening signed compatibility |
 | Production signing and key custody | Not performed | Maintainer establishes offline custody/backups and conducts a separate authorized ceremony |
 | GitHub execution | Configured and locally validated; hosted results pending | Inspect hosted results after push, satisfy runtime prerequisites and retain actual run/artifact links |
