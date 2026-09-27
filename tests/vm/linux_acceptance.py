@@ -434,6 +434,9 @@ class Acceptance:
         observation = {"scope": "bounded DNS metadata in synthetic disposable guest only"}
         self.report.setdefault("automatic_fallback_observations", []).append(observation)
         with capture(self, observation):
+            # Observe disconnect too: late DNS socket resets can precede Connect.
+            self.clean_disconnect()
+            mark(self, observation, "counter_baseline_requested")
             before_connect = self.counter()
             observation["before_connect"] = before_connect
             self.block_server("udp")
@@ -448,9 +451,9 @@ class Acceptance:
                 assert self.request(host="probe.test") == "vps"
                 after_connect = self.counter()
                 observation["after_connect"] = after_connect
-                # Keep the strict original gate. A future failure has a timeline
-                # for attribution; a zero pre-connect count alone is insufficient.
-                assert after_connect == {"dns": 0, "ipv6": 0}, {
+                # Count new packets, not traffic already observed while disconnected.
+                # Every increment still fails, including before the guard is armed.
+                assert after_connect == before_connect and after_connect["ipv6"] == 0, {
                     "before_connect": before_connect, "after_connect": after_connect}
                 rules = json.loads(self.server.run(["nft", "-j", "list", "table", "inet",
                                                    "sirin_acceptance_fault"]).stdout)["nftables"]
@@ -459,7 +462,8 @@ class Acceptance:
                             if isinstance(expression.get("counter"), dict))
                 assert drops > 0, "the test did not observe an attempted UDP transport"
                 return {"udp_blocked": True, "dropped_udp_packets": drops,
-                        "selected_transport": local["transport"], "exit": "vps"}
+                        "selected_transport": local["transport"], "exit": "vps",
+                        "before_connect": before_connect, "after_connect": after_connect}
             finally:
                 self.block_server(None)
 
@@ -583,8 +587,6 @@ class Acceptance:
                                       lambda kill_switch=kill_switch, reconnect=reconnect:
                                       self.failure_policy(kill_switch, reconnect))
                     for attempt in range(self.args.fallback_repeats):
-                        if attempt:
-                            self.clean_disconnect()
                         self.step(f"Automatic fallback with both UDP transports blocked ({attempt + 1})", self.automatic_fallback)
                     self.step("Power loss, persistent blocking and automatic recovery", self.power_loss)
                     self.step("Disconnect clears persistent protection and restores networking", self.clean_disconnect)

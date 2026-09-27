@@ -83,6 +83,13 @@ history. An nftables notification timestamp is an upper bound on rule
 installation, not the exact kernel commit timestamp; preserve this limitation
 when interpreting the trace.
 
+Ordinary fallback capture begins before Disconnect and retains its pre-Connect
+counter snapshot. Require **zero new DNS packets** from that snapshot through
+completed fallback, including the interval before the guard is armed; an
+already nonzero disconnected count is not itself a connection leak. Counter
+decreases also fail. IPv6 remains at zero. No TCP flags or payload size are
+exempted from this gate. Keep the original absolute-counter failures separately.
+
 Do not mark the historical DNS issue explained unless the retained evidence
 supports the explanation. If an actual protection failure is reproduced, fix
 its owner and retain the reproducing test. If a measurement error is proven,
