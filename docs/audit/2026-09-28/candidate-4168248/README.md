@@ -5,9 +5,11 @@ This is development qualification, not independent security review or production
 approval. The subsequent report/fixture commit does not change which source or
 package bytes these results qualify.
 
-The [draft candidate release](https://github.com/RamazanBerk20/SirinVPN/releases/tag/untagged-8e34ac227fdf850c9c7c)
-holds the exact packages and evidence archive for maintainer review. Draft assets
-require repository access. [Publication metadata](publication.json) binds the
+The [draft candidate release](https://github.com/RamazanBerk20/SirinVPN/releases)
+lists `v0.1.1-candidate.4168248` (release ID `397855664`) with the exact packages
+and evidence archive for maintainer review. Draft assets require repository
+access. GitHub changes temporary draft URLs when notes are edited; use this
+release list and tag instead of the creation-time URL inside the immutable archive. [Publication metadata](publication.json) binds the
 archive and uploaded files by SHA-256; the archive contains its own file manifest.
 GitHub release assets preserve this evidence beyond CI's 14-day artifact window,
 but remain deletable by repository maintainers. Keep a separate offline copy.
