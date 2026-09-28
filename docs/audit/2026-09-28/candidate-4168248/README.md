@@ -28,7 +28,7 @@ but remain deletable by repository maintainers. Keep a separate offline copy.
 | Windows release crash/reboot | All eight checks passed | Actual process termination, new PID/counter epoch, blocked underlay probes, new Windows boot and tunnel recovery before login |
 | Android API 29 | Five upgrade invocations and seven native tests passed | Same-signer debug APK; synthetic state in a fresh x86_64 AVD |
 | Android API 36 | Five upgrade invocations and eight native assertions passed in separate AVDs | Later fixture/log-export failures remain failures in the enclosing collectors; see below |
-| Physical Android | Deferred at the user's request | Prior S25+ evidence does not qualify these new bytes |
+| Physical Android | In-place 0.1.0→0.1.1 upgrade and all 16 lifecycle checks passed | Exact candidate APK on Samsung S25+, Android 16/ARM64/4 KiB; same development signer and existing Member profile |
 
 [Hosted results](hosted-summary.json) link the successful
 [Validate run](https://github.com/RamazanBerk20/SirinVPN/actions/runs/36351092541)
@@ -37,6 +37,21 @@ and [dependency run](https://github.com/RamazanBerk20/SirinVPN/actions/runs/3635
 [source checks](frozen-source-check.json) accompany the raw archive. All 34
 candidate collectors retained clean, unchanged source; that includes the failed
 collectors, whose outcomes have not been rewritten.
+
+The later [physical-phone supplement](physical-android.json) uses the same
+candidate APK with clean harness source `322ca9e`. The original profile,
+encrypted credential and saved policies remained byte-identical. Authenticated
+management and ordinary-UID traffic verified use of the original Keystore-backed
+identity after upgrading. All 16 lifecycle checks passed, including network
+transitions, process termination and Always-on/lockdown. Original settings were
+restored, the temporary probe app removed and the user's connection resumed.
+
+The supplement preserves the installed 0.1.0 baseline APK by hash without
+inventing a source commit. Twelve inventoried files were unchanged immediately
+after installation; first launch then refreshed two cached server executables
+whose hashes match the candidate APK assets. The initial overly broad file
+assertion and this verified distinction are retained in the restoration record.
+This is additive evidence in the draft release; the original archive is unchanged.
 
 The exact NSIS installed payloads matched its extracted hashes. The unpackaged
 desktop build output is also retained but is not the installed desktop's byte
@@ -151,6 +166,7 @@ Production approval still requires offline trust-root custody/recovery,
 production Android signing and migration, Windows publisher/driver signing,
 final signed-byte installation checks, remaining DNS/platform scope review,
 and corresponding-source/notice review. No production key was created or
-replaced and no driver-signature enforcement was bypassed. Physical phone,
-camera/accessibility/OEM behavior, broader Windows/Linux fault matrices and
-independent security review remain outside this candidate's completed scope.
+replaced and no driver-signature enforcement was bypassed. Physical-phone reboot,
+camera/accessibility/overnight behavior, other OEMs, physical 16 KiB pages,
+broader Windows/Linux fault matrices and independent security review remain
+outside this candidate's completed scope.

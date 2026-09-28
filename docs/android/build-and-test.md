@@ -65,9 +65,14 @@ after the blocked probes. The harness restores OS/network settings, disconnects,
 checks that the profile file is unchanged and removes its own ADB forward.
 Remove the test APK afterwards if it was absent before testing.
 
-The current S25+ run passed 16 checks on Android 16 with 4 KB pages. Sampled
-traffic is not proof of uninterrupted flow. Reboot, physical camera, TalkBack,
-overnight power behavior, other OEMs and physical 16 KB pages remain unqualified.
+The [28 September candidate run](../audit/2026-09-28/candidate-4168248/physical-android.json)
+passed an in-place 0.1.0→0.1.1 upgrade and all 16 checks on the S25+, Android 16
+with 4 KB pages. The exact candidate APK retained the original profile and
+encrypted identity. The operator temporarily enabled auto-reconnect for the
+interruption checks, then restored its original value and the user's active
+connection after harness cleanup. Sampled traffic is not proof of uninterrupted
+flow. Reboot, physical camera, TalkBack, overnight power behavior, other OEMs
+and physical 16 KB pages remain unqualified.
 
 ## Toolchain used
 

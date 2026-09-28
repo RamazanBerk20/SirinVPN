@@ -1,0 +1,73 @@
+{
+  "package_source": "41682484b9528ddd1183d62806e258698434790a",
+  "harness_source": "322ca9e639b99006c4ff49fdde2244187e59b094",
+  "harness_source_clean_and_unchanged": true,
+  "device": {
+    "model": "SM-S936B",
+    "android": "16",
+    "sdk": "36",
+    "abi": "arm64-v8a",
+    "security_patch": "2026-08-05",
+    "page_size": 4096
+  },
+  "installed_apk_sha256": "748b7476d68776a9ebc53bde3113ae6fc30b6865876ad149bce6079780905d72",
+  "baseline_apk_sha256": "efc9c60223d6593c9b4b03edd886276e14c9a9165244428d0cefdba845d3edca",
+  "baseline_source_commit": "unbound",
+  "same_development_signer": true,
+  "in_place_upgrade": {
+    "from": "0.1.0 (1000)",
+    "to": "0.1.1 (1001)",
+    "passed": true,
+    "inventoried_files_unchanged_immediately_after_install": 12,
+    "profile_ciphertext_and_saved_policies_unchanged_after_lifecycle": true,
+    "cached_server_binaries_refreshed_from_candidate_apk": true
+  },
+  "physical_lifecycle": {
+    "passed": true,
+    "checks": 16,
+    "check_names": [
+      "Existing Member profile readable",
+      "Separate ordinary test UID reaches controlled LAN before lockdown",
+      "Connected with existing encrypted identity",
+      "Home and reopen",
+      "UI process termination and reopen",
+      "OS task removal and reopen",
+      "Thirty-second foreground hold",
+      "Wi-Fi to mobile-data transition",
+      "Loss of both networks reports waiting",
+      "Network return reconnects over Wi-Fi",
+      "VPN process death reconstructs a new session",
+      "Package force-stop remains stopped after reopen",
+      "Explicit connect after force-stop",
+      "Always-on retains traffic and rejects ordinary Disconnect",
+      "OS lockdown blocks ordinary UID while VPN package is force-stopped",
+      "Restoring OS policy re-enables ordinary UID LAN traffic"
+    ]
+  },
+  "restoration": {
+    "passed": true,
+    "auto_reconnect": false,
+    "always_on": false,
+    "lockdown": false,
+    "wifi_enabled": true,
+    "mobile_data_enabled": true,
+    "temporary_probe_package_removed": true,
+    "final_phase": "connected",
+    "original_profile_and_encrypted_credential_unchanged": true,
+    "personal_vps_administration": false
+  },
+  "raw_evidence": {
+    "upgrade.json": "28bc4fdc42df3573185989b1f7029bc04c65d3bd3419b6d71a7c61f5fcd1aa36",
+    "lifecycle.json": "ed73f7476a07906fbf22ed73a3314338069e0a0c84d5af5497bc812b45dd8116",
+    "final-restoration.json": "ce3c0840eee909a829de0da7f9d8668d1a59c21f243d50a066351bdb8b558434",
+    "physical-s25-candidate.json": "e0d3c0c95e96b4c630129ec55222940ccb8f384c37df13680b6b1386193f67f2",
+    "physical-s25-candidate.log": "77bf05eaf46d7210e27a0980345f8a385cd02b6bb75f5f55d24186664ba33811"
+  },
+  "limits": [
+    "One authorized physical Samsung S25+; Android 16, ARM64, 4 KiB pages.",
+    "Disconnected same-signer development upgrade, not live-tunnel or production-signer migration.",
+    "Sampled traffic and one ordinary-UID lockdown canary do not prove uninterrupted traffic or universal leak prevention.",
+    "No reboot, physical camera, TalkBack, overnight power behavior, other OEMs or physical 16 KiB pages.",
+    "The original frozen archive is unchanged; this is additive evidence."
+  ]
+}

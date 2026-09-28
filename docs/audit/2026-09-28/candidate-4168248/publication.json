@@ -75,5 +75,38 @@
   ],
   "retention": "GitHub release assets do not use the workflow artifact expiry, but repository maintainers can delete them. Keep an independent offline copy.",
   "draft_url_at_asset_verification": "https://github.com/RamazanBerk20/SirinVPN/releases/tag/untagged-8e34ac227fdf850c9c7c",
-  "draft_url_note": "The temporary draft URL can change when release notes are edited. Resolve the stable release ID or locate the named tag in the release list."
+  "draft_url_note": "The temporary draft URL can change when release notes are edited. Resolve the stable release ID or locate the named tag in the release list.",
+  "supplements": [
+    {
+      "kind": "physical-android",
+      "package_source": "41682484b9528ddd1183d62806e258698434790a",
+      "harness_source": "322ca9e639b99006c4ff49fdde2244187e59b094",
+      "archive": {
+        "name": "SirinVPN-physical-android-4168248-20260928.zip",
+        "bytes": 43009794,
+        "sha256": "3d56608d648bbe9851ea08bd01c5f06e2ea5ba036f1eed505454f4e3dc1e7f82",
+        "manifest_sha256": "835027bc57b9d80721c3741aa6f56a2e8db0427b983e2be12c5be9c561e6c11b",
+        "files": 25,
+        "zip_crc_verified": true
+      },
+      "assets": [
+        {
+          "name": "SirinVPN-physical-android-4168248-20260928.zip",
+          "id": 594650851,
+          "bytes": 43009794,
+          "sha256": "3d56608d648bbe9851ea08bd01c5f06e2ea5ba036f1eed505454f4e3dc1e7f82",
+          "github_digest": "sha256:3d56608d648bbe9851ea08bd01c5f06e2ea5ba036f1eed505454f4e3dc1e7f82"
+        },
+        {
+          "name": "SHA256SUMS-physical-android",
+          "id": 594650852,
+          "bytes": 113,
+          "sha256": "6a2fc5e0dbe82045a6f607c537cfc7c511c7b7ee6687579ee58fe471717e962c",
+          "github_digest": "sha256:6a2fc5e0dbe82045a6f607c537cfc7c511c7b7ee6687579ee58fe471717e962c"
+        }
+      ],
+      "github_asset_digests_match_local": true,
+      "existing_assets_unchanged": true
+    }
+  ]
 }

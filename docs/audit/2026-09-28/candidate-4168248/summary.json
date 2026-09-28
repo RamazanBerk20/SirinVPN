@@ -27,7 +27,7 @@
   "android": {
     "api29": "Five upgrade invocations and seven native tests passed.",
     "api36": "Five upgrade invocations and eight native tests passed in separate fresh AVDs against the same APK; raw collectors retain later Wi-Fi-prerequisite/log-fetch failures.",
-    "physical_device": "Deferred at user request."
+    "physical_device": "Exact candidate APK passed an in-place 0.1.0 to 0.1.1 upgrade and all 16 lifecycle/network/OS-policy checks on the S25+ (Android 16, ARM64, 4 KiB). Original profile, ciphertext and policies preserved; settings and active connection restored. See physical-android.json and additive draft-release evidence."
   },
   "distribution_inputs": {
     "full_inventory": 959,
@@ -42,7 +42,7 @@
   "release_approval": false,
   "remaining": [
     "Original two DNS counter-only events cannot be retrospectively attributed.",
-    "Physical Android and broader OEM/hardware/platform fault matrices.",
+    "Physical reboot, camera/accessibility, overnight/OEM/16 KiB hardware and broader platform fault matrices.",
     "Production signing, offline trust-root custody, Android signer transition and properly signed Windows application-routing driver.",
     "Pinned AppImage runtime exact Alpine package revision/patches and complete static relinking-material review."
   ]
