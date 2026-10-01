@@ -1,0 +1,87 @@
+{
+  "date": "2026-10-01",
+  "scope": "Android local status and peer progress monitoring",
+  "source_parent": "0211541b8120f116905cb5d0e76897af2374694c",
+  "source_files_sha256": {
+    ".github/workflows/android.yml": "60f30724507f7e762cdd1d9de182053dee1208686b31d7001c970df02a8533f8",
+    "apps/desktop/android/src/androidTest/java/org/sirinvpn/client/NotificationTrafficTest.kt": "251ae52c1f9c82ed1f827eb2759f4662bc7695cc5ee7dbe9aeea9ffe95500f8c",
+    "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt": "7914589693981293380ac9b612936aa59aebae497c0e8cce1db7a9c0dc2cc50b",
+    "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinTileService.kt": "ba4e5a38e1397b64bfa15f8a8eeb750cd9c1b6ed0f35f6e6f27e1c11e999dd7f",
+    "apps/desktop/android/src/main/java/org/sirinvpn/client/VpnNotifications.kt": "04b2c9c61589168e823b9aabbb7fd30fa011a95936d38ed263684713190e0026",
+    "apps/desktop/android/src/main/java/org/sirinvpn/client/TunnelHealth.kt": "3a9e0df724b159e3436e942c693555a43284064f0067a0a174c1622bd7766114",
+    "apps/desktop/android/src/test/java/org/sirinvpn/client/TunnelHealthTest.kt": "b62cf21af88dd6f468aab545dc44457144308f894eab35c16bfacfc7c611b5b2"
+  },
+  "change": [
+    "Refresh reads current WireGuard counters instead of the cached snapshot.",
+    "Peer health uses observed receive/handshake progress and elapsed time, with a new observation window after a sampling gap.",
+    "No peer progress is represented as degraded reachability; failed local reads remain unknown.",
+    "Read and application of counters use one controller lock; fresh progress is checked before a pending inactivity retry.",
+    "Notifications and Quick Settings retain the disconnect control for a degraded tunnel."
+  ],
+  "artifact": {
+    "version_name": "0.1.1",
+    "version_code": 1001,
+    "sha256": "2a34f8ad7a3cf5431d1da763d6609f399b9df57e6c44c7df12346450d3d7d43d",
+    "signing_category": "development",
+    "signer_certificate_sha256": [
+      "d2aa1cc007ddcd2cc286af89ad5fa1ede0eaec490ed7f5df33e6c8696778f634"
+    ],
+    "abis": [
+      "arm64-v8a",
+      "x86_64"
+    ],
+    "page_alignment": 16384,
+    "native_and_frontend_assets": {
+      "unchanged_native_and_assets_entries": 10,
+      "reused_from": "41682484b9528ddd1183d62806e258698434790a",
+      "only_android_kotlin_changed": true
+    }
+  },
+  "validation": {
+    "kotlin_regression_tests": 3,
+    "android_api36_native_tests": 8,
+    "android_lint": "passed",
+    "workflow_syntax": "actionlint passed; full check-workflows.py unavailable because local shellcheck is missing",
+    "unit_test_command": ":app:testUniversalDebugUnitTest -x rustBuildUniversalDebug",
+    "emulator_cleanup": "owned emulator stopped; AVD and credentials removed",
+    "emulator_peak_memory_bytes": 3990040576,
+    "emulator_oom_kills": 0
+  },
+  "physical_phone": {
+    "passed": true,
+    "model": "SM-S936B",
+    "api": 36,
+    "refreshes": 16,
+    "no_reconnect_during_refresh": true,
+    "private_profile_loaded": true,
+    "saved_preferences_unchanged": true,
+    "automatic_reconnect": false,
+    "authenticated_management_requests": 8,
+    "ping_replies": 3,
+    "limit": "The intermittent university Wi-Fi failure was not active during this check.",
+    "ui": {
+      "connected": true,
+      "unknown": false,
+      "refreshLabel": false
+    },
+    "upgrade": {
+      "passed": true,
+      "model": "SM-S936B",
+      "api": 36,
+      "same_signer": true,
+      "previous_apk_sha256": "748b7476d68776a9ebc53bde3113ae6fc30b6865876ad149bce6079780905d72",
+      "installed_apk_sha256": "2a34f8ad7a3cf5431d1da763d6609f399b9df57e6c44c7df12346450d3d7d43d",
+      "mode": "adb install -r",
+      "private_files_unchanged": 11,
+      "profile_unchanged": true,
+      "encrypted_credentials_unchanged": true,
+      "saved_settings_unchanged": true
+    },
+    "prior_refresh_returned_same_sample_pairs": 5
+  },
+  "limits": [
+    "The university-Wi-Fi incident itself was not active during phone testing; the precise campus trigger remains unconfirmed.",
+    "This is a separate development hotfix APK; the frozen 4168248 candidate artifacts and qualification remain unchanged.",
+    "API 36 service tests and ARM64 phone checks were rerun; unchanged Rust/Go code and API 29 were not requalified in this patch."
+  ]
+}

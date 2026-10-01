@@ -33,13 +33,14 @@ class SirinTileService : TileService() {
             val phase = state?.optString("phase")
             this.state = when (phase) {
                 "connected" -> Tile.STATE_ACTIVE
-                "disconnected", "paused", "failed", "permission_required", "connecting", "reconnecting", "waiting_for_network" -> Tile.STATE_INACTIVE
+                "disconnected", "paused", "failed", "permission_required", "connecting", "reconnecting", "waiting_for_network", "degraded" -> Tile.STATE_INACTIVE
                 else -> Tile.STATE_UNAVAILABLE
             }
             subtitle = when (phase) {
                 "connected" -> if (state?.optBoolean("always_on") == true) "Always-on" else "Connected"
                 "connecting", "reconnecting" -> "Connecting…"
                 "waiting_for_network" -> "No network"
+                "degraded" -> "Connection interrupted"
                 "disconnected", "paused" -> "Disconnected"
                 else -> "Open SirinVPN"
             }
@@ -69,7 +70,7 @@ class SirinTileService : TileService() {
     private fun act(control:IControl) {
         val current = JSONObject(control.snapshot())
         if (current.optBoolean("always_on")) return launch(Intent(android.provider.Settings.ACTION_VPN_SETTINGS))
-        val command = if (current.getString("phase") in setOf("connected", "connecting", "reconnecting", "waiting_for_network")) "disconnect_server" else "connect_saved"
+        val command = if (current.getString("phase") in setOf("connected", "connecting", "reconnecting", "waiting_for_network", "degraded")) "disconnect_server" else "connect_saved"
         if(command=="connect_saved" && current.isNull("quick_profile")) return openApp()
         if(command=="connect_saved" && VpnService.prepare(this)!=null) return launch(Intent(this,ControlActionActivity::class.java)
             .putExtra("command",command).putExtra("generation",current.getLong("generation")))

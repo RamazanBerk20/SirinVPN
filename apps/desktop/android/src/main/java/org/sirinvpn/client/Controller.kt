@@ -46,6 +46,7 @@ object Controller {
     private var tx: Long? = null
     private var counterSampledAt = 0L
     private var handshake: Long? = null
+    private var health = TunnelHealth()
     private var error: String? = null
     private var initialized = false
     private var operation = false
@@ -229,6 +230,7 @@ object Controller {
         tunnelConfiguration = JSONObject(config.toString()).apply { remove("wireguard") }
         reconnectOverride?.let { tunnelConfiguration!!.put("automatic_reconnect",it) }
         started = SystemClock.elapsedRealtime(); rx = null; tx = null; handshake = null
+        health = TunnelHealth()
         phase = "connecting"; error = null
         quality=null;mtu=null
         publish()
@@ -241,6 +243,7 @@ object Controller {
         stopWireGuard()
         Native.stopTransport()
         rx = null; tx = null; handshake = null
+        health = TunnelHealth()
         if (phase == "connected") phase = "unknown"
     }
     @Synchronized fun serviceDestroyed() {
@@ -317,7 +320,13 @@ object Controller {
             stop(true); callback.complete(success(snapshot().getJSONObject("status"))); return
             }
         }
-        if (command == "local_status") { callback.complete(success(snapshot().getJSONObject("status"))); return }
+        if (command == "local_status") {
+            synchronized(this) {
+                refreshStatistics()
+                callback.complete(success(snapshot().getJSONObject("status")))
+            }
+            return
+        }
         val transition=command in setOf("rotate_device_keys","apply_endpoint_update","publish_endpoint_update")
         val connection = transition || command in setOf("connect_server", "connect_server_with_policy", "connect_saved", "reconnect_server", "resume_server", "join_server", "recover_owner_access")
         val maintenance = transition || command in setOf("provision_server","repair_server","uninstall_server","export_server_backup","import_server_backup","export_vps_backup","restore_vps_backup","export_recovery_package","import_recovery_package","inspect_server_network","check_release_update","install_release_update","prepare_vps_baseline","install_vps_baseline","manage_vps_release","save_ssh_login")
@@ -605,27 +614,31 @@ object Controller {
             } }
         }} catch (_:java.util.concurrent.RejectedExecutionException) { wifiReading.set(false) }
     }
+    @Synchronized private fun refreshStatistics() {
+        if (handle < 0) return
+        try {
+            val data = checkNotNull(WireGuard.statistics(handle))
+            rx = data[0]; tx = data[1]; handshake = data[2].takeIf { it > 0 }
+            counterSampledAt = SystemClock.elapsedRealtime()
+            if (handshake != null && network != null && phase != "reconnecting") {
+                val healthy = health.record(counterSampledAt, data[0], data[2])
+                // A read succeeded: lack of peer progress is degraded reachability,
+                // not an unknown local tunnel or protection state.
+                if (healthy) retryAt = 0
+                phase = if (healthy) "connected" else "degraded"
+                if (!healthy && !operation && retryAt == 0L && retryRequested()) retryAt = counterSampledAt + 1000
+            }
+        } catch (_: Exception) { rx = null; tx = null; phase = "unknown" }
+    }
     private fun sample() {
         try {
             val retry = synchronized(this) {
+                // Read and apply the same engine's counters under one lock. New
+                // authenticated progress cancels a pending inactivity retry.
+                refreshStatistics()
                 if (!operation && !settingsUpdating && !paused && retryRequested() && preferences.getBoolean("requested",false) && retryAt > 0 && network != null && SystemClock.elapsedRealtime() >= retryAt) {
                     retryAt = 0; Triple(lastCommand,lastArguments,epoch.get())
-                } else null
-            }
-            if (retry != null) { execute(retry.first,retry.second,UUID.randomUUID().toString(),retry.third,ignoreResult,retry=true); return }
-            val data = synchronized(engineLock) { if (handle >= 0) WireGuard.statistics(handle) else null }
-            synchronized(this) {
-                if (data != null) {
-                    rx = data[0]; tx = data[1]; handshake = data[2].takeIf { it > 0 }
-                    counterSampledAt = SystemClock.elapsedRealtime()
-                    if (handshake != null && network != null && phase != "reconnecting") {
-                        val age = System.currentTimeMillis() / 1000 - handshake!!
-                        if (age < 180) phase = "connected"
-                        else {
-                            phase = "unknown"
-                            if (!operation && retryAt == 0L && retryRequested()) retryAt = SystemClock.elapsedRealtime() + 1000
-                        }
-                    }
+                } else {
                     if(phase=="connected" && measuredGeneration!=epoch.get()) {
                         val generation=epoch.get();measuredGeneration=generation
                         val config=tunnelConfiguration?.let { JSONObject(it.toString()) }
@@ -648,8 +661,10 @@ object Controller {
                         } } catch (_:java.util.concurrent.RejectedExecutionException) { measuredGeneration=-1L }
                     }
                     publish()
+                    null
                 }
             }
+            if (retry != null) execute(retry.first,retry.second,UUID.randomUUID().toString(),retry.third,ignoreResult,retry=true)
         } catch (_: Exception) { synchronized(this) { rx = null; tx = null; phase = "unknown"; publish() } }
     }
     val ignoreResult = object : IResult.Stub() { override fun complete(result: String) {} }

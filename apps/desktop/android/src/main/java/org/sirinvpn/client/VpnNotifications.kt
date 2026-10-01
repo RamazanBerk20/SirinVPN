@@ -89,7 +89,7 @@ object VpnNotifications {
         val traffic=if(state==lastState && lastSample>0 && elapsed>0 && elapsed<=20 && rx>=lastRx && tx>=lastTx && status.optBoolean("byte_counters_available")) " · ↓ ${rate(rx-lastRx,elapsed)} · ↑ ${rate(tx-lastTx,elapsed)}" else ""
         lastState=state;lastRx=rx;lastTx=tx;lastSample=sampledAt
         val monitoring=snapshot.optBoolean("wifi_automation_enabled") && phase in setOf("paused", "disconnected", "failed", "permission_required")
-        val label = if (policy) "VPN settings" else if (phase == "connected") "Disconnect" else if (monitoring) "Stop Wi-Fi automation" else "Stop attempts"
+        val label = if (policy) "VPN settings" else if (phase in setOf("connected", "degraded")) "Disconnect" else if (monitoring) "Stop Wi-Fi automation" else "Stop attempts"
         val action = if (policy) PendingIntent.getActivity(service, 2, Intent(android.provider.Settings.ACTION_VPN_SETTINGS),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         else PendingIntent.getBroadcast(service, 3, Intent(service, VpnActionReceiver::class.java)
@@ -99,6 +99,7 @@ object VpnNotifications {
         service.getSystemService(NotificationManager::class.java).notify(VPN_ID,
             base(service).setContentText(when (phase) {
                 "connected" -> "Connected$traffic"
+                "degraded" -> "Connection interrupted"
                 "waiting_for_network" -> "Waiting for network"
                 "reconnecting" -> "Reconnecting…"
                 "unknown" -> "Connection status unavailable"

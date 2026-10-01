@@ -77,6 +77,9 @@ class NotificationTrafficTest {
             sampledAt += 1000
             publish()
             expectText("Connected · ↓ 0 B/s · ↑ 0 B/s")
+            state.put("phase", "degraded")
+            publish()
+            assertEquals("Disconnect", expectText("Connection interrupted").notification.actions.single().title)
         } finally { manager.cancel(VpnNotifications.VPN_ID) }
     }
 }

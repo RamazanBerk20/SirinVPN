@@ -52,7 +52,7 @@ jobs:
             sh scripts/build-android.sh all debug
             sh scripts/build-android-catalog.sh
             python3 scripts/check-android-package.py apps/desktop/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk > target/remediation-evidence/android-package.json
-            apps/desktop/src-tauri/gen/android/gradlew -p apps/desktop/src-tauri/gen/android :app:lintUniversalDebug -x rustBuildUniversalDebug --no-daemon --max-workers=2
+            apps/desktop/src-tauri/gen/android/gradlew -p apps/desktop/src-tauri/gen/android :app:testUniversalDebugUnitTest :app:lintUniversalDebug -x rustBuildUniversalDebug --no-daemon --max-workers=2
           '
       - name: Fresh AVD native checks
         run: |
@@ -72,6 +72,7 @@ jobs:
             target/remediation-evidence/android-package.json
             target/remediation-evidence/android-emulator-29.json
             target/remediation-evidence/android-emulator-36.json
+            apps/desktop/src-tauri/gen/android/app/build/test-results/testUniversalDebugUnitTest/*.xml
             .cache/android-emulator-29/results.json
             .cache/android-emulator-36/results.json
             .cache/android-emulator-29/instrumentation.log
