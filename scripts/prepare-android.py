@@ -37,10 +37,10 @@ if 'testInstrumentationRunner =' not in text:
     text = text.replace('    defaultConfig {','    defaultConfig {\n        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"')
 if 'zxing-android-embedded' not in text:
     text = text.replace('dependencies {','dependencies {\n    implementation("com.journeyapps:zxing-android-embedded:4.3.0")')
-text = text.replace('jackson-bom:2.18.8', 'jackson-bom:2.18.9')
-if 'jackson-bom:2.18.9' not in text:
+text = re.sub(r'jackson-bom:2\.18\.\d+', 'jackson-bom:2.18.11', text)
+if 'jackson-bom:2.18.11' not in text:
     # Compatible 2.x maintenance line fixes advisories in Tauri's 2.15.3 dependency.
-    text = text.replace('dependencies {', 'dependencies {\n    implementation(platform("com.fasterxml.jackson:jackson-bom:2.18.9"))')
+    text = text.replace('dependencies {', 'dependencies {\n    implementation(platform("com.fasterxml.jackson:jackson-bom:2.18.11"))')
 text = text.replace('buildConfig = true', 'buildConfig = true\n        aidl = true') if 'aidl = true' not in text else text
 if 'sourceCompatibility' not in text:
     text = text.replace('    kotlinOptions {', '    compileOptions {\n        sourceCompatibility = JavaVersion.VERSION_17\n        targetCompatibility = JavaVersion.VERSION_17\n    }\n    kotlinOptions {')
