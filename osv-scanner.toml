@@ -38,7 +38,7 @@ reason = "Official POM: https://dl.google.com/dl/android/maven2/com/google/andro
 
 [[PackageOverrides]]
 name = "stdlib"
-version = "1.27.1"
+version = "1.27.2"
 ecosystem = "Go"
 license.override = ["BSD-3-Clause"]
 reason = "Go distribution LICENSE, https://go.dev/LICENSE; reviewed local toolchain copy SHA256 911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad."

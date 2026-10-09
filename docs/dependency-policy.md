@@ -23,7 +23,12 @@ exit codes, missing lockfiles and unavailable verification tools also fail.
 | [RUSTSEC-2025-0080](https://rustsec.org/advisories/RUSTSEC-2025-0080.html) | crates.io `unic-common` 0.9.0 | Same Unicode dependency chain and maintenance scope. |
 | [RUSTSEC-2025-0100](https://rustsec.org/advisories/RUSTSEC-2025-0100.html) | crates.io `unic-ucd-ident` 0.9.0 | Same Unicode dependency chain and maintenance scope. |
 | [RUSTSEC-2025-0098](https://rustsec.org/advisories/RUSTSEC-2025-0098.html) | crates.io `unic-ucd-version` 0.9.0 | Same Unicode dependency chain and maintenance scope. |
-| [GO-2026-5932](https://pkg.go.dev/vuln/GO-2026-5932) | Go `golang.org/x/crypto` 0.56.0 | The affected OpenPGP packages are absent from the Android bridge's production import graph. Every scan uses the pinned Go toolchain to run `go list -mod=readonly -deps ./...` for Android arm64 and amd64 with CGO enabled. Importing OpenPGP or any subpackage, or failing to obtain either graph, blocks the scan. |
+| [GO-2026-5932](https://pkg.go.dev/vuln/GO-2026-5932) | Go `golang.org/x/crypto` 0.57.0 | The affected OpenPGP packages are absent from the Android bridge's production import graph. Every scan uses the pinned Go toolchain to run `go list -mod=readonly -deps ./...` for Android arm64 and amd64 with CGO enabled. Importing OpenPGP or any subpackage, or failing to obtain either graph, blocks the scan. |
+
+On 9 October 2026, the Go disposition was rechecked for `x/crypto` 0.57.0,
+required by the `x/net` 0.60.0 security update. Both Android import graphs still
+exclude OpenPGP. The exact advisory ID, verification and expiry stay unchanged;
+the former 0.56.0 disposition no longer applies.
 
 The Unicode packages occur in build and runtime dependencies; their notices are
 not dismissed as unreachable. Their temporary acceptance preserves the compatible

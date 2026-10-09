@@ -31,7 +31,8 @@ REVIEWS = {
     "RUSTSEC-2025-0080": ("crates.io", "unic-common", "0.9.0", "unmaintained"),
     "RUSTSEC-2025-0100": ("crates.io", "unic-ucd-ident", "0.9.0", "unmaintained"),
     "RUSTSEC-2025-0098": ("crates.io", "unic-ucd-version", "0.9.0", "unmaintained"),
-    "GO-2026-5932": ("Go", "golang.org/x/crypto", "0.56.0", "OpenPGP not imported"),
+    # Rechecked 2026-10-09 for the x/net security update; expiry is unchanged.
+    "GO-2026-5932": ("Go", "golang.org/x/crypto", "0.57.0", "OpenPGP not imported"),
 }
 
 

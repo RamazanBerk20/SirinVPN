@@ -77,7 +77,7 @@ and physical 16 KB pages remain unqualified.
 ## Toolchain used
 
 Linux x86_64; Node 26.10, pnpm 11.3.0; Rust 1.97.1; Tauri 2.11.5 / JS API
-2.11.1; React 19.2.8; Go 1.27.1; JDK 17; Gradle 8.14.3; AGP 8.11; Kotlin
+2.11.1; React 19.2.8; Go 1.27.2; JDK 17; Gradle 8.14.3; AGP 8.11; Kotlin
 compiler 1.9.25 (resolved runtime stdlib 2.0.21); Android SDK 36; NDK
 30.0.16248370. Minimum API 29, target API 36. The universal APK contains
 `arm64-v8a` and `x86_64`; native instrumentation executes on x86_64 emulators,
