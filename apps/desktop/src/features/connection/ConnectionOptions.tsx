@@ -184,7 +184,7 @@ export function ConnectionOptions({ model }: { model: ServerWorkspaceModel }) {
           <label className="preference-row" key={key}>
             <span>
               <strong>{label}</strong>
-              <small>{isAndroid && key === "automatic_reconnect" ? "Saves immediately. Turning this off stops pending reconnect attempts. Android Always-on remains controlled in VPN settings." : hint}</small>
+              <small>{isAndroid && key === "automatic_reconnect" ? "Saves immediately. Turning this off stops pending reconnect attempts. Active sessions still follow network changes. Android Always-on remains controlled in VPN settings." : hint}</small>
             </span>
             <input
               type="checkbox"
@@ -206,8 +206,8 @@ export function ConnectionOptions({ model }: { model: ServerWorkspaceModel }) {
         <details className="inline-disclosure">
           <summary>How automatic selection and recovery work</summary>
           <p>
-            Connect tries each available method once. After that, or after a
-            connected session fails, only Automatic reconnect permits further
+            Connect tries each available method once. {isAndroid && "An active session gets one handover attempt when its network changes. "}
+            After a failed attempt, only Automatic reconnect permits further
             attempts. The kill switch remains independent throughout.
           </p>
         </details>

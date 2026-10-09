@@ -251,4 +251,18 @@ describe("desktop status stream", () => {
     expect(setServers).not.toHaveBeenCalled();
   });
 
+  it("manually refreshes an unknown Android stream state without reconnecting", async () => {
+    let receive!: (event: LocalStatusEvent) => void;
+    mocked.watchLocalStatus = callback => { receive = callback; return vi.fn(); };
+    const { result } = renderHook(() => useDesktopStatus("android", vi.fn()));
+    act(() => receive({ status: null, stale: true, phase: "unknown", generation: 0, sequence: 0 }));
+    expect(result.current.localStatus.state).toBe("unknown");
+    mocked.localStatus.mockResolvedValue(emptyLocalStatus);
+    await act(() => result.current.refreshStatus());
+    expect(mocked.localStatus).toHaveBeenCalledOnce();
+    expect(result.current.localStatus.state).toBe("disconnected");
+    expect(result.current.freshness.refreshing).toBe(false);
+    expect(mocked.watchServerStatus).not.toHaveBeenCalled();
+  });
+
 });

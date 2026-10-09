@@ -56,6 +56,7 @@ object Controller {
     private var paused = false
     private var attempts = 0
     private var retryAt = 0L
+    private var networkHandoff = false
     private var sampling: java.util.concurrent.ScheduledFuture<*>? = null
     private var tileState = ""
     private var wifiPolicy: JSONObject? = null
@@ -187,11 +188,13 @@ object Controller {
         val service = SirinVpnService.instance
         val lockdown = service?.isLockdownEnabled == true
         val config = tunnelConfiguration
-        val local = JSONObject().put("state", when (phase) {
+        val state = when (phase) {
             "waiting_for_network", "reconnecting" -> "connecting"
-            "paused", "permission_required" -> "disconnected"
+            "paused", "permission_required", "failed" -> "disconnected"
             else -> phase
-        }).put("interface_name", "SirinVPN").put("server_id", active ?: pendingServer ?: JSONObject.NULL)
+        }
+        val local = JSONObject().put("state", state).put("interface_name", "SirinVPN")
+            .put("server_id", if(state=="disconnected") JSONObject.NULL else active ?: pendingServer ?: JSONObject.NULL)
             .put("rx_bytes", rx ?: 0).put("tx_bytes", tx ?: 0)
             .put("byte_counters_available", rx != null && tx != null)
             .put("counter_sampled_at_ms", if (rx != null && tx != null) counterSampledAt else JSONObject.NULL)
@@ -204,6 +207,7 @@ object Controller {
             .put("always_on",service?.isAlwaysOn==true).put("lockdown",lockdown)
             .put("supervisor_status_known",true).put("endpoint_updates_supported",true)
             .put("auto_reconnect_enabled", retryEnabled)
+            .put("recovery_in_progress", networkHandoff || phase == "reconnecting")
             .put("transport_fallback_enabled", config?.optBoolean("automatic_transport") == true)
             .put("routing_mode", config?.optString("routing_mode") ?: "full_tunnel")
             .put("allow_lan", config?.optBoolean("allow_lan") ?: false)
@@ -244,7 +248,7 @@ object Controller {
         Native.stopTransport()
         rx = null; tx = null; handshake = null
         health = TunnelHealth()
-        if (phase == "connected") phase = "unknown"
+        if (phase == "connected") phase = "disconnected"
     }
     @Synchronized fun serviceDestroyed() {
         if(handle>=0) Native.generation(epoch.incrementAndGet())
@@ -323,6 +327,7 @@ object Controller {
         if (command == "local_status") {
             synchronized(this) {
                 refreshStatistics()
+                publish()
                 callback.complete(success(snapshot().getJSONObject("status")))
             }
             return
@@ -335,12 +340,13 @@ object Controller {
         val wifiSetting = setting && command !in setOf("set_connection_preferences", "android_set_reconnect")
         var previousHandle=-1
         var previousPhase="unknown"
+        var handoff=false
         val generation: Long
         synchronized(this) {
             if ((operation && !readOnly && (!setting || protectedTransition || phase !in setOf("connecting", "reconnecting", "waiting_for_network"))) || settingsUpdating && !readOnly) {
                 callback.complete(failure("Another operation is in progress.")); return
             }
-            if (retry && (paused || !preferences.getBoolean("requested", false) || !retryRequested())) { callback.complete(success()); return }
+            if (retry && (paused || !preferences.getBoolean("requested", false) || !retryRequested() && !networkHandoff)) { callback.complete(success()); return }
             if (wifi && (paused || !wifiEnabled() || wifiPolicy?.optString("current_network") != "untrusted_wifi")) { callback.complete(success()); return }
             if(switching && !connection && !readOnly && !setting) {callback.complete(failure("A transport handoff is being verified. Retry in a moment."));return}
             if (expected >= 0 && !current(expected)) { callback.complete(failure("The connection changed. Refresh its status.")); return }
@@ -351,6 +357,8 @@ object Controller {
             else if (!readOnly) {operation = true;protectedTransition=transition}
             if (connection) {
                 previousHandle=handle;previousPhase=phase
+                handoff=networkHandoff
+                networkHandoff=false
                 if(callback !== ignoreResult) {
                     attempts=0;measuredMtu=null
                     if(SirinVpnService.instance?.isAlwaysOn!=true) systemStartRequested=false
@@ -445,7 +453,9 @@ object Controller {
                             retryEnabled=tunnelConfiguration?.optBoolean("automatic_reconnect")==true
                             preferences.edit().putString("requested_arguments",lastArguments).commit()
                         }
-                        attempts = 0; phase = "connected"; error = null
+                        attempts = 0
+                        phase = when { !networkHandoff -> "connected"; network==null -> "waiting_for_network"; else -> "reconnecting" }
+                        error = null
                     }
                 }
                 if (connection && !transition && effective !in setOf("join_server", "recover_owner_access") && JSONObject(response).has("ok")) success(snapshot().getJSONObject("status")) else response
@@ -458,19 +468,20 @@ object Controller {
                     context.stopService(Intent(context,MaintenanceService::class.java))
                 }
                 if (connection && current(generation) && JSONObject(result).has("error")) {
-                    if(previousHandle>=0 && handle==previousHandle) {
+                    if(!handoff && previousHandle>=0 && handle==previousHandle) {
                         // Local validation can reject a command before touching the
                         // existing engine. Its counters and traffic remain authoritative.
                         phase=previousPhase;error=null
                         retryEnabled=tunnelConfiguration?.optBoolean("automatic_reconnect")==true
                     } else {
-                        val shouldRetry=retryRequested()
+                        val shouldRetry=retryRequested() || networkHandoff
                         phase = "failed"; error = JSONObject(result).optString("error")
                         synchronized(engineLock) { stopEngine() }
                         if (shouldRetry && !paused && attempts < 8) {
                             phase = if (network == null) "waiting_for_network" else "reconnecting"
                             retryAt = SystemClock.elapsedRealtime() + (1000L shl attempts.coerceAtMost(5)); attempts++
                         } else {
+                            networkHandoff=false
                             preferences.edit().putBoolean("requested", false).commit()
                             sampling?.cancel(false); sampling = null
                             if(wifiPolicy?.optJSONObject("policy")?.optBoolean("enabled")!=true) SirinVpnService.instance?.finishSession()
@@ -520,6 +531,7 @@ object Controller {
     @Synchronized fun stop(user: Boolean) {
         Native.generation(epoch.incrementAndGet())
         paused=user; pausedNetwork=network; phase="disconnecting"; retryAt=0; retryEnabled=false; systemStartRequested=false
+        networkHandoff=false
         pendingServer=null; wifiRequested=false; reconnectOverride=null; lastArguments="{}"; lastCommand="connect_saved"
         sampling?.cancel(false); sampling=null
         preferences.edit().putBoolean("requested", false).putBoolean("paused", user).putBoolean("wifi_requested",false)
@@ -557,12 +569,12 @@ object Controller {
     private fun networkChanged() {
         SirinVpnService.instance?.setUnderlyingNetworks(network?.let { arrayOf(it) })
         synchronized(this) {
+            // Moving an active session to a new carrier is allowed even when failure retries are off.
+            if((handle>=0 || operation && phase in setOf("connecting", "reconnecting", "waiting_for_network")) &&
+                preferences.getBoolean("requested",false) && !paused && !protectedTransition) networkHandoff=true
             if (handle >= 0 && network == null) phase = "waiting_for_network"
-            if (network != null && preferences.getBoolean("requested",false) && !paused && retryRequested()) {
+            if (network != null && preferences.getBoolean("requested",false) && !paused && (retryRequested() || networkHandoff)) {
                 attempts = 0; retryAt = SystemClock.elapsedRealtime() + 1000; phase = "reconnecting"
-            } else if(handle>=0 && network!=null) {
-                // Existing sockets are bound to the previous network; await an explicit reconnect.
-                stopEngine();phase="unknown";error="The underlying network changed. Reconnect to resume VPN traffic."
             }
             publish()
         }
@@ -615,12 +627,20 @@ object Controller {
         }} catch (_:java.util.concurrent.RejectedExecutionException) { wifiReading.set(false) }
     }
     @Synchronized private fun refreshStatistics() {
-        if (handle < 0) return
+        if (handle < 0) {
+            if(phase=="unknown") phase=when {
+                !operation && retryAt==0L -> "disconnected"
+                network==null -> "waiting_for_network"
+                else -> "reconnecting"
+            }
+            return
+        }
         try {
             val data = checkNotNull(WireGuard.statistics(handle))
             rx = data[0]; tx = data[1]; handshake = data[2].takeIf { it > 0 }
             counterSampledAt = SystemClock.elapsedRealtime()
-            if (handshake != null && network != null && phase != "reconnecting") {
+            if(phase=="unknown" && handshake==null) phase=if(network==null) "waiting_for_network" else if(operation) "connecting" else "degraded"
+            if (handshake != null && network != null && phase != "reconnecting" && !networkHandoff && !operation) {
                 val healthy = health.record(counterSampledAt, data[0], data[2])
                 // A read succeeded: lack of peer progress is degraded reachability,
                 // not an unknown local tunnel or protection state.
@@ -636,8 +656,9 @@ object Controller {
                 // Read and apply the same engine's counters under one lock. New
                 // authenticated progress cancels a pending inactivity retry.
                 refreshStatistics()
-                if (!operation && !settingsUpdating && !paused && retryRequested() && preferences.getBoolean("requested",false) && retryAt > 0 && network != null && SystemClock.elapsedRealtime() >= retryAt) {
-                    retryAt = 0; Triple(lastCommand,lastArguments,epoch.get())
+                if (!operation && !settingsUpdating && !paused && (retryRequested() || networkHandoff) && preferences.getBoolean("requested",false) && retryAt > 0 && network != null && SystemClock.elapsedRealtime() >= retryAt) {
+                    // execute consumes the deadline only after accepting the connection.
+                    Triple(lastCommand,lastArguments,epoch.get())
                 } else {
                     if(phase=="connected" && measuredGeneration!=epoch.get()) {
                         val generation=epoch.get();measuredGeneration=generation

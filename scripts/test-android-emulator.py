@@ -166,7 +166,7 @@ def main():
                 raise TimeoutError("Synthetic AndroidWifi fixture did not connect")
             state = run([*adb, "shell", "dumpsys", "connectivity"], timeout=30)
             (output / "network-before-native.log").write_bytes(state.stdout+state.stderr)
-        cases = ["VaultAcceptanceTest", "NotificationTrafficTest", "QrScannerTest",
+        cases = ["VaultAcceptanceTest", "NotificationTrafficTest", "QrScannerTest", "NetworkRecoveryTest",
                  "OptionHandlingTest#packageReplacementUsesOrdinaryRecovery",
                  "OptionHandlingTest#optionsControlTheRunningService"]
         if args.api >= 30:
