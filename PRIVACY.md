@@ -13,6 +13,8 @@ native connection intent are necessary operational state. Linux keyring storage
 is required for new identities unless permission-protected file fallback is
 explicitly allowed. Those fallback files are not encrypted by SirinVPN. Android
 uses Keystore encryption; Windows uses DPAPI. See [credential storage](SECURITY.md).
+Linux desktop/tray connections may display the system wallet's unlock prompt;
+the wallet handles its password, and SirinVPN does not receive or store it.
 
 The remediation adds one private server recovery intent containing only a schema,
 generation, and hashes of the previous/next authorization documents. It is removed

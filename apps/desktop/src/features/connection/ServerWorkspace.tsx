@@ -20,6 +20,7 @@ const AccessPanel = lazy(() => import("../devices/AccessPanel").then(m => ({ def
 const PortForwardSettings = lazy(() => import("../devices/PortForwardSettings").then(m => ({ default: m.PortForwardSettings })));
 import { formatDnsPolicy } from "../../format";
 import { useServerWorkspace } from "./useServerWorkspace";
+import { PreferenceSaveBar } from "./PreferenceSaveBar";
 import { isAndroid } from "../../platform";
 import { Brand } from "../../components/Brand";
 import { ArrowLeft, CaretRight, Database, SlidersHorizontal, Info } from "@phosphor-icons/react";
@@ -227,6 +228,11 @@ export function ServerWorkspace(
               />
             </div>
           )}
+          {(category === "connection" || category === "network") && <PreferenceSaveBar
+            preferences={model.preferences}
+            local={model.localStatus}
+            serverId={profile.id}
+          />}
         </SettingsLayout>
       )}
       {view === "devices" && (

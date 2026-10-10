@@ -52,7 +52,7 @@ export function CredentialStorage() {
   if (snapshot?.supported === false) return null;
   return <section className="settings-card" aria-busy={busy}>
     <h2>Credential storage</h2>
-    <p>New credentials require the system keyring by default. Existing profiles keep their current storage until you migrate them.</p>
+    <p>New credentials require the system keyring by default. This policy only affects new credentials; existing profiles keep their current storage until you migrate them.</p>
     {error && <InlineError message={error} />}
     {!snapshot && <button className="secondary-button" disabled={busy} onClick={() => void run()}>{busy ? "Reading storage…" : "Retry storage status"}</button>}
     {snapshot && <>

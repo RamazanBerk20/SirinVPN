@@ -18,7 +18,7 @@ export function PreferenceSaveBar({
       ? preferenceDifferences(preferences.saved, local, serverId)
       : [];
   return (
-    <div className="connection-save-state">
+    <div className={`connection-save-state${preferences.dirty ? " has-unsaved-preferences" : ""}`}>
       <div className="preference-save-bar">
         <span role="status">
           {preferences.saving

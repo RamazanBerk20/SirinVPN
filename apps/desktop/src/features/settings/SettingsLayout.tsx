@@ -97,6 +97,7 @@ export function SettingsLayout({
           const target = event.target;
           if (
             !(target instanceof HTMLElement) ||
+            target === event.currentTarget ||
             !event.currentTarget.contains(target)
           )
             return;

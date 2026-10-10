@@ -10,6 +10,10 @@ counts and platform limitations do not describe this implementation. See the
 The recorded Linux acceptance applies to its named earlier builds; GUI and native
 Windows acceptance are separate from source checks and compilation.
 
+The [10 October Settings and keyring fixes](remediation.md#10-october-2026-settings-and-keyring-follow-up)
+add a bounded system unlock for explicit Linux connections and a visible pending
+preferences bar. The earlier platform acceptance claims remain historical.
+
 | Capability | Linux / Windows desktop and CLI | Android | Focused evidence |
 | --- | --- | --- | --- |
 | Pinned SSH installation and preflight | Implemented | [Current matrix](android/features.md) | [Preflight](installer-network-preflight-2026-09-06.md), [Android](android-integration-2026-09-07.md) |

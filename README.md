@@ -79,6 +79,8 @@ results, local evidence paths, configured CI, and release blockers. New Linux
 credentials require the system keyring. Permission-protected, unencrypted file
 fallback requires explicit consent in Settings → General → Credential storage
 or `sirinvpn storage allow-private-file`; existing legacy profiles remain readable.
+On Linux, clicking Connect can request a system keyring unlock after login or wake;
+background status checks and Wi-Fi automation never display an unlock prompt.
 
 ## Getting started
 

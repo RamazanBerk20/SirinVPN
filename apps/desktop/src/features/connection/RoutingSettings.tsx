@@ -1,6 +1,5 @@
 import { Check } from "@phosphor-icons/react";
 import type { ServerWorkspaceModel } from "./useServerWorkspace";
-import { PreferenceSaveBar } from "./PreferenceSaveBar";
 import { ApplicationLauncher } from "./ApplicationLauncher";
 import { invoke, isAndroid } from "../../platform";
 export function RoutingSettings({ model }: { model: ServerWorkspaceModel }) {
@@ -20,11 +19,6 @@ export function RoutingSettings({ model }: { model: ServerWorkspaceModel }) {
     <section className="settings-card routing-settings">
       <h2>Traffic routing · next connection</h2>
       <p>Routing preferences for this device on {profile.name}.</p>
-      <PreferenceSaveBar
-        preferences={model.preferences}
-        local={model.localStatus}
-        serverId={profile.id}
-      />
       <fieldset className="choice-fieldset">
         <legend>Routing mode</legend>
         <div className="condition-choices">

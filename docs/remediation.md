@@ -115,7 +115,7 @@ references or paths cross the new desktop storage API.
 
 The pinned keyring 3.6.3 `linux-native-sync-persistent` builder actually selects
 Secret Service directly; app-created entries were not a kernel-keyring cache.
-The adapter retains app attributes and legacy entries while refusing interactive
+At that checkpoint, the adapter retained app attributes and legacy entries while refusing interactive
 unlock prompts. A real container fixture verified interoperability, duplicate
 cleanup, migration and locked-store refusal. This is not evidence for every
 Secret Service implementation.
@@ -924,3 +924,38 @@ ports the observed emulator readiness controls into the reusable harness; it
 does not relabel the tested package source. Production custody/signatures,
 remaining physical and broader platform acceptance, and AppImage static-runtime
 corresponding-source/relink review remain explicit boundaries.
+
+## 10 October 2026 Settings and keyring follow-up
+
+Explicit Linux desktop/tray connections now request the system's unlock prompt
+after an unavailable credential read, wait at most 60 seconds for that prompt,
+and retry the normal validated read once. Background reads and Wi-Fi automation
+remain non-interactive. Failed unlocks preserve keyring authority, storage policy,
+and the refusal to use stale identity files.
+
+Settings ignores focus on the panel container itself when adjusting scrolling;
+focused controls still remain clear of the sticky tabs. Pending connection and
+routing changes share a sticky Save/Discard bar at the bottom of the full category,
+above bottom navigation in compact layouts. Credential-storage copy clarifies
+that its policy affects new credentials only.
+
+Validation: 214 frontend tests passed across 42 files; 13 storage unit tests passed;
+the disposable GNOME Secret Service interoperability/duplicate/migration/lock
+fixture passed. Desktop native compilation, TypeScript, and the production UI
+build passed. Browser checks with synthetic profiles at 1224×780, 760×620, and
+390×844 confirmed Save visibility and no horizontal overflow. A scrolled panel
+retained its position when blank space received first focus; Save and Discard
+completed normally. The existing browser smoke fixtures now assert Save is in
+the viewport before clicking it.
+
+These checks do not establish acceptance of the real desktop's login/wake unlock
+prompt, physical Android behavior, or Windows runtime behavior. The installed
+application was not replaced. A standalone Linux release build completed for
+local testing.
+
+A subsequent Wi-Fi report showed an unnamed saved trust entry while the current
+network was untrusted. After the user trusted it again, the entry matched the
+current NetworkManager profile and survived an app restart. All nine core
+network-policy tests passed. The cause of the earlier mismatch remains
+unconfirmed; reboot behavior was not tested and no Wi-Fi recognition change is
+included in this follow-up.

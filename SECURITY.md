@@ -24,7 +24,10 @@ endpoint. A failed containment operation is reported as unverified. The
 ## Credential storage by platform
 
 New Linux credentials require the system Secret Service keyring by default.
-Unlock the keyring and retry after a storage failure. Settings → General →
+Explicit desktop/tray connections request a system unlock when needed, with a
+60-second prompt limit and one credential retry. Background reads and Wi-Fi
+automation remain non-interactive. Failed unlocks do not change storage policy
+or use a stale fallback file. Settings → General →
 Credential storage shows actual provenance and offers migration. The CLI exposes
 `sirinvpn storage status`, `require-secure`, `allow-private-file`,
 `migrate <server>`, and `retry-cleanup` under the `storage` command.

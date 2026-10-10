@@ -66,10 +66,16 @@ pub(crate) fn connect_native(
             "Finish this device's pending key rotation before connecting from the tray.".into(),
         );
     }
-    let secret = paths
-        .secret_store()
-        .get(&profile.identity_reference)
-        .map_err(safe_error)?;
+    let secrets = paths.secret_store();
+    #[cfg(target_os = "linux")]
+    let secret = if interactive {
+        secrets.get_with_unlock(&profile.identity_reference)
+    } else {
+        secrets.get(&profile.identity_reference)
+    };
+    #[cfg(not(target_os = "linux"))]
+    let secret = secrets.get(&profile.identity_reference);
+    let secret = secret.map_err(safe_error)?;
     let network = NetworkContext::discover();
     let store = paths.network_policy_store();
     let _ = store.set_network_profile(preferences.network_profile);

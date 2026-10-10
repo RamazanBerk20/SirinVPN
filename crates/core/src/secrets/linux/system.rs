@@ -1,11 +1,19 @@
-//! Preserve keyring-rs attributes, but refuse interactive prompts. The pinned
-//! keyring adapter otherwise waits indefinitely for an unlock prompt.
+//! Preserve keyring-rs attributes. Background reads never prompt; explicit
+//! connections can request a bounded system unlock prompt.
 use super::*;
 use dbus_secret_service::{EncryptionType, Item, SecretService};
 use std::collections::HashMap;
 
-fn unavailable(_: dbus_secret_service::Error) -> SecretStoreError {
-    SecretStoreError::Unavailable("unlock the system keyring and retry".into())
+fn unavailable(error: dbus_secret_service::Error) -> SecretStoreError {
+    let message = match error {
+        dbus_secret_service::Error::Locked | dbus_secret_service::Error::Prompt => {
+            "the system keyring is locked or its unlock prompt was cancelled; connect again to retry"
+        }
+        _ => {
+            "the system keyring service could not be reached; check that your desktop wallet is running and retry"
+        }
+    };
+    SecretStoreError::Unavailable(message.into())
 }
 fn attributes(reference: &str) -> HashMap<&str, &str> {
     HashMap::from([
@@ -44,6 +52,24 @@ fn lookup<'a>(
     Ok(None)
 }
 impl KeyringBackend for SystemKeyring {
+    fn unlock(&self, reference: &str) -> Result<(), SecretStoreError> {
+        let service = SecretService::connect_with_max_prompt_timeout(EncryptionType::Plain, 60)
+            .map_err(unavailable)?;
+        let found = service
+            .search_items(owned_attributes(reference))
+            .map_err(unavailable)?;
+        if found.locked.len() + found.unlocked.len() > 1 {
+            return Err(SecretStoreError::InvalidData);
+        }
+        for item in found.locked {
+            item.unlock().map_err(unavailable)?;
+            if item.is_locked().map_err(unavailable)? {
+                return Err(unavailable(dbus_secret_service::Error::Locked));
+            }
+        }
+        Ok(())
+    }
+
     fn put(&self, reference: &str, bytes: &[u8]) -> Result<(), SecretStoreError> {
         let service = service()?;
         if let Some(item) = lookup(&service, reference)? {

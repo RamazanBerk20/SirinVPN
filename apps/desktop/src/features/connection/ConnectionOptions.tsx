@@ -5,7 +5,6 @@ import type { TransportPreference, NetworkProfile } from "../../types";
 import { describeConnection } from "./connectionState";
 import { formatTransport } from "../../format";
 import { StartupConnectionState } from "./StartupConnectionState";
-import { PreferenceSaveBar } from "./PreferenceSaveBar";
 import { MtuSettings } from "./MtuSettings";
 
 const conditions: { value: NetworkProfile; title: string; hint: string }[] = [
@@ -79,11 +78,6 @@ export function ConnectionOptions({ model }: { model: ServerWorkspaceModel }) {
   };
   return (
     <div className="settings-sections connection-preferences">
-      <PreferenceSaveBar
-        preferences={model.preferences}
-        local={model.localStatus}
-        serverId={profile.id}
-      />
       <section className="settings-card">
         <h2>Saved connection preferences</h2>
         <p>Connection preferences for this device on {profile.name}.</p>

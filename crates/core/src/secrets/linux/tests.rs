@@ -13,6 +13,13 @@ fn real_secret_service_interop_migration_duplicates_and_lock() {
     let generated = crate::LocalIdentity::generate("synthetic keyring acceptance").unwrap();
     let reference = format!("acceptance-{}", sirinvpn_protocol::ServerId::new());
     store.put(&reference, &generated.secret).unwrap();
+    assert_eq!(
+        store
+            .get_with_unlock(&reference)
+            .unwrap()
+            .wireguard_private_key,
+        generated.secret.wireguard_private_key
+    );
     let entry = keyring::Entry::new("org.sirinvpn.client", &reference).unwrap();
     assert_eq!(
         identity(&entry.get_secret().unwrap()).unwrap().1,
@@ -36,6 +43,10 @@ fn real_secret_service_interop_migration_duplicates_and_lock() {
         .unwrap();
     assert!(matches!(
         store.get(&reference),
+        Err(SecretStoreError::InvalidData)
+    ));
+    assert!(matches!(
+        store.get_with_unlock(&reference),
         Err(SecretStoreError::InvalidData)
     ));
     store.delete(&reference).unwrap();
@@ -70,6 +81,8 @@ struct Memory {
     unavailable: bool,
     invalid_put: bool,
     calls: usize,
+    locked: bool,
+    unlocks: usize,
 }
 #[derive(Clone, Default)]
 struct Fake(Arc<Mutex<Memory>>);
@@ -80,7 +93,7 @@ impl KeyringBackend for Fake {
         if m.invalid_put {
             return Err(SecretStoreError::InvalidData);
         }
-        if m.unavailable {
+        if m.unavailable || m.locked {
             return Err(SecretStoreError::Unavailable("fixture".into()));
         }
         m.value = Some(bytes.to_vec());
@@ -89,7 +102,7 @@ impl KeyringBackend for Fake {
     fn get(&self, _: &str) -> Result<Vec<u8>, SecretStoreError> {
         let mut m = self.0.lock().unwrap();
         m.calls += 1;
-        if m.unavailable {
+        if m.unavailable || m.locked {
             return Err(SecretStoreError::Unavailable("fixture".into()));
         }
         m.value.clone().ok_or(SecretStoreError::NotFound)
@@ -103,6 +116,16 @@ impl KeyringBackend for Fake {
         m.value = None;
         Ok(())
     }
+    #[cfg(target_os = "linux")]
+    fn unlock(&self, _: &str) -> Result<(), SecretStoreError> {
+        let mut m = self.0.lock().unwrap();
+        m.unlocks += 1;
+        if m.unavailable {
+            return Err(SecretStoreError::Unavailable("fixture".into()));
+        }
+        m.locked = false;
+        Ok(())
+    }
 }
 fn fixture() -> (tempfile::TempDir, HybridSecretStore, Fake) {
     let dir = tempfile::tempdir().unwrap();
@@ -112,6 +135,72 @@ fn fixture() -> (tempfile::TempDir, HybridSecretStore, Fake) {
         backend: Box::new(backend.clone()),
     };
     (dir, store, backend)
+}
+
+#[cfg(target_os = "linux")]
+#[test]
+fn explicit_read_unlocks_after_wake_but_background_reads_never_prompt() {
+    let (_dir, store, backend) = fixture();
+    let secret = crate::LocalIdentity::generate("fixture").unwrap().secret;
+    store.put("fixture", &secret).unwrap();
+    for _ in 0..2 {
+        backend.0.lock().unwrap().locked = true;
+        let unlocks = backend.0.lock().unwrap().unlocks;
+        assert!(matches!(
+            store.get("fixture"),
+            Err(SecretStoreError::Unavailable(_))
+        ));
+        assert_eq!(backend.0.lock().unwrap().unlocks, unlocks);
+        assert_eq!(
+            store
+                .get_with_unlock("fixture")
+                .unwrap()
+                .wireguard_private_key,
+            secret.wireguard_private_key
+        );
+        assert_eq!(backend.0.lock().unwrap().unlocks, unlocks + 1);
+        store.get_with_unlock("fixture").unwrap();
+        assert_eq!(backend.0.lock().unwrap().unlocks, unlocks + 1);
+    }
+    assert_eq!(store.policy().unwrap(), StoragePolicy::SecureStoreRequired);
+    assert!(!store.fallback_path("fixture").unwrap().exists());
+}
+
+#[cfg(target_os = "linux")]
+#[test]
+fn failed_unlock_preserves_keyring_authority_and_never_uses_a_stale_file() {
+    let (_dir, store, backend) = fixture();
+    let secret = crate::LocalIdentity::generate("fixture").unwrap().secret;
+    store.put("fixture", &secret).unwrap();
+    store.set_policy(StoragePolicy::AllowPrivateFile).unwrap();
+    files::atomic_write(
+        &store.fallback_path("fixture").unwrap(),
+        &serde_json::to_vec(&secret).unwrap(),
+        true,
+    )
+    .unwrap();
+    backend.0.lock().unwrap().unavailable = true;
+    assert!(matches!(
+        store.get_with_unlock("fixture"),
+        Err(SecretStoreError::Unavailable(_))
+    ));
+    assert_eq!(backend.0.lock().unwrap().unlocks, 1);
+    assert_eq!(store.status("fixture").unwrap().backend, "keyring");
+    assert!(store.get_with_unlock("../escape").is_err());
+    assert_eq!(backend.0.lock().unwrap().unlocks, 1);
+    backend.0.lock().unwrap().unavailable = false;
+    backend.0.lock().unwrap().value = Some(b"corrupt".to_vec());
+    assert!(matches!(
+        store.get_with_unlock("fixture"),
+        Err(SecretStoreError::InvalidData)
+    ));
+    assert_eq!(backend.0.lock().unwrap().unlocks, 1);
+    store.delete("fixture").unwrap();
+    assert!(matches!(
+        store.get_with_unlock("fixture"),
+        Err(SecretStoreError::Deleted)
+    ));
+    assert_eq!(backend.0.lock().unwrap().unlocks, 1);
 }
 
 #[test]

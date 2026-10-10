@@ -9,6 +9,8 @@ pub(super) trait KeyringBackend: Send + Sync {
     fn put(&self, reference: &str, bytes: &[u8]) -> Result<(), SecretStoreError>;
     fn get(&self, reference: &str) -> Result<Vec<u8>, SecretStoreError>;
     fn delete(&self, reference: &str) -> Result<(), SecretStoreError>;
+    #[cfg(target_os = "linux")]
+    fn unlock(&self, reference: &str) -> Result<(), SecretStoreError>;
 }
 
 pub(super) struct SystemKeyring;
@@ -90,6 +92,19 @@ fn identity(bytes: &[u8]) -> Result<(SecretIdentity, String), SecretStoreError> 
 }
 
 impl HybridSecretStore {
+    /// Only explicit user actions may request the system's bounded unlock prompt.
+    #[cfg(target_os = "linux")]
+    pub fn get_with_unlock(&self, reference: &str) -> Result<SecretIdentity, SecretStoreError> {
+        match self.get(reference) {
+            Err(SecretStoreError::Unavailable(_)) => {
+                // Never hold the identity lock while waiting for user input.
+                self.backend.unlock(reference)?;
+                self.get(reference)
+            }
+            result => result,
+        }
+    }
+
     fn record(&self, reference: &str) -> Result<Option<Record>, SecretStoreError> {
         let bytes = match self.read_private(&format!("{reference}.state.json")) {
             Err(SecretStoreError::NotFound) => return Ok(None),

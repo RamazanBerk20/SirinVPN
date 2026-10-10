@@ -133,6 +133,7 @@ with sync_playwright() as pw:
                     page.get_by_role('tab', name='Connection', exact=True).click()
                     page.get_by_role('switch', name='Choose transport automatically').uncheck()
                     page.get_by_role('radio', name='Direct UDP Standard WireGuard', exact=True).check()
+                    expect(page.get_by_role('button', name='Save preferences', exact=True)).to_be_in_viewport(ratio=1)
                     page.get_by_role('button', name='Save preferences', exact=True).click()
                     expect(page.get_by_role('button', name='Save preferences', exact=True)).to_have_count(0)
                     inspect(page, prefix + '-connection-settings')
