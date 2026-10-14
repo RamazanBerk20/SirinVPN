@@ -2,11 +2,14 @@ import { dnsEndpointAddressIsUsable, dnsOverHttpsPathIsValid } from "../../dns";
 import { validateHost } from "../../format";
 import { type DnsUpstream } from "../../types";
 import { Field } from "../../components/ui";
+import { formatNumber, t } from "../../i18n";
 
 export type DnsPolicyChoice =
   "preserve" | "recursive" | "dns_over_tls" | "dns_over_https";
 
 export type PrivateDnsRecordChoice = "preserve" | "replace" | "clear";
+
+const defaultDohPath = "/dns-query";
 
 export interface DnsEndpointDraft {
   address: string;
@@ -16,8 +19,8 @@ export interface DnsEndpointDraft {
 
 export function newDnsEndpointDrafts(): DnsEndpointDraft[] {
   return [
-    { address: "", authenticationName: "", path: "/dns-query" },
-    { address: "", authenticationName: "", path: "/dns-query" },
+    { address: "", authenticationName: "", path: defaultDohPath },
+    { address: "", authenticationName: "", path: defaultDohPath },
   ];
 }
 
@@ -77,11 +80,6 @@ export function dnsUpstreamFromDraft(
   };
 }
 
-export function privateDnsRecordSummary(count: number): string {
-  if (count === 0) return "no private DNS records";
-  return `${count} private DNS ${count === 1 ? "record" : "records"}`;
-}
-
 export function PrivateDnsRecordFields({
   choice,
   value,
@@ -97,7 +95,7 @@ export function PrivateDnsRecordFields({
 }) {
   return (
     <fieldset className="auth-method dns-policy private-dns-policy">
-      <legend>Private DNS records</legend>
+      <legend>{t("dns.records.legend")}</legend>
       {allowPreserve ? (
         <div className="segmented-control dns-segmented with-preserve">
           <button
@@ -105,36 +103,33 @@ export function PrivateDnsRecordFields({
             aria-pressed={choice === "preserve"}
             onClick={() => onChoiceChange("preserve")}
           >
-            Keep current
+            {t("dns.records.mode.preserve")}
           </button>
           <button
             type="button"
             aria-pressed={choice === "replace"}
             onClick={() => onChoiceChange("replace")}
           >
-            Replace
+            {t("dns.records.mode.replace")}
           </button>
           <button
             type="button"
             aria-pressed={choice === "clear"}
             onClick={() => onChoiceChange("clear")}
           >
-            Clear
+            {t("dns.records.mode.clear")}
           </button>
         </div>
       ) : null}
       <p className="dns-policy-note">
         {choice === "preserve"
-          ? "Repair leaves every private record unchanged."
+          ? t("dns.records.note.preserve")
           : choice === "clear"
-            ? "Repair removes every SirinVPN-managed private record."
-            : "Optional A/AAAA records are answered only by the resolver inside your VPN."}
+            ? t("dns.records.note.clear")
+            : t("dns.records.note.replace")}
       </p>
       {choice === "replace" ? (
-        <Field
-          label="One DNS-name=IP record per line"
-          hint="Up to 64 records. Example: nas.home=10.20.30.40"
-        >
+        <Field label={t("dns.records.label")} hint={t("dns.records.hint")}>
           <textarea
             className="private-dns-record-input mono"
             value={value}
@@ -169,7 +164,7 @@ export function DnsPolicyFields({
 }) {
   return (
     <fieldset className="auth-method dns-policy">
-      <legend>Private DNS upstream</legend>
+      <legend>{t("dns.resolver.legend")}</legend>
       <div
         className={`segmented-control dns-segmented ${allowPreserve ? "with-preserve" : ""}`}
       >
@@ -179,7 +174,7 @@ export function DnsPolicyFields({
             aria-pressed={choice === "preserve"}
             onClick={() => onChoiceChange("preserve")}
           >
-            Keep current
+            {t("dns.resolver.mode.preserve")}
           </button>
         ) : null}
         <button
@@ -187,44 +182,43 @@ export function DnsPolicyFields({
           aria-pressed={choice === "recursive"}
           onClick={() => onChoiceChange("recursive")}
         >
-          Recursive
+          {t("dns.resolver.mode.recursive")}
         </button>
         <button
           type="button"
           aria-pressed={choice === "dns_over_tls"}
           onClick={() => onChoiceChange("dns_over_tls")}
         >
-          DNS over TLS
+          {t("dns.resolver.mode.dnsOverTls")}
         </button>
         <button
           type="button"
           aria-pressed={choice === "dns_over_https"}
           onClick={() => onChoiceChange("dns_over_https")}
         >
-          DNS over HTTPS
+          {t("dns.resolver.mode.dnsOverHttps")}
         </button>
       </div>
       <p className="dns-policy-note">
         {choice === "preserve"
-          ? "Repair leaves the VPS DNS policy unchanged."
+          ? t("dns.resolver.note.preserve")
           : choice === "recursive"
-            ? "The VPS resolves DNS itself with DNSSEC validation and no configured forwarding provider."
+            ? t("dns.resolver.note.recursive")
             : choice === "dns_over_tls"
-              ? "Unbound authenticates each configured resolver on port 853. It will not fall back to plaintext forwarding."
-              : "SirinVPN posts DNS wire messages over authenticated HTTPS on port 443 to the exact resolver IPs. It uses no system DNS, HTTP proxy, or plaintext fallback."}
+              ? t("dns.resolver.note.dnsOverTls")
+              : t("dns.resolver.note.dnsOverHttps")}
       </p>
       {choice === "dns_over_tls" || choice === "dns_over_https" ? (
         <div className="dns-endpoints">
           {endpoints.map((endpoint, index) => (
             <div className="dns-endpoint" key={index}>
               <strong>
-                Endpoint {index + 1}
-                {index === 1 ? " · optional" : ""}
+                {t(index === 1 ? "dns.resolver.endpointOptional" : "dns.resolver.endpoint", { number: formatNumber(index + 1) })}
               </strong>
               <div
                 className={`field-grid dns-endpoint-fields ${choice === "dns_over_https" ? "with-path" : ""}`}
               >
-                <Field label="Resolver IP address">
+                <Field label={t("dns.resolver.address")}>
                   <input
                     value={endpoint.address}
                     onChange={(event) =>
@@ -236,7 +230,7 @@ export function DnsPolicyFields({
                     spellCheck={false}
                   />
                 </Field>
-                <Field label="TLS authentication name">
+                <Field label={t("dns.resolver.tlsName")}>
                   <input
                     value={endpoint.authenticationName}
                     onChange={(event) =>
@@ -257,13 +251,13 @@ export function DnsPolicyFields({
                   />
                 </Field>
                 {choice === "dns_over_https" ? (
-                  <Field label="HTTPS path">
+                  <Field label={t("dns.resolver.httpsPath")}>
                     <input
                       value={endpoint.path}
                       onChange={(event) =>
                         onEndpointChange(index, "path", event.target.value)
                       }
-                      placeholder="/dns-query"
+                      placeholder={defaultDohPath}
                       autoCapitalize="none"
                       autoComplete="off"
                       spellCheck={false}

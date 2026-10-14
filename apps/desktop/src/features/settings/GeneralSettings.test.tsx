@@ -10,6 +10,7 @@ import {
 import { GeneralSettings } from "./GeneralSettings";
 import { PreferencesProvider } from "./PreferencesProvider";
 import type { PreferencesSnapshot } from "./preferences";
+import { t } from "../../i18n";
 
 const mocks = vi.hoisted(() => ({
   getAppPreferences: vi.fn(),
@@ -59,18 +60,18 @@ function setup(platform: "desktop" | "android" = "desktop") {
 
 it("shows Android policy controls, denied-notification guidance and the older tile instructions", async () => {
   mocks.getAppPreferences.mockResolvedValue({ ...initial, notification_permission: "denied" });
-  mocks.invoke.mockImplementation(async command => command === "android_add_tile" ? "Open Quick Settings, tap Edit and add SirinVPN." : { quick_profile: null });
+  mocks.invoke.mockImplementation(async command => command === "android_add_tile" ? "Native tile instructions" : { quick_profile: null });
   setup("android");
-  expect(await screen.findByText(/Android is hiding SirinVPN notifications/)).toBeTruthy();
-  expect(screen.queryByText("Startup & window")).toBeNull();
-  expect(screen.queryByText("Local VPN component")).toBeNull();
-  fireEvent.click(screen.getByRole("button", { name: "Add Quick Settings tile" }));
-  expect(await screen.findByText("Open Quick Settings, tap Edit and add SirinVPN.")).toBeTruthy();
+  expect(await screen.findByText(t("settings.general.notifications.blockedAndroid"))).toBeTruthy();
+  expect(screen.queryByText(t("settings.general.startup.title"))).toBeNull();
+  expect(screen.queryByText(t("settings.general.component.title"))).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: t("settings.general.android.addTile") }));
+  expect(await screen.findByText("Native tile instructions")).toBeTruthy();
 });
 it("shows notifications off when Android permission is missing even if the saved preference is on", async () => {
   mocks.getAppPreferences.mockResolvedValue({ ...initial, preferences: { ...initial.preferences, notifications: true }, notification_permission: "denied" });
   setup("android");
-  const input = await screen.findByRole("switch", { name: "Connection notifications" });
+  const input = await screen.findByRole("switch", { name: t("settings.general.notifications.connection.label") });
   expect((input as HTMLInputElement).checked).toBe(false);
   await waitFor(() => expect(input.matches(":disabled")).toBe(false));
   fireEvent.click(input);
@@ -84,10 +85,10 @@ it("refreshes Android notification access after the test action grants permissio
     mocks.getAppPreferences.mockResolvedValue({ ...initial, preferences, notification_permission: "granted" });
   });
   setup("android");
-  const button = await screen.findByRole("button", { name: "Test notification" });
+  const button = await screen.findByRole("button", { name: t("settings.general.notifications.test") });
   await waitFor(() => expect(button.matches(":disabled")).toBe(false));
   fireEvent.click(button);
-  await waitFor(() => expect((screen.getByRole("switch", { name: "Connection notifications" }) as HTMLInputElement).checked).toBe(true));
+  await waitFor(() => expect((screen.getByRole("switch", { name: t("settings.general.notifications.connection.label") }) as HTMLInputElement).checked).toBe(true));
 });
 async function toggle(name: string) {
   const input = (await screen.findByRole("switch", {
@@ -103,7 +104,7 @@ it("retains the previous preference when a native save fails", async () => {
     new Error("Startup registration failed"),
   );
   setup();
-  const input = await toggle("Start on system startup");
+  const input = await toggle(t("settings.general.startup.startOnLogin.label"));
   expect(await screen.findByText("Startup registration failed")).toBeTruthy();
   expect(input.checked).toBe(false);
 });
@@ -111,7 +112,7 @@ it("retains the previous preference when a native save fails", async () => {
 it("ignores an older Android refresh after a newer refresh and switch save", async () => {
   mocks.android = true;
   setup("android");
-  const input = await screen.findByRole("switch", { name: "Interface animations" }) as HTMLInputElement;
+  const input = await screen.findByRole("switch", { name: t("settings.general.notifications.animations.label") }) as HTMLInputElement;
   await waitFor(() => expect(input.disabled).toBe(false));
   let resolveOld!: (value: PreferencesSnapshot) => void;
   mocks.getAppPreferences.mockImplementationOnce(() => new Promise(resolve => { resolveOld = resolve; }));
@@ -128,19 +129,19 @@ it("ignores an older Android refresh after a newer refresh and switch save", asy
 it("requests permission before enabling notifications and never saves a denial", async () => {
   mocks.requestNotificationPermission.mockResolvedValue("denied");
   setup();
-  const input = await toggle("Connection notifications");
-  expect(await screen.findByText(/Notifications are blocked/)).toBeTruthy();
+  const input = await toggle(t("settings.general.notifications.connection.label"));
+  expect(await screen.findByText(t("settings.preferences.notificationsBlocked"))).toBeTruthy();
   expect(mocks.setAppPreferences).not.toHaveBeenCalled();
   expect(input.checked).toBe(false);
 });
 
 it("saves allowed notifications and sends a native test only on request", async () => {
   setup();
-  const input = await toggle("Connection notifications");
+  const input = await toggle(t("settings.general.notifications.connection.label"));
   await waitFor(() => expect(input.checked).toBe(true));
   expect(mocks.requestNotificationPermission).toHaveBeenCalledTimes(1);
   expect(mocks.testNotification).not.toHaveBeenCalled();
-  fireEvent.click(screen.getByRole("button", { name: "Test notification" }));
+  fireEvent.click(screen.getByRole("button", { name: t("settings.general.notifications.test") }));
   await waitFor(() => expect(mocks.testNotification).toHaveBeenCalledTimes(1));
 });
 
@@ -156,7 +157,7 @@ it("restores reduced motion after the app reloads", async () => {
   expect(
     (
       screen.getByRole("switch", {
-        name: "Interface animations",
+        name: t("settings.general.notifications.animations.label"),
       }) as HTMLInputElement
     ).checked,
   ).toBe(false);
@@ -175,16 +176,16 @@ it("locks unavailable tray and startup controls while other preferences remain u
     preferences,
   }));
   setup();
-  const animation = await toggle("Interface animations");
+  const animation = await toggle(t("settings.general.notifications.animations.label"));
   await waitFor(() => expect(animation.checked).toBe(false));
   expect(
-    (screen.getByRole("switch", { name: "Close to tray" }) as HTMLInputElement)
+    (screen.getByRole("switch", { name: t("settings.general.startup.closeToTray.label") }) as HTMLInputElement)
       .disabled,
   ).toBe(true);
   expect(
     (
       screen.getByRole("switch", {
-        name: "Start on system startup",
+        name: t("settings.general.startup.startOnLogin.label"),
       }) as HTMLInputElement
     ).disabled,
   ).toBe(true);
@@ -199,7 +200,7 @@ it("keeps settings disabled when the native store cannot be read", async () => {
   expect(
     (
       screen.getByRole("switch", {
-        name: "Connection notifications",
+        name: t("settings.general.notifications.connection.label"),
       }) as HTMLInputElement
     ).disabled,
   ).toBe(true);

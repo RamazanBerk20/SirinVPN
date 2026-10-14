@@ -11,7 +11,7 @@ pub(super) async fn create_endpoint_update(
     let local = invoke_helper("status", None).map_err(safe_error)?;
     if local.server_id != Some(profile.id) || local.state == ConnectionState::Disconnected {
         return Err(
-            "Connect to the restored VPS before creating its signed endpoint update.".to_owned(),
+            "Connect to the restored server before creating its address update.".to_owned(),
         );
     }
     let code = create_endpoint_transition(&state.paths, profile.id)
@@ -29,14 +29,14 @@ pub(super) async fn available_endpoint_update(
     let local = invoke_helper("status", None).map_err(safe_error)?;
     if local.server_id != Some(profile.id) || local.state == ConnectionState::Disconnected {
         return Err(
-            "Connect to this VPS before checking for a published endpoint update.".to_owned(),
+            "Connect to this server before checking for an address update.".to_owned(),
         );
     }
     // An unlock prompt may wait for the user; keep it off the async workers.
     let (paths, reference) = (state.paths.clone(), profile.identity_reference.clone());
     let secret = tauri::async_runtime::spawn_blocking(move || explicit_secret(&paths, &reference))
         .await
-        .map_err(|_| "The credential worker was interrupted.".to_owned())??;
+        .map_err(|_| "Reading this device’s key was interrupted. Try again.".to_owned())??;
     let response = ManagementClient::new(&profile, &secret)
         .map_err(safe_error)?
         .endpoint_transition()
@@ -75,7 +75,7 @@ pub(super) async fn apply_endpoint_update(
         return Ok(endpoint_result(&head));
     }
     if local.state != ConnectionState::Disconnected || local.server_id.is_some() {
-        return Err("Disconnect the other server before applying this endpoint update.".into());
+        return Err("Disconnect from the other server before applying this address update.".into());
     }
     apply_endpoint_transition(
         &state.paths,
@@ -107,7 +107,7 @@ pub(super) async fn publish_endpoint_update(
         return Ok(endpoint_result(&head));
     }
     if local.state != ConnectionState::Disconnected || local.server_id.is_some() {
-        return Err("Disconnect the other server before publishing this endpoint update.".into());
+        return Err("Disconnect from the other server before publishing this address update.".into());
     }
     publish_endpoint_transition(
         &state.paths,

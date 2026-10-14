@@ -1,28 +1,29 @@
 import { InlineError } from "../../components/ui";
 import { useAccessController, type AccessProps } from "./useAccessController";
 import { PortForwardPanel } from "./PortForwardPanel";
+import { t } from "../../i18n";
 export function PortForwardSettings(props: AccessProps & { onManageDevices?: () => void }) {
   const m = useAccessController(props);
   return (
-    <section className="settings-card" aria-label="Port forwarding">
+    <section className="settings-card" aria-label={t("devices.ports.title")}>
       {!props.connected ? (
         <>
-          <h2>Port forwarding · VPS</h2>
-          <p>Connect to view or change public ports on {props.profile.name}.</p>
+          <h2>{t("devices.ports.title")}</h2>
+          <p>{t("devices.ports.connectFirst", { server: props.profile.name })}</p>
         </>
       ) : !m.snapshot ? (
         <>
-          <h2>Port forwarding · VPS</h2>
+          <h2>{t("devices.ports.title")}</h2>
           <p>
             {m.loading
-              ? "Reading server configuration…"
-              : "Server configuration is unavailable."}
+              ? t("common.state.loading")
+              : t("devices.ports.settingsUnavailable")}
           </p>
         </>
       ) : (
         <PortForwardPanel
           onAddDevice={props.onManageDevices}
-          serverError={m.error && /reserved|public.*port/i.test(m.error) ? m.error : undefined}
+          serverError={m.publicPortError ?? undefined}
           snapshot={m.snapshot}
           accessLevel={props.accessLevel}
           available={m.portForwardingAvailable === true && !m.loadError}

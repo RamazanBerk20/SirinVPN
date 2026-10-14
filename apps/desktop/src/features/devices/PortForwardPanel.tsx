@@ -2,6 +2,13 @@ import { CaretRight, Plus, Warning, Wrench } from "@phosphor-icons/react";
 import { type FormEvent } from "react";
 import { canManagePortForwards } from "../../access";
 import { type MembershipSnapshot, type PortForwardProtocol } from "../../types";
+import { t } from "../../i18n";
+import { Rich } from "../../i18n/Rich";
+
+const MAX_FORWARDS = 32;
+const GATEWAY_ADDRESS = "10.77.0.1";
+/** Protocol names are the same in every language. */
+const protocolName = (protocol: PortForwardProtocol) => protocol.toUpperCase();
 
 export function PortForwardPanel({
   snapshot,
@@ -55,8 +62,8 @@ export function PortForwardPanel({
     Number.isInteger(Number(value)) &&
     Number(value) >= minimum &&
     Number(value) <= 65535;
-  const publicError = serverError || (publicPort && !validPort(publicPort, 1024) ? Number(publicPort) < 1024 ? "Public port must be 1024–65535. Low ports are reserved." : "Public port must be 1024–65535." : "");
-  const deviceError = devicePort && !validPort(devicePort, 1) ? "Device port must be 1–65535." : "";
+  const publicError = serverError || (publicPort && !validPort(publicPort, 1024) ? Number(publicPort) < 1024 ? t("devices.ports.publicPortLow") : t("devices.ports.publicPortRange") : "");
+  const deviceError = devicePort && !validPort(devicePort, 1) ? t("devices.ports.devicePortRange") : "";
   const validMapping =
     !publicError && !deviceError &&
     Boolean(selectedDeviceId) &&
@@ -76,38 +83,31 @@ export function PortForwardPanel({
     <div className="port-forward-panel">
       <div className="port-forward-heading">
         <div>
-          <h2>Port forwarding · VPS</h2>
-          <p>
-            Open one explicit IPv4 TCP or UDP port and send it to one authorized
-            VPN device.
-          </p>
+          <h2>{t("devices.ports.title")}</h2>
         </div>
         <span className="port-forward-count">
-          {forwards.length} / 32 configured
+          {t("devices.ports.count", { used: forwards.length, max: MAX_FORWARDS })}
         </span>
       </div>
 
       {!available ? (
         <div className="access-empty">
-          <Wrench size={19} /> Repair this VPS with the current app build to
-          enable port forwarding.
+          <Wrench size={19} /> {t("devices.ports.unavailable")}
         </div>
       ) : (
         <>
           <div className="port-forward-notice">
             <Warning size={20} />
             <p>
-              <strong>
-                This exposes the selected device service to the public internet.
-              </strong>
+              <strong>{t("devices.ports.exposure")}</strong>
             </p>
           </div>
-          {targets.length === 0 ? <div className="access-empty" role="status"><p>{accessLevel === "member" ? "Your current membership has no eligible device or permission for port forwarding. Ask an Owner or Admin to review your access." : "Authorize an active device before opening a port."}</p>{accessLevel !== "member" && onAddDevice && <button className="secondary-button" onClick={onAddDevice}>Manage devices and invitations</button>}</div> : <form
+          {targets.length === 0 ? <div className="access-empty" role="status"><p>{t(accessLevel === "member" ? "devices.ports.noTargetsMember" : "devices.ports.noTargets")}</p>{accessLevel !== "member" && onAddDevice && <button className="secondary-button" onClick={onAddDevice}>{t("devices.ports.manageDevices")}</button>}</div> : <form
             className="port-forward-form"
             onSubmit={(event) => void onCreate(event)}
           >
             <label>
-              <span>Protocol</span>
+              <span>{t("devices.ports.protocol")}</span>
               <select
                 value={protocol}
                 onChange={(event) =>
@@ -115,12 +115,12 @@ export function PortForwardPanel({
                 }
                 disabled={busy !== null}
               >
-                <option value="tcp">TCP</option>
-                <option value="udp">UDP</option>
+                <option value="tcp">{protocolName("tcp")}</option>
+                <option value="udp">{protocolName("udp")}</option>
               </select>
             </label>
             <label>
-              <span>Public port</span>
+              <span>{t("devices.ports.publicPort")}</span>
               <input
                 type="number"
                 min="1024"
@@ -135,7 +135,7 @@ export function PortForwardPanel({
               />
             </label>
             <label className="port-forward-device-field">
-              <span>Target device</span>
+              <span>{t("devices.ports.device")}</span>
               <select
                 value={selectedDeviceId}
                 onChange={(event) => onDeviceChange(event.target.value)}
@@ -143,18 +143,17 @@ export function PortForwardPanel({
                 required
               >
                 {targets.length === 0 ? (
-                  <option value="">No manageable device</option>
+                  <option value="">{t("devices.ports.noDevice")}</option>
                 ) : null}
                 {targets.map(({ member, device }) => (
                   <option value={device.id} key={device.id}>
-                    {member.name} / {device.name} ·{" "}
-                    {device.client_tunnel_address}
+                    {t("devices.ports.targetOption", { member: member.name, device: device.name, address: device.client_tunnel_address })}
                   </option>
                 ))}
               </select>
             </label>
             <label>
-              <span>Device port</span>
+              <span>{t("devices.ports.devicePort")}</span>
               <input
                 type="number"
                 min="1"
@@ -170,45 +169,48 @@ export function PortForwardPanel({
             </label>
             {publicError && <p id="forward-public-error" className="field-error" role="alert">{publicError}</p>}
             {deviceError && <p id="forward-device-error" className="field-error" role="alert">{deviceError}</p>}
-            <p className="forward-preview" aria-label="Mapping preview">
+            <p className="forward-preview" aria-label={t("devices.ports.previewLabel")}>
               {validMapping ? (
-                <>
-                  Public {protocol.toUpperCase()} port{" "}
-                  <strong>{Number(publicPort)}</strong> →{" "}
-                  <strong>
-                    {targetFor(selectedDeviceId)?.device.name ??
-                      "Choose a device"}
-                  </strong>{" "}
-                  → port <strong>{Number(devicePort)}</strong>
-                </>
+                <Rich
+                  id="devices.ports.preview"
+                  params={{
+                    protocol: protocolName(protocol),
+                    publicPort: Number(publicPort),
+                    device: targetFor(selectedDeviceId)?.device.name ?? t("devices.ports.chooseDevice"),
+                    devicePort: Number(devicePort),
+                  }}
+                  tags={{ strong: (content) => <strong>{content}</strong> }}
+                />
               ) : !publicPort || !devicePort ? (
-                "Enter both ports to preview the forwarding rule."
+                t("devices.ports.previewEmpty")
               ) : (
-                "Correct the highlighted fields to preview this rule."
+                t("devices.ports.previewInvalid")
               )}
             </p>
             <button
               className="secondary-button port-forward-submit"
               type="submit"
-              disabled={busy !== null || !validMapping || forwards.length >= 32}
+              disabled={busy !== null || !validMapping || forwards.length >= MAX_FORWARDS}
             >
               <Plus size={15} weight="bold" />{" "}
-              {busy === "create" ? "Opening" : "Open port"}
+              {busy === "create" ? t("devices.ports.opening") : t("devices.ports.open")}
             </button>
           </form>}
 
           <div className="port-forward-notice">
             <Warning size={17} weight="fill" />
             <p>
-              The service sees the VPN gateway address{" "}
-              <span className="mono">10.77.0.1</span>, not the visitor&apos;s
-              original IP. Low and SirinVPN control ports stay reserved.
+              <Rich
+                id="devices.ports.visitorAddress"
+                params={{ address: GATEWAY_ADDRESS }}
+                tags={{ address: (content) => <span className="mono">{content}</span> }}
+              />
             </p>
           </div>
 
           <div className="port-forward-list">
             {forwards.length === 0 ? (
-              <p className="port-forward-empty">No public ports are open.</p>
+              <p className="port-forward-empty">{t("devices.ports.empty")}</p>
             ) : (
               forwards.map((forward) => {
                 const target = targetFor(forward.device_id);
@@ -221,35 +223,33 @@ export function PortForwardPanel({
                     <span
                       className={`port-forward-protocol ${forward.protocol}`}
                     >
-                      {forward.protocol.toUpperCase()}
+                      {protocolName(forward.protocol)}
                     </span>
                     <span className="port-forward-route mono">
                       :{forward.public_port}
                       <CaretRight size={14} />
-                      {target?.device.client_tunnel_address ?? "Unavailable"}:
+                      {target?.device.client_tunnel_address ?? t("common.state.unavailable")}:
                       {forward.device_port}
                     </span>
                     <span className="port-forward-target">
                       {target
-                        ? `${target.member.name} / ${target.device.name}`
-                        : "Target unavailable"}
-                      {target?.member.suspended &&
-                        " · Paused while member is suspended"}
+                        ? t(target.member.suspended ? "devices.ports.targetPaused" : "devices.ports.target", { member: target.member.name, device: target.device.name })
+                        : t("devices.ports.targetUnavailable")}
                     </span>
                     {removable ? (
                       <button
                         className="text-button danger-text"
-                        aria-label={`Close port ${forward.protocol.toUpperCase()} ${forward.public_port} to ${target?.device.name ?? forward.device_id}:${forward.device_port}`}
+                        aria-label={t("devices.ports.closeLabel", { protocol: protocolName(forward.protocol), publicPort: forward.public_port, device: target?.device.name ?? forward.device_id, devicePort: forward.device_port })}
                         disabled={busy !== null}
                         onClick={() =>
                           void onRemove(forward.protocol, forward.public_port)
                         }
                       >
-                        {busy === key ? "Closing" : "Close port"}
+                        {busy === key ? t("devices.ports.closing") : t("devices.ports.close")}
                       </button>
                     ) : (
                       <span className="port-forward-managed">
-                        Owner managed
+                        {t("devices.ports.ownerManaged")}
                       </span>
                     )}
                   </div>

@@ -14,6 +14,7 @@ import {
   type TunnelRoutingMode,
 } from "../../types";
 import { errorMessage } from "../../lib/errors";
+import { t } from "../../i18n";
 import { clearMembershipCache } from "../devices/membershipCache";
 
 export function useServerWorkspace({
@@ -124,9 +125,9 @@ export function useServerWorkspace({
     value: number | undefined,
     format: (value: number | undefined) => string,
   ) => {
-    if (!serverStatus) return "Unavailable";
-    if (!liveServerMetrics) return "Update server";
-    return value === undefined ? "Sampling" : format(value);
+    if (!serverStatus) return t("common.state.unavailable");
+    if (!liveServerMetrics) return t("maintenance.workspace.metric.needsUpdate");
+    return value === undefined ? t("maintenance.workspace.metric.sampling") : format(value);
   };
 
   const refreshRotationPending = useCallback(async () => {
@@ -149,8 +150,8 @@ export function useServerWorkspace({
     ) {
       setError(
         preferences.dirty
-          ? "Save or discard your connection preferences in Settings before connecting."
-          : "Load saved connection preferences in Settings before connecting.",
+          ? t("maintenance.workspace.error.unsavedSettings")
+          : t("maintenance.workspace.error.settingsNotLoaded"),
       );
       return;
     }
@@ -168,9 +169,7 @@ export function useServerWorkspace({
       await onRefresh(status);
     } catch (reason) {
       if (request !== connectionGeneration.current) return;
-      const fallback =
-        "The network change did not complete. Refresh the connection state before trying again.";
-      setError(errorMessage(reason, fallback));
+      setError(errorMessage(reason, t("maintenance.workspace.error.connectionChange")));
       await onRefresh();
     } finally {
       if (request === connectionGeneration.current) { setBusy(false); setConnectionOperation(null); }
@@ -187,7 +186,7 @@ export function useServerWorkspace({
       if (request === connectionGeneration.current) await onRefresh(status);
     } catch (reason) {
       if (request === connectionGeneration.current) {
-        setError(errorMessage(reason, "The VPN has not confirmed that it stopped. Check its current status."));
+        setError(errorMessage(reason, t("maintenance.workspace.error.stopUnconfirmed")));
         await onRefresh();
       }
     } finally {
@@ -203,10 +202,7 @@ export function useServerWorkspace({
       await api.resume(profile.id);
     } catch (reason) {
       setError(
-        errorMessage(
-          reason,
-          "Could not resume. The current traffic policy was retained.",
-        ),
+        errorMessage(reason, t("maintenance.workspace.error.resume")),
       );
     } finally {
       await onRefresh();
@@ -228,9 +224,9 @@ export function useServerWorkspace({
         checks: [
           {
             code: "local_diagnostics_unavailable",
-            label: "Current diagnostics",
+            label: t("maintenance.diagnostics.title"),
             level: "fail",
-            message: "The diagnostic request could not complete. Refresh local connection state and try again. An unavailable report does not establish a tunnel or certificate failure.",
+            message: t("maintenance.workspace.error.diagnostics"),
           },
         ],
       });

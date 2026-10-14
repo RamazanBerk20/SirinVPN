@@ -6,6 +6,7 @@ import { api } from "../../api";
 import { type KeyRotationResult, type ServerProfile } from "../../types";
 import { InlineError } from "../../components/ui";
 import { errorMessage } from "../../lib/errors";
+import { t } from "../../i18n";
 
 export function KeyRotationDialog({
   profile,
@@ -51,12 +52,7 @@ export function KeyRotationDialog({
       await onCompleted();
     } catch (reason) {
       setConfirmed(false);
-      setError(
-        errorMessage(
-          reason,
-          "Key rotation stopped safely. If a transition was already staged, use Resume keys after network access returns.",
-        ),
-      );
+      setError(errorMessage(reason, t("settings.keyRotation.failed")));
       await onPendingChanged();
     } finally {
       setBusy(false);
@@ -69,30 +65,26 @@ export function KeyRotationDialog({
         <Dialog.Overlay className="dialog-overlay" />
         <DialogContent className="dialog-content remove-server-dialog key-rotation-dialog"
           heading={<>{result
-              ? "Device keys rotated"
+              ? t("settings.keyRotation.doneTitle")
               : pending
-                ? "Resume key rotation"
-                : "Rotate this device's keys"}</>}
-          description={<>Generate fresh WireGuard and management keys locally without
-            changing this device's access, address, or name.</>}
-          closeDisabled={busy} closeLabel="Close">
+                ? t("settings.keyRotation.resumeTitle")
+                : t("settings.keyRotation.title")}</>}
+          description={<>{t("settings.keyRotation.description")}</>}
+          closeDisabled={busy} closeLabel={t("common.action.close")}>
 
           {result ? (
             <div className="backup-success key-rotation-success">
               <span>
                 <Check size={26} weight="bold" />
               </span>
-              <h3>Fresh identity is active</h3>
-              <p>
-                The VPS accepted the new public keys, the tunnel reconnected,
-                and the previous private identity was removed locally.
-              </p>
+              <h3>{t("settings.keyRotation.done.title")}</h3>
+              <p>{t("settings.keyRotation.done.summary")}</p>
               <code>{result.identity_fingerprint}</code>
               <button
                 className="primary-button"
                 onClick={() => onOpenChange(false)}
               >
-                Done
+                {t("common.action.done")}
               </button>
             </div>
           ) : busy ? (
@@ -100,28 +92,25 @@ export function KeyRotationDialog({
               <ArrowClockwise className="spin" size={26} />
               <strong>
                 {pending
-                  ? "Recovering the staged transition"
-                  : "Rotating both device keys"}
+                  ? t("settings.keyRotation.progress.resuming")
+                  : t("settings.keyRotation.progress.rotating")}
               </strong>
-              <p>
-                The tunnel briefly reconnects. Keep the app open while the new
-                identity is verified and the old local keys are removed.
-              </p>
+              <p>{t("settings.keyRotation.progress.summary")}</p>
             </div>
           ) : (
             <div className="uninstall-fingerprint key-rotation-confirmation">
               <Key size={28} weight="duotone" />
               <h3>
                 {pending
-                  ? "A recoverable transition is waiting"
-                  : "Replace only this device's identity"}
+                  ? t("settings.keyRotation.confirmation.resumeTitle")
+                  : t("settings.keyRotation.confirmation.title")}
               </h3>
               <div className="warning-note replacement-warning">
                 <Warning size={18} weight="fill" />
                 <span>
                   {pending
-                    ? "SirinVPN retained the staged local keys so it can determine whether the VPS committed the change. Resume instead of deleting or recreating this profile."
-                    : "Private keys are generated on this computer and never sent to the VPS. Existing members, other devices, permissions, invitations, and the VPS identity remain unchanged."}
+                    ? t("settings.keyRotation.confirmation.resumeWarning")
+                    : t("settings.keyRotation.confirmation.warning")}
                 </span>
               </div>
               <label
@@ -133,13 +122,8 @@ export function KeyRotationDialog({
                   onChange={(event) => setConfirmed(event.target.checked)}
                 />
                 <span>
-                  <strong>
-                    I understand the tunnel will briefly reconnect
-                  </strong>
-                  <small>
-                    Persistent protection is restored after the new identity
-                    passes verification.
-                  </small>
+                  <strong>{t("settings.keyRotation.confirmation.accept")}</strong>
+                  <small>{t("settings.keyRotation.confirmation.acceptHint")}</small>
                 </span>
               </label>
               {error ? <InlineError message={error} /> : null}
@@ -148,7 +132,9 @@ export function KeyRotationDialog({
                 disabled={!confirmed}
                 onClick={() => void rotate()}
               >
-                {pending ? "Resume safely" : "Rotate both keys"}
+                {pending
+                  ? t("settings.keyRotation.confirmation.resume")
+                  : t("settings.keyRotation.confirmation.rotate")}
               </button>
             </div>
           )}

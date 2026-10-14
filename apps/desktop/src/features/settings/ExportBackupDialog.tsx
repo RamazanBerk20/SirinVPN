@@ -15,6 +15,8 @@ import { type ServerProfile } from "../../types";
 import { Field, InlineError } from "../../components/ui";
 import { preferredBackupPath } from "../../lib/backupPaths";
 import { errorMessage } from "../../lib/errors";
+import { t } from "../../i18n";
+import { Rich } from "../../i18n/Rich";
 
 export function ExportBackupDialog({
   profile,
@@ -59,11 +61,11 @@ export function ExportBackupDialog({
           .replace(/[^a-zA-Z0-9_-]+/g, "-")
           .replace(/^-+|-+$/g, "") || "sirinvpn-device";
       const selected = await save({
-        title: "Save encrypted SirinVPN backup",
+        title: t("settings.backup.dialogTitle"),
         defaultPath: await preferredBackupPath(`${safeName}.sirinvpn-backup`),
         filters: [
           {
-            name: "SirinVPN encrypted backup",
+            name: t("settings.backup.fileType"),
             extensions: ["sirinvpn-backup"],
           },
         ],
@@ -73,12 +75,7 @@ export function ExportBackupDialog({
         setError(null);
       }
     } catch (reason) {
-      setError(
-        errorMessage(
-          reason,
-          "The backup destination picker could not be opened.",
-        ),
-      );
+      setError(errorMessage(reason, t("settings.backup.pickerFailed")));
     }
   };
 
@@ -90,12 +87,7 @@ export function ExportBackupDialog({
       await api.exportServerBackup(profile.id, path, password, confirmed);
       setComplete(true);
     } catch (reason) {
-      setError(
-        errorMessage(
-          reason,
-          "The encrypted device backup could not be created.",
-        ),
-      );
+      setError(errorMessage(reason, t("settings.backup.failed")));
     } finally {
       setPassword("");
       setPasswordConfirmation("");
@@ -108,27 +100,23 @@ export function ExportBackupDialog({
       <Dialog.Portal>
         <Dialog.Overlay className="dialog-overlay" />
         <DialogContent className="dialog-content backup-dialog"
-          heading={<>Encrypted device backup</>}
-          description={<>Export this local profile and its private WireGuard and management
-            identity. Nothing is uploaded.</>}
-          closeDisabled={busy} closeLabel="Close">
+          heading={<>{t("settings.backup.title")}</>}
+          description={<>{t("settings.backup.description")}</>}
+          closeDisabled={busy} closeLabel={t("common.action.close")}>
           {complete ? (
             <div className="backup-success">
               <span>
                 <Check size={24} weight="bold" />
               </span>
-              <h3>Backup created</h3>
+              <h3>{t("settings.backup.done.title")}</h3>
               <ShareEncryptedFile uri={path} />
-              <p>
-                Store the file and its password separately. Restoring it does
-                not change your VPS.
-              </p>
+              <p>{t("settings.backup.done.summary")}</p>
               <button
                 className="primary-button"
                 type="button"
                 onClick={() => changeOpen(false)}
               >
-                Done
+                {t("common.action.done")}
               </button>
             </div>
           ) : (
@@ -142,21 +130,19 @@ export function ExportBackupDialog({
               <div className="sensitive-backup-warning">
                 <Warning size={19} weight="fill" />
                 <p>
-                  <strong>This file can impersonate this device.</strong> Anyone
-                  with both the file and password can connect until the device
-                  is revoked.
+                  <Rich id="settings.backup.warning" tags={{ strong: content => <strong>{content}</strong> }} />
                 </p>
               </div>
               <Field
-                label="Save destination"
-                hint="SirinVPN refuses to overwrite an existing file."
+                label={t("settings.backup.destination.label")}
+                hint={t("settings.backup.destination.hint")}
               >
                 <div className="file-picker-row">
                   <input
                     className="mono"
                     value={path}
                     readOnly
-                    placeholder="Choose a protected destination"
+                    placeholder={t("settings.backup.destination.placeholder")}
                   />
                   <button
                     className="secondary-button"
@@ -164,12 +150,12 @@ export function ExportBackupDialog({
                     onClick={() => void chooseDestination()}
                     disabled={busy}
                   >
-                    Choose file
+                    {t("settings.backup.destination.choose")}
                   </button>
                 </div>
               </Field>
               <div className="field-grid two-column backup-passwords">
-                <Field label="Password" hint="Use at least 12 characters.">
+                <Field label={t("settings.backup.password.label")} hint={t("settings.backup.password.hint")}>
                   <SecretInput
                     type="password"
                     value={password}
@@ -177,7 +163,7 @@ export function ExportBackupDialog({
                     autoComplete="new-password"
                   />
                 </Field>
-                <Field label="Repeat password">
+                <Field label={t("settings.backup.password.repeat")}>
                   <SecretInput
                     type="password"
                     value={passwordConfirmation}
@@ -197,13 +183,8 @@ export function ExportBackupDialog({
                   onChange={(event) => setConfirmed(event.target.checked)}
                 />
                 <span>
-                  <strong>
-                    I understand this export contains a complete private device
-                    identity.
-                  </strong>
-                  <small>
-                    The password cannot be recovered by SirinVPN or anyone else.
-                  </small>
+                  <strong>{t("settings.backup.accept.label")}</strong>
+                  <small>{t("settings.backup.accept.hint")}</small>
                 </span>
               </label>
               {error ? <InlineError message={error} /> : null}
@@ -217,7 +198,7 @@ export function ExportBackupDialog({
                 ) : (
                   <DownloadSimple size={18} />
                 )}
-                {busy ? "Encrypting locally" : "Create encrypted backup"}
+                {busy ? t("settings.backup.creating") : t("settings.backup.create")}
               </button>
             </form>
           )}

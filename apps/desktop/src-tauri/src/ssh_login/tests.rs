@@ -95,7 +95,7 @@ fn failed_wallet_write_never_reports_success() {
         save_entry(login(), &store, |_| Ok(()))
             .err()
             .unwrap()
-            .contains("could not be saved")
+            .contains("couldn’t be saved")
     );
     assert!(read_entry("vps.example", &store).unwrap().is_none());
 }

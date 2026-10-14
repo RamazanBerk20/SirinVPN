@@ -14,6 +14,8 @@ import { currentQualitySample } from "./TransportQuality";
 import { MtuDetails } from "./MtuSettings";
 
 import { useTrafficStore, type TrafficStore } from "../../hooks/trafficStore";
+import { InfoHint } from "../../components/InfoHint";
+import { formatNumber, t } from "../../i18n";
 export function DeviceTraffic({
   local: fallback,
   source,
@@ -44,46 +46,34 @@ export function DeviceTraffic({
     local.byte_counters_available !== false;
   const rate = (value: number | undefined) =>
     !connected
-      ? local.state === "unknown"
-        ? "Unknown"
-        : "Not connected"
+      ? t(local.state === "unknown" ? "common.state.unknown" : "common.state.notConnected")
       : value !== undefined
         ? formatRate(value)
-        : sampling
-          ? "Sampling…"
-          : "Unavailable";
+        : t(sampling ? "home.traffic.measuring" : "format.unavailable");
   const available = (
     value: number | undefined,
     format: (n: number) => string,
   ) =>
     connected && value !== undefined
       ? format(value)
-      : connected
-        ? "Unavailable"
-        : local.state === "unknown"
-          ? "Unknown"
-          : "Not connected";
+      : t(connected ? "format.unavailable" : local.state === "unknown" ? "common.state.unknown" : "common.state.notConnected");
   return (
-    <section className="device-traffic" aria-label="This device traffic">
+    <section className="device-traffic" aria-label={t("home.traffic.label")}>
       <div className="section-heading">
-        <h2>This device</h2>
+        <h2>{t("common.noun.thisDevice")}</h2>
         <span className="section-meta">
-          {connected
-            ? "Current tunnel · resets on reconnect"
-            : local.state === "unknown"
-              ? "Counters unavailable"
-              : "No active tunnel to this server"}
+          {t(connected ? "home.traffic.session" : local.state === "unknown" ? "home.traffic.countersUnavailable" : "home.traffic.notConnected")}
         </span>
       </div>
       <div className="device-traffic-grid">
         <Metric
-          label="Download"
+          label={t("home.traffic.download")}
           value={rate(local.rx_bytes_per_second)}
           detail={
             connected
               ? local.byte_counters_available === false
-                ? "Counter reading failed"
-                : `${formatBytes(local.rx_bytes)} received`
+                ? t("home.traffic.counterFailed")
+                : t("home.traffic.received", { amount: formatBytes(local.rx_bytes) })
               : undefined
           }
           icon={<ArrowDown />}
@@ -94,13 +84,13 @@ export function DeviceTraffic({
           }
         />
         <Metric
-          label="Upload"
+          label={t("home.traffic.upload")}
           value={rate(local.tx_bytes_per_second)}
           detail={
             connected
               ? local.byte_counters_available === false
-                ? "Counter reading failed"
-                : `${formatBytes(local.tx_bytes)} sent`
+                ? t("home.traffic.counterFailed")
+                : t("home.traffic.sent", { amount: formatBytes(local.tx_bytes) })
               : undefined
           }
           icon={<ArrowUp />}
@@ -111,16 +101,12 @@ export function DeviceTraffic({
           }
         />
         <Metric
-          label="Tunnel duration"
+          label={t("home.traffic.duration")}
           value={available(tunnelDuration, formatTunnelDuration)}
           detail={
             connected && tunnelDuration === undefined
-              ? unsupported
-                ? "Requires an updated VPN component"
-                : "Session timing could not be read"
-              : connected
-                ? "Current connection duration"
-                : undefined
+              ? t(unsupported ? "home.traffic.needsUpdate" : "home.traffic.durationFailed")
+              : undefined
           }
           icon={<Timer />}
           kind={
@@ -132,10 +118,10 @@ export function DeviceTraffic({
       </div>
       {unsupported && (
         <div className="measurement-update">
-          <p>Live rates and duration require an updated local VPN component.</p>
+          <p>{t("home.traffic.updateNeeded")}</p>
           {onReviewUpdate && (
             <button className="text-button" onClick={onReviewUpdate}>
-              Review update
+              {t("home.componentUpdate.review")}
             </button>
           )}
         </div>
@@ -172,68 +158,56 @@ export function DeviceTrafficDetails({
   const available = (
     value: number | undefined,
     format: (n: number) => string,
-  ) => (connected && value !== undefined ? format(value) : "Unavailable");
+  ) => (connected && value !== undefined ? format(value) : t("format.unavailable"));
   return (
     <details className="metrics-details">
       <summary>
-        Device counters & connection details{" "}
+        {t("home.device.summary")}{" "}
         <CaretDown className="disclosure-chevron" size={17} />
       </summary>
       <dl>
         <div>
-          <dt>Received packets</dt>
+          <dt>{t("home.device.receivedPackets")}</dt>
           <dd>{available(local.rx_packets, formatCount)}</dd>
         </div>
         <div>
-          <dt>Sent packets</dt>
+          <dt>{t("home.device.sentPackets")}</dt>
           <dd>{available(local.tx_packets, formatCount)}</dd>
         </div>
         {address && (
           <div>
-            <dt>Assigned VPN address</dt>
+            <dt>{t("home.details.vpnAddress")}</dt>
             <dd>
-              <CopyValue value={address} label="device VPN address" />
+              <CopyValue value={address} label={t("home.details.vpnAddress")} />
             </dd>
           </div>
         )}
         {connected && (
           <>
             <div>
-              <dt>Private-tunnel latency</dt>
-              <dd>{quality ? `${(quality.latency_micros / 1000).toFixed(1)} ms` : "No current measurement"}</dd>
+              <dt>{t("home.device.latency")}<InfoHint text={t("home.device.latencyInfo")} /></dt>
+              <dd>{quality ? t("format.latency", { value: formatNumber(quality.latency_micros / 1000, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) }) : t("home.device.noMeasurement")}</dd>
             </div>
-            {quality && <div><dt>Probe delivery</dt><dd>{quality.probes_received} / {quality.probes_sent} replies · {(quality.jitter_micros / 1000).toFixed(1)} ms jitter</dd></div>}
+            {quality && <div><dt>{t("home.device.probes")}</dt><dd>{t("home.device.probesValue", { received: quality.probes_received, sent: quality.probes_sent, jitter: t("format.latency", { value: formatNumber(quality.jitter_micros / 1000, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) }) })}</dd></div>}
             <div>
-              <dt>IPv6 handling</dt>
+              <dt>{t("home.device.ipv6")}</dt>
               <dd>{protectionEvidence(local).ipv6}</dd>
             </div>
             <>
                 <div>
-                  <dt>Automatic reconnect</dt>
-                  <dd>
-                    {local.auto_reconnect_enabled
-                      ? "Configured"
-                      : "Disabled for this connection"}
-                  </dd>
+                  <dt>{t("home.device.autoReconnect")}</dt>
+                  <dd>{t(local.auto_reconnect_enabled ? "common.state.enabled" : "common.state.disabled")}</dd>
                 </div>
                 <div>
-                  <dt>Transport fallback</dt>
-                  <dd>
-                    {local.transport_fallback_enabled
-                      ? "Configured"
-                      : "Disabled for this connection"}
-                  </dd>
+                  <dt>{t("home.device.fallback")}</dt>
+                  <dd>{t(local.transport_fallback_enabled ? "common.state.enabled" : "common.state.disabled")}</dd>
                 </div>
             </>
           </>
         )}
       </dl>
       {connected && local.mtu && <MtuDetails mtu={local.mtu} />}
-      {connected && <p className="settings-note">Latency is the average ICMP round trip through this tunnel to the private VPS address. It measures the current VPN path, not internet speed or a management request.</p>}
-      <p className="settings-note">
-        Packets and bytes belong to this device's current tunnel interface.
-        Rates use the latest two local readings; no activity history is saved.
-      </p>
+      <p className="settings-note">{t("home.device.countersNote")}</p>
     </details>
   );
 }

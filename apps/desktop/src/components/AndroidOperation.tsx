@@ -1,3 +1,4 @@
+import { t } from "../i18n";
 import { useEffect, useState } from "react";
 import { invoke, isAndroid, watchAndroidStatus } from "../platform";
 import type { LocalStatusEvent } from "../types";
@@ -10,15 +11,13 @@ export function AndroidOperation() {
   useEffect(() => isAndroid ? watchAndroidStatus(event => setOperation(event.operation)) : undefined, []);
   if (!isAndroid || !operation) return null;
   const running=operation.phase==="running";
-  const message=running ? "An operation is running. You can leave this screen and return to its result."
-    : operation.phase==="completed" ? "The operation completed. Reopen its page to review the current state."
-    : "The operation was interrupted or did not finish. Check the current server or file before retrying the same operation.";
+  const message=t(running ? "app.operation.running" : operation.phase==="completed" ? "app.operation.completed" : "app.operation.interrupted");
   return <div role="status" className="notice-banner">
     <p>{message}</p>
     {!running && <button type="button" className="secondary-button" onClick={() => {
       setDismissError("");
-      void invoke("android_dismiss_operation").then(() => setOperation(null)).catch((reason) => setDismissError(errorMessage(reason, "This notice could not be dismissed. Try again.")));
-    }}>Dismiss</button>}
+      void invoke("android_dismiss_operation").then(() => setOperation(null)).catch((reason) => setDismissError(errorMessage(reason, t("app.operation.dismissFailed"))));
+    }}>{t("app.operation.dismiss")}</button>}
     <InlineError message={dismissError} />
   </div>;
 }

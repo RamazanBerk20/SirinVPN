@@ -1,3 +1,4 @@
+import { t } from "../i18n";
 import { useEffect, type RefObject } from "react";
 import { registerNavigationGuard } from "../lib/navigationGuard";
 
@@ -8,7 +9,7 @@ export function useSecretNavigationGuard(pending: boolean, scope: RefObject<HTML
     const check = () => {
       if (released) return true;
       if (busy) return false;
-      if (!window.confirm("This recovery key cannot be retrieved again. Leave without confirming that you saved it? Any unsaved copy in this view will be cleared.")) return false;
+      if (!window.confirm(t("app.recoveryKeyGuard"))) return false;
       released = true;
       abandon();
       return true;

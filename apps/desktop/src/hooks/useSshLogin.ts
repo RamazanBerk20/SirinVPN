@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { api } from "../api";
 import { validateHost } from "../format";
 import { errorMessage } from "../lib/errors";
+import { t } from "../i18n";
 import type { SavedSshLogin, SshCredentials } from "../types";
 
 export function useSshLogin(host: string, active = true) {
@@ -70,12 +71,7 @@ export function useSshLogin(host: string, active = true) {
         })
         .catch((reason) => {
           if (validContext())
-            setError(
-              errorMessage(
-                reason,
-                "The saved SSH login could not be read. You can enter a login below.",
-              ),
-            );
+            setError(errorMessage(reason, t("ssh.error.readSaved")));
         })
         .finally(() => {
           window.clearTimeout(progressTimer);
@@ -114,12 +110,10 @@ export function useSshLogin(host: string, active = true) {
         current.current !== context ||
         generation.current !== epoch
       )
-        throw new Error(
-          "The SSH operation was cancelled because its destination changed.",
-        );
+        throw new Error(t("ssh.error.cancelled"));
     };
     ensureCurrent();
-    if (!valid) throw new Error("Enter a valid SSH login.");
+    if (!valid) throw new Error(t("ssh.error.invalidLogin"));
     const credentials: SshCredentials = {
       username: username.trim(),
       ssh_port: parsedPort,
@@ -167,9 +161,7 @@ export function useSshLogin(host: string, active = true) {
       clearSecrets();
     } catch (reason) {
       if (current.current === context && generation.current === epoch)
-        setError(
-          errorMessage(reason, "The saved SSH login could not be removed."),
-        );
+        setError(errorMessage(reason, t("ssh.error.forget")));
     } finally {
       if (current.current === context && generation.current === epoch)
         setForgetting(false);

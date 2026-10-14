@@ -1,8 +1,9 @@
-import { isAndroid } from "../../platform";
 import { InlineError } from "../../components/ui";
 import type { useConnectionPreferences } from "./useConnectionPreferences";
 import { preferenceDifferences } from "./connectionPreferences";
 import type { LocalTunnelStatus } from "../../types";
+import { formatList, t } from "../../i18n";
+import { Rich } from "../../i18n/Rich";
 
 export function PreferenceSaveBar({
   preferences,
@@ -22,13 +23,13 @@ export function PreferenceSaveBar({
       <div className="preference-save-bar">
         <span role="status">
           {preferences.saving
-            ? "Saving…"
+            ? t("common.state.saving")
             : preferences.dirty
-              ? "Unsaved connection preferences"
+              ? t("connection.saveBar.unsaved")
               : preferences.notice ||
                 (preferences.ready
-                  ? isAndroid ? "Reconnect applies immediately; other saved preferences apply on your next connection." : "Saved on this device. Applies when you next connect."
-                  : "Loading connection preferences…")}
+                  ? t("connection.saveBar.idle")
+                  : t("common.state.loading"))}
         </span>
         {preferences.dirty && (
           <>
@@ -37,14 +38,14 @@ export function PreferenceSaveBar({
               disabled={preferences.saving}
               onClick={preferences.discard}
             >
-              Discard
+              {t("connection.saveBar.discard")}
             </button>
             <button
               className="primary-button"
               disabled={preferences.saving}
               onClick={() => void preferences.save()}
             >
-              Save preferences
+              {t("connection.saveBar.save")}
             </button>
           </>
         )}
@@ -57,15 +58,18 @@ export function PreferenceSaveBar({
               className="secondary-button"
               onClick={() => void preferences.reload()}
             >
-              Retry loading preferences
+              {t("common.action.retry")}
             </button>
           )}
         </>
       )}
       {pending.length > 0 && (
         <p className="pending-preferences">
-          <strong>Saved for next connection.</strong> Current connection:{" "}
-          {pending.join(" · ")}.
+          <Rich
+            id="connection.saveBar.pending"
+            params={{ differences: formatList(pending, "unit") }}
+            tags={{ strong: (content) => <strong>{content}</strong> }}
+          />
         </p>
       )}
     </div>

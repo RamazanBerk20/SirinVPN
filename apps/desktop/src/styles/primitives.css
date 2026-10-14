@@ -1,0 +1,35 @@
+/* Shared primitives used by every screen. */
+.info-button {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  margin: -2px 0 -2px 4px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  vertical-align: middle;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+/* A larger invisible target keeps the icon small but easy to tap. */
+.info-button::before { content: ""; position: absolute; inset: -11px; }
+.info-button:hover, .info-button[aria-expanded="true"] { color: var(--accent-strong); }
+.info-panel {
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  border-left: 2px solid var(--line-strong);
+  border-radius: 0 8px 8px 0;
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
+  color: var(--muted);
+  font-size: .8125rem;
+  font-weight: 400;
+  line-height: 1.55;
+  text-align: start;
+  white-space: normal;
+}
+.info-panel[hidden] { display: none; }
+/* Destructive menu items read as destructive before hover, which touch screens never have. */
+[role="menuitem"].danger-text, .mobile-sheet-action.danger-text { color: var(--danger); }

@@ -60,18 +60,18 @@ class SirinPlugin(private val activity: Activity) : Plugin(activity) {
         if(command=="android_close_ui") {resolve(invoke);activity.moveTaskToBack(true);return}
         if(command=="android_share_document") {
             val uri=android.net.Uri.parse(args.optString("uri"))
-            if(uri.scheme!="content") {reject(invoke,"Choose an encrypted document first.");return}
+            if(uri.scheme!="content") {reject(invoke,R.string.error_choose_document);return}
             attach()
             link!!.ready.whenComplete {control,error ->
-                if(error!=null) reject(invoke,"The service is unavailable")
-                else execute(control,"authorize_document_share",args.toString(),-1,{reject(invoke,"The service is unavailable")}) {result -> activity.runOnUiThread {
-                    if(JSONObject(result).has("error")) reject(invoke,"Export the encrypted file again before sharing it.")
+                if(error!=null) reject(invoke,R.string.error_service_unavailable)
+                else execute(control,"authorize_document_share",args.toString(),-1,{reject(invoke,R.string.error_service_interrupted)}) {result -> activity.runOnUiThread {
+                    if(JSONObject(result).has("error")) reject(invoke,R.string.error_share_expired)
                     else try {
                         val intent=Intent(Intent.ACTION_SEND).setType("application/octet-stream").putExtra(Intent.EXTRA_STREAM,uri)
                             .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                        intent.clipData=android.content.ClipData.newRawUri("Encrypted SirinVPN backup",uri)
-                        activity.startActivity(Intent.createChooser(intent,"Share encrypted file"));resolve(invoke)
-                    } catch (_:Exception) {reject(invoke,"This document provider could not share the file.")}
+                        intent.clipData=android.content.ClipData.newRawUri(activity.getString(R.string.share_clip_label),uri)
+                        activity.startActivity(Intent.createChooser(intent,activity.getString(R.string.share_chooser_title)));resolve(invoke)
+                    } catch (_:Exception) {reject(invoke,R.string.error_share_failed)}
                 }}
             };return
         }
@@ -89,20 +89,20 @@ class SirinPlugin(private val activity: Activity) : Plugin(activity) {
         }
         if (command == "install_release_update" && args.optJSONObject("input")?.optBoolean("baseline_only")!=true && !activity.packageManager.canRequestPackageInstalls()) {
             activity.startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,android.net.Uri.parse("package:${activity.packageName}")))
-            reject(invoke,"Allow SirinVPN to request Android package installation, then retry the reviewed update.");return
+            reject(invoke,R.string.error_install_permission);return
         }
         if (command == "android_choose_applications") {
             val previous = args.optJSONObject("selection")
             val packages = activity.packageManager.getInstalledApplications(0).filter { it.packageName != activity.packageName && it.enabled }
                 .sortedBy { activity.packageManager.getApplicationLabel(it).toString().lowercase() }
             val selected = BooleanArray(packages.size) { i -> previous?.optJSONArray("packages")?.let { values -> (0 until values.length()).any { values.getString(it) == packages[i].packageName } } == true }
-            android.app.AlertDialog.Builder(activity).setTitle("Application routing")
-                .setItems(arrayOf("Only selected applications use VPN","Selected applications bypass VPN")) { _,mode ->
-                    val dialog = android.app.AlertDialog.Builder(activity).setTitle(if (mode==0) "Use VPN" else "Bypass VPN")
-                        .setMultiChoiceItems(packages.map { "${activity.packageManager.getApplicationLabel(it)}\n${it.packageName}" }.toTypedArray(),selected) { _,which,checked -> selected[which]=checked }
-                        .setPositiveButton("Use selection") { _,_ -> resolve(invoke,JSONObject().put("mode",if(mode==0) "include" else "exclude")
+            android.app.AlertDialog.Builder(activity).setTitle(R.string.routing_title)
+                .setItems(arrayOf(activity.getString(R.string.routing_mode_include),activity.getString(R.string.routing_mode_exclude))) { _,mode ->
+                    val dialog = android.app.AlertDialog.Builder(activity).setTitle(if (mode==0) R.string.routing_include_title else R.string.routing_exclude_title)
+                        .setMultiChoiceItems(packages.map { activity.getString(R.string.routing_app_row,activity.packageManager.getApplicationLabel(it),it.packageName) }.toTypedArray(),selected) { _,which,checked -> selected[which]=checked }
+                        .setPositiveButton(R.string.routing_use_selection) { _,_ -> resolve(invoke,JSONObject().put("mode",if(mode==0) "include" else "exclude")
                             .put("packages",org.json.JSONArray(packages.filterIndexed { i,_ -> selected[i] }.map { it.packageName }))) }
-                        .setNegativeButton("Cancel") { _,_ -> resolve(invoke) }.create()
+                        .setNegativeButton(R.string.dialog_cancel) { _,_ -> resolve(invoke) }.create()
                     dialog.setOnCancelListener { resolve(invoke) }; dialog.show()
                 }.setOnCancelListener { resolve(invoke) }.show()
             return
@@ -111,11 +111,11 @@ class SirinPlugin(private val activity: Activity) : Plugin(activity) {
         if (command == "android_show_secret" || command == "android_copy_secret") {
             attach()
             link!!.ready.whenComplete { control,error ->
-                if (error != null) { reject(invoke,"Protected value unavailable"); return@whenComplete }
-                execute(control,"reveal_secret",JSONObject().put("reference",args.getString("reference")).toString(),-1,{reject(invoke,"Protected value unavailable")}) { result ->
+                if (error != null) { reject(invoke,R.string.error_protected_value_unavailable); return@whenComplete }
+                execute(control,"reveal_secret",JSONObject().put("reference",args.getString("reference")).toString(),-1,{reject(invoke,R.string.error_protected_value_unavailable)}) { result ->
                     val response=JSONObject(result)
                     activity.runOnUiThread {
-                        if (response.has("error")) reject(invoke,"Protected value expired")
+                        if (response.has("error")) reject(invoke,R.string.error_protected_value_expired)
                         else { ProtectedValue.show(activity,response.getJSONObject("ok"),command == "android_copy_secret"); resolve(invoke) }
                     }
                 }
@@ -127,24 +127,24 @@ class SirinPlugin(private val activity: Activity) : Plugin(activity) {
                 importantForAutofill = android.view.View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS
                 filters = arrayOf(android.text.InputFilter.LengthFilter(131072))
             }
-            val dialog = android.app.AlertDialog.Builder(activity).setTitle(args.optString("label","Protected value"))
-                .setView(field).setPositiveButton("Use value",null).setNegativeButton("Cancel") { _,_ -> reject(invoke,"Cancelled") }
-                .setNeutralButton("Clear value") { _,_ -> field.text?.clear();resolve(invoke,"") }.create()
-            dialog.setOnCancelListener { reject(invoke,"Cancelled") }
+            val dialog = android.app.AlertDialog.Builder(activity).setTitle(args.optString("label",activity.getString(R.string.protected_value_title)))
+                .setView(field).setPositiveButton(R.string.secret_input_use,null).setNegativeButton(R.string.dialog_cancel) { _,_ -> reject(invoke,R.string.error_entry_cancelled) }
+                .setNeutralButton(R.string.secret_input_clear) { _,_ -> field.text?.clear();resolve(invoke,"") }.create()
+            dialog.setOnCancelListener { reject(invoke,R.string.error_entry_cancelled) }
             dialog.setOnDismissListener {field.text?.clear()}
             dialog.window?.addFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE)
             dialog.show()
             dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener {
                 val minimum=args.optInt("minimumLength",0).coerceIn(0,1024)
-                if(field.text.length<minimum) field.error="Use at least $minimum characters."
+                if(field.text.length<minimum) field.error=activity.resources.getQuantityString(R.plurals.secret_input_minimum_length,minimum,minimum)
                 else {send(invoke,"remember_secret",JSONObject().put("value",field.text.toString()));field.text?.clear();dialog.dismiss()}
             }
             return
         }
         if (command == "android_confirm") {
-            val dialog = android.app.AlertDialog.Builder(activity).setTitle("SirinVPN")
-                .setMessage(args.getString("message")).setPositiveButton("Confirm") { _,_ -> resolve(invoke,true) }
-                .setNegativeButton("Cancel") { _,_ -> resolve(invoke,false) }.create()
+            val dialog = android.app.AlertDialog.Builder(activity).setTitle(R.string.app_name)
+                .setMessage(args.getString("message")).setPositiveButton(R.string.dialog_confirm) { _,_ -> resolve(invoke,true) }
+                .setNegativeButton(R.string.dialog_cancel) { _,_ -> resolve(invoke,false) }.create()
             dialog.setOnCancelListener { resolve(invoke,false) }; dialog.show(); return
         }
         if (command == "android_open_document" || command == "android_save_document") {
@@ -171,14 +171,14 @@ class SirinPlugin(private val activity: Activity) : Plugin(activity) {
         }
         if (command == "android_add_tile") {
             if (Build.VERSION.SDK_INT >= 33) activity.getSystemService(StatusBarManager::class.java).requestAddTileService(
-                ComponentName(activity,SirinTileService::class.java),"SirinVPN",Icon.createWithResource(activity,R.drawable.ic_sirin_vpn),activity.mainExecutor
+                ComponentName(activity,SirinTileService::class.java),activity.getString(R.string.app_name),Icon.createWithResource(activity,R.drawable.ic_sirin_vpn),activity.mainExecutor
             ) { resolve(invoke,it) }
-            else { resolve(invoke,"Open Quick Settings, tap Edit and drag SirinVPN into the active tiles.") }
+            else { resolve(invoke,activity.getString(R.string.tile_add_instructions)) }
             return
         }
         if (command == "android_snapshot") {
             attach(); link!!.ready.whenComplete { control,error ->
-                if (error != null) reject(invoke,"The service is unavailable") else resolve(invoke,JSONObject(control.snapshot()))
+                if (error != null) reject(invoke,R.string.error_service_unavailable) else resolve(invoke,JSONObject(control.snapshot()))
             }; return
         }
         val startsVpn = command in setOf("connect_server","connect_server_with_policy","connect_saved","resume_server","reconnect_server","join_server","recover_owner_access") || command=="set_wifi_policy" && args.optJSONObject("policy")?.optBoolean("enabled")==true
@@ -207,27 +207,27 @@ class SirinPlugin(private val activity: Activity) : Plugin(activity) {
         else resolve(invoke,notificationPermission())
     }
     private fun testNotification(invoke:Invoke) {
-        if(notificationPermission()!="granted") {reject(invoke,"Notifications are blocked. Allow SirinVPN in Android notification settings.");return}
+        if(notificationPermission()!="granted") {reject(invoke,R.string.error_notifications_blocked);return}
         VpnNotifications.channels(activity)
         activity.getSystemService(NotificationManager::class.java).notify(71,
             android.app.Notification.Builder(activity,VpnNotifications.CHANNEL).setSmallIcon(R.drawable.ic_sirin_vpn)
                 .setBadgeIconType(android.app.Notification.BADGE_ICON_NONE)
-                .setContentTitle("SirinVPN").setContentText("Android notifications are available.").setAutoCancel(true)
+                .setContentTitle(activity.getString(R.string.app_name)).setContentText(activity.getString(R.string.notification_test_text)).setAutoCancel(true)
                 .setContentIntent(VpnNotifications.openApp(activity)).build())
         resolve(invoke)
     }
     @PermissionCallback private fun scanGranted(invoke:Invoke) {
-        if(activity.checkSelfPermission(Manifest.permission.CAMERA)!=PackageManager.PERMISSION_GRANTED) {reject(invoke,"Camera permission was not granted. You can enter the code securely instead.");return}
-        if (scanner != null) { reject(invoke,"A scanner is already open."); return }
+        if(activity.checkSelfPermission(Manifest.permission.CAMERA)!=PackageManager.PERMISSION_GRANTED) {reject(invoke,R.string.error_camera_denied);return}
+        if (scanner != null) { reject(invoke,R.string.error_scanner_open); return }
         scanner = CodeScanner(activity) { value ->
             scanner = null
-            if (value == null) reject(invoke,"Scanning cancelled. You can enter the code securely instead.")
-            else if (value.length > 131072) reject(invoke,"Code is too large")
+            if (value == null) reject(invoke,R.string.error_scan_cancelled)
+            else if (value.length > 131072) reject(invoke,R.string.error_code_too_large)
             else send(invoke,"remember_secret",JSONObject().put("value",value))
         }.also { it.show() }
     }
     @ActivityCallback private fun vpnConsent(invoke: Invoke, result: ActivityResult) {
-        if (result.resultCode != Activity.RESULT_OK) { reject(invoke,"VPN permission was not granted."); return }
+        if (result.resultCode != Activity.RESULT_OK) { reject(invoke,R.string.error_vpn_permission_denied); return }
         val request = invoke.getArgs()
         send(invoke,request.getString("command")!!,request.optJSONObject("args") ?: JSONObject())
     }
@@ -244,11 +244,11 @@ class SirinPlugin(private val activity: Activity) : Plugin(activity) {
     private fun send(invoke: Invoke, command: String, args: JSONObject) {
         attach()
         link!!.ready.whenComplete { control,error ->
-            if (error != null) { reject(invoke,"The Android service is unavailable."); return@whenComplete }
+            if (error != null) { reject(invoke,R.string.error_service_unavailable); return@whenComplete }
             val expected = try {
                 if (command in setOf("disconnect_server","cancel_connection","reconnect_server")) JSONObject(control.snapshot()).getLong("generation") else -1L
-            } catch (_: Exception) { reject(invoke,"The service connection was interrupted."); return@whenComplete }
-            execute(control,command,args.toString(),expected,{reject(invoke,"The service connection was interrupted.")}) { result -> invoke.resolve(JSObject(result)) }
+            } catch (_: Exception) { reject(invoke,R.string.error_service_interrupted); return@whenComplete }
+            execute(control,command,args.toString(),expected,{reject(invoke,R.string.error_service_interrupted)}) { result -> invoke.resolve(JSObject(result)) }
         }
     }
     /**
@@ -276,6 +276,7 @@ class SirinPlugin(private val activity: Activity) : Plugin(activity) {
     // Expected, reviewed user-facing errors share the service response envelope.
     // Plugin transport rejection is reserved for an unavailable bridge.
     private fun reject(invoke: Invoke, message: String) { invoke.resolve(JSObject().put("error",message)) }
+    private fun reject(invoke: Invoke, @androidx.annotation.StringRes message: Int) = reject(invoke,activity.getString(message))
     private fun resolve(invoke: Invoke, value: Any = JSONObject.NULL) { invoke.resolve(JSObject().put("ok",value)) }
     private fun notificationPermission(): String = if (activity.getSystemService(NotificationManager::class.java).areNotificationsEnabled()) "granted" else "denied"
 }

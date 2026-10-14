@@ -78,9 +78,7 @@ html[data-window-chrome="custom"] .dialog-content.dialog-layout {
 .dialog-layout .replacement-option strong,
 .dialog-layout .preference-checkbox,
 .dialog-layout .field-help,
-.dialog-layout .field-label,
 .dialog-layout .field > span,
-.dialog-layout .field-hint,
 .dialog-layout .field small,
 .dialog-layout .uninstall-progress p,
 .dialog-layout .backup-success p {

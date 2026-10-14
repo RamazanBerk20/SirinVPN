@@ -71,7 +71,7 @@ impl ReleaseUpdateRuntime {
     fn lock(&self) -> Result<MutexGuard<'_, Runtime>, String> {
         self.inner
             .lock()
-            .map_err(|_| "The current release check is unavailable. Reopen SirinVPN.".into())
+            .map_err(|_| "Update status is unavailable. Reopen SirinVPN.".into())
     }
 }
 
@@ -81,11 +81,11 @@ pub(crate) async fn check_release_update(
     input: CheckReleaseUpdateInput,
 ) -> Result<ReleaseUpdateCandidate, String> {
     sirinvpn_release_fetch::validate_source_url(&input.source)
-        .map_err(|_| "Enter an HTTPS release directory ending in '/'.".to_owned())?;
+        .map_err(|_| "Enter an HTTPS folder URL ending in /.".to_owned())?;
     {
         let mut state = runtime.lock()?;
         if state.busy {
-            return Err("Another release operation is running.".into());
+            return Err("Another update is in progress.".into());
         }
         state.busy = true;
         state.pending = None;
@@ -94,9 +94,9 @@ pub(crate) async fn check_release_update(
         let temporary = tempfile::Builder::new()
             .prefix("sirinvpn-release-")
             .tempdir()
-            .map_err(|_| "A private release directory could not be created.".to_owned())?;
+            .map_err(|_| "Couldn’t create a private download folder.".to_owned())?;
         sirinvpn_platform::files::restrict_temporary_directory(&temporary)
-            .map_err(|_| "The release directory could not be secured.".to_owned())?;
+            .map_err(|_| "Couldn’t make the download folder private.".to_owned())?;
         let fetched = sirinvpn_release_fetch::fetch_release(ReleaseFetchRequest {
             source: input.source,
             expected_channel: input.channel,
@@ -106,7 +106,7 @@ pub(crate) async fn check_release_update(
         })
         .await
         .map_err(|_| {
-            "The source did not provide an authenticated Windows release for this computer."
+            "No verified release for this device was found at this source. Check the URL and channel."
                 .to_owned()
         })?;
         let candidate = summary(&fetched)?;
@@ -133,20 +133,20 @@ pub(crate) async fn install_release_update(
     input: InstallReleaseUpdateInput,
 ) -> Result<ReleaseUpdateCandidate, String> {
     if !input.confirmed {
-        return Err("Confirm this authenticated Windows update first.".into());
+        return Err("Confirm installing this verified Windows update first.".into());
     }
     let (directory, candidate, digest) = {
         let mut state = runtime.lock()?;
         if state.busy {
-            return Err("Another release operation is running.".into());
+            return Err("Another update is in progress.".into());
         }
         let pending = state
             .pending
             .as_ref()
-            .ok_or("Check an authenticated release first.")?;
+            .ok_or("Check for a verified release first.")?;
         let candidate = summary(&pending.fetched)?;
         if !candidate.newer_than_running || !candidate.windows_install_available {
-            return Err("This candidate cannot update the installed Windows application.".into());
+            return Err("This release can’t update the installed Windows app.".into());
         }
         let bundle = VerifiedReleaseBundle::open(
             &pending.fetched.bundle_directory,
@@ -169,7 +169,7 @@ pub(crate) async fn install_release_update(
         let mut state = runtime.lock()?;
         state.busy = false;
         outcome.map_err(|_| "The Windows update was interrupted.".to_owned())?
-            .map_err(|_| "Windows did not authorize or finish staging the update. Retry the same authenticated release.".to_owned())?;
+            .map_err(|_| "Windows didn’t approve or prepare the update. Try installing this release again.".to_owned())?;
         state.pending.take()
     };
     // The privileged worker now owns its own verified copy. Remove the user's
@@ -185,7 +185,7 @@ pub(crate) fn discard_release_update(
 ) -> Result<(), String> {
     let mut state = runtime.lock()?;
     if state.busy {
-        return Err("Wait for the current release operation to finish.".into());
+        return Err("Wait for the current update to finish.".into());
     }
     state.pending = None;
     Ok(())

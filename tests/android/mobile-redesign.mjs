@@ -43,12 +43,12 @@ for(const [width,height,scale] of [[390,844,1],[320,640,1],[390,844,2]]) {
     await click(`.mobile-add-server .mobile-list-row:nth-child(${index+1})`);
     assert.equal(await evaluate('document.querySelectorAll("[role=dialog]").length',9224),1);
     await shot(prefix+'-'+kind);
-    await click('[aria-label="Back to connection options"]');
+    await click('[aria-label="Back to options"]');
   }
   await mount();
   assert.equal(await evaluate('!!document.querySelector(".server-metrics")',9224),false);
   await shot(prefix+'-home');
-  await click('.mobile-home-links button:last-child');await shot(prefix+'-connection-details');
+  await click('.home-links button:last-child');await shot(prefix+'-connection-details');
   await click('.mobile-page-header button');
   assert.equal(await evaluate('location.hash',9224),'#home');
   await call('act',{text:'Settings'});await shot(prefix+'-settings');
@@ -60,7 +60,7 @@ for(const [width,height,scale] of [[390,844,1],[320,640,1],[390,844,2]]) {
   }
   await mount({profileCount:4,longNames:true});await call('act',{text:'Servers'});await shot(prefix+'-servers');
   await click('.collection-row > button:last-child');await shot(prefix+'-server-actions');
-  await call('act',{text:'Rename locally'});await shot(prefix+'-rename');
+  await call('act',{text:'Rename'});await shot(prefix+'-rename');
   await mount();await call('act',{text:'Devices'});await shot(prefix+'-devices-owner');
   await click('.device-row-header > .icon-button');await shot(prefix+'-device-actions');
   await mount({role:'member'});await call('act',{text:'Devices'});await shot(prefix+'-devices-member');

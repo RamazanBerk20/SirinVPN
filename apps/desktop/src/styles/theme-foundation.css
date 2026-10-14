@@ -123,10 +123,7 @@ summary {
 .server-list {
   flex: initial;
 }
-.sidebar-update-wrap {
-  margin-top: auto;
-  padding-top: 170px;
-}
+
 .sidebar-foot {
   font-size: 10px;
   border: 0;
@@ -139,37 +136,7 @@ summary {
 .workspace::before {
   background: radial-gradient(ellipse at 70% 0, #123e8420, transparent 65%);
 }
-.workspace-topline {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  border-bottom: 1px solid #23365b;
-  margin: 0 -30px 30px;
-  padding: 18px 30px;
-  color: #a3bae7;
-  font-size: 9px;
-  letter-spacing: 0.22em;
-}
-.workspace-topline b {
-  color: #46759e;
-  margin: 0 8px;
-}
-.topline-status {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  letter-spacing: 0;
-  font-size: 11px;
-}
-.online-dot {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  background: var(--success);
-  border-radius: 50%;
-  box-shadow: 0 0 12px #00ecaa65;
-}
+
 .workspace-header {
   display: flex;
   flex-wrap: wrap;
@@ -185,11 +152,7 @@ summary {
   line-height: 1.2;
   letter-spacing: -0.035em;
 }
-.workspace-status {
-  font-size: 11px;
-  border-radius: 20px;
-  padding: 7px 13px;
-}
+
 .endpoint {
   margin-top: 9px;
   font-size: 11px;
@@ -200,8 +163,7 @@ summary {
   color: #829eff;
   letter-spacing: 0.22em;
 }
-.primary-button,
-.connect-button {
+.primary-button {
   background: var(--gradient);
   border: 1px solid #6f98ff;
   border-radius: 9px;

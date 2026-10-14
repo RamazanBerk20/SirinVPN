@@ -1,6 +1,8 @@
 import { Field } from "../../components/ui";
 import { validateHost } from "../../format";
 import type { ServerProfile, TransportSetup } from "../../types";
+import { useInfoHint } from "../../components/InfoHint";
+import { t } from "../../i18n";
 
 export interface TransportDraft {
   publicHost: string;
@@ -59,30 +61,32 @@ export function TransportSetupFields({ value, onChange, existing = false }: {
   value: TransportDraft; onChange: (value: TransportDraft) => void; existing?: boolean;
 }) {
   const update = <K extends keyof TransportDraft>(key: K, next: TransportDraft[K]) => onChange({ ...value, [key]: next });
+  const [portsHint, portsPanel] = useInfoHint(t("ssh.transport.portsInfo"), t("ssh.transport.portsInfoLabel"));
+  const [httpsHint, httpsPanel] = useInfoHint(t("ssh.transport.httpsInfo"), t("ssh.transport.httpsInfoLabel"));
   return <details className="advanced-fields">
-    <summary>Public addresses, transport ports and HTTPS</summary>
-    <Field label="Public VPN address (optional)"><input placeholder="Defaults to the SSH address" value={value.publicHost} onChange={(event) => update("publicHost", event.target.value)} autoCapitalize="none" spellCheck={false} /></Field>
-    <Field label="Alternate addresses (optional)"><textarea rows={3} placeholder="Up to three hostnames or IP addresses" value={value.alternateHosts} onChange={(event) => update("alternateHosts", event.target.value)} autoCapitalize="none" spellCheck={false} /></Field>
-    <p className="settings-note">Every address must reach this same VPS and use the same transport ports. Clients verify the server’s identity at each address.</p>
+    <summary>{t("ssh.transport.summary")}</summary>
+    <Field label={t("ssh.transport.publicHost")}><input placeholder={t("ssh.transport.publicHostPlaceholder")} value={value.publicHost} onChange={(event) => update("publicHost", event.target.value)} autoCapitalize="none" spellCheck={false} /></Field>
+    <Field label={t("ssh.transport.alternateHosts")}><textarea rows={3} placeholder={t("ssh.transport.alternateHostsPlaceholder")} value={value.alternateHosts} onChange={(event) => update("alternateHosts", event.target.value)} autoCapitalize="none" spellCheck={false} /></Field>
+    <p className="settings-note">{t("ssh.transport.alternateNote")}</p>
     <div className="field-grid">
-      <Field label="Direct UDP port"><input inputMode="numeric" value={value.wireguard} onChange={(event) => update("wireguard", event.target.value)} /></Field>
-      <Field label="Obfuscated UDP port"><input inputMode="numeric" value={value.obfuscated} onChange={(event) => update("obfuscated", event.target.value)} /></Field>
-      <Field label="TCP and TLS port"><input inputMode="numeric" value={value.tcpTls} onChange={(event) => update("tcpTls", event.target.value)} /></Field>
+      <Field label={t("ssh.transport.directPort")}><input inputMode="numeric" value={value.wireguard} onChange={(event) => update("wireguard", event.target.value)} /></Field>
+      <Field label={t("ssh.transport.obfuscatedPort")}><input inputMode="numeric" value={value.obfuscated} onChange={(event) => update("obfuscated", event.target.value)} /></Field>
+      <Field label={t("ssh.transport.tcpTlsPort")}><input inputMode="numeric" value={value.tcpTls} onChange={(event) => update("tcpTls", event.target.value)} /></Field>
     </div>
-    <p className="settings-note">TCP fallback and TLS share one listener. Open the chosen ports in your VPS provider’s firewall. Private DNS and management ports are reserved.</p>
-    <p className="settings-note">The original TLS port stays open for authenticated endpoint updates when you change the transport port. Keep that port allowed in the provider firewall.</p>
-    <label className="checkbox-row"><input type="checkbox" checked={value.https} onChange={(event) => update("https", event.target.checked)} />Use HTTPS mode</label>
+    <p className="settings-note">{t("ssh.transport.portsNote")}{portsHint}</p>
+    {portsPanel}
+    <label className="checkbox-row"><input type="checkbox" checked={value.https} onChange={(event) => update("https", event.target.checked)} />{t("ssh.transport.https")}</label>
     {value.https && <>
       <div className="field-grid">
-        <Field label="HTTPS hostname"><input placeholder="vpn.example.org" value={value.hostname} onChange={(event) => update("hostname", event.target.value)} autoCapitalize="none" spellCheck={false} /></Field>
-        <Field label="HTTPS path"><input value={value.path} onChange={(event) => update("path", event.target.value)} autoCapitalize="none" spellCheck={false} /></Field>
+        <Field label={t("ssh.transport.hostname")}><input placeholder={t("ssh.transport.hostnamePlaceholder")} value={value.hostname} onChange={(event) => update("hostname", event.target.value)} autoCapitalize="none" spellCheck={false} /></Field>
+        <Field label={t("ssh.transport.path")}><input value={value.path} onChange={(event) => update("path", event.target.value)} autoCapitalize="none" spellCheck={false} /></Field>
       </div>
-      <p className="settings-note">Use a hostname you control. A pinned certificate is generated by default. To present a certificate from your certificate authority, enter both PEM paths already on the VPS.</p>
-      <Field label="Certificate chain path on VPS (optional)"><input placeholder="/etc/letsencrypt/live/vpn.example.org/fullchain.pem" value={value.certificate} onChange={(event) => update("certificate", event.target.value)} autoCapitalize="none" spellCheck={false} /></Field>
-      <Field label="Certificate private key path on VPS (optional)"><input placeholder="/etc/letsencrypt/live/vpn.example.org/privkey.pem" value={value.privateKey} onChange={(event) => update("privateKey", event.target.value)} autoCapitalize="none" spellCheck={false} /></Field>
-      <p className="settings-note">The VPS keeps its own copy of the certificate. Import renewals through this screen so clients receive the new pin. HTTPS behavior does not guarantee access through every restrictive network.</p>
+      <p className="settings-note">{t("ssh.transport.httpsNote")}{httpsHint}</p>
+      {httpsPanel}
+      <Field label={t("ssh.transport.certificate")}><input placeholder={t("ssh.transport.certificatePlaceholder")} value={value.certificate} onChange={(event) => update("certificate", event.target.value)} autoCapitalize="none" spellCheck={false} /></Field>
+      <Field label={t("ssh.transport.privateKey")}><input placeholder={t("ssh.transport.privateKeyPlaceholder")} value={value.privateKey} onChange={(event) => update("privateKey", event.target.value)} autoCapitalize="none" spellCheck={false} /></Field>
     </>}
-    {existing && <p className="settings-note">Before changing ports or certificates, cancel active invitations and finish any enrollment or key rotation. Changes take effect after the guarded repair commits.</p>}
-    {!transportDraftIsValid(value) && <p className="settings-note" role="status">Check the port numbers, hostname, path, and matching certificate paths.</p>}
+    {existing && <p className="settings-note">{t("ssh.transport.existingNote")}</p>}
+    {!transportDraftIsValid(value) && <p className="settings-note" role="status">{t("ssh.transport.invalid")}</p>}
   </details>;
 }

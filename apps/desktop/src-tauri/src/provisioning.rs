@@ -36,7 +36,7 @@ pub(super) async fn probe_host_key(input: HostKeyInput) -> Result<String, String
         .map_err(safe_error)
     })
     .await
-    .map_err(|_| "The SSH identity check was interrupted.".to_owned())?
+    .map_err(|_| "Checking the server’s SSH key was interrupted. Try again.".to_owned())?
 }
 
 #[tauri::command]
@@ -47,7 +47,7 @@ pub(super) async fn provision_server(
     let paths = state.paths.clone();
     tauri::async_runtime::spawn_blocking(move || provision_blocking(paths, input))
         .await
-        .map_err(|_| "The installation worker was interrupted.".to_owned())?
+        .map_err(|_| "Server setup was interrupted.".to_owned())?
 }
 
 pub(super) fn provision_blocking(
@@ -96,7 +96,7 @@ pub(super) fn provision_blocking(
         Ok(outcome) => outcome,
         Err(error) => {
             if secrets.delete(&identity_reference).is_err() {
-                return Err("Provisioning failed; credential cleanup is incomplete. Unlock the secure store and retry credential cleanup.".into());
+                return Err("Server setup failed, and its new key couldn’t be deleted. Unlock secure storage and retry cleanup.".into());
             }
             return Err(error.to_string());
         }
@@ -145,10 +145,10 @@ pub(super) fn take_ssh_authentication(
                 .take()
                 .filter(|value| !value.is_empty())
                 .map(PathBuf::from)
-                .ok_or_else(|| "Enter the local SSH private key path.".to_owned())?,
+                .ok_or_else(|| "Enter the path to your SSH private key.".to_owned())?,
             passphrase: private_key_passphrase.take().map(Zeroizing::new),
         },
-        _ => return Err("Select a supported SSH authentication method.".to_owned()),
+        _ => return Err("Choose a supported SSH sign-in method.".to_owned()),
     })
 }
 
@@ -162,7 +162,7 @@ pub(super) async fn uninstall_server(
     let server_id = input.server_id.clone();
     tauri::async_runtime::spawn_blocking(move || uninstall_blocking(paths, input))
         .await
-        .map_err(|_| "The uninstall worker was interrupted.".to_owned())??;
+        .map_err(|_| "Uninstalling was interrupted.".to_owned())??;
     crate::connection_preferences::forget(&app, &server_id)
 }
 
@@ -176,7 +176,7 @@ pub(super) fn uninstall_blocking(
         .map_err(|_| "The local server ID is invalid.".to_owned())?;
     let status = invoke_helper("status", None).map_err(safe_error)?;
     if status.state != ConnectionState::Disconnected {
-        return Err("Disconnect SirinVPN before uninstalling it from a VPS.".to_owned());
+        return Err("Disconnect before uninstalling SirinVPN from the VPS.".to_owned());
     }
     let profile = paths
         .profile_store()
@@ -184,10 +184,10 @@ pub(super) fn uninstall_blocking(
         .map_err(safe_error)?
         .into_iter()
         .find(|profile| profile.id == id)
-        .ok_or_else(|| "The local server profile was not found.".to_owned())?;
+        .ok_or_else(|| "This server is no longer saved on this device.".to_owned())?;
     if has_pending_key_rotation(&paths, id).map_err(safe_error)? {
         return Err(
-            "Complete or resume this device's pending key rotation before uninstalling its VPS."
+            "Finish this device’s key rotation before uninstalling SirinVPN from the VPS."
                 .to_owned(),
         );
     }
@@ -214,11 +214,11 @@ pub(super) fn uninstall_blocking(
         .secret_store()
         .delete(&profile.identity_reference)
         .map_err(|_| {
-            "SirinVPN was removed from the VPS, but its local device key could not be deleted. Use local removal to retry cleanup."
+            "SirinVPN was removed from the VPS, but this device’s key couldn’t be deleted. Use Remove from this device to finish."
                 .to_owned()
         })?;
     paths.profile_store().remove(id).map_err(|_| {
-        "SirinVPN was removed from the VPS, but its local profile could not be deleted. Use local removal to retry cleanup."
+        "SirinVPN was removed from the VPS, but this device couldn’t delete the saved server. Use Remove from this device to finish."
             .to_owned()
     })?;
     let _ = paths.network_policy_store().forget_server(id);
@@ -233,7 +233,7 @@ pub(super) async fn repair_server(
     let paths = state.paths.clone();
     tauri::async_runtime::spawn_blocking(move || repair_blocking(paths, input))
         .await
-        .map_err(|_| "The repair worker was interrupted.".to_owned())?
+        .map_err(|_| "The VPS repair was interrupted.".to_owned())?
 }
 
 pub(super) fn repair_blocking(
@@ -241,7 +241,7 @@ pub(super) fn repair_blocking(
     mut input: RepairInput,
 ) -> Result<RepairResult, String> {
     if !input.confirmed {
-        return Err("Confirm the guarded VPS repair before continuing.".to_owned());
+        return Err("Confirm the VPS repair first.".to_owned());
     }
     if let Some(dns_upstream) = &input.dns_upstream {
         validate_dns_upstream(dns_upstream).map_err(|error| error.to_string())?;
@@ -251,7 +251,7 @@ pub(super) fn repair_blocking(
     }
     let status = invoke_helper("status", None).map_err(safe_error)?;
     if status.state != ConnectionState::Disconnected {
-        return Err("Disconnect SirinVPN before repairing or updating its VPS.".to_owned());
+        return Err("Disconnect before repairing or updating the VPS.".to_owned());
     }
     let mut profile = find_profile(&paths, &input.server_id)?;
     if profile.role != ServerRole::Owner {
@@ -310,7 +310,7 @@ pub(super) fn repair_blocking(
         profile.tcp_fallback = outcome.tcp_fallback.clone();
         profile.tls_like = outcome.tls_like.clone();
         paths.profile_store().upsert(profile).map_err(|_| {
-            "The VPS was repaired, but its local capabilities could not be saved. Repair again before connecting."
+            "The VPS was repaired, but this device couldn’t save its new settings. Repair again before connecting."
                 .to_owned()
         })?;
     }

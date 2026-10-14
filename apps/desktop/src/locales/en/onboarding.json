@@ -1,0 +1,140 @@
+{
+  "choice": {
+    "listLabel": "How to add a server",
+    "back": "Back to options",
+    "privacy": "No account. No telemetry.",
+    "join": {
+      "title": "Use an invitation",
+      "summary": "Scan a QR code or enter your code"
+    },
+    "provision": {
+      "title": "Set up my VPS",
+      "summary": "Create a VPN on your own server"
+    },
+    "backup": {
+      "title": "Restore a backup",
+      "summary": "Import an encrypted device backup"
+    },
+    "recovery": {
+      "title": "Use a recovery key",
+      "summary": "Recover access to your server"
+    }
+  },
+  "mode": {
+    "provision": "My VPS",
+    "join": "Invitation",
+    "backup": "Backup",
+    "recovery": "Recovery key"
+  },
+  "backup": {
+    "title": "Restore this device",
+    "summary": "Adds a server back to this device. The server itself isn’t contacted.",
+    "file": "Backup file",
+    "fileHint": "Servers already on this device are never overwritten",
+    "filePlaceholder": "Choose a .sirinvpn-backup file",
+    "choose": "Choose file",
+    "pickerTitle": "Open a SirinVPN backup",
+    "fileType": "SirinVPN backup",
+    "password": "Backup password",
+    "submit": "Restore backup",
+    "submitting": "Restoring…",
+    "error": {
+      "picker": "Couldn’t open the file picker. Try again.",
+      "restore": "Couldn’t restore the backup. Check the file and password."
+    }
+  },
+  "invitation": {
+    "access": {
+      "owner": "Owner access",
+      "admin": "Admin access",
+      "member": "Member access"
+    },
+    "expires": "Expires {{date}}",
+    "addsDevice": "Adds a device to an existing member. Access stays the same.",
+    "deviceName": "Device name",
+    "presetName": "The inviter named this device <strong>{{name}}</strong>.",
+    "identity": "Verified server identity",
+    "trust": "Join only if you expected this invitation from someone you trust.",
+    "error": "Couldn’t verify this invitation. Ask for a new one."
+  },
+  "join": {
+    "title": "Join a server",
+    "summary": "Your private key is created on this device and never leaves it.",
+    "code": "Invitation code",
+    "codeHint": "Keep it private, like a password",
+    "review": "Review invitation",
+    "submit": "Join server",
+    "submitting": "Joining…",
+    "defaultDeviceNameAndroid": "My Android device",
+    "defaultDeviceNameDesktop": "My computer",
+    "error": "This invitation didn’t work. It may be expired, used or revoked; ask for a new one."
+  },
+  "recover": {
+    "title": "Recover Owner access",
+    "summary": "Disconnect the VPN first, then enter your recovery key.",
+    "key": "Recovery key",
+    "keyHint": "Starts with sirr1. Nothing is sent until you confirm.",
+    "file": {
+      "toggle": "Open a recovery key file",
+      "password": "File password",
+      "open": "Open file",
+      "type": "SirinVPN recovery key"
+    },
+    "serverIdentity": "Server identity",
+    "copyServerIdentity": "server identity",
+    "deviceName": "Owner device name",
+    "defaultDeviceName": "Recovered Owner device",
+    "confirmRevoke": "Revoke all previous Owner devices and use up this key. Members keep access; Admins lose recovery permissions.",
+    "replaceProfile": "Replace this device’s saved profile for {{name}}",
+    "review": "Review recovery key",
+    "submit": "Recover Owner access",
+    "error": "Recovery didn’t finish. Try again with the same key."
+  },
+  "setup": {
+    "title": "Connect your server",
+    "summary": "Sign in to your server over SSH to install SirinVPN.",
+    "defaultName": "My server",
+    "name": "Server name",
+    "nameHint": "Only saved on this device",
+    "host": "IP address or hostname",
+    "advanced": "Advanced settings",
+    "replace": {
+      "title": "Replace existing installation",
+      "summary": "Only if every Owner device and recovery key is lost"
+    },
+    "verify": "Verify server",
+    "verifying": "Connecting…",
+    "fingerprint": {
+      "title": "Verify your server",
+      "summary": "Check this fingerprint in your hosting provider’s web console.",
+      "copy": "Copy fingerprint",
+      "mismatch": "If it doesn’t match, don’t continue. The connection may be intercepted.",
+      "replaceWarning": "Replacing revokes every device, invitation and recovery key for this server.",
+      "matches": "Fingerprint matches",
+      "checkAgain": "Check network again",
+      "checking": "Checking network…",
+      "install": "Install SirinVPN",
+      "replace": "Replace SirinVPN"
+    },
+    "confirmReplace": {
+      "title": "Replace the existing installation?",
+      "message": "Every device, invitation and recovery key for this server stops working. Other software on the server isn’t affected.",
+      "confirm": "Replace"
+    },
+    "installing": {
+      "title": "Setting up your server",
+      "progress": "Installation progress",
+      "keepOpen": "Keep SirinVPN open until this finishes."
+    },
+    "success": {
+      "title": "Your VPN is ready",
+      "summary": "{{name}} was added. Only this device has Owner access, so keep a recovery key.",
+      "open": "Open server"
+    },
+    "error": {
+      "unreachable": "Couldn’t reach the server over SSH. Check the address and port.",
+      "network": "Couldn’t check the server’s network. Try again.",
+      "install": "Installation stopped safely and the server’s network is unchanged. Fix the issue and try again."
+    }
+  }
+}

@@ -1,0 +1,297 @@
+{
+  "layout": {
+    "categories": "Settings categories"
+  },
+  "category": {
+    "general": {
+      "label": "General",
+      "hint": "Wi-Fi, controls, notifications"
+    },
+    "connection": {
+      "label": "Connection",
+      "hint": "Method, kill switch, reconnect"
+    },
+    "network": {
+      "label": "Network",
+      "hint": "App routing, DNS, ports"
+    },
+    "recovery": {
+      "label": "Keys & recovery",
+      "hint": "Keys, backups, recovery"
+    },
+    "maintenance": {
+      "label": "VPS maintenance",
+      "shortLabel": "Diagnostics",
+      "hint": "Health, diagnostics, updates"
+    }
+  },
+  "general": {
+    "startup": {
+      "title": "Startup & window",
+      "startOnLogin": {
+        "label": "Start at sign-in",
+        "summary": "Open SirinVPN when you sign in",
+        "unavailable": "Not available on this system"
+      },
+      "launchMinimized": {
+        "label": "Start minimized",
+        "summary": "Open to the taskbar, or the tray if Close to tray is on"
+      },
+      "closeToTray": {
+        "label": "Close to tray",
+        "summary": "Keep running in the tray when you close the window",
+        "unavailable": "No system tray in this desktop session"
+      },
+      "note": "Closing or quitting the app doesn’t disconnect the VPN."
+    },
+    "android": {
+      "title": "VPN controls",
+      "summary": "Always-on VPN and Block connections without VPN are set in Android.",
+      "vpnSettings": "Android VPN settings",
+      "addTile": "Add Quick Settings tile",
+      "addTileManually": "Open Quick Settings, tap Edit and add SirinVPN."
+    },
+    "quickServer": {
+      "label": "Quick Settings server",
+      "placeholder": "Choose a server",
+      "loadFailed": "Couldn’t load your servers. Reopen this page to try again.",
+      "saveFailed": "Couldn’t save the Quick Settings server. Try again."
+    },
+    "notifications": {
+      "title": "Notifications & interface",
+      "infoLabel": "About notifications",
+      "infoDesktop": "Alerts never include server names, addresses or keys.",
+      "infoAndroid": "Alerts never include server names, addresses or keys. Android controls the ongoing VPN notification.",
+      "connection": {
+        "label": "Connection notifications",
+        "summary": "Alerts when the VPN connects, drops or reconnects"
+      },
+      "test": "Test notification",
+      "androidSettings": "Android notification settings",
+      "blockedAndroid": "Android is blocking SirinVPN notifications. Control the VPN from the app or its Quick Settings tile.",
+      "animations": {
+        "label": "Interface animations",
+        "summary": "Page transitions; your system’s reduced motion still applies"
+      }
+    },
+    "updates": {
+      "title": "App updates",
+      "check": "Check for updates"
+    },
+    "component": {
+      "title": "Local VPN component",
+      "summary": "Keep this device’s VPN service matched to the app",
+      "review": "Review component"
+    }
+  },
+  "preferences": {
+    "loadFailed": "Couldn’t load preferences. Try again.",
+    "saveFailed": "Couldn’t save this setting. Your previous choice still applies.",
+    "notificationsBlocked": "Notifications are blocked. Allow them for SirinVPN in system settings, then try again.",
+    "testSent": "Test notification sent; check system settings if it doesn’t appear.",
+    "testFailed": "Couldn’t send the test notification. Try again."
+  },
+  "wifi": {
+    "title": "Wi-Fi auto-connect",
+    "infoLabel": "About Wi-Fi auto-connect",
+    "infoDesktop": "Trusted Wi-Fi is an exception to auto-connect, not a safety rating. Wi-Fi names are only displayed, never saved or sent. Auto-connect runs while the app is in the tray and stops when you quit.",
+    "infoAndroid": "Trusted Wi-Fi is an exception to auto-connect, not a safety rating. Wi-Fi names are only displayed, never saved or sent. While it’s on, a notification lets you pause or stop it.",
+    "toggle": {
+      "label": "Auto-connect on Wi-Fi",
+      "summary": "Uses the server below, except on trusted Wi-Fi"
+    },
+    "server": {
+      "label": "Auto-connect server",
+      "empty": "Add a server first"
+    },
+    "network": {
+      "unavailable": "No active network",
+      "otherNetwork": "Current network isn’t Wi-Fi",
+      "trusted": "Current Wi-Fi is trusted",
+      "untrusted": "Current Wi-Fi isn’t trusted",
+      "named": "{{status}} — <strong>{{name}}</strong>"
+    },
+    "status": {
+      "disabled": "Auto-connect is off.",
+      "waitingForWifi": "Waiting for Wi-Fi that isn’t trusted.",
+      "trusted": "On trusted Wi-Fi. An active VPN stays connected.",
+      "connecting": "Connecting…",
+      "sessionActive": "The VPN or kill switch is already on.",
+      "paused": "Paused on this network until it changes. You can still connect manually.",
+      "needsAttention": "Auto-connect couldn’t finish. Connect from Home to see why.",
+      "needsAuthorization": "Connect once from Home to allow auto-connect."
+    },
+    "access": {
+      "permission": "Android needs precise location to identify this Wi-Fi. SirinVPN never collects your location.",
+      "locationOff": "Turn on Location so Android can identify this Wi-Fi.",
+      "unidentified": "This Wi-Fi can’t be identified reliably, so it can’t be trusted.",
+      "changed": "The network changed. Select Refresh network before trusting it.",
+      "denied": "Wi-Fi access wasn’t granted. Open App permissions and allow precise location.",
+      "allow": "Allow Wi-Fi access",
+      "locationSettings": "Open Location settings",
+      "appPermissions": "App permissions"
+    },
+    "trust": {
+      "label": "Label (optional)",
+      "placeholder": "For example, Home",
+      "action": "Trust this Wi-Fi"
+    },
+    "trusted": {
+      "savedName": "Saved Wi-Fi ({{id}})",
+      "label": "Label: {{label}}",
+      "current": "Current network",
+      "saved": "Saved Wi-Fi",
+      "nameUnavailable": "Name unavailable",
+      "remove": "Remove trust",
+      "removeLabel": "Remove trust for {{name}}"
+    },
+    "refresh": "Refresh network",
+    "background": {
+      "summary": "Set Location to Allow all the time so trusted Wi-Fi works in the background.",
+      "action": "Background location"
+    },
+    "loadFailed": "Couldn’t load Wi-Fi settings. Try again.",
+    "refreshFailed": "Couldn’t refresh the network status. Select Refresh network to try again.",
+    "saveFailed": "Couldn’t change the Wi-Fi setting. Try again."
+  },
+  "credentials": {
+    "title": "Credential storage",
+    "summary": "Applies to new keys. Existing keys stay where they are until you move them.",
+    "policy": {
+      "secure": "New keys must use the system keyring.",
+      "fileAllowed": "New keys may use an unencrypted file if the keyring is unavailable."
+    },
+    "consent": "I accept unencrypted key files when the keyring is unavailable",
+    "allowFile": "Allow file fallback",
+    "requireKeyring": "Require keyring",
+    "protection": {
+      "keyring": "System keyring",
+      "file": "Unencrypted file",
+      "unverified": "Unverified storage"
+    },
+    "availability": {
+      "available": "Available",
+      "absent": "Missing",
+      "invalid": "Unreadable",
+      "unavailable": "Locked or unavailable"
+    },
+    "cleanupIncomplete": "Cleanup incomplete",
+    "move": "Move to keyring",
+    "pendingCleanup": "Some removed keys are still on this device. Unlock the keyring and retry cleanup.",
+    "refresh": "Refresh storage",
+    "retryCleanup": "Retry cleanup",
+    "loadFailed": "Couldn’t read credential storage. Unlock the system keyring and try again."
+  },
+  "recovery": {
+    "title": "Owner recovery",
+    "summary": "Regain Owner access if every Owner device is lost",
+    "infoLabel": "About Owner recovery",
+    "info": "On a new device, choose Add server → Recovery key. No other Owner device or VPN connection is needed, only access to your server.",
+    "unsupported": "Update the server software to use recovery keys.",
+    "registered": "A recovery key is set up.",
+    "none": "No recovery key yet.",
+    "finishing": "A recovery key is still being set up. Wait a minute before creating another.",
+    "accept": "I understand that anyone with this key can replace every Owner device. A new key voids the old one.",
+    "create": "Create recovery key",
+    "replace": "Replace recovery key",
+    "revoke": "Revoke recovery key",
+    "revokeConfirm": {
+      "title": "Revoke recovery key?",
+      "message": "Saved copies of this key stop working immediately.",
+      "confirm": "Revoke"
+    },
+    "admins": {
+      "title": "Admin recovery",
+      "summary": "Selected Admins can issue a new Owner recovery key at any time. A completed recovery clears this list.",
+      "suspended": "Suspended",
+      "none": "No Admins yet, so Admin recovery is off.",
+      "entry": "{{name}} ({{id}})",
+      "save": "Save Admin recovery",
+      "saved": "Admin recovery saved.",
+      "confirm": {
+        "title": "Update Admin recovery?",
+        "message": "Allow {{names}} to issue Owner recovery keys? Other Admins lose this permission.",
+        "confirm": "Save"
+      },
+      "confirmNone": {
+        "title": "Turn off Admin recovery?",
+        "message": "No Admin will be able to issue Owner recovery keys.",
+        "confirm": "Turn off"
+      }
+    },
+    "key": {
+      "warning": "Store this key offline. It works once and can’t be shown again.",
+      "label": "Recovery key",
+      "copy": "Copy recovery key",
+      "copied": "Recovery key copied. Store it offline before you finish.",
+      "qr": "Recovery QR code",
+      "password": "File password",
+      "passwordHint": "Use at least 12 characters.",
+      "repeat": "Repeat file password",
+      "save": "Save recovery key file",
+      "fileType": "SirinVPN recovery key",
+      "saved": "Recovery key file saved. Keep its password somewhere else.",
+      "retained": "I’ve stored this key or the recovery key file offline and can reach it",
+      "finish": "Finish setup",
+      "finished": "Done. The key is no longer shown here."
+    },
+    "loadFailed": "Couldn’t load recovery settings. Try again.",
+    "actionFailed": "Couldn’t complete the recovery action. Try again."
+  },
+  "keyRotation": {
+    "title": "Rotate device keys",
+    "resumeTitle": "Resume key rotation",
+    "doneTitle": "Keys rotated",
+    "description": "Creates new keys for this device. Its access, VPN address and name stay the same.",
+    "done": {
+      "title": "New keys are active",
+      "summary": "Your server accepted them and the old keys were deleted from this device."
+    },
+    "progress": {
+      "rotating": "Rotating keys…",
+      "resuming": "Finishing the interrupted rotation…",
+      "summary": "The VPN reconnects briefly. Keep the app open."
+    },
+    "confirmation": {
+      "title": "Only this device changes",
+      "resumeTitle": "A rotation was interrupted",
+      "warning": "Private keys are created on this device and never sent to the server. Nothing else on the server changes.",
+      "resumeWarning": "SirinVPN kept the new keys so it can finish safely. Resume instead of removing or re-adding this server.",
+      "accept": "I understand the VPN will reconnect briefly",
+      "acceptHint": "Kill switch and auto-reconnect resume once the new keys are verified.",
+      "rotate": "Rotate keys",
+      "resume": "Resume rotation"
+    },
+    "failed": "Key rotation stopped safely. If it’s waiting to resume, try again once you’re online."
+  },
+  "backup": {
+    "title": "Encrypted device backup",
+    "description": "Saves this server profile and device keys to an encrypted file. Nothing is uploaded.",
+    "dialogTitle": "Save encrypted backup",
+    "fileType": "SirinVPN encrypted backup",
+    "warning": "<strong>This file can impersonate this device.</strong> Anyone with it and the password can connect until you revoke the device.",
+    "destination": {
+      "label": "Save to",
+      "hint": "Existing files are never overwritten.",
+      "placeholder": "No file chosen",
+      "choose": "Choose file"
+    },
+    "password": {
+      "label": "Password",
+      "hint": "Use at least 12 characters.",
+      "repeat": "Repeat password"
+    },
+    "accept": {
+      "label": "I understand this file contains this device’s private keys",
+      "hint": "A lost password can’t be recovered."
+    },
+    "create": "Create backup",
+    "creating": "Encrypting…",
+    "done": {
+      "title": "Backup saved",
+      "summary": "Keep the file and its password in separate places."
+    },
+    "pickerFailed": "Couldn’t open the file picker. Try again.",
+    "failed": "Couldn’t create the backup. Try again."
+  }
+}

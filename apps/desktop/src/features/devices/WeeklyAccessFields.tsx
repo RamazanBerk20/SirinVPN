@@ -1,8 +1,11 @@
 import { useId, useState } from "react";
 import { Field } from "../../components/ui";
-import { policyDraft, policyFromDraft } from "./memberPolicy";
+import { policyDraft, policyFromDraft, SCHEDULE_EXAMPLE } from "./memberPolicy";
+import { formatDateTime, t } from "../../i18n";
 
 const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+/** Day codes stay fixed in the schedule text; the picker shows the localized weekday. 1 January 2024 is a Monday. */
+const dayName = (index: number) => formatDateTime(new Date(Date.UTC(2024, 0, 1 + index)), { weekday: "short", timeZone: "UTC" });
 type Row = { day: string; start: string; end: string };
 function rowsFrom(value: string): Row[] {
   return value.split("\n").filter(Boolean).map(line => {
@@ -31,20 +34,21 @@ export function WeeklyAccessFields({ value, onChange, error }: { value: string; 
     const policy = policyFromDraft({ ...policyDraft(), schedule: value });
     const monday = new Date();
     monday.setUTCDate(monday.getUTCDate() - (monday.getUTCDay() + 6) % 7); monday.setUTCHours(0, 0, 0, 0);
-    preview = policy.weekly_access.map(window => [window.start_minute, window.end_minute].map(minute => new Date(monday.getTime() + minute * 60000).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", timeZoneName: "short" })).join(" → "));
+    const local = (minute: number) => formatDateTime(new Date(monday.getTime() + minute * 60000), { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", timeZoneName: "short" });
+    preview = policy.weekly_access.map(window => t("devices.schedule.range", { start: local(window.start_minute), end: local(window.end_minute) }));
   } catch { /* Field validation supplies the actionable error. */ }
-  return <section className="weekly-access-rows" aria-label="Weekly access schedule">
-    <h3>Weekly access (UTC)</h3><p className="settings-note">No intervals means access all week. Times are stored in UTC; overnight intervals are split automatically.</p>
+  return <section className="weekly-access-rows" aria-label={t("devices.schedule.label")}>
+    <h3>{t("devices.schedule.title")}</h3><p className="settings-note">{t("devices.schedule.allWeek")}</p>
     {!advanced && rows.map((row, index) => <div className="weekly-access-row" key={index}>
-      <Field label={`Day ${index + 1}`}><select {...invalid} value={row.day} onChange={event => update(rows.map((item, at) => at === index ? { ...item, day: event.target.value } : item))}>{days.map(day => <option key={day}>{day}</option>)}</select></Field>
-      <Field label={`Start ${index + 1} (UTC)`}><input {...invalid} type="time" value={row.start} onChange={event => update(rows.map((item, at) => at === index ? { ...item, start: event.target.value } : item))} /></Field>
-      <Field label={`End ${index + 1} (UTC)`} hint={row.end === "24:00" ? "Midnight at the end of this day." : undefined}><input {...invalid} type="time" value={row.end === "24:00" ? "00:00" : row.end} onChange={event => update(rows.map((item, at) => at === index ? { ...item, end: event.target.value } : item))} /></Field>
-      <button type="button" className="text-button" onClick={() => update(rows.filter((_, at) => at !== index))}>Remove interval {index + 1}</button>
+      <Field label={t("devices.schedule.day", { number: index + 1 })}><select {...invalid} value={row.day} onChange={event => update(rows.map((item, at) => at === index ? { ...item, day: event.target.value } : item))}>{days.map((day, at) => <option key={day} value={day}>{dayName(at)}</option>)}</select></Field>
+      <Field label={t("devices.schedule.start", { number: index + 1 })}><input {...invalid} type="time" value={row.start} onChange={event => update(rows.map((item, at) => at === index ? { ...item, start: event.target.value } : item))} /></Field>
+      <Field label={t("devices.schedule.end", { number: index + 1 })} hint={row.end === "24:00" ? t("devices.schedule.midnight") : undefined}><input {...invalid} type="time" value={row.end === "24:00" ? "00:00" : row.end} onChange={event => update(rows.map((item, at) => at === index ? { ...item, end: event.target.value } : item))} /></Field>
+      <button type="button" className="text-button" onClick={() => update(rows.filter((_, at) => at !== index))}>{t("devices.schedule.remove", { number: index + 1 })}</button>
     </div>)}
-    {!advanced && <button type="button" className="secondary-button" onClick={() => update([...rows, { day: "Mon", start: "09:00", end: "17:00" }])}>Add interval</button>}
-    <button type="button" className="text-button" onClick={() => { if (advanced) { if (error) return; setRows(rowsFrom(value)); } setAdvanced(!advanced); }}>{advanced ? "Use day and time controls" : "Edit UTC text"}</button>
-    {advanced && <Field label="Weekly access (UTC)" error={error} hint="One UTC window per line, for example Mon 09:00-17:00. Up to 28 non-overlapping windows."><textarea rows={3} value={value} onChange={event => onChange(event.target.value)} /></Field>}
+    {!advanced && <button type="button" className="secondary-button" onClick={() => update([...rows, { day: "Mon", start: "09:00", end: "17:00" }])}>{t("devices.schedule.add")}</button>}
+    <button type="button" className="text-button" onClick={() => { if (advanced) { if (error) return; setRows(rowsFrom(value)); } setAdvanced(!advanced); }}>{t(advanced ? "devices.schedule.useControls" : "devices.schedule.editText")}</button>
+    {advanced && <Field label={t("devices.schedule.title")} error={error} hint={t("devices.schedule.textHint", { example: SCHEDULE_EXAMPLE })}><textarea rows={3} value={value} onChange={event => onChange(event.target.value)} /></Field>}
     {!advanced && error && <p id={errorId} className="field-error" role="alert">{error}</p>}
-    {!!preview.length && <details><summary>Local time preview for this week</summary><p>UTC intervals stay fixed. Local times can change with daylight saving.</p>{preview.map((line, index) => <p key={index}>{line}</p>)}</details>}
+    {!!preview.length && <details><summary>{t("devices.schedule.preview")}</summary><p>{t("devices.schedule.previewNote")}</p>{preview.map((line, index) => <p key={index}>{line}</p>)}</details>}
   </section>;
 }

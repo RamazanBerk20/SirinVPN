@@ -17,9 +17,9 @@ with sync_playwright() as pw:
   p.evaluate('document.documentElement.dataset.windowChrome="custom"')
   return p
  p=page_for()
- p.locator('.metrics-details').filter(has_text='Device counters & connection details').locator('summary').click()
+ p.locator('.metrics-details').filter(has_text='Device details').locator('summary').click()
  # Copy controls must not increase one metric's value row height.
- rows=p.locator('.metrics-details').filter(has_text='Device counters & connection details').locator('dl > div')
+ rows=p.locator('.metrics-details').filter(has_text='Device details').locator('dl > div')
  offsets=rows.evaluate_all('''rows=>rows.slice(0,3).map(r=>{let a=document.createRange(),b=document.createRange();a.selectNodeContents(r.querySelector('dt'));b.selectNodeContents(r.querySelector('dd .mono')||r.querySelector('dd'));return b.getBoundingClientRect().top-a.getBoundingClientRect().bottom})''')
  assert max(offsets)-min(offsets)<2,offsets
  rows.first.scroll_into_view_if_needed()
@@ -45,12 +45,12 @@ with sync_playwright() as pw:
  p.get_by_role('navigation',name='Main navigation').get_by_role('button',name='Settings',exact=False).click()
  p.get_by_role('tab',name='VPS maintenance',exact=True).click()
  p.get_by_role('button',name='Update VPS software',exact=False).click()
- p.get_by_role('button',name='Continue to VPS setup',exact=True).click()
+ p.get_by_role('button',name='Continue',exact=True).click()
  expect(p.get_by_text('Saved SSH login',exact=True)).to_be_visible()
  expect(p.get_by_label('SSH password',exact=True)).to_have_count(0)
  p.screenshot(path=str(OUT/'saved-ssh-login.png'))
- p.get_by_role('button',name='Read VPS release state',exact=True).click()
- expect(p.get_by_text('Signed baseline not registered',exact=True)).to_be_visible()
+ p.get_by_role('button',name='Continue',exact=True).click()
+ expect(p.get_by_text('Updates aren’t set up for this server yet.',exact=True)).to_be_visible()
  payload=p.evaluate("window.__sirinCommandArguments.find(c=>c.command==='manage_vps_release').args.input.ssh")
  assert payload['authentication']=='saved' and payload['ssh_port']==2222 and payload['password'] is None,payload
  assert p.evaluate("window.__sirinCommands.filter(c=>c==='save_ssh_login').length")==0
@@ -59,10 +59,10 @@ with sync_playwright() as pw:
  p=page_for('onboarding')
  p.get_by_label('IP address or hostname',exact=True).fill('new.example.com')
  p.get_by_role('button',name='SSH agent',exact=True).click()
- p.get_by_role('button',name='Verify VPS',exact=False).click()
+ p.get_by_role('button',name='Verify server',exact=False).click()
  expect(p.get_by_role('button',name='Copy verification command',exact=True)).to_be_visible()
- expect(p.get_by_text('Open this VPS on your hosting provider',exact=False)).to_be_visible()
- expect(p.get_by_role('button',name='Fingerprint matches — inspect network',exact=True)).to_be_visible()
+ expect(p.get_by_text('Open the server’s browser console on your hosting provider',exact=False)).to_be_visible()
+ expect(p.get_by_role('button',name='Fingerprint matches',exact=True)).to_be_visible()
  p.screenshot(path=str(OUT/'verify-setup.png'))
  p.close(); browser.close()
  assert not errors,errors

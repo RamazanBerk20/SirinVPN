@@ -284,8 +284,6 @@ input[type="checkbox"]:not([role="switch"]):disabled {
 }
 
 .primary-button,
-.connect-button,
-.disconnect-button,
 .secondary-button,
 .back-button {
   display: inline-flex;

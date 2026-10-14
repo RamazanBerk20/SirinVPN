@@ -35,7 +35,7 @@ async fn connect_candidate_at_endpoint(
     let local = invoke_helper("status", None).map_err(safe_error)?;
     if local.server_id.is_some() || local.state != ConnectionState::Disconnected {
         return Err(
-            "Disconnect the active SirinVPN connection before testing the new endpoint.".to_owned(),
+            "Disconnect before testing the new server address.".to_owned(),
         );
     }
     let selections = TransportEngine
@@ -75,7 +75,7 @@ async fn connect_candidate_at_endpoint(
                     Ok(Err(error)) => return AutomaticAttempt::Abort(error),
                     Err(_) => {
                         return AutomaticAttempt::Abort(
-                            "The endpoint test worker was interrupted.".to_owned(),
+                            "Testing the new address was interrupted.".to_owned(),
                         );
                     }
                 };
@@ -84,13 +84,13 @@ async fn connect_candidate_at_endpoint(
                     || local.transport != Some(selection.kind)
                 {
                     return AutomaticAttempt::Abort(
-                        "The privileged helper did not activate the candidate endpoint.".to_owned(),
+                        "This device couldn’t connect to the new address.".to_owned(),
                     );
                 }
                 match management.status().await {
                     Ok(server) if server.interface_up => AutomaticAttempt::Connected(()),
                     Ok(_) => AutomaticAttempt::Abort(
-                        "The authenticated VPS did not report an active tunnel.".to_owned(),
+                        "The server didn’t confirm the VPN connection.".to_owned(),
                     ),
                     Err(ManagementError::RequestRejected {
                         code: sirinvpn_protocol::ErrorCode::AuthorizationFailed,
@@ -106,7 +106,7 @@ async fn connect_candidate_at_endpoint(
                 cleanup_automatic_attempt(expected_server_id, transport)
             })
             .await
-            .map_err(|_| "The endpoint cleanup worker was interrupted.".to_owned())?
+            .map_err(|_| "Closing the test connection was interrupted. Disconnect before trying again.".to_owned())?
         },
     )
     .await
@@ -123,7 +123,7 @@ pub(super) fn cleanup_automatic_attempt(
         return Ok(());
     }
     if local.server_id != Some(server_id) || local.transport != Some(transport) {
-        return Err("Local tunnel state changed during automatic selection.".to_owned());
+        return Err("The VPN connection changed during the test. Check its status before trying again.".to_owned());
     }
     disconnect_candidate(server_id)
 }
@@ -194,7 +194,7 @@ pub(super) async fn disconnect_server() -> Result<LocalTunnelStatus, String> {
         invoke_helper("status", None).map_err(safe_error)
     })
     .await
-    .map_err(|_| "The network worker was interrupted.".to_owned())?
+    .map_err(|_| "Disconnecting was interrupted. Check the connection status.".to_owned())?
 }
 
 #[tauri::command]
@@ -220,7 +220,7 @@ pub(super) async fn local_status(state: State<'_, AppState>) -> Result<LocalTunn
         Ok(local)
     })
     .await
-    .map_err(|_| "The local status worker was interrupted.".to_owned())?
+    .map_err(|_| "Reading the VPN status was interrupted.".to_owned())?
 }
 
 #[tauri::command]
@@ -275,7 +275,7 @@ pub(super) fn disconnect_candidate(server_id: ServerId) -> Result<(), String> {
         return Ok(());
     }
     if local.server_id != Some(server_id) {
-        return Err("The active connection changed during enrollment.".into());
+        return Err("The VPN connection changed during setup. Check its status before trying again.".into());
     }
     let input = serde_json::to_vec(&server_id).map_err(safe_error)?;
     invoke_helper("disconnect-session", Some(&input))

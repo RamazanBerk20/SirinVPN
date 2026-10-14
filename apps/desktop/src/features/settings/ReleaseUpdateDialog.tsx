@@ -16,6 +16,7 @@ import { formatBytes } from "../../format";
 import { Field, InlineError } from "../../components/ui";
 import { errorMessage } from "../../lib/errors";
 import { ReleaseRecovery } from "./ReleaseRecovery";
+import { t } from "../../i18n";
 
 export function ReleaseUpdateDialog({
   open,
@@ -40,7 +41,8 @@ export function ReleaseUpdateDialog({
   const ready = android || windows || appimage || binding || installationReady;
   const nativeAvailable = Boolean(candidate && (candidate.debian_install_available || candidate.windows_install_available
     || candidate.appimage_install_available || candidate.android_install_available));
-  const packageLabel = android ? "Android APK" : windows ? "Windows package" : appimage ? "AppImage" : "Debian package";
+  const installConfirmation = android ? t("release.candidate.confirmAndroid") : windows ? t("release.candidate.confirmWindows")
+    : appimage ? t("release.candidate.confirmAppImage") : t("release.candidate.confirmDebian");
 
   useEffect(() => {
     if (!ready) setConfirmed(false);
@@ -68,7 +70,7 @@ export function ReleaseUpdateDialog({
 
   const discard = async () => {
     try { await api.discardReleaseUpdate(); reset(); onOpenChange(false); }
-    catch (reason) { setError(errorMessage(reason, "The temporary download could not be discarded. Retry.")); }
+    catch (reason) { setError(errorMessage(reason, t("release.error.discard"))); }
   };
 
   const check = async (event: React.FormEvent) => {
@@ -83,12 +85,7 @@ export function ReleaseUpdateDialog({
     try {
       setCandidate(await api.checkReleaseUpdate(releaseSource, channel));
     } catch (reason) {
-      setError(
-        errorMessage(
-          reason,
-          "The source did not provide a root-authenticated release for this build.",
-        ),
-      );
+      setError(errorMessage(reason, t("release.error.check")));
     } finally {
       setBusy(null);
     }
@@ -107,10 +104,9 @@ export function ReleaseUpdateDialog({
       setError(
         errorMessage(
           reason,
-          windows
-            ? "The Windows update did not complete. Retry the same authenticated package; its recovery state and any accepted trust-policy update are retained."
-            : appimage ? "The AppImage replacement could not be confirmed. Reopen app updates to reconcile the installed file. The signed recovery packages are retained."
-            : "The package update did not complete. The coordinator attempted rollback and retained recovery state if it could not prove completion; a root-authenticated trust-policy update may remain active.",
+          windows ? t("release.error.installWindows")
+            : appimage ? t("release.error.installAppImage")
+            : t("release.error.installDebian"),
         ),
       );
     } finally {
@@ -129,123 +125,123 @@ export function ReleaseUpdateDialog({
       <Dialog.Portal>
         <Dialog.Overlay className="dialog-overlay" />
         <DialogContent className="dialog-content release-update-dialog"
-          heading={<>{installed ? candidate?.baseline_bound ? "Signed baseline verified" : android ? "Android installer requested" : windows ? "Windows installer opened" : "Update installed" : "Check for app updates"}</>}
-          description={<>Contact only a release directory you choose. SirinVPN attaches no
-            device, account, installation, or VPS identifier.</>}
-          closeDisabled={Boolean(busy) || recoveryBusy} closeLabel="Close app updates">
+          heading={installed ? candidate?.baseline_bound ? t("release.done.titleVerified") : android ? t("release.done.titleAndroid")
+            : windows ? t("release.done.titleWindows") : t("release.done.titleInstalled") : t("release.dialog.title")}
+          description={t("release.dialog.description")}
+          closeDisabled={Boolean(busy) || recoveryBusy} closeLabel={t("release.dialog.close")}>
 
           {installed && candidate ? (
             <div className="backup-success release-update-success">
               <span>
                 <Check size={26} weight="bold" />
               </span>
-              <h3>{candidate.baseline_bound ? `SirinVPN ${candidate.release_version} is verified` : windows ? `Install SirinVPN ${candidate.release_version}` : `SirinVPN ${candidate.release_version} is installed`}</h3>
+              <h3>{candidate.baseline_bound ? t("release.done.headingVerified", { version: candidate.release_version })
+                : windows ? t("release.done.headingWindows", { version: candidate.release_version })
+                : t("release.done.headingInstalled", { version: candidate.release_version })}</h3>
               <p>
-                {candidate.baseline_bound ? "This installed package now has a signed baseline. You can check a newer release source to update it."
-                  : android ? "Complete Android’s installation approval. Installation can interrupt the VPN. Android controls app downgrade availability." : windows ? "Complete the Windows installer, then reopen SirinVPN."
-                  : appimage ? "Close and reopen the same AppImage to run the new version. The previous signed version remains available for rollback."
-                  : "The authenticated Debian transaction completed. Close and reopen SirinVPN to run the new application version."}
+                {candidate.baseline_bound ? t("release.done.bodyVerified")
+                  : android ? t("release.done.bodyAndroid") : windows ? t("release.done.bodyWindows")
+                  : appimage ? t("release.done.bodyAppImage")
+                  : t("release.done.bodyDebian")}
               </p>
               <button
                 className="primary-button"
                 type="button"
                 onClick={() => changeOpen(false)}
               >
-                {android || windows || candidate.baseline_bound ? "Close" : "Close SirinVPN later"}
+                {android || windows || candidate.baseline_bound ? t("common.action.close") : t("release.done.closeLater")}
               </button>
             </div>
           ) : busy === "installing" ? (
             <div className="uninstall-progress release-update-progress">
               <ArrowClockwise className="spin" size={27} />
-              <strong>{binding ? "Verifying the installed package" : "Installing the authenticated package"}</strong>
+              <strong>{binding ? t("release.progress.verifying") : t("release.progress.installing")}</strong>
               <p>
-                {binding ? "The signed release must match the exact installed bytes."
-                  : android ? "Review Android’s installation prompt. The APK signature and signed release are checked before installation. Android controls downgrade availability." : appimage ? "The complete verified AppImage replaces the current file atomically. A signed copy of the previous version is kept for recovery."
-                  : windows ? "Approve the Windows update prompt. SirinVPN will close once the verified installer is ready. Your selected protection policy is retained while the VPN service restarts." : "Keep SirinVPN open. Package health is verified before the installed-release receipt advances; failure attempts authenticated restoration and retains recovery state if completion cannot be proven."}
+                {binding ? t("release.progress.verifyingBody")
+                  : android ? t("release.progress.android") : appimage ? t("release.progress.appImage")
+                  : windows ? t("release.progress.windows") : t("release.progress.debian")}
               </p>
             </div>
           ) : candidate ? (
             <div className="release-candidate">
               <div className="release-candidate-heading">
                 <span className="release-authenticated">
-                  <ShieldCheck size={16} weight="fill" /> Root-authenticated
+                  <ShieldCheck size={16} weight="fill" /> {t("release.candidate.verified")}
                 </span>
                 {candidate.security_update ? (
                   <span className="release-security-label">
-                    Security update
+                    {t("release.candidate.security")}
                   </span>
                 ) : null}
-                <h3>SirinVPN {candidate.release_version}</h3>
+                <h3>{t("release.candidate.title", { version: candidate.release_version })}</h3>
                 <p>
-                  Sequence {candidate.release_sequence} · {candidate.channel}{" "}
-                  channel · running {candidate.current_version}
+                  {t("release.candidate.meta", {
+                    channel: candidate.channel === "preview" ? t("release.channel.preview") : t("release.channel.stable"),
+                    current: candidate.current_version,
+                    sequence: candidate.release_sequence,
+                  })}
                 </p>
               </div>
-              <p>Verified version {candidate.release_version} for this device · {formatBytes(candidate.artifact_size_bytes)}</p>
-              <p className="settings-note">Release source: {source}</p>
-              <details className="release-verification-details"><summary>Signature and package details</summary>
+              <p>{t("release.candidate.package", { size: formatBytes(candidate.artifact_size_bytes) })}</p>
+              <p className="settings-note">{t("release.candidate.source", { source })}</p>
+              <details className="release-verification-details"><summary>{t("release.candidate.details")}</summary>
               <div className="release-detail-grid">
                 <div>
-                  <span>Package</span>
+                  <span>{t("release.candidate.detailPackage")}</span>
                   <strong>{candidate.artifact_file_name}</strong>
                 </div>
                 <div>
-                  <span>Download</span>
+                  <span>{t("release.candidate.detailSize")}</span>
                   <strong>{formatBytes(candidate.artifact_size_bytes)}</strong>
                 </div>
                 <div>
-                  <span>Target</span>
+                  <span>{t("release.candidate.detailTarget")}</span>
                   <strong>{candidate.artifact_target}</strong>
                 </div>
                 <div>
-                  <span>Trust policy</span>
-                  <strong>Sequence {candidate.trust_policy_sequence}</strong>
+                  <span>{t("release.candidate.detailPolicy")}</span>
+                  <strong>{t("release.candidate.detailPolicyValue", { sequence: candidate.trust_policy_sequence })}</strong>
                 </div>
                 <div>
-                  <span>Trust root</span>
+                  <span>{t("release.candidate.detailRoot")}</span>
                   <code title={candidate.root_key_id_sha256}>
                     {candidate.root_key_id_sha256}
                   </code>
                 </div>
                 <div>
-                  <span>Release signer</span>
+                  <span>{t("release.candidate.detailSigner")}</span>
                   <code title={candidate.release_key_id_sha256}>
                     {candidate.release_key_id_sha256}
                   </code>
                 </div>
               </div>
               <div className="release-digest">
-                <span>Verified package SHA-256</span>
+                <span>{t("release.candidate.digest")}</span>
                 <code>{candidate.artifact_sha256}</code>
               </div>
 
               </details>
 
-              {binding ? <p className="settings-note">Verify the signed copy of this installed version once to enable future updates.</p> : !candidate.newer_than_running ? (
+              {binding ? <p className="settings-note">{t("release.candidate.verifyOnce")}</p> : !candidate.newer_than_running ? (
                 <div className="warning-note replacement-warning">
                   <Warning size={18} weight="fill" />
-                  <span>
-                    This authenticated candidate is not newer than the running
-                    build. This screen never performs rollback.
-                  </span>
+                  <span>{t("release.candidate.notNewer")}</span>
                 </div>
               ) : !nativeAvailable ? (
                 <div className="warning-note replacement-warning">
                   <Warning size={18} weight="fill" />
                   <span>
-                    {windows ? "The download is verified. Install the packaged Windows application before using in-app updates." : "The download is verified. In-app installation requires the installed Debian application or a supported, user-owned AppImage."}
+                    {windows ? t("release.candidate.notInstallableWindows") : t("release.candidate.notInstallableLinux")}
                   </span>
                 </div>
               ) : !ready ? (
                 <div className="warning-note replacement-warning">
                   <Warning size={18} weight="fill" />
-                  <span>
-                    Disconnect SirinVPN and disable persistent protection before installing. The verified candidate is retained during this app session while you review connection settings.
-                  </span>
+                  <span>{t("release.candidate.notReady")}</span>
                 </div>
               ) : null}
 
-              {!ready && <button className="secondary-button" onClick={() => { changeOpen(false); onReviewPrerequisites?.(); }}>Review connection prerequisites</button>}
+              {!ready && <button className="secondary-button" onClick={() => { changeOpen(false); onReviewPrerequisites?.(); }}>{t("release.candidate.openConnection")}</button>}
               <label
                 className={`replacement-option release-install-confirmation ${confirmed ? "selected" : ""}`}
               >
@@ -257,13 +253,9 @@ export function ReleaseUpdateDialog({
                 />
                 <span>
                   <strong>
-                    {binding ? "I confirm verification of this installed package" : `I confirm installation of this exact authenticated ${packageLabel}`}
+                    {binding ? t("release.candidate.confirmVerify") : installConfirmation}
                   </strong>
-                  <small>
-                    The root-signed key policy is applied first and may remain
-                    active if package installation later fails. Retrying this
-                    exact candidate is safe.
-                  </small>
+                  <small>{t("release.candidate.confirmNote")}</small>
                 </span>
               </label>
               {error ? <InlineError message={error} /> : null}
@@ -273,7 +265,7 @@ export function ReleaseUpdateDialog({
                   type="button"
                   onClick={() => void discard()}
                 >
-                  Discard
+                  {t("release.candidate.discard")}
                 </button>
                 <button
                   className="primary-button"
@@ -281,13 +273,11 @@ export function ReleaseUpdateDialog({
                   disabled={!confirmed || !installAvailable}
                   onClick={() => void install()}
                 >
-                  <ShieldCheck size={18} /> {binding ? "Verify installed release" : "Install authenticated update"}
+                  <ShieldCheck size={18} /> {binding ? t("release.candidate.verify") : t("release.candidate.install")}
                 </button>
               </div>
               <p className="form-footnote">
-                <LockKey size={15} /> The source URL and check result are not
-                saved across app restarts. Discard removes the temporary download; signed packages
-                needed for installation or rollback remain in private storage.
+                <LockKey size={15} /> {t("release.candidate.footnote")}
               </p>
             </div>
           ) : (
@@ -299,7 +289,7 @@ export function ReleaseUpdateDialog({
                   disabled={Boolean(busy)}
                   onClick={() => setChannel("stable")}
                 >
-                  Stable
+                  {t("release.form.stable")}
                 </button>
                 <button
                   type="button"
@@ -307,12 +297,12 @@ export function ReleaseUpdateDialog({
                   disabled={Boolean(busy)}
                   onClick={() => setChannel("preview")}
                 >
-                  Preview
+                  {t("release.form.preview")}
                 </button>
               </div>
               <Field
-                label="Release source"
-                hint="Explicit HTTPS base directory ending in /. This value is used for this check only."
+                label={t("release.form.source")}
+                hint={t("release.form.sourceHint")}
               >
                 <input
                   type="url"
@@ -329,11 +319,8 @@ export function ReleaseUpdateDialog({
               <div className="release-download-notice">
                 <DownloadSimple size={20} />
                 <p>
-                  <strong>A check downloads one complete package.</strong>
-                  <span>
-                    Four bounded metadata files are authenticated first, then
-                    only this platform's signed package is downloaded.
-                  </span>
+                  <strong>{t("release.form.noticeTitle")}</strong>
+                  <span>{t("release.form.noticeBody")}</span>
                 </p>
               </div>
               {error ? <InlineError message={error} /> : null}
@@ -348,13 +335,11 @@ export function ReleaseUpdateDialog({
                   <ShieldCheck size={18} />
                 )}
                 {busy === "checking"
-                  ? "Authenticating and downloading"
-                  : "Check and verify release"}
+                  ? t("release.form.checking")
+                  : t("release.form.check")}
               </button>
               <p className="form-footnote">
-                <GlobeHemisphereWest size={15} /> The chosen host and network
-                can observe your IP, request timing, channel path, and platform
-                package name.
+                <GlobeHemisphereWest size={15} /> {t("release.form.privacy")}
               </p>
               <ReleaseRecovery busy={Boolean(busy) || recoveryBusy} setBusy={setRecoveryBusy} />
             </form>

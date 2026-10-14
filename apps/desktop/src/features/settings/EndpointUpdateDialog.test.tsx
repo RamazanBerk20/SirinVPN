@@ -3,6 +3,7 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { api } from "../../api";
 import type { ServerProfile } from "../../types";
 import { EndpointUpdateDialog } from "./EndpointUpdateDialog";
+import { t } from "../../i18n";
 
 vi.mock("../../api", () => ({ api: {
   applyEndpointUpdate: vi.fn(),
@@ -20,8 +21,8 @@ it("hands an active endpoint update to the policy-preserving native operation", 
   const completed = vi.fn().mockResolvedValue(undefined);
   render(<EndpointUpdateDialog profile={profile} open connected onOpenChange={vi.fn()} onCompleted={completed} />);
   fireEvent.change(screen.getByRole("textbox"), { target: { value: "  sirm1.signed-checkpoint  " } });
-  fireEvent.click(screen.getByRole("button", { name: "Verify and switch" }));
-  await screen.findByText("Endpoint updated");
+  fireEvent.click(screen.getByRole("button", { name: t("vps.endpoint.verify") }));
+  await screen.findByText(t("vps.endpoint.applied"));
   expect(api.applyEndpointUpdate).toHaveBeenCalledWith(profile.id, "sirm1.signed-checkpoint");
   expect(completed).toHaveBeenCalledOnce();
   expect(api.disconnect).not.toHaveBeenCalled();
@@ -33,9 +34,9 @@ it("retains the session and code when checkpoint verification fails", async () =
   const completed = vi.fn();
   render(<EndpointUpdateDialog profile={profile} open connected onOpenChange={vi.fn()} onCompleted={completed} />);
   fireEvent.change(screen.getByRole("textbox"), { target: { value: "sirm1.invalid" } });
-  fireEvent.click(screen.getByRole("button", { name: "Verify and switch" }));
+  fireEvent.click(screen.getByRole("button", { name: t("vps.endpoint.verify") }));
   await screen.findByText("The signed checkpoint is invalid.");
-  await waitFor(() => expect((screen.getByRole("button", { name: "Verify and switch" }) as HTMLButtonElement).disabled).toBe(false));
+  await waitFor(() => expect((screen.getByRole("button", { name: t("vps.endpoint.verify") }) as HTMLButtonElement).disabled).toBe(false));
   expect((screen.getByRole("textbox") as HTMLTextAreaElement).value).toBe("sirm1.invalid");
   expect(completed).not.toHaveBeenCalled();
   expect(api.disconnect).not.toHaveBeenCalled();
@@ -48,12 +49,12 @@ it("ties the update summary to its own code and publishes the signed code from t
   vi.mocked(api.publishEndpointUpdate).mockResolvedValue(undefined as never);
   const owner = { ...profile, role: "owner" } as ServerProfile;
   render(<EndpointUpdateDialog profile={owner} open connected onOpenChange={vi.fn()} onCompleted={vi.fn().mockResolvedValue(undefined)} />);
-  fireEvent.click(screen.getByRole("button", { name: /Retrieve from current VPS/ }));
+  fireEvent.click(screen.getByRole("button", { name: t("vps.endpoint.getFromServer") }));
   await screen.findByText("new.example:51820");
   fireEvent.change(screen.getByRole("textbox"), { target: { value: "sirm1.different" } });
   expect(screen.queryByText("new.example:51820")).toBeNull();
-  fireEvent.click(screen.getByRole("button", { name: "Share migration" }));
-  expect((screen.getByLabelText("Signed endpoint update code") as HTMLTextAreaElement).value).toBe("sirm1.signed");
-  fireEvent.click(screen.getByRole("button", { name: /Publish on old VPS/ }));
+  fireEvent.click(screen.getByRole("button", { name: t("vps.endpoint.tab.share") }));
+  expect((screen.getByLabelText(t("vps.endpoint.code")) as HTMLTextAreaElement).value).toBe("sirm1.signed");
+  fireEvent.click(screen.getByRole("button", { name: t("vps.endpoint.publish") }));
   await waitFor(() => expect(api.publishEndpointUpdate).toHaveBeenCalledWith(owner.id, "sirm1.signed"));
 });

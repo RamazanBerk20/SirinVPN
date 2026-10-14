@@ -3,6 +3,7 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { api } from "../../api";
 import { RecoverAccessFlow } from "./RecoverAccessFlow";
 import type { RecoveryPreview, ServerProfile } from "../../types";
+import { t } from "../../i18n";
 
 vi.mock("../../api", () => ({ api: { previewRecoveryKey: vi.fn(), recoverOwnerAccess: vi.fn() } }));
 vi.mock("@tauri-apps/plugin-dialog", () => ({ open: vi.fn() }));
@@ -13,29 +14,29 @@ afterEach(cleanup);
 it("requires both Owner revocation and local replacement confirmation before recovery", async () => {
   const completed = vi.fn().mockResolvedValue(undefined);
   render(<RecoverAccessFlow onComplete={completed} />);
-  fireEvent.change(screen.getByLabelText("Recovery key"), { target: { value: "sirr1.test" } });
-  fireEvent.click(screen.getByRole("button", { name: "Review recovery key" }));
+  fireEvent.change(screen.getByLabelText(t("onboarding.recover.key")), { target: { value: "sirr1.test" } });
+  fireEvent.click(screen.getByRole("button", { name: t("onboarding.recover.review") }));
   await screen.findByText("My VPS");
-  const submit = screen.getByRole("button", { name: "Recover Owner access" }) as HTMLButtonElement;
+  const submit = screen.getByRole("button", { name: t("onboarding.recover.submit") }) as HTMLButtonElement;
   expect(submit.disabled).toBe(true);
-  fireEvent.click(screen.getByRole("checkbox", { name: /Revoke all old Owner/ }));
+  fireEvent.click(screen.getByRole("checkbox", { name: t("onboarding.recover.confirmRevoke") }));
   expect(submit.disabled).toBe(true);
   fireEvent.submit(submit.closest("form")!);
   expect(api.recoverOwnerAccess).not.toHaveBeenCalled();
-  await waitFor(() => expect(submit.textContent).toBe("Recover Owner access"));
-  fireEvent.click(screen.getByRole("checkbox", { name: /Replace this device/ }));
+  await waitFor(() => expect(submit.textContent).toBe(t("onboarding.recover.submit")));
+  fireEvent.click(screen.getByRole("checkbox", { name: t("onboarding.recover.replaceProfile", { name: "My VPS" }) }));
   fireEvent.click(submit);
   await waitFor(() => expect(completed).toHaveBeenCalled());
-  expect(api.recoverOwnerAccess).toHaveBeenCalledWith("sirr1.test", "Recovered Owner device", true, true);
+  expect(api.recoverOwnerAccess).toHaveBeenCalledWith("sirr1.test", t("onboarding.recover.defaultDeviceName"), true, true);
 });
 
 it("ignores a late preview after the recovery key changes", async () => {
   let resolve!: (value: RecoveryPreview) => void;
   vi.mocked(api.previewRecoveryKey).mockImplementation(() => new Promise((done) => { resolve = done; }));
   render(<RecoverAccessFlow onComplete={vi.fn()} />);
-  fireEvent.change(screen.getByLabelText("Recovery key"), { target: { value: "sirr1.first" } });
-  fireEvent.click(screen.getByRole("button", { name: "Review recovery key" }));
-  fireEvent.change(screen.getByLabelText("Recovery key"), { target: { value: "sirr1.changed" } });
+  fireEvent.change(screen.getByLabelText(t("onboarding.recover.key")), { target: { value: "sirr1.first" } });
+  fireEvent.click(screen.getByRole("button", { name: t("onboarding.recover.review") }));
+  fireEvent.change(screen.getByLabelText(t("onboarding.recover.key")), { target: { value: "sirr1.changed" } });
   await act(async () => resolve(preview));
   expect(screen.queryByText("My VPS")).toBeNull();
   expect(api.recoverOwnerAccess).not.toHaveBeenCalled();

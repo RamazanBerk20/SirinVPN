@@ -1,0 +1,45 @@
+{
+  "appName": "SirinVPN",
+  "action": {
+    "back": "Back",
+    "cancel": "Cancel",
+    "close": "Close",
+    "continue": "Continue",
+    "copy": "Copy",
+    "copied": "Copied",
+    "done": "Done",
+    "moreInfo": "More info",
+    "open": "Open",
+    "remove": "Remove",
+    "retry": "Try again"
+  },
+  "state": {
+    "checking": "Checking…",
+    "connected": "Connected",
+    "disabled": "Off",
+    "enabled": "On",
+    "loading": "Loading…",
+    "notConnected": "Not connected",
+    "saved": "Saved",
+    "saving": "Saving…",
+    "unavailable": "Unavailable",
+    "unknown": "Unknown",
+    "working": "Working…"
+  },
+  "role": {
+    "owner": "Owner",
+    "admin": "Admin",
+    "member": "Member"
+  },
+  "noun": {
+    "thisDevice": "This device"
+  },
+  "separator": {
+    "pair": "{{first}} · {{second}}",
+    "triple": "{{first}} · {{second}} · {{third}}"
+  },
+  "error": {
+    "needsConnection": "Connect to this server first.",
+    "localSave": "Couldn’t save on this device. Try again."
+  }
+}

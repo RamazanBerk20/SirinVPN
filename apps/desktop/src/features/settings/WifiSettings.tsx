@@ -4,22 +4,27 @@ import { invoke, isAndroid } from "../../platform";
 import { InlineError } from "../../components/ui";
 import { errorMessage } from "../../lib/errors";
 import type { ServerProfile, WifiPolicySnapshot } from "../../types";
+import { t, type MessageKey } from "../../i18n";
+import { Rich } from "../../i18n/Rich";
+import { useInfoHint } from "../../components/InfoHint";
 
-const networkLabels = {
-  unavailable: "No active network detected",
-  other_network: "The active connection is not Wi-Fi",
-  trusted_wifi: "Current network: marked trusted",
-  untrusted_wifi: "Current network: not marked trusted",
+/** Stored label for a trusted network the user did not name; never displayed. */
+const UNNAMED_NETWORK_LABEL = "Wi-Fi exception";
+const networkLabels: Record<WifiPolicySnapshot["current_network"], MessageKey> = {
+  unavailable: "settings.wifi.network.unavailable",
+  other_network: "settings.wifi.network.otherNetwork",
+  trusted_wifi: "settings.wifi.network.trusted",
+  untrusted_wifi: "settings.wifi.network.untrusted",
 };
-const statusLabels = {
-  disabled: "Automatic connection is off.",
-  waiting_for_wifi: "Waiting for a Wi-Fi network that is not marked trusted.",
-  trusted: "This network is marked trusted. Existing VPN sessions stay connected.",
-  connecting: "Connecting with the automation server’s saved settings…",
-  session_active: "A VPN session or its protection is already active.",
-  waiting_for_network_change: "Automation paused on this network. It resumes when the network changes; you can also connect manually.",
-  needs_attention: "Automatic connection could not finish. Open Home to check the connection and try manually.",
-  needs_authorization: "Connect once from Home to authorize VPN controls for this account.",
+const statusLabels: Record<WifiPolicySnapshot["automation_status"], MessageKey> = {
+  disabled: "settings.wifi.status.disabled",
+  waiting_for_wifi: "settings.wifi.status.waitingForWifi",
+  trusted: "settings.wifi.status.trusted",
+  connecting: "settings.wifi.status.connecting",
+  session_active: "settings.wifi.status.sessionActive",
+  waiting_for_network_change: "settings.wifi.status.paused",
+  needs_attention: "settings.wifi.status.needsAttention",
+  needs_authorization: "settings.wifi.status.needsAuthorization",
 };
 
 export function WifiSettings() {
@@ -35,6 +40,10 @@ export function WifiSettings() {
   const writing = useRef(false);
   // A later successful poll clears only errors that polling itself reported.
   const pollFailed = useRef(false);
+  const [info, infoPanel] = useInfoHint(
+    t(isAndroid ? "settings.wifi.infoAndroid" : "settings.wifi.infoDesktop"),
+    t("settings.wifi.infoLabel"),
+  );
   const applySnapshot = (next: WifiPolicySnapshot, profiles?: ServerProfile[]) => {
     setSnapshot(next);
     if (profiles) setServers(profiles);
@@ -76,8 +85,8 @@ export function WifiSettings() {
         if (current()) {
           pollFailed.current = true;
           setError(initialized
-            ? "The current network status could not be refreshed. Refresh network to try again."
-            : errorMessage(reason, "Wi-Fi trust settings could not be loaded."));
+            ? t("settings.wifi.refreshFailed")
+            : errorMessage(reason, t("settings.wifi.loadFailed")));
         }
       } finally {
         polling = false;
@@ -117,7 +126,7 @@ export function WifiSettings() {
       if (reviewNetwork) { setReviewedToken(next.current_network_token); setLabel(""); }
     } catch (e) {
       if (active.current && epoch === generation.current) {
-        setError(errorMessage(e, "The Wi-Fi trust setting could not be changed."));
+        setError(errorMessage(e, t("settings.wifi.saveFailed")));
         setSelected(snapshot?.policy.server_id ?? servers[0]?.id ?? "");
       }
     } finally {
@@ -130,71 +139,72 @@ export function WifiSettings() {
   const permissionRequired = isAndroid && snapshot?.permission_required === true;
   const locationOff = isAndroid && snapshot?.location_enabled === false;
   const trustReason = permissionRequired
-    ? "Allow precise location so Android can identify this Wi-Fi. SirinVPN does not collect your location."
-    : locationOff ? "Turn on Location in Android so this Wi-Fi can be identified."
+    ? t("settings.wifi.access.permission")
+    : locationOff ? t("settings.wifi.access.locationOff")
     : !snapshot?.can_trust_current || !snapshot.current_network_token
-    ? "The operating system cannot reliably identify this saved Wi-Fi connection. It cannot be marked trusted."
-    : networkChanged ? "The network changed. Select Refresh network to review it before marking it trusted." : "";
-  return <section className="settings-card wifi-settings" aria-label="Wi-Fi trust" aria-busy={busy}>
-    <div className="settings-section-heading"><h2>Wi-Fi trust</h2></div>
+    ? t("settings.wifi.access.unidentified")
+    : networkChanged ? t("settings.wifi.access.changed") : "";
+  return <section className="settings-card wifi-settings" aria-label={t("settings.wifi.title")} aria-busy={busy}>
+    <div className="settings-section-heading"><h2>{t("settings.wifi.title")}</h2>{info}</div>
+    {infoPanel}
     <label className="preference-row">
-      <span><strong>Connect on Wi-Fi not marked trusted</strong><small>Automatic connection applies on Wi-Fi networks that are not marked trusted. Uses the server chosen below and its saved connection settings.</small></span>
-      <input type="checkbox" role="switch" aria-label="Connect on Wi-Fi not marked trusted"
+      <span><strong>{t("settings.wifi.toggle.label")}</strong><small>{t("settings.wifi.toggle.summary")}</small></span>
+      <input type="checkbox" role="switch" aria-label={t("settings.wifi.toggle.label")}
         checked={snapshot?.policy.enabled ?? false} disabled={busy || !snapshot || !selected}
         onChange={(e) => { const enabled = e.target.checked; void action(() => api.setWifiPolicy({ enabled, server_id: selected })); }} />
     </label>
-    <label className="field"><span>Automatic connection server</span>
-      <select aria-label="Automatic connection server" value={selected} disabled={busy || !snapshot || !servers.length}
+    <label className="field"><span>{t("settings.wifi.server.label")}</span>
+      <select aria-label={t("settings.wifi.server.label")} value={selected} disabled={busy || !snapshot || !servers.length}
         onChange={(e) => { const id = e.target.value; setSelected(id); void action(() => api.setWifiPolicy({ enabled: snapshot?.policy.enabled ?? false, server_id: id })); }}>
-        {!servers.length && <option value="">Add a server first</option>}
+        {!servers.length && <option value="">{t("settings.wifi.server.empty")}</option>}
         {servers.map((server) => <option key={server.id} value={server.id}>{server.name}</option>)}
       </select>
     </label>
     {snapshot && <>
-      <p className="settings-note">{networkLabels[snapshot.current_network]}{currentName && <> — <strong>{currentName}</strong></>}</p>
-      {snapshot.policy.enabled && <p className={snapshot.automation_status === "waiting_for_network_change" ? "wifi-paused" : "settings-note"} role="status">{statusLabels[snapshot.automation_status]}</p>}
+      <p className="settings-note">{currentName
+        ? <Rich id="settings.wifi.network.named" params={{ status: t(networkLabels[snapshot.current_network]), name: currentName }} tags={{ strong: content => <strong>{content}</strong> }} />
+        : t(networkLabels[snapshot.current_network])}</p>
+      {snapshot.policy.enabled && <p className={snapshot.automation_status === "waiting_for_network_change" ? "wifi-paused" : "settings-note"} role="status">{t(statusLabels[snapshot.automation_status])}</p>}
       {snapshot.current_network === "untrusted_wifi" && <>
         {permissionRequired || locationOff ? <div className="wifi-access">
           <p id="wifi-trust-reason" className="settings-note">{trustReason}</p>
           <div className="settings-action-row">
             {permissionRequired && <button className="secondary-button" disabled={busy} onClick={() => void action(async () => {
               if (!await invoke<boolean>("android_wifi_permission"))
-                throw new Error("Wi-Fi access was not granted. Open App permissions, choose Location and enable Precise location.");
-            }, true)}>Allow Wi-Fi access</button>}
-            {locationOff && <button className="secondary-button" disabled={busy} onClick={() => void invoke("android_location_settings")}>Open Location settings</button>}
-            <button className="text-button" onClick={() => void invoke("android_background_wifi_settings")}>App permissions</button>
+                throw new Error(t("settings.wifi.access.denied"));
+            }, true)}>{t("settings.wifi.access.allow")}</button>}
+            {locationOff && <button className="secondary-button" disabled={busy} onClick={() => void invoke("android_location_settings")}>{t("settings.wifi.access.locationSettings")}</button>}
+            <button className="text-button" onClick={() => void invoke("android_background_wifi_settings")}>{t("settings.wifi.access.appPermissions")}</button>
           </div>
         </div> : <>
         <div className="settings-action-row">
-          <label className="field"><span>Network name (optional)</span><input value={label} maxLength={80} placeholder="For example, Home" onChange={(e) => setLabel(e.target.value)} disabled={busy || Boolean(trustReason)} /></label>
+          <label className="field"><span>{t("settings.wifi.trust.label")}</span><input value={label} maxLength={80} placeholder={t("settings.wifi.trust.placeholder")} onChange={(e) => setLabel(e.target.value)} disabled={busy || Boolean(trustReason)} /></label>
           <button className="secondary-button" disabled={busy || Boolean(trustReason)}
             aria-describedby={trustReason ? "wifi-trust-reason" : undefined}
-            onClick={() => void action(() => api.trustCurrentWifi(reviewedToken!, label.trim() || "Wi-Fi exception"), true)}>Trust current Wi-Fi</button>
+            onClick={() => void action(() => api.trustCurrentWifi(reviewedToken!, label.trim() || UNNAMED_NETWORK_LABEL), true)}>{t("settings.wifi.trust.action")}</button>
         </div>
         {trustReason && <p id="wifi-trust-reason" className="settings-note">{trustReason}</p>}
         </>}
       </>}
       {snapshot.trusted_networks.length > 0 && <ul className="plain-list">{snapshot.trusted_networks.map((network) => {
         const osName = snapshot.network_names?.[network.id];
-        const friendly = network.label !== "Wi-Fi exception" ? network.label : "";
-        const name = osName || friendly || `Saved Wi-Fi (${network.id.slice(0, 8)})`;
+        const friendly = network.label !== UNNAMED_NETWORK_LABEL ? network.label : "";
+        const name = osName || friendly || t("settings.wifi.trusted.savedName", { id: network.id.slice(0, 8) });
+        const kind = t(network.id === snapshot.current_network_token ? "settings.wifi.trusted.current" : "settings.wifi.trusted.saved");
         return <li key={network.id} className="settings-action-row trusted-wifi-row">
           <div><strong>{name}</strong>
-            {osName && friendly && friendly !== osName && <p className="settings-note">Label: {friendly}</p>}
-            <p className="settings-note">{network.id === snapshot.current_network_token ? "Current network" : "Saved Wi-Fi connection"}{!osName && " · OS name unavailable"}</p>
+            {osName && friendly && friendly !== osName && <p className="settings-note">{t("settings.wifi.trusted.label", { label: friendly })}</p>}
+            <p className="settings-note">{osName ? kind : t("common.separator.pair", { first: kind, second: t("settings.wifi.trusted.nameUnavailable") })}</p>
           </div>
-          <button className={isAndroid ? "secondary-button" : "text-button"} aria-label={`Remove trust for ${name}`} disabled={busy} onClick={() => void action(() => api.forgetTrustedWifi(network.id))}>Remove trust</button>
+          <button className={isAndroid ? "secondary-button" : "text-button"} aria-label={t("settings.wifi.trusted.removeLabel", { name })} disabled={busy} onClick={() => void action(() => api.forgetTrustedWifi(network.id))}>{t("settings.wifi.trusted.remove")}</button>
         </li>;
       })}</ul>}
     </>}
-    <button className="text-button" disabled={busy} onClick={() => void action(async () => {}, true)}>Refresh network</button>
+    <button className="text-button" disabled={busy} onClick={() => void action(async () => {}, true)}>{t("settings.wifi.refresh")}</button>
     {isAndroid && snapshot?.can_trust_current && <div>
-      <p className="settings-note">For trusted Wi-Fi exceptions while the app is closed, allow Location → Allow all the time in Android. A hidden identity is treated as untrusted.</p>
-      <button className="text-button" onClick={() => void invoke("android_background_wifi_settings")}>Background Wi-Fi permissions</button>
+      <p className="settings-note">{t("settings.wifi.background.summary")}</p>
+      <button className="text-button" onClick={() => void invoke("android_background_wifi_settings")}>{t("settings.wifi.background.action")}</button>
     </div>}
-    <p className="settings-note">Trust is your exception to automatic connection, not a network security assessment. It applies to a saved Wi-Fi connection and stores no history of networks visited.</p>
-    <p className="settings-note">OS Wi-Fi names are read only for display on this device. They are not stored by SirinVPN or sent to the VPS.</p>
-    <p className="settings-note">{isAndroid ? "An Android notification keeps enabled automation visible while the app is closed. Disconnect pauses it on the current network. Stop Wi-Fi automation in the notification turns this option off and ends monitoring." : "Monitoring continues while SirinVPN is hidden in the tray. Quit app stops monitoring, even if an existing VPN tunnel stays connected."}</p>
     <InlineError message={error} />
   </section>;
 }

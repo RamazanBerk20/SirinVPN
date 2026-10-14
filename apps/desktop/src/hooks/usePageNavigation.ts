@@ -5,7 +5,7 @@ import { pageScrollPort } from "../lib/scrolling";
 
 const pages: Page[] = ["home", "servers", "devices", "settings"];
 const details: Partial<Record<Page, string[]>> = {
-  home: ["details"],
+  home: ["details", "connection"],
   settings: ["general", "connection", "network", "recovery", "maintenance"],
 };
 function readRoute(): [Page, string] {

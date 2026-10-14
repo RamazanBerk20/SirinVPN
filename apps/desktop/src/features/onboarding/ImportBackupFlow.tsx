@@ -1,12 +1,13 @@
 import { SecretInput } from "../../components/SecretInput";
 import { open } from "../../lib/nativeDialog";
-import { ArrowClockwise, LockKey, UploadSimple } from "@phosphor-icons/react";
+import { ArrowClockwise, UploadSimple } from "@phosphor-icons/react";
 import { useState } from "react";
 import { api } from "../../api";
 import { type ServerProfile } from "../../types";
 import { Field, InlineError } from "../../components/ui";
 import { preferredBackupDirectory } from "../../lib/backupPaths";
 import { errorMessage } from "../../lib/errors";
+import { t } from "../../i18n";
 
 export function ImportBackupFlow({
   onComplete,
@@ -24,13 +25,13 @@ export function ImportBackupFlow({
     try {
       const defaultPath = await preferredBackupDirectory();
       const selected = await open({
-        title: "Open encrypted SirinVPN backup",
+        title: t("onboarding.backup.pickerTitle"),
         multiple: false,
         directory: false,
         defaultPath,
         filters: [
           {
-            name: "SirinVPN encrypted backup",
+            name: t("onboarding.backup.fileType"),
             extensions: ["sirinvpn-backup"],
           },
         ],
@@ -41,7 +42,7 @@ export function ImportBackupFlow({
       }
     } catch (reason) {
       setError(
-        errorMessage(reason, "The backup file picker could not be opened."),
+        errorMessage(reason, t("onboarding.backup.error.picker")),
       );
     }
   };
@@ -58,10 +59,7 @@ export function ImportBackupFlow({
     } catch (reason) {
       setPassword("");
       setError(
-        errorMessage(
-          reason,
-          "The encrypted device backup could not be restored.",
-        ),
+        errorMessage(reason, t("onboarding.backup.error.restore")),
       );
     } finally {
       setBusy(false);
@@ -81,23 +79,20 @@ export function ImportBackupFlow({
           <UploadSimple size={20} />
         </span>
         <div>
-          <h2>Restore this device</h2>
-          <p>
-            Decrypt one local profile and device identity. The VPS is not
-            contacted or changed.
-          </p>
+          <h2>{t("onboarding.backup.title")}</h2>
+          <p>{t("onboarding.backup.summary")}</p>
         </div>
       </div>
       <Field
-        label="Encrypted backup"
-        hint="Existing identities and conflicting server IDs are never overwritten."
+        label={t("onboarding.backup.file")}
+        hint={t("onboarding.backup.fileHint")}
       >
         <div className="file-picker-row">
           <input
             className="mono"
             value={path}
             readOnly
-            placeholder="Choose a .sirinvpn-backup file"
+            placeholder={t("onboarding.backup.filePlaceholder")}
           />
           <button
             className="secondary-button"
@@ -105,11 +100,11 @@ export function ImportBackupFlow({
             onClick={() => void chooseBackup()}
             disabled={busy}
           >
-            Choose file
+            {t("onboarding.backup.choose")}
           </button>
         </div>
       </Field>
-      <Field label="Backup password">
+      <Field label={t("onboarding.backup.password")}>
         <SecretInput
           type="password"
           value={password}
@@ -128,12 +123,8 @@ export function ImportBackupFlow({
         ) : (
           <UploadSimple size={18} />
         )}
-        {busy ? "Decrypting locally" : "Restore backup"}
+        {busy ? t("onboarding.backup.submitting") : t("onboarding.backup.submit")}
       </button>
-      <p className="form-footnote">
-        <LockKey size={15} /> Passwords and decrypted keys are never sent to a
-        server.
-      </p>
     </form>
   );
 }

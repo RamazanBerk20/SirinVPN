@@ -53,7 +53,7 @@ for(const [index,s] of cases.entries()) {
     appendFileSync(log,JSON.stringify(row)+'\n');continue;
   }
   if(/local-component|update-local-vpn-component|retained-appimage|application-launch|launch-application|launched-command|startup-|activate-startup/.test(key) ||
-      s.actions.some(a=>/Start on system startup|Launch minimized|Close to tray/.test(a.css??''))) {
+      s.actions.some(a=>/Start at sign-in|Start minimized|Close to tray/.test(a.css??''))) {
     row.disposition='android_native_workflow_requires_separate_evidence';
     row.adaptation='Android system VPN policy, package routing or APK replacement owns this desktop-specific outcome. See docs/android/scenarios.json; a desktop fixture is not native verification.';
     appendFileSync(log,JSON.stringify(row)+'\n');continue;
@@ -68,14 +68,14 @@ for(const [index,s] of cases.entries()) {
         row.adaptation='Preference save/dirty/error workflow uses Automatic reconnect; kill switch is verified separately in Android Settings.';
         return {...action,css:'input[aria-label="Automatic reconnect"]'};
       }
-      if(action.text==='Enlarge invitation QR code' || action.text==='Enlarge recovery QR code') {
+      if(action.text==='Enlarge invitation QR code' || action.text==='Enlarge recovery key QR code') {
         const kind=action.text.includes('invitation')?'invitation':'recovery';
         row.adaptation='Native protected QR/secret viewer; this fixture proves invocation only. Native view requires separate evidence.';
-        return {...action,text:`View or share ${kind} securely`};
+        return {...action,text:kind==='invitation'?'View or share invitation':'View or share recovery key'};
       }
       if(action.text==='SSH agent') {
         row.adaptation='OS SSH-agent authentication uses a user-selected private key on Android; the same host-trust/operation outcome is exercised.';
-        return [{...action,text:'Private key'},{js:`(()=>{const b=[...document.querySelectorAll('button')].find(b=>/Choose SSH key|SSH key selected/.test(b.innerText));if(!b) throw Error('Native SSH key picker missing');b.click()})()`}];
+        return [{...action,text:'Private key'},{js:`(()=>{const b=[...document.querySelectorAll('button')].find(b=>/Choose SSH key|Key selected/.test(b.innerText));if(!b) throw Error('Native SSH key picker missing');b.click()})()`}];
       }
       return action;
     });
@@ -100,13 +100,13 @@ for(const [index,s] of cases.entries()) {
     if(errors.length || row.observed.unknown.length) throw Error(JSON.stringify({errors,unknown:row.observed.unknown}));
     row.assertions=[];
     for(const a of [...(s.assertions??[]),...(s.expect?[{text:s.expect}]:[])]) {
-      if(a.text==='Scan recovery QR') {
+      if(a.text==='Scan recovery key') {
         const invoked=await evaluate(`window.__catalog.prompts.some(p=>p.kind==='android_show_secret')`,9224);
         if(!invoked) throw Error('Protected native QR viewer was not requested');
         row.nativeVerification='Invocation observed; protected native viewer requires separate evidence.';
       } else row.assertions.push(await call('assertVisible',a));
     }
-    if(row.observed.text.length<12) throw Error('Empty screen');
+    if(row.observed.text.trim().length<8) throw Error('Empty screen'); // The shortest real screen is “Loading…”.
     if(row.observed.overflow) throw Error('Horizontal document overflow');
     await capture(row);
     if(s.expand && await evaluate('!!document.querySelector("details:not([open])")',9224)) {await call('act',{details:'open'});await capture(row,'--expanded')}

@@ -1,5 +1,6 @@
 import { CaretDown, Key } from "@phosphor-icons/react";
-import { canCancelInvitation } from "../../access";
+import { accessLevelLabel, canCancelInvitation } from "../../access";
+import { t } from "../../i18n";
 import { formatExpiry } from "../../lib/errors";
 import type { MembershipSnapshot } from "../../types";
 
@@ -15,14 +16,14 @@ export function ActiveInvitations({
   if (snapshot.active_invitations.length === 0)
     return (
       <p className="invitation-empty">
-        No active invitations. Invite someone to give them access.
+        {t("devices.invitations.empty")}
       </p>
     );
   return (
     <details className="access-disclosure invitations-disclosure">
       <summary>
         <Key size={17} />
-        <span>Active invitations</span>
+        <span>{t("devices.invitations.title")}</span>
         <span className="disclosure-count">
           {snapshot.active_invitations.length}
         </span>
@@ -34,14 +35,14 @@ export function ActiveInvitations({
             ? snapshot.members.find((member) => member.id === invitation.target_member_id)
             : undefined;
           const role = member?.role === "owner"
-            ? "Owner"
-            : (member?.administrator ?? invitation.administrator) ? "Admin" : "Member";
+            ? "owner"
+            : (member?.administrator ?? invitation.administrator) ? "admin" : "member";
           return (
             <div className="invitation-row" key={invitation.id}>
               <span>
-                <strong>{invitation.recipient_names && !invitation.target_member_id ? "New member invitation" : invitation.member_name}</strong>
+                <strong>{invitation.recipient_names && !invitation.target_member_id ? t("devices.invitations.newMember") : invitation.member_name}</strong>
                 <small>
-                  {role} · expires at {formatExpiry(invitation.expires_at_unix)}
+                  {t("devices.invitations.row", { role: accessLevelLabel(role), date: formatExpiry(invitation.expires_at_unix) })}
                 </small>
               </span>
               {canCancelInvitation(
@@ -53,7 +54,7 @@ export function ActiveInvitations({
                   className="text-button danger-text"
                   onClick={() => void onCancel(invitation.id)}
                 >
-                  Cancel
+                  {t("common.action.cancel")}
                 </button>
               )}
             </div>

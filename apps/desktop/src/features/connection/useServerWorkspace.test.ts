@@ -2,6 +2,7 @@ import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "../../api";
 import { emptyLocalStatus } from "../../hooks/useDesktopStatus";
+import { t } from "../../i18n";
 import type { DiagnosticReport, LocalTunnelStatus, ServerProfile } from "../../types";
 import { defaultConnectionPreferences } from "./connectionPreferences";
 import { useServerWorkspace } from "./useServerWorkspace";
@@ -71,6 +72,18 @@ describe("independent desktop policy", () => {
     rerender({ p: { ...profile, id: "another-server" } });
     expect(result.current.diagnostics).toBeNull();
     expect(result.current.diagnosticsOpen).toBe(false);
+  });
+
+  it("reports a failed diagnostics request as an unavailable check", async () => {
+    vi.mocked(api.diagnostics).mockRejectedValue(new Error("unavailable"));
+    const { result } = renderHook(() => useServerWorkspace(input()));
+    await waitFor(() => expect(result.current.preferences.ready).toBe(true));
+    await act(() => result.current.runDiagnostics());
+    expect(result.current.diagnostics?.checks).toEqual([expect.objectContaining({
+      code: "local_diagnostics_unavailable",
+      level: "fail",
+      message: t("maintenance.workspace.error.diagnostics"),
+    })]);
   });
 
   for (const kill of [false, true])

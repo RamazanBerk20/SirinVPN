@@ -1,4 +1,5 @@
 import type { DnsUpstream, TransportKind } from "./types";
+import { formatNumber, t } from "./i18n";
 
 export function formatBytes(value: number): string {
   if (!Number.isFinite(value) || value <= 0) return "0 B";
@@ -10,7 +11,9 @@ export function formatBytes(value: number): string {
   // Values that round up to 1024 read as the next unit, not "1024 KB".
   if (index < units.length - 1 && Math.round(value / 1024 ** index) >= 1024) index += 1;
   const amount = value / 1024 ** index;
-  return `${amount >= 10 || index === 0 ? amount.toFixed(0) : amount.toFixed(1)} ${units[index]}`;
+  const digits = amount >= 10 || index === 0 ? 0 : 1;
+  const unit = units[index] as "B" | "KB" | "MB" | "GB" | "TB";
+  return t(`format.bytes.${unit}`, { value: formatNumber(amount, { minimumFractionDigits: digits, maximumFractionDigits: digits }) });
 }
 
 export function validateHost(value: string): boolean {
@@ -45,24 +48,21 @@ export function validateHost(value: string): boolean {
 export function formatUptime(seconds: number): string {
   const days = Math.floor(seconds / 86_400);
   const hours = Math.floor((seconds % 86_400) / 3_600);
-  if (days > 0) return `${days}d ${hours}h`;
+  if (days > 0) return t("format.uptimeDays", { days, hours });
   const minutes = Math.floor((seconds % 3_600) / 60);
-  return `${hours}h ${minutes}m`;
+  return t("format.uptimeHours", { hours, minutes });
 }
 
-// The interface is English; numeric grouping must not follow the host's locale.
-const countFormatter = new Intl.NumberFormat("en-US", {
-  maximumFractionDigits: 0,
-});
+// Numbers follow the interface locale, not the host's, so they match the surrounding text.
 export function formatCount(value: number | undefined): string {
   return value === undefined || !Number.isFinite(value) || value < 0
-    ? "Unavailable"
-    : countFormatter.format(value);
+    ? t("format.unavailable")
+    : formatNumber(value, { maximumFractionDigits: 0 });
 }
 
 export function formatTunnelDuration(seconds: number | undefined): string {
   if (seconds === undefined || !Number.isFinite(seconds) || seconds < 0)
-    return "Unavailable";
+    return t("format.unavailable");
   const whole = Math.floor(seconds);
   const pad = (value: number) => String(value).padStart(2, "0");
   if (whole < 3600) return `${pad(Math.floor(whole / 60))}:${pad(whole % 60)}`;
@@ -75,9 +75,9 @@ export function formatRate(bytesPerSecond: number | undefined): string {
     !Number.isFinite(bytesPerSecond) ||
     bytesPerSecond < 0
   ) {
-    return "Unavailable";
+    return t("format.unavailable");
   }
-  return `${formatBytes(bytesPerSecond)}/s`;
+  return t("format.rate", { value: formatBytes(bytesPerSecond) });
 }
 
 export function formatCpuUsage(basisPoints: number | undefined): string {
@@ -86,9 +86,9 @@ export function formatCpuUsage(basisPoints: number | undefined): string {
     !Number.isFinite(basisPoints) ||
     basisPoints < 0
   ) {
-    return "Unavailable";
+    return t("format.unavailable");
   }
-  return `${(Math.min(basisPoints, 10_000) / 100).toFixed(1)}%`;
+  return formatNumber(Math.min(basisPoints, 10_000) / 10_000, { style: "percent", minimumFractionDigits: 1, maximumFractionDigits: 1 });
 }
 
 export function formatMemoryUsage(
@@ -103,10 +103,10 @@ export function formatMemoryUsage(
     usedBytes < 0 ||
     totalBytes <= 0
   ) {
-    return "Unavailable";
+    return t("format.unavailable");
   }
-  const percentage = Math.min(100, (usedBytes / totalBytes) * 100);
-  return `${percentage.toFixed(0)}% · ${formatBytes(usedBytes)}`;
+  const share = Math.min(1, usedBytes / totalBytes);
+  return t("format.memoryUsage", { percent: formatNumber(share, { style: "percent", maximumFractionDigits: 0 }), used: formatBytes(usedBytes) });
 }
 
 export function formatLatency(milliseconds: number | undefined): string {
@@ -115,37 +115,18 @@ export function formatLatency(milliseconds: number | undefined): string {
     !Number.isFinite(milliseconds) ||
     milliseconds < 0
   ) {
-    return "Unavailable";
+    return t("format.unavailable");
   }
-  return milliseconds < 1 ? "<1 ms" : `${Math.round(milliseconds)} ms`;
+  return milliseconds < 1 ? t("format.latencyBelowOne") : t("format.latency", { value: formatNumber(Math.round(milliseconds)) });
 }
 
 export function formatTransport(transport: TransportKind | undefined): string {
-  if (transport === "direct_udp") return "Direct UDP";
-  if (transport === "obfuscated_udp") return "Obfuscated UDP";
-  if (transport === "tls_like") return "TLS fallback";
-  if (transport === "tcp_fallback") return "TCP fallback";
-  return "Unavailable";
-}
-
-export function formatDnsStatus(
-  upstream: DnsUpstream | undefined,
-  healthy: boolean | undefined,
-  connected: boolean,
-): string {
-  if (!connected) return "Inactive";
-  if (healthy === undefined) return "Checking";
-  if (!healthy) return "Unavailable";
-  if (upstream?.mode === "split") return "Split DNS active";
-  if (upstream?.mode === "dns_over_tls") return "DoT active";
-  if (upstream?.mode === "dns_over_https") return "DoH active";
-  return "Recursive";
+  return transport ? t(`format.transport.${transport}`) : t("format.unavailable");
 }
 
 export function formatDnsPolicy(upstream: DnsUpstream): string {
-  if (upstream.mode === "split") return `Split DNS · ${upstream.zones.length} zones · ${formatDnsPolicy(upstream.default)}`;
-  if (upstream.mode === "recursive") return "Recursive DNS";
-  const protocol =
-    upstream.mode === "dns_over_tls" ? "DNS over TLS" : "DNS over HTTPS";
-  return `${protocol} · ${upstream.endpoints.length} endpoint${upstream.endpoints.length === 1 ? "" : "s"}`;
+  if (upstream.mode === "split") return t("format.dnsPolicy.split", { count: upstream.zones.length, fallback: formatDnsPolicy(upstream.default) });
+  if (upstream.mode === "recursive") return t("format.dnsPolicy.recursive");
+  const count = upstream.endpoints.length;
+  return upstream.mode === "dns_over_tls" ? t("format.dnsPolicy.dnsOverTls", { count }) : t("format.dnsPolicy.dnsOverHttps", { count });
 }

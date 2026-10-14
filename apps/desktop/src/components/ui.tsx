@@ -1,3 +1,4 @@
+import { t } from "../i18n";
 import { cloneElement, isValidElement, useId, type InputHTMLAttributes } from "react";
 import { Warning } from "@phosphor-icons/react";
 import { Brand, SirinMark } from "./Brand";
@@ -59,7 +60,7 @@ export function Metric({
             min={0}
             max={100}
             value={Math.max(0, Math.min(100, percent))}
-            aria-label={`${label} utilization`}
+            aria-label={t("app.metric.usage", { label })}
           />
         )}
       </div>
@@ -80,7 +81,7 @@ export function LoadingScreen() {
   return (
     <main className="loading-screen" role="status" aria-live="polite">
       <SirinMark className="brand-mark" />
-      <p>Loading your VPN…</p>
+      <p>{t("common.state.loading")}</p>
     </main>
   );
 }
@@ -96,14 +97,11 @@ export function PlatformUnavailable({ message, onRetry }: { message: string; onR
         role="alert"
       >
         <Warning size={34} weight="duotone" />
-        <p className="section-label">Safety boundary active</p>
-        <h1>Protected controls are unavailable.</h1>
-        <p className="initialization-summary">
-          {message} No VPN or provisioning action was started.
-        </p>
-        <p>Unlock this device and check that its secure storage and SirinVPN system component are available. Your saved profiles are preserved.</p>
-        {onRetry && <button className="primary-button" onClick={onRetry}>Retry initialization</button>}
-        <button className="text-button" onClick={() => void navigator.clipboard.writeText("SirinVPN initialization failed. Protected controls are unavailable; no VPN or provisioning action was started.").catch(() => {})}>Copy diagnostic summary</button>
+        <h1>{t("app.unavailable.title")}</h1>
+        <p className="initialization-summary">{message}</p>
+        <p>{t("app.unavailable.help")}</p>
+        {onRetry && <button className="primary-button" onClick={onRetry}>{t("common.action.retry")}</button>}
+        <button className="text-button" onClick={() => void navigator.clipboard.writeText(t("app.unavailable.report", { message })).catch(() => {})}>{t("app.unavailable.copy")}</button>
       </section>
     </main>
   );

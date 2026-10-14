@@ -30,14 +30,12 @@ label > span,
 .field > span,
 .choice-row strong,
 .primary-navigation strong,
-.setting-row strong,
 .preference-row strong {
   font-weight: var(--weight-medium);
 }
 .workspace-header h1,
 .server-collection h1,
-.initialization-card > h1,
-.dialog-title {
+.initialization-card > h1 {
   font-size: var(--text-page);
   font-weight: var(--weight-semibold);
   line-height: 1.25;
@@ -45,15 +43,13 @@ label > span,
 }
 h2,
 .section-heading h2,
-.settings-card h2,
-.settings-category-intro h2 {
+.settings-card h2 {
   font-size: var(--text-section);
   font-weight: var(--weight-semibold);
   line-height: 1.4;
   letter-spacing: normal;
 }
 .field,
-.setting-row,
 .preference-row,
 .settings-note,
 .choice-row,
@@ -63,7 +59,6 @@ h2,
   line-height: 1.5;
 }
 .field small,
-.setting-row small,
 .preference-row small,
 .settings-note,
 .choice-row small,
@@ -99,7 +94,6 @@ code,
   letter-spacing: normal;
 }
 .endpoint,
-.workspace-status,
 .connection-facts,
 .port-forward-route {
   font-family: var(--font-ui);

@@ -7,6 +7,9 @@ import {
   waitFor,
 } from "@testing-library/react";
 import App from "./App";
+import { t } from "./i18n";
+
+const startsWith = (text: string) => (name: string) => name.startsWith(text);
 
 const apiMocks = vi.hoisted(() => ({
   getAppPreferences: vi.fn(),
@@ -99,18 +102,18 @@ describe("Desktop release update boundary", () => {
     });
     apiMocks.discardReleaseUpdate.mockImplementationOnce(async()=>{apiMocks.releaseUpdateStatus.mockResolvedValue(status);});
     render(<App />);
-    fireEvent.click(await screen.findByRole("button",{name:"Check for app updates"}));
-    fireEvent.change(screen.getByLabelText(/^Release source/),{target:{value:["https","://updates.example/sirinvpn/"].join("")}});
-    fireEvent.click(screen.getByRole("button",{name:"Check and verify release"}));
-    fireEvent.click(await screen.findByRole("checkbox",{name:/I confirm installation/}));
-    fireEvent.click(screen.getByRole("button",{name:"Install authenticated update"}));
-    await screen.findByRole("heading",{name:"Android installer requested"});
-    fireEvent.click(screen.getByRole("button",{name:"Close"}));
+    fireEvent.click(await screen.findByRole("button",{name:t("app.onboarding.checkUpdates")}));
+    fireEvent.change(screen.getByLabelText(new RegExp(`^${t("release.form.source")}`)),{target:{value:["https","://updates.example/sirinvpn/"].join("")}});
+    fireEvent.click(screen.getByRole("button",{name:t("release.form.check")}));
+    fireEvent.click(await screen.findByRole("checkbox",{name:startsWith(t("release.candidate.confirmAndroid"))}));
+    fireEvent.click(screen.getByRole("button",{name:t("release.candidate.install")}));
+    await screen.findByRole("heading",{name:t("release.done.titleAndroid")});
+    fireEvent.click(screen.getByRole("button",{name:t("common.action.close")}));
     expect(apiMocks.discardReleaseUpdate).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole("button",{name:"Check for app updates"}));
-    fireEvent.click(await screen.findByRole("button",{name:"Cancel pending Android installation"}));
+    fireEvent.click(screen.getByRole("button",{name:t("app.onboarding.checkUpdates")}));
+    fireEvent.click(await screen.findByRole("button",{name:t("release.recovery.cancelPending")}));
     await waitFor(()=>expect(apiMocks.discardReleaseUpdate).toHaveBeenCalledTimes(1));
-    await waitFor(()=>expect(screen.queryByRole("button",{name:"Cancel pending Android installation"})).toBeNull());
+    await waitFor(()=>expect(screen.queryByRole("button",{name:t("release.recovery.cancelPending")})).toBeNull());
   });
 
   it("never checks automatically and installs only after a separate confirmation", async () => {
@@ -118,15 +121,15 @@ describe("Desktop release update boundary", () => {
     render(<App />);
 
     const openUpdates = await screen.findByRole("button", {
-      name: "Check for app updates",
+      name: t("app.onboarding.checkUpdates"),
     });
     expect(apiMocks.checkReleaseUpdate).not.toHaveBeenCalled();
     fireEvent.click(openUpdates);
-    fireEvent.change(screen.getByLabelText(/^Release source/), {
+    fireEvent.change(screen.getByLabelText(new RegExp(`^${t("release.form.source")}`)), {
       target: { value: `  ${source}  ` },
     });
     fireEvent.click(
-      screen.getByRole("button", { name: "Check and verify release" }),
+      screen.getByRole("button", { name: t("release.form.check") }),
     );
 
     await waitFor(() =>
@@ -136,19 +139,19 @@ describe("Desktop release update boundary", () => {
       ),
     );
     expect(
-      await screen.findByRole("heading", { name: "SirinVPN 0.2.0" }),
+      await screen.findByRole("heading", { name: t("release.candidate.title", { version: "0.2.0" }) }),
     ).toBeTruthy();
     expect(screen.getByText("x86_64-unknown-linux-gnu")).toBeTruthy();
     expect(screen.getByTitle("a".repeat(64))).toBeTruthy();
     const install = screen.getByRole("button", {
-      name: "Install authenticated update",
+      name: t("release.candidate.install"),
     }) as HTMLButtonElement;
     expect(install.disabled).toBe(true);
     expect(apiMocks.installReleaseUpdate).not.toHaveBeenCalled();
 
     fireEvent.click(
       screen.getByRole("checkbox", {
-        name: /I confirm installation of this exact authenticated Debian package/,
+        name: startsWith(t("release.candidate.confirmDebian")),
       }),
     );
     expect(install.disabled).toBe(false);
@@ -159,11 +162,11 @@ describe("Desktop release update boundary", () => {
     );
     expect(
       await screen.findByRole("heading", {
-        name: "SirinVPN 0.2.0 is installed",
+        name: t("release.done.headingInstalled", { version: "0.2.0" }),
       }),
     ).toBeTruthy();
     fireEvent.click(
-      screen.getByRole("button", { name: "Close SirinVPN later" }),
+      screen.getByRole("button", { name: t("release.done.closeLater") }),
     );
     await waitFor(() =>
       expect(apiMocks.discardReleaseUpdate).toHaveBeenCalledTimes(1),
@@ -179,20 +182,20 @@ describe("Desktop release update boundary", () => {
     apiMocks.localStatus.mockResolvedValue({ state: "connected", kill_switch_enabled: true,
       auto_reconnect_enabled: true, rx_bytes: 0, tx_bytes: 0, routing_mode: "full_tunnel" });
     render(<App />);
-    fireEvent.click(await screen.findByRole("button", { name: "Check for app updates" }));
-    fireEvent.change(screen.getByLabelText(/^Release source/), {
+    fireEvent.click(await screen.findByRole("button", { name: t("app.onboarding.checkUpdates") }));
+    fireEvent.change(screen.getByLabelText(new RegExp(`^${t("release.form.source")}`)), {
       target: { value: ["https", "://updates.example/sirinvpn/stable/"].join("") },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Check and verify release" }));
+    fireEvent.click(screen.getByRole("button", { name: t("release.form.check") }));
     const confirmation = await screen.findByRole("checkbox", {
-      name: /I confirm installation of this exact authenticated Windows package/,
+      name: startsWith(t("release.candidate.confirmWindows")),
     });
     expect((confirmation as HTMLInputElement).disabled).toBe(false);
-    expect(screen.queryByText(/Disconnect SirinVPN and disable persistent protection/)).toBeNull();
+    expect(screen.queryByText(t("release.candidate.notReady"))).toBeNull();
     expect(apiMocks.installReleaseUpdate).not.toHaveBeenCalled();
     fireEvent.click(confirmation);
-    fireEvent.click(screen.getByRole("button", { name: "Install authenticated update" }));
-    expect(await screen.findByRole("heading", { name: "Windows installer opened" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: t("release.candidate.install") }));
+    expect(await screen.findByRole("heading", { name: t("release.done.titleWindows") })).toBeTruthy();
     expect(screen.queryByRole("heading", { name: /is installed/ })).toBeNull();
     expect(apiMocks.installReleaseUpdate).toHaveBeenCalledWith(true);
   });
@@ -214,33 +217,33 @@ describe("Desktop release update boundary", () => {
     render(<App />);
 
     fireEvent.click(
-      await screen.findByRole("button", { name: "Check for app updates" }),
+      await screen.findByRole("button", { name: t("app.onboarding.checkUpdates") }),
     );
-    fireEvent.change(screen.getByLabelText(/^Release source/), {
+    fireEvent.change(screen.getByLabelText(new RegExp(`^${t("release.form.source")}`)), {
       target: {
         value: ["https", "://updates.example/sirinvpn/stable/"].join(""),
       },
     });
     fireEvent.click(
-      screen.getByRole("button", { name: "Check and verify release" }),
+      screen.getByRole("button", { name: t("release.form.check") }),
     );
 
     expect(
       await screen.findByText(
-        /Disconnect SirinVPN and disable persistent protection/,
+        t("release.candidate.notReady"),
       ),
     ).toBeTruthy();
     expect(
       (
         screen.getByRole("checkbox", {
-          name: /I confirm installation of this exact authenticated Debian package/,
+          name: startsWith(t("release.candidate.confirmDebian")),
         }) as HTMLInputElement
       ).disabled,
     ).toBe(true);
     expect(
       (
         screen.getByRole("button", {
-          name: "Install authenticated update",
+          name: t("release.candidate.install"),
         }) as HTMLButtonElement
       ).disabled,
     ).toBe(true);

@@ -20,18 +20,18 @@ pub(super) async fn rotate_device_keys(
 ) -> Result<KeyRotationResult, String> {
     let _operation = crate::connection_controller::acquire()?;
     if !input.confirmed {
-        return Err("Confirm the current-device key rotation before continuing.".to_owned());
+        return Err("Confirm the key rotation first.".to_owned());
     }
     let profile = find_profile(&state.paths, &input.server_id)?;
     let pending = has_pending_key_rotation(&state.paths, profile.id).map_err(safe_error)?;
     let local = invoke_helper("status", None).map_err(safe_error)?;
     if local.server_id.is_some() && local.server_id != Some(profile.id) {
-        return Err("Disconnect the other SirinVPN server before rotating these keys.".to_owned());
+        return Err("Disconnect from the other server before rotating keys.".to_owned());
     }
     if !pending
         && (local.server_id != Some(profile.id) || local.state == ConnectionState::Disconnected)
     {
-        return Err("Connect to this server before rotating this device's keys.".to_owned());
+        return Err("Connect to this server before rotating this device’s keys.".to_owned());
     }
     let persistent_protection = local.kill_switch_enabled && local.auto_reconnect_enabled;
     let transport = local.transport.unwrap_or(TransportKind::DirectUdp);
@@ -136,7 +136,7 @@ pub(super) async fn rotate_device_keys(
             if status.server_id != Some(profile.id) || status.state == ConnectionState::Disconnected
             {
                 return Err(
-                    "The privileged helper did not activate the requested tunnel.".to_owned(),
+                    "The VPN didn’t connect with the new keys.".to_owned(),
                 );
             }
             Ok(())
@@ -154,7 +154,7 @@ pub(super) async fn join_server(
     let _operation = crate::connection_controller::acquire()?;
     let mut invitation = DecodedInvitation::decode(&input.code).map_err(safe_error)?;
     invitation.set_recipient_names(input.member_name.as_deref(), input.device_name.as_deref())
-        .map_err(|_| "Review this invitation and provide valid display names. An existing member keeps its name.".to_owned())?;
+        .map_err(|_| "Enter valid member and device names. An existing member keeps its name.".to_owned())?;
     input.code.zeroize();
     if state
         .paths
@@ -164,11 +164,11 @@ pub(super) async fn join_server(
         .iter()
         .any(|profile| profile.id == invitation.server_id())
     {
-        return Err("This device already has a profile for the invited server.".to_owned());
+        return Err("This server is already saved on this device.".to_owned());
     }
     let local = invoke_helper("status", None).map_err(safe_error)?;
     if local.state != ConnectionState::Disconnected {
-        return Err("Disconnect the current SirinVPN tunnel before joining.".to_owned());
+        return Err("Disconnect before joining a server.".to_owned());
     }
 
     let secrets = state.paths.secret_store();
@@ -253,5 +253,5 @@ pub(super) fn find_profile(paths: &ClientPaths, id: &str) -> Result<ServerProfil
         .map_err(safe_error)?
         .into_iter()
         .find(|profile| profile.id == id)
-        .ok_or_else(|| "The local server profile was not found.".to_owned())
+        .ok_or_else(|| "This server is no longer saved on this device.".to_owned())
 }

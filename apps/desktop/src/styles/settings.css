@@ -62,24 +62,17 @@
   color: var(--cyan);
   flex-shrink: 0;
 }
-.settings-card h2,
-.settings-category-intro h2 {
+.settings-card h2 {
   margin: 0;
   font-size: 1rem;
   line-height: 1.5;
 }
-.settings-card p,
-.settings-category-intro p {
+.settings-card p {
   color: var(--muted);
   font-size: 0.875rem;
   line-height: 1.7;
 }
-.settings-category-intro {
-  margin-bottom: 16px;
-}
-.settings-category-intro h2 {
-  font-size: 1.125rem;
-}
+
 .settings-note {
   margin: 10px 0 0;
 }
@@ -181,21 +174,7 @@
 .settings-action-row:not(.settings-card) {
   padding-top: 10px;
 }
-.settings-health {
-  border: 1px solid var(--line);
-  border-radius: 10px;
-}
-.settings-health > summary {
-  padding: 15px 18px;
-  color: var(--muted);
-  font-size: 0.9375rem;
-}
-.settings-health .live-section {
-  border: 0;
-}
-.settings-health .metrics-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
+
 .settings-action-list {
   display: grid;
 }
@@ -464,28 +443,12 @@ select {
 .choice-row > svg {
   color: var(--cyan);
 }
-.routing-settings .routing-control-body {
-  padding: 10px 0 0;
-}
-.routing-settings .routing-mode-picker {
-  max-width: none;
-}
-.routing-settings .routing-mode-picker button {
-  min-height: 72px;
-  padding: 12px;
-}
-.routing-settings .routing-mode-picker strong {
-  font-size: 0.9375rem;
-}
-.routing-settings .routing-mode-picker small,
-.routing-settings .route-list-field small,
-.routing-settings .lan-option small {
+
+.routing-settings .route-list-field small {
   font-size: 0.875rem;
   line-height: 1.6;
 }
-.routing-mode-picker button[aria-checked="true"] strong::before {
-  content: "✓ ";
-}
+
 .routing-settings .route-list-field textarea {
   font-size: 0.9375rem;
 }
@@ -504,22 +467,6 @@ select {
   color: var(--muted);
 }
 
-.vps-release-status,
-.vps-release-candidate {
-  display: grid;
-  gap: 10px;
-  padding: 18px 0;
-  border-block: 1px solid var(--line);
-}
-.vps-release-status p,
-.vps-release-candidate p {
-  margin: 0;
-}
-.vps-release-candidate code.fingerprint-value {
-  display: block;
-  overflow-wrap: anywhere;
-  word-break: break-all;
-}
 .health-checks dd {
   margin: 0;
   text-align: right;

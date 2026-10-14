@@ -1,6 +1,7 @@
 import { Check } from "@phosphor-icons/react";
 import { CopyValue } from "../../components/CopyValue";
 import { formatDnsPolicy } from "../../format";
+import { t } from "../../i18n";
 import type { RepairResult, ServerProfile } from "../../types";
 import { ServerNetworkPreflight } from "./ServerNetworkPreflight";
 
@@ -11,45 +12,45 @@ export function RepairSummary({ profile, result, dnsPreserved, recordsPreserved 
   recordsPreserved: boolean;
 }) {
   const fingerprint = result.server_identity_fingerprint;
+  const records = result.private_dns_records.length;
   return <div className="repair-result">
     <div className="repair-result-heading">
       <span className="result-check"><Check size={26} weight="bold" /></span>
-      <h3>{profile.name} is ready to reconnect</h3>
-      <p>The server component and VPN configuration were repaired and checked.</p>
+      <h3>{t("vps.summary.title", { name: profile.name })}</h3>
     </div>
     <section className="result-section" aria-labelledby="repair-completed-heading">
-      <h3 id="repair-completed-heading">Completed</h3>
+      <h3 id="repair-completed-heading">{t("vps.summary.completed")}</h3>
       <dl className="result-facts">
-        <div><dt>Server software</dt><dd>Installed and verified</dd></div>
-        <div><dt>VPN services</dt><dd>Restarted and checked</dd></div>
-        <div><dt>Private DNS</dt><dd>Verification passed · {formatDnsPolicy(result.dns_upstream)}</dd></div>
-        <div><dt>Private records</dt><dd>{result.private_dns_records.length === 0 ? "None configured" : `${result.private_dns_records.length} configured and verified`}</dd></div>
+        <div><dt>{t("vps.summary.software")}</dt><dd>{t("vps.summary.softwareValue")}</dd></div>
+        <div><dt>{t("vps.summary.services")}</dt><dd>{t("vps.summary.servicesValue")}</dd></div>
+        <div><dt>{t("vps.summary.dns")}</dt><dd>{t("vps.summary.dnsValue", { policy: formatDnsPolicy(result.dns_upstream) })}</dd></div>
+        <div><dt>{t("vps.summary.records")}</dt><dd>{records === 0 ? t("vps.summary.recordsNone") : t("vps.summary.recordsValue", { count: records })}</dd></div>
       </dl>
     </section>
     <section className="result-section" aria-labelledby="repair-preserved-heading">
-      <h3 id="repair-preserved-heading">Preserved</h3>
+      <h3 id="repair-preserved-heading">{t("vps.summary.preserved")}</h3>
       <ul className="result-list">
-        <li>Server and device identities and existing access</li>
-        {dnsPreserved && <li>Private DNS policy</li>}
-        {recordsPreserved && <li>Private DNS records</li>}
+        <li>{t("vps.summary.identities")}</li>
+        {dnsPreserved && <li>{t("vps.summary.dnsPolicy")}</li>}
+        {recordsPreserved && <li>{t("vps.summary.dnsRecords")}</li>}
       </ul>
       <div className="result-identity">
-        <span>Server identity fingerprint</span>
-        {fingerprint ? <CopyValue value={fingerprint} label="server identity fingerprint" shorten showCopyLabel />
-          : <span className="settings-note">The preserved identity is pinned in this server’s saved profile.</span>}
+        <span>{t("vps.summary.fingerprint")}</span>
+        {fingerprint ? <CopyValue value={fingerprint} label={t("vps.summary.fingerprint")} shorten showCopyLabel />
+          : <span className="settings-note">{t("vps.summary.fingerprintSaved")}</span>}
       </div>
     </section>
     {result.network_preflight && <details className="result-disclosure">
-      <summary>Network requirements · review if needed</summary>
-      <p className="settings-note">Provider firewall access was not verified by this inspection. Review these requirements if a connection or transport fails.</p>
+      <summary>{t("vps.summary.network")}</summary>
+      <p className="settings-note">{t("vps.summary.networkNote")}</p>
       <ServerNetworkPreflight report={result.network_preflight} />
     </details>}
     <details className="result-disclosure">
-      <summary>Installed software details</summary>
-      <div className="result-identity"><span>Server software SHA-256</span>
-        <CopyValue value={result.artifact_sha256} label="server software checksum" shorten showCopyLabel />
+      <summary>{t("vps.common.softwareDetails")}</summary>
+      <div className="result-identity"><span>{t("vps.common.softwareHash")}</span>
+        <CopyValue value={result.artifact_sha256} label={t("vps.common.softwareHash")} shorten showCopyLabel />
       </div>
     </details>
-    <p className="result-next-step">Return to Home, connect to {profile.name}, and run diagnostics to check this device’s connection.</p>
+    <p className="result-next-step">{t("vps.summary.next")}</p>
   </div>;
 }

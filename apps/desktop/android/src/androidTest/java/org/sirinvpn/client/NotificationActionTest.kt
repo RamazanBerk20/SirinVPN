@@ -51,7 +51,7 @@ class NotificationActionTest {
                     .putExtra("generation", state.getLong("generation")))
                 until("Foreground notification did not appear") { manager.activeNotifications.any { it.id == VpnNotifications.VPN_ID } }
                 VpnNotifications.update(context, state.put("phase", phase))
-                val label = if (phase == "connected") "Disconnect" else "Stop attempts"
+                val label = context.getString(if (phase == "connected") R.string.notification_action_disconnect else R.string.notification_action_stop_connecting)
                 until("Notification controls were not published") {
                     manager.activeNotifications.any { it.id == VpnNotifications.VPN_ID && it.notification.actions?.singleOrNull()?.title == label }
                 }

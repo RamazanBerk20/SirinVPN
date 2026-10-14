@@ -1,5 +1,5 @@
-import { DotsThree } from "@phosphor-icons/react";
-import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { DotsThree, DotsThreeVertical } from "@phosphor-icons/react";
+import { Fragment, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { DialogContent } from "./DialogContent";
 import { isAndroid } from "../platform";
@@ -12,12 +12,25 @@ export interface MenuAction {
   danger?: boolean;
 }
 
+/** Groups keep their first-seen order; destructive actions move to the end of their group. */
+function sheetGroups(actions: MenuAction[]): [string, MenuAction[]][] {
+  const groups = new Map<string, MenuAction[]>();
+  for (const action of actions) groups.set(action.group ?? "", [...(groups.get(action.group ?? "") ?? []), action]);
+  // Ungrouped actions come first, so they never read as part of a titled group.
+  return [...groups].sort(([a], [b]) => Number(Boolean(a)) - Number(Boolean(b)))
+    .map(([group, items]) => [group, [...items.filter(item => !item.danger), ...items.filter(item => item.danger)]]);
+}
+
 export function ActionMenu({
   label,
+  title,
   actions,
   onOpenChange,
 }: {
+  /** Accessible name of the trigger, e.g. “Actions for Android phone”. */
   label: string;
+  /** Sheet title on Android; defaults to the label. */
+  title?: string;
   actions: MenuAction[];
   onOpenChange?: (open: boolean) => void;
 }) {
@@ -75,12 +88,15 @@ export function ActionMenu({
     };
   }, [open]);
   if (isAndroid) return <Dialog.Root open={open} onOpenChange={setOpen}>
-    <Dialog.Trigger asChild><button className="icon-button" aria-label={label}><DotsThree size={26} weight="bold" /></button></Dialog.Trigger>
+    <Dialog.Trigger asChild><button className="icon-button overflow-button" aria-label={label}><DotsThreeVertical size={24} weight="bold" /></button></Dialog.Trigger>
     <Dialog.Portal><Dialog.Overlay className="dialog-overlay" />
-      <DialogContent className="dialog-content mobile-action-sheet" heading={label} aria-describedby={undefined}>
-        {actions.map(action => <button key={action.label} className={`mobile-sheet-action ${action.danger ? "danger-text" : ""}`} disabled={action.disabled} onClick={() => { setOpen(false); action.run(); }}>
-          <span>{action.group && <small>{action.group}</small>}{action.label}</span>{action.reason && <small>{action.reason}</small>}
-        </button>)}
+      <DialogContent className="dialog-content mobile-action-sheet" heading={title ?? label} aria-describedby={undefined}>
+        {sheetGroups(actions).map(([group, items]) => <Fragment key={group}>
+          {group && <h3 className="sheet-group-label">{group}</h3>}
+          {items.map(action => <button key={action.label} className={`mobile-sheet-action ${action.danger ? "danger-text" : ""}`} disabled={action.disabled} onClick={() => { setOpen(false); action.run(); }}>
+            <span>{action.label}</span>{action.reason && <small>{action.reason}</small>}
+          </button>)}
+        </Fragment>)}
       </DialogContent>
     </Dialog.Portal>
   </Dialog.Root>;

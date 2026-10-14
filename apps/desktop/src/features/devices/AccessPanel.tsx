@@ -5,8 +5,12 @@ import { DeviceList } from "./DeviceList";
 import { ActiveInvitations } from "./ActiveInvitations";
 import { InvitationDialog } from "./InvitationDialog";
 import { MemberPolicyDialog } from "./MemberPolicyDialog";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import type { MemberSummary } from "../../types";
+import { formatDateTime, t } from "../../i18n";
+import { Rich } from "../../i18n/Rich";
+
+const strong = { strong: (content: ReactNode) => <strong>{content}</strong> };
 export function AccessPanel(
   props: AccessProps & { onNetwork?: () => void; onOpenHome?: () => void },
 ) {
@@ -44,23 +48,21 @@ export function AccessPanel(
     changeInvitationOpen,
   } = useAccessController(props);
 
+  const savedAt = updatedAt ? formatDateTime(new Date(updatedAt), { timeStyle: "short" }) : null;
+  const deviceCount = snapshot?.members.reduce((count, member) => count + member.devices.length, 0) ?? 0;
   const issuer = snapshot?.members.find((member) => member.devices.some((device) => device.id === profile.device_id))
     ?? (accessLevel === "member" ? snapshot?.members[0] : undefined);
   return (
     <section className="access-section">
       <div className="section-heading">
         <div>
-          <h2>Current access</h2>
-          <p>
-            Invite a person, or use a device’s action menu to add another device
-            for its member.
-          </p>
+          <h2>{t("devices.panel.title")}</h2>
         </div>
         <div className="access-heading-actions">
           <button
             className="icon-button"
             disabled={!connected || loading}
-            aria-label="Refresh devices"
+            aria-label={t("devices.panel.refresh")}
             onClick={() => void refresh()}
           >
             <ArrowClockwise size={17} />
@@ -70,44 +72,43 @@ export function AccessPanel(
             disabled={!verified || (accessLevel === "member" && !issuer?.policy?.invite_members)}
             onClick={() => openInvitation(null)}
           >
-            <Plus size={16} weight="bold" /> Invite member
+            <Plus size={16} weight="bold" /> {t("devices.panel.invite")}
           </button>
         </div>
       </div>
       {!connected ? (
         <div className="access-empty">
-          <LockKey size={20} /> Connect to view and change authorized devices.
+          <LockKey size={20} /> {t("devices.panel.connectFirst")}
           {props.onOpenHome && (
             <button className="secondary-button" onClick={props.onOpenHome}>
-              Open Home
+              {t("devices.panel.openHome")}
             </button>
           )}
         </div>
       ) : loading && !snapshot && !loadError ? (
         <div className="access-empty">
-          <ArrowClockwise className="spin" size={20} /> Reading current
-          authorization
+          <ArrowClockwise className="spin" size={20} /> {t("devices.panel.loading")}
         </div>
       ) : (
         <>
           {loadError ? <InlineError message={loadError} /> : null}
           {snapshot && !verified && <p className="settings-note" role="status">
-            Showing saved devices{updatedAt ? ` from ${new Date(updatedAt).toLocaleTimeString()}` : ""}.{" "}
-            {loading ? "Refreshing current access…" : "Current access is unavailable. Device changes are disabled."}
+            {loading
+              ? savedAt ? t("devices.panel.savedRefreshingAt", { time: savedAt }) : t("devices.panel.savedRefreshing")
+              : savedAt ? t("devices.panel.savedStaleAt", { time: savedAt }) : t("devices.panel.savedStale")}
           </p>}
           {error ? <InlineError message={error} /> : null}
           {memberLifecycleAvailable === false && (
             <p className="settings-note">
-              Update VPS software to enable member suspension and revoking all
-              member devices.
+              {t("devices.panel.lifecycleUnsupported")}
             </p>
           )}
           {snapshot && (
             <label className="device-search">
-              <span>Search devices</span>
+              <span>{t("devices.panel.search")}</span>
               <input
                 type="search"
-                placeholder="Search by name or tunnel address…"
+                placeholder={t("devices.panel.searchPlaceholder")}
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
               />
@@ -117,31 +118,16 @@ export function AccessPanel(
             <fieldset className="access-dashboard" disabled={!verified} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
               <div
                 className="access-summary"
-                aria-label="Current authorization summary"
+                aria-label={t("devices.panel.summary.label")}
               >
                 <span>
-                  <strong>{snapshot.members.length}</strong>{" "}
-                  {snapshot.members.length === 1 ? "member" : "members"}
+                  <Rich id="devices.panel.summary.members" params={{ count: snapshot.members.length }} tags={strong} />
                 </span>
                 <span>
-                  <strong>
-                    {snapshot.members.reduce(
-                      (count, member) => count + member.devices.length,
-                      0,
-                    )}
-                  </strong>{" "}
-                  {snapshot.members.reduce(
-                    (n, m) => n + m.devices.length,
-                    0,
-                  ) === 1
-                    ? "device"
-                    : "devices"}
+                  <Rich id="devices.panel.summary.devices" params={{ count: deviceCount }} tags={strong} />
                 </span>
                 <span>
-                  <strong>{snapshot.active_invitations.length}</strong>{" "}
-                  {snapshot.active_invitations.length === 1
-                    ? "invitation"
-                    : "invitations"}
+                  <Rich id="devices.panel.summary.invitations" params={{ count: snapshot.active_invitations.length }} tags={strong} />
                 </span>
               </div>
               <DeviceList

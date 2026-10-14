@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { canManageMember } from "../../access";
 import { api } from "../../api";
 import { errorMessage } from "../../lib/errors";
+import { t } from "../../i18n";
 import type { MemberSummary, MembershipSnapshot } from "../../types";
 
 type Options = {
@@ -46,11 +47,24 @@ export function useMemberLifecycle(options: Options) {
       return;
     const suspended = !Boolean(member.suspended);
     const count = member.devices.length;
-    const prompt = revoke
-      ? `Revoke all ${count} devices for ${member.name}? This permanently removes their VPN and management access, port forwards and pending device invitations. They will need a new invitation to return.`
+    const name = member.name;
+    const confirmation = revoke
+      ? {
+          title: t("devices.confirm.revokeAll.title", { name }),
+          message: t("devices.confirm.revokeAll.message", { count }),
+          confirm: t("devices.confirm.revokeAll.action"),
+        }
       : suspended
-        ? `Suspend ${member.name} and all ${count} of their devices? VPN, management, peer access and port forwards will stop. Their identities and settings are kept for reactivation; pending device invitations and key rotations are cancelled.`
-        : `Reactivate ${member.name}? The same devices will regain VPN and management access, including their saved peer-access settings and port forwards. Cancelled invitations are not restored.`;
+        ? {
+            title: t("devices.confirm.suspend.title", { name }),
+            message: t("devices.confirm.suspend.message", { count }),
+            confirm: t("devices.confirm.suspend.action"),
+          }
+        : {
+            title: t("devices.confirm.reactivate.title", { name }),
+            message: t("devices.confirm.reactivate.message"),
+            confirm: t("devices.confirm.reactivate.action"),
+          };
     const at = generation.current;
     const serverId = current.serverId;
     const isCurrent = () =>
@@ -61,7 +75,7 @@ export function useMemberLifecycle(options: Options) {
     setMemberBusy(member.id);
     current.onError(null);
     try {
-      if (!await confirmAction(prompt) || !isCurrent()) return;
+      if (!await confirmAction(confirmation) || !isCurrent()) return;
       const snapshot = revoke
         ? await api.revokeMemberDevices(serverId, member.id, true)
         : await api.updateMemberSuspension(serverId, member.id, suspended);
@@ -69,12 +83,7 @@ export function useMemberLifecycle(options: Options) {
     } catch (reason) {
       if (isCurrent())
         latest.current.onError(
-          errorMessage(
-            reason,
-            revoke
-              ? "The member's devices could not be revoked. Refresh access to check their current state."
-              : "Member access could not be changed. Refresh access to check its current state.",
-          ),
+          errorMessage(reason, t(revoke ? "devices.error.revokeAll" : "devices.error.suspension")),
         );
     } finally {
       if (isCurrent()) {

@@ -73,7 +73,7 @@ with sync_playwright() as pw:
     navigation.get_by_role('button', name='Devices', exact=False).click()
     action('Reactivate member')
     expect(page.locator('.device-row[data-suspended="true"]')).to_have_count(0)
-    action('Revoke all member devices')
+    action('Revoke all devices')
     expect(page.get_by_role('button', name='Actions for Android phone')).to_have_count(0)
     expect(page.get_by_role('button', name='Actions for Work laptop')).to_have_count(0)
     expect(page.get_by_role('button', name='Actions for Other phone')).to_be_visible()
@@ -82,7 +82,7 @@ with sync_playwright() as pw:
     # The same view on an older VPS communicates the required upgrade.
     page.evaluate('window.__lifecycleAvailable=false')
     page.get_by_role('button', name='Refresh devices', exact=True).click()
-    expect(page.get_by_text('Update VPS software to enable member suspension', exact=False)).to_be_visible()
+    expect(page.get_by_text('Update the server to suspend members', exact=False)).to_be_visible()
     page.get_by_role('button', name='Actions for Other phone').click()
     expect(page.get_by_role('menuitem', name='Suspend member')).to_have_count(0)
     browser.close()

@@ -22,7 +22,7 @@ pub(super) async fn run(
         return Ok(message(
             "local_diagnostics_busy",
             "Current diagnostics",
-            "A previous native status check is still finishing. Cancel an active connection attempt if needed, then retry.",
+            "A previous check is still finishing. Wait a moment or cancel any connection attempt, then try again.",
         ));
     };
     let cancelled = Arc::new(AtomicBool::new(false));
@@ -36,14 +36,14 @@ pub(super) async fn run(
         Ok(Err(_)) => Ok(message(
             "local_diagnostics_unavailable",
             "Current diagnostics",
-            "The diagnostic worker could not finish. Refresh connection state and try again.",
+            "The checks couldn’t finish. Refresh the connection status and try again.",
         )),
         Err(_) => {
             cancelled.store(true, Ordering::Release);
             Ok(message(
                 "local_diagnostics_timeout",
                 "Current diagnostics",
-                "The current checks did not finish within sixteen seconds. A connection, recovery or private server request may still be running. Wait briefly or cancel the connection attempt, then retry.",
+                "The checks didn’t finish within 16 seconds; another connection or server request may still be running. Wait a moment or cancel any connection attempt, then try again.",
             ))
         }
     }
@@ -64,7 +64,7 @@ async fn collect(
     let paths = app.state::<crate::AppState>().paths.clone();
     let (profile, identity, current) = tauri::async_runtime::spawn_blocking(move || {
         let profile = crate::find_profile(&paths, &server_id)
-            .map_err(|_| "The selected server profile could not be opened.".to_owned())?;
+            .map_err(|_| "Couldn’t load this server’s saved details.".to_owned())?;
         let current = crate::invoke_helper("status", None)
             .ok()
             .map(|status| status.diagnostic_connection(profile.id));
@@ -72,7 +72,7 @@ async fn collect(
         Ok::<_, String>((profile, identity, current))
     })
     .await
-    .map_err(|_| "The local status worker was interrupted.")??;
+    .map_err(|_| "Reading the VPN status was interrupted.")??;
     if cancelled.load(Ordering::Acquire) {
         return Ok(DiagnosticReport {
             api_version: API_VERSION.into(),

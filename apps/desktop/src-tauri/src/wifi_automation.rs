@@ -75,7 +75,7 @@ pub async fn get_wifi_policy(app: tauri::AppHandle) -> Result<WifiSettingsSnapsh
         })
     })
     .await
-    .map_err(|_| "Network discovery was interrupted.".to_owned())?
+    .map_err(|_| "Checking the Wi-Fi network was interrupted. Try again.".to_owned())?
 }
 
 #[tauri::command]
@@ -96,7 +96,7 @@ pub async fn set_wifi_policy(
         Ok(())
     })
     .await
-    .map_err(|_| "Wi-Fi preferences could not be saved.".to_owned())?
+    .map_err(|_| "Saving Wi-Fi settings was interrupted.".to_owned())?
 }
 
 #[tauri::command]
@@ -107,7 +107,7 @@ pub async fn trust_current_wifi(
 ) -> Result<(), String> {
     let paths = app.state::<AppState>().paths.clone();
     tauri::async_runtime::spawn_blocking(move || {
-        let network = NetworkContext::discover().ok_or("A Wi-Fi network is unavailable.")?;
+        let network = NetworkContext::discover().ok_or("This device isn’t connected to Wi-Fi.")?;
         let store = paths.network_policy_store();
         if store
             .wifi_snapshot(Some(&network))
@@ -123,7 +123,7 @@ pub async fn trust_current_wifi(
         Ok(())
     })
     .await
-    .map_err(|_| "Wi-Fi trust could not be saved.".to_owned())?
+    .map_err(|_| "Saving the trusted network was interrupted.".to_owned())?
 }
 
 #[tauri::command]
@@ -231,7 +231,7 @@ fn inspect(app: &tauri::AppHandle, entry: &mut NetworkEntry) -> Result<Automatio
     let id = snapshot
         .policy
         .server_id
-        .ok_or("Choose a server for Wi-Fi automation.")?;
+        .ok_or("Choose a server for Wi-Fi auto-connect.")?;
     let preferences = app
         .state::<connection_preferences::ConnectionPreferenceStore>()
         .get(id)?;

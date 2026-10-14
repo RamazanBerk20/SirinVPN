@@ -73,11 +73,11 @@ internal class CodeScanner(private val activity: Activity, private val result: (
             insets
         }
         val header = LinearLayout(activity).apply { gravity = Gravity.CENTER_VERTICAL; setPadding(dp(12), dp(8), dp(12), 0) }
-        header.addView(Button(activity).apply { text = "Back"; minHeight = dp(48); setOnClickListener { dismiss() } })
-        header.addView(TextView(activity).apply { text = "Scan QR code"; textSize = 21f; setPadding(dp(12), 0, 0, 0) }, LinearLayout.LayoutParams(0, -2, 1f))
+        header.addView(Button(activity).apply { text = activity.getString(R.string.scanner_back); minHeight = dp(48); setOnClickListener { dismiss() } })
+        header.addView(TextView(activity).apply { text = activity.getString(R.string.scanner_title); textSize = 21f; setPadding(dp(12), 0, 0, 0) }, LinearLayout.LayoutParams(0, -2, 1f))
         root.addView(header)
         val guidance = TextView(activity).apply {
-            text = "Keep the whole code visible. For a dense code, enlarge it on the other screen and hold steady."
+            text = activity.getString(R.string.scanner_guidance)
             textSize = 16f; setTextColor(Color.rgb(177, 194, 220)); setPadding(dp(20), dp(16), dp(20), dp(16))
             accessibilityLiveRegion = android.view.View.ACCESSIBILITY_LIVE_REGION_POLITE
         }
@@ -90,17 +90,20 @@ internal class CodeScanner(private val activity: Activity, private val result: (
         if (activity.packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH)) {
             controls.addView(Button(activity).apply {
                 var on = false
-                text = "Flashlight on"; minHeight = dp(48)
-                setOnClickListener { on = !on; camera.setTorch(on); text = if (on) "Flashlight off" else "Flashlight on" }
+                text = activity.getString(R.string.scanner_flashlight_on); minHeight = dp(48)
+                setOnClickListener {
+                    on = !on; camera.setTorch(on)
+                    text = activity.getString(if (on) R.string.scanner_flashlight_off else R.string.scanner_flashlight_on)
+                }
             })
         }
         controls.addView(Button(activity).apply {
-            text = "Refocus"; minHeight = dp(48)
+            text = activity.getString(R.string.scanner_refocus); minHeight = dp(48)
             setOnClickListener {
                 camera.pause()
                 camera.cameraSettings.isContinuousFocusEnabled = !camera.cameraSettings.isContinuousFocusEnabled
                 camera.resume()
-                guidance.text = "Focus reset. Move a little closer or farther away, keeping the entire code visible."
+                guidance.text = activity.getString(R.string.scanner_refocused)
             }
         })
         root.addView(controls)
@@ -110,7 +113,7 @@ internal class CodeScanner(private val activity: Activity, private val result: (
             override fun previewStopped() {}
             override fun cameraClosed() {}
             override fun cameraError(error: Exception) {
-                guidance.text = "Camera unavailable. Tap Refocus to retry, or go back and enter the code securely."
+                guidance.text = activity.getString(R.string.scanner_camera_error)
             }
         })
         camera.decodeSingle(object : BarcodeCallback {

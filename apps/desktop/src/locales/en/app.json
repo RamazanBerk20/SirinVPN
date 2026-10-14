@@ -1,0 +1,121 @@
+{
+  "skipToContent": "Skip to content",
+  "nav": {
+    "label": "Main navigation",
+    "mobileLabel": "Bottom navigation",
+    "home": "Home",
+    "servers": "Servers",
+    "devices": "Devices",
+    "settings": "Settings"
+  },
+  "sidebar": {
+    "servers": "My servers",
+    "serverList": "Saved servers",
+    "privacy": "No account. No telemetry."
+  },
+  "addServer": {
+    "title": "Add a server",
+    "description": "Choose how you want to connect."
+  },
+  "home": {
+    "connectionTitle": "Connection",
+    "connectionSummary": "Method: {{method}}",
+    "automatic": "Automatic",
+    "detailsTitle": "Connection details",
+    "detailsSummary": "Status, addresses and server stats"
+  },
+  "settingsScope": {
+    "general": "Preferences for this device",
+    "connection": "{{name}} · on this device",
+    "network": "{{name}} · routing, DNS and ports",
+    "recovery": "{{name}} · keys and backups",
+    "maintenance": "{{name}} · server maintenance"
+  },
+  "network": {
+    "dnsTitle": "DNS",
+    "dnsRefresh": "Refresh the status to see DNS settings.",
+    "dnsUnavailable": "DNS settings are unavailable right now.",
+    "dnsNeedsConnection": "Connect to see DNS status.",
+    "dnsChange": "Changes apply to every device on this server.",
+    "dnsConfigure": "Configure DNS"
+  },
+  "onboarding": {
+    "settings": "App settings",
+    "settingsDescription": "Preferences for this device.",
+    "checkUpdates": "Check for updates",
+    "welcome": "Welcome to SirinVPN",
+    "headlineFirst": "Your VPN.",
+    "headlineSecond": "On your terms.",
+    "desktopTitle": "Set up your VPS",
+    "androidIntro": "Connect to a private server. Your keys stay with you.",
+    "desktopIntro": "Set up your own server over SSH, or join one with an invitation.",
+    "firstServer": "Add your first server",
+    "storeTitle": "Saved servers unavailable",
+    "storeHelp": "Unlock this device’s secure storage, then try again."
+  },
+  "errors": {
+    "profiles": "Couldn’t open the servers saved on this device.",
+    "platform": "SirinVPN couldn’t start its protected services.",
+    "trayServer": "That server is no longer saved on this device."
+  },
+  "unavailable": {
+    "title": "SirinVPN can’t start",
+    "help": "Unlock this device and make sure the SirinVPN service is installed. Your saved servers are safe.",
+    "copy": "Copy details",
+    "report": "SirinVPN couldn’t start: {{message}} No VPN action was taken."
+  },
+  "dialog": {
+    "waitToClose": "Wait for the current task to finish",
+    "running": "Working… You can close this when it finishes."
+  },
+  "operation": {
+    "result": "Result",
+    "running": "A task is running. You can leave this screen and come back.",
+    "completed": "The task finished. Reopen its page to see the result.",
+    "interrupted": "The task didn’t finish. Check the server or file before trying again.",
+    "dismiss": "Dismiss",
+    "dismissFailed": "Couldn’t dismiss this notice. Try again."
+  },
+  "copy": {
+    "label": "Copy {{label}}",
+    "failed": "Couldn’t copy",
+    "failedManual": "Couldn’t copy. Select the text and copy it manually.",
+    "showAll": "Show all",
+    "showLess": "Show less"
+  },
+  "secret": {
+    "value": "Protected value",
+    "code": "Secret code",
+    "enterLabel": "Enter {{label}}",
+    "enter": "Enter securely",
+    "entered": "Entered · Change",
+    "unchanged": "Nothing was changed.",
+    "scan": "Scan QR code",
+    "scanFailed": "Couldn’t scan the code. You can enter it instead.",
+    "codeReady": "Code ready to review"
+  },
+  "share": {
+    "button": "Share encrypted file",
+    "failed": "Couldn’t share the file."
+  },
+  "brand": {
+    "tagline": "Ultra-private. Self-hosted.",
+    "keysLocal": "Keys stay on your devices",
+    "noHistory": "No activity history",
+    "noCloud": "No SirinVPN cloud"
+  },
+  "metric": {
+    "usage": "{{label}} usage"
+  },
+  "window": {
+    "label": "Application window",
+    "minimize": "Minimize",
+    "maximize": "Maximize",
+    "restore": "Restore",
+    "closeToTray": "Close to tray · VPN keeps running",
+    "quit": "Quit app · VPN keeps running",
+    "actionFailed": "That didn’t work. Use your desktop’s window controls.",
+    "resizeFailed": "Can’t resize here. Use your desktop’s resize shortcut."
+  },
+  "recoveryKeyGuard": "You can’t view this recovery key again. Leave without saving it?"
+}

@@ -1,5 +1,5 @@
 //! Local status notifications contain no server addresses, names, or identity material.
-use crate::app_preferences::PreferencesState;
+use crate::{app_preferences::PreferencesState, native_text::text};
 use std::sync::Mutex;
 use tauri::{AppHandle, Manager};
 
@@ -16,18 +16,17 @@ pub enum Phase {
 #[derive(Default)]
 pub struct ConnectionNotifications(Mutex<Option<Phase>>);
 
+/// The message key for a change, if it deserves a notification.
 fn message(previous: Option<Phase>, next: Phase) -> Option<&'static str> {
     if previous.is_none() || previous == Some(next) {
         return None;
     }
     match next {
         Phase::Connecting | Phase::Paused => None,
-        Phase::Connected => Some("VPN connected."),
-        Phase::Disconnected => Some("VPN disconnected."),
-        Phase::Recovering => Some("VPN connection interrupted. SirinVPN is trying to reconnect."),
-        Phase::Unavailable => {
-            Some("VPN status is unavailable. Open SirinVPN to check your connection.")
-        }
+        Phase::Connected => Some("native.notification.connected"),
+        Phase::Disconnected => Some("native.notification.disconnected"),
+        Phase::Recovering => Some("native.notification.reconnecting"),
+        Phase::Unavailable => Some("native.notification.statusUnknown"),
     }
 }
 
@@ -36,12 +35,13 @@ pub fn observe(app: &AppHandle, next: Phase) {
     let Ok(mut previous) = state.0.lock() else {
         return;
     };
-    let body = message(*previous, next);
+    let key = message(*previous, next);
     *previous = Some(next);
     drop(previous);
     if app.state::<PreferencesState>().current().notifications
-        && let Some(body) = body
+        && let Some(key) = key
     {
+        let body = text(key);
         let handle = app.clone();
         tauri::async_runtime::spawn(async move {
             let _ = crate::app_notifications::show(handle, 7400, body).await;
@@ -70,11 +70,13 @@ mod tests {
     fn lost_status_never_claims_a_disconnect_or_protection() {
         assert_eq!(
             message(Some(Phase::Connected), Phase::Unavailable),
-            Some("VPN status is unavailable. Open SirinVPN to check your connection.")
+            Some("native.notification.statusUnknown")
         );
         assert_eq!(
             message(Some(Phase::Recovering), Phase::Connected),
-            Some("VPN connected.")
+            Some("native.notification.connected")
         );
+        let unknown = text("native.notification.statusUnknown").to_lowercase();
+        assert!(!unknown.contains("disconnected") && !unknown.contains("protect"));
     }
 }

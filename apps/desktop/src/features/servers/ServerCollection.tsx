@@ -1,4 +1,4 @@
-import { CaretRight, Database, Plus, Star } from "@phosphor-icons/react";
+import { Check, Database, Plus, Star } from "@phosphor-icons/react";
 import { useState } from "react";
 import { api } from "../../api";
 import { ActionMenu } from "../../components/ActionMenu";
@@ -10,6 +10,14 @@ import { errorMessage } from "../../lib/errors";
 import { isAndroid } from "../../platform";
 import * as Dialog from "@radix-ui/react-dialog";
 import { DialogContent } from "../../components/DialogContent";
+import { t } from "../../i18n";
+
+/** Search appears once a collection is long enough to need it. */
+const SEARCH_THRESHOLD = 6;
+function roleLabel(server: ServerProfile): string {
+  return t(server.role === "owner" ? "common.role.owner" : server.administrator ? "common.role.admin" : "common.role.member");
+}
+
 export function ServerCollection({
   servers,
   selectedId,
@@ -37,7 +45,7 @@ export function ServerCollection({
     if (isAndroid && favorite === undefined && newName === undefined) { setRenaming(server); setDraftName(server.name); return; }
     const name =
       favorite === undefined
-        ? (newName ?? window.prompt("Name on this device", server.name))?.trim()
+        ? (newName ?? window.prompt(t("servers.rename.prompt"), server.name))?.trim()
         : null;
     if (favorite === undefined && (!name || name === server.name)) return;
     setBusy(true);
@@ -51,7 +59,7 @@ export function ServerCollection({
       await onChanged();
       setRenaming(null);
     } catch (e) {
-      setError(errorMessage(e, "The local server details could not be saved."));
+      setError(errorMessage(e, t("common.error.localSave")));
     } finally {
       setBusy(false);
     }
@@ -60,16 +68,16 @@ export function ServerCollection({
     <section className="servers-page">
       <header className="workspace-header">
         <div>
-          <h1>Servers</h1>
-          <p>{isAndroid ? `${servers.length} saved on this phone` : "Choose a server to open its connection controls."}</p>
+          <h1>{t("app.nav.servers")}</h1>
+          <p>{t("servers.count", { count: servers.length })}</p>
         </div>
         <button className="primary-button" onClick={onAdd}>
-          <Plus size={18} /> Add server
+          <Plus size={18} /> {t("servers.add")}
         </button>
       </header>
       {error && <InlineError message={error} />}
-      <label className="field"><span>Search servers</span><input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Name or VPN address" /></label>
-      {!filtered.length && <p role="status">No servers match your search.</p>}
+      {(servers.length >= SEARCH_THRESHOLD || query) && <label className="field"><span>{t("servers.search.label")}</span><input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t("servers.search.placeholder")} /></label>}
+      {!filtered.length && <p role="status">{t("servers.search.empty")}</p>}
       <div className="server-collection">
         {filtered.map((server) => {
           const state = describeConnection(local, server.id, null);
@@ -79,9 +87,10 @@ export function ServerCollection({
               className="collection-row"
               data-selected={selectedId === server.id}
             >
-              {isAndroid ? <button className="mobile-server-open" onClick={() => onOpen(server.id)} aria-label={`Open ${server.name}`}>
-                <span className={`mobile-row-icon ${state.connected ? "online" : ""}`}><Database size={24} /></span>
-                <span><strong>{server.favorite && <Star size={15} weight="fill" />} {server.name}</strong><small>{server.role === "owner" ? "Owner" : server.administrator ? "Admin" : "Member"} · {state.status}</small></span><CaretRight size={18} />
+              {isAndroid ? <button className="mobile-server-open" onClick={() => onOpen(server.id)} aria-label={t("servers.open", { name: server.name })} aria-current={selectedId === server.id || undefined}>
+                <span className={`mobile-row-icon ${state.connected ? "online" : ""}`}><Database size={22} /></span>
+                <span><strong>{server.favorite && <Star size={14} weight="fill" aria-label={t("servers.favorite")} />}{server.name}</strong><small>{t("common.separator.pair", { first: roleLabel(server), second: state.status })}</small></span>
+                {selectedId === server.id && <Check size={20} className="row-check" />}
               </button> : <><span
                 className={`server-card-icon ${state.connected ? "online" : ""}`}
               >
@@ -90,24 +99,20 @@ export function ServerCollection({
               <div className="collection-copy">
                 <h2>
                   {server.favorite && (
-                    <Star size={17} weight="fill" aria-label="Favorite" />
+                    <Star size={17} weight="fill" aria-label={t("servers.favorite")} />
                   )}
                   {server.name}
                 </h2>
                 <span>
-                  {server.role === "owner"
-                    ? "Owner"
-                    : server.administrator
-                      ? "Admin"
-                      : "Member"}{" "}
-                  · {state.status}
-                  {selectedId === server.id ? " · Selected" : ""}
+                  {selectedId === server.id
+                    ? t("common.separator.triple", { first: roleLabel(server), second: state.status, third: t("servers.selected") })
+                    : t("common.separator.pair", { first: roleLabel(server), second: state.status })}
                 </span>
                 <div className="collection-address">
-                  <span>VPN endpoint</span>
+                  <span>{t("home.details.serverAddress")}</span>
                   <CopyValue
                     value={`${server.endpoint.host}:${server.endpoint.wireguard_port}`}
-                    label={`${server.name} endpoint`}
+                    label={t("servers.addressOf", { name: server.name })}
                   />
                 </div>
               </div>
@@ -115,23 +120,24 @@ export function ServerCollection({
                 className="secondary-button"
                 onClick={() => onOpen(server.id)}
               >
-                Open
+                {t("common.action.open")}
               </button></>}
               <ActionMenu
-                label={`Actions for ${server.name}`}
+                label={t("servers.actions.label", { name: server.name })}
+                title={server.name}
                 actions={[
                   {
-                    label: "Rename locally",
+                    label: t("servers.actions.rename"),
                     disabled: busy,
                     run: () => void edit(server),
                   },
                   {
-                    label: server.favorite ? "Remove favorite" : "Add favorite",
+                    label: t(server.favorite ? "servers.actions.unfavorite" : "servers.actions.favorite"),
                     disabled: busy,
                     run: () => void edit(server, !server.favorite),
                   },
                   {
-                    label: "Inspect & maintain",
+                    label: t("servers.actions.maintain"),
                     run: () => onInspect(server.id),
                   },
                 ]}
@@ -141,11 +147,11 @@ export function ServerCollection({
         })}
       </div>
       <Dialog.Root open={Boolean(renaming)} onOpenChange={open => { if (!open && !busy) setRenaming(null); }}>
-        <Dialog.Portal><Dialog.Overlay className="dialog-overlay" /><DialogContent heading="Rename server" description="This name is only saved on this phone." closeDisabled={busy}>
+        <Dialog.Portal><Dialog.Overlay className="dialog-overlay" /><DialogContent heading={t("servers.rename.title")} description={t("servers.rename.description")} closeDisabled={busy}>
           <form onSubmit={event => { event.preventDefault(); if (renaming) void edit(renaming, undefined, draftName); }}>
-            <label className="field"><span>Server name</span><input value={draftName} maxLength={128} onChange={event => setDraftName(event.target.value)} /></label>
+            <label className="field"><span>{t("servers.rename.label")}</span><input value={draftName} maxLength={128} onChange={event => setDraftName(event.target.value)} /></label>
             {error && <InlineError message={error} />}
-            <button className="primary-button" disabled={busy || !draftName.trim()}>{busy ? "Saving…" : "Save name"}</button>
+            <button className="primary-button" disabled={busy || !draftName.trim()}>{busy ? t("common.state.saving") : t("servers.rename.save")}</button>
           </form>
         </DialogContent></Dialog.Portal>
       </Dialog.Root>

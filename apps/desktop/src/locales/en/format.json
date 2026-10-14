@@ -1,0 +1,31 @@
+{
+  "unavailable": "Unavailable",
+  "bytes": {
+    "B": "{{value}} B",
+    "KB": "{{value}} KB",
+    "MB": "{{value}} MB",
+    "GB": "{{value}} GB",
+    "TB": "{{value}} TB"
+  },
+  "rate": "{{value}}/s",
+  "memoryUsage": "{{percent}} · {{used}}",
+  "latency": "{{value}} ms",
+  "latencyBelowOne": "<1 ms",
+  "uptimeDays": "{{days}}d {{hours}}h",
+  "uptimeHours": "{{hours}}h {{minutes}}m",
+  "transport": {
+    "direct_udp": "Direct UDP",
+    "obfuscated_udp": "Obfuscated UDP",
+    "tls_like": "TLS fallback",
+    "tcp_fallback": "TCP fallback"
+  },
+  "dnsPolicy": {
+    "recursive": "Recursive DNS",
+    "dnsOverTls_one": "DNS over TLS · {{count}} server",
+    "dnsOverTls_other": "DNS over TLS · {{count}} servers",
+    "dnsOverHttps_one": "DNS over HTTPS · {{count}} server",
+    "dnsOverHttps_other": "DNS over HTTPS · {{count}} servers",
+    "split_one": "Split DNS · {{count}} zone · {{fallback}}",
+    "split_other": "Split DNS · {{count}} zones · {{fallback}}"
+  }
+}

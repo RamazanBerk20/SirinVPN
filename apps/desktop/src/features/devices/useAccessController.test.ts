@@ -1,4 +1,5 @@
 import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
+import type { FormEvent } from "react";
 import { afterEach, expect, it, vi } from "vitest";
 import { api } from "../../api";
 import type {
@@ -9,6 +10,7 @@ import type {
 import { useAccessController } from "./useAccessController";
 import { clearMembershipCache } from "./membershipCache";
 import * as dialog from "@tauri-apps/plugin-dialog";
+import { t } from "../../i18n";
 
 vi.mock("@tauri-apps/plugin-dialog", () => ({ confirm: vi.fn() }));
 vi.mock("../../api", () => ({
@@ -17,6 +19,8 @@ vi.mock("../../api", () => ({
     serverConfiguration: vi.fn(),
     updateMemberSuspension: vi.fn(),
     revokeDevice: vi.fn(),
+    createPortForward: vi.fn(),
+    removePortForward: vi.fn(),
   },
 }));
 afterEach(() => {
@@ -290,4 +294,31 @@ it("keeps a successful suspension when an older access refresh finishes afterwar
   });
   expect(result.current.snapshot).toBe(suspended);
   expect(result.current.loading).toBe(false);
+});
+
+it("routes port failures to the public port field without matching translated text", async () => {
+  const snapshot: MembershipSnapshot = { members: [{ id: "owner", name: "Owner", role: "owner", devices: [
+    { id: "self", member_id: "owner", name: "Laptop", client_tunnel_address: "10.77.0.2" },
+  ] }], active_invitations: [] };
+  vi.spyOn(window, "confirm").mockReturnValue(true);
+  vi.mocked(api.membership).mockResolvedValue(snapshot);
+  vi.mocked(api.serverConfiguration).mockResolvedValue({ port_forwarding_enabled: true } as CurrentConfiguration);
+  const { result } = renderHook(useAccessController, { initialProps: confirmationProps() });
+  await waitFor(() => expect(result.current.portForwardingAvailable).toBe(true));
+  await waitFor(() => expect(result.current.verified).toBe(true));
+  act(() => { result.current.setForwardPublicPort("48080"); result.current.setForwardDevicePort("8080"); });
+
+  const reserved = "that public protocol and port is reserved by SirinVPN DNS";
+  vi.mocked(api.createPortForward).mockRejectedValueOnce(new Error(reserved));
+  await act(async () => { await result.current.createPortForward({ preventDefault() {} } as FormEvent<HTMLFormElement>); });
+  expect(result.current.publicPortError).toBe(reserved);
+
+  vi.mocked(api.removePortForward).mockRejectedValueOnce(undefined);
+  await act(async () => { await result.current.removePortForward("tcp", 48080); });
+  expect(result.current.publicPortError).toBe(t("devices.error.closePort"));
+
+  vi.mocked(api.removePortForward).mockRejectedValueOnce(new Error("the private management connection failed"));
+  await act(async () => { await result.current.removePortForward("tcp", 48080); });
+  expect(result.current.error).toBe("the private management connection failed");
+  expect(result.current.publicPortError).toBeNull();
 });

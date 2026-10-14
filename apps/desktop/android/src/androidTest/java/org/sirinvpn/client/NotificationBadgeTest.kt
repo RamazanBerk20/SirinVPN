@@ -19,7 +19,7 @@ class NotificationBadgeTest {
         val manager = context.getSystemService(NotificationManager::class.java)
         assertTrue(manager.areNotificationsEnabled())
         // Recreate the pre-update channel to exercise migration of an already posted notification.
-        manager.createNotificationChannel(NotificationChannel("vpn", "VPN connection", NotificationManager.IMPORTANCE_LOW))
+        manager.createNotificationChannel(NotificationChannel("vpn", context.getString(R.string.notification_channel_vpn), NotificationManager.IMPORTANCE_LOW))
         val old = manager.getNotificationChannel("vpn")
         assertTrue("The old channel must reproduce the badge", old.canShowBadge())
         val open = VpnNotifications.openApp(context)

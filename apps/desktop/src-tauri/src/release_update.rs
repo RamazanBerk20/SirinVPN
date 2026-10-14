@@ -36,7 +36,7 @@ pub(crate) async fn get_release_update_status(
         let runtime = app.state::<ReleaseUpdateRuntime>();
         let state = runtime.lock()?;
         if state.busy {
-            return Err("Wait for the active release operation.".into());
+            return Err("Wait for the current update to finish.".into());
         }
         match appimage::Context::capture(&app)? {
             Some(context) => context.status(),
@@ -48,7 +48,7 @@ pub(crate) async fn get_release_update_status(
         }
     })
     .await
-    .map_err(|_| "The release status check was interrupted.".to_owned())?
+    .map_err(|_| "Checking the update status was interrupted. Try again.".to_owned())?
 }
 
 #[tauri::command]
@@ -58,18 +58,18 @@ pub(crate) async fn rollback_release_update(
     input: crate::release_update_status::RollbackReleaseInput,
 ) -> Result<(), String> {
     if !input.confirmed {
-        return Err("Confirm restoration of the displayed AppImage version first.".into());
+        return Err("Confirm restoring this AppImage version first.".into());
     }
     {
         let mut state = runtime.lock()?;
         if state.busy {
-            return Err("Another release operation is running.".into());
+            return Err("Another update is in progress.".into());
         }
         state.busy = true;
     }
     let outcome = tauri::async_runtime::spawn_blocking(move || {
         appimage::Context::capture(&app)?
-            .ok_or("AppImage rollback requires a user-owned AppImage.")?
+            .ok_or("Rollback needs an AppImage that you own.")?
             .rollback(&input.expected_version)
     })
     .await
@@ -192,7 +192,7 @@ pub(crate) async fn check_release_update(
         RELEASE_FETCH_BINARY,
         "sirinvpn-release-fetch",
     )
-    .map_err(|_| "The packaged release verifier is unavailable.".to_owned())?;
+    .map_err(|_| "The update checker is missing. Reinstall SirinVPN.".to_owned())?;
     let artifact_target = current_artifact_target()?.to_owned();
     let channel = input.channel.as_str().to_owned();
     // Claim the operation first: capture cancels an interrupted AppImage
@@ -209,7 +209,7 @@ pub(crate) async fn check_release_update(
         Ok(outcome) => outcome,
         Err(_) => {
             runtime.complete_check(None)?;
-            return Err("The release check was interrupted.".to_owned());
+            return Err("The update check was interrupted. Try again.".to_owned());
         }
     };
 
@@ -237,7 +237,7 @@ pub(crate) async fn install_release_update(
     input: InstallReleaseUpdateInput,
 ) -> Result<ReleaseUpdateCandidate, String> {
     if !input.confirmed {
-        return Err("Confirm this exact authenticated package first.".to_owned());
+        return Err("Confirm installing this verified package first.".to_owned());
     }
     let portable = runtime
         .lock()?
@@ -246,13 +246,13 @@ pub(crate) async fn install_release_update(
         .is_some_and(|pending| pending.appimage.is_some());
     if !portable {
         let status = super::invoke_helper("status", None)
-            .map_err(|_| "The local VPN state could not be verified.".to_owned())?;
+            .map_err(|_| "Couldn’t check the VPN status. Try again.".to_owned())?;
         if status.state != sirinvpn_protocol::ConnectionState::Disconnected
             || status.kill_switch_enabled
             || status.auto_reconnect_enabled
         {
             return Err(
-            "Disconnect SirinVPN and disable persistent protection before installing an update."
+            "Disconnect and turn off the kill switch before installing an update."
                 .to_owned(),
         );
         }
@@ -264,7 +264,7 @@ pub(crate) async fn install_release_update(
             Ok(operation) => operation,
             Err(_) => {
                 runtime.complete_install(false)?;
-                return Err("The package update worker was interrupted.".to_owned());
+                return Err("Installing the update was interrupted.".to_owned());
             }
         };
     match operation {
@@ -292,7 +292,7 @@ impl ReleaseUpdateRuntime {
     fn begin_check(&self) -> Result<Option<PendingReleaseUpdate>, String> {
         let mut state = self.lock()?;
         if state.busy {
-            return Err("Another release operation is already running.".to_owned());
+            return Err("Another update is in progress.".to_owned());
         }
         state.busy = true;
         Ok(state.pending.take())
@@ -308,22 +308,22 @@ impl ReleaseUpdateRuntime {
     fn begin_install(&self) -> Result<InstallSnapshot, String> {
         let mut state = self.lock()?;
         if state.busy {
-            return Err("Another release operation is already running.".to_owned());
+            return Err("Another update is in progress.".to_owned());
         }
         let pending = state
             .pending
             .as_ref()
-            .ok_or_else(|| "Check and authenticate a release before installing it.".to_owned())?;
+            .ok_or_else(|| "Check and verify a release before installing it.".to_owned())?;
         let fetched = &pending.fetched;
         let candidate = pending_summary(pending)?;
         if !candidate.newer_than_running && !candidate.baseline_bind_available {
             return Err(
-                "The authenticated candidate is not newer than this running build.".to_owned(),
+                "This release isn’t newer than your version.".to_owned(),
             );
         }
         if !candidate.debian_install_available && !candidate.appimage_install_available {
             return Err(
-                "In-app installation is available only from the root-owned Debian package build."
+                "This copy can’t update itself. Use the Debian package or an AppImage you own."
                     .to_owned(),
             );
         }
@@ -350,7 +350,7 @@ impl ReleaseUpdateRuntime {
     fn discard(&self) -> Result<Option<PendingReleaseUpdate>, String> {
         let mut state = self.lock()?;
         if state.busy {
-            return Err("The active release operation cannot be discarded.".to_owned());
+            return Err("Wait for the current update to finish before discarding it.".to_owned());
         }
         Ok(state.pending.take())
     }
@@ -358,7 +358,7 @@ impl ReleaseUpdateRuntime {
     fn lock(&self) -> Result<std::sync::MutexGuard<'_, ReleaseUpdateState>, String> {
         self.inner
             .lock()
-            .map_err(|_| "The in-memory release state is unavailable.".to_owned())
+            .map_err(|_| "Update status is unavailable. Reopen SirinVPN.".to_owned())
     }
 }
 
@@ -369,7 +369,7 @@ fn validate_source_input(source: &str) -> Result<(), String> {
         || source.chars().any(char::is_control)
         || !source.ends_with('/')
     {
-        return Err("Enter a valid HTTPS release directory ending in '/'.".to_owned());
+        return Err("Enter an HTTPS folder URL ending in /.".to_owned());
     }
     Ok(())
 }
@@ -378,7 +378,7 @@ fn current_artifact_target() -> Result<&'static str, String> {
     match env::consts::ARCH {
         "x86_64" => Ok("x86_64-unknown-linux-gnu"),
         "aarch64" => Ok("aarch64-unknown-linux-gnu"),
-        _ => Err("This Linux architecture has no signed update target.".to_owned()),
+        _ => Err("Updates aren’t available for this processor type.".to_owned()),
     }
 }
 
@@ -392,14 +392,14 @@ fn fetch_candidate(
     let temporary_directory = TempBuilder::new()
         .prefix("sirinvpn-desktop-release.")
         .tempdir()
-        .map_err(|_| "A private release staging directory could not be created.".to_owned())?;
+        .map_err(|_| "Couldn’t create a private download folder.".to_owned())?;
     fs::set_permissions(
         temporary_directory.path(),
         fs::Permissions::from_mode(0o700),
     )
-    .map_err(|_| "The release staging directory could not be made private.".to_owned())?;
+    .map_err(|_| "Couldn’t make the download folder private.".to_owned())?;
     let real_staging = fs::canonicalize(temporary_directory.path())
-        .map_err(|_| "The release staging directory could not be verified.".to_owned())?;
+        .map_err(|_| "Couldn’t verify the download folder.".to_owned())?;
     let destination = real_staging.join("candidate");
     let mut command = Command::new(fetcher);
     command
@@ -423,7 +423,7 @@ fn fetch_candidate(
         .stderr(Stdio::null());
     let output = successful_bounded_output(
         command,
-        "The release source did not provide an authenticated compatible Debian candidate.",
+        "No verified release for this device was found at this source. Check the URL and channel.",
     )?;
     let fetched = parse_fetch_output_kind(
         &output,
@@ -497,7 +497,7 @@ fn parse_fetch_output_kind(
     expected_kind: &str,
 ) -> Result<FetchOutput, String> {
     let fetched: FetchOutput = serde_json::from_slice(output)
-        .map_err(|_| "The packaged release verifier returned invalid data.".to_owned())?;
+        .map_err(|_| "The update check returned invalid data.".to_owned())?;
     if fetched.bundle_directory != destination
         || fetched.artifact_directory != destination.join("artifact")
         || fetched.channel != expected_channel
@@ -513,7 +513,7 @@ fn parse_fetch_output_kind(
         || !valid_file_name(&fetched.artifact.file_name)
         || Version::parse(&fetched.release_version).is_err()
     {
-        return Err("The packaged release verifier returned inconsistent data.".to_owned());
+        return Err("The update check returned inconsistent data.".to_owned());
     }
     Ok(fetched)
 }
@@ -538,27 +538,27 @@ fn validate_fetched_layout(fetched: &FetchOutput) -> Result<(), String> {
 
 fn require_private_directory(path: &Path, uid: u32) -> Result<(), String> {
     let metadata = fs::symlink_metadata(path)
-        .map_err(|_| "The verified release directory is unavailable.".to_owned())?;
+        .map_err(|_| "The verified download is missing. Check the release again.".to_owned())?;
     if !metadata.file_type().is_dir()
         || metadata.file_type().is_symlink()
         || metadata.uid() != uid
         || metadata.mode() & 0o777 != 0o700
     {
-        return Err("The verified release directory is not private.".to_owned());
+        return Err("The download folder isn’t private. Check the release again.".to_owned());
     }
     Ok(())
 }
 
 fn require_private_file(path: &Path, uid: u32) -> Result<(), String> {
     let metadata = fs::symlink_metadata(path)
-        .map_err(|_| "A verified release file is unavailable.".to_owned())?;
+        .map_err(|_| "A verified download file is missing. Check the release again.".to_owned())?;
     if !metadata.file_type().is_file()
         || metadata.file_type().is_symlink()
         || metadata.uid() != uid
         || metadata.nlink() != 1
         || metadata.mode() & 0o777 != 0o600
     {
-        return Err("A verified release file has unsafe local permissions.".to_owned());
+        return Err("A downloaded file has unsafe permissions. Check the release again.".to_owned());
     }
     Ok(())
 }
@@ -567,7 +567,7 @@ fn candidate_summary(fetched: &FetchOutput) -> Result<ReleaseUpdateCandidate, St
     let current = Version::parse(env!("CARGO_PKG_VERSION"))
         .map_err(|_| "The running application version is invalid.".to_owned())?;
     let candidate = Version::parse(&fetched.release_version)
-        .map_err(|_| "The authenticated release version is invalid.".to_owned())?;
+        .map_err(|_| "The release version is invalid.".to_owned())?;
     Ok(ReleaseUpdateCandidate {
         current_version: current.to_string(),
         release_version: candidate.to_string(),
@@ -620,7 +620,7 @@ fn install_candidate(snapshot: &InstallSnapshot) -> Result<ReleaseUpdateCandidat
         return context.install(snapshot);
     }
     let coordinator = installed_debian_release_coordinator().map_err(|_| {
-        "The root-owned Debian release coordinator is unavailable or unsafe.".to_owned()
+        "The system update installer is missing or unsafe. Reinstall the SirinVPN Debian package.".to_owned()
     })?;
     let policy = snapshot.bundle_directory.join(TRUST_POLICY_FILE_NAME);
     let trust_signature = snapshot.bundle_directory.join(TRUST_SIGNATURE_FILE_NAME);
@@ -635,7 +635,7 @@ fn install_candidate(snapshot: &InstallSnapshot) -> Result<ReleaseUpdateCandidat
             OsString::from("--signature"),
             trust_signature.into_os_string(),
         ],
-        "The root-signed trust policy could not be confirmed. The installed package was not changed.",
+        "Couldn’t confirm the release’s signing-key update. The installed package wasn’t changed.",
     )?;
 
     let manifest = snapshot.bundle_directory.join(RELEASE_MANIFEST_FILE_NAME);
@@ -655,7 +655,7 @@ fn install_candidate(snapshot: &InstallSnapshot) -> Result<ReleaseUpdateCandidat
             OsString::from("--artifact-target"),
             OsString::from(&snapshot.artifact_target),
         ],
-        "The authenticated package update did not complete. The coordinator attempted rollback and retained recovery state if it could not prove completion; a root-authenticated trust-policy update may remain active.",
+        "The update didn’t finish. It was rolled back where possible, recovery data is kept if needed, and a signing-key update may stay active.",
     )?;
     Ok(snapshot.candidate.clone())
 }

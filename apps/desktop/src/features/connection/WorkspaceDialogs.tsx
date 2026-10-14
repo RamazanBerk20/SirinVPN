@@ -11,6 +11,7 @@ import { VpsBackupDialog } from "../settings/VpsBackupDialog";
 import { VpsRestoreDialog } from "../settings/VpsRestoreDialog";
 import { ExportBackupDialog } from "../settings/ExportBackupDialog";
 import { RemoveServerDialog } from "../settings/RemoveServerDialog";
+import { t } from "../../i18n";
 
 import type { ServerWorkspaceModel } from "./useServerWorkspace";
 
@@ -55,11 +56,11 @@ export function WorkspaceDialogs({
       <Dialog.Root open={diagnosticsOpen} onOpenChange={setDiagnosticsOpen}>
         <Dialog.Portal>
           <Dialog.Overlay className="dialog-overlay" />
-          <DialogContent className="dialog-content diagnostics-dialog" heading="Current diagnostics"
-            description="Checks describe current device and server conditions. Results are discarded when this view closes; copying keeps the sanitized text in your clipboard.">
+          <DialogContent className="dialog-content diagnostics-dialog" heading={t("maintenance.diagnostics.title")}
+            description={t("maintenance.diagnostics.description")}>
             {!diagnostics ? (
               <div className="diagnostic-loading">
-                <ArrowClockwise className="spin" /> Checking current device and server conditions
+                <ArrowClockwise className="spin" /> {t("maintenance.diagnostics.checking")}
               </div>
             ) : (
               <DiagnosticResults report={diagnostics} />

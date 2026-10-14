@@ -4,48 +4,50 @@ import { DialogContent } from "../../components/DialogContent";
 import { InlineError } from "../../components/ui";
 import { api } from "../../api";
 import { errorMessage } from "../../lib/errors";
+import { t, type MessageKey } from "../../i18n";
 import type { ServerWorkspaceModel } from "./useServerWorkspace";
 
 const plans = {
   backup: {
-    title: "Back up VPS",
+    title: "maintenance.operation.backup.title",
     steps: [
-      "Read the server configuration and authorization state over verified SSH.",
-      "Encrypt the backup with a password you choose and save it on this device.",
+      "maintenance.operation.backup.steps.read",
+      "maintenance.operation.backup.steps.encrypt",
     ],
   },
   restore: {
-    title: "Restore or migrate VPS",
+    title: "maintenance.operation.restore.title",
     steps: [
-      "Choose an encrypted VPS backup and verify the target host over SSH.",
-      "Review the destination and replacement plan before restoring. Server services may restart and interrupt other devices.",
+      "maintenance.operation.restore.steps.choose",
+      "maintenance.operation.restore.steps.review",
+      "maintenance.operation.interruption",
     ],
   },
   update: {
-    title: "Update VPS software",
+    title: "maintenance.operation.update.title",
     steps: [
-      "Check your chosen HTTPS source and review the signed VPS release before installing it.",
-      "Verify current-state compatibility and keep the previous authenticated release available for rollback.",
-      "Installation restarts VPS services. Other devices may briefly lose their connection.",
+      "maintenance.operation.update.steps.review",
+      "maintenance.operation.update.steps.rollback",
+      "maintenance.operation.interruption",
     ],
   },
   repair: {
-    title: "Repair VPS configuration",
+    title: "maintenance.operation.repair.title",
     steps: [
-      "Reapply SirinVPN networking, services, and DNS configuration. This also reinstalls the bundled server software.",
-      "Preserve existing identities and authorization. Review any DNS changes before applying.",
-      "Restart and verify SirinVPN services. Other devices may briefly lose their connection.",
+      "maintenance.operation.repair.steps.reapply",
+      "maintenance.operation.repair.steps.preserve",
+      "maintenance.operation.interruption",
     ],
   },
   dns: {
-    title: "Configure VPS DNS",
+    title: "maintenance.operation.dns.title",
     steps: [
-      "Choose DNS upstreams or private records and verify the VPS over SSH.",
-      "Apply changes using the repair workflow, which also reinstalls bundled server software and restarts services.",
-      "DNS changes affect all devices using this VPS.",
+      "maintenance.operation.dns.steps.choose",
+      "maintenance.operation.dns.steps.apply",
+      "maintenance.operation.interruption",
     ],
   },
-} as const;
+} as const satisfies Record<string, { title: MessageKey; steps: readonly MessageKey[] }>;
 export type MaintenanceOperation = keyof typeof plans;
 
 export function MaintenanceReview({ model }: { model: ServerWorkspaceModel }) {
@@ -68,7 +70,7 @@ export function MaintenanceReview({ model }: { model: ServerWorkspaceModel }) {
       await api.disconnect();
     } catch (reason) {
       setError(
-        errorMessage(reason, "The local tunnel could not be disconnected."),
+        errorMessage(reason, t("maintenance.review.disconnectFailed")),
       );
     } finally {
       await model.onRefresh();
@@ -95,17 +97,17 @@ export function MaintenanceReview({ model }: { model: ServerWorkspaceModel }) {
       <Dialog.Portal>
         <Dialog.Overlay className="dialog-overlay" />
         <DialogContent className="dialog-content maintenance-review"
-          heading={<>{plan?.title}</>}
-          description={<>Review maintenance requirements for {model.profile.name}.</>}
-          closeDisabled={busy} closeLabel="Close maintenance review">
+          heading={<>{plan && t(plan.title)}</>}
+          description={t("maintenance.review.description", { name: model.profile.name })}
+          closeDisabled={busy} closeLabel={t("maintenance.review.close")}>
           <ol className="maintenance-plan">
             {plan?.steps.map((step) => (
-              <li key={step}>{step}</li>
+              <li key={step}>{t(step)}</li>
             ))}
           </ol>
           {model.rotationPending && (
             <div className="maintenance-prerequisite">
-              <p>Finish this device's pending key rotation first.</p>
+              <p>{t("maintenance.review.rotationFirst")}</p>
               <button
                 className="secondary-button"
                 onClick={() => {
@@ -113,7 +115,7 @@ export function MaintenanceReview({ model }: { model: ServerWorkspaceModel }) {
                   model.setRotationOpen(true);
                 }}
               >
-                Review key rotation
+                {t("maintenance.review.reviewRotation")}
               </button>
             </div>
           )}
@@ -121,15 +123,11 @@ export function MaintenanceReview({ model }: { model: ServerWorkspaceModel }) {
             <div className="maintenance-prerequisite">
               <p>
                 {!model.localKnown
-                  ? "Refresh this device's tunnel status before continuing."
-                  : "Disconnect the active SirinVPN tunnel on this computer before the SSH operation. This step does not disconnect other members from the VPS."}
+                  ? t("maintenance.review.refreshFirst")
+                  : local.kill_switch_enabled
+                    ? t("maintenance.review.disconnectFirstKillSwitch")
+                    : t("maintenance.review.disconnectFirst")}
               </p>
-              {local.kill_switch_enabled && model.localKnown && (
-                <p>
-                  Disconnect also releases this computer's traffic block and
-                  stops automatic reconnect.
-                </p>
-              )}
               <button
                 className="secondary-button"
                 disabled={busy}
@@ -138,10 +136,10 @@ export function MaintenanceReview({ model }: { model: ServerWorkspaceModel }) {
                 }
               >
                 {busy
-                  ? "Disconnecting…"
+                  ? t("maintenance.review.disconnecting")
                   : model.localKnown
-                    ? "Disconnect this computer"
-                    : "Refresh local status"}
+                    ? t("maintenance.review.disconnect")
+                    : t("maintenance.review.refresh")}
               </button>
             </div>
           )}
@@ -152,7 +150,7 @@ export function MaintenanceReview({ model }: { model: ServerWorkspaceModel }) {
               disabled={!disconnected || model.rotationPending || busy}
               onClick={proceed}
             >
-              Continue to VPS setup
+              {t("common.action.continue")}
             </button>
           </div>
         </DialogContent>

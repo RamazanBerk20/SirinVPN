@@ -25,7 +25,7 @@ catalog.native=async(command:string,args:any={})=>{
     catalog.prompts.push({kind:command,fixture:true});return null;
   }
   if(command==='android_choose_applications') return {mode:'include',packages:['com.example.mail']};
-  if(command==='android_add_tile') {catalog.prompts.push({kind:command,fixture:true});return 'Open Quick Settings, tap Edit, and add SirinVPN.';}
+  if(command==='android_add_tile') {catalog.prompts.push({kind:command,fixture:true});return 'Open Quick Settings, tap Edit and add SirinVPN.';}
   if(command==='android_vpn_settings' || command==='android_notification_settings') {catalog.prompts.push({kind:command,fixture:true});return null;}
   return native(command,args);
 };

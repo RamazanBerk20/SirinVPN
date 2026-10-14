@@ -66,7 +66,7 @@ with tempfile.TemporaryDirectory(prefix="desktop-native-", dir=OUTPUT) as direct
         original = initial["preferences"]
         assert original == dict(start_on_login=False, launch_minimized=False, close_to_tray=False, notifications=False, animations=True)
         assert not (config / "autostart").exists()
-        assert "Enable notifications" in inspector.invoke("test_notification", error=True)
+        assert "Turn on notifications first" in inspector.invoke("test_notification", error=True)
         results.append("Safe defaults and disabled-notification guard")
         print("PASS defaults", flush=True)
 

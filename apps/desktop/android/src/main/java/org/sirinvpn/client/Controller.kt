@@ -93,7 +93,7 @@ object Controller {
                 .putBoolean("animations", legacy.getBoolean("animations", true)).commit())
         }
         if (preferences.contains("maintenance")) {
-            error = "A server operation was interrupted. Review its current state and retry the same operation."
+            error = context.getString(R.string.error_server_task_interrupted)
             operationState=JSONObject().put("command",preferences.getString("maintenance","")).put("phase","interrupted")
         }
         initialized = true
@@ -125,7 +125,7 @@ object Controller {
         // the foreground start. Never infer this from persisted intent alone.
         if(interrupted && SirinVpnService.instance==null && needsReconstruction()) {
             try {context.startForegroundService(Intent(context,SirinVpnService::class.java).setAction("org.sirinvpn.RECOVER"))}
-            catch (_:Exception) {error="Android deferred VPN recovery. Open SirinVPN and reconnect."}
+            catch (_:Exception) {error=context.getString(R.string.error_vpn_recovery_deferred)}
         }
     }
 
@@ -270,7 +270,7 @@ object Controller {
 
     fun execute(command: String, arguments: String, requestId: String, expected: Long, callback: IResult,
                 retry: Boolean = false, wifi: Boolean = false) {
-        if (arguments.length > 131072 || requestId.length > 80) { callback.complete(failure("Request too large.")); return }
+        if (arguments.length > 131072 || requestId.length > 80) { callback.complete(failure(R.string.error_request_too_large)); return }
         if (command in setOf("get_app_preferences", "set_app_preferences")) {
             try {
                 val prefs = context.getSharedPreferences("application-preferences", 0)
@@ -289,7 +289,7 @@ object Controller {
                         .put("notification_permission", if (context.getSystemService(android.app.NotificationManager::class.java).areNotificationsEnabled()) "granted" else "denied")
                         .put("font_scale", context.resources.configuration.fontScale)))
                 }
-            } catch (_: Exception) { callback.complete(failure("App preferences could not be saved or read.")) }
+            } catch (_: Exception) { callback.complete(failure(R.string.error_preferences)) }
             return
         }
         if(command=="android_dismiss_operation") {
@@ -301,16 +301,16 @@ object Controller {
         if(command=="authorize_document_share") {
             val uri=try {JSONObject(arguments).getString("uri")} catch (_:Exception) {""}
             val allowed=synchronized(this) { exports[uri]?.let {SystemClock.elapsedRealtime()-it<600000}==true }
-            callback.complete(if(allowed) success() else failure("Export the encrypted file again before sharing it."));return
+            callback.complete(if(allowed) success() else failure(R.string.error_share_expired));return
         }
         if (command == "remember_secret") {
             try { callback.complete(success(SecretInputs.remember(JSONObject(arguments).getString("value")))) }
-            catch (_: Exception) { callback.complete(failure("Protected input could not be retained.")) }
+            catch (_: Exception) { callback.complete(failure(R.string.error_protected_input)) }
             return
         }
         if (command == "reveal_secret") {
             try { callback.complete(success(SecretInputs.reveal(JSONObject(arguments).getString("reference")))) }
-            catch (_: Exception) { callback.complete(failure("Protected value expired. Enter or create it again.")) }
+            catch (_: Exception) { callback.complete(failure(R.string.error_protected_value_expired)) }
             return
         }
         synchronized(this) {
@@ -318,9 +318,9 @@ object Controller {
         }
         if (command in setOf("disconnect_server", "cancel_connection")) {
             synchronized(this) {
-            if (SirinVpnService.instance?.isAlwaysOn == true) { callback.complete(failure("Android Always-on controls this connection. Open VPN settings.")); return }
-            if (expected >= 0 && !current(expected)) { callback.complete(failure("The connection changed. Refresh its status.")); return }
-            if (operation && (protectedTransition || phase !in setOf("connecting", "reconnecting", "waiting_for_network"))) { callback.complete(failure("Finish the current protected operation before stopping.")); return }
+            if (SirinVpnService.instance?.isAlwaysOn == true) { callback.complete(failure(R.string.error_always_on)); return }
+            if (expected >= 0 && !current(expected)) { callback.complete(failure(R.string.error_connection_changed)); return }
+            if (operation && (protectedTransition || phase !in setOf("connecting", "reconnecting", "waiting_for_network"))) { callback.complete(failure(R.string.error_busy_disconnect)); return }
             stop(true); callback.complete(success(snapshot().getJSONObject("status"))); return
             }
         }
@@ -344,17 +344,17 @@ object Controller {
         val generation: Long
         synchronized(this) {
             if ((operation && !readOnly && (!setting || protectedTransition || phase !in setOf("connecting", "reconnecting", "waiting_for_network"))) || settingsUpdating && !readOnly) {
-                callback.complete(failure("Another operation is in progress.")); return
+                callback.complete(failure(R.string.error_busy)); return
             }
             if (retry && (paused || !preferences.getBoolean("requested", false) || !retryRequested() && !networkHandoff)) { callback.complete(success()); return }
             if (wifi && (paused || !wifiEnabled() || wifiPolicy?.optString("current_network") != "untrusted_wifi")) { callback.complete(success()); return }
-            if(switching && !connection && !readOnly && !setting) {callback.complete(failure("A transport handoff is being verified. Retry in a moment."));return}
-            if (expected >= 0 && !current(expected)) { callback.complete(failure("The connection changed. Refresh its status.")); return }
+            if(switching && !connection && !readOnly && !setting) {callback.complete(failure(R.string.error_switching_method));return}
+            if (expected >= 0 && !current(expected)) { callback.complete(failure(R.string.error_connection_changed)); return }
             if (connection && VpnService.prepare(context) != null) {
                 // Only the user can grant consent: consume the pending retry or handoff
                 // so sample() does not re-run this attempt every second.
                 retryAt = 0; networkHandoff = false
-                phase = "permission_required"; publish(); callback.complete(failure("VPN permission is required.")); return
+                phase = "permission_required"; publish(); callback.complete(failure(R.string.error_vpn_permission_required)); return
             }
             if (setting) { settingsUpdating=true; if(wifiSetting) wifiRevision++ }
             else if (!readOnly) {operation = true;protectedTransition=transition}
@@ -386,13 +386,13 @@ object Controller {
             synchronized(this) {operationState=JSONObject().put("command",command).put("phase","running")}
         } catch (_:Exception) {
             synchronized(this) { operation=false;publish() }
-            callback.complete(failure("Open SirinVPN to start this server operation."));return
+            callback.complete(failure(R.string.error_server_task_background));return
         }
         if (connection) try {
             context.startForegroundService(Intent(context, SirinVpnService::class.java).setAction("org.sirinvpn.START").putExtra("generation",generation))
         } catch (_: Exception) {
-            synchronized(this) { operation = false; phase = "failed"; error = "Android could not start the VPN service."; publish() }
-            callback.complete(failure("Open SirinVPN to start the VPN.")); return
+            synchronized(this) { operation = false; phase = "failed"; error = context.getString(R.string.error_vpn_start_failed); publish() }
+            callback.complete(failure(R.string.error_vpn_start_failed)); return
         }
         publish()
         try { (if (setting) preferenceWorker else if (readOnly) readers else worker).execute {
@@ -462,7 +462,7 @@ object Controller {
                     }
                 }
                 if (connection && !transition && effective !in setOf("join_server", "recover_owner_access") && JSONObject(response).has("ok")) success(snapshot().getJSONObject("status")) else response
-            } catch (_: Exception) { failure("The operation could not finish. Check permissions, configuration and network access.") }
+            } catch (_: Exception) { failure(R.string.error_operation_failed) }
             synchronized(this) {
                 if (setting) settingsUpdating=false else if (!readOnly) operation = false
                 if (maintenance) {
@@ -516,7 +516,7 @@ object Controller {
                 if (connection) {
                     // The attempt never ran: undo what was prepared for it, as a non-retried failure does.
                     if (previousHandle >= 0) phase = previousPhase else {
-                        phase = "failed"; error = "Too many pending requests. Retry after the current operation finishes."
+                        phase = "failed"; error = context.getString(R.string.error_queue_full)
                         preferences.edit().putBoolean("requested", false).commit()
                         sampling?.cancel(false); sampling = null
                         if(wifiPolicy?.optJSONObject("policy")?.optBoolean("enabled")!=true) SirinVpnService.instance?.finishSession()
@@ -525,7 +525,7 @@ object Controller {
                 publish()
             }
             if (wifiSetting) refreshWifi()
-            callback.complete(failure("Too many pending requests. Retry after the current operation finishes."))
+            callback.complete(failure(R.string.error_queue_full))
         }
     }
     @Synchronized fun maintenanceTimeout() {
@@ -715,4 +715,5 @@ object Controller {
     val ignoreResult = object : IResult.Stub() { override fun complete(result: String) {} }
     fun success(value: Any = JSONObject.NULL) = JSONObject().put("ok", value).toString()
     fun failure(message: String) = JSONObject().put("error", message).toString()
+    private fun failure(@androidx.annotation.StringRes message: Int) = failure(context.getString(message))
 }

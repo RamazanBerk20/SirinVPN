@@ -1,0 +1,67 @@
+{
+  "resolver": {
+    "legend": "DNS resolver",
+    "mode": {
+      "preserve": "Keep current",
+      "recursive": "Recursive",
+      "dnsOverTls": "DNS over TLS",
+      "dnsOverHttps": "DNS over HTTPS"
+    },
+    "note": {
+      "preserve": "Current resolver and split DNS zones stay as they are",
+      "recursive": "Your server looks up names itself, with DNSSEC validation",
+      "dnsOverTls": "Forwards lookups over TLS on port 853, with no plaintext fallback",
+      "dnsOverHttps": "Forwards lookups over HTTPS on port 443, with no plaintext fallback"
+    },
+    "endpoint": "Resolver {{number}}",
+    "endpointOptional": "Resolver {{number}} (optional)",
+    "address": "IP address",
+    "tlsName": "TLS hostname",
+    "httpsPath": "HTTPS path"
+  },
+  "records": {
+    "legend": "Private DNS records",
+    "mode": {
+      "preserve": "Keep current",
+      "replace": "Replace",
+      "clear": "Clear"
+    },
+    "note": {
+      "preserve": "Current records stay as they are",
+      "replace": "Names that resolve only inside your VPN",
+      "clear": "Removes all private records"
+    },
+    "label": "Records",
+    "hint": "One name=IP per line, up to 64"
+  },
+  "split": {
+    "label": "Split DNS zones",
+    "summary": "Optional. Send a domain to its own resolver: domain=IP, one per line.",
+    "infoLabel": "About split DNS zones",
+    "info": "Private-IP resolvers are trusted without DNSSEC. IP#TLS-name uses DNS over TLS with DNSSEC. Separate backup resolvers with commas; zones never fall back to the main resolver.",
+    "invalid": "Check the domain names and resolver addresses. Up to 16 zones."
+  },
+  "review": {
+    "label": "DNS change review",
+    "title": "Review DNS changes",
+    "resolver": {
+      "term": "Resolver",
+      "preserve": "Keep current resolver and split DNS zones",
+      "recursive": "Recursive DNS with DNSSEC",
+      "dnsOverTls": "DNS over TLS, no plaintext fallback",
+      "dnsOverHttps": "DNS over HTTPS, no plaintext fallback"
+    },
+    "addresses": "Resolver addresses",
+    "split": {
+      "term": "Split DNS zones",
+      "none": "None. Existing zones are removed."
+    },
+    "records": {
+      "term": "Private DNS records",
+      "preserve": "Keep current records",
+      "clear": "Remove all records",
+      "replace": "Replace all records with:"
+    },
+    "impact": "Affects every device on this server, and the VPN restarts briefly. VPN addresses, ports, devices and access stay the same."
+  }
+}

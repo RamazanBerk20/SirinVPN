@@ -73,40 +73,6 @@
   font-weight: 560;
 }
 
-.privacy-boundary {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  margin-top: 30px;
-  padding: 19px 21px;
-  border: 1px solid #15345b;
-  border-left: 2px solid var(--cyan);
-  border-radius: 7px;
-  background: rgb(9 31 64 / 48%);
-}
-
-.privacy-boundary > svg {
-  flex: 0 0 auto;
-  color: var(--cyan);
-}
-
-.privacy-boundary h3,
-.privacy-boundary p {
-  margin: 0;
-}
-
-.privacy-boundary h3 {
-  font-size: 12px;
-}
-
-.privacy-boundary p {
-  max-width: 760px;
-  margin-top: 4px;
-  color: var(--muted);
-  font-size: 10px;
-  line-height: 1.55;
-}
-
 .dialog-overlay {
   position: fixed;
   inset: 0;

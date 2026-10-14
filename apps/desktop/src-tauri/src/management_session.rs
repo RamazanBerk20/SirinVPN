@@ -144,7 +144,7 @@ async fn prepare(
             Ok(retain(profile, connection, 0, client))
         })
         .await
-        .map_err(|_| "The management worker was interrupted.".to_owned())??;
+        .map_err(|_| "The server request was interrupted. Try again.".to_owned())??;
         Ok(ManagementSession {
             profile: entry.profile,
             client: entry.client,
@@ -158,7 +158,7 @@ async fn read_generation<T>(
     operation: impl std::future::Future<Output = Result<T, sirinvpn_core::ManagementError>>,
 ) -> Result<T, String> {
     let mut changes = GENERATION.subscribe();
-    let changed = || "The connection changed. Refresh this server's current data.".to_owned();
+    let changed = || "The connection changed. Refresh this server’s current data.".to_owned();
     if *changes.borrow() != generation {
         return Err(changed());
     }

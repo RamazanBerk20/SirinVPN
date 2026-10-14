@@ -17,6 +17,10 @@ import { type EndpointUpdateCodeResult, type ServerProfile } from "../../types";
 import { Field, InlineError } from "../../components/ui";
 import { errorMessage } from "../../lib/errors";
 import { CopyButton } from "../../components/CopyButton";
+import { t } from "../../i18n";
+
+/** Shape of a signed update code; a format sample, not translatable text. */
+const CODE_PLACEHOLDER = "sirm1.…";
 
 export function EndpointUpdateDialog({
   profile,
@@ -69,10 +73,7 @@ export function EndpointUpdateDialog({
       await onCompleted();
     } catch (reason) {
       setError(
-        errorMessage(
-          reason,
-          "The restored VPS could not create a signed endpoint update. Keep the old VPS running and retry while connected.",
-        ),
+        errorMessage(reason, t("vps.endpoint.error.create")),
       );
     } finally {
       setBusy(false);
@@ -85,15 +86,12 @@ export function EndpointUpdateDialog({
     try {
       const result = await api.availableEndpointUpdate(profile.id);
       if (!result)
-        throw new Error("This VPS has no published endpoint update.");
+        throw new Error(t("vps.endpoint.error.none"));
       setUpdate(result);
       setCode(result.code);
     } catch (reason) {
       setError(
-        errorMessage(
-          reason,
-          "No signed endpoint update could be retrieved from this VPS.",
-        ),
+        errorMessage(reason, t("vps.endpoint.error.retrieve")),
       );
     } finally {
       setBusy(false);
@@ -111,10 +109,7 @@ export function EndpointUpdateDialog({
       await onCompleted();
     } catch (reason) {
       setError(
-        errorMessage(
-          reason,
-          "The old VPS was left installed, but the endpoint update could not be published there.",
-        ),
+        errorMessage(reason, t("vps.endpoint.error.publish")),
       );
     } finally {
       setBusy(false);
@@ -131,10 +126,7 @@ export function EndpointUpdateDialog({
       await onCompleted();
     } catch (reason) {
       setError(
-        errorMessage(
-          reason,
-          "The update could not be completed. Check the connection status and retry.",
-        ),
+        errorMessage(reason, t("vps.endpoint.error.apply")),
       );
     } finally {
       setBusy(false);
@@ -147,11 +139,10 @@ export function EndpointUpdateDialog({
         <Dialog.Overlay className="dialog-overlay" />
         <DialogContent className="dialog-content invitation-dialog endpoint-update-dialog"
           heading={<>{mode === "share"
-              ? "Move devices to a new VPS address"
-              : "Update this device endpoint"}</>}
-          description={<>Signed updates verify this server’s identity and let devices catch up
-            to its current addresses, ports, and transport settings.</>}
-          closeDisabled={busy} closeLabel="Close">
+              ? t("vps.endpoint.titleShare")
+              : t("vps.endpoint.titleApply")}</>}
+          description={<>{t("vps.endpoint.description")}</>}
+          closeDisabled={busy}>
 
           {owner ? (
             <div className="segmented-control endpoint-update-tabs">
@@ -160,14 +151,14 @@ export function EndpointUpdateDialog({
                 aria-pressed={mode === "share"}
                 onClick={() => setMode("share")}
               >
-                Share migration
+                {t("vps.endpoint.tab.share")}
               </button>
               <button
                 type="button"
                 aria-pressed={mode === "apply"}
                 onClick={() => setMode("apply")}
               >
-                Update this device
+                {t("vps.endpoint.tab.apply")}
               </button>
             </div>
           ) : null}
@@ -178,8 +169,7 @@ export function EndpointUpdateDialog({
                 <div className="warning-note replacement-warning">
                   <Warning size={18} weight="fill" />
                   <span>
-                    Devices still using {profile.pending_previous_endpoint.host}{" "}
-                    need a signed update before that VPS can be retired.
+                    {t("vps.endpoint.pending", { host: profile.pending_previous_endpoint.host })}
                   </span>
                 </div>
               ) : null}
@@ -188,14 +178,10 @@ export function EndpointUpdateDialog({
                   <GlobeHemisphereWest size={28} weight="duotone" />
                   <h3>
                     {profile.pending_previous_endpoint
-                      ? "Create the migration handoff"
-                      : "Retrieve the latest handoff"}
+                      ? t("vps.endpoint.create.title")
+                      : t("vps.endpoint.retrieve.title")}
                   </h3>
-                  <p>
-                    Connect to the restored VPS. It signs the new endpoint
-                    without exposing a private key or contacting a SirinVPN
-                    cloud.
-                  </p>
+                  <p>{t("vps.endpoint.intro")}</p>
                   <button
                     className="primary-button"
                     disabled={!connected || busy}
@@ -207,11 +193,11 @@ export function EndpointUpdateDialog({
                       <Key size={18} />
                     )}
                     {profile.pending_previous_endpoint
-                      ? "Create signed update"
-                      : "Retrieve signed update"}
+                      ? t("vps.endpoint.create.action")
+                      : t("vps.endpoint.retrieve.action")}
                   </button>
                   {!connected ? (
-                    <small>Connect to the current restored VPS first.</small>
+                    <small>{t("vps.endpoint.connectFirst")}</small>
                   ) : null}
                 </div>
               ) : (
@@ -224,22 +210,22 @@ export function EndpointUpdateDialog({
                     <code>
                       {endpointLabel(update.endpoint)}
                     </code>
-                    <span>Generation {update.generation}</span>
+                    <span>{t("vps.endpoint.number", { number: update.generation })}</span>
                   </div>
                   <Field
-                    label="Signed endpoint update"
-                    hint="This code contains no access key. Its signature prevents modification."
+                    label={t("vps.endpoint.code")}
+                    hint={t("vps.endpoint.codeHint")}
                   >
                     <textarea
                       className="secret-code-output mono"
                       value={update.code}
                       readOnly
-                      aria-label="Signed endpoint update code"
+                      aria-label={t("vps.endpoint.code")}
                     />
                   </Field>
                   <div className="dialog-actions">
                     <CopyButton className="secondary-button" value={update.code}>
-                      {" "}Copy code
+                      {" "}{t("vps.endpoint.copy")}
                     </CopyButton>
                     <button
                       className="primary-button"
@@ -252,14 +238,12 @@ export function EndpointUpdateDialog({
                         <GlobeHemisphereWest size={18} />
                       )}
                       {published
-                        ? "Published on old VPS"
-                        : "Publish on old VPS"}
+                        ? t("vps.endpoint.published")
+                        : t("vps.endpoint.publish")}
                     </button>
                   </div>
                   <p className="form-footnote">
-                    <LockKey size={15} /> Publishing authenticates to the previous VPS
-                    and stores its signed handoff. The old VPS then serves migration
-                    control while VPN traffic moves to the new VPS.
+                    <LockKey size={15} /> {t("vps.endpoint.publishNote")}
                   </p>
                 </>
               )}
@@ -272,30 +256,24 @@ export function EndpointUpdateDialog({
                   <span>
                     <Check size={26} weight="bold" />
                   </span>
-                  <h3>Endpoint updated</h3>
-                  <p>
-                    The server’s signed update was verified and saved. Check
-                    the connection status for reachability at its new address.
-                  </p>
+                  <h3>{t("vps.endpoint.applied")}</h3>
+                  <p>{t("vps.endpoint.appliedNote")}</p>
                   <button
                     className="primary-button"
                     onClick={() => changeOpen(false)}
                   >
-                    Done
+                    {t("common.action.done")}
                   </button>
                 </div>
               ) : (
                 <>
-                  <p>
-                    Paste the Owner’s signed code, or retrieve the current VPS’s
-                    published handoff. An active session keeps its protection and routing settings.
-                  </p>
-                  <Field label="Signed endpoint update">
+                  <p>{t("vps.endpoint.applyIntro")}</p>
+                  <Field label={t("vps.endpoint.code")}>
                     <textarea
                       className="secret-code-output mono"
                       value={code}
                       onChange={(event) => setCode(event.target.value)}
-                      placeholder="sirm1.…"
+                      placeholder={CODE_PLACEHOLDER}
                       spellCheck={false}
                     />
                   </Field>
@@ -308,7 +286,7 @@ export function EndpointUpdateDialog({
                       <code>
                         {endpointLabel(update.endpoint)}
                       </code>
-                      <span>Generation {update.generation}</span>
+                      <span>{t("vps.endpoint.number", { number: update.generation })}</span>
                     </div>
                   ) : null}
                   {error ? <InlineError message={error} /> : null}
@@ -318,7 +296,7 @@ export function EndpointUpdateDialog({
                       disabled={!connected || busy}
                       onClick={() => void checkCurrent()}
                     >
-                      <DownloadSimple size={17} /> Retrieve from current VPS
+                      <DownloadSimple size={17} /> {t("vps.endpoint.getFromServer")}
                     </button>
                     <button
                       className="primary-button"
@@ -330,12 +308,11 @@ export function EndpointUpdateDialog({
                       ) : (
                         <ShieldCheck size={18} />
                       )}
-                      Verify and switch
+                      {t("vps.endpoint.verify")}
                     </button>
                   </div>
                   <p className="form-footnote">
-                    <ShieldCheck size={15} /> Your device keys and pinned server
-                    identity remain bound to this connection.
+                    <ShieldCheck size={15} /> {t("vps.endpoint.identityNote")}
                   </p>
                 </>
               )}

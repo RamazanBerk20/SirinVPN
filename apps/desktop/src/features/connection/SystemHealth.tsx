@@ -1,7 +1,7 @@
 import { TransportQuality } from "./TransportQuality";
 import { protectionEvidence } from "./protectionEvidence";
-import { mtuDescription } from "./MtuSettings";
 import { describeConnection } from "./connectionState";
+import { t } from "../../i18n";
 import type { ServerWorkspaceModel } from "./useServerWorkspace";
 
 export function SystemHealth({
@@ -17,70 +17,63 @@ export function SystemHealth({
     model.preferences.saved?.policy,
   );
   return (
-    <section className="settings-card system-health" aria-label="System health">
+    <section className="settings-card system-health" aria-label={t("maintenance.health.title")}>
       <div className="settings-section-heading">
-        <h2>System health</h2>
+        <h2>{t("maintenance.health.title")}</h2>
       </div>
       <dl className="health-checks">
         <div>
-          <dt>Local tunnel</dt>
+          <dt>{t("maintenance.health.connection")}</dt>
           <dd>{state.status}</dd>
         </div>
         <div>
-          <dt>Kill switch</dt>
+          <dt>{t("maintenance.health.killSwitch")}</dt>
           <dd>{state.protection}</dd>
         </div>
         <div>
-          <dt>Automatic reconnect</dt>
+          <dt>{t("maintenance.health.autoReconnect")}</dt>
           <dd>
             {!state.known
-              ? "Unknown"
+              ? t("common.state.unknown")
               : state.other
-                ? "See active server"
+                ? t("maintenance.health.autoReconnectOther")
                 : state.active && local.auto_reconnect_enabled
-                  ? "Configured"
-                  : "Off"}
+                  ? t("common.state.enabled")
+                  : t("common.state.disabled")}
           </dd>
         </div>
         <div>
-          <dt>Management service</dt>
+          <dt>{t("maintenance.health.management")}</dt>
           <dd>
             {remote
-              ? "Responding"
+              ? t("maintenance.health.managementResponding")
               : state.connected
-                ? "Unavailable · VPN remains connected"
-                : "Not checked"}
+                ? t("maintenance.health.managementUnavailable")
+                : t("maintenance.health.notChecked")}
           </dd>
         </div>
         {remote && (
           <>
             <div>
-              <dt>Server VPN interface</dt>
-              <dd>{remote.interface_up ? "Up" : "Down"}</dd>
+              <dt>{t("maintenance.health.serverVpn")}</dt>
+              <dd>{remote.interface_up ? t("maintenance.health.serverVpnUp") : t("maintenance.health.serverVpnDown")}</dd>
             </div>
             <div>
-              <dt>Server DNS service</dt>
-              <dd>{remote.dns_healthy ? "Running" : "Not responding"}</dd>
+              <dt>{t("maintenance.health.serverDns")}</dt>
+              <dd>{remote.dns_healthy ? t("maintenance.health.serverDnsRunning") : t("maintenance.health.serverDnsDown")}</dd>
             </div>
           </>
         )}
       </dl>
       {local.server_id === profile.id && <TransportQuality status={local} />}
-      {local.server_id === profile.id && local.mtu && <p className="settings-note">{mtuDescription(local.mtu)}</p>}
-      <p className="settings-note">
-        {state.active && local.kill_switch_enabled
-          ? protectionEvidence(local).detail
-          : state.summary}
-      </p>
+      {state.active && local.kill_switch_enabled && <p className="settings-note">{protectionEvidence(local).detail}</p>}
       <div className="settings-action-row">
-        <p>
-          Check the local connection, protection, transport and MTU. A connected VPN also enables private DNS and authenticated VPS checks.
-        </p>
+        <p>{t("maintenance.health.diagnosticsSummary")}</p>
         <button
           className="secondary-button"
           onClick={() => void model.runDiagnostics()}
         >
-          Run diagnostics
+          {t("maintenance.health.runDiagnostics")}
         </button>
       </div>
     </section>

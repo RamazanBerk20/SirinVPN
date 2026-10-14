@@ -49,7 +49,7 @@ fn entry(host: &str, prompt: bool) -> Result<Entry, String> {
     {
         let _ = prompt;
         Entry::new(SERVICE, &account)
-            .map_err(|_| "The desktop credential store is unavailable.".into())
+            .map_err(|_| "This device’s secure storage is unavailable.".into())
     }
 }
 
@@ -61,7 +61,7 @@ fn read_entry(host: &str, store: &Entry) -> Result<Option<SshLoginInput>, String
     let bytes = match store.get_secret() {
         Ok(bytes) => Zeroizing::new(bytes),
         Err(keyring::Error::NoEntry) => return Ok(None),
-        Err(_) => return Err("Unlock your desktop wallet to use the saved SSH login, or enter a login for this operation.".into()),
+        Err(_) => return Err("Unlock secure storage to use the saved SSH login, or enter the login again.".into()),
     };
     if bytes.len() > MAX_LOGIN_BYTES {
         return Err("The saved SSH login is invalid. Forget it and enter it again.".into());
@@ -70,7 +70,7 @@ fn read_entry(host: &str, store: &Entry) -> Result<Option<SshLoginInput>, String
         .map_err(|_| "The saved SSH login is invalid. Forget it and enter it again.")?;
     validate(&login)?;
     if account(&login.host)? != account(host)? {
-        return Err("The saved SSH login belongs to a different host.".into());
+        return Err("The saved SSH login is for a different server.".into());
     }
     Ok(Some(login))
 }
@@ -89,7 +89,7 @@ fn validate(login: &SshLoginInput) -> Result<(), String> {
                 .as_ref()
                 .is_none_or(|p| p.trim().is_empty())
     {
-        return Err("Enter a valid SSH login and verify the VPS fingerprint.".into());
+        return Err("Enter a valid SSH login and verify the server fingerprint.".into());
     }
     Ok(())
 }
@@ -127,7 +127,7 @@ fn saved_target(host: &str, port: u16, fingerprint: &str) -> Result<SshTarget, S
 
 fn bound_target(login: SshLoginInput, port: u16, fingerprint: &str) -> Result<SshTarget, String> {
     if login.ssh_port != port || login.host_key_sha256 != fingerprint {
-        return Err("The VPS SSH identity or port changed. Choose Change login and enter credentials for this destination.".into());
+        return Err("The server’s SSH key or port changed. Choose Change login and enter the login again.".into());
     }
     target(login)
 }
@@ -172,12 +172,12 @@ fn save_entry(
         serde_json::to_vec(&input).map_err(|_| "The SSH login could not be saved.")?,
     );
     if bytes.len() > MAX_LOGIN_BYTES {
-        return Err("The SSH login exceeds the size limit.".into());
+        return Err("The SSH login is too long.".into());
     }
     let saved = summary(&input);
     // Authenticate before remembering a password, without running a command.
     verify(&target(input)?)?;
-    store.set_secret(&bytes).map_err(|_| "The SSH login worked, but it could not be saved. Unlock your desktop wallet, or turn off Remember login to continue.".to_owned())?;
+    store.set_secret(&bytes).map_err(|_| "The SSH login worked but couldn’t be saved. Unlock secure storage, or turn off Remember login to continue.".to_owned())?;
     Ok(saved)
 }
 
@@ -191,7 +191,7 @@ pub(crate) async fn forget_ssh_login(host: String) -> Result<(), String> {
     tauri::async_runtime::spawn_blocking(move || match entry(&host, true)?.delete_credential() {
         Ok(()) | Err(keyring::Error::NoEntry) => Ok(()),
         Err(_) => Err(
-            "The saved SSH login could not be removed. Unlock your desktop wallet and try again."
+            "Couldn’t remove the saved SSH login. Unlock secure storage and try again."
                 .into(),
         ),
     })

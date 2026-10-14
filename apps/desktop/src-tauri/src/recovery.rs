@@ -89,7 +89,7 @@ async fn client(
         .map_err(safe_error)?
         .recovery_keys_enabled
     {
-        return Err("Update this VPS before configuring offline recovery keys.".into());
+        return Err("Update this server to use recovery keys.".into());
     }
     Ok(client)
 }
@@ -207,7 +207,7 @@ pub(super) async fn recover_owner_access(
 ) -> Result<ServerProfile, String> {
     if !input.confirmed {
         return Err(
-            "Confirm revoking all old Owner device identities and consuming the recovery key."
+            "Confirm revoking all old Owner devices and using up the recovery key."
                 .into(),
         );
     }
@@ -222,14 +222,14 @@ pub(super) async fn recover_owner_access(
         .into_iter()
         .find(|profile| profile.id == bootstrap.id);
     if old_profile.is_some() && !input.replace_existing {
-        return Err("Review and confirm replacing the saved profile for this server.".into());
+        return Err("Confirm replacing this server on this device.".into());
     }
     if invoke_helper("status", None).map_err(safe_error)?.state != ConnectionState::Disconnected {
-        return Err("Disconnect the current VPN before recovering Owner access.".into());
+        return Err("Disconnect before recovering Owner access.".into());
     }
     if has_pending_key_rotation(&state.paths, bootstrap.id).map_err(safe_error)? {
         return Err(
-            "Resolve the pending device key rotation before recovering this server.".into(),
+            "Finish this device’s key rotation before recovering this server.".into(),
         );
     }
     let secrets = state.paths.secret_store();
@@ -266,7 +266,7 @@ pub(super) async fn recover_owner_access(
             && old.identity_reference != profile.identity_reference
         {
             secrets.delete(&old.identity_reference).map_err(|_| anyhow!(
-                "Owner recovery committed; old credential cleanup is incomplete. Unlock the secure store and retry credential cleanup."
+                "Owner access was recovered, but the old device key couldn’t be deleted. Unlock secure storage and retry cleanup."
             ))?;
         }
         disconnect_candidate(profile.id).map_err(anyhow::Error::msg)?;
@@ -288,7 +288,7 @@ pub(super) async fn export_recovery_package(
     input: RecoveryPackageInput,
 ) -> Result<(), String> {
     if !input.confirmed {
-        return Err("Confirm exporting this Owner recovery credential.".into());
+        return Err("Confirm exporting this recovery key.".into());
     }
     tauri::async_runtime::spawn_blocking(move || {
         {

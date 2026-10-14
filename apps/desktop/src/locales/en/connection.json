@@ -1,0 +1,220 @@
+{
+  "scope": "Saved for {{server}} on this device",
+  "options": {
+    "title": "Connection preferences",
+    "automatic": {
+      "label": "Choose method automatically",
+      "summary": "Picks a method that works on your network"
+    },
+    "conditions": {
+      "legend": "Network conditions",
+      "automatic": { "title": "Auto", "summary": "Detects what works" },
+      "normal": { "title": "Normal", "summary": "Home or mobile network" },
+      "restricted": { "title": "Restricted", "summary": "Blocks regular VPN traffic" },
+      "extreme": { "title": "Heavily restricted", "summary": "When other modes fail" }
+    },
+    "methods": {
+      "legend": "Connection method",
+      "unavailable": "Update the server to use this method",
+      "summary": {
+        "direct_udp": "Standard WireGuard",
+        "obfuscated_udp": "Disguised UDP for networks that block WireGuard",
+        "tls_like": "Uses TLS 1.3, like web traffic",
+        "tcp_fallback": "Last resort when UDP is blocked"
+      }
+    },
+    "policy": {
+      "kill_switch": {
+        "label": "Kill switch",
+        "summary": "Blocks internet if the VPN drops, until you disconnect"
+      },
+      "automatic_reconnect": {
+        "label": "Automatic reconnect",
+        "summary": "Retries if the connection drops",
+        "summaryAndroid": "Retries if the connection drops · applies immediately",
+        "info": "When off, a dropped connection stays down until you reconnect. The kill switch keeps blocking either way.",
+        "infoAndroid": "When off, a dropped connection stays down until you reconnect. Switching between Wi-Fi and mobile data still gets one reconnect try.",
+        "infoLabel": "About automatic reconnect"
+      },
+      "connect_on_startup": {
+        "label": "Connect on system startup",
+        "summary": "Connects when this device starts"
+      }
+    },
+    "android": {
+      "summary": "Always-on VPN and Block connections without VPN are Android settings. Blocking continues after you disconnect.",
+      "open": "Open VPN settings"
+    },
+    "notes": {
+      "selectedRoutes": "Only your selected routes and system DNS use the VPN.",
+      "windowsApps": "Windows app routing needs the kill switch on and local network access off.",
+      "launchedApps": "Launched apps are blocked whenever the VPN is down; other apps use your normal network."
+    },
+    "status": {
+      "title": "Current status",
+      "method": "Connection method",
+      "killSwitch": "Kill switch",
+      "routing": "Routing"
+    }
+  },
+  "routing": {
+    "title": "Traffic routing",
+    "legend": "Routing mode",
+    "modes": {
+      "full_tunnel": { "label": "Full tunnel", "summary": "All internet traffic uses the VPN" },
+      "selected_routes": { "label": "Selected routes", "summary": "Only the IP ranges you list use the VPN" },
+      "selected_applications": {
+        "label": "Selected apps",
+        "summaryAndroid": "Choose which apps use the VPN",
+        "summaryWindows": "Only the programs you choose use the VPN",
+        "summaryLinux": "Only apps launched from SirinVPN use the VPN"
+      }
+    },
+    "unsupported": "App routing isn’t available on this device. Selected routes still work.",
+    "unsupportedWindows": "App routing is unavailable because its Windows driver isn’t running. Repair or update SirinVPN.",
+    "windowsKillSwitch": "Turn on the kill switch in Connection settings before connecting.",
+    "android": {
+      "blockNote": "If Block connections without VPN is on, apps that don’t use the VPN have no internet.",
+      "choose": "Choose apps",
+      "chooseError": "Couldn’t open the app list. Try again.",
+      "none": "No apps chosen",
+      "all": "All apps use the VPN",
+      "include_one": "{{count}} app uses the VPN",
+      "include_other": "{{count}} apps use the VPN",
+      "exclude_one": "{{count}} app bypasses the VPN",
+      "exclude_other": "{{count}} apps bypass the VPN"
+    },
+    "routes": {
+      "label": "IP ranges (CIDR), one per line",
+      "hint": "Up to {{max}} ranges. System DNS always uses the VPN."
+    },
+    "localNetwork": {
+      "label": "Allow local network",
+      "summary": "Reach printers and other local devices outside the VPN",
+      "summaryLaunched": "Lets launched apps reach devices on your local network",
+      "summaryWindows": "Turn this off for Windows app routing"
+    }
+  },
+  "launcher": {
+    "legend": "Launch an app in the VPN",
+    "summaryLinux": "Only apps you launch here use the VPN. Close any open copies first.",
+    "summaryWindows": "Programs you choose here use the VPN. Close any open copies first.",
+    "infoLinux": "Choose a native program. Flatpak and Snap apps, and apps that rely on a background service, may not work.",
+    "infoWindows": "Choose a .exe on a local drive, and add each program that uses the network; helpers and services aren’t added for you. Selected programs can’t use IPv6, and system DNS goes through the VPN.",
+    "infoLabel": "About launching apps",
+    "notReady": "Save this mode and connect to this server to launch apps.",
+    "executable": "Program",
+    "placeholderLinux": "/usr/bin/app",
+    "placeholderWindows": "C:\\Program Files\\App\\app.exe",
+    "browse": "Browse…",
+    "dialogTitle": "Choose a program",
+    "dialogFilter": "Programs (.exe)",
+    "chooserError": "Couldn’t open the file chooser. Enter the path instead.",
+    "arguments": {
+      "summary": "Launch arguments",
+      "label": "One argument per line",
+      "hint": "No quotes needed, even with spaces. Arguments aren’t saved."
+    },
+    "safetyLinux": "Launched apps never use the internet outside the VPN, even with the kill switch off. After you disconnect, they stay open but offline.",
+    "safetyWindows": "Selected programs stay blocked outside the VPN if it drops or is paused. Disconnecting unblocks them and clears the selection.",
+    "launch": "Launch in VPN",
+    "launching": "Launching…",
+    "launched": "Started in the VPN.",
+    "exited": "The program exited right away. If it was already open, close it and try again.",
+    "launchError": "Couldn’t launch the app in the VPN. Try again."
+  },
+  "mtu": {
+    "title": "Packet size (MTU)",
+    "automatic": {
+      "label": "Automatic packet size",
+      "summary": "Measures and adjusts the packet size while connected"
+    },
+    "manual": {
+      "label": "Manual MTU",
+      "hint": "{{min}}–{{max}} bytes. Obfuscated UDP uses at most {{obfuscatedMax}}.",
+      "invalid": "Enter a whole number from {{min}} to {{max}}.",
+      "invalidIpv6": "With IPv6 on, enter a whole number from {{min}} to {{max}}."
+    },
+    "notConnected": "Connect to measure the packet size.",
+    "unsupported": "Update the VPN component on this device to measure packet size.",
+    "details": {
+      "current": "Current MTU",
+      "recommended": "Recommended",
+      "notMeasured": "Not measured yet",
+      "pending": "Pending change",
+      "bytes": "{{value}} bytes",
+      "pendingValue": "{{value}} bytes · not applied yet"
+    },
+    "outcome": {
+      "pending": "Waiting to measure the packet size.",
+      "incomplete": "Measurement not finished yet.",
+      "verified": "Verified at {{value}} bytes.",
+      "smaller": "A smaller packet size was measured and will be applied.",
+      "manual": "A recommendation is ready. Your manual MTU stays in use.",
+      "noReply": "The server didn’t answer the measurement. The current MTU stays in use.",
+      "noUsable": "Large packets don’t get through on this network. Try {{tls}} or {{tcp}}.",
+      "applyFailed": "Couldn’t apply the measured size. MTU stays at {{value}} bytes."
+    }
+  },
+  "quality": {
+    "label": "Connection quality",
+    "sample": "{{latency}} latency · {{jitter}} jitter · {{loss}} loss",
+    "selection": {
+      "pending": "Waiting for the first quality check.",
+      "observing": "Measured inside the VPN, not a speed test.",
+      "waiting_for_idle": "Will compare connection methods when traffic is idle.",
+      "comparing": "Comparing connection methods…",
+      "selected": "Using the best connection method measured.",
+      "icmp_unavailable": "The server didn’t answer quality checks, so latency and loss are unavailable.",
+      "protection_required": "Turn on the kill switch to let SirinVPN compare connection methods."
+    },
+    "reason": {
+      "confirmed_failure": "Switched connection method after the previous one failed.",
+      "quality_improvement": "Switched to a consistently better connection method.",
+      "rollback": "Kept the current connection method; the alternative didn’t connect."
+    }
+  },
+  "startup": {
+    "unknown": "Startup connection status unknown.",
+    "otherServer": "Startup connection saved. Another server is active.",
+    "serviceUnknown": "Startup connection saved; status unavailable.",
+    "inactive": "Startup connection saved, not active.",
+    "active": "Startup connection active for this server.",
+    "unconfirmed": "Startup connection on; server not confirmed.",
+    "activate": "Connect and activate"
+  },
+  "saveBar": {
+    "unsaved": "Unsaved changes",
+    "idle": "Changes apply on your next connection.",
+    "discard": "Discard",
+    "save": "Save preferences",
+    "pending": "<strong>Saved for your next connection.</strong> Current connection: {{differences}}."
+  },
+  "differences": {
+    "mtu": {
+      "automatic": "MTU {{value}} (automatic)",
+      "manual": "MTU {{value}} (manual)"
+    },
+    "method": "Connection method: {{method}}",
+    "policy": {
+      "kill_switch": { "on": "Kill switch: on", "off": "Kill switch: off" },
+      "automatic_reconnect": { "on": "Automatic reconnect: on", "off": "Automatic reconnect: off" },
+      "connect_on_startup": { "on": "Connect on startup: on", "off": "Connect on startup: off" }
+    },
+    "routing": {
+      "full_tunnel": "Routing: full tunnel",
+      "selected_routes": "Routing: selected routes",
+      "selected_applications": "Routing: selected apps"
+    },
+    "localNetwork": { "on": "Local network access: on", "off": "Local network access: off" },
+    "routes": "Different IP ranges"
+  },
+  "preferences": {
+    "loadError": "Couldn’t load connection preferences.",
+    "saved": "Saved. Changes apply on your next connection.",
+    "saveError": "Couldn’t save. Your previous preferences are still in place.",
+    "reconnectOn": "Automatic reconnect is on.",
+    "reconnectOff": "Automatic reconnect is off.",
+    "reconnectError": "Couldn’t change automatic reconnect. Try again."
+  }
+}

@@ -1,6 +1,7 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { DeviceList } from "./DeviceList";
+import { t } from "../../i18n";
 import type { MembershipSnapshot } from "../../types";
 
 afterEach(cleanup);
@@ -70,7 +71,7 @@ function setup(overrides: Partial<Parameters<typeof DeviceList>[0]> = {}) {
   return props;
 }
 function menu(name: string) {
-  fireEvent.click(screen.getByRole("button", { name: `Actions for ${name}` }));
+  fireEvent.click(screen.getByRole("button", { name: t("devices.menu.deviceActions", { name }) }));
 }
 
 it.each([
@@ -98,21 +99,30 @@ it.each([
   expect(screen.queryByText("My Android device")).toBeNull();
   expect(screen.queryByText("Saved device name")).toBeNull();
   expect(screen.queryByText("Access group")).toBeNull();
-  expect(Boolean(screen.queryByText("This device"))).toBe(currentDeviceId === "desktop");
+  expect(Boolean(screen.queryByText(t("common.noun.thisDevice")))).toBe(currentDeviceId === "desktop");
+});
+
+it("shows the VPN address and role as one subtitle", () => {
+  setup({ query: "10.77.0.3" });
+  const subtitle = screen.getByRole("button", { name: /^Android phone/ }).querySelector("small")!;
+  expect(subtitle.textContent).toBe(
+    t("devices.row.subtitle", { address: "10.77.0.3", role: t("common.role.member") }).replace(/<\/?address>/g, ""),
+  );
+  expect(subtitle.querySelector(".mono")?.textContent).toBe("10.77.0.3");
 });
 
 it("keeps filtered overflow actions bound to the correct device and member", () => {
   const props = setup({ query: "10.77.0.3" });
   expect(screen.queryByText("My desktop")).toBeNull();
   menu("Android phone");
-  fireEvent.click(screen.getByRole("menuitem", { name: "Rename device" }));
+  fireEvent.click(screen.getByRole("menuitem", { name: t("devices.menu.rename") }));
   menu("Android phone");
   fireEvent.click(
-    screen.getByRole("menuitem", { name: "Enable mutual device access" }),
+    screen.getByRole("menuitem", { name: t("devices.menu.allowMutual") }),
   );
   menu("Android phone");
   fireEvent.click(
-    screen.getByRole("menuitem", { name: "Add device for Family" }),
+    screen.getByRole("menuitem", { name: t("devices.menu.addDeviceFor", { name: "Family" }) }),
   );
   expect(props.onRename).toHaveBeenCalledWith("phone", "Android phone");
   expect(props.onPeer).toHaveBeenCalledWith("phone", "Android phone", false);
@@ -137,26 +147,26 @@ it("preserves last-owner and pending invitation restrictions with visible reason
   expect(
     (
       screen.getByRole("menuitem", {
-        name: /Revoke My desktop/,
+        name: t("devices.menu.revoke", { name: "My desktop" }),
       }) as HTMLButtonElement
     ).disabled,
   ).toBe(true);
   expect(
-    screen.getAllByText("The last Owner device cannot be revoked.")[0],
+    screen.getAllByText(t("devices.row.lastOwnerDevice"))[0],
   ).toBeTruthy();
   fireEvent.keyDown(screen.getByRole("menu"), { key: "Escape" });
   expect(document.activeElement).toBe(
-    screen.getByRole("button", { name: "Actions for My desktop" }),
+    screen.getByRole("button", { name: t("devices.menu.deviceActions", { name: "My desktop" }) }),
   );
   menu("Android phone");
   expect(
-    (screen.getByRole("menuitem", { name: /Make Admin/ }) as HTMLButtonElement)
+    (screen.getByRole("menuitem", { name: t("devices.menu.makeAdmin") }) as HTMLButtonElement)
       .disabled,
   ).toBe(true);
   expect(
     (
       screen.getByRole("menuitem", {
-        name: /Transfer ownership/,
+        name: t("devices.menu.transfer"),
       }) as HTMLButtonElement
     ).disabled,
   ).toBe(true);
@@ -167,17 +177,17 @@ it("limits Admin controls and states unknown activity directly in the row", () =
     currentDeviceId: "admin-device",
   });
   expect(
-    screen.queryByRole("button", { name: "Actions for My desktop" }),
+    screen.queryByRole("button", { name: t("devices.menu.deviceActions", { name: "My desktop" }) }),
   ).toBeNull();
   expect(
-    screen.queryByRole("button", { name: "Actions for Admin laptop" }),
+    screen.queryByRole("button", { name: t("devices.menu.deviceActions", { name: "Admin laptop" }) }),
   ).toBeNull();
-  expect(screen.getByText("Activity unknown")).toBeTruthy();
-  expect(screen.getByText("Recently active")).toBeTruthy();
+  expect(screen.getByText(t("devices.row.activity.unknown"))).toBeTruthy();
+  expect(screen.getByText(t("devices.row.activity.recent"))).toBeTruthy();
   menu("Android phone");
-  expect(screen.queryByRole("menuitem", { name: "Make Admin" })).toBeNull();
+  expect(screen.queryByRole("menuitem", { name: t("devices.menu.makeAdmin") })).toBeNull();
   fireEvent.click(
-    screen.getByRole("menuitem", { name: "Revoke Android phone" }),
+    screen.getByRole("menuitem", { name: t("devices.menu.revoke", { name: "Android phone" }) }),
   );
   expect(props.onRevoke).toHaveBeenCalledWith("phone", "Android phone");
 });
@@ -189,20 +199,20 @@ it("offers member actions only with server support and never on the Owner", () =
     onRevokeMemberDevices: vi.fn(),
   });
   menu("My desktop");
-  expect(screen.queryByRole("menuitem", { name: "Suspend member" })).toBeNull();
+  expect(screen.queryByRole("menuitem", { name: t("devices.menu.suspend") })).toBeNull();
   fireEvent.keyDown(screen.getByRole("menu"), { key: "Escape" });
   menu("Android phone");
-  fireEvent.click(screen.getByRole("menuitem", { name: "Suspend member" }));
+  fireEvent.click(screen.getByRole("menuitem", { name: t("devices.menu.suspend") }));
   expect(props.onMemberSuspension).toHaveBeenCalledWith(snapshot.members[1]);
   menu("Android phone");
   fireEvent.click(
-    screen.getByRole("menuitem", { name: "Revoke all member devices" }),
+    screen.getByRole("menuitem", { name: t("devices.menu.revokeAll") }),
   );
   expect(props.onRevokeMemberDevices).toHaveBeenCalledWith(snapshot.members[1]);
   cleanup();
   setup();
   menu("Android phone");
-  expect(screen.queryByRole("menuitem", { name: "Suspend member" })).toBeNull();
+  expect(screen.queryByRole("menuitem", { name: t("devices.menu.suspend") })).toBeNull();
 });
 
 it("shows suspension over stale activity and prevents enrollment and ownership transfer", () => {
@@ -212,21 +222,19 @@ it("shows suspension over stale activity and prevents enrollment and ownership t
     onMemberSuspension: vi.fn(),
     snapshot: { ...snapshot, members: [snapshot.members[0], suspended] },
   });
-  expect(screen.getByText("Suspended")).toBeTruthy();
-  expect(screen.queryByText("Recently active")).toBeNull();
+  expect(screen.getByText(t("devices.row.activity.suspended"))).toBeTruthy();
+  expect(screen.queryByText(t("devices.row.activity.recent"))).toBeNull();
   menu("Android phone");
-  for (const name of ["Add device for Family", "Transfer ownership"]) {
+  for (const name of [t("devices.menu.addDeviceFor", { name: "Family" }), t("devices.menu.transfer")]) {
     expect(
       (
-        screen.getByRole("menuitem", {
-          name: new RegExp(`^${name}`),
-        }) as HTMLButtonElement
+        screen.getByRole("menuitem", { name }) as HTMLButtonElement
       ).disabled,
     ).toBe(true);
   }
-  fireEvent.click(screen.getByRole("menuitem", { name: "Reactivate member" }));
+  fireEvent.click(screen.getByRole("menuitem", { name: t("devices.menu.reactivate") }));
   expect(props.onMemberSuspension).toHaveBeenCalledWith(suspended);
   expect(
-    screen.queryByRole("button", { name: "Review transfer to Family" }),
+    screen.queryByRole("button", { name: t("devices.row.transferTo", { name: "Family" }) }),
   ).toBeNull();
 });

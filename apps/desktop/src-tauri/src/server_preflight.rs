@@ -23,5 +23,5 @@ pub(crate) async fn inspect_server_network(
         .map_err(|error| error.to_string())
     })
     .await
-    .map_err(|_| "The VPS network inspection was interrupted.".to_owned())?
+    .map_err(|_| "The server network check was interrupted. Try again.".to_owned())?
 }

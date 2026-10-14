@@ -11,15 +11,16 @@ import { useId, useRef, type ReactNode } from "react";
 import { usePageTransition } from "../../hooks/usePageTransition";
 import { pageScrollPort } from "../../lib/scrolling";
 import { confirmNavigation } from "../../lib/navigationGuard";
+import { t } from "../../i18n";
 
 export type SettingsCategory =
   "general" | "connection" | "network" | "recovery" | "maintenance";
 const categories = [
-  { id: "general", label: "General", hint: "Android controls, Wi-Fi & appearance", icon: GearSix },
-  { id: "connection", label: "Connection", hint: "Transport, reconnect & tunnel options", icon: WifiHigh },
-  { id: "network", label: "Network", hint: "App routing, DNS & port forwarding", icon: GlobeHemisphereWest },
-  { id: "recovery", label: "Keys & recovery", hint: "Device identity & encrypted backups", icon: Key },
-  { id: "maintenance", label: "VPS maintenance", hint: "Server health, diagnostics & updates", icon: SlidersHorizontal },
+  { id: "general", label: "settings.category.general.label", hint: "settings.category.general.hint", icon: GearSix },
+  { id: "connection", label: "settings.category.connection.label", hint: "settings.category.connection.hint", icon: WifiHigh },
+  { id: "network", label: "settings.category.network.label", hint: "settings.category.network.hint", icon: GlobeHemisphereWest },
+  { id: "recovery", label: "settings.category.recovery.label", hint: "settings.category.recovery.hint", icon: Key },
+  { id: "maintenance", label: "settings.category.maintenance.label", hint: "settings.category.maintenance.hint", icon: SlidersHorizontal },
 ] as const;
 
 export function SettingsLayout({
@@ -40,12 +41,13 @@ export function SettingsLayout({
   const id = useId();
   const tabs = useRef<HTMLDivElement>(null);
   const panel = usePageTransition<HTMLDivElement>(category);
+  const current = categories.find(item => item.id === category);
   if (mobile) return detail ? <div className="mobile-settings-detail">
-    <header className="mobile-page-header"><button className="icon-button" aria-label="Back" onClick={onBack}><ArrowLeft size={24} /></button><h1>{categories.find(item => item.id === category)?.label}</h1></header>
+    <header className="mobile-page-header"><button className="icon-button" aria-label={t("common.action.back")} onClick={onBack}><ArrowLeft size={24} /></button><h1>{current && t(current.label)}</h1></header>
     <div className="settings-panel">{children}</div>
-  </div> : <div className="mobile-choice-list" aria-label="Settings categories">
-    {categories.map(({ id: value, label, hint, icon: Icon }) => <button key={value} className="mobile-list-row" aria-label={label} aria-describedby={`${id}-${value}-hint`} onClick={() => onChange(value)}>
-      <span className="mobile-row-icon"><Icon size={23} /></span><span><strong>{label}</strong><small id={`${id}-${value}-hint`}>{hint}</small></span><CaretRight size={18} />
+  </div> : <div className="mobile-choice-list" aria-label={t("settings.layout.categories")}>
+    {categories.map(({ id: value, label, hint, icon: Icon }) => <button key={value} className="mobile-list-row" aria-label={t(label)} aria-describedby={`${id}-${value}-hint`} onClick={() => onChange(value)}>
+      <span className="mobile-row-icon"><Icon size={23} /></span><span><strong>{t(label)}</strong><small id={`${id}-${value}-hint`}>{t(hint)}</small></span><CaretRight size={18} />
     </button>)}
   </div>;
   return (
@@ -54,7 +56,7 @@ export function SettingsLayout({
         className="settings-tabs"
         ref={tabs}
         role="tablist"
-        aria-label="Settings categories"
+        aria-label={t("settings.layout.categories")}
       >
         {categories.map(({ id: value, label, icon: Icon }, index) => (
           <button
@@ -84,7 +86,7 @@ export function SettingsLayout({
           >
             <Icon size={20} />
             <span>
-              {mobile && value === "maintenance" ? "Diagnostics" : label}
+              {mobile && value === "maintenance" ? t("settings.category.maintenance.shortLabel") : t(label)}
             </span>
           </button>
         ))}

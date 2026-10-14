@@ -87,11 +87,7 @@
   font-size: 0.8125rem;
   line-height: 1.5;
 }
-.refresh-state {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
+
 .metrics-stream-state {
   display: inline-flex;
   align-items: center;

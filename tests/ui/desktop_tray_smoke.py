@@ -155,7 +155,7 @@ with tempfile.TemporaryDirectory(prefix="tray-", dir=runtime_parent) as director
             assert not calls()
             checks.append("Readable status rows open Home without a connection mutation")
             assert len([r for r in rows() if str(r.get("label", "")).startswith("Tray VPS")]) <= 6
-            click("Settings…")
+            click("Settings")
             wait_for(lambda: inspector.evaluate("Boolean(document.querySelector('[aria-label=\"Close to tray\"]'))"))
             prefs = inspector.invoke("get_app_preferences")["preferences"]
             inspector.invoke("set_app_preferences", {"preferences":{**prefs,"close_to_tray":True}})
@@ -178,7 +178,7 @@ with tempfile.TemporaryDirectory(prefix="tray-", dir=runtime_parent) as director
             assert calls()[-1]["server_id"] == ids[0]
             checks.append("Reconnect targets the active server, not the GUI selection; no Disconnect is sent")
             click("Tray VPS 2")
-            press("Switch server")
+            press("Switch")
             wait_for(lambda: find("Connected to Tray VPS 2"))
             assert calls()[-1]["command"] == "switch-session"
             assert calls()[-1]["policy"] == policy and not calls()[-1]["routing"]["allow_lan"]
@@ -189,14 +189,14 @@ with tempfile.TemporaryDirectory(prefix="tray-", dir=runtime_parent) as director
             wait_for(lambda: find("Stop reconnecting…"))
             click("Stop reconnecting…")
             press("Stop attempts")
-            wait_for(lambda: find("Resume connection"))
+            wait_for(lambda: find("Resume"))
             assert find("Kill switch: Blocking traffic")
             save_icon("blocked")
             assert calls()[-1]["command"] == "pause-session"
             checks.append("Stopping retries retains the block and exposes Resume plus explicit Disconnect")
-            click("Resume connection")
+            click("Resume")
             wait_for(lambda: find("Connected to Tray VPS 2"))
-            click("Diagnostics…")
+            click("Diagnostics")
             wait_for(lambda: inspector.evaluate("Boolean(document.querySelector('.diagnostics-dialog'))"))
             assert not any(c["command"] == "repair" for c in calls())
             checks.append("Diagnostics opens its local result workflow without a repair action")
@@ -226,16 +226,16 @@ with tempfile.TemporaryDirectory(prefix="tray-", dir=runtime_parent) as director
             props = dbus.Interface(bus.get_object(service, path), "org.freedesktop.DBus.Properties")
             menu_path = props.Get("org.kde.StatusNotifierItem", "Menu")
             menu = dbus.Interface(bus.get_object(service, menu_path), "com.canonical.dbusmenu")
-            wait_for(lambda: find("Quit app (VPN keeps running)"))
+            wait_for(lambda: find("Quit app · VPN keeps running"))
             data = json.loads(state_file.read_text()); data["status_unavailable"] = True; state_file.write_text(json.dumps(data))
-            wait_for(lambda: find("Connection status unavailable"))
-            assert find("Kill switch: Status unknown") and find("Disconnect…") is None
+            wait_for(lambda: find("Status unknown"))
+            assert find("Kill switch: Unknown") and find("Disconnect…") is None
             save_icon("attention")
             data["status_unavailable"] = False; state_file.write_text(json.dumps(data))
-            wait_for(lambda: find("Quit app (VPN keeps running)"))
+            wait_for(lambda: find("Quit app · VPN keeps running"))
             checks.append("Helper status failure removes connection claims and uses the attention state")
             count = len(calls())
-            click("Quit app (VPN keeps running)")
+            click("Quit app · VPN keeps running")
             process.wait(timeout=20)
             assert len(calls()) == count and json.loads(state_file.read_text())["status"]["server_id"] == ids[0]
             checks.append("Plain Quit exits the GUI without sending any connection mutation")

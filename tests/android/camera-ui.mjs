@@ -29,7 +29,7 @@ const node=(adb('exec-out','cat','/data/local/tmp/sirin-camera.xml').match(/<nod
 assert(node,'Camera permission dialog is missing');
 const [x,y,r,b]=node.match(/bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"/).slice(1).map(Number);
 adb('shell','input','tap',String((x+r)>>1),String((y+b)>>1));await delay(700);
-assert.match(await evaluate(`document.querySelector('[role="alert"]')?.textContent??''`),/Camera permission was not granted/);
+assert.match(await evaluate(`document.querySelector('[role="alert"]')?.textContent??''`),/Camera access wasn’t granted/);
 assert(await evaluate(`[...document.querySelectorAll('button')].some(b=>b.innerText.trim()==='Enter securely'&&!b.disabled)`));
 // Use the emulator's blank/default scene: an immediately decoded QR would close it.
 adb('shell','pm','grant',pkg,'android.permission.CAMERA');

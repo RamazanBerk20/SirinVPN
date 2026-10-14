@@ -77,28 +77,28 @@ def main():
  sep={'item':'Separator'}
  states=[
   ('disconnected','Disconnected','Kill switch: Off','Connect to My private VPS','Quit app',False,False,False,False),
-  ('connected','Connected to My private VPS','Kill switch: Armed','Disconnect…','Quit app (VPN keeps running)',True,False,False,False),
-  ('connecting','Connecting to My private VPS','Kill switch: Armed','Cancel connection…','Quit app (connection service keeps running)',True,False,True,False),
-  ('recovering','Reconnecting to My private VPS','Kill switch: Blocking traffic','Stop reconnecting…','Quit app (recovery keeps running)',True,False,True,False),
-  ('paused','Connection paused · My private VPS','Kill switch: Blocking traffic','Resume connection','Quit app (connection stays paused)',True,False,True,False),
-  ('unavailable','Connection status unavailable','Kill switch: Status unknown',None,'Quit app (VPN status unknown)…',False,False,False,False),
-  ('busy','Connected to My private VPS','Kill switch: Armed','Disconnect…','Quit app (VPN keeps running)',True,True,False,False),
-  ('component-update','Connected to My private VPS','Kill switch: Status unknown',None,'Quit app (VPN keeps running)',True,False,False,True),
-  ('interrupted','Connection interrupted · My private VPS','Kill switch: Enforcement failed','Cancel connection…','Quit app (connection service keeps running)',True,False,True,False),
+  ('connected','Connected to My private VPS','Kill switch: On','Disconnect…','Quit app · VPN keeps running',True,False,False,False),
+  ('connecting','Connecting to My private VPS…','Kill switch: On','Stop connecting…','Quit app · VPN service keeps running',True,False,True,False),
+  ('recovering','Reconnecting to My private VPS…','Kill switch: Blocking traffic','Stop reconnecting…','Quit app · VPN keeps reconnecting',True,False,True,False),
+  ('paused','Connection paused · My private VPS','Kill switch: Blocking traffic','Resume','Quit app · VPN stays paused',True,False,True,False),
+  ('unavailable','Status unknown','Kill switch: Unknown',None,'Quit app · Status unknown…',False,False,False,False),
+  ('busy','Connected to My private VPS','Kill switch: On','Disconnect…','Quit app · VPN keeps running',True,True,False,False),
+  ('component-update','Connected to My private VPS','Kill switch: Unknown',None,'Quit app · VPN keeps running',True,False,False,True),
+  ('interrupted','Connection interrupted · My private VPS','Kill switch: Not working','Stop connecting…','Quit app · VPN service keeps running',True,False,True,False),
  ]
  for name,status,protection,primary,quitlabel,active,busy,extra,update in states:
   result={'id':'native-tray-menu-'+name,'family':'native-tray','platform':'desktop','success':False,'description':status,'data_source':'Native menu preview using production tray labels and synthetic state; network actions are unbound','renderer':'Tauri native GTK menu','files':[]}
   try:
    e.call('mount',{'platform':'desktop','connected':active or name=='unavailable','componentUpdate':update,'local':{'state':'unknown' if name=='unavailable' else 'degraded' if name in ['paused','interrupted'] else 'connecting' if name in ['connecting','recovering'] else 'connected' if active else 'disconnected','kill_switch_enabled':active and not update,'kill_switch_state':'unknown' if name=='unavailable' or update else 'failed' if name=='interrupted' else 'blocking' if name in ['recovering','paused'] else 'armed' if active else 'off','supervisor_status_known':name!='unavailable','auto_reconnect_enabled':name in ['recovering','paused'],'waiting_for_user':name=='paused','recovery_in_progress':name=='recovering','connection_control_supported':not update}})
    items=[row(status),row(protection)]
-   if busy:items+=[row('Connection operation in progress…',False)]
+   if busy:items+=[row('Changing connection…',False)]
    items+=[sep,row('Open SirinVPN')]
    if primary:items+=[row(primary,not busy)]
    if extra:items+=[row('Disconnect…',not busy)]
    if active and not extra and not update:items+=[row('Reconnect',not busy)]
-   if update:items+=[row('Review local VPN component update…')]
-   servers=[row('My private VPS',not active and not busy and name!='unavailable',checked=active),row('Travel VPN',not busy and not update and name!='unavailable',checked=False),sep,row('Manage servers…')]
-   items+=[{'text':'Switch server' if active else 'Connect to server','items':servers},sep,row('Connection settings…'),row('Settings…'),row('Diagnostics…'),sep,row(quitlabel,not busy)]
+   if update:items+=[row('Update VPN component…')]
+   servers=[row('My private VPS',not active and not busy and name!='unavailable',checked=active),row('Travel VPN',not busy and not update and name!='unavailable',checked=False),sep,row('Manage servers')]
+   items+=[{'text':'Switch server' if active else 'Connect to server','items':servers},sep,row('Connection settings'),row('Settings'),row('Diagnostics'),sep,row(quitlabel,not busy)]
    if active:items+=[row('Disconnect and quit…',not busy and not update)]
    e.menu(items)
    result['files']=[e.shot(OUT/'desktop/native-tray'/(result['id']+'.png'))]

@@ -1,3 +1,4 @@
+import { t } from "../i18n";
 import mark from "../assets/sirin-mark.png";
 import { GlobeHemisphereWest, LockKey, Pulse } from "@phosphor-icons/react";
 
@@ -6,8 +7,8 @@ export function Brand({ compact }: { compact: boolean }) {
     <div className={`brand ${compact ? "compact" : ""}`}>
       <SirinMark />
       <div>
-        <strong>SirinVPN</strong>
-        <small>Ultra-private. Self-hosted.</small>
+        <strong>{t("common.appName")}</strong>
+        <small>{t("app.brand.tagline")}</small>
       </div>
     </div>
   );
@@ -28,13 +29,13 @@ export function PrivacyPromises() {
   return (
     <div className="privacy-promises">
       <span>
-        <LockKey size={18} /> Client keys stay local
+        <LockKey size={18} /> {t("app.brand.keysLocal")}
       </span>
       <span>
-        <Pulse size={18} /> No activity history
+        <Pulse size={18} /> {t("app.brand.noHistory")}
       </span>
       <span>
-        <GlobeHemisphereWest size={18} /> No SirinVPN cloud
+        <GlobeHemisphereWest size={18} /> {t("app.brand.noCloud")}
       </span>
     </div>
   );

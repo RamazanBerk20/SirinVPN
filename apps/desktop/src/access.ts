@@ -1,3 +1,4 @@
+import { t, type MessageKey } from "./i18n";
 import type {
   ActiveInvitationSummary,
   MemberSummary,
@@ -23,11 +24,27 @@ export function resolveAccess(
   };
 }
 
+export function memberAccessLevel(
+  member: Pick<MemberSummary, "role" | "administrator">,
+): AccessLevel {
+  if (member.role === "owner") return "owner";
+  return member.administrator ? "admin" : "member";
+}
+
+const ACCESS_LEVEL_KEYS = {
+  owner: "common.role.owner",
+  admin: "common.role.admin",
+  member: "common.role.member",
+} as const satisfies Record<AccessLevel, MessageKey>;
+
+export function accessLevelLabel(level: AccessLevel): string {
+  return t(ACCESS_LEVEL_KEYS[level]);
+}
+
 export function memberAccessLabel(
   member: Pick<MemberSummary, "role" | "administrator">,
-): "Owner" | "Admin" | "Member" {
-  if (member.role === "owner") return "Owner";
-  return member.administrator ? "Admin" : "Member";
+): string {
+  return accessLevelLabel(memberAccessLevel(member));
 }
 
 export function canManageMember(

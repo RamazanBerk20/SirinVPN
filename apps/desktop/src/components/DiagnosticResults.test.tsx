@@ -1,5 +1,6 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { t } from "../i18n";
 import { DiagnosticResults } from "./DiagnosticResults";
 
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
@@ -11,7 +12,7 @@ it("copies only the displayed report after an explicit click", async () => {
     unrelated_identity: "never-export-this-field" };
   render(<DiagnosticResults report={report} />);
   expect(writeText).not.toHaveBeenCalled();
-  fireEvent.click(screen.getByRole("button", { name: "Copy sanitized report" }));
+  fireEvent.click(screen.getByRole("button", { name: t("maintenance.diagnostics.copy") }));
   await waitFor(() => expect(writeText).toHaveBeenCalledTimes(1));
   const text = writeText.mock.calls[0][0];
   expect(text).toContain("This device is disconnected.");
@@ -34,14 +35,22 @@ it("puts issues and unavailable checks before collapsed passes and preserves evi
     "IPv4 NAT", "Public reachability", "Compatibility", "Traffic protection", "Configured routing", "DNS response",
   ]);
   expect(container.querySelector("details")?.open).toBe(false);
-  expect(screen.getAllByText("Not checked").length).toBe(2);
-  expect(screen.getByText("Service reported")).toBeTruthy();
-  expect(screen.getAllByText("Configuration inspected").length).toBe(2);
-  expect(screen.getByText("Observed test result")).toBeTruthy();
-  fireEvent.click(screen.getByRole("button", { name: "Copy sanitized report" }));
+  const evidence = (code: "configuration" | "service" | "observed" | "notChecked") =>
+    Array.from(container.querySelectorAll(".diagnostic-evidence")).filter((item) => item.textContent === t(`maintenance.diagnostics.evidence.${code}`)).length;
+  expect(evidence("notChecked")).toBe(2);
+  expect(evidence("service")).toBe(1);
+  expect(evidence("configuration")).toBe(2);
+  expect(evidence("observed")).toBe(1);
+  expect(screen.getByRole("status").textContent).toBe(t("maintenance.diagnostics.summary.withUnavailable", {
+    attention: t("maintenance.diagnostics.summary.attention", { count: 1 }),
+    review: t("maintenance.diagnostics.summary.review", { count: 1 }),
+    unavailable: t("maintenance.diagnostics.summary.unavailable", { count: 1 }),
+    passed: t("maintenance.diagnostics.summary.passed", { count: 3 }),
+  }));
+  fireEvent.click(screen.getByRole("button", { name: t("maintenance.diagnostics.copy") }));
   await waitFor(() => expect(writeText).toHaveBeenCalledOnce());
   const copied = writeText.mock.calls[0][0];
   expect(copied.indexOf("IPv4 NAT")).toBeLessThan(copied.indexOf("Public reachability"));
   expect(copied.indexOf("Public reachability")).toBeLessThan(copied.indexOf("Traffic protection"));
-  expect(copied).toContain("Evidence: Service reported");
+  expect(copied).toContain(t("maintenance.diagnostics.report.evidence", { evidence: t("maintenance.diagnostics.evidence.service") }));
 });

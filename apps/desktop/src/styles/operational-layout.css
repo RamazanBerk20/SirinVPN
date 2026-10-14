@@ -385,12 +385,7 @@ summary:focus-visible,
 .initialization-shell .settings-panel {
   width: 100%;
 }
-.initialization-shell.compact-header .initialization-card {
-  padding-top: 10px;
-}
-.initialization-shell.compact-header h1 {
-  font-size: 1.5rem;
-}
+
 .initialization-shell .settings-sections {
   text-align: left;
 }
@@ -447,13 +442,10 @@ summary:focus-visible,
   .port-forward-form {
     grid-template-columns: minmax(0, 1fr);
   }
-  .health-checks,
-  .routing-mode-picker {
+  .health-checks {
     min-width: 0;
   }
-  .routing-mode-picker {
-    grid-template-columns: minmax(0, 1fr);
-  }
+  
   .connection-facts {
     display: grid;
     gap: 7px;
@@ -466,33 +458,7 @@ summary:focus-visible,
   }
 }
 /* Phone screens reserve the first viewport for the action and device traffic. */
-.initialization-shell.compact-header {
-  padding-top: max(12px, env(safe-area-inset-top));
-  gap: 8px;
-}
-.initialization-shell.compact-header .initialization-brand {
-  justify-content: flex-start;
-  width: min(100%, 680px);
-  margin-inline: auto;
-}
-.initialization-shell.compact-header .initialization-brand .brand {
-  flex-direction: row;
-  text-align: left;
-  gap: 10px;
-}
-.initialization-shell.compact-header .initialization-brand .brand-mark {
-  width: 38px;
-  height: 38px;
-}
-.initialization-shell.compact-header .initialization-brand .brand strong {
-  font-size: 1.125rem;
-}
-.initialization-shell.compact-header .initialization-brand .brand small {
-  display: none;
-}
-.initialization-shell.compact-header .initialization-card > h1 {
-  margin: 8px 0;
-}
+
 .sidebar {
   overflow-y: auto;
 }

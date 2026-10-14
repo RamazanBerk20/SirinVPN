@@ -34,9 +34,11 @@ def workflows(p, add):
     for count in [4, 12]:
         add('servers', str(count) + '-saved-servers', servers, {'profileCount': count}, True)
     add('servers', 'long-server-names', servers, {'profileCount': 4, 'longNames': True}, True)
-    add('servers', 'server-rename-confirmation', servers + [click('Actions for My private VPS'), click('Rename locally')], expand=True)
+    add('servers', 'server-rename-confirmation', servers + [click('Actions for My private VPS'), click('Rename')], expand=True)
+    # Scenario IDs keep their original names; the menu labels are the current interface text.
+    menu_labels = {'Revoke all member devices': 'Revoke all devices', 'Enable mutual device access': 'Allow mutual access'}
     for label in ['Rename device', 'Suspend member', 'Revoke all member devices', 'Enable mutual device access', 'Revoke Android phone', 'Make Admin', 'Transfer ownership']:
-        action = devices + [click('Actions for Android phone'), click(label)]
+        action = devices + [click('Actions for Android phone'), click(menu_labels.get(label, label))]
         add('member-actions', label.lower().replace(' ', '-') + '-confirmation', action, expand=True)
         method = {'Rename device': 'renameDevice', 'Suspend member': 'updateMemberSuspension', 'Revoke all member devices': 'revokeMemberDevices', 'Enable mutual device access': 'updateDevicePeerCommunication', 'Revoke Android phone': 'revokeDevice', 'Make Admin': 'updateMemberAccess', 'Transfer ownership': 'transferOwnership'}[label]
         add('member-actions', label.lower().replace(' ', '-') + '-failed', action, {'errors': {method: ERROR}}, True)
@@ -50,10 +52,10 @@ def workflows(p, add):
     rk = recovery
     for name, opts in [('recovery-loading', {'holds': ['recoverySettings']}), ('recovery-failed', {'errors': {'recoverySettings': ERROR}}), ('recovery-key-registered', {'recoverySettings': {'key': {'recovery_id': 'example-recovery-key', 'identity_fingerprint': 'SHA256:' + 'A' * 43}}}), ('recovery-enrollment-finishing', {'recoverySettings': {'enrollment_finishing': True}}), ('recovery-issuance-unavailable', {'recoverySettings': {'can_issue_key': False}}), ('recovery-unsupported-vps', {'configuration': {'recovery_keys_enabled': False}})]:
         add('recovery-keys', name, rk, opts, True)
-    create = rk + [check('I understand that anyone holding this key'), click('Create recovery key')]
+    create = rk + [check('I understand that anyone with this key'), click('Create recovery key')]
     outcome('recovery-keys', 'create-offline-recovery-key', create, 'createRecoveryKey')
-    outcome('recovery-keys', 'export-recovery-package', create + [fill('Recovery package password', PASS), fill('Repeat package password', PASS), click('Save encrypted recovery package')], 'exportRecoveryPackage')
-    outcome('recovery-keys', 'save-administrator-recovery-policy', rk + [click('Administrator recovery policy'), check('Morgan'), click('Save recovery policy')], 'updateRecoveryPolicy')
+    outcome('recovery-keys', 'export-recovery-package', create + [fill('File password', PASS), fill('Repeat file password', PASS), click('Save recovery key file')], 'exportRecoveryPackage')
+    outcome('recovery-keys', 'save-administrator-recovery-policy', rk + [click('Admin recovery'), check('Morgan'), click('Save Admin recovery')], 'updateRecoveryPolicy')
     add('recovery-keys', 'revoke-registered-recovery-key', rk + [click('Revoke recovery key')], {'recoverySettings': {'key': {'recovery_id': 'example-recovery-key', 'identity_fingerprint': 'SHA256:' + 'A' * 43}}}, True)
     diag = maintenance + [click('Run diagnostics')]
     outcome('diagnostics', 'run-diagnostics', diag, 'diagnostics')
@@ -74,7 +76,7 @@ def workflows(p, add):
     review = join + [click('Review invitation')]
     for name, preview in [('older-invitation-names', {'recipient_names': False}), ('existing-member-device', {'creates_member': False}), ('admin-invitation', {'access_level': 'admin'}), ('owner-device-invitation', {'access_level': 'owner', 'creates_member': False})]:
         add('join', name, review, {**empty, 'invitationPreview': preview}, True)
-    ready = review + [fill('Your device name', 'My laptop')]
+    ready = review + [fill('Device name', 'My laptop')]
     add('join', 'recipient-names-entered', ready, empty, True)
     outcome('join', 'join-reviewed-invitation', ready + [click('Join server')], 'joinServer', empty)
     backup = [click('Backup'), click('Choose file'), fill('Backup password', PASS)]
@@ -84,33 +86,33 @@ def workflows(p, add):
     outcome('owner-recovery', 'review-offline-owner-key', owner, 'previewRecoveryKey', empty)
     replace = {'responses': {'previewRecoveryKey': {'existing_profile': True, 'preview': {'server_id': ID, 'server_name': 'My private VPS', 'host': 'vpn.example.com', 'recovery_id': 'example-recovery-key', 'server_identity_fingerprint': 'SHA256:' + 'A' * 43}}}}
     add('owner-recovery', 'replace-existing-owner-profile-review', owner, {**empty, **replace}, True)
-    ownerready = owner + [fill('New Owner device name', 'Recovered laptop'), check('Revoke all old Owner device')]
+    ownerready = owner + [fill('Owner device name', 'Recovered laptop'), check('Revoke all previous Owner devices')]
     outcome('owner-recovery', 'recover-owner-access', ownerready + [click('Recover Owner access')], 'recoverOwnerAccess', empty)
     export = recovery + [click('Export device backup', False)]
-    filled = export + [click('Choose file'), fill('Password', PASS), fill('Repeat password', PASS), check('I understand this export')]
+    filled = export + [click('Choose file'), fill('Password', PASS), fill('Repeat password', PASS), check('I understand this file contains')]
     add('device-backups', 'device-export-ready', filled, expand=True)
     add('device-backups', 'device-export-password-mismatch', export + [click('Choose file'), fill('Password', PASS), fill('Repeat password', 'different-password')], expand=True)
-    outcome('device-backups', 'device-export', filled + [click('Create encrypted backup')], 'exportServerBackup')
-    rotation = recovery + [click('Rotate device keys', False), check('I understand the tunnel')]
-    outcome('key-rotation', 'rotate-desktop-device-keys', rotation + [click('Rotate both keys')], 'rotateDeviceKeys')
+    outcome('device-backups', 'device-export', filled + [click('Create backup')], 'exportServerBackup')
+    rotation = recovery + [click('Rotate device keys', False), check('I understand the VPN will reconnect briefly')]
+    outcome('key-rotation', 'rotate-desktop-device-keys', rotation + [click('Rotate keys')], 'rotateDeviceKeys')
     add('key-rotation', 'resume-interrupted-key-rotation', recovery + [click('Resume key rotation', False)], {'pendingRotation': True}, True)
-    endpoint = maintenance + [click('Move devices to a new VPS address', False)]
-    add('endpoint', 'share-migration-introduction', endpoint + [click('Share migration')], expand=True)
-    retrieve = endpoint + [click('Share migration'), click('Retrieve signed update')]
+    endpoint = maintenance + [click('Move to a new address', False)]
+    add('endpoint', 'share-migration-introduction', endpoint + [click('Share update')], expand=True)
+    retrieve = endpoint + [click('Share update'), click('Get update')]
     outcome('endpoint', 'retrieve-signed-address-update', retrieve, 'createEndpointUpdate')
     outcome('endpoint', 'publish-signed-address-update', retrieve + [click('Publish on old VPS')], 'publishEndpointUpdate')
-    outcome('endpoint', 'apply-signed-address-update', endpoint + [fill('Signed endpoint update', 'sire1.' + 'EXAMPLE-' * 60), click('Verify and switch')], 'applyEndpointUpdate')
-    remove = maintenance + [click('Remove saved server or uninstall SirinVPN', False)]
+    outcome('endpoint', 'apply-signed-address-update', endpoint + [fill('Update code', 'sire1.' + 'EXAMPLE-' * 60), click('Verify and switch')], 'applyEndpointUpdate')
+    remove = maintenance + [click('Remove or uninstall', False)]
     outcome('removal', 'remove-local-server', remove + [click('Remove from this device', False)], 'removeServer', {'connected': False})
     add('removal', 'uninstall-vps-ssh-details', remove + [click('Uninstall from VPS', False)], {'connected': False}, True)
     setup = [fill('IP address or hostname', 'vpn.example.com'), click('SSH agent')]
     add('provisioning', 'new-vps-details-ready', setup, empty, True)
-    outcome('provisioning', 'probe-new-vps', setup + [click('Verify VPS')], 'probeHostKey', empty)
+    outcome('provisioning', 'probe-new-vps', setup + [click('Verify server')], 'probeHostKey', empty)
     for method in ['Private key', 'Password', 'SSH agent']:
         add('provisioning', 'new-vps-auth-' + method.lower().replace(' ', '-'), [click(method)], empty, True)
-    operations = [('vps-backup', 'Back up VPS', recovery, 'Create VPS backup', 'exportVpsBackup', [click('Choose file'), fill('Backup password', PASS), fill('Repeat password', PASS)]), ('vps-restore', 'Restore or migrate VPS', recovery, 'Restore VPS', 'restoreVpsBackup', [click('Choose file'), fill('Backup password', PASS)]), ('vps-repair', 'Repair VPS configuration', maintenance, 'Repair VPS', 'repairServer', []), ('vps-updates', 'Update VPS software', maintenance, 'Continue', 'manageVpsRelease', [])]
+    operations = [('vps-backup', 'Back up VPS', recovery, 'Create backup', 'exportVpsBackup', [click('Choose file'), fill('Backup password', PASS), fill('Repeat password', PASS)]), ('vps-restore', 'Restore or migrate VPS', recovery, 'Restore', 'restoreVpsBackup', [click('Choose file'), fill('Backup password', PASS)]), ('vps-repair', 'Repair VPS configuration', maintenance, 'Repair server', 'repairServer', []), ('vps-updates', 'Update VPS software', maintenance, 'Continue', 'manageVpsRelease', [])]
     for family, label, base, submit, method, fields in operations:
-        base = base + [click(label, False), click('Continue to VPS setup')]
+        base = base + [click(label, False), click('Continue')]
         for authentication in ['Password', 'SSH agent']:
             add(family, family + '-ssh-' + authentication.lower().replace(' ', '-'), base + [click(authentication)], {'connected': False}, True)
         add(family, family + '-sudo-login', base + [fill('SSH username', 'admin')], {'connected': False}, True)
@@ -137,17 +139,17 @@ def workflows(p, add):
             for name, opts in [('installed-release-and-schedule', {}), ('interrupted-update-recovery', {'releasePending': True}), ('installed-receipt-mismatch', {'releaseMatches': False}), ('automatic-security-updates-enabled', {'releaseAutomatic': True})]:
                 add(family, name, release, {**configured, **opts}, True)
             add(family, 'verified-vps-update-available', release + [click('Check for updates')], configured, True)
-            outcome(family, 'install-reviewed-vps-update', release + [click('Check for updates'), click('Install update 1.0.2')], 'manageVpsRelease', configured)
-            outcome(family, 'save-automatic-update-schedule', release + [check('Automatic security updates'), click('Save schedule')], 'manageVpsRelease', configured)
-            add(family, 'rollback-vps-review', release + [click('Restore previous version 1.0.0'), check('Restore version 1.0.0')], configured, True)
-    dns_setup = network + [click('Configure VPS DNS'), click('Continue to VPS setup')]
+            outcome(family, 'install-reviewed-vps-update', release + [click('Check for updates'), click('Install 1.0.2')], 'manageVpsRelease', configured)
+            outcome(family, 'save-automatic-update-schedule', release + [check('Install security updates automatically'), click('Save schedule')], 'manageVpsRelease', configured)
+            add(family, 'rollback-vps-review', release + [click('Previous version 1.0.0'), check('Restore version 1.0.0')], configured, True)
+    dns_setup = network + [click('Configure DNS'), click('Continue')]
     for mode in ['Recursive', 'DNS over TLS', 'DNS over HTTPS']:
         add('dns', 'desktop-dns-' + mode.lower().replace(' ', '-'), dns_setup + [click(mode)], {'connected': False}, True)
     add('dns', 'desktop-private-dns-records', dns_setup + [click('Replace')], {'connected': False}, True)
-    app = general + [click('App updates')]
+    app = general + [click('Check for updates')]
     for source, name in [('http://updates.example.com/', 'invalid-http-source'), (SOURCE, 'valid-source')]:
         add('app-updates', 'desktop-' + name, app + [fill('Release source', source)], expand=True)
-    appcheck = app + [fill('Release source', SOURCE), click('Check and verify release')]
+    appcheck = app + [fill('Release source', SOURCE), click('Check release')]
     outcome('app-updates', 'desktop-verify-app-release', appcheck, 'checkReleaseUpdate')
     for kind in ['appimage', 'windows', 'unsupported']:
         add('app-updates', 'installer-kind-' + kind, appcheck, {'releaseCandidate': {'installer_kind': kind, 'debian_install_available': False, 'appimage_install_available': kind == 'appimage', 'windows_install_available': kind == 'windows'}}, True)

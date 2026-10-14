@@ -5,6 +5,14 @@ import { Field, InlineError } from "../../components/ui";
 import type { useSshLogin } from "../../hooks/useSshLogin";
 import { errorMessage } from "../../lib/errors";
 import { useState } from "react";
+import { t, type MessageKey } from "../../i18n";
+import type { SavedSshLogin } from "../../types";
+
+const authLabels: Record<SavedSshLogin["authentication"], MessageKey> = {
+  password: "ssh.auth.password",
+  agent: "ssh.auth.agent",
+  private_key: "ssh.auth.privateKey",
+};
 
 export function SshLoginFields({
   login,
@@ -15,7 +23,7 @@ export function SshLoginFields({
   return (
     <div className="ssh-login-fields" aria-busy={login.loading}>
       <p className="ssh-login-status settings-note" role="status">
-        {login.checkingSavedLogin ? "Checking for a saved SSH login…" : ""}
+        {login.checkingSavedLogin ? t("ssh.login.checking") : ""}
       </p>
       {login.error && <InlineError message={login.error} />}
       {login.error && !login.saved && (
@@ -25,26 +33,21 @@ export function SshLoginFields({
           disabled={login.forgetting}
           onClick={() => void login.forget()}
         >
-          Forget saved login
+          {t("ssh.login.forgetSaved")}
         </button>
       )}
       <fieldset className="ssh-login-content" disabled={login.loading || login.forgetting}>
       {login.usingSaved ? (
         <div className="saved-ssh-login">
           <div>
-            <strong>Saved SSH login</strong>
+            <strong>{t("ssh.login.savedTitle")}</strong>
             <p>
-              {login.username} · port {login.port} ·{" "}
-              {login.auth === "agent"
-                ? "SSH agent"
-                : login.auth === "private_key"
-                  ? "Private key"
-                  : "Password"}
+              {t("ssh.login.savedSummary", { username: login.username, port: login.port, method: t(authLabels[login.auth]) })}
             </p>
           </div>
           <div className="saved-ssh-actions">
             <button type="button" className="text-button" onClick={login.edit}>
-              Change login
+              {t("ssh.login.change")}
             </button>
             <button
               type="button"
@@ -52,21 +55,21 @@ export function SshLoginFields({
               disabled={login.forgetting}
               onClick={() => void login.forget()}
             >
-              Forget login
+              {t("ssh.login.forget")}
             </button>
           </div>
         </div>
       ) : (
         <>
           <div className="field-grid two-column">
-            <Field label="SSH username">
+            <Field label={t("ssh.login.username")}>
               <input
                 value={login.username}
                 onChange={(e) => login.setUsername(e.target.value)}
                 autoCapitalize="none"
               />
             </Field>
-            <Field label="SSH port">
+            <Field label={t("ssh.login.port")}>
               <input
                 value={login.port}
                 onChange={(e) => login.setPort(e.target.value)}
@@ -75,32 +78,27 @@ export function SshLoginFields({
             </Field>
           </div>
           <fieldset className="auth-method">
-            <legend>Authentication</legend>
+            <legend>{t("ssh.login.method")}</legend>
             <div className="segmented-control">
-              {(
-                [
-                  ["password", "Password"],
-                  ["agent", "SSH agent"],
-                  ["private_key", "Private key"],
-                ] as const
-              ).filter(([value]) => !isAndroid || value !== "agent").map(([value, label]) => (
+              {(["password", "agent", "private_key"] as const)
+                .filter((value) => !isAndroid || value !== "agent").map((value) => (
                 <button
                   key={value}
                   type="button"
                   aria-pressed={login.auth === value}
                   onClick={() => login.setAuth(value)}
                 >
-                  {label}
+                  {t(authLabels[value])}
                 </button>
               ))}
             </div>
           </fieldset>
           {login.auth === "private_key" && (
             <div className="field-grid two-column key-fields">
-              <Field label="Private key path" error={isAndroid && pickerError ? pickerError : undefined}>
-                {isAndroid ? <button type="button" className="secondary-button" onClick={() => { setPickerError(""); void open({ multiple: false }).then(path => { if (typeof path === "string") login.setKeyPath(path); }).catch(reason => setPickerError(errorMessage(reason, "The SSH key picker could not be opened."))); }}>{login.keyPath ? "SSH key selected · Change" : "Choose SSH key"}</button> : <input value={login.keyPath} onChange={(e) => login.setKeyPath(e.target.value)} placeholder="/home/me/.ssh/vps" />}
+              <Field label={t("ssh.login.keyPath")} error={isAndroid && pickerError ? pickerError : undefined}>
+                {isAndroid ? <button type="button" className="secondary-button" onClick={() => { setPickerError(""); void open({ multiple: false }).then(path => { if (typeof path === "string") login.setKeyPath(path); }).catch(reason => setPickerError(errorMessage(reason, t("ssh.error.picker")))); }}>{login.keyPath ? t("ssh.login.changeKey") : t("ssh.login.chooseKey")}</button> : <input value={login.keyPath} onChange={(e) => login.setKeyPath(e.target.value)} placeholder={t("ssh.login.keyPathPlaceholder")} />}
               </Field>
-              <Field label="Key passphrase" hint="Leave empty if unencrypted">
+              <Field label={t("ssh.login.keyPassphrase")} hint={t("ssh.login.keyPassphraseHint")}>
                 <SecretInput
                   type="password"
                   value={login.keyPassphrase}
@@ -111,7 +109,7 @@ export function SshLoginFields({
             </div>
           )}
           {login.auth === "password" && (
-            <Field label="SSH password">
+            <Field label={t("ssh.login.password")}>
               <SecretInput
                 type="password"
                 value={login.password}
@@ -122,8 +120,8 @@ export function SshLoginFields({
           )}
           {login.username.trim() !== "root" && (
             <Field
-              label="sudo password"
-              hint="Leave empty for passwordless sudo"
+              label={t("ssh.login.sudoPassword")}
+              hint={t("ssh.login.sudoPasswordHint")}
             >
               <SecretInput
                 type="password"
@@ -140,16 +138,13 @@ export function SshLoginFields({
               onChange={(e) => login.setRemember(e.target.checked)}
             />
             <span>
-              <strong>Remember login on this device</strong>
-              <small>
-                Save in your secure credential store after SSH authentication succeeds.
-                Reuse it for future VPS actions.
-              </small>
+              <strong>{t("ssh.login.remember")}</strong>
+              <small>{t("ssh.login.rememberNote")}</small>
             </span>
           </label>
           {login.saved && (
             <button type="button" className="text-button" onClick={login.reuse}>
-              Use saved login
+              {t("ssh.login.useSaved")}
             </button>
           )}
         </>

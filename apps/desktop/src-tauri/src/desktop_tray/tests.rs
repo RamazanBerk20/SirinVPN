@@ -1,4 +1,5 @@
 use super::*;
+use crate::native_text::text_with;
 use sirinvpn_protocol::ServerProfile;
 use sirinvpn_tunnel_model::{ConnectionPolicy, KillSwitchState, LocalTunnelStatus};
 
@@ -37,7 +38,12 @@ fn active_server_wins_over_gui_selection_and_only_connected_server_is_checked() 
     assert_eq!(m.servers.iter().find(|s| s.connected).unwrap().id, id(1));
     assert_eq!(m.active, Some(id(1)));
     assert_eq!(m.selected, Some(id(2)));
-    assert_eq!(m.protection, "Kill switch: Armed");
+    assert_eq!(m.protection, text("native.tray.killSwitch.on"));
+    assert_eq!(
+        m.status,
+        text_with("native.tray.status.connectedTo", &[("name", "Server 1")])
+    );
+    assert_eq!(m.quit, model::Quit::Connected);
 }
 
 #[test]
@@ -53,11 +59,21 @@ fn saved_selection_does_not_claim_connection_and_absence_is_not_unknown() {
     let m = model::project(Some(&local), Some(&profiles), Some(id(2)), false);
     assert_eq!(m.primary.unwrap().1, Action::Connect(id(2)));
     assert!(m.servers.iter().all(|s| !s.connected));
-    assert_eq!(m.quit, "Quit app");
+    assert_eq!(m.quit, model::Quit::Plain);
+    assert_eq!(m.status, text("native.tray.status.disconnected"));
     let unknown = model::project(None, Some(&profiles), Some(id(2)), false);
     assert!(unknown.primary.is_none());
     assert!(!unknown.can_switch);
     assert_eq!(unknown.icon, model::IconState::Attention);
+    assert!(unknown.quit.needs_consent());
+    let unloaded = model::project(None, None, None, false);
+    assert_eq!(
+        unloaded.status,
+        text_with(
+            "native.tray.status.serversUnavailable",
+            &[("status", text("native.tray.status.unknown").as_str())]
+        )
+    );
     let empty = model::project(Some(&local), Some(&[]), None, false);
     assert_eq!(
         empty.primary.unwrap().1,
@@ -71,21 +87,30 @@ fn pauses_keep_a_block_distinct_from_an_error_and_retries_have_explicit_actions(
     local.state = ConnectionState::Connecting;
     local.kill_switch_state = Some(KillSwitchState::Blocking);
     let m = model::project(Some(&local), None, None, false);
-    assert_eq!(m.primary.unwrap().0, "Cancel connection…");
+    assert_eq!(
+        m.primary.unwrap().0,
+        text("native.tray.menu.stopConnecting")
+    );
+    // No saved name: the status reads without one instead of inventing it.
+    assert_eq!(m.status, text("native.tray.status.connecting"));
     local.recovery_in_progress = true;
     let m = model::project(Some(&local), None, None, false);
-    assert_eq!(m.primary.unwrap().0, "Stop reconnecting…");
+    assert_eq!(
+        m.primary.unwrap().0,
+        text("native.tray.menu.stopReconnecting")
+    );
     assert_eq!(m.icon, model::IconState::Blocked);
     local.waiting_for_user = true;
     local.recovery_in_progress = false;
     let m = model::project(Some(&local), None, None, false);
     assert_eq!(m.primary.unwrap().1, Action::Reconnect(id(1)));
     assert!(m.extra_disconnect);
-    assert!(m.quit.contains("block stays active"));
+    assert_eq!(m.quit, model::Quit::Blocking);
     local.supervisor_status_known = Some(false);
     let m = model::project(Some(&local), None, None, false);
     assert_eq!(m.icon, model::IconState::Attention);
-    assert!(m.protection.contains("unknown"));
+    assert_eq!(m.protection, text("native.tray.killSwitch.unknown"));
+    assert_eq!(m.quit, model::Quit::KillSwitchUnknown);
 }
 
 #[test]
@@ -97,13 +122,16 @@ fn old_helpers_do_not_advertise_safe_handoffs_or_invent_ipv6_evidence() {
     assert!(m.needs_update);
     assert!(!m.reconnect);
     assert!(!m.can_switch);
-    assert!(m.protection.contains("IPv6 verification unavailable"));
+    assert_eq!(
+        m.protection,
+        text("native.tray.killSwitch.onIpv6Unverified")
+    );
+    assert_eq!(m.icon, model::IconState::Attention);
     local.policy = Some(ConnectionPolicy::default());
     local.kill_switch_state = None;
-    assert!(
-        model::project(Some(&local), None, None, false)
-            .protection
-            .contains("unknown")
+    assert_eq!(
+        model::project(Some(&local), None, None, false).protection,
+        text("native.tray.killSwitch.unknown")
     );
     local.connection_control_supported = true;
     local.policy = None;
@@ -125,4 +153,15 @@ fn collection_is_bounded_and_favorites_follow_the_active_server() {
     assert_eq!(m.servers[0].id, id(1));
     assert!(m.servers.iter().any(|s| s.id == id(19)));
     assert!(m.servers.iter().any(|s| s.name == "İş && EvVPN"));
+    // Labels are escaped once, when the menu is built.
+    profiles[0].name = "A & B".into();
+    let m = model::project(Some(&local), Some(&profiles), None, false);
+    assert_eq!(
+        m.status,
+        text_with("native.tray.status.connectedTo", &[("name", "A & B")])
+    );
+    assert_eq!(
+        model::escape(&m.status),
+        text_with("native.tray.status.connectedTo", &[("name", "A && B")])
+    );
 }

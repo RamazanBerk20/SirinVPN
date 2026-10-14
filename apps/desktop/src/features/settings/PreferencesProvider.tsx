@@ -10,6 +10,7 @@ import {
 import { api } from "../../api";
 import { isAndroid } from "../../platform";
 import { errorMessage } from "../../lib/errors";
+import { t } from "../../i18n";
 import type { AppPreferences, PreferencesSnapshot } from "./preferences";
 
 function usePreferencesController() {
@@ -33,7 +34,7 @@ function usePreferencesController() {
       setSnapshot(next);
       setError(null);
     } catch (reason) {
-      if (request === generation.current) setError(errorMessage(reason, "App preferences could not be opened."));
+      if (request === generation.current) setError(errorMessage(reason, t("settings.preferences.loadFailed")));
     } finally {
       if (request === generation.current) setLoading(false);
     }
@@ -75,9 +76,7 @@ function usePreferencesController() {
             current && { ...current, notification_permission: permission },
         );
         if (permission !== "granted") {
-          throw new Error(
-            "Notifications are blocked. Allow SirinVPN in system notification settings, then try again.",
-          );
+          throw new Error(t("settings.preferences.notificationsBlocked"));
         }
       }
       const saved = await api.setAppPreferences({
@@ -85,13 +84,10 @@ function usePreferencesController() {
         [key]: value,
       });
       setSnapshot(saved);
-      setStatus("Preferences saved.");
+      setStatus(t("common.state.saved"));
     } catch (reason) {
       setError(
-        errorMessage(
-          reason,
-          "The preference could not be saved. Previous settings remain active.",
-        ),
+        errorMessage(reason, t("settings.preferences.saveFailed")),
       );
     } finally {
       inFlight.current = false;
@@ -111,11 +107,9 @@ function usePreferencesController() {
     try {
       await api.testNotification();
       if (isAndroid) setSnapshot(await api.getAppPreferences());
-      setStatus(
-        "Test notification sent. Your system's notification settings still apply.",
-      );
+      setStatus(t("settings.preferences.testSent"));
     } catch (reason) {
-      setError(errorMessage(reason, "The notification could not be sent."));
+      setError(errorMessage(reason, t("settings.preferences.testFailed")));
     } finally {
       inFlight.current = false;
       setSaving(false);

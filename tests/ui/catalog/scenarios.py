@@ -67,8 +67,10 @@ def scenarios(p):
         for cat in ['network', 'recovery', 'maintenance']:
             add('settings', cat + '-settings-' + role, settings('desktop', cat), {'role': role}, True)
     general = settings('desktop', 'general')
+    # Scenario IDs keep their original names; the switch labels are the current interface text.
+    control_labels = {'Start on system startup': 'Start at sign-in', 'Launch minimized': 'Start minimized'}
     for control in ['Interface animations'] + ['Connection notifications', 'Start on system startup', 'Launch minimized', 'Close to tray']:
-        add('general', control.lower().replace(' ', '-') + '-enabled', general + [css('input[aria-label="' + control + '"]', check=True)], expand=True)
+        add('general', control.lower().replace(' ', '-') + '-enabled', general + [css('input[aria-label="' + control_labels.get(control, control) + '"]', check=True)], expand=True)
     add('general', 'preferences-load-failed', general, {'errors': {'getAppPreferences': ERROR}}, True)
     add('general', 'preferences-save-failed', general + [css('input[aria-label="Interface animations"]', check=True)], {'errors': {'setAppPreferences': ERROR}}, True)
     for perm in ['granted', 'denied', 'unknown']:
@@ -115,7 +117,7 @@ def scenarios(p):
     add('invitations', 'new-admin-invitation', inv + [fill('Access level', 'admin')], expand=True)
     for lifetime in ['86400', '604800']:
         add('invitations', 'invitation-expires-' + ('24-hours' if lifetime == '86400' else '7-days'), inv + [fill('Expires after', lifetime)], expand=True)
-    add('invitations', 'reusable-invitation-10-joins', inv + [fill('Number of joins', '10')], expand=True)
+    add('invitations', 'reusable-invitation-10-joins', inv + [fill('Number of uses', '10')], expand=True)
     add('invitations', 'legacy-invitation-name-fields', inv, {'configuration': {'recipient_names_enabled': False}}, True)
     legacy = [fill('Device name', 'Android tablet')]
     add('invitations', 'legacy-invitation-ready-to-create', inv + legacy, {'configuration': {'recipient_names_enabled': False}}, True)
@@ -124,7 +126,7 @@ def scenarios(p):
     result = inv + [click('Create single-use code')]
     add('invitations', 'invitation-created-qr-and-code', result, expand=True)
     add('invitations', 'invitation-enlarged-qr', result + [click('Enlarge invitation QR code')])
-    add('invitations', 'reusable-invitation-created', inv + [fill('Number of joins', '10'), click('Create reusable code')], expand=True)
+    add('invitations', 'reusable-invitation-created', inv + [fill('Number of uses', '10'), click('Create reusable code')], expand=True)
     for target in ['My Linux desktop', 'Morgan’s laptop', 'Android phone']:
         add('invitations', 'add-device-' + target.lower().replace(' ', '-').replace('’', ''), devices + [click('Actions for ' + target), click('Add device', False)], expand=True)
     empty = {'empty': True}
@@ -133,16 +135,17 @@ def scenarios(p):
     add('onboarding', 'add-another-vps', [click('Add server')], expand=True)
     recovery = settings('desktop', 'recovery')
     maintenance = settings('desktop', 'maintenance')
+    dialog_labels = {'Move devices to a new VPS address': 'Move to a new address', 'Remove saved server or uninstall SirinVPN': 'Remove or uninstall'}
     for name, base in [('Export device backup', recovery), ('Rotate device keys', recovery), ('Move devices to a new VPS address', maintenance), ('Remove saved server or uninstall SirinVPN', maintenance)]:
-        add('dialogs', name.lower().replace(' ', '-'), base + [click(name, False)], expand=True)
+        add('dialogs', name.lower().replace(' ', '-'), base + [click(dialog_labels.get(name, name), False)], expand=True)
     for name, base in [('Back up VPS', recovery), ('Restore or migrate VPS', recovery), ('Update VPS software', maintenance), ('Repair VPS configuration', maintenance)]:
         family = {'Back up VPS': 'vps-backup', 'Restore or migrate VPS': 'vps-restore', 'Update VPS software': 'vps-updates', 'Repair VPS configuration': 'vps-repair'}[name]
         steps = base + [click(name, False)]
         add(family, 'review-' + family + '-while-connected', steps, expand=True)
         add(family, 'review-' + family + '-disconnected', steps, {'connected': False}, True)
-        add(family, family + '-ssh-details', steps + [click('Continue to VPS setup')], {'connected': False}, True)
-    add('app-updates', 'desktop-app-update-dialog', general + [click('App updates')], expand=True)
-    add('app-updates', 'desktop-local-component-review', general + [click('Review local component')], expand=True)
+        add(family, family + '-ssh-details', steps + [click('Continue')], {'connected': False}, True)
+    add('app-updates', 'desktop-app-update-dialog', general + [click('Check for updates')], expand=True)
+    add('app-updates', 'desktop-local-component-review', general + [click('Review component')], expand=True)
     from workflows import workflows
     workflows('desktop', add)
     from extra_states import extra_states

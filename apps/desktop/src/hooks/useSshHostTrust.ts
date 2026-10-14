@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "../api";
 import type { SshHostInspection } from "../types";
+import { t } from "../i18n";
 
 export interface InspectedSshHost extends SshHostInspection {
   host: string;
@@ -43,19 +44,17 @@ export function useSshHostTrust(host: string, port: number, open: boolean) {
       inspected.host !== host.trim() ||
       inspected.port !== port
     ) {
-      throw new Error("The SSH destination changed. Check its identity again.");
+      throw new Error(t("ssh.error.hostChanged"));
     }
     if (inspected.status !== "trusted") {
-      if (!confirmed) throw new Error("Verify this VPS fingerprint first.");
+      if (!confirmed) throw new Error(t("ssh.error.verifyFirst"));
       await api.trustSshHost(
         inspected.host,
         inspected.port,
         inspected.fingerprint,
       );
       if (attempt !== generation.current || target !== current.current)
-        throw new Error(
-          "The SSH destination changed. Check its identity again.",
-        );
+        throw new Error(t("ssh.error.hostChanged"));
       setInspection({ ...inspected, status: "trusted" });
     }
     return inspected.fingerprint;

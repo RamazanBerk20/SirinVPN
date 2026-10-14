@@ -9,7 +9,9 @@ import { useId, useState } from "react";
 import { isAndroid } from "../../platform";
 import { ActionMenu, type MenuAction } from "../../components/ActionMenu";
 import { CopyValue } from "../../components/CopyValue";
-import { canManageMember, memberAccessLabel } from "../../access";
+import { canManageMember, memberAccessLabel, memberAccessLevel } from "../../access";
+import { t } from "../../i18n";
+import { Rich } from "../../i18n/Rich";
 import {
   memberLifecycleActions,
   type MemberLifecycleProps,
@@ -59,17 +61,17 @@ function MemberControls({
   if (isAndroid) {
     const actions = memberLifecycleActions(member, props);
     if (props.onPolicy && member.role !== "owner" && canManageMember(props.accessLevel, member))
-      actions.unshift({ label: "Access policy", run: () => props.onPolicy?.(member) });
+      actions.unshift({ label: t("devices.menu.accessPolicy"), group: t("devices.menu.group.member"), run: () => props.onPolicy?.(member) });
     if (props.accessLevel === "owner" && member.role === "member") actions.push(
-      { label: member.administrator ? "Remove Admin" : "Make Admin", disabled: props.accessBusy === member.id || hasInvitation || props.memberBusy != null,
-        reason: hasInvitation ? "Cancel this member’s active invitation first." : undefined, run: () => void props.onAccess(member) },
-      { label: "Transfer ownership", danger: true, disabled: props.accessBusy === member.id || props.memberBusy != null || member.suspended || hasInvitation || member.devices.length === 0,
-        reason: hasInvitation ? "Cancel this member’s active invitation first." : undefined, run: () => void props.onTransfer(member) },
+      { label: t(member.administrator ? "devices.menu.removeAdmin" : "devices.menu.makeAdmin"), group: t("devices.menu.group.member"), disabled: props.accessBusy === member.id || hasInvitation || props.memberBusy != null,
+        reason: hasInvitation ? t("devices.menu.cancelInvitationFirst") : undefined, run: () => void props.onAccess(member) },
+      { label: t("devices.menu.transfer"), group: t("devices.menu.group.ownership"), danger: true, disabled: props.accessBusy === member.id || props.memberBusy != null || member.suspended || hasInvitation || member.devices.length === 0,
+        reason: hasInvitation ? t("devices.menu.cancelInvitationFirst") : undefined, run: () => void props.onTransfer(member) },
     );
     if (canManageMember(props.accessLevel, member) || props.accessLevel === "member" && member.policy?.add_own_devices)
-      actions.unshift({ label: "Add device", disabled: member.suspended || props.memberBusy != null || Boolean(member.policy?.device_limit && member.devices.length >= member.policy.device_limit), run: () => props.onInvite(member) });
-    return <div className="device-member-controls"><span className="member-identity"><strong>{member.name}</strong><span className={`access-badge ${memberAccessLabel(member).toLowerCase()}`}>{memberAccessLabel(member)}</span></span>
-      {actions.length > 0 && <ActionMenu label={`Member actions for ${member.name}`} actions={actions} />}
+      actions.unshift({ label: t("devices.menu.addDevice"), group: t("devices.menu.group.member"), disabled: member.suspended || props.memberBusy != null || Boolean(member.policy?.device_limit && member.devices.length >= member.policy.device_limit), run: () => props.onInvite(member) });
+    return <div className="device-member-controls"><span className="member-identity"><strong>{member.name}</strong><span className={`access-badge ${memberAccessLevel(member)}`}>{memberAccessLabel(member)}</span></span>
+      {actions.length > 0 && <ActionMenu label={t("devices.menu.memberActions", { name: member.name })} title={member.name} actions={actions} />}
     </div>;
   }
   return (
@@ -77,23 +79,23 @@ function MemberControls({
       <span className="member-identity">
         <strong>{member.name}</strong>
         <span
-          className={`access-badge ${memberAccessLabel(member).toLowerCase()}`}
+          className={`access-badge ${memberAccessLevel(member)}`}
         >
           {memberAccessLabel(member)}
         </span>
       </span>
       <div className="member-actions">
         {props.onPolicy && member.role !== "owner" && canManageMember(props.accessLevel, member) &&
-          <button className="text-button" onClick={() => props.onPolicy?.(member)}>Access policy</button>}
+          <button className="text-button" onClick={() => props.onPolicy?.(member)}>{t("devices.menu.accessPolicy")}</button>}
         {memberLifecycleActions(member, props).length > 0 && (
           <ActionMenu
-            label={`Member actions for ${member.name}`}
+            label={t("devices.menu.memberActions", { name: member.name })}
+            title={member.name}
             actions={memberLifecycleActions(member, props)}
           />
         )}
         {props.accessLevel === "owner" && member.role === "member" && (
           <>
-            {isAndroid && hasInvitation && <p className="settings-note">Cancel this member’s active device invitation before changing their role or transferring ownership.</p>}
             <button
               className="text-button"
               disabled={
@@ -103,16 +105,16 @@ function MemberControls({
               }
               title={
                 hasInvitation
-                  ? "Cancel this member's active device invitation first."
+                  ? t("devices.menu.cancelInvitationFirst")
                   : undefined
               }
               onClick={() => void props.onAccess(member)}
             >
               {props.accessBusy === member.id
-                ? "Applying"
+                ? t("devices.menu.applying")
                 : member.administrator
-                  ? "Remove Admin"
-                  : "Make Admin"}
+                  ? t("devices.menu.removeAdmin")
+                  : t("devices.menu.makeAdmin")}
             </button>
             <button
               className="text-button danger-text"
@@ -125,12 +127,12 @@ function MemberControls({
               }
               title={
                 hasInvitation
-                  ? "Cancel this member's active device invitation first."
+                  ? t("devices.menu.cancelInvitationFirst")
                   : undefined
               }
               onClick={() => void props.onTransfer(member)}
             >
-              Transfer ownership
+              {t("devices.menu.transfer")}
             </button>
           </>
         )}
@@ -140,7 +142,7 @@ function MemberControls({
             disabled={member.suspended || props.memberBusy != null || Boolean(member.policy?.device_limit && member.devices.length >= member.policy.device_limit)}
             onClick={() => props.onInvite(member)}
           >
-            <Plus size={14} /> Add device
+            <Plus size={14} /> {t("devices.menu.addDevice")}
           </button>
         )}
       </div>
@@ -159,23 +161,22 @@ function DeviceRow({
   const current = device.id === props.currentDeviceId;
   const Icon = deviceIcon(device.name, current);
   const activity = member.suspended
-    ? "Suspended"
+    ? t("devices.row.activity.suspended")
     : current
-      ? "Connected"
+      ? t("common.state.connected")
       : device.recent_handshake === true
-        ? "Recently active"
+        ? t("devices.row.activity.recent")
         : device.recent_handshake === false
-          ? "No recent activity"
-          : "Activity unknown";
+          ? t("devices.row.activity.idle")
+          : t("devices.row.activity.unknown");
+  // Shown only for other devices; this device's row already says it is connected.
   const hint = member.suspended
-    ? "This member's devices are suspended. Reactivation restores their saved identities and access."
-    : current
-      ? "This device's local tunnel is connected."
-      : device.recent_handshake === true
-        ? "Handshake within three minutes. This is not a guarantee of current connectivity."
-        : device.recent_handshake === false
-          ? "No recent handshake. The device may be idle or disconnected."
-          : "The server did not provide activity information.";
+    ? t("devices.row.activityDetail.suspended")
+    : device.recent_handshake === true
+      ? t("devices.row.activityDetail.recent")
+      : device.recent_handshake === false
+        ? t("devices.row.activityDetail.idle")
+        : t("devices.row.activityDetail.unknown");
   const manageable = canManageMember(props.accessLevel, member);
   const lastOwnerDevice =
     member.role === "owner" && member.devices.length === 1;
@@ -185,25 +186,26 @@ function DeviceRow({
   const actions: MenuAction[] = manageable
     ? [
         {
-          label: "Rename device",
-          group: "Device",
+          label: t("devices.menu.rename"),
+          group: t("devices.menu.group.device"),
           run: () => void props.onRename(device.id, device.name),
         },
         {
-          label: `Add device for ${member.name}`,
-          group: "Member",
+          label: t("devices.menu.addDeviceFor", { name: member.name }),
+          group: t("devices.menu.group.member"),
           disabled: member.suspended || props.memberBusy != null,
           reason: member.suspended
-            ? "Reactivate this member before adding a device."
+            ? t("devices.menu.reactivateFirst")
             : undefined,
           run: () => props.onInvite(member),
         },
-        ...(props.onPolicy && member.role !== "owner" ? [{ label: "Access policy", group: "Member", run: () => props.onPolicy?.(member) }] : []),
+        ...(props.onPolicy && member.role !== "owner" ? [{ label: t("devices.menu.accessPolicy"), group: t("devices.menu.group.member"), run: () => props.onPolicy?.(member) }] : []),
         ...memberLifecycleActions(member, props),
         {
           label: device.peer_communication_enabled
-            ? "Isolate from VPN devices"
-            : "Enable mutual device access",
+            ? t("devices.menu.isolate")
+            : t("devices.menu.allowMutual"),
+          group: t("devices.menu.group.device"),
           disabled: props.peerBusy === device.id || props.memberBusy != null,
           run: () =>
             void props.onPeer(
@@ -213,12 +215,12 @@ function DeviceRow({
             ),
         },
         {
-          label: `Revoke ${device.name}`,
-          group: "Device",
+          label: t("devices.menu.revoke", { name: device.name }),
+          group: t("devices.menu.group.device"),
           danger: true,
           disabled: lastOwnerDevice || props.memberBusy != null,
           reason: lastOwnerDevice
-            ? "The last Owner device cannot be revoked."
+            ? t("devices.row.lastOwnerDevice")
             : undefined,
           run: () => void props.onRevoke(device.id, device.name),
         },
@@ -227,40 +229,42 @@ function DeviceRow({
   if (props.accessLevel === "owner" && member.role === "member")
     actions.push(
       {
-        label: member.administrator ? "Remove Admin" : "Make Admin",
+        label: t(member.administrator ? "devices.menu.removeAdmin" : "devices.menu.makeAdmin"),
+        group: t("devices.menu.group.member"),
         disabled:
           props.accessBusy === member.id ||
           hasInvitation ||
           props.memberBusy != null,
         reason: hasInvitation
-          ? "Cancel this member's device invitation first."
+          ? t("devices.menu.cancelInvitationFirst")
           : undefined,
         run: () => void props.onAccess(member),
       },
       {
-        label: "Transfer ownership",
-        group: "Ownership",
+        label: t("devices.menu.transfer"),
+        group: t("devices.menu.group.ownership"),
         disabled:
           props.accessBusy === member.id ||
           hasInvitation ||
           member.suspended ||
           props.memberBusy != null,
         reason: member.suspended
-          ? "Reactivate this member before transferring ownership."
+          ? t("devices.menu.reactivateFirst")
           : hasInvitation
-            ? "Cancel this member's device invitation first."
+            ? t("devices.menu.cancelInvitationFirst")
             : undefined,
         run: () => void props.onTransfer(member),
         danger: true,
       },
     );
   if (props.accessLevel === "member" && member.policy?.manage_own_peer_communication) actions.push({
-    label: device.peer_communication_enabled ? "Isolate from VPN devices" : "Enable mutual device access",
+    label: t(device.peer_communication_enabled ? "devices.menu.isolate" : "devices.menu.allowMutual"),
+    group: t("devices.menu.group.device"),
     disabled: props.peerBusy === device.id,
     run: () => void props.onPeer(device.id, device.name, Boolean(device.peer_communication_enabled)),
   });
   if (props.onNetwork && (manageable || (props.accessLevel === "member" && member.policy?.manage_own_port_forwards)))
-    actions.push({ label: "Port forwarding settings", run: props.onNetwork });
+    actions.push({ label: t("devices.menu.portForwarding"), group: t("devices.menu.group.device"), run: props.onNetwork });
   return (
     <article
       className="device-row"
@@ -284,12 +288,14 @@ function DeviceRow({
           <span className="device-row-copy">
             <strong>
               {device.name}
-              {current && <span className="this-device">This device</span>}
+              {current && <span className="this-device">{t("common.noun.thisDevice")}</span>}
             </strong>
             <small>
-              Tunnel IP:{" "}
-              <span className="mono">{device.client_tunnel_address}</span> ·
-              {memberAccessLabel(member)}
+              <Rich
+                id="devices.row.subtitle"
+                params={{ address: device.client_tunnel_address, role: memberAccessLabel(member) }}
+                tags={{ address: (content) => <span className="mono">{content}</span> }}
+              />
             </small>
           </span>
           <span className="device-activity-label">{activity}</span>
@@ -297,7 +303,8 @@ function DeviceRow({
         </button>
         {actions.length > 0 && (
           <ActionMenu
-            label={`Actions for ${device.name}`}
+            label={t("devices.menu.deviceActions", { name: device.name })}
+            title={device.name}
             actions={actions}
             onOpenChange={setMenuOpen}
           />
@@ -310,29 +317,33 @@ function DeviceRow({
         inert={menuOpen}
       >
         <dl className="device-facts">
+          <div>
+            <dt>{t("devices.row.facts.address")}</dt>
+            <dd className="mono">{device.client_tunnel_address}</dd>
+          </div>
           {!current && (
             <div>
-              <dt>Activity</dt>
+              <dt>{t("devices.row.facts.activity")}</dt>
               <dd>{hint}</dd>
             </div>
           )}
           <div>
-            <dt>Device network access</dt>
+            <dt>{t("devices.row.facts.network")}</dt>
             <dd>
               {member.suspended
-                ? "Suspended. VPN, management, peer connections and forwarded ports are blocked. Reactivation restores saved access."
+                ? t("devices.row.network.suspended")
                 : device.peer_communication_enabled
-                  ? "This device can send to and receive from other VPN devices that also enable mutual access."
-                  : "Isolated from other VPN devices. Internet access is allowed."}
+                  ? t("devices.row.network.mutual")
+                  : t("devices.row.network.isolated")}
             </dd>
           </div>
           {device.identity_fingerprint && (
             <div>
-              <dt>Identity fingerprint</dt>
+              <dt>{t("devices.row.facts.fingerprint")}</dt>
               <dd>
                 <CopyValue
                   value={device.identity_fingerprint}
-                  label={`${device.name} fingerprint`}
+                  label={t("devices.row.fingerprintLabel", { name: device.name })}
                   shorten
                 />
               </dd>
@@ -342,13 +353,13 @@ function DeviceRow({
         {lastOwnerDevice && (
           <div className="owner-recovery">
             <p className="settings-note">
-              The last Owner device cannot be revoked.
+              {t("devices.row.lastOwnerDevice")}
             </p>
             <button
               className="text-button"
               onClick={() => props.onInvite(member)}
             >
-              Add another Owner device
+              {t("devices.row.addOwnerDevice")}
             </button>
             {props.snapshot.members.some(
               (m) =>
@@ -356,7 +367,7 @@ function DeviceRow({
             ) && (
               <details>
                 <summary>
-                  Transfer ownership to another member{" "}
+                  {t("devices.row.transferToOther")}{" "}
                   <CaretDown size={16} className="disclosure-chevron" />
                 </summary>
                 {props.snapshot.members
@@ -379,7 +390,7 @@ function DeviceRow({
                       }
                       onClick={() => void props.onTransfer(target)}
                     >
-                      Review transfer to {target.name}
+                      {t("devices.row.transferTo", { name: target.name })}
                     </button>
                   ))}
               </details>
@@ -422,8 +433,8 @@ export function DeviceList(props: Props) {
               <strong>{member.name}</strong>
               <small>
                 {member.suspended
-                  ? "Suspended · No devices"
-                  : "No authorized devices"}
+                  ? t("devices.row.suspendedNoDevices")
+                  : t("devices.row.noDevices")}
               </small>
             </span>
             <CaretDown className="disclosure-chevron" size={17} />
@@ -435,7 +446,7 @@ export function DeviceList(props: Props) {
       ))}
       {rows.length === 0 && emptyMembers.length === 0 && (
         <p role="status" className="device-list-empty">
-          No devices match your search.
+          {t("devices.row.noMatches")}
         </p>
       )}
     </div>

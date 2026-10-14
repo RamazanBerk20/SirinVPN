@@ -5,6 +5,8 @@ import { InlineError } from "../../components/ui";
 import type { Page } from "../../components/Navigation";
 import { formatTransport, formatLatency } from "../../format";
 import { describeConnection } from "./connectionState";
+import { InfoHint } from "../../components/InfoHint";
+import { t } from "../../i18n";
 import type { ServerWorkspaceModel } from "./useServerWorkspace";
 
 export function ConnectionHero({
@@ -32,14 +34,14 @@ export function ConnectionHero({
   return (
     <section
       className={`connection-console ${state.connected && !state.recoveringAuthorization ? "is-connected" : ""}`}
-      aria-label="VPN connection"
+      aria-label={t("home.consoleLabel")}
     >
       <div className="connection-center">
         {!isAndroid && <SirinMark className="connection-mark" />}
         <button
           className={`power-control ${state.connected ? "active" : ""}`}
           disabled={busy || state.other}
-          aria-label={systemControlled ? "Android VPN settings" : busy ? "Changing connection" : state.action}
+          aria-label={systemControlled ? t("home.action.androidVpnSettings") : busy ? t("home.action.changing") : state.action}
           onClick={() =>
             void (systemControlled ? invoke("android_vpn_settings") : componentUpdateRequired && !state.active && onReviewComponentUpdate
               ? onReviewComponentUpdate()
@@ -52,20 +54,20 @@ export function ConnectionHero({
             <Power size={36} />
           )}
           <span>
-            {systemControlled ? "VPN settings" : busy ? "Please wait…" : state.active ? "Disconnect" : state.action}
+            {systemControlled ? t("home.action.vpnSettings") : busy ? t("home.action.wait") : state.active ? t("home.action.disconnect") : state.action}
           </span>
         </button>
         <p className="connection-state" role="status">
           {busy
-            ? "Changing connection…"
-            : `${state.status}${state.connected && !state.recoveringAuthorization && !isAndroid ? ` to ${profile.name}` : ""}`}
+            ? t("home.status.changing")
+            : state.connected && !state.recoveringAuthorization && !isAndroid ? t("home.status.connectedTo", { name: profile.name }) : state.status}
         </p>
-        {!systemControlled && (model.connectionOperation === "connecting" || !state.known) && <button className="secondary-button" type="button" onClick={() => void model.cancelConnection()} disabled={model.connectionOperation === "disconnecting"}>Stop VPN</button>}
+        {!systemControlled && (model.connectionOperation === "connecting" || !state.known) && <button className="secondary-button" type="button" onClick={() => void model.cancelConnection()} disabled={model.connectionOperation === "disconnecting"}>{t("home.action.stop")}</button>}
       </div>
       <p className="connection-explanation">{state.summary}</p>
       {state.active && localStatus.kill_switch_enabled && (
         <p className="disconnect-consequence">
-          {isAndroid ? "Android controls traffic blocking. Change Always-on VPN or Block connections without VPN in Android settings." : "Disconnect also releases the traffic block and stops automatic reconnect."}
+          {t(isAndroid ? "home.consequence.android" : "home.consequence.desktop")}
         </p>
       )}
       {state.active && localStatus.waiting_for_user && (
@@ -74,18 +76,17 @@ export function ConnectionHero({
           className="secondary-button"
           onClick={() => void model.resume()}
           disabled={busy}
-          title="Resume the active connection policy. Saved changes apply after Disconnect and Connect."
+          title={t("home.action.reconnectHint")}
         >
-          Reconnect
+          {t("home.action.reconnect")}
         </button>
-        {isAndroid && <p className="settings-note">Reconnect resumes the active policy. Saved changes apply after Disconnect and Connect.</p>}
         </>
       )}
       {state.warning && <InlineError message={state.warning} />}
       {!isAndroid && <ConnectionDetails model={model} />}
       {componentUpdateRequired && onReviewComponentUpdate && <div className="measurement-update">
-        <p>The local VPN component needs updating before this app can connect.</p>
-        <button className="text-button" disabled={busy} onClick={onReviewComponentUpdate}>Review local component update</button>
+        <p>{t("home.componentUpdate.needed")}</p>
+        <button className="text-button" disabled={busy} onClick={onReviewComponentUpdate}>{t("home.componentUpdate.review")}</button>
       </div>}
       {error && <InlineError message={error} />}
     </section>
@@ -98,23 +99,21 @@ export function ConnectionDetails({ model }: { model: ServerWorkspaceModel }) {
   return <>
       <dl className="connection-facts">
         <div>
-          <dt>Transport</dt>
+          <dt>{t("home.details.method")}</dt>
           <dd>
             {state.active
               ? formatTransport(localStatus.transport)
-              : state.known
-                ? "Not active"
-                : "Unknown"}
+              : t(state.known ? "home.routing.inactive" : "common.state.unknown")}
           </dd>
         </div>
         <div>
-          <dt>Routing</dt>
+          <dt>{t("home.details.routing")}</dt>
           <dd>{state.routing}</dd>
         </div>
         <div>
-          <dt>Kill switch</dt>
+          <dt>{t("home.details.killSwitch")}</dt>
           <dd
-            className={state.protection === "Disabled" ? "protection-off" : ""}
+            className={state.protectionState === "off" ? "protection-off" : ""}
           >
             {state.protection}
             {state.protectionDetail && (
@@ -124,14 +123,14 @@ export function ConnectionDetails({ model }: { model: ServerWorkspaceModel }) {
             )}
           </dd>
         </div>
-        {state.applicationIsolation && <div><dt>Application isolation</dt><dd>{state.applicationIsolation}</dd></div>}
+        {state.applicationIsolation && <div><dt>{t("home.details.appIsolation")}</dt><dd>{state.applicationIsolation}</dd></div>}
         {state.connected && serverStatus?.management_latency_ms !== undefined && (
-          <div title="Time for an authenticated management status request; not tunnel latency.">
-            <dt>Management response</dt>
-            <dd>{formatLatency(serverStatus.management_latency_ms)}{isAndroid && <small>Authenticated management request; separate from tunnel latency.</small>}</dd>
+          <div>
+            <dt>{t("home.details.serverResponse")}<InfoHint text={t("home.details.serverResponseInfo")} /></dt>
+            <dd>{formatLatency(serverStatus.management_latency_ms)}</dd>
           </div>
         )}
       </dl>
-      {state.connected && <p className="settings-note connection-evidence">{state.health.reachability}. {state.health.detail}</p>}
+      {state.connected && <p className="settings-note connection-evidence">{t("home.details.reachabilityLine", { state: state.health.reachability })}{state.health.detail && ` ${state.health.detail}`}</p>}
   </>;
 }

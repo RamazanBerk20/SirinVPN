@@ -13,6 +13,8 @@ import { api } from "../../api";
 import { Field, InlineError } from "../../components/ui";
 import { errorMessage } from "../../lib/errors";
 import type { MemberSummary, RecoveryKeyOutput, RecoverySettings, ServerProfile } from "../../types";
+import { formatList, t } from "../../i18n";
+import { useInfoHint } from "../../components/InfoHint";
 
 export function RecoveryKeys({ profile, connected, owner }: { profile: Pick<ServerProfile, "id">; connected: boolean; owner: boolean }) {
   const [settings, setSettings] = useState<RecoverySettings | null>(null);
@@ -29,6 +31,7 @@ export function RecoveryKeys({ profile, connected, owner }: { profile: Pick<Serv
   const clearMaterial = useCallback(() => { setCreated(null); setPassword(""); setRepeat(""); setRetained(false); setExportedPath(""); }, []);
   const [busy, setBusy] = useState(false), [error, setError] = useState<string | null>(null), [notice, setNotice] = useState<string | null>(null);
   useSecretNavigationGuard(Boolean(created) && !retained || busy, scope, clearMaterial, busy);
+  const [info, infoPanel] = useInfoHint(t("settings.recovery.info"), t("settings.recovery.infoLabel"));
   const refresh = useCallback(async (request = generation.current) => {
     const read = ++reading.current;
     const current = () => request === generation.current && read === reading.current;
@@ -43,7 +46,7 @@ export function RecoveryKeys({ profile, connected, owner }: { profile: Pick<Serv
       setSettings(next); setSelected(next.policy.administrator_member_ids);
       setCreated((current) => current && current.recovery_id === next.key?.recovery_id ? current : null);
       setAdmins(membership.members.filter((member) => member.role === "member" && member.administrator));
-    } catch (reason) { if (current()) setError(errorMessage(reason, "Recovery settings could not be read.")); }
+    } catch (reason) { if (current()) setError(errorMessage(reason, t("settings.recovery.loadFailed"))); }
   }, [profile.id, connected]);
   useEffect(() => {
     generation.current += 1;
@@ -59,7 +62,7 @@ export function RecoveryKeys({ profile, connected, owner }: { profile: Pick<Serv
     const current = () => request === generation.current;
     inFlight.current = true;
     setBusy(true); setError(null); setNotice(null);
-    try { await work(current); } catch (reason) { if (current()) setError(errorMessage(reason, "The recovery operation failed.")); }
+    try { await work(current); } catch (reason) { if (current()) setError(errorMessage(reason, t("settings.recovery.actionFailed"))); }
     finally { if (current()) { inFlight.current = false; setBusy(false); } }
   };
   const create = () => action(async (current) => {
@@ -71,59 +74,72 @@ export function RecoveryKeys({ profile, connected, owner }: { profile: Pick<Serv
   });
   const exportPackage = () => action(async (current) => {
     if (!created) return;
-    const path = await save({ defaultPath: "sirinvpn-recovery.sirrec", filters: [{ name: "Encrypted SirinVPN recovery package", extensions: ["sirrec"] }] });
+    const path = await save({ defaultPath: "sirinvpn-recovery.sirrec", filters: [{ name: t("settings.recovery.key.fileType"), extensions: ["sirrec"] }] });
     if (!path || !current()) return;
     await api.exportRecoveryPackage(created.key, path, password, accepted);
     if (!current()) return;
     setExportedPath(path);
-    setPassword(""); setRepeat(""); setNotice("Encrypted recovery package saved. Keep its password separately.");
+    setPassword(""); setRepeat(""); setNotice(t("settings.recovery.key.saved"));
   });
-  return <section ref={scope} className="settings-card" aria-label="Owner recovery">
-    <h2>Owner recovery</h2>
-    <p>Keep the recovery key or encrypted package offline. Using it to regain Owner access requires contacting your VPS.</p>
-    <p className="settings-note">On a fresh client, choose Add server → Recovery key. No existing authorized device or ordinary VPN connection is required.</p>
-    {!connected ? <p>Connect to configure recovery for this server.</p> : supported === false ? <p>Update VPS software to enable offline recovery keys.</p> : settings ? <>
-      <p>{settings.key ? "An offline recovery key is registered. Its private material is never stored on the VPS." : "No offline recovery key is registered."}</p>
-      {settings.enrollment_finishing && <p>A recovery enrollment is finishing. Wait one minute before creating another key.</p>}
+  return <section ref={scope} className="settings-card" aria-label={t("settings.recovery.title")}>
+    <h2>{t("settings.recovery.title")}</h2>
+    <p>{t("settings.recovery.summary")}{info}</p>
+    {infoPanel}
+    {!connected ? <p>{t("common.error.needsConnection")}</p> : supported === false ? <p>{t("settings.recovery.unsupported")}</p> : settings ? <>
+      <p>{settings.key ? t("settings.recovery.registered") : t("settings.recovery.none")}</p>
+      {settings.enrollment_finishing && <p>{t("settings.recovery.finishing")}</p>}
       {settings.can_issue_key && <>
         <label className="preference-checkbox"><input type="checkbox" checked={accepted} onChange={(event) => setAccepted(event.target.checked)} />
-          <span>I understand that anyone holding this key can replace every Owner device. Creating a replacement invalidates the previous key.</span>
+          <span>{t("settings.recovery.accept")}</span>
         </label>
-        <button className="secondary-button" disabled={!accepted || busy || settings.enrollment_finishing} onClick={() => void create()}><Key size={17} />{busy ? "Working" : settings.key ? "Replace recovery key" : "Create recovery key"}</button>
+        <button className="secondary-button" disabled={!accepted || busy || settings.enrollment_finishing} onClick={() => void create()}><Key size={17} />{busy ? t("common.state.working") : settings.key ? t("settings.recovery.replace") : t("settings.recovery.create")}</button>
       </>}
       {settings.key && owner && <button className="text-button danger-text" disabled={busy} onClick={() => void action(async (current) => {
-        if (!await confirmAction("Revoke this offline recovery key immediately? Its saved copies will stop working.") || !current()) return;
+        if (!await confirmAction({
+          title: t("settings.recovery.revokeConfirm.title"),
+          message: t("settings.recovery.revokeConfirm.message"),
+          confirm: t("settings.recovery.revokeConfirm.confirm"),
+        }) || !current()) return;
         const next = await api.revokeRecoveryKey(profile.id, settings.key!.recovery_id);
         if (current()) { setSettings(next); clearMaterial(); }
-      })}>Revoke recovery key</button>}
-      {owner && <details className="access-disclosure"><summary>Administrator recovery policy</summary>
-        <p>Selected Admins can issue a new Owner recovery key, including while Owner devices still exist. Successful recovery clears these permissions; the recovered Owner can grant them again.</p>
+      })}>{t("settings.recovery.revoke")}</button>}
+      {owner && <details className="access-disclosure"><summary>{t("settings.recovery.admins.title")}</summary>
+        <p>{t("settings.recovery.admins.summary")}</p>
         {admins.length ? admins.map((admin) => <label className="preference-checkbox" key={admin.id}>
           <input type="checkbox" checked={selected.includes(admin.id)} onChange={(event) => setSelected(event.target.checked ? [...selected, admin.id] : selected.filter((id) => id !== admin.id))} />
-          <span>{admin.name}{admin.suspended ? " · currently suspended" : ""}</span>
-        </label>) : <p>No Admins are configured. Administrator recovery stays disabled.</p>}
+          <span>{admin.suspended ? t("common.separator.pair", { first: admin.name, second: t("settings.recovery.admins.suspended") }) : admin.name}</span>
+        </label>) : <p>{t("settings.recovery.admins.none")}</p>}
         <button className="secondary-button" disabled={busy} onClick={() => void action(async (current) => {
-          const names = admins.filter(admin => selected.includes(admin.id)).map(admin => `${admin.name} (${admin.id})`).join(", ") || "No Administrators";
-          if (!await confirmAction(`Allow these Administrators to issue Owner recovery keys: ${names}? Everyone else loses this permission.`) || !current()) return;
+          const names = admins.filter(admin => selected.includes(admin.id)).map(admin => t("settings.recovery.admins.entry", { name: admin.name, id: admin.id }));
+          const confirmation = names.length ? {
+            title: t("settings.recovery.admins.confirm.title"),
+            message: t("settings.recovery.admins.confirm.message", { names: formatList(names) }),
+            confirm: t("settings.recovery.admins.confirm.confirm"),
+          } : {
+            title: t("settings.recovery.admins.confirmNone.title"),
+            message: t("settings.recovery.admins.confirmNone.message"),
+            confirm: t("settings.recovery.admins.confirmNone.confirm"),
+          };
+          if (!await confirmAction(confirmation) || !current()) return;
           const next = await api.updateRecoveryPolicy(profile.id, selected);
           if (!current()) return;
           setSettings(next); setSelected(next.policy.administrator_member_ids);
           setCreated((current) => current && current.recovery_id === next.key?.recovery_id ? current : null);
-          setNotice("Administrator recovery policy saved.");
-        })}>Save recovery policy</button>
+          setNotice(t("settings.recovery.admins.saved"));
+        })}>{t("settings.recovery.admins.save")}</button>
       </details>}
-    </> : <p>Reading current recovery settings…</p>}
+    </> : <p>{t("common.state.loading")}</p>}
       {created && <div className="invite-form">
-        <p className="warning-note">Keep this key offline. It contains recovery secrets, works once, and cannot be retrieved again from the VPS.</p>
-        {!isAndroid && <Field label="Recovery key"><textarea rows={4} readOnly value={created.key} className="secret-code-output mono" /></Field>}
-        <button className="secondary-button" disabled={busy} onClick={() => void action(async (current) => { await copyText(created.key); if (current()) setNotice("Recovery key copied. Save it offline before confirming completion."); })}><Copy size={17} />Copy recovery key</button>
-        <details><summary>Recovery QR code</summary><SecretQr source={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(created.qr_svg)}`} kind="recovery" code={created.key} /></details>
-        <Field label="Recovery package password" hint="At least 12 characters. The package contains the complete recovery key."><SecretInput type="password" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} /></Field>
-        <Field label="Repeat package password"><SecretInput type="password" autoComplete="new-password" value={repeat} onChange={(event) => setRepeat(event.target.value)} /></Field>
-        <button className="secondary-button" disabled={busy || !accepted || [...password].length < 12 || password !== repeat} onClick={() => void exportPackage()}><DownloadSimple size={17} />Save encrypted recovery package</button>
-        <ConfirmationRow checked={retained} onChange={setRetained}>I have saved this recovery key or its encrypted package offline and can access it.</ConfirmationRow>
+        <p className="warning-note">{t("settings.recovery.key.warning")}</p>
+        {!isAndroid && <Field label={t("settings.recovery.key.label")}><textarea rows={4} readOnly value={created.key} className="secret-code-output mono" /></Field>}
+        <button className="secondary-button" disabled={busy} onClick={() => void action(async (current) => { await copyText(created.key); if (current()) setNotice(t("settings.recovery.key.copied")); })}><Copy size={17} />{t("settings.recovery.key.copy")}</button>
+        <details><summary>{t("settings.recovery.key.qr")}</summary><SecretQr source={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(created.qr_svg)}`} kind="recovery" code={created.key} /></details>
+        <Field label={t("settings.recovery.key.password")} hint={t("settings.recovery.key.passwordHint")}><SecretInput type="password" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} /></Field>
+        <Field label={t("settings.recovery.key.repeat")}><SecretInput type="password" autoComplete="new-password" value={repeat} onChange={(event) => setRepeat(event.target.value)} /></Field>
+        <button className="secondary-button" disabled={busy || !accepted || [...password].length < 12 || password !== repeat} onClick={() => void exportPackage()}><DownloadSimple size={17} />{t("settings.recovery.key.save")}</button>
+        <ConfirmationRow checked={retained} onChange={setRetained}>{t("settings.recovery.key.retained")}</ConfirmationRow>
         <ShareEncryptedFile uri={exportedPath} />
-        <button className="primary-button" disabled={!retained || busy} onClick={() => { clearMaterial(); setNotice("Recovery material acknowledged. The key has been cleared from this view."); }}>Finish recovery setup</button>
+        <button className="primary-button" disabled={!retained || busy} onClick={() => { clearMaterial(); setNotice(t("settings.recovery.key.finished")); }}>{t("settings.recovery.key.finish")}</button>
       </div>}
     {notice && <p role="status">{notice}</p>}{error && <InlineError message={error} />}
   </section>;

@@ -1,4 +1,6 @@
 import { CopyButton } from "../../components/CopyButton";
+import { t } from "../../i18n";
+import { Rich } from "../../i18n/Rich";
 
 const command =
   'for key in /etc/ssh/ssh_host_*_key.pub; do ssh-keygen -l -E sha256 -f "$key"; done';
@@ -10,25 +12,19 @@ export function SshVerificationGuide({
 }) {
   return (
     <ol className="ssh-verification-steps">
+      <li>{t("ssh.guide.openConsole")}</li>
       <li>
-        Open this VPS on your hosting provider’s website, launch its browser
-        console, and sign in to the VPS.
-      </li>
-      <li>
-        Run this command in that console to list the server’s public SSH
-        fingerprints:
+        {t("ssh.guide.runCommand")}
         <div className="ssh-verification-command">
           <code>{command}</code>
-          <CopyButton value={command} label="Copy verification command" />
+          <CopyButton value={command} label={t("ssh.guide.copyCommand")} />
         </div>
       </li>
       <li>
-        Find the <code>SHA256:…</code> value that matches the fingerprint above
-        exactly.{" "}
-        {confirmation === "button"
-          ? "Then select Fingerprint matches below."
-          : "Then check the verification box below."}{" "}
-        If none match, stop and check with your provider.
+        <Rich
+          id={confirmation === "button" ? "ssh.guide.matchButton" : "ssh.guide.matchCheckbox"}
+          tags={{ code: (content) => <code>{content}</code> }}
+        />
       </li>
     </ol>
   );

@@ -1,34 +1,18 @@
 import { invoke, isAndroid } from "../../platform";
 import { Check, CaretDown } from "@phosphor-icons/react";
 import type { ServerWorkspaceModel } from "./useServerWorkspace";
-import type { TransportPreference, NetworkProfile } from "../../types";
+import type { TransportPreference, NetworkProfile, TransportKind } from "../../types";
 import { describeConnection } from "./connectionState";
 import { formatTransport } from "../../format";
 import { StartupConnectionState } from "./StartupConnectionState";
 import { MtuSettings } from "./MtuSettings";
+import { t } from "../../i18n";
+import { useInfoHint } from "../../components/InfoHint";
+import { Fragment } from "react";
 
-const conditions: { value: NetworkProfile; title: string; hint: string }[] = [
-  {
-    value: "automatic",
-    title: "Auto",
-    hint: "Automatically choose a working method",
-  },
-  {
-    value: "normal",
-    title: "Normal",
-    hint: "An ordinary home or mobile network",
-  },
-  {
-    value: "restricted",
-    title: "Restricted",
-    hint: "A network that blocks regular VPN traffic",
-  },
-  {
-    value: "extreme",
-    title: "Heavily restricted",
-    hint: "A network where other modes fail",
-  },
-];
+const conditions: NetworkProfile[] = ["automatic", "normal", "restricted", "extreme"];
+const policies = ["kill_switch", "automatic_reconnect", "connect_on_startup"] as const;
+
 export function ConnectionOptions({ model }: { model: ServerWorkspaceModel }) {
   const {
     selectedTransport,
@@ -47,31 +31,18 @@ export function ConnectionOptions({ model }: { model: ServerWorkspaceModel }) {
     model.serverStatus,
     model.preferences.saved?.policy,
   );
+  const [reconnectInfoButton, reconnectInfoPanel] = useInfoHint(
+    t(isAndroid ? "connection.options.policy.automatic_reconnect.infoAndroid" : "connection.options.policy.automatic_reconnect.info"),
+    t("connection.options.policy.automatic_reconnect.infoLabel"),
+  );
   const transports: {
-    value: TransportPreference;
-    title: string;
-    hint: string;
+    value: TransportKind;
     unavailable?: boolean;
   }[] = [
-    { value: "direct_udp", title: "Direct UDP", hint: "Standard WireGuard" },
-    {
-      value: "obfuscated_udp",
-      title: "Obfuscated UDP",
-      hint: "Authenticated UDP wrapper",
-      unavailable: !profile.obfuscated_udp,
-    },
-    {
-      value: "tls_like",
-      title: "TLS fallback",
-      hint: "Pinned TLS 1.3",
-      unavailable: !profile.tls_like,
-    },
-    {
-      value: "tcp_fallback",
-      title: "TCP fallback",
-      hint: "Authenticated TCP · last resort",
-      unavailable: !profile.tcp_fallback,
-    },
+    { value: "direct_udp" },
+    { value: "obfuscated_udp", unavailable: !profile.obfuscated_udp },
+    { value: "tls_like", unavailable: !profile.tls_like },
+    { value: "tcp_fallback", unavailable: !profile.tcp_fallback },
   ];
   const choose = (value: TransportPreference) => {
     setSelectedTransport(value);
@@ -79,19 +50,17 @@ export function ConnectionOptions({ model }: { model: ServerWorkspaceModel }) {
   return (
     <div className="settings-sections connection-preferences">
       <section className="settings-card">
-        <h2>Saved connection preferences</h2>
-        <p>Connection preferences for this device on {profile.name}.</p>
+        <h2>{t("connection.options.title")}</h2>
+        <p>{t("connection.scope", { server: profile.name })}</p>
         <label className="preference-row">
           <span>
-            <strong>Choose transport automatically</strong>
-            <small>
-              Find a working method for the network conditions below.
-            </small>
+            <strong>{t("connection.options.automatic.label")}</strong>
+            <small>{t("connection.options.automatic.summary")}</small>
           </span>
           <input
             type="checkbox"
             role="switch"
-            aria-label="Choose transport automatically"
+            aria-label={t("connection.options.automatic.label")}
             checked={selectedTransport === "automatic"}
             disabled={disabled}
             onChange={(e) =>
@@ -101,9 +70,9 @@ export function ConnectionOptions({ model }: { model: ServerWorkspaceModel }) {
         </label>
         {selectedTransport === "automatic" ? (
           <fieldset className="choice-fieldset">
-            <legend>Network conditions</legend>
+            <legend>{t("connection.options.conditions.legend")}</legend>
             <div className="condition-choices">
-              {conditions.map(({ value, title, hint }) => (
+              {conditions.map((value) => (
                 <label key={value} className="choice-row">
                   <input
                     type="radio"
@@ -114,8 +83,8 @@ export function ConnectionOptions({ model }: { model: ServerWorkspaceModel }) {
                     onChange={() => setSelectedNetworkProfile(value)}
                   />
                   <span>
-                    <strong>{title}</strong>
-                    <small>{hint}</small>
+                    <strong>{t(`connection.options.conditions.${value}.title`)}</strong>
+                    <small>{t(`connection.options.conditions.${value}.summary`)}</small>
                   </span>
                   {selectedNetworkProfile === value && (
                     <Check size={18} aria-hidden="true" />
@@ -123,15 +92,12 @@ export function ConnectionOptions({ model }: { model: ServerWorkspaceModel }) {
                 </label>
               ))}
             </div>
-            <p className="settings-note">
-              Every mode uses encrypted, authenticated connections.
-            </p>
           </fieldset>
         ) : (
           <fieldset className="choice-fieldset">
-            <legend>Manual transport</legend>
+            <legend>{t("connection.options.methods.legend")}</legend>
             <div className="condition-choices">
-              {transports.map(({ value, title, hint, unavailable }) => (
+              {transports.map(({ value, unavailable }) => (
                 <label className="choice-row" key={value}>
                   <input
                     type="radio"
@@ -141,11 +107,11 @@ export function ConnectionOptions({ model }: { model: ServerWorkspaceModel }) {
                     onChange={() => choose(value)}
                   />
                   <span>
-                    <strong>{title}</strong>
+                    <strong>{formatTransport(value)}</strong>
                     <small>
                       {unavailable
-                        ? "Update the VPS to enable this transport"
-                        : hint}
+                        ? t("connection.options.methods.unavailable")
+                        : t(`connection.options.methods.summary.${value}`)}
                     </small>
                   </span>
                   {selectedTransport === value && (
@@ -156,73 +122,47 @@ export function ConnectionOptions({ model }: { model: ServerWorkspaceModel }) {
             </div>
           </fieldset>
         )}
-        {(
-          [
-            [
-              "kill_switch",
-              "Kill switch",
-              "Block traffic outside the VPN if this connection fails. Disconnect releases the block.",
-            ],
-            [
-              "automatic_reconnect",
-              "Automatic reconnect",
-              "Retry an interrupted connection. This does not change your kill switch preference.",
-            ],
-            [
-              "connect_on_startup",
-              "Connect on system startup",
-              "Start this VPN when the device boots. Manual Disconnect deactivates startup and keeps this preference saved.",
-            ],
-          ] as const
-        ).filter(([key]) => !isAndroid || key === "automatic_reconnect").map(([key, label, hint]) => (
-          <label className="preference-row" key={key}>
-            <span>
-              <strong>{label}</strong>
-              <small>{isAndroid && key === "automatic_reconnect" ? "Saves immediately. Turning this off stops pending reconnect attempts. Active sessions still follow network changes. Android Always-on remains controlled in VPN settings." : hint}</small>
-            </span>
-            <input
-              type="checkbox"
-              role="switch"
-              aria-label={label}
-              checked={connectionPolicy[key]}
-              disabled={isAndroid && key === "automatic_reconnect" ? model.preferences.saving || !model.preferences.ready : disabled}
-              onChange={(e) => isAndroid && key === "automatic_reconnect"
-                ? void model.preferences.setReconnect(e.target.checked)
-                : setConnectionPolicy(key, e.target.checked)}
-            />
-          </label>
-        ))}
-        {isAndroid ? <div className="settings-action-row"><p>Always-on VPN and Block connections without VPN are Android settings. Blocking remains active until you change it in Android, including after disconnecting.</p><button className="secondary-button" onClick={() => void invoke("android_vpn_settings")}>Android VPN settings</button></div> : <StartupConnectionState model={model} />}
-        <p className="settings-note">
-          {isAndroid ? "Automatic reconnect is saved and applied immediately. Other connection preferences apply when you connect again." : "Saved per server on this device. Changes apply when you connect again."}
-          {" "}Opening another server does not change the active connection.
-        </p>
-        <details className="inline-disclosure">
-          <summary>How automatic selection and recovery work</summary>
-          <p>
-            Connect tries each available method once. {isAndroid && "An active session gets one handover attempt when its network changes. "}
-            After a failed attempt, only Automatic reconnect permits further
-            attempts. The kill switch remains independent throughout.
-          </p>
-        </details>
+        {policies.filter((key) => !isAndroid || key === "automatic_reconnect").map((key) => {
+          const label = t(`connection.options.policy.${key}.label`);
+          const androidReconnect = isAndroid && key === "automatic_reconnect";
+          return (
+            <Fragment key={key}>
+              <label className="preference-row">
+                <span>
+                  <strong>{label}{key === "automatic_reconnect" && reconnectInfoButton}</strong>
+                  <small>{androidReconnect ? t("connection.options.policy.automatic_reconnect.summaryAndroid") : t(`connection.options.policy.${key}.summary`)}</small>
+                </span>
+                <input
+                  type="checkbox"
+                  role="switch"
+                  aria-label={label}
+                  checked={connectionPolicy[key]}
+                  disabled={androidReconnect ? model.preferences.saving || !model.preferences.ready : disabled}
+                  onChange={(e) => androidReconnect
+                    ? void model.preferences.setReconnect(e.target.checked)
+                    : setConnectionPolicy(key, e.target.checked)}
+                />
+              </label>
+              {key === "automatic_reconnect" && reconnectInfoPanel}
+            </Fragment>
+          );
+        })}
+        {isAndroid ? <div className="settings-action-row"><p>{t("connection.options.android.summary")}</p><button className="secondary-button" onClick={() => void invoke("android_vpn_settings")}>{t("connection.options.android.open")}</button></div> : <StartupConnectionState model={model} />}
         {model.routingMode === "selected_routes" && (
-          <p className="settings-note">
-            Protection applies to selected routes and system DNS. Other
-            destinations continue to use your normal network.
-          </p>
+          <p className="settings-note">{t("connection.options.notes.selectedRoutes")}</p>
         )}
         {!isAndroid && model.routingMode === "selected_applications" && <p className="settings-note">{model.localStatus.application_routing_backend === "windows_bind_redirect"
-          ? "Windows application routing requires the kill switch on and local-network access off. Selected executables stay blocked outside the tunnel until Disconnect. System DNS uses the VPS."
-          : "Launched apps always lose internet access when the tunnel is unavailable. Other apps and system DNS use their usual network."}</p>}
+          ? t("connection.options.notes.windowsApps")
+          : t("connection.options.notes.launchedApps")}</p>}
       </section>
       <MtuSettings model={model} />
       <details className="metrics-details">
         <summary>
-          Current status <CaretDown className="disclosure-chevron" size={17} />
+          {t("connection.options.status.title")} <CaretDown className="disclosure-chevron" size={17} />
         </summary>
         <dl>
           <div>
-            <dt>Transport</dt>
+            <dt>{t("connection.options.status.method")}</dt>
             <dd>
               {current.active
                 ? formatTransport(model.localStatus.transport)
@@ -230,11 +170,11 @@ export function ConnectionOptions({ model }: { model: ServerWorkspaceModel }) {
             </dd>
           </div>
           <div>
-            <dt>Kill switch</dt>
+            <dt>{t("connection.options.status.killSwitch")}</dt>
             <dd>{current.protection}</dd>
           </div>
           <div>
-            <dt>Routing</dt>
+            <dt>{t("connection.options.status.routing")}</dt>
             <dd>{current.routing}</dd>
           </div>
         </dl>

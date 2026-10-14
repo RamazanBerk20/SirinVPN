@@ -3,6 +3,7 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { api } from "../api";
 import { useSshLogin } from "./useSshLogin";
 import type { SavedSshLogin } from "../types";
+import { t } from "../i18n";
 
 vi.mock("../api", () => ({
   api: { getSshLogin: vi.fn(), saveSshLogin: vi.fn(), forgetSshLogin: vi.fn() },
@@ -202,7 +203,7 @@ it("cancels preparation when the dialog closes while a login is being saved", as
   await load();
   act(() => result.current.setAuth("agent"));
   const pending = result.current.prepare(fingerprint);
-  const rejected = expect(pending).rejects.toThrow("cancelled");
+  const rejected = expect(pending).rejects.toThrow(t("ssh.error.cancelled"));
   rerender({ active: false });
   await act(async () => resolve(saved));
   await rejected;

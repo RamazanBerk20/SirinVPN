@@ -21,6 +21,7 @@ import { type RepairResult, type ServerProfile } from "../../types";
 import { SplitDnsFields, splitDnsDraftIsValid, withSplitDns } from "../dns/SplitDnsFields";
 import { InlineError } from "../../components/ui";
 import { errorMessage } from "../../lib/errors";
+import { t } from "../../i18n";
 import {
   type DnsPolicyChoice,
   type PrivateDnsRecordChoice,
@@ -136,7 +137,7 @@ export function RepairServerDialog({
         setStep("fingerprint");
       }
     } catch (reason) {
-      setError(errorMessage(reason, "The VPS could not be reached over SSH."));
+      setError(errorMessage(reason, t("vps.common.error.unreachable")));
     } finally {
       setBusy(false);
     }
@@ -179,10 +180,7 @@ export function RepairServerDialog({
       setConfirmed(false);
       setStep("details");
       setError(
-        errorMessage(
-          reason,
-          "Repair stopped safely. Server/device identities and the local secret were not intentionally changed; interrupted VPS changes are protected by rollback.",
-        ),
+        errorMessage(reason, intent === "dns" ? t("vps.repair.error.dns") : t("vps.repair.error.repair")),
       );
     } finally {
       setBusy(false);
@@ -195,20 +193,21 @@ export function RepairServerDialog({
         <Dialog.Overlay className="dialog-overlay" />
         <DialogContent className="dialog-content remove-server-dialog repair-server-dialog"
           heading={step === "repairing"
-              ? intent === "dns" ? "Applying DNS configuration" : "Repairing SirinVPN"
-              : step === "success" ? intent === "dns" ? "DNS configuration complete" : "Repair complete" : `${intent === "dns" ? "Configure DNS for" : "Repair"} ${profile.name}`}
+              ? intent === "dns" ? t("vps.repair.titleRunningDns") : t("vps.repair.titleRunning")
+              : step === "success" ? intent === "dns" ? t("vps.repair.titleDoneDns") : t("vps.repair.titleDone")
+              : intent === "dns" ? t("vps.repair.titleDns", { name: profile.name }) : t("vps.repair.title", { name: profile.name })}
           description={step === "success"
-            ? "Repair finished. Your server and device identities and existing access were preserved."
+            ? t("vps.repair.description.done")
             : step === "repairing"
-              ? "The VPS is being repaired and checked. Keep SirinVPN open until this finishes."
-              : intent === "dns" ? "Review the resolver, private records and split DNS changes for this VPS." : "Restore this VPS’s VPN software and settings while preserving server and device identities."}
+              ? t("vps.repair.description.running")
+              : intent === "dns" ? t("vps.repair.description.dns") : t("vps.repair.description.repair")}
           closeDisabled={busy || step === "repairing"}
-          footer={step === "repairing" ? <p role="status">This operation cannot be interrupted from this dialog.</p>
-            : step === "success" ? <button className="primary-button" type="button" onClick={() => { onOpenChange(false); onReturnHome?.(); }}>Return to Home</button>
+          footer={step === "repairing" ? <p role="status">{t("vps.common.keepOpen")}</p>
+            : step === "success" ? <button className="primary-button" type="button" onClick={() => { onOpenChange(false); onReturnHome?.(); }}>{t("vps.repair.action.home")}</button>
             : <>
-              <button className="secondary-button" type="button" disabled={busy} onClick={() => changeOpen(false)}>Cancel</button>
-              {step === "details" ? <button className="primary-button" type="submit" form={formId} disabled={!sshValid || busy}>{busy ? "Checking VPS…" : intent === "dns" ? "Review DNS changes" : "Repair VPS"}</button>
-                : <button className="primary-button" type="button" disabled={busy || !sshValid || step === "fingerprint" && !confirmed} onClick={() => { if (intent === "dns" && step === "fingerprint") setStep("review"); else void repair(); }}>{intent === "dns" ? step === "fingerprint" ? "Review DNS changes" : "Apply DNS configuration" : "Repair VPS"}</button>}
+              <button className="secondary-button" type="button" disabled={busy} onClick={() => changeOpen(false)}>{t("common.action.cancel")}</button>
+              {step === "details" ? <button className="primary-button" type="submit" form={formId} disabled={!sshValid || busy}>{busy ? t("vps.common.checking") : intent === "dns" ? t("vps.repair.action.review") : t("vps.repair.action.repair")}</button>
+                : <button className="primary-button" type="button" disabled={busy || !sshValid || step === "fingerprint" && !confirmed} onClick={() => { if (intent === "dns" && step === "fingerprint") setStep("review"); else void repair(); }}>{intent === "dns" ? step === "fingerprint" ? t("vps.repair.action.review") : t("vps.repair.action.apply") : t("vps.repair.action.repair")}</button>}
             </>}
         >
 
@@ -227,10 +226,9 @@ export function RepairServerDialog({
                   <code>{profile.endpoint.host}</code>
                 </div>
                 {!disconnected ? (
-                  <InlineError message="Disconnect every active SirinVPN tunnel before repairing this VPS." />
+                  <InlineError message={t("vps.common.disconnectFirst")} />
                 ) : null}
                 <SshLoginFields login={login} />
-                {intent === "dns" && <p>Review resolver mode, upstreams, private records and split DNS zones below. Unchanged choices preserve the existing DNS policy. This verified SSH operation also reinstalls bundled VPS software and restarts services; all devices using this VPS may briefly disconnect. Addresses and transport ports retain their current values.</p>}
                 {intent !== "dns" && <TransportSetupFields value={transport} onChange={setTransport} existing />}
                 <DnsPolicyFields
                   choice={dnsChoice}
@@ -247,10 +245,7 @@ export function RepairServerDialog({
                   onValueChange={setPrivateDnsRecords}
                 />
                 {dnsChoice !== "preserve" && <SplitDnsFields value={splitDns} onChange={setSplitDns} />}
-                <p className="settings-note">
-                  The VPN will be briefly unavailable while the server component
-                  is updated. Server and device identities are preserved.
-                </p>
+                {intent !== "dns" && <p className="settings-note">{t("vps.repair.note")}</p>}
                 {error ? <InlineError message={error} /> : null}
               </fieldset>
             </form>
@@ -262,33 +257,29 @@ export function RepairServerDialog({
                 className="back-button"
                 onClick={() => setStep("details")}
               >
-                Back
+                {t("common.action.back")}
               </button>
               <SshHostVerification
                 inspection={trust.inspection}
                 confirmed={confirmed}
                 onConfirmed={setConfirmed}
               />
-              {!disconnected && <InlineError message="Disconnect every active SirinVPN tunnel before repairing this VPS." />}
+              {!disconnected && <InlineError message={t("vps.common.disconnectFirst")} />}
             </div>
           ) : null}
 
           {step === "review" && <>
-            <button type="button" className="back-button" disabled={busy} onClick={() => setStep("details")}>Back to DNS settings</button>
-            <p>{profile.name} · SSH {profile.endpoint.host}:{port}</p>
+            <button type="button" className="back-button" disabled={busy} onClick={() => setStep("details")}>{t("common.action.back")}</button>
+            <p>{t("vps.repair.reviewTarget", { name: profile.name, host: profile.endpoint.host, port })}</p>
             <DnsChangeReview choice={dnsChoice} endpoints={dnsEndpoints} privateChoice={privateDnsChoice} records={privateDnsRecords} splitDns={splitDns} />
-            {!disconnected && <InlineError message="Disconnect every active SirinVPN tunnel before repairing this VPS." />}
+            {!disconnected && <InlineError message={t("vps.common.disconnectFirst")} />}
             {error && <InlineError message={error} />}
           </>}
 
           {step === "repairing" ? (
             <div className="uninstall-progress repair-progress">
               <ArrowClockwise className="spin" size={26} />
-              <strong>Repairing and verifying the VPS</strong>
-              <p>
-                The VPN will be briefly unavailable. SirinVPN is checking the
-                repaired configuration and service health before finishing.
-              </p>
+              <strong>{t("vps.repair.progress")}</strong>
             </div>
           ) : null}
 

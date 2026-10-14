@@ -8,7 +8,6 @@ import {
   CaretRight,
   Check,
   Key,
-  LockKey,
   ShieldCheck,
   TerminalWindow,
   Warning,
@@ -16,20 +15,20 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { api } from "../../api";
 import { privateDnsDraftIsValid, privateDnsRecordsFromDraft } from "../../dns";
-import { formatDnsPolicy, validateHost } from "../../format";
+import { validateHost } from "../../format";
 import { type NetworkPreflight, type ProvisionResult } from "../../types";
 import { ServerNetworkPreflight } from "../settings/ServerNetworkPreflight";
 import { Field, InlineError } from "../../components/ui";
 import { CopyButton } from "../../components/CopyButton";
 import { errorMessage } from "../../lib/errors";
 import { registerNavigationGuard } from "../../lib/navigationGuard";
+import { t } from "../../i18n";
 import {
   type DnsPolicyChoice,
   type DnsEndpointDraft,
   newDnsEndpointDrafts,
   dnsDraftIsValid,
   dnsUpstreamFromDraft,
-  privateDnsRecordSummary,
   PrivateDnsRecordFields,
   DnsPolicyFields,
 } from "../dns/DnsFields";
@@ -44,7 +43,7 @@ export function SetupFlow({
   const [step, setStep] = useState<
     "details" | "fingerprint" | "installing" | "success"
   >("details");
-  const [name, setName] = useState("My VPS");
+  const [name, setName] = useState(() => t("onboarding.setup.defaultName"));
   const [host, setHost] = useState("");
   const login = useSshLogin(host);
   const [busy, setBusy] = useState(false);
@@ -107,9 +106,7 @@ export function SetupFlow({
       setFingerprint(await api.probeHostKey(host.trim(), Number(login.port)));
       setStep("fingerprint");
     } catch {
-      setError(
-        "The VPS could not be reached over SSH. Check the address, port, and network.",
-      );
+      setError(t("onboarding.setup.error.unreachable"));
     } finally {
       setBusy(false);
     }
@@ -126,16 +123,18 @@ export function SetupFlow({
         transport: transportSetupFromDraft(transport),
       }));
     } catch (reason) {
-      setError(errorMessage(reason, "The network inspection could not be completed."));
+      setError(errorMessage(reason, t("onboarding.setup.error.network")));
     } finally { setBusy(false); }
   };
 
   const provision = async () => {
     if (
       replaceExistingInstallation &&
-      !await confirmAction(
-        "Replace the existing SirinVPN installation? All current SirinVPN devices, invitations, and recovery material for this VPS will be revoked. Other VPS services are preserved.",
-      )
+      !await confirmAction({
+        title: t("onboarding.setup.confirmReplace.title"),
+        message: t("onboarding.setup.confirmReplace.message"),
+        confirm: t("onboarding.setup.confirmReplace.confirm"),
+      })
     )
       return;
     setStep("installing");
@@ -164,12 +163,7 @@ export function SetupFlow({
     } catch (reason) {
       login.clearSecrets();
       setStep("details");
-      setError(
-        errorMessage(
-          reason,
-          "Installation stopped safely. Existing networking was preserved; correct the issue and retry.",
-        ),
-      );
+      setError(errorMessage(reason, t("onboarding.setup.error.install")));
     }
   };
 
@@ -179,15 +173,11 @@ export function SetupFlow({
         <div className="install-orbit">
           <ShieldCheck size={32} weight="duotone" />
         </div>
-        <h2>Securing your VPS</h2>
-        <p>
-          Compatibility, identity, networking, private DNS, and SSH safety are
-          being verified as one transaction.
-        </p>
+        <h2>{t("onboarding.setup.installing.title")}</h2>
         <div
           className="install-track"
           role="progressbar"
-          aria-label="Installation is in progress"
+          aria-label={t("onboarding.setup.installing.progress")}
         >
           <span className="active" />
           <span />
@@ -195,7 +185,7 @@ export function SetupFlow({
           <span />
           <span />
         </div>
-        <small>Do not close the app while the rollback guard is active.</small>
+        <small>{t("onboarding.setup.installing.keepOpen")}</small>
       </div>
     );
   }
@@ -206,13 +196,8 @@ export function SetupFlow({
         <span className="success-icon">
           <Check size={28} weight="bold" />
         </span>
-        <h2>Your VPN is ready.</h2>
-        <p>
-          {result.profile.name} was added locally with{" "}
-          {formatDnsPolicy(result.dns_upstream).toLowerCase()} and{" "}
-          {privateDnsRecordSummary(result.private_dns_records.length)}. The
-          private owner identity remains only on this device.
-        </p>
+        <h2>{t("onboarding.setup.success.title")}</h2>
+        <p>{t("onboarding.setup.success.summary", { name: result.profile.name })}</p>
         {result.network_preflight && <ServerNetworkPreflight report={result.network_preflight} />}
         <button
           className="primary-button"
@@ -221,7 +206,7 @@ export function SetupFlow({
             void onComplete(result);
           }}
         >
-          Open server
+          {t("onboarding.setup.success.open")}
         </button>
       </div>
     );
@@ -231,45 +216,36 @@ export function SetupFlow({
     return (
       <div className="fingerprint-step">
         <button className="back-button" onClick={() => setStep("details")}>
-          Back
+          {t("common.action.back")}
         </button>
         <div className="fingerprint-heading">
           <Key size={28} weight="duotone" aria-hidden="true" />
-          <h2>Verify this VPS</h2>
+          <h2>{t("onboarding.setup.fingerprint.title")}</h2>
         </div>
-        <p>
-          Check this fingerprint using your hosting provider’s browser console.
-        </p>
+        <p>{t("onboarding.setup.fingerprint.summary")}</p>
         <div className="fingerprint-value">
           <code>{fingerprint}</code>
-          <CopyButton value={fingerprint} label="Copy fingerprint" />
+          <CopyButton value={fingerprint} label={t("onboarding.setup.fingerprint.copy")} />
         </div>
         {!preflight && <SshVerificationGuide confirmation="button" />}
         <div className="warning-note">
           <Warning size={18} weight="fill" />
-          <span>
-            A mismatch can mean the server was replaced or the connection is
-            being intercepted.
-          </span>
+          <span>{t("onboarding.setup.fingerprint.mismatch")}</span>
         </div>
         {replaceExistingInstallation ? (
           <div className="warning-note replacement-warning">
             <Warning size={18} weight="fill" />
-            <span>
-              This rotates the SirinVPN owner and server identity. Existing
-              SirinVPN devices and invitations will stop working; unrelated VPS
-              services remain intact.
-            </span>
+            <span>{t("onboarding.setup.fingerprint.replaceWarning")}</span>
           </div>
         ) : null}
         {preflight && <ServerNetworkPreflight report={preflight} />}
         {error && <InlineError message={error} />}
         <div className="fingerprint-actions">
           <button className={preflight ? "secondary-button" : "primary-button"} disabled={busy} onClick={() => void inspectNetwork()}>
-            {busy ? "Inspecting VPS network…" : preflight ? "Check network again" : "Fingerprint matches — inspect network"}
+            {busy ? t("onboarding.setup.fingerprint.checking") : preflight ? t("onboarding.setup.fingerprint.checkAgain") : t("onboarding.setup.fingerprint.matches")}
           </button>
           {preflight && <button className="primary-button" disabled={busy || preflight.issues.some((issue) => issue.blocking)} onClick={() => void provision()}>
-            {replaceExistingInstallation ? "Replace SirinVPN" : "Install SirinVPN"}
+            {replaceExistingInstallation ? t("onboarding.setup.fingerprint.replace") : t("onboarding.setup.fingerprint.install")}
           </button>}
         </div>
       </div>
@@ -289,14 +265,12 @@ export function SetupFlow({
           <TerminalWindow size={20} />
         </span>
         <div>
-          <h2>Connect your server</h2>
-          <p>
-            {login.usingSaved ? "This login is already saved in this device’s secure credential store. Its in-memory session copy is discarded after use." : login.remember ? "After successful SSH authentication, Remember login saves these credentials in this device’s secure credential store for future VPS actions." : "Credentials are used in memory for this SSH session, then discarded."}
-          </p>
+          <h2>{t("onboarding.setup.title")}</h2>
+          <p>{t("onboarding.setup.summary")}</p>
         </div>
       </div>
       <div className="field-grid">
-        <Field label="Server name" hint="Only stored on this device">
+        <Field label={t("onboarding.setup.name")} hint={t("onboarding.setup.nameHint")}>
           <input
             value={name}
             onChange={(event) => setName(event.target.value)}
@@ -304,7 +278,7 @@ export function SetupFlow({
           />
         </Field>
       </div>
-      <Field label="IP address or hostname">
+      <Field label={t("onboarding.setup.host")}>
         <input
           disabled={busy}
           value={host}
@@ -318,7 +292,7 @@ export function SetupFlow({
         <SshLoginFields login={login} />
       </fieldset>
       <details className="setup-advanced">
-        <summary>Advanced server configuration</summary>
+        <summary>{t("onboarding.setup.advanced")}</summary>
         <div className="setup-advanced-content">
           <TransportSetupFields value={transport} onChange={setTransport} />
           <DnsPolicyFields
@@ -348,11 +322,8 @@ export function SetupFlow({
               }
             />
             <span>
-              <strong>Replace existing SirinVPN installation</strong>
-              <small>
-                Use only when SSH access is valid but every Owner device or
-                recovery backup is gone.
-              </small>
+              <strong>{t("onboarding.setup.replace.title")}</strong>
+              <small>{t("onboarding.setup.replace.summary")}</small>
             </span>
           </label>
         </div>
@@ -363,13 +334,9 @@ export function SetupFlow({
         type="submit"
         disabled={!valid || busy}
       >
-        {busy ? "Checking VPS…" : "Verify VPS"}{" "}
+        {busy ? t("onboarding.setup.verifying") : t("onboarding.setup.verify")}{" "}
         <CaretRight size={17} weight="bold" />
       </button>
-      <p className="form-footnote">
-        <LockKey size={15} /> Direct connection. No SirinVPN service is
-        involved.
-      </p>
     </form>
   );
 }

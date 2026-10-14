@@ -1,0 +1,217 @@
+{
+  "consoleLabel": "VPN connection",
+  "status": {
+    "unknown": "Status unknown",
+    "restoringAccess": "Restoring server access",
+    "monitorUnavailable": "VPN monitor not responding",
+    "reconnecting": "Reconnecting",
+    "connected": "Connected",
+    "connecting": "Connecting",
+    "interrupted": "Connection interrupted",
+    "disconnected": "Disconnected",
+    "changing": "Changing connection…",
+    "connectedTo": "Connected to {{name}}"
+  },
+  "action": {
+    "refresh": "Refresh status",
+    "disconnectAndUnblock": "Disconnect and turn off kill switch block",
+    "disconnect": "Disconnect",
+    "connect": "Connect",
+    "changing": "Changing connection",
+    "wait": "Please wait…",
+    "vpnSettings": "VPN settings",
+    "androidVpnSettings": "Android VPN settings",
+    "cancelConnection": "Cancel",
+    "reconnect": "Reconnect",
+    "reconnectHint": "Resume with the current settings",
+    "stop": "Stop VPN"
+  },
+  "routing": {
+    "unknown": "Unknown",
+    "inactive": "Not active",
+    "selectedApps": "Selected apps",
+    "selectedRoutes": "Selected routes",
+    "fullTunnelLan": "Full tunnel · LAN allowed",
+    "fullTunnel": "Full tunnel"
+  },
+  "killSwitch": {
+    "unknown": "Unknown",
+    "otherServer": "See active server",
+    "nextConnection": "On for next connection",
+    "off": "Off",
+    "inactive": "Not active",
+    "armed": "On",
+    "blocking": "Blocking traffic",
+    "failed": "Not working",
+    "unverified": "On · not verified"
+  },
+  "isolation": {
+    "verified": "Verified",
+    "unverified": "Not verified"
+  },
+  "summary": {
+    "unknown": "Couldn’t read the VPN status. Refresh to check.",
+    "restoringAccess": "Don’t rely on this connection until server access is restored.",
+    "monitorUnavailable": "The VPN monitor isn’t responding, so kill switch status is unknown.",
+    "otherServer": "Another server is connected. Open it to disconnect.",
+    "androidApps": "Only the selected apps use the VPN.",
+    "windowsApps": "Selected apps use the VPN. System DNS goes through the server.",
+    "launchedApps": "Apps launched from SirinVPN use the VPN.",
+    "selectedRoutes": "Selected networks use the VPN. Everything else doesn’t.",
+    "fullTunnelLan": "Internet traffic uses the VPN. Local network traffic doesn’t.",
+    "fullTunnel": "All internet traffic goes through the VPN.",
+    "waitingAndroidLockdown": "Android blocks traffic until you reconnect.",
+    "waitingBlocked": "Traffic is blocked. Reconnect, or disconnect to unblock.",
+    "waiting": "Automatic reconnect is off. Reconnect when you’re ready.",
+    "reconnecting": "Trying to restore the connection.",
+    "connecting": "Setting up a secure connection.",
+    "disconnected": "Your traffic isn’t using the VPN."
+  },
+  "warning": {
+    "accessContained": "Server access is being restored. VPN traffic is held until it finishes.",
+    "accessUnenforced": "Server access checks aren’t working. Don’t rely on this server until they’re restored.",
+    "androidLockdown": "Android’s “Block connections without VPN” stays on after you disconnect.",
+    "killSwitchFailed": "The kill switch couldn’t be verified. Don’t rely on it until this is fixed.",
+    "androidAppsUnverified": "Couldn’t verify app routing. Check the connection before relying on it.",
+    "appsUnverified": "Couldn’t verify app routing. New app launches are off.",
+    "dnsDown": "The server’s DNS isn’t responding. Run diagnostics.",
+    "ipv6": "Couldn’t route or block IPv6. Check the connection."
+  },
+  "consequence": {
+    "android": "Android’s VPN settings control traffic blocking.",
+    "desktop": "Disconnecting also lifts the kill switch block and stops auto-reconnect."
+  },
+  "componentUpdate": {
+    "needed": "Update the VPN component to connect.",
+    "review": "Review update"
+  },
+  "health": {
+    "idle": "No recent handshake. The connection may just be idle.",
+    "managementUnavailable": "Server management is unavailable.",
+    "reachability": {
+      "notChecked": "Not checked",
+      "replied": "Responding",
+      "noReply": "No reply"
+    }
+  },
+  "protection": {
+    "ipv6NotVerified": "IPv6 not verified",
+    "ipv6": {
+      "tunneled": "Through VPN",
+      "blocked": "Blocked",
+      "unknown": "Unknown",
+      "blockedLanAllowed": "Blocked · LAN allowed",
+      "blockedVerified": "Blocked · verified",
+      "selectedRoutes": "Selected routes only",
+      "blockedUnverified": "Blocked · not verified",
+      "bypassesOutsideRoutes": "Bypasses VPN outside selected routes",
+      "unverified": "Not verified"
+    },
+    "android": {
+      "unverified": "Couldn’t verify Android’s routing or blocking.",
+      "packages": "Selected apps use the VPN and its DNS. Other apps bypass it unless Android blocks them.",
+      "lockdown": "Android’s “Block connections without VPN” is on for all apps."
+    },
+    "apps": {
+      "ipv6Unverified": "App routing not verified",
+      "ipv6Tunneled": "Launched apps: through VPN",
+      "ipv6Blocked": "Launched apps: blocked",
+      "notReady": "App routing isn’t ready. New launches are off.",
+      "windows": "Selected apps use the VPN for IPv4; their IPv6 is blocked. DNS uses the server.",
+      "launched": "Launched apps and their DNS use the VPN. Other apps use your normal network."
+    },
+    "firewall": {
+      "verifiedSelectedRoutes": "Firewall verified for selected routes and DNS.",
+      "verifiedLanAllowed": "Firewall verified for IPv4, IPv6 and DNS. LAN allowed.",
+      "verified": "Firewall verified for IPv4, IPv6 and DNS.",
+      "unverified": "Couldn’t verify the firewall."
+    }
+  },
+  "details": {
+    "connection": "Connection",
+    "status": "Status",
+    "method": "Method",
+    "routing": "Routing",
+    "killSwitch": "Kill switch",
+    "appIsolation": "App isolation",
+    "reachability": "Server reachable",
+    "reachabilityLine": "Server reachable: {{state}}.",
+    "serverResponse": "Server response",
+    "serverResponseInfo": "How long the server takes to answer a status request. It isn’t VPN latency.",
+    "addresses": "Addresses",
+    "serverAddress": "Server address",
+    "vpnAddress": "VPN address",
+    "thisDevice": "This device",
+    "mtu": "Packet size (MTU)"
+  },
+  "traffic": {
+    "label": "This device’s traffic",
+    "session": "Current session",
+    "countersUnavailable": "Counters unavailable",
+    "notConnected": "Not connected to this server",
+    "download": "Download",
+    "upload": "Upload",
+    "duration": "Connected for",
+    "measuring": "Measuring…",
+    "received": "{{amount}} received",
+    "sent": "{{amount}} sent",
+    "counterFailed": "Couldn’t read counters",
+    "needsUpdate": "Needs a VPN component update",
+    "durationFailed": "Couldn’t read session time",
+    "updateNeeded": "Live rates need a VPN component update."
+  },
+  "device": {
+    "summary": "Device details",
+    "receivedPackets": "Packets received",
+    "sentPackets": "Packets sent",
+    "latency": "Latency",
+    "latencyInfo": "Average round trip to the server through the VPN. It isn’t internet speed.",
+    "noMeasurement": "Not measured yet",
+    "probes": "Probe replies",
+    "probesValue": "{{received}} of {{sent}} · {{jitter}} jitter",
+    "ipv6": "IPv6",
+    "autoReconnect": "Auto-reconnect",
+    "fallback": "Fallback methods",
+    "countersNote": "Counters reset when you reconnect. No history is kept."
+  },
+  "server": {
+    "title": "Server",
+    "freshness": {
+      "unavailable": "Unavailable",
+      "live": "Live",
+      "polling": "Updating",
+      "connecting": "Connecting…",
+      "reconnecting": "Reconnecting…"
+    },
+    "unavailable": "Server stats are unavailable. They’ll return automatically.",
+    "connectToSee": "Connect to see server stats.",
+    "pollingNote": "Update the server software for live stats.",
+    "noMeasurement": "Not measured",
+    "usedOf": "{{used}} of {{total}}",
+    "cpu": "CPU",
+    "memory": "Memory",
+    "storage": "Storage",
+    "uptime": "Uptime",
+    "devices": "Devices",
+    "devicesActive": "{{active}} / {{total}}",
+    "devicesActiveDetail": "Active / total",
+    "devicesAuthorized_one": "{{count}} device",
+    "devicesAuthorized_other": "{{count}} devices",
+    "activityUnavailable": "Activity unavailable",
+    "activityUnreadable": "Couldn’t read device activity from the server.",
+    "activityUnsupported": "This server can’t report device activity. Update it to turn this on.",
+    "reviewHealth": "Check server health",
+    "reviewUpdate": "Review update",
+    "detailsSummary": "Server details",
+    "inbound": "Inbound",
+    "outbound": "Outbound",
+    "received": "Received",
+    "sent": "Sent",
+    "receivedPackets": "Packets received",
+    "sentPackets": "Packets sent",
+    "dns": "DNS",
+    "dnsRunning": "Running",
+    "dnsDown": "Not responding",
+    "totalsInfo": "Totals cover all devices since the server’s VPN started."
+  }
+}

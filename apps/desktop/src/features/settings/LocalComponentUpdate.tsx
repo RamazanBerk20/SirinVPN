@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { api } from "../../api";
 import { InlineError } from "../../components/ui";
 import { errorMessage } from "../../lib/errors";
+import { useInfoHint } from "../../components/InfoHint";
+import { t } from "../../i18n";
 
 export function LocalComponentUpdate({
   open,
@@ -23,6 +25,7 @@ export function LocalComponentUpdate({
   const [installing, setInstalling] = useState(false);
   const [error, setError] = useState("");
   const [updated, setUpdated] = useState(false);
+  const [bundledHint, bundledPanel] = useInfoHint(t("release.component.bundledInfo"), t("release.component.bundledInfoLabel"));
   useEffect(() => {
     if (!open) return;
     let active = true;
@@ -30,7 +33,7 @@ export function LocalComponentUpdate({
     api.localComponentUpdateStatus().then((value) => {
       if (active) setStatus(value);
     }).catch((reason) => {
-      if (active) setError(errorMessage(reason, "The local VPN component could not be checked."));
+      if (active) setError(errorMessage(reason, t("release.component.errorCheck")));
     }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [open]);
@@ -43,7 +46,7 @@ export function LocalComponentUpdate({
       setUpdated(true);
       await onUpdated();
     } catch (reason) {
-      setError(errorMessage(reason, "The local VPN component was not updated. Complete the administrator prompt and try again."));
+      setError(errorMessage(reason, t("release.component.errorInstall")));
     } finally { setInstalling(false); }
   }
   return (
@@ -51,46 +54,27 @@ export function LocalComponentUpdate({
       <Dialog.Portal>
         <Dialog.Overlay className="dialog-overlay" />
         <DialogContent className="dialog-content"
-          heading={<>Update the local VPN component</>}
-          description={<>Update this computer's VPN component to support the app's current
-            connection controls and session measurements.</>}
-          closeDisabled={installing} closeLabel="Close component update">
-          {loading && <p className="settings-note" role="status">Checking the bundled VPN component…</p>}
+          heading={t("release.component.title")}
+          description={t("release.component.description")}
+          closeDisabled={installing} closeLabel={t("release.component.close")}>
+          {loading && <p className="settings-note" role="status">{t("release.component.checking")}</p>}
           {status?.install_available ? <>
-            <p className="settings-note">
-              This app already includes the matching VPN component. Install it on
-              this computer using the normal administrator prompt.
-            </p>
-            <p className="settings-note">
-              Updating VPS software or replacing an AppImage does not update the
-              system component. This step uses the files bundled with this app.
-            </p>
-            {!status.update_required && <p role="status">{updated ? "The local VPN component is updated. You can connect from Home." : "The local VPN component is already current."}</p>}
+            <p className="settings-note">{t("release.component.bundled")}{bundledHint}</p>
+            {bundledPanel}
+            {!status.update_required && <p role="status">{updated ? t("release.component.updated") : t("release.component.current")}</p>}
             {status.update_required && <>
-              {!disconnected && <p className="settings-note">Disconnect and release VPN protection before updating this component.</p>}
+              {!disconnected && <p className="settings-note">{t("release.component.disconnectFirst")}</p>}
               <button className="primary-button" disabled={installing || !disconnected} onClick={() => void install()}>
-                {installing ? "Waiting for administrator approval…" : "Update local VPN component"}
+                {installing ? t("release.component.waiting") : t("release.component.update")}
               </button>
             </>}
           </> : status && <>
           <ol className="maintenance-plan">
-            <li>
-              Install the current SirinVPN package for this computer, which includes its
-              VPN service, or review an authenticated app update below.
-            </li>
-            <li>
-              Review the update screen's connection requirements before
-              approving installation.
-            </li>
-            <li>
-              Reopen SirinVPN and connect again. Supported tray controls become
-              available after the component update; live rates need two readings.
-            </li>
+            <li>{t("release.component.stepInstall")}</li>
+            <li>{t("release.component.stepApprove")}</li>
+            <li>{t("release.component.stepReconnect")}</li>
           </ol>
-          <p className="settings-note">
-            Updating VPS software does not update the helper on this computer.
-            The app update screen requires a release source you trust.
-          </p>
+          <p className="settings-note">{t("release.component.serverNote")}</p>
           <button
             className="primary-button"
             onClick={() => {
@@ -98,7 +82,7 @@ export function LocalComponentUpdate({
               onCheckUpdates();
             }}
           >
-            Review app update
+            {t("release.component.openUpdates")}
           </button>
           </>}
           <InlineError message={error} />

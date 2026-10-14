@@ -1,3 +1,4 @@
+import { t } from "../i18n";
 import { Copy, Check } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
 export function CopyValue({
@@ -12,7 +13,7 @@ export function CopyValue({
   showCopyLabel?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const [feedback, setFeedback] = useState("");
+  const [feedback, setFeedback] = useState<"" | "copied" | "failed">("");
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   useEffect(() => () => clearTimeout(timer.current), []);
   return (
@@ -25,20 +26,20 @@ export function CopyValue({
       <button
         type="button"
         className={showCopyLabel ? "text-button copy-value-button" : "icon-button"}
-        aria-label={`Copy ${label}`}
+        aria-label={t("app.copy.label", { label })}
         onClick={() => {
           void navigator.clipboard
             .writeText(value)
             .then(() => {
-              setFeedback("Copied");
+              setFeedback("copied");
               clearTimeout(timer.current);
               timer.current = setTimeout(() => setFeedback(""), 2000);
             })
-            .catch(() => setFeedback("Copy failed"));
+            .catch(() => setFeedback("failed"));
         }}
       >
-        {feedback === "Copied" ? <Check size={17} /> : <Copy size={17} />}
-        {showCopyLabel && "Copy"}
+        {feedback === "copied" ? <Check size={17} /> : <Copy size={17} />}
+        {showCopyLabel && t("common.action.copy")}
       </button>
       {shorten && (
         <button
@@ -47,11 +48,11 @@ export function CopyValue({
           onClick={() => setExpanded(!expanded)}
           aria-expanded={expanded}
         >
-          {expanded ? "Shorten" : "Show full"}
+          {expanded ? t("app.copy.showLess") : t("app.copy.showAll")}
         </button>
       )}
       <span className="copy-feedback" role="status">
-        {feedback}
+        {feedback === "copied" ? t("common.action.copied") : feedback === "failed" ? t("app.copy.failed") : ""}
       </span>
     </span>
   );

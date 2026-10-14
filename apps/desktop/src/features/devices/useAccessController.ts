@@ -15,6 +15,8 @@ import type {
   ServerProfile,
 } from "../../types";
 import { errorMessage } from "../../lib/errors";
+import { t } from "../../i18n";
+import type { Confirmation } from "../../lib/confirmAction";
 import { useMemberLifecycle } from "./useMemberLifecycle";
 import { cachedMembership, invalidateMembership, readMembership, retainMembership, withoutLiveActivity } from "./membershipCache";
 export interface AccessProps {
@@ -61,7 +63,17 @@ export function useAccessController({
     ? (membershipFailure?.key === cacheKey ? membershipFailure.message : null)
       ?? (configurationFailure?.key === cacheKey ? configurationFailure.message : null)
     : null;
-  const [error, setError] = useState<string | null>(null);
+  // A failure may belong under the public port field. Server messages are matched by
+  // content; failures raised here are flagged where they happen.
+  const [failure, setFailure] = useState<{ message: string; publicPort: boolean } | null>(null);
+  const error = failure?.message ?? null;
+  const publicPortError = failure?.publicPort ? failure.message : null;
+  const setError = (message: string | null, publicPort = false) =>
+    setFailure(message === null ? null : { message, publicPort });
+  const setPortError = (reason: unknown, fallback: string) => {
+    const server = errorMessage(reason, "");
+    setError(server || fallback, !server || /reserved|public.*port/i.test(server));
+  };
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteTarget, setInviteTarget] = useState<MemberSummary | null>(null);
   const [accessBusy, setAccessBusy] = useState<string | null>(null);
@@ -127,7 +139,7 @@ export function useAccessController({
       if (generation !== request.current) return;
       setMemberLifecycleAvailable(null); setPortForwardingAvailable(null);
       setScopedInvitationsAvailable(false); setInvitationNaming(null);
-      setConfigurationFailure({ key: cacheKey, message: errorMessage(reason, "Server capabilities could not be refreshed.") });
+      setConfigurationFailure({ key: cacheKey, message: errorMessage(reason, t("devices.error.features")) });
     });
     const membership = readMembership(cacheKey, () => api.membership(profile.id)).then(nextSnapshot => {
       if (generation !== request.current || startedRevision !== revision.current) return;
@@ -139,7 +151,7 @@ export function useAccessController({
       if (generation !== request.current || startedRevision !== revision.current) return;
       setVerifiedKey(null);
       setSnapshot(current => current && withoutLiveActivity(current));
-      setMembershipFailure({ key: cacheKey, message: errorMessage(reason, "Current access could not be read from the VPS.") });
+      setMembershipFailure({ key: cacheKey, message: errorMessage(reason, t("devices.error.load")) });
     }).finally(() => {
       if (generation === request.current) setLoading(false);
     });
@@ -169,34 +181,36 @@ export function useAccessController({
 
   const rename = async (deviceId: string, currentName: string) => {
     if (!verified) return;
-    const name = window.prompt("Device name", currentName)?.trim();
+    const name = window.prompt(t("devices.rename.prompt"), currentName)?.trim();
     if (!name || name === currentName) return;
     setError(null);
     try {
       updateSnapshot(await api.renameDevice(profile.id, deviceId, name));
     } catch (reason) {
-      setError(errorMessage(reason, "The device could not be renamed."));
+      setError(errorMessage(reason, t("devices.error.rename")));
     }
   };
 
-  const confirmCurrentAction = async (message: string) => {
+  const confirmCurrentAction = async (confirmation: Confirmation) => {
     if (!verified) return false;
     const generation = actionScope.current;
-    return await confirmAction(message) && generation === actionScope.current;
+    return await confirmAction(confirmation) && generation === actionScope.current;
   };
 
   const revoke = async (deviceId: string, deviceName: string) => {
     if (
-      !await confirmCurrentAction(
-        `Revoke ${deviceName}? Its VPN and management access will stop immediately.`,
-      )
+      !await confirmCurrentAction({
+        title: t("devices.confirm.revoke.title", { name: deviceName }),
+        message: t("devices.confirm.revoke.message"),
+        confirm: t("devices.confirm.revoke.action"),
+      })
     )
       return;
     setError(null);
     try {
       updateSnapshot(await api.revokeDevice(profile.id, deviceId));
     } catch (reason) {
-      setError(errorMessage(reason, "The device could not be revoked."));
+      setError(errorMessage(reason, t("devices.error.revoke")));
     }
   };
 
@@ -206,10 +220,18 @@ export function useAccessController({
     currentlyEnabled: boolean,
   ) => {
     const enabled = !currentlyEnabled;
-    const prompt = enabled
-      ? `Allow ${deviceName} to communicate directly with other explicitly allowed VPN devices? Both devices must have peer access enabled.`
-      : `Return ${deviceName} to internet-only isolation? Existing direct connections to other VPN devices will stop.`;
-    if (!await confirmCurrentAction(prompt)) return;
+    const confirmation = enabled
+      ? {
+          title: t("devices.confirm.allowMutual.title", { name: deviceName }),
+          message: t("devices.confirm.allowMutual.message"),
+          confirm: t("devices.confirm.allowMutual.action"),
+        }
+      : {
+          title: t("devices.confirm.isolate.title", { name: deviceName }),
+          message: t("devices.confirm.isolate.message"),
+          confirm: t("devices.confirm.isolate.action"),
+        };
+    if (!await confirmCurrentAction(confirmation)) return;
     setPeerBusy(deviceId);
     setError(null);
     try {
@@ -217,9 +239,7 @@ export function useAccessController({
         await api.updateDevicePeerCommunication(profile.id, deviceId, enabled),
       );
     } catch (reason) {
-      setError(
-        errorMessage(reason, "Peer communication could not be changed."),
-      );
+      setError(errorMessage(reason, t("devices.error.mutualAccess")));
     } finally {
       setPeerBusy(null);
     }
@@ -248,14 +268,20 @@ export function useAccessController({
       devicePort < 1 ||
       devicePort > 65535
     ) {
-      setError(
-        "Choose a device, a public port from 1024 to 65535, and a device port from 1 to 65535.",
-      );
+      setError(t("devices.error.portsInvalid"), true);
       return;
     }
-    const confirmed = await confirmCurrentAction(
-      `Expose public ${forwardProtocol.toUpperCase()} port ${publicPort} on this VPS and forward it to ${target.member.name} / ${target.device.name} on port ${devicePort}? Anyone on the internet can attempt to reach that service.`,
-    );
+    const confirmed = await confirmCurrentAction({
+      title: t("devices.confirm.openPort.title", { publicPort }),
+      message: t("devices.confirm.openPort.message", {
+        protocol: forwardProtocol.toUpperCase(),
+        publicPort,
+        member: target.member.name,
+        device: target.device.name,
+        devicePort,
+      }),
+      confirm: t("devices.confirm.openPort.action"),
+    });
     if (!confirmed) return;
     setForwardBusy("create");
     setError(null);
@@ -272,7 +298,7 @@ export function useAccessController({
       setForwardPublicPort("");
       setForwardDevicePort("");
     } catch (reason) {
-      setError(errorMessage(reason, "The public port could not be forwarded."));
+      setPortError(reason, t("devices.error.openPort"));
     } finally {
       setForwardBusy(null);
     }
@@ -283,9 +309,11 @@ export function useAccessController({
     publicPort: number,
   ) => {
     if (
-      !await confirmCurrentAction(
-        `Close public ${protocol.toUpperCase()} port ${publicPort} immediately?`,
-      )
+      !await confirmCurrentAction({
+        title: t("devices.confirm.closePort.title", { protocol: protocol.toUpperCase(), publicPort }),
+        message: t("devices.confirm.closePort.message"),
+        confirm: t("devices.confirm.closePort.action"),
+      })
     )
       return;
     const key = `${protocol}:${publicPort}`;
@@ -296,7 +324,7 @@ export function useAccessController({
         await api.removePortForward(profile.id, protocol, publicPort),
       );
     } catch (reason) {
-      setError(errorMessage(reason, "The public port could not be closed."));
+      setPortError(reason, t("devices.error.closePort"));
     } finally {
       setForwardBusy(null);
     }
@@ -309,16 +337,24 @@ export function useAccessController({
       await api.cancelInvitation(profile.id, invitationId);
       await refreshAfterChange();
     } catch (reason) {
-      setError(errorMessage(reason, "The invitation could not be cancelled."));
+      setError(errorMessage(reason, t("devices.error.cancelInvitation")));
     }
   };
 
   const updateAccess = async (member: MemberSummary) => {
     const administrator = !Boolean(member.administrator);
-    const prompt = administrator
-      ? `Make ${member.name} an Admin? Admins can invite Members and manage ordinary Member devices.`
-      : `Remove Admin access from ${member.name}? Their VPN devices will remain authorized.`;
-    if (!await confirmCurrentAction(prompt)) return;
+    const confirmation = administrator
+      ? {
+          title: t("devices.confirm.makeAdmin.title", { name: member.name }),
+          message: t("devices.confirm.makeAdmin.message"),
+          confirm: t("devices.confirm.makeAdmin.action"),
+        }
+      : {
+          title: t("devices.confirm.removeAdmin.title", { name: member.name }),
+          message: t("devices.confirm.removeAdmin.message"),
+          confirm: t("devices.confirm.removeAdmin.action"),
+        };
+    if (!await confirmCurrentAction(confirmation)) return;
     setAccessBusy(member.id);
     setError(null);
     try {
@@ -326,9 +362,7 @@ export function useAccessController({
         await api.updateMemberAccess(profile.id, member.id, administrator),
       );
     } catch (reason) {
-      setError(
-        errorMessage(reason, "The member access level could not be changed."),
-      );
+      setError(errorMessage(reason, t("devices.error.role")));
     } finally {
       setAccessBusy(null);
     }
@@ -340,9 +374,11 @@ export function useAccessController({
     const fingerprint = destination.identity_fingerprint
       ? destination.identity_fingerprint
       : destination.id;
-    const confirmed = await confirmCurrentAction(
-      `Transfer ownership to ${member.name} through ${destination.name} (identity ${fingerprint})? ${member.name}'s devices will become Owner devices. This device will become an Admin and only the new Owner can transfer ownership again.`,
-    );
+    const confirmed = await confirmCurrentAction({
+      title: t("devices.confirm.transfer.title", { name: member.name }),
+      message: t("devices.confirm.transfer.message", { device: destination.name, fingerprint }),
+      confirm: t("devices.confirm.transfer.action"),
+    });
     if (!confirmed) return;
     setAccessBusy(member.id);
     setError(null);
@@ -350,7 +386,7 @@ export function useAccessController({
       updateSnapshot(await api.transferOwnership(profile.id, destination.id));
       await onAccessChanged();
     } catch (reason) {
-      setError(errorMessage(reason, "Ownership could not be transferred."));
+      setError(errorMessage(reason, t("devices.error.transfer")));
     } finally {
       setAccessBusy(null);
     }
@@ -374,6 +410,7 @@ export function useAccessController({
     loading,
     loadError,
     error,
+    publicPortError,
     inviteOpen,
     inviteTarget,
     accessBusy,

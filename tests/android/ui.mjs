@@ -28,7 +28,7 @@ try {
   await click('Home','.bottom-navigation button');
   await click('Settings','.bottom-navigation button');
   await click('General','button[role=tab]');
-  assert(await evaluate(`document.body.innerText.includes('Android VPN controls')&&!document.body.innerText.includes('Startup & window')&&!document.body.innerText.includes('Local VPN component')`));
+  assert(await evaluate(`document.body.innerText.includes('VPN controls')&&!document.body.innerText.includes('Startup & window')&&!document.body.innerText.includes('Local VPN component')`));
   if(Number(adb('shell','getprop','ro.build.version.sdk'))<33) {
     await click('Add Quick Settings tile');
     assert(await evaluate(`document.body.innerText.includes('Open Quick Settings, tap Edit')`));

@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { SettingsLayout } from "./SettingsLayout";
 import { registerNavigationGuard } from "../../lib/navigationGuard";
+import { t } from "../../i18n";
 
 const scrollBy = vi.hoisted(() => vi.fn());
 vi.mock("../../lib/scrolling", () => ({ pageScrollPort: () => ({ scrollBy }) }));
@@ -49,7 +50,7 @@ it("asks navigation guards before arrow keys switch settings categories", () => 
   let allow = false;
   const guard = vi.fn(() => allow);
   const unregister = registerNavigationGuard(guard);
-  const current = screen.getByRole("tab", { name: "Keys & recovery" });
+  const current = screen.getByRole("tab", { name: t("settings.category.recovery.label") });
   fireEvent.keyDown(current, { key: "ArrowRight" });
   expect(guard).toHaveBeenCalledOnce();
   expect(onChange).not.toHaveBeenCalled();

@@ -15,7 +15,7 @@ pub(super) async fn connect_server_with_policy(
         connect_native(paths, &server_id, preferences, None, true)
     })
     .await
-    .map_err(|_| "The network worker was interrupted.".to_owned())?
+    .map_err(|_| "Connecting was interrupted. Check the connection status.".to_owned())?
 }
 
 /// The caller holds the shared native operation gate, including any confirmation.
@@ -36,21 +36,21 @@ pub(crate) fn connect_native(
     let _ = interactive;
     let helper_status = invoke_helper("status", None).map_err(safe_error)?;
     if !helper_status.mtu_detection_supported {
-        return Err("Update the local VPN component in Settings before using the new connection and MTU controls.".into());
+        return Err("Update the VPN component in Settings before connecting.".into());
     }
     if !helper_status.endpoint_updates_supported {
-        return Err("Update the local VPN component in Settings to support signed endpoint updates and IPv6 addresses.".into());
+        return Err("Update the VPN component in Settings before connecting.".into());
     }
     if let Some(active) = active {
         if !active.connection_control_supported {
-            return Err("Update the local VPN component before switching servers.".into());
+            return Err("Update the VPN component in Settings before switching servers.".into());
         }
         preferences.manual_mtu = active.mtu.as_ref().and_then(|mtu| match mtu.policy {
             sirinvpn_protocol::MtuPolicy::Manual { value } => Some(value),
             sirinvpn_protocol::MtuPolicy::Automatic => None,
         });
         preferences.policy = active.policy.ok_or(
-            "This session does not support a protected handoff. Open connection settings.",
+            "This connection can’t switch servers safely. Open connection settings.",
         )?;
         preferences.routing = TunnelRoutingPolicy {
             mode: active.routing_mode,
@@ -58,13 +58,13 @@ pub(crate) fn connect_native(
             included_routes: active
                 .included_routes
                 .clone()
-                .ok_or("Current routing could not be verified.")?,
+                .ok_or("Couldn’t verify the current routing.")?,
         };
     }
     let profile = find_profile(&paths, server_id)?;
     if has_pending_key_rotation(&paths, profile.id).map_err(safe_error)? {
         return Err(
-            "Finish this device's pending key rotation before connecting from the tray.".into(),
+            "Finish this device’s key rotation before connecting.".into(),
         );
     }
     let secret = if interactive {
@@ -107,7 +107,7 @@ pub(crate) fn connect_native(
     }
     let first = plan
         .first()
-        .ok_or("No supported transport is available.")?
+        .ok_or("No supported connection method is available.")?
         .clone();
     let mut request = tunnel_request(
         &profile,
@@ -120,7 +120,7 @@ pub(crate) fn connect_native(
     )
     .map_err(safe_error)?;
     if request.requires_https_support() && !helper_status.https_transport_supported {
-        return Err("Update the local VPN component to use this server’s HTTPS transport.".into());
+        return Err("Update the VPN component in Settings to use this server’s HTTPS mode.".into());
     }
     request.schema_version =
         if request.routing.mode == sirinvpn_tunnel_model::TunnelRoutingMode::SelectedApplications {
@@ -179,7 +179,7 @@ pub(crate) fn connect_native(
         || status.server_id != Some(profile.id)
         || status.policy != Some(preferences.policy)
     {
-        return Err("The local VPN component did not acknowledge the independent connection policy. Review its update in Settings.".into());
+        return Err("The VPN component didn’t confirm your connection settings. Update it in Settings.".into());
     }
     // Tray disconnects do not advance the epoch; each connect retires older observers.
     let observer = OBSERVER.fetch_add(1, Ordering::AcqRel) + 1;
@@ -306,5 +306,5 @@ pub(super) async fn resume_server(server_id: String) -> Result<LocalTunnelStatus
         invoke_helper("resume", Some(&input)).map_err(safe_error)
     })
     .await
-    .map_err(|_| "The network worker was interrupted.".to_owned())?
+    .map_err(|_| "Resuming was interrupted. Check the connection status.".to_owned())?
 }

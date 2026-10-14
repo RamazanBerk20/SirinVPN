@@ -4,6 +4,7 @@ import { ReleaseUpdateDialog } from "./ReleaseUpdateDialog";
 import { ReleaseUpdateSession } from "./ReleaseUpdateSession";
 import { api } from "../../api";
 import type { ReleaseUpdateCandidate } from "../../types";
+import { t } from "../../i18n";
 
 vi.mock("../../api", () => ({ api: {
   checkReleaseUpdate: vi.fn(), installReleaseUpdate: vi.fn(), discardReleaseUpdate: vi.fn(),
@@ -16,10 +17,11 @@ const candidate: ReleaseUpdateCandidate = {
   artifact_sha256: "c".repeat(64), artifact_size_bytes: 4096, newer_than_running: true, debian_install_available: false,
   installer_kind: "appimage", appimage_install_available: true,
 };
+const startsWith = (text: string) => (name: string) => name.startsWith(text);
 async function check() {
-  fireEvent.change(screen.getByLabelText(/^Release source/), { target: { value: ["https", "://release.example/stable/"].join("") } });
-  fireEvent.click(screen.getByRole("button", { name: "Check and verify release" }));
-  await screen.findByText("Root-authenticated");
+  fireEvent.change(screen.getByLabelText(t("release.form.source"), { exact: false }), { target: { value: ["https", "://release.example/stable/"].join("") } });
+  fireEvent.click(screen.getByRole("button", { name: t("release.form.check") }));
+  await screen.findByText(t("release.candidate.verified"));
 }
 describe("portable app updates", () => {
   beforeEach(() => {
@@ -32,12 +34,12 @@ describe("portable app updates", () => {
   it("allows confirmed AppImage replacement while the service is connected", async () => {
     render(<ReleaseUpdateDialog open onOpenChange={vi.fn()} installationReady={false} />);
     await check();
-    const button = screen.getByRole("button", { name: "Install authenticated update" }) as HTMLButtonElement;
+    const button = screen.getByRole("button", { name: t("release.candidate.install") }) as HTMLButtonElement;
     expect(button.disabled).toBe(true);
-    fireEvent.click(screen.getByRole("checkbox", { name: /exact authenticated AppImage/ }));
+    fireEvent.click(screen.getByRole("checkbox", { name: startsWith(t("release.candidate.confirmAppImage")) }));
     fireEvent.click(button);
     await waitFor(() => expect(api.installReleaseUpdate).toHaveBeenCalledWith(true));
-    expect(await screen.findByText(/Close and reopen the same AppImage/)).toBeTruthy();
+    expect(await screen.findByText(t("release.done.bodyAppImage"))).toBeTruthy();
   });
   it("binds the same-version signed baseline only after its own confirmation", async () => {
     vi.mocked(api.checkReleaseUpdate).mockResolvedValue({ ...candidate, release_version: "0.1.0", newer_than_running: false, baseline_bind_available: true });
@@ -45,9 +47,9 @@ describe("portable app updates", () => {
     render(<ReleaseUpdateDialog open onOpenChange={vi.fn()} installationReady={false} />);
     await check();
     expect(api.installReleaseUpdate).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole("checkbox", { name: /verification of this installed package/ }));
-    fireEvent.click(screen.getByRole("button", { name: "Verify installed release" }));
-    expect(await screen.findByText("Signed baseline verified")).toBeTruthy();
+    fireEvent.click(screen.getByRole("checkbox", { name: startsWith(t("release.candidate.confirmVerify")) }));
+    fireEvent.click(screen.getByRole("button", { name: t("release.candidate.verify") }));
+    expect(await screen.findByText(t("release.done.titleVerified"))).toBeTruthy();
   });
   it("retains the authenticated candidate across prerequisite navigation and requires fresh consent", async () => {
     vi.mocked(api.checkReleaseUpdate).mockResolvedValue({ ...candidate, installer_kind: "debian", appimage_install_available: false, debian_install_available: true });
@@ -57,16 +59,16 @@ describe("portable app updates", () => {
       : <p>Connection controls</p>}</ReleaseUpdateSession>;
     const view = render(page(true, false));
     await check();
-    fireEvent.click(screen.getByRole("button", { name: "Review connection prerequisites" }));
+    fireEvent.click(screen.getByRole("button", { name: t("release.candidate.openConnection") }));
     expect(review).toHaveBeenCalledOnce();
     view.rerender(page(false, false));
     expect(api.discardReleaseUpdate).not.toHaveBeenCalled();
     view.rerender(page(true, true));
-    expect(await screen.findByText("Root-authenticated")).toBeTruthy();
+    expect(await screen.findByText(t("release.candidate.verified"))).toBeTruthy();
     expect(api.checkReleaseUpdate).toHaveBeenCalledOnce();
-    const install = screen.getByRole("button", { name: "Install authenticated update" });
+    const install = screen.getByRole("button", { name: t("release.candidate.install") });
     expect(install.matches(":disabled")).toBe(true);
-    fireEvent.click(screen.getByRole("checkbox", { name: /exact authenticated Debian package/ }));
+    fireEvent.click(screen.getByRole("checkbox", { name: startsWith(t("release.candidate.confirmDebian")) }));
     fireEvent.click(install);
     await waitFor(() => expect(api.installReleaseUpdate).toHaveBeenCalledWith(true));
   });
@@ -75,13 +77,13 @@ describe("portable app updates", () => {
     let complete!: () => void;
     vi.mocked(api.rollbackReleaseUpdate).mockReturnValue(new Promise<void>((done) => { complete = done; }));
     render(<ReleaseUpdateDialog open onOpenChange={vi.fn()} installationReady />);
-    const confirmation = await screen.findByRole("checkbox", { name: /Restore AppImage 0.1.0/ });
+    const confirmation = await screen.findByRole("checkbox", { name: startsWith(t("release.recovery.restoreConfirm", { version: "0.1.0" })) });
     fireEvent.click(confirmation);
-    fireEvent.click(screen.getByRole("button", { name: "Restore previous AppImage" }));
+    fireEvent.click(screen.getByRole("button", { name: t("release.recovery.restore") }));
     await waitFor(() => expect(api.rollbackReleaseUpdate).toHaveBeenCalledWith("0.1.0"));
-    expect(screen.getByRole("button", { name: "Close app updates" }).matches(":disabled")).toBe(true);
-    expect((screen.getByRole("button", { name: "Check and verify release" }) as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByRole("button", { name: t("release.dialog.close") }).matches(":disabled")).toBe(true);
+    expect((screen.getByRole("button", { name: t("release.form.check") }) as HTMLButtonElement).disabled).toBe(true);
     complete();
-    expect(await screen.findByText(/AppImage 0.1.0 restored/)).toBeTruthy();
+    expect(await screen.findByText(t("release.recovery.restored", { version: "0.1.0" }))).toBeTruthy();
   });
 });

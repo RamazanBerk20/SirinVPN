@@ -7,8 +7,8 @@ from scenarios import scenarios, click, fill, settings
 
 e=NativeDesktop();cases={c['id']:c for c in scenarios('desktop')}
 for key,items,state in [
- ('no-saved-servers',[{'text':'Disconnected'},{'text':'Kill switch: Off'},{'item':'Separator'},{'text':'Open SirinVPN'},{'text':'Add server…'},{'text':'Connect to server','items':[{'text':'Manage servers…'}]},{'text':'Settings…'},{'item':'Separator'},{'text':'Quit app'}],{'empty':True}),
- ('legacy-session',[{'text':'Connected to My private VPS'},{'text':'Kill switch: Armed'},{'text':'Additional tray controls need a fresh connection','enabled':False},{'item':'Separator'},{'text':'Open SirinVPN'},{'text':'Disconnect…'},{'text':'Switch server','items':[{'text':'My private VPS','checked':True,'enabled':False},{'text':'Travel VPN','enabled':False},{'text':'Manage servers…'}]},{'text':'Settings…'},{'text':'Quit app (VPN keeps running)'},{'text':'Disconnect and quit…'}],{}),
+ ('no-saved-servers',[{'text':'Disconnected'},{'text':'Kill switch: Off'},{'item':'Separator'},{'text':'Open SirinVPN'},{'text':'Add server…'},{'text':'Connect to server','items':[{'text':'Manage servers'}]},{'text':'Settings'},{'item':'Separator'},{'text':'Quit app'}],{'empty':True}),
+ ('legacy-session',[{'text':'Connected to My private VPS'},{'text':'Kill switch: On'},{'text':'More controls on next connection','enabled':False},{'item':'Separator'},{'text':'Open SirinVPN'},{'text':'Disconnect…'},{'text':'Switch server','items':[{'text':'My private VPS','checked':True,'enabled':False},{'text':'Travel VPN','enabled':False},{'text':'Manage servers'}]},{'text':'Settings'},{'text':'Quit app · VPN keeps running'},{'text':'Disconnect and quit…'}],{}),
 ]:
  r={'id':'native-tray-menu-'+key,'platform':'desktop','family':'native-tray','description':key.replace('-',' ')+' tray menu','success':False,'files':[],'renderer':'Tauri native GTK menu','data_source':'Production tray labels and synthetic state; actions unbound'}
  try:
@@ -18,27 +18,29 @@ for key,items,state in [
 for active in [False,True]:
  key='native-tray-server-submenu-'+('connected' if active else 'disconnected')
  e.call('mount',{'platform':'desktop','connected':active,'profileCount':3})
- e.menu([{'text':'Connected to My private VPS' if active else 'Disconnected'},{'text':'Switch server' if active else 'Connect to server','items':[{'text':'My private VPS','checked':active,'enabled':not active},{'text':'Amsterdam VPS'},{'text':'Travel VPN'},{'item':'Separator'},{'text':'Manage servers…'}]},{'text':'Settings…'}])
+ e.menu([{'text':'Connected to My private VPS' if active else 'Disconnected'},{'text':'Switch server' if active else 'Connect to server','items':[{'text':'My private VPS','checked':active,'enabled':not active},{'text':'Amsterdam VPS'},{'text':'Travel VPN'},{'item':'Separator'},{'text':'Manage servers'}]},{'text':'Settings'}])
  subprocess.run(['xdotool','mousemove','915','99'],env=e.env,check=True);time.sleep(.8)
  record({'id':key,'platform':'desktop','family':'native-tray','description':'Native tray server submenu','success':True,'files':[e.shot(OUT/'desktop/native-tray'/(key+'.png'))],'renderer':'Tauri native GTK menu','data_source':'Native menu preview with production labels and fictional server data; actions unbound'})
  e.dismiss()
 
 # Preview native-only tray confirmations without invoking any VPN action.
+# Each entry is (key, dialog title, confirm button, message), as in native.tray.confirm.* of native.json.
+disconnect_message='Any traffic block is lifted, and the VPN stays off until you connect again. Other devices stay connected.'
 tray_prompts=[
- ('disconnect','Disconnect','Disconnect this device from its active VPN server?\n\nThis releases the traffic block, stops connection attempts, and pauses startup connection until you Connect again. Other devices stay connected.'),
- ('disconnect-and-quit','Disconnect and quit','Disconnect this device from its active VPN server?\n\nThis releases the traffic block, stops connection attempts, and pauses startup connection until you Connect again. Other devices stay connected.'),
- ('quit-status-unknown','Quit app','Connection status unavailable\n\nClosing the app does not stop the VPN service, recovery, or an active traffic block. Quit the interface?'),
+ ('disconnect','Disconnect the VPN?','Disconnect',disconnect_message),
+ ('disconnect-and-quit','Disconnect and quit?','Disconnect and quit',disconnect_message),
+ ('quit-status-unknown','Quit SirinVPN?','Quit','Status unknown\nClosing the app doesn’t stop the VPN, reconnecting or the kill switch.'),
 ]
 for enabled in [False,True]:
- protection='The kill switch stays active. Internet access may remain blocked until you resume or explicitly Disconnect.' if enabled else 'The kill switch is off. Traffic will not be blocked by SirinVPN.'
- tray_prompts.append(('pause-protection-'+str(enabled).lower(),'Stop attempts',"Stop this connection's attempts and wait for manual action?\n\n"+protection+'\n\nThe saved startup preference is unchanged.'))
- protection='The kill switch remains in place during the change.' if enabled else 'The kill switch is off; traffic is not blocked during the change.'
- tray_prompts.append(('switch-protection-'+str(enabled).lower(),'Switch server',"Switch this device's connection to Travel VPN?\n\n"+protection+"\n\nCurrent reconnect, startup and routing choices carry across. This server's saved protection and routing preferences apply when you start a fresh connection. Other members stay connected."))
-for key,label,message in tray_prompts:
+ message='The kill switch keeps blocking traffic until you reconnect or disconnect.' if enabled else 'The kill switch is off, so traffic bypasses the VPN until you reconnect.'
+ tray_prompts.append(('pause-protection-'+str(enabled).lower(),'Stop connection attempts?','Stop attempts',message))
+ message='Your current settings carry over. The kill switch stays on during the switch.' if enabled else 'Your current settings carry over. The kill switch is off, so traffic may bypass the VPN during the switch.'
+ tray_prompts.append(('switch-protection-'+str(enabled).lower(),'Switch to Travel VPN?','Switch',message))
+for key,title,label,message in tray_prompts:
  r={'id':'native-tray-confirm-'+key,'platform':'desktop','family':'native-confirmations','description':label+' tray confirmation','success':False,'files':[],'renderer':'Native Tauri dialog','data_source':'Production tray confirmation text; action is unbound'}
  try:
   e.call('mount',{'platform':'desktop'})
-  e.native_dialog({'kind':'confirm','message':message,'options':{'title':'SirinVPN','okLabel':label,'cancelLabel':'Cancel','kind':'info'}})
+  e.native_dialog({'kind':'confirm','message':message,'options':{'title':title,'okLabel':label,'cancelLabel':'Cancel','kind':'info'}})
   r['files']=[e.shot(OUT/'desktop/native-confirmations'/(r['id']+'.png'))];r['success']=True
  except Exception as err:r['error']=str(err)
  record(r);e.dismiss()
@@ -47,7 +49,7 @@ for key,label,message in tray_prompts:
 pid=subprocess.check_output(['xdotool','getwindowpid',e.window],env=e.env,text=True).strip()
 bus=next(item.split('=',1)[1] for item in (Path('/proc')/pid/'environ').read_bytes().decode().split('\0') if item.startswith('DBUS_SESSION_BUS_ADDRESS='))
 notification_env={**e.env,'DBUS_SESSION_BUS_ADDRESS':bus}
-for key,body in [('connected','VPN connected.'),('disconnected','VPN disconnected.'),('recovering','VPN connection interrupted. SirinVPN is trying to reconnect.'),('unavailable','VPN status is unavailable. Open SirinVPN to check your connection.'),('test','Notifications are ready. Connection alerts will appear here.')]:
+for key,body in [('connected','VPN connected'),('disconnected','VPN disconnected'),('recovering','Connection interrupted. Reconnecting…'),('unavailable','Couldn’t read the VPN status. Open SirinVPN to check.'),('test','Notifications are ready. Connection alerts will appear here.')]:
  r={'id':'native-notification-'+key,'platform':'desktop','family':'native-notifications','description':body,'success':False,'files':[],'renderer':'Native Xfce notification daemon in isolated X session','data_source':'Production notification title, body and icon; simulated connection transition'}
  try:
   e.call('mount',{'platform':'desktop','connected':key!='disconnected'})
@@ -60,7 +62,7 @@ for key,body in [('connected','VPN connected.'),('disconnected','VPN disconnecte
 for key,actions,target,state in [
  ('invitation-access',[{'text':'Devices'},{'text':'Invite member'}],{'css':'select','index':0},{}),
  ('invitation-lifetime',[{'text':'Devices'},{'text':'Invite member'}],{'css':'select','index':1},{}),
- ('wifi-server',settings('desktop','general'),{'css':'select[aria-label="Automatic connection server"]'},{'profileCount':4}),
+ ('wifi-server',settings('desktop','general'),{'css':'select[aria-label="Auto-connect server"]'},{'profileCount':4}),
  ('port-protocol',settings('desktop','network'),{'label':'Protocol'},{}),
  ('port-target-device',settings('desktop','network'),{'css':'.port-forward-form select','index':1},{}),
  ('weekly-access-day',cases['weekly-day-time-controls']['actions'],{'label':'Day 1'},cases['weekly-day-time-controls']['state']),
@@ -93,9 +95,8 @@ for key,scenario,selector in [
  ('minimize-window','connected-home','[title="Minimize"]'),
  ('maximize-window','connected-home','[title="Maximize"]'),
  ('close-window','connected-home','.titlebar-close'),
- ('management-response','connected-home','[title^="Time for an authenticated"]'),
- ('resume-policy','recovery-waiting-for-user','[title^="Resume the active"]'),
- ('busy-dialog-close','install-authenticated-app-release-in-progress','[title="Wait for the current operation to finish"]'),
+ ('resume-policy','recovery-waiting-for-user','[title^="Resume with the current"]'),
+ ('busy-dialog-close','install-authenticated-app-release-in-progress','[title="Wait for the current task to finish"]'),
 ]:
  r={'id':'tooltip-'+key,'platform':'desktop','family':'tooltips','description':key.replace('-',' ')+' tooltip','success':False,'files':[],'renderer':'Native WebKitGTK tooltip','data_source':'Production title attribute'}
  try:

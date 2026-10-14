@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, expect, it } from "vitest";
 import { useState } from "react";
 import { TransportSetupFields, newTransportDraft, transportDraftIsValid, transportSetupFromDraft } from "./TransportSetupFields";
+import { t } from "../../i18n";
 
 afterEach(cleanup);
 
@@ -24,10 +25,10 @@ it("shows HTTPS fields only when enabled and accepts custom ports", () => {
     return <TransportSetupFields value={draft} onChange={setDraft} />;
   }
   render(<Form />);
-  fireEvent.click(screen.getByText("Public addresses, transport ports and HTTPS"));
-  expect(screen.queryByRole("textbox", { name: "HTTPS hostname" })).toBeNull();
-  fireEvent.click(screen.getByRole("checkbox", { name: "Use HTTPS mode" }));
-  fireEvent.change(screen.getByRole("textbox", { name: "HTTPS hostname" }), { target: { value: "vpn.example.org" } });
-  fireEvent.change(screen.getByRole("textbox", { name: "TCP and TLS port" }), { target: { value: "4443" } });
+  fireEvent.click(screen.getByText(t("ssh.transport.summary")));
+  expect(screen.queryByRole("textbox", { name: t("ssh.transport.hostname") })).toBeNull();
+  fireEvent.click(screen.getByRole("checkbox", { name: t("ssh.transport.https") }));
+  fireEvent.change(screen.getByRole("textbox", { name: t("ssh.transport.hostname") }), { target: { value: "vpn.example.org" } });
+  fireEvent.change(screen.getByRole("textbox", { name: t("ssh.transport.tcpTlsPort") }), { target: { value: "4443" } });
   expect(screen.queryByRole("status")).toBeNull();
 });

@@ -25,17 +25,17 @@ class MainActivity : TauriActivity() {
         // that installation rather than displaying a notice it would overwrite.
         val provider=android.webkit.WebView.getCurrentWebViewPackage()
         val major=provider?.versionName?.substringBefore('.')?.toIntOrNull() ?: 0
-        if(view is android.webkit.WebView && major<111) {
+        if(view is android.webkit.WebView && major<MINIMUM_WEBVIEW) {
             val content=android.widget.LinearLayout(this).apply {
                 orientation=android.widget.LinearLayout.VERTICAL
                 val padding=(24*resources.displayMetrics.density).toInt()
                 setPadding(padding,padding,padding,padding)
                 addView(android.widget.TextView(this@MainActivity).apply {
-                    text="Update Android System WebView\n\nSirinVPN needs WebView 111 or newer. Update the system WebView, then reopen SirinVPN."
+                    text=getString(R.string.webview_update_message,MINIMUM_WEBVIEW)
                     textSize=20f
                 })
                 addView(android.widget.Button(this@MainActivity).apply {
-                    text="Open WebView settings"
+                    text=getString(R.string.webview_update_action)
                     setOnClickListener { startActivity(android.content.Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
                         android.net.Uri.parse("package:${provider?.packageName ?: "com.google.android.webview"}"))) }
                 })
@@ -45,6 +45,7 @@ class MainActivity : TauriActivity() {
         }
         super.setContentView(view)
     }
+    private companion object { const val MINIMUM_WEBVIEW=111 }
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)

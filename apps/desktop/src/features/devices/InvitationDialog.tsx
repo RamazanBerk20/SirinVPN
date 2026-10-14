@@ -22,6 +22,7 @@ import { errorMessage, formatExpiry } from "../../lib/errors";
 import { MemberPolicyFields } from "./MemberPolicyFields";
 import { policyDraft, policyFromDraft } from "./memberPolicy";
 import { InvitationShare } from "./InvitationShare";
+import { t } from "../../i18n";
 
 export function InvitationDialog({
   profile,
@@ -113,7 +114,7 @@ export function InvitationDialog({
       setCreated(invitation);
       await onCreated();
     } catch (reason) {
-      setError(errorMessage(reason, "The invitation could not be created."));
+      setError(errorMessage(reason, t("devices.invite.createFailed")));
     } finally {
       setBusy(false);
     }
@@ -125,38 +126,34 @@ export function InvitationDialog({
         <Dialog.Overlay className="dialog-overlay" />
         <DialogContent className={`dialog-content invitation-dialog${created ? " invitation-dialog-ready" : ""}`}
           heading={<>{created
-              ? "Invitation ready"
+              ? t("devices.invite.titleReady")
               : target
-                ? `Add a device for ${target.name}`
-                : "Invite a member"}</>}
+                ? t("devices.invite.titleForMember", { name: target.name })
+                : t("devices.invite.title")}</>}
           description={<>{created
-              ? `Copy or share this code before closing. It is only shown once and permits ${maxUses === 1 ? "one join" : `up to ${maxUses} joins`}.`
+              ? t("devices.invite.descriptionReady", { count: maxUses })
               : target
-                ? `The new device will join the existing ${memberAccessLabel(target)} identity after it creates its own permanent keys.`
-                : "The recipient creates permanent keys on their own device and enrolls directly with this VPS."}</>}
-          closeDisabled={busy} closeLabel="Close"
+                ? t("devices.invite.descriptionForMember", { name: target.name })
+                : t("devices.invite.description")}</>}
+          closeDisabled={busy} closeLabel={t("common.action.close")}
           footer={created ? (
             <div className="invitation-result-actions">
-              <span>Expires {formatExpiry(created.expires_at_unix)}</span>
+              <span>{t("devices.invite.expires", { date: formatExpiry(created.expires_at_unix) })}</span>
               <button
                 className="secondary-button"
                 onClick={() => void copyCode()}
                 aria-live="polite"
               >
-                {copyResult === "copied" ? <><Check size={16} /> Copied</> : <><Copy size={16} /> Copy code</>}
+                {copyResult === "copied" ? <><Check size={16} /> {t("common.action.copied")}</> : <><Copy size={16} /> {t("devices.invite.copyCode")}</>}
               </button>
             </div>
           ) : undefined}>
           {created ? (
             <div className="invitation-result" ref={resultRef}>
-              {copyResult === "failed" && <InlineError message="The code could not be copied. Select the long code and copy it manually before closing." />}
+              {copyResult === "failed" && <InlineError message={t("devices.invite.copyFailed")} />}
               <div className="warning-note">
                 <Warning size={18} weight="fill" />
-                <span>
-                  This is a bearer secret. Anyone holding it can use the
-                  invitation until it is redeemed, cancelled, or expired.
-                  {" "}If you lose the code, cancel this invitation and create a new one.
-                </span>
+                <span>{t("devices.invite.secretWarning")}</span>
               </div>
               <InvitationShare invitation={created} />
             </div>
@@ -176,9 +173,7 @@ export function InvitationDialog({
                   <div>
                     <strong>{target.name}</strong>
                     <small>
-                      {memberAccessLabel(target)} · {target.devices.length}{" "}
-                      authorized{" "}
-                      {target.devices.length === 1 ? "device" : "devices"}
+                      {t("devices.invite.targetSummary", { role: memberAccessLabel(target), count: target.devices.length })}
                     </small>
                   </div>
                 </div>
@@ -186,8 +181,8 @@ export function InvitationDialog({
                 <>
                   {canCreateAdmin ? (
                     <Field
-                      label="Access level"
-                      hint="Admins can invite Members and manage ordinary Member devices. Only the Owner can manage Admins."
+                      label={t("devices.invite.role")}
+                      hint={t("devices.invite.roleHint")}
                     >
                       <select
                         value={access}
@@ -195,8 +190,8 @@ export function InvitationDialog({
                           setAccess(event.target.value as "member" | "admin")
                         }
                       >
-                        <option value="member">Member</option>
-                        <option value="admin">Admin</option>
+                        <option value="member">{t("common.role.member")}</option>
+                        <option value="admin">{t("common.role.admin")}</option>
                       </select>
                     </Field>
                   ) : null}
@@ -207,36 +202,33 @@ export function InvitationDialog({
                   {configurationError ? <>
                     <InlineError message={configurationError} />
                     <button className="secondary-button" type="button" onClick={() => void onRefreshConfiguration()}>
-                      <ArrowClockwise size={16} /> Retry server check
+                      <ArrowClockwise size={16} /> {t("devices.invite.checkAgain")}
                     </button>
-                  </> : <p className="settings-note">Checking invitation support on this VPS…</p>}
+                  </> : <p className="settings-note">{t("devices.invite.checking")}</p>}
                 </div>
               ) : recipientNamesAvailable ? (
-                <p className="settings-note">{target ? `The recipient names their new device. It stays part of ${target.name}.` : "The recipient chooses their device name when joining. You choose their access and invitation limits."}</p>
+                <p className="settings-note">{t("devices.invite.recipientNames")}</p>
               ) : <>
-                <p className="settings-note">
-                  This VPS uses the earlier invitation format. Choose the device name here to create a code.
-                  Update the VPS components to let recipients choose their device name when joining.
-                </p>
-                <Field label="Device name">
+                <p className="settings-note">{t("devices.invite.olderServer")}</p>
+                <Field label={t("devices.invite.deviceName")}>
                   <input value={deviceName} maxLength={64} required autoComplete="off" onChange={(event) => setDeviceName(event.target.value)} />
                 </Field>
               </>}
-              <Field label="Expires after">
+              <Field label={t("devices.invite.lifetime")}>
                 <select
                   value={lifetime}
                   onChange={(event) => setLifetime(event.target.value)}
                 >
-                  <option value="3600">1 hour</option>
-                  <option value="86400">24 hours</option>
-                  <option value="604800">7 days</option>
+                  <option value="3600">{t("devices.invite.hours", { count: 1 })}</option>
+                  <option value="86400">{t("devices.invite.hours", { count: 24 })}</option>
+                  <option value="604800">{t("devices.invite.days", { count: 7 })}</option>
                 </select>
               </Field>
-              {scopedAvailable && target?.role !== "owner" && <Field label="Number of joins" hint="Each join creates separate permanent device keys. Additional devices for an existing member also follow their device limit.">
+              {scopedAvailable && target?.role !== "owner" && <Field label={t("devices.invite.uses")} hint={t("devices.invite.usesHint")}>
                 <input type="number" min={1} max={100} value={maxUses} onChange={(event) => setMaxUses(Number(event.target.value))} />
               </Field>}
               {scopedAvailable && !target && <details className="access-disclosure member-policy-disclosure">
-                <summary>Member permissions and access times</summary>
+                <summary>{t("devices.invite.permissions")}</summary>
                 <MemberPolicyFields draft={policy} onChange={setPolicy} delegated={delegated} />
               </details>}
               {error ? <InlineError message={error} /> : null}
@@ -253,10 +245,10 @@ export function InvitationDialog({
                   <Key size={18} />
                 )}
                 {busy
-                  ? "Creating"
+                  ? t("devices.invite.creating")
                   : target
-                    ? "Create device code"
-                    : maxUses > 1 ? "Create reusable code" : "Create single-use code"}
+                    ? t("devices.invite.createForMember")
+                    : maxUses > 1 ? t("devices.invite.createReusable") : t("devices.invite.createSingleUse")}
               </button>
             </form>
           )}

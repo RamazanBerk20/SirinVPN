@@ -191,7 +191,7 @@ class OptionHandlingTest {
                 until("Enabling automation did not resume") {state().getJSONObject("status").getBoolean("auto_reconnect_enabled")}
                 call("disconnect_server");idle()
                 until("Missing stop-monitoring action") {notices.activeNotifications.any {
-                    it.id==VpnNotifications.VPN_ID && it.notification.actions?.singleOrNull()?.title=="Stop Wi-Fi automation"
+                    it.id==VpnNotifications.VPN_ID && it.notification.actions?.singleOrNull()?.title==context.getString(R.string.notification_action_stop_auto_connect)
                 }}
                 notices.activeNotifications.single {it.id==VpnNotifications.VPN_ID}.notification.actions.single().actionIntent.send()
                 until("Notification action did not disable policy") {!wifi().getJSONObject("policy").getBoolean("enabled")}

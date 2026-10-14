@@ -17,6 +17,7 @@ mod desktop_lifecycle;
 mod desktop_startup;
 mod desktop_tray;
 mod local_component;
+mod native_text;
 mod wifi_automation;
 
 mod command_types;
@@ -211,6 +212,7 @@ fn run_inner() -> tauri::Result<()> {
             desktop_tray::navigation::desktop_navigation,
             desktop_tray::navigation::desktop_navigation_ack,
             desktop_tray::navigation::desktop_selection,
+            native_text::set_native_text,
             current_network_profile,
             disconnect_server,
             local_status,

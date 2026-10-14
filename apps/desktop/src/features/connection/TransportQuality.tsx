@@ -1,25 +1,22 @@
 import type { LocalTunnelStatus } from "../../types";
+import { formatNumber, t } from "../../i18n";
 
-const selectionText = {
-  pending: "Waiting for a tunnel quality measurement.",
-  observing: "Current private tunnel measurement.",
-  waiting_for_idle: "Automatic mode will compare alternatives when traffic is quiet.",
-  comparing: "Measuring alternative transports.",
-  selected: "Using the best measured transport from the current comparison.",
-  icmp_unavailable: "The VPS did not answer the quality probes. Latency and loss are unavailable.",
-  protection_required: "Enable the kill switch to allow protected transport comparisons.",
-};
+const milliseconds = (micros: number) =>
+  t("format.latency", { value: formatNumber(micros / 1000, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) });
+
 export function TransportQuality({ status }: { status: LocalTunnelStatus }) {
   const quality = status.transport_quality;
   if (!quality) return null;
   const sample = currentQualitySample(status);
-  const reason = quality.last_switch_reason === "confirmed_failure" ? "Transport changed after connectivity checks failed."
-    : quality.last_switch_reason === "quality_improvement" ? "Switched to a consistently better measured transport."
-    : quality.last_switch_reason === "rollback" ? "Kept the previous transport because the alternative did not connect." : null;
-  return <div className="settings-note" aria-label="Current transport quality">
-    {sample && <p>{(sample.latency_micros / 1000).toFixed(1)} ms latency · {(sample.jitter_micros / 1000).toFixed(1)} ms jitter · {Math.round(100 * (1 - sample.probes_received / sample.probes_sent))}% probe loss ({sample.probes_received}/{sample.probes_sent} replies)</p>}
+  const reason = quality.last_switch_reason ? t(`connection.quality.reason.${quality.last_switch_reason}`) : null;
+  return <div className="settings-note" aria-label={t("connection.quality.label")}>
+    {sample && <p>{t("connection.quality.sample", {
+      latency: milliseconds(sample.latency_micros),
+      jitter: milliseconds(sample.jitter_micros),
+      loss: formatNumber(1 - sample.probes_received / sample.probes_sent, { style: "percent", maximumFractionDigits: 0 }),
+    })}</p>}
     {reason && <p>{reason}</p>}
-    <p>{selectionText[quality.selection]} Measurements cover the private VPN path; they do not measure download speed.</p>
+    <p>{t(`connection.quality.selection.${quality.selection}`)}</p>
   </div>;
 }
 

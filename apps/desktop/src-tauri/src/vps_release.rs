@@ -19,14 +19,14 @@ pub(crate) async fn manage_vps_release(
     let paths = state.paths.clone();
     tauri::async_runtime::spawn_blocking(move || {
         let profile = crate::find_profile(&paths, &input.server_id)?;
-        if profile.role != ServerRole::Owner { return Err("Only the Owner can manage VPS software releases.".to_owned()); }
+        if profile.role != ServerRole::Owner { return Err("Only the Owner can update this VPS.".to_owned()); }
         if matches!(input.operation, ServerReleaseAction::Install { .. } | ServerReleaseAction::Rollback { .. } | ServerReleaseAction::Recover) {
             let status = crate::invoke_helper("status", None).map_err(crate::safe_error)?;
             if status.state != ConnectionState::Disconnected || status.kill_switch_enabled || status.auto_reconnect_enabled {
-                return Err("Disconnect this computer before restarting the VPS services.".to_owned());
+                return Err("Disconnect this device and turn off the kill switch before restarting VPS services.".to_owned());
             }
             if sirinvpn_core::has_pending_key_rotation(&paths, profile.id).map_err(crate::safe_error)? {
-                return Err("Finish this device's pending key rotation before updating its VPS.".to_owned());
+                return Err("Finish this device’s key rotation before updating the VPS.".to_owned());
             }
         }
         let secret = crate::explicit_secret(&paths, &profile.identity_reference)?;
@@ -36,7 +36,7 @@ pub(crate) async fn manage_vps_release(
             .map_err(|error| error.to_string())?;
         preserve_sequence_precision(&mut value);
         Ok(value)
-    }).await.map_err(|_| "The VPS release operation was interrupted. Its recovery transaction is retained on the VPS.".to_owned())?
+    }).await.map_err(|_| "The VPS update was interrupted. Its recovery data stays on the VPS; check its status before trying again.".to_owned())?
 }
 
 fn preserve_sequence_precision(value: &mut serde_json::Value) {

@@ -21,6 +21,7 @@ import { SshHostVerification } from "./SshHostVerification";
 import { type ServerProfile } from "../../types";
 import { InlineError } from "../../components/ui";
 import { errorMessage } from "../../lib/errors";
+import { t } from "../../i18n";
 
 export function RemoveServerDialog({
   profile,
@@ -68,11 +69,11 @@ export function RemoveServerDialog({
 
   const forgetLocal = async () => {
     if (
-      !await confirmAction(
-        owner
-          ? `Remove ${profile.name} only from this device? Its Owner key will be deleted, but the VPS remains installed and claimed.`
-          : `Remove ${profile.name} and this device key locally? The Owner's VPS installation remains unchanged.`,
-      )
+      !await confirmAction({
+        title: t("vps.remove.local.confirmTitle", { name: profile.name }),
+        message: owner ? t("vps.remove.local.confirmOwner") : t("vps.remove.local.confirmMember"),
+        confirm: t("common.action.remove"),
+      })
     )
       return;
     setBusy(true);
@@ -83,7 +84,7 @@ export function RemoveServerDialog({
       await onRemoved();
       onOpenChange(false);
     } catch (reason) {
-      setError(errorMessage(reason, "The local profile could not be removed."));
+      setError(errorMessage(reason, t("vps.remove.local.error")));
     } finally {
       setBusy(false);
     }
@@ -105,7 +106,7 @@ export function RemoveServerDialog({
         setStep("fingerprint");
       }
     } catch (reason) {
-      setError(errorMessage(reason, "The VPS could not be reached over SSH."));
+      setError(errorMessage(reason, t("vps.common.error.unreachable")));
     } finally {
       setBusy(false);
     }
@@ -117,9 +118,11 @@ export function RemoveServerDialog({
     if (!checked || !sshValid || (checked.status !== "trusted" && !confirmed))
       return;
     if (
-      !await confirmAction(
-        `Permanently uninstall SirinVPN from ${profile.endpoint.host}? All SirinVPN devices and invitations for this VPS will stop working. Docker and unrelated VPS services are preserved.`,
-      )
+      !await confirmAction({
+        title: t("vps.remove.uninstall.confirmTitle", { host: profile.endpoint.host }),
+        message: t("vps.remove.uninstall.confirmMessage"),
+        confirm: t("vps.remove.uninstall.confirm"),
+      })
     )
       return;
     setStep("uninstalling");
@@ -139,10 +142,7 @@ export function RemoveServerDialog({
       clearSecrets();
       setStep("details");
       setError(
-        errorMessage(
-          reason,
-          "Uninstall did not complete. No local profile was intentionally removed; any interrupted VPS teardown is protected by rollback.",
-        ),
+        errorMessage(reason, t("vps.remove.uninstall.error")),
       );
     } finally {
       setBusy(false);
@@ -155,12 +155,12 @@ export function RemoveServerDialog({
         <Dialog.Overlay className="dialog-overlay" />
         <DialogContent className="dialog-content remove-server-dialog"
           heading={<>{step === "uninstalling"
-              ? "Removing SirinVPN"
-              : `Remove ${profile.name}`}</>}
+              ? t("vps.remove.titleRunning")
+              : t("vps.remove.title", { name: profile.name })}</>}
           description={<>{owner
-              ? "Choose whether to forget this Owner device or cleanly uninstall SirinVPN from the VPS."
-              : "Admins and Members can remove only their own local profile and device key."}</>}
-          closeDisabled={busy || step === "uninstalling"} closeLabel="Close">
+              ? t("vps.remove.description.owner")
+              : t("vps.remove.description.member")}</>}
+          closeDisabled={busy || step === "uninstalling"}>
 
           {step === "choice" ? (
             <div className="removal-choices">
@@ -173,11 +173,8 @@ export function RemoveServerDialog({
                   <Desktop size={20} />
                 </span>
                 <div>
-                  <strong>Remove from this device</strong>
-                  <small>
-                    Delete this local profile and device key. The VPS stays
-                    installed.
-                  </small>
+                  <strong>{t("vps.remove.local.title")}</strong>
+                  <small>{t("vps.remove.local.summary")}</small>
                 </div>
                 <CaretRight size={16} />
               </button>
@@ -191,11 +188,8 @@ export function RemoveServerDialog({
                     <Trash size={20} />
                   </span>
                   <div>
-                    <strong>Uninstall from VPS</strong>
-                    <small>
-                      Verify privileged SSH, remove SirinVPN-owned state, then
-                      delete this local profile.
-                    </small>
+                    <strong>{t("vps.remove.uninstall.title")}</strong>
+                    <small>{t("vps.remove.uninstall.summary")}</small>
                   </div>
                   <CaretRight size={16} />
                 </button>
@@ -218,7 +212,7 @@ export function RemoveServerDialog({
                   className="back-button"
                   onClick={() => setStep("choice")}
                 >
-                  Back
+                  {t("common.action.back")}
                 </button>
                 <div className="uninstall-target">
                   <GlobeHemisphereWest size={16} />
@@ -231,7 +225,7 @@ export function RemoveServerDialog({
                   type="submit"
                   disabled={!sshValid || busy}
                 >
-                  {busy ? "Checking VPS" : "Review uninstall"}
+                  {busy ? t("vps.common.checking") : t("vps.remove.uninstall.review")}
                 </button>
               </fieldset>
             </form>
@@ -243,7 +237,7 @@ export function RemoveServerDialog({
                 className="back-button"
                 onClick={() => setStep("details")}
               >
-                Back
+                {t("common.action.back")}
               </button>
               <SshHostVerification
                 inspection={trust.inspection}
@@ -255,7 +249,7 @@ export function RemoveServerDialog({
                 disabled={!confirmed || !sshValid || busy}
                 onClick={() => void uninstall()}
               >
-                Uninstall SirinVPN
+                {t("vps.remove.uninstall.action")}
               </button>
             </div>
           ) : null}
@@ -263,11 +257,8 @@ export function RemoveServerDialog({
           {step === "uninstalling" ? (
             <div className="uninstall-progress">
               <ArrowClockwise className="spin" size={26} />
-              <strong>Cleaning SirinVPN-owned state</strong>
-              <p>
-                Keep the app open. A five-minute server rollback guard protects
-                interruption.
-              </p>
+              <strong>{t("vps.remove.uninstall.progress")}</strong>
+              <p>{t("vps.common.keepOpen")}</p>
             </div>
           ) : null}
         </DialogContent>

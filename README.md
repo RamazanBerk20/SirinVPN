@@ -220,6 +220,7 @@ codes, keys, passwords, backups, or private VPS details.
 - [Testing](docs/testing.md) and [source map](docs/module-map.md)
 - [Android build, design, and verification](docs/android/README.md)
 - [Desktop feature map](docs/overhaul-feature-map.md)
+- [Interface text and localization](docs/ui-text.md) — writing guide and how to add a language
 - [Windows integration](docs/windows-integration-2026-09-07.md)
 - [Signed update design](docs/releases.md) — implementation documentation; no published releases yet
 

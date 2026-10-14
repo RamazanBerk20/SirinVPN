@@ -4,6 +4,7 @@ import { usePageNavigation } from "../../hooks/usePageNavigation";
 import { registerNavigationGuard } from "../../lib/navigationGuard";
 import { SettingsLayout, type SettingsCategory } from "./SettingsLayout";
 import { ActionMenu } from "../../components/ActionMenu";
+import { t } from "../../i18n";
 
 vi.mock("../../platform", () => ({ isAndroid: true }));
 vi.mock("./PreferencesProvider", () => ({ usePreferences: () => ({ snapshot: { preferences: { animations: false } } }) }));
@@ -21,16 +22,16 @@ it("drills into one mobile settings page, honours navigation guards, and returns
   render(<Screen />);
   expect(screen.queryByRole("tablist")).toBeNull();
   expect(screen.queryByText(/^Editing/)).toBeNull();
-  fireEvent.click(screen.getByRole("button", { name: "Connection" }));
+  fireEvent.click(screen.getByRole("button", { name: t("settings.category.connection.label") }));
   expect(screen.getByText("Editing connection")).toBeTruthy();
   expect(window.location.hash).toBe("#settings/connection");
   const removeGuard = registerNavigationGuard(() => false);
-  fireEvent.click(screen.getByRole("button", { name: "Back" }));
+  fireEvent.click(screen.getByRole("button", { name: t("common.action.back") }));
   expect(screen.getByText("Editing connection")).toBeTruthy();
   removeGuard();
-  fireEvent.click(screen.getByRole("button", { name: "Back" }));
+  fireEvent.click(screen.getByRole("button", { name: t("common.action.back") }));
   await waitFor(() => expect(screen.queryByText("Editing connection")).toBeNull());
-  expect(screen.getByRole("button", { name: /^VPS maintenance/ })).toBeTruthy();
+  expect(screen.getByRole("button", { name: t("settings.category.maintenance.label") })).toBeTruthy();
 });
 
 it("opens Android actions in a dismissible sheet and keeps disabled operations disabled", async () => {

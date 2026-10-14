@@ -4,8 +4,10 @@ import {
   canManageMember,
   canRotateDeviceKeys,
   memberAccessLabel,
+  memberAccessLevel,
   resolveAccess,
 } from "./access";
+import { t } from "./i18n";
 import type { ActiveInvitationSummary, MemberSummary } from "./types";
 
 const owner: MemberSummary = {
@@ -74,9 +76,10 @@ describe("device key rotation gate", () => {
 
 describe("management target boundaries", () => {
   it("labels compatibility roles without inventing a third wire role", () => {
-    expect(memberAccessLabel(owner)).toBe("Owner");
-    expect(memberAccessLabel(admin)).toBe("Admin");
-    expect(memberAccessLabel(member)).toBe("Member");
+    expect([owner, admin, member].map(memberAccessLevel)).toEqual(["owner", "admin", "member"]);
+    expect(memberAccessLabel(owner)).toBe(t("common.role.owner"));
+    expect(memberAccessLabel(admin)).toBe(t("common.role.admin"));
+    expect(memberAccessLabel(member)).toBe(t("common.role.member"));
   });
 
   it("lets Admins manage only ordinary Members", () => {

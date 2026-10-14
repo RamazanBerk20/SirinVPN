@@ -16,7 +16,7 @@ import android.widget.ScrollView
 object ProtectedValue {
     private fun copy(activity: Activity, value: String) {
         val clipboard = activity.getSystemService(ClipboardManager::class.java)
-        val clip = ClipData.newPlainText("SirinVPN protected value",value)
+        val clip = ClipData.newPlainText(activity.getString(R.string.protected_value_clip_label),value)
         clip.description.extras = PersistableBundle().apply { putBoolean("android.content.extra.IS_SENSITIVE",true) }
         clipboard.setPrimaryClip(clip)
         Handler(Looper.getMainLooper()).postDelayed({
@@ -41,15 +41,15 @@ object ProtectedValue {
             }
             content.addView(android.widget.ImageView(activity).apply {
                 setImageBitmap(bitmap);adjustViewBounds=true;minimumHeight=280
-                contentDescription="Protected QR code"
+                contentDescription=activity.getString(R.string.protected_value_qr_description)
                 (drawable as? android.graphics.drawable.BitmapDrawable)?.isFilterBitmap=false
             })
         }
         content.addView(text)
-        val dialog = AlertDialog.Builder(activity).setTitle("Protected SirinVPN value")
+        val dialog = AlertDialog.Builder(activity).setTitle(R.string.protected_value_title)
             .setView(ScrollView(activity).apply { addView(content) })
-            .setPositiveButton("Close") { _,_ -> text.text = "" }
-            .setNegativeButton("Copy for 1 minute") { _,_ -> copy(activity,value); text.text = "" }
+            .setPositiveButton(R.string.protected_value_close) { _,_ -> text.text = "" }
+            .setNegativeButton(R.string.protected_value_copy) { _,_ -> copy(activity,value); text.text = "" }
             .create()
         dialog.window?.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
         dialog.setOnDismissListener { text.text = "" }

@@ -1,3 +1,4 @@
+import { t } from "../i18n";
 import * as Dialog from "@radix-ui/react-dialog";
 import { ArrowLeft, X } from "@phosphor-icons/react";
 import { isAndroid } from "../platform";
@@ -12,7 +13,7 @@ type DialogContentProps = ComponentProps<typeof Dialog.Content> & {
 };
 
 /** Restore focus for dialogs opened from state, as well as Radix triggers. */
-export function DialogContent({ heading, description, footer, closeDisabled = false, closeLabel = "Close", children, ...props }: DialogContentProps) {
+export function DialogContent({ heading, description, footer, closeDisabled = false, closeLabel = t("common.action.close"), children, ...props }: DialogContentProps) {
   const returnFocus = useRef<HTMLElement | null>(null);
   const title = useRef<HTMLHeadingElement | null>(null);
   const framed = heading !== undefined;
@@ -59,13 +60,13 @@ export function DialogContent({ heading, description, footer, closeDisabled = fa
           </div>
           <Dialog.Close asChild>
             <button type="button" className="dialog-close" aria-label={closeLabel} disabled={closeDisabled}
-              title={closeDisabled ? "Wait for the current operation to finish" : "Close"}>
-              {isAndroid ? <ArrowLeft size={22} /> : <X size={20} />}
+              title={closeDisabled ? t("app.dialog.waitToClose") : closeLabel}>
+              {isAndroid && !props.className?.includes("mobile-action-sheet") ? <ArrowLeft size={22} /> : <X size={20} />}
             </button>
           </Dialog.Close>
         </header>
         <div className="dialog-body">{children}</div>
-        {(footer || closeDisabled) && <footer className="dialog-footer">{footer ?? <p role="status">The operation is running. Closing is available when it finishes.</p>}</footer>}
+        {(footer || closeDisabled) && <footer className="dialog-footer">{footer ?? <p role="status">{t("app.dialog.running")}</p>}</footer>}
       </> : children}
     </Dialog.Content>
   );

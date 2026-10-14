@@ -9,6 +9,8 @@ import {
 } from "./connectionPreferences";
 import { useConnectionPreferences } from "./useConnectionPreferences";
 import { emptyLocalStatus } from "../../hooks/useDesktopStatus";
+import { t } from "../../i18n";
+import { formatTransport } from "../../format";
 vi.mock("../../api", () => ({
   api: { getConnectionPreferences: vi.fn(), setConnectionPreferences: vi.fn() },
 }));
@@ -117,7 +119,7 @@ describe("saved connection preferences", () => {
         local,
         "a",
       ),
-    ).toEqual(["Transport: Direct UDP"]);
+    ).toEqual([t("connection.differences.method", { method: formatTransport("direct_udp") })]);
     expect(
       preferenceDifferences(
         {
@@ -195,6 +197,7 @@ it("accepts a manual MTU limited by Obfuscated UDP as the saved value", () => {
   };
   const saved = { ...defaults, manual_mtu: 1420 };
   expect(preferenceDifferences(saved, local, "a")).toEqual([]);
-  expect(preferenceDifferences(saved, { ...local, transport: "direct_udp" }, "a")).toEqual(["MTU: 1398 (manual)"]);
-  expect(preferenceDifferences({ ...defaults, manual_mtu: 1300 }, local, "a")).toEqual(["MTU: 1398 (manual)"]);
+  const manual1398 = t("connection.differences.mtu.manual", { value: "1398" });
+  expect(preferenceDifferences(saved, { ...local, transport: "direct_udp" }, "a")).toEqual([manual1398]);
+  expect(preferenceDifferences({ ...defaults, manual_mtu: 1300 }, local, "a")).toEqual([manual1398]);
 });

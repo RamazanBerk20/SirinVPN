@@ -10,6 +10,7 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { api } from "../../api";
 import type { ServerProfile, RepairResult } from "../../types";
 import { RepairServerDialog } from "./RepairServerDialog";
+import { t } from "../../i18n";
 
 vi.mock("../../api", () => ({
   api: {
@@ -54,15 +55,15 @@ afterEach(cleanup);
 
 it("reviews DNS scope on a trusted host and preserves transport at the command boundary", async () => {
   render(<RepairServerDialog profile={profile} open onOpenChange={vi.fn()} disconnected intent="dns" onCompleted={vi.fn().mockResolvedValue(undefined)} />);
-  const agent = await screen.findByRole("button", { name: "SSH agent" });
+  const agent = await screen.findByRole("button", { name: t("ssh.auth.agent") });
   await waitFor(() => expect(agent.matches(":disabled")).toBe(false));
   fireEvent.click(agent);
-  fireEvent.click(screen.getByRole("button", { name: "Recursive" }));
-  fireEvent.click(screen.getByRole("button", { name: "Review DNS changes" }));
-  await screen.findByRole("region", { name: "DNS change review" });
+  fireEvent.click(screen.getByRole("button", { name: t("dns.resolver.mode.recursive") }));
+  fireEvent.click(screen.getByRole("button", { name: t("vps.repair.action.review") }));
+  await screen.findByRole("region", { name: t("dns.review.label") });
   expect(api.repairServer).not.toHaveBeenCalled();
-  fireEvent.click(screen.getByRole("button", { name: "Apply DNS configuration" }));
-  await screen.findByText("DNS configuration complete");
+  fireEvent.click(screen.getByRole("button", { name: t("vps.repair.action.apply") }));
+  await screen.findByText(t("vps.repair.titleDoneDns"));
   expect(api.repairServer).toHaveBeenCalledWith(expect.objectContaining({ transport: null, dns_upstream: { mode: "recursive" }, private_dns_records: null, host_key_sha256: fingerprint }));
 });
 
@@ -76,21 +77,21 @@ async function setup() {
       onCompleted={vi.fn().mockResolvedValue(undefined)}
     />,
   );
-  const agent = await screen.findByRole("button", { name: "SSH agent" });
+  const agent = await screen.findByRole("button", { name: t("ssh.auth.agent") });
   await waitFor(() => expect(agent.matches(":disabled")).toBe(false));
   fireEvent.click(agent);
-  fireEvent.click(screen.getByRole("button", { name: "Repair VPS" }));
+  fireEvent.click(screen.getByRole("button", { name: t("vps.repair.action.repair") }));
 }
 
 it("repairs an already trusted VPS directly with the inspected pin", async () => {
   await setup();
-  await screen.findByText("Repair complete");
+  await screen.findByText(t("vps.repair.titleDone"));
   expect(api.inspectSshHost).toHaveBeenCalledWith("vps.example", 22);
   expect(api.repairServer).toHaveBeenCalledWith(
     expect.objectContaining({ host_key_sha256: fingerprint, confirmed: true }),
   );
   expect(api.trustSshHost).not.toHaveBeenCalled();
-  expect(screen.queryByRole("checkbox", { name: /fingerprint/ })).toBeNull();
+  expect(screen.queryByRole("checkbox", { name: new RegExp(t("ssh.verify.confirm")) })).toBeNull();
 });
 
 for (const status of ["unknown", "changed"] as const) {
@@ -99,18 +100,18 @@ for (const status of ["unknown", "changed"] as const) {
     await setup();
     await screen.findByText(
       status === "changed"
-        ? "The VPS SSH key has changed"
-        : "Verify this VPS once",
+        ? t("ssh.verify.titleChanged")
+        : t("ssh.verify.title"),
     );
     expect(api.repairServer).not.toHaveBeenCalled();
     expect(api.trustSshHost).not.toHaveBeenCalled();
     expect(
-      (screen.getByRole("button", { name: "Repair VPS" }) as HTMLButtonElement)
+      (screen.getByRole("button", { name: t("vps.repair.action.repair") }) as HTMLButtonElement)
         .disabled,
     ).toBe(true);
-    fireEvent.click(screen.getByRole("checkbox", { name: /I verified/ }));
-    fireEvent.click(screen.getByRole("button", { name: "Repair VPS" }));
-    await screen.findByText("Repair complete");
+    fireEvent.click(screen.getByRole("checkbox", { name: new RegExp(status === "changed" ? t("ssh.verify.confirmChanged") : t("ssh.verify.confirm")) }));
+    fireEvent.click(screen.getByRole("button", { name: t("vps.repair.action.repair") }));
+    await screen.findByText(t("vps.repair.titleDone"));
     expect(api.trustSshHost).toHaveBeenCalledWith(
       "vps.example",
       22,
@@ -131,8 +132,8 @@ it("does not perform the VPS action if the key changes during confirmation or ca
     new Error("The SSH key changed during verification."),
   );
   await setup();
-  fireEvent.click(await screen.findByRole("checkbox", { name: /I verified/ }));
-  fireEvent.click(screen.getByRole("button", { name: "Repair VPS" }));
+  fireEvent.click(await screen.findByRole("checkbox", { name: new RegExp(t("ssh.verify.confirm")) }));
+  fireEvent.click(screen.getByRole("button", { name: t("vps.repair.action.repair") }));
   await screen.findByText("The SSH key changed during verification.");
   expect(api.repairServer).not.toHaveBeenCalled();
 });
@@ -146,11 +147,11 @@ it("reuses trust after an authentication failure instead of asking for the finge
     new Error("SSH authentication failed."),
   );
   await setup();
-  fireEvent.click(await screen.findByRole("checkbox", { name: /I verified/ }));
-  fireEvent.click(screen.getByRole("button", { name: "Repair VPS" }));
+  fireEvent.click(await screen.findByRole("checkbox", { name: new RegExp(t("ssh.verify.confirm")) }));
+  fireEvent.click(screen.getByRole("button", { name: t("vps.repair.action.repair") }));
   await screen.findByText("SSH authentication failed.");
-  fireEvent.click(screen.getByRole("button", { name: "Repair VPS" }));
-  await screen.findByText("Repair complete");
+  fireEvent.click(screen.getByRole("button", { name: t("vps.repair.action.repair") }));
+  await screen.findByText(t("vps.repair.titleDone"));
   expect(api.trustSshHost).toHaveBeenCalledTimes(1);
   expect(api.repairServer).toHaveBeenCalledTimes(2);
 });
@@ -170,10 +171,10 @@ it("ignores an inspection from a dialog closed by its parent", async () => {
     onCompleted: vi.fn().mockResolvedValue(undefined),
   };
   const { rerender } = render(<RepairServerDialog {...props} open />);
-  const agent = await screen.findByRole("button", { name: "SSH agent" });
+  const agent = await screen.findByRole("button", { name: t("ssh.auth.agent") });
   await waitFor(() => expect(agent.matches(":disabled")).toBe(false));
   fireEvent.click(agent);
-  fireEvent.click(screen.getByRole("button", { name: "Repair VPS" }));
+  fireEvent.click(screen.getByRole("button", { name: t("vps.repair.action.repair") }));
   await waitFor(() => expect(api.inspectSshHost).toHaveBeenCalled());
   rerender(<RepairServerDialog {...props} open={false} />);
   await act(async () => resolve({ fingerprint, status: "trusted" }));
@@ -193,8 +194,8 @@ it("does not start maintenance after unmounting during key confirmation", async 
       }),
   );
   await setup();
-  fireEvent.click(await screen.findByRole("checkbox", { name: /I verified/ }));
-  fireEvent.click(screen.getByRole("button", { name: "Repair VPS" }));
+  fireEvent.click(await screen.findByRole("checkbox", { name: new RegExp(t("ssh.verify.confirm")) }));
+  fireEvent.click(screen.getByRole("button", { name: t("vps.repair.action.repair") }));
   await waitFor(() => expect(api.trustSshHost).toHaveBeenCalled());
   cleanup();
   await act(async () => resolve());
@@ -206,6 +207,6 @@ it("rebuilds the transport draft from the profile saved when the dialog reopens"
   const { rerender } = render(<RepairServerDialog {...props} profile={profile} open={false} />);
   const restored = { ...profile, endpoint: { ...profile.endpoint, host: "restored.example", wireguard_port: 51900 } } as ServerProfile;
   rerender(<RepairServerDialog {...props} profile={restored} open />);
-  expect((await screen.findByLabelText("Public VPN address (optional)") as HTMLInputElement).value).toBe("restored.example");
-  expect((screen.getByLabelText("Direct UDP port") as HTMLInputElement).value).toBe("51900");
+  expect((await screen.findByLabelText(t("ssh.transport.publicHost")) as HTMLInputElement).value).toBe("restored.example");
+  expect((screen.getByLabelText(t("ssh.transport.directPort")) as HTMLInputElement).value).toBe("51900");
 });

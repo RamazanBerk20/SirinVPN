@@ -16,7 +16,7 @@ with sync_playwright() as pw:
     page.on("pageerror", lambda error: errors.append(str(error)))
     page.add_init_script('window.__sirinPlatform="desktop";window.__sirinScenario="connected";' + FIXTURE)
     page.goto("http://127.0.0.1:1420", wait_until="networkidle")
-    overview = page.get_by_role("region", name="VPS overview")
+    overview = page.get_by_role("region", name="Server", exact=True)
     expect(overview.get_by_role("status")).to_have_text("Live")
     expect(page.get_by_role("button", name="Refresh current state")).to_have_count(0)
     cpu = overview.locator(".metric strong").first
@@ -27,7 +27,7 @@ with sync_playwright() as pw:
     assert page.evaluate("window.__sirinCommands.filter(c=>c==='server_status').length") == 0
     assert page.evaluate("window.__sirinCommands.filter(c=>c==='subscribe_server_status').length") == 1
     expect(page.locator(".device-traffic .metric strong").first).to_contain_text("KB/s")
-    duration = page.locator(".device-traffic .metric").filter(has_text="Tunnel duration").locator("strong")
+    duration = page.locator(".device-traffic .metric").filter(has_text="Connected for").locator("strong")
     for _ in range(3):
         previous = duration.inner_text()
         expect(duration).not_to_have_text(previous, timeout=1600)
@@ -41,8 +41,8 @@ with sync_playwright() as pw:
     expect(overview.get_by_role("status")).to_have_text("Live")
 
     page.evaluate("window.__sirinStreamMode='polling'")
-    expect(overview.get_by_role("status")).to_have_text("Automatic updates")
-    expect(overview.get_by_text("Update the VPS software", exact=False)).to_be_visible()
+    expect(overview.get_by_role("status")).to_have_text("Updating")
+    expect(overview.get_by_text("Update the server software", exact=False)).to_be_visible()
     page.evaluate("window.__sirinStreamMode='live'")
     expect(overview.get_by_role("status")).to_have_text("Live")
 
@@ -60,19 +60,20 @@ with sync_playwright() as pw:
         page.get_by_role("navigation", name="Main navigation").get_by_role("button", name="Settings", exact=False).click()
         page.get_by_role("tab", name="VPS maintenance", exact=True).click()
         page.get_by_role("button", name="Update VPS software", exact=False).click()
-        page.get_by_role("button", name="Continue to VPS setup", exact=True).click()
+        page.get_by_role("button", name="Continue", exact=True).click()
         page.get_by_role("button", name="SSH agent", exact=True).click()
-        page.get_by_role("button", name="Update VPS", exact=True).click()
+        # The update dialog signs in, verifies the host key when needed, then reads the release status.
+        page.get_by_role("button", name="Continue", exact=True).click()
         if status != "trusted":
-            expect(page.get_by_role("heading", name="The VPS SSH key has changed" if status == "changed" else "Verify this VPS once")).to_be_visible()
-            expect(page.get_by_role("button", name="Update VPS", exact=True)).to_be_disabled()
-            assert page.evaluate("window.__sirinCommands.filter(c=>c==='repair_server').length") == 0
+            expect(page.get_by_role("heading", name="Server key changed" if status == "changed" else "Verify this server")).to_be_visible()
+            expect(page.get_by_role("button", name="Continue", exact=True)).to_be_disabled()
+            assert page.evaluate("window.__sirinCommands.filter(c=>c==='manage_vps_release').length") == 0
             page.screenshot(path=str(OUT / f"ssh-{status}.png"))
             page.get_by_role("checkbox", name="I verified", exact=False).check()
-            page.get_by_role("button", name="Update VPS", exact=True).click()
-        expect(page.get_by_role("heading", name="Update complete", exact=True)).to_be_visible()
+            page.get_by_role("button", name="Continue", exact=True).click()
+        expect(page.get_by_role("heading", name="Set up updates for My private VPS", exact=True)).to_be_visible()
         assert page.evaluate("window.__sirinCommands.filter(c=>c==='trust_ssh_host').length") == (0 if status == "trusted" else 1)
-        assert page.evaluate("window.__sirinCommandArguments.find(c=>c.command==='repair_server').args.input.host_key_sha256") == "SHA256:" + "A" * 43
+        assert page.evaluate("window.__sirinCommandArguments.find(c=>c.command==='manage_vps_release').args.input.ssh.host_key_sha256") == "SHA256:" + "A" * 43
         page.close()
     assert not errors, errors
     browser.close()

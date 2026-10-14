@@ -73,20 +73,20 @@ fn read(path: &Path) -> Result<Document, String> {
                 hosts: BTreeMap::new(),
             });
         }
-        Err(_) => return Err("Saved SSH identities could not be read.".into()),
+        Err(_) => return Err("Couldn’t read saved server keys.".into()),
     };
     let mut bytes = Vec::new();
     file.take((MAX_STORE_BYTES + 1) as u64)
         .read_to_end(&mut bytes)
-        .map_err(|_| "Saved SSH identities could not be read.")?;
+        .map_err(|_| "Couldn’t read saved server keys.")?;
     let document: Document = serde_json::from_slice(&bytes)
-        .map_err(|_| "Saved SSH identities are invalid; the file has been preserved.")?;
+        .map_err(|_| "Saved server keys are unreadable. The file was left unchanged.")?;
     if bytes.len() > MAX_STORE_BYTES
         || document.schema_version != 1
         || document.hosts.values().any(|fp| !valid_fingerprint(fp))
     {
         return Err(
-            "Saved SSH identities are unsupported or invalid; the file has been preserved.".into(),
+            "Saved server keys are invalid or unsupported. The file was left unchanged.".into(),
         );
     }
     Ok(document)
@@ -101,7 +101,7 @@ fn inspect_at(
     let key = endpoint(host, port)?;
     let _guard = STORE_LOCK
         .lock()
-        .map_err(|_| "Saved SSH identities are busy.")?;
+        .map_err(|_| "Saved server keys are unavailable. Reopen SirinVPN.")?;
     let document = read(path)?;
     let status = match document.hosts.get(&key) {
         Some(saved) if saved == &fingerprint => TrustStatus::Trusted,
@@ -121,13 +121,13 @@ fn remember_at(path: &Path, host: &str, port: u16, fingerprint: &str) -> Result<
     }
     let _guard = STORE_LOCK
         .lock()
-        .map_err(|_| "Saved SSH identities are busy.")?;
+        .map_err(|_| "Saved server keys are unavailable. Reopen SirinVPN.")?;
     let mut document = read(path)?;
     document.hosts.insert(key, fingerprint.to_owned());
     let bytes =
-        serde_json::to_vec_pretty(&document).map_err(|_| "The SSH identity could not be saved.")?;
+        serde_json::to_vec_pretty(&document).map_err(|_| "Couldn’t save the server key.")?;
     if bytes.len() > MAX_STORE_BYTES {
-        return Err("The saved SSH identity limit has been reached.".into());
+        return Err("Too many server keys are saved.".into());
     }
     let write = || -> std::io::Result<()> {
         let parent = path
@@ -136,7 +136,7 @@ fn remember_at(path: &Path, host: &str, port: u16, fingerprint: &str) -> Result<
         sirinvpn_platform::files::create_private_directory(parent)?;
         sirinvpn_platform::files::atomic_write(path, &bytes, true)
     };
-    write().map_err(|_| "The verified SSH identity could not be saved. Check the app configuration directory permissions.".into())
+    write().map_err(|_| "Couldn’t save the verified server key. Check permissions on the app’s settings folder.".into())
 }
 
 pub(crate) fn remember_verified(
@@ -180,7 +180,7 @@ pub(crate) async fn inspect_ssh_host(
         inspect_at(&path, &input.host, input.port, fingerprint)
     })
     .await
-    .map_err(|_| "The SSH identity check was interrupted.".to_owned())?
+    .map_err(|_| "Checking the server’s SSH key was interrupted. Try again.".to_owned())?
 }
 
 #[tauri::command]
@@ -194,13 +194,13 @@ pub(crate) async fn trust_ssh_host(
         let current = probe(&input.host, input.port)?;
         if current != fingerprint {
             return Err(
-                "The SSH key changed during verification. Check the VPS identity again.".into(),
+                "The SSH key changed during verification. Verify the server fingerprint again.".into(),
             );
         }
         remember_verified(&paths, &input.host, input.port, &fingerprint)
     })
     .await
-    .map_err(|_| "Saving the SSH identity was interrupted.".to_owned())?
+    .map_err(|_| "Saving the server key was interrupted. Try again.".to_owned())?
 }
 
 #[cfg(test)]

@@ -67,7 +67,7 @@ pub fn desktop_selection(app: AppHandle, server_id: Option<String>) -> Result<()
     let mut inner = state
         .inner
         .lock()
-        .map_err(|_| "The tray selection is unavailable.")?;
+        .map_err(|_| crate::native_text::text("native.tray.error.selectionUnavailable"))?;
     inner.selected = id;
     drop(inner);
     request_refresh(&app);

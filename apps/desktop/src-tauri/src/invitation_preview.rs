@@ -20,7 +20,7 @@ pub(crate) struct InvitationPreview {
 pub(crate) fn preview_invitation(code: String) -> Result<InvitationPreview, String> {
     let code = Zeroizing::new(code);
     let invitation = DecodedInvitation::decode(&code)
-        .map_err(|_| "This invitation is invalid, expired, modified, or unsupported.".to_owned())?;
+        .map_err(|_| "This invitation is invalid, expired, modified or unsupported. Ask for a new one.".to_owned())?;
     let binding = invitation.enrollment_binding();
     Ok(InvitationPreview {
         server_name: invitation.server_name().to_owned(),
@@ -28,7 +28,7 @@ pub(crate) fn preview_invitation(code: String) -> Result<InvitationPreview, Stri
         server_identity_fingerprint: management_certificate_fingerprint(
             &binding.pinned_server_certificate_pem,
         )
-        .map_err(|_| "The invitation's server identity could not be verified.".to_owned())?,
+        .map_err(|_| "Couldn’t verify the server in this invitation. Ask for a new one.".to_owned())?,
         expires_at_unix: invitation.expires_at_unix(),
         recipient_names: invitation.recipient_names(),
         creates_member: invitation.creates_member(),

@@ -29,22 +29,24 @@ class SirinTileService : TileService() {
     private fun render() {
         val state = snapshot
         qsTile?.apply {
-            label = "SirinVPN"
+            label = getString(R.string.app_name)
             val phase = state?.optString("phase")
             this.state = when (phase) {
                 "connected" -> Tile.STATE_ACTIVE
                 "disconnected", "paused", "failed", "permission_required", "connecting", "reconnecting", "waiting_for_network", "degraded" -> Tile.STATE_INACTIVE
                 else -> Tile.STATE_UNAVAILABLE
             }
-            subtitle = when (phase) {
-                "connected" -> if (state?.optBoolean("always_on") == true) "Always-on" else "Connected"
-                "connecting", "reconnecting" -> "Connecting…"
-                "waiting_for_network" -> "No network"
-                "degraded" -> "Connection interrupted"
-                "disconnected", "paused" -> "Disconnected"
-                else -> "Open SirinVPN"
-            }
-            contentDescription = "SirinVPN, $subtitle"
+            val status = getString(when (phase) {
+                "connected" -> if (state?.optBoolean("always_on") == true) R.string.tile_status_always_on else R.string.status_connected
+                "connecting" -> R.string.status_connecting
+                "reconnecting" -> R.string.status_reconnecting
+                "waiting_for_network" -> R.string.tile_status_no_network
+                "degraded" -> R.string.status_interrupted
+                "disconnected", "paused" -> R.string.status_disconnected
+                else -> R.string.tile_status_open_app
+            })
+            subtitle = status
+            contentDescription = getString(R.string.tile_description, status)
             updateTile()
         }
     }

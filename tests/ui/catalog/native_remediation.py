@@ -78,10 +78,10 @@ def main():
         scene('invitation-created-qr-and-code' if kind == 'invitation' else 'create-offline-recovery-key-completed')
         if kind == 'recovery':
             e.call('act', {'details': 'open'})
-        e.call('act', click('Enlarge ' + kind + ' QR code'))
+        e.call('act', click('Enlarge invitation QR code' if kind == 'invitation' else 'Enlarge recovery key QR code'))
         e.call('assertVisible', {'selector': '.invitation-qr-dialog img', 'complete': True})
-        e.call('assertVisible', {'selector': '[aria-label="Close enlarged QR code"]', 'complete': True})
-        e.call('assertVisible', {'text': 'Copy ' + kind + ' code', 'complete': True})
+        e.call('assertVisible', {'selector': '[aria-label="Close QR code"]', 'complete': True})
+        e.call('assertVisible', {'text': 'Copy invitation code' if kind == 'invitation' else 'Copy recovery key', 'complete': True})
         return {'files': [shot(kind + '-qr-enlarged')], 'evidence': 'Native renderer QR and complete copy/close controls'}
     for kind in ['invitation', 'recovery']:
         record(kind + '-qr-enlarged', lambda kind=kind: qr(kind))
@@ -101,9 +101,11 @@ def main():
 
     def ownership_confirmation():
         scene('transfer-ownership-confirmation')
-        message = e.evaluate('window.__catalog.prompts.find(prompt=>prompt.message.startsWith("Transfer ownership"))?.message')
+        # Confirmations carry a question title and a separate consequence message.
+        prompt = e.evaluate('window.__catalog.prompts.find(prompt=>prompt.options?.title?.startsWith("Transfer ownership"))')
+        message = prompt['message']
         assert 'SHA256:' + 'A' * 43 in message, 'The full destination fingerprint is missing'
-        e.begin('plugin:dialog|message', {'title': 'Transfer ownership', 'message': message, 'kind': 'warning', 'buttons': {'OkCancelCustom': ['Transfer ownership', 'Cancel']}})
+        e.begin('plugin:dialog|message', {'title': prompt['options']['title'], 'message': message, 'kind': 'warning', 'buttons': {'OkCancelCustom': [prompt['options']['okLabel'], 'Cancel']}})
         time.sleep(0.5)
         file = shot('ownership-identity-confirmation')
         subprocess.run(['xdotool', 'key', 'Escape'], env={**os.environ, 'DISPLAY': ':87'}, check=True)

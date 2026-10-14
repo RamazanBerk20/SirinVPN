@@ -13,3 +13,4 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <App />
   </React.StrictMode>,
 );
+void import("./i18n/native").then(native => native.pushNativeText(), () => {});

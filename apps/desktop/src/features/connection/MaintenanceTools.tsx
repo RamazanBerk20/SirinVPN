@@ -10,6 +10,7 @@ import {
   CaretRight,
 } from "@phosphor-icons/react";
 import { canRotateDeviceKeys } from "../../access";
+import { t } from "../../i18n";
 import type { ServerWorkspaceModel } from "./useServerWorkspace";
 import { RecoveryKeys } from "../settings/RecoveryKeys";
 
@@ -25,32 +26,37 @@ export function MaintenanceTools({
   const { rotationPending, connected, anotherConnected, profile, localKnown } =
     model;
   const blockedRotation = rotationPending
-    ? "Resume device key rotation first."
+    ? t("maintenance.tools.finishRotationFirst")
     : undefined;
   const deviceActions = [
     {
-      label: "Export device backup",
+      id: "export-backup",
+      label: t("maintenance.tools.exportBackup.label"),
       description:
         blockedRotation ??
-        "Encrypt this device's VPN and management identity locally.",
+        t("maintenance.tools.exportBackup.summary"),
       icon: DownloadSimple,
       disabled: rotationPending,
       run: () => model.setBackupOpen(true),
     },
     {
-      label: "Restore device backup",
-      description: "Import an encrypted identity from a local backup file.",
+      id: "restore-backup",
+      label: t("maintenance.tools.restoreBackup.label"),
+      description: t("maintenance.tools.restoreBackup.summary"),
       icon: UploadSimple,
       disabled: false,
       run: onRestoreDevice,
     },
     {
-      label: rotationPending ? "Resume key rotation" : "Rotate device keys",
+      id: "rotate-keys",
+      label: rotationPending
+        ? t("maintenance.tools.rotateKeys.resumeLabel")
+        : t("maintenance.tools.rotateKeys.label"),
       description: rotationPending
-        ? "Finish this device's interrupted rotation."
+        ? t("maintenance.tools.rotateKeys.resumeSummary")
         : connected
-          ? "Replace only this device's VPN and management keys."
-          : "Connect to this server to rotate its device keys.",
+          ? t("maintenance.tools.rotateKeys.summary")
+          : t("maintenance.tools.rotateKeys.needsConnection"),
       icon: Key,
       disabled:
         !localKnown ||
@@ -62,18 +68,20 @@ export function MaintenanceTools({
     profile.role === "owner"
       ? [
           {
-            label: "Back up VPS",
+            id: "backup-vps",
+            label: t("maintenance.operation.backup.title"),
             description:
               blockedRotation ??
-              "Encrypt the server configuration and authorization state.",
+              t("maintenance.operation.backup.summary"),
             icon: HardDrives,
             disabled: false,
             run: () => model.setMaintenanceReview("backup"),
           },
           {
-            label: "Restore or migrate VPS",
+            id: "restore-vps",
+            label: t("maintenance.operation.restore.title"),
             description:
-              blockedRotation ?? "Restore server state on a verified host.",
+              blockedRotation ?? t("maintenance.operation.restore.summary"),
             icon: UploadSimple,
             disabled: false,
             run: () => model.setMaintenanceReview("restore"),
@@ -82,15 +90,18 @@ export function MaintenanceTools({
       : [];
   const maintenance = [
     {
+      id: "endpoint-update",
       label:
         profile.role === "owner"
-          ? "Move devices to a new VPS address"
-          : "Apply server address update",
+          ? t("maintenance.tools.endpoint.ownerLabel")
+          : t("maintenance.tools.endpoint.memberLabel"),
       description:
         blockedRotation ??
         (anotherConnected
-          ? "Disconnect the other server first."
-          : "Review a signed address update and move devices to the new endpoint."),
+          ? t("maintenance.tools.endpoint.otherConnected")
+          : profile.role === "owner"
+            ? t("maintenance.tools.endpoint.ownerSummary")
+            : t("maintenance.tools.endpoint.memberSummary")),
       icon: GlobeHemisphereWest,
       disabled: !localKnown || rotationPending || anotherConnected,
       run: () => model.setEndpointUpdateOpen(true),
@@ -98,9 +109,9 @@ export function MaintenanceTools({
     ...(profile.role === "owner"
       ? [
           {
-            label: "Update VPS software",
-            description:
-              "Update SirinVPN on this VPS. Review the operation before proceeding.",
+            id: "update-vps",
+            label: t("maintenance.operation.update.title"),
+            description: t("maintenance.operation.update.summary"),
             icon: ArrowClockwise,
             disabled: false,
             run: () => {
@@ -108,9 +119,9 @@ export function MaintenanceTools({
             },
           },
           {
-            label: "Repair VPS configuration",
-            description:
-              "Restore networking and service configuration. Review the repair plan.",
+            id: "repair-vps",
+            label: t("maintenance.operation.repair.title"),
+            description: t("maintenance.operation.repair.summary"),
             icon: Wrench,
             disabled: false,
             run: () => {
@@ -120,10 +131,12 @@ export function MaintenanceTools({
         ]
       : []),
     {
-      label: "Remove saved server or uninstall SirinVPN",
+      id: "remove",
+      danger: true,
+      label: t("maintenance.tools.remove.label"),
       description:
         blockedRotation ??
-        "Choose local removal or server software uninstall. Your rented VPS is preserved.",
+        t("maintenance.tools.remove.summary"),
       icon: Trash,
       disabled: rotationPending || !localKnown,
       run: () => model.setRemoveOpen(true),
@@ -132,38 +145,42 @@ export function MaintenanceTools({
   const sections =
     category === "recovery"
       ? [
-          { title: "This device · identity & backup", actions: deviceActions },
+          { id: "device", title: t("maintenance.tools.deviceTitle"), actions: deviceActions },
           ...(serverRecovery.length
-            ? [{ title: "VPS · backup & recovery", actions: serverRecovery }]
+            ? [{ id: "vps", title: t("maintenance.tools.vpsTitle"), actions: serverRecovery }]
             : []),
         ]
-      : [{ title: `${profile.name} · maintenance`, actions: maintenance }];
+      : [{ id: "maintenance", title: t("maintenance.tools.serverTitle", { name: profile.name }), actions: maintenance }];
   return (
     <div className="settings-sections">
       {category === "recovery" && model.accessLevel !== "member" && <RecoveryKeys key={profile.id} profile={profile} connected={connected} owner={model.accessLevel === "owner"} />}
       {sections.map((section) => (
         <section
-          key={section.title}
+          key={section.id}
           className="settings-card maintenance-tools"
         >
           <h2>{section.title}</h2>
           <div className="settings-action-list">
             {section.actions.map(
-              ({ label, description, icon: Icon, disabled, run }) => (
-                <button
-                  key={label}
-                  className={`settings-action ${label.startsWith("Remove") ? "danger" : ""}`}
-                  onClick={run}
-                  disabled={disabled}
-                >
-                  <Icon size={22} />
-                  <span>
-                    <strong>{label}</strong>
-                    <small>{description}</small>
-                  </span>
-                  <CaretRight size={17} />
-                </button>
-              ),
+              (action) => {
+                const { id, label, description, icon: Icon, disabled, run } = action;
+                const danger = "danger" in action && action.danger;
+                return (
+                  <button
+                    key={id}
+                    className={`settings-action ${danger ? "danger" : ""}`}
+                    onClick={run}
+                    disabled={disabled}
+                  >
+                    <Icon size={22} />
+                    <span>
+                      <strong>{label}</strong>
+                      <small>{description}</small>
+                    </span>
+                    <CaretRight size={17} />
+                  </button>
+                );
+              },
             )}
           </div>
         </section>

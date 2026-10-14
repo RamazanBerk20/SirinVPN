@@ -3,6 +3,7 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { api } from "../../api";
 import type { MemberSummary, MembershipSnapshot } from "../../types";
 import { useMemberLifecycle } from "./useMemberLifecycle";
+import { t } from "../../i18n";
 
 vi.mock("../../api", () => ({
   api: { updateMemberSuspension: vi.fn(), revokeMemberDevices: vi.fn() },
@@ -70,13 +71,16 @@ it("uses the latest member state and confirms the scope of all devices", async (
     false,
   );
   expect(window.confirm).toHaveBeenCalledWith(
-    expect.stringContaining("Reactivate Family"),
+    expect.stringContaining(t("devices.confirm.reactivate.title", { name: "Family" })),
   );
   await act(async () => {
     await result.current.revokeMemberDevices(member);
   });
-  expect(window.confirm).toHaveBeenCalledWith(
-    expect.stringContaining("Revoke all 2 devices"),
+  expect(window.confirm).toHaveBeenLastCalledWith(
+    expect.stringContaining(t("devices.confirm.revokeAll.title", { name: "Family" })),
+  );
+  expect(window.confirm).toHaveBeenLastCalledWith(
+    expect.stringContaining(t("devices.confirm.revokeAll.message", { count: 2 })),
   );
   expect(api.revokeMemberDevices).toHaveBeenCalledWith(
     "server",

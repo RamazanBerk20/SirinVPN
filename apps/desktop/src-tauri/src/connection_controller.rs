@@ -30,7 +30,7 @@ pub fn cancel() -> Result<CancellationGuard, String> {
         .map_err(|_| "Disconnect is already in progress.".to_owned())?;
     if is_busy() && !CONNECTING.load(Ordering::Acquire) {
         CANCELLING.store(false, Ordering::Release);
-        return Err("Finish the current protected device operation before disconnecting.".into());
+        return Err("Wait for the current operation to finish before disconnecting.".into());
     }
     EPOCH.fetch_add(1, Ordering::AcqRel);
     crate::management_session::invalidate();
@@ -58,7 +58,7 @@ pub fn is_busy() -> bool {
 
 pub fn require_finished_rotation(paths: &ClientPaths, id: ServerId) -> Result<(), String> {
     if has_pending_key_rotation(paths, id).map_err(safe_error)? {
-        return Err("Finish this device's pending key rotation in Keys & recovery before reconnecting or switching servers.".into());
+        return Err("Finish this device’s key rotation in Keys & recovery first.".into());
     }
     Ok(())
 }
@@ -88,7 +88,7 @@ fn acquire_gate(connecting: bool) -> Result<OperationGuard, String> {
             Ok(guard)
         })
         .map_err(|_| {
-            "Another connection operation is in progress. Finish it before trying again.".into()
+            "Another VPN operation is running. Try again when it finishes.".into()
         })
 }
 
@@ -99,7 +99,7 @@ pub fn session_action(command: &str, expected: ServerId) -> Result<LocalTunnelSt
     }
     if !current.connection_control_supported {
         return Err(
-            "Update the local VPN component in Settings before using this connection control."
+            "Update the VPN component in Settings first."
                 .into(),
         );
     }
@@ -130,7 +130,7 @@ pub async fn reconnect_server(
         session_action("reconnect-session", id)
     })
     .await
-    .map_err(|_| "The network worker was interrupted.".to_owned())?
+    .map_err(|_| "Reconnecting was interrupted. Check the connection status.".to_owned())?
 }
 
 #[cfg(test)]

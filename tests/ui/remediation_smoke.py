@@ -63,16 +63,16 @@ with sync_playwright() as pw:
         expect(allow).to_be_enabled()
         allow.focus()
         page.keyboard.press("Enter")
-        expect(card.get_by_role("status")).to_contain_text("not encrypted")
-        card.get_by_role("button", name="Retry credential cleanup", exact=True).click()
+        expect(card.get_by_role("status")).to_contain_text("unencrypted file")
+        card.get_by_role("button", name="Retry cleanup", exact=True).click()
         expect(card.get_by_role("alert")).to_contain_text("cleanup is incomplete")
         card.scroll_into_view_if_needed()
         page.screenshot(path=str(OUT / f"{width}-partial-cleanup.png"))
         page.evaluate("window.__sirinCleanupFails = false")
-        card.get_by_role("button", name="Retry credential cleanup", exact=True).click()
-        expect(card.get_by_role("button", name="Retry credential cleanup", exact=True)).to_have_count(0)
-        card.get_by_role("button", name="Migrate to keyring", exact=True).click()
-        expect(card.get_by_text("System keyring · available", exact=True)).to_be_visible()
+        card.get_by_role("button", name="Retry cleanup", exact=True).click()
+        expect(card.get_by_role("button", name="Retry cleanup", exact=True)).to_have_count(0)
+        card.get_by_role("button", name="Move to keyring", exact=True).click()
+        expect(card.get_by_text("System keyring · Available", exact=True)).to_be_visible()
         assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), "Horizontal overflow"
         page.screenshot(path=str(OUT / f"{width}-migrated.png"))
         checks.append({"viewport": [width, height], "consent_keyboard": True,
@@ -86,7 +86,7 @@ window.__sirinServerOverride={authorization_recovery:{health:'recovery_failed',g
   containment_verified:false,committed:true}};
 """)
     page.goto("http://127.0.0.1:1420", wait_until="networkidle")
-    expect(page.get_by_text("Server authorization enforcement is unavailable. Do not rely on this server until recovery succeeds.", exact=True)).to_be_visible()
+    expect(page.get_by_text("Server access checks aren’t working. Don’t rely on this server until they’re restored.", exact=True)).to_be_visible()
     page.screenshot(path=str(OUT / "authorization-unverified.png"))
     checks.append({"authorization_failure_visible": True})
     page.close()
@@ -110,7 +110,7 @@ window.__TAURI_INTERNALS__.invoke = async (command, args) => {
 """)
         page.goto("http://127.0.0.1:1420", wait_until="networkidle")
         page.add_style_tag(content=f"html {{ font-size: {font}% !important; }}")
-        expect(page.get_by_text("Server authorization enforcement is unavailable. Do not rely on this server until recovery succeeds.", exact=True)).to_be_visible()
+        expect(page.get_by_text("Server access checks aren’t working. Don’t rely on this server until they’re restored.", exact=True)).to_be_visible()
         assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), "Mobile horizontal overflow"
         page.screenshot(path=str(OUT / f"android-{width}-{font}-recovery.png"), full_page=True)
         checks.append({"platform": "synthetic Android browser", "viewport": [width, height],

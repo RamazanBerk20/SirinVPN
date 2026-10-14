@@ -26,7 +26,7 @@ pub(super) async fn update_member_policy(
         .map_err(safe_error)?
         .member_policies_enabled
     {
-        return Err("Update this VPS before configuring member access policies.".into());
+        return Err("Update this server to set access policies.".into());
     }
     client
         .update_member_policy(member_id, &input.policy)
@@ -61,7 +61,7 @@ async fn connected_member_client(
         .map_err(safe_error)?
         .member_lifecycle_enabled
     {
-        return Err("Update this VPS with the current app before managing member suspension or revoking all devices.".into());
+        return Err("Update the server to suspend members or revoke all their devices.".into());
     }
     Ok(client)
 }
@@ -88,7 +88,7 @@ pub(super) async fn revoke_member_devices(
     input: MemberDevicesRevokeInput,
 ) -> Result<MembershipSnapshot, String> {
     if !input.confirmed {
-        return Err("Confirm revoking all of this member's devices before continuing.".into());
+        return Err("Confirm revoking all of this member’s devices first.".into());
     }
     let member_id = input
         .member_id

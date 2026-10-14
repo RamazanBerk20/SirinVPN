@@ -23,7 +23,9 @@ async fn android_call(
     tauri::async_runtime::spawn_blocking(move || {
         handle
             .run_mobile_plugin("call", Request { command, args })
-            .map_err(|_| "The Android service is unavailable. Reopen SirinVPN and retry.".into())
+            .map_err(|_| {
+                "The Android service isn’t available. Reopen SirinVPN and try again.".into()
+            })
     })
     .await
     .map_err(|_| "The Android request was interrupted.".to_owned())?
@@ -52,7 +54,7 @@ async fn android_watch(
         )
         .await
         .map(|_| ())
-        .map_err(|_| "Could not observe Android service state.".into())
+        .map_err(|_| "Couldn’t read the VPN status from Android.".into())
 }
 
 #[tauri::command]
@@ -65,7 +67,7 @@ async fn android_unwatch(app: tauri::AppHandle, channel_id: u32) -> Result<(), S
         )
         .await
         .map(|_| ())
-        .map_err(|_| "Could not remove Android observer.".into())
+        .map_err(|_| "Couldn’t stop VPN status updates.".into())
 }
 
 #[tauri::mobile_entry_point]

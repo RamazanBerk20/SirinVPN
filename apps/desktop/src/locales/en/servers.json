@@ -1,0 +1,34 @@
+{
+  "count_one": "{{count}} server",
+  "count_other": "{{count}} servers",
+  "add": "Add server",
+  "open": "Open {{name}}",
+  "favorite": "Favorite",
+  "selected": "Selected",
+  "addressOf": "{{name}} address",
+  "search": {
+    "label": "Search servers",
+    "placeholder": "Name or address",
+    "empty": "No servers match your search."
+  },
+  "actions": {
+    "label": "Actions for {{name}}",
+    "rename": "Rename",
+    "favorite": "Add to favorites",
+    "unfavorite": "Remove from favorites",
+    "maintain": "Maintenance"
+  },
+  "rename": {
+    "title": "Rename server",
+    "description": "The new name is only saved on this device.",
+    "prompt": "Name on this device",
+    "label": "Server name",
+    "save": "Save name"
+  },
+  "picker": {
+    "eyebrow": "Server",
+    "trigger": "Server: {{name}}. Change server",
+    "title": "Choose a server",
+    "manage": "Manage servers"
+  }
+}

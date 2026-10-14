@@ -18,7 +18,7 @@ class MaintenanceService : Service() {
         VpnNotifications.channels(this)
         val notification=Notification.Builder(this,VpnNotifications.MAINTENANCE_CHANNEL).setSmallIcon(R.drawable.ic_sirin_vpn)
             .setBadgeIconType(Notification.BADGE_ICON_NONE)
-            .setContentTitle("SirinVPN server operation").setContentText("A requested operation is in progress. Reopen SirinVPN for its result.")
+            .setContentTitle(getString(R.string.notification_maintenance_title)).setContentText(getString(R.string.notification_maintenance_text))
             .setOngoing(true).setOnlyAlertOnce(true).setContentIntent(VpnNotifications.openApp(this)).build()
         if(Build.VERSION.SDK_INT>=29) startForeground(72,notification,ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC) else startForeground(72,notification)
         return START_NOT_STICKY

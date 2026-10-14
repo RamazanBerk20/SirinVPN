@@ -1,0 +1,101 @@
+{
+  "login": {
+    "checking": "Checking for a saved login…",
+    "forgetSaved": "Forget saved login",
+    "savedTitle": "Saved SSH login",
+    "savedSummary": "{{username}} · port {{port}} · {{method}}",
+    "change": "Change login",
+    "forget": "Forget login",
+    "username": "SSH username",
+    "port": "SSH port",
+    "method": "Sign-in method",
+    "keyPath": "Private key path",
+    "keyPathPlaceholder": "/home/me/.ssh/id_ed25519",
+    "chooseKey": "Choose SSH key",
+    "changeKey": "Key selected · Change",
+    "keyPassphrase": "Key passphrase",
+    "keyPassphraseHint": "Leave empty if the key has no passphrase",
+    "password": "SSH password",
+    "sudoPassword": "sudo password",
+    "sudoPasswordHint": "Leave empty for passwordless sudo",
+    "remember": "Remember login on this device",
+    "rememberNote": "Saved securely after a successful sign-in.",
+    "useSaved": "Use saved login"
+  },
+  "auth": {
+    "password": "Password",
+    "agent": "SSH agent",
+    "privateKey": "Private key"
+  },
+  "error": {
+    "picker": "Couldn’t open the file picker. Try again.",
+    "readSaved": "Couldn’t read the saved login. Enter the login below.",
+    "forget": "Couldn’t remove the saved login. Try again.",
+    "cancelled": "Cancelled because the server address changed. Try again.",
+    "invalidLogin": "Enter a valid SSH login.",
+    "hostChanged": "The server address changed. Verify it again.",
+    "verifyFirst": "Verify the server fingerprint first."
+  },
+  "verify": {
+    "titleChanged": "Server key changed",
+    "title": "Verify this server",
+    "bodyChanged": "It doesn’t match the saved key. Verify the new key before replacing it.",
+    "body": "Check that this fingerprint belongs to your server:",
+    "copyFingerprint": "Copy fingerprint",
+    "changedWarning": "If you didn’t rebuild the server or change its keys, stop and contact your provider.",
+    "confirmChanged": "I verified the new key",
+    "confirm": "I verified this fingerprint",
+    "confirmChangedNote": "Replaces the saved key for this address and port.",
+    "confirmNote": "Saved for next time. You’re asked again only if it changes."
+  },
+  "guide": {
+    "openConsole": "Open the server’s browser console on your hosting provider’s website and sign in.",
+    "runCommand": "Run this command in the console:",
+    "copyCommand": "Copy verification command",
+    "matchCheckbox": "Find the <code>SHA256:…</code> line that exactly matches the fingerprint above, then check the box below. If none match, stop and contact your provider.",
+    "matchButton": "Find the <code>SHA256:…</code> line that exactly matches the fingerprint above, then confirm below. If none match, stop and contact your provider."
+  },
+  "network": {
+    "title": "Server network check",
+    "titleConflicts": "Fix network conflicts",
+    "exposure": {
+      "publicInterface": "Public address",
+      "natOrProxy": "May be behind NAT or a proxy",
+      "privateEndpoint": "Private address",
+      "unresolved": "Address didn’t resolve"
+    },
+    "ports": "Allow these incoming ports in your provider’s firewall or NAT:",
+    "portsLabel": "Required incoming ports",
+    "port": "{{protocol}} port {{port}}",
+    "otherNotes": "Other network notes",
+    "addresses": "Server addresses",
+    "address": "<code>{{address}}/{{prefix}}</code> on {{interface}}"
+  },
+  "transport": {
+    "summary": "Addresses, ports and HTTPS",
+    "publicHost": "Public address (optional)",
+    "publicHostPlaceholder": "Same as the SSH address",
+    "alternateHosts": "Alternate addresses (optional)",
+    "alternateHostsPlaceholder": "Up to three hostnames or IP addresses",
+    "alternateNote": "Each address must reach this server on the same ports.",
+    "directPort": "Direct UDP port",
+    "obfuscatedPort": "Obfuscated UDP port",
+    "tcpTlsPort": "TCP and TLS port",
+    "portsNote": "Open these ports in your provider’s firewall. Ports 53, 5053 and 8443 are reserved.",
+    "portsInfo": "TCP and TLS fallback share one port. If you change it, the old port stays open so devices can receive the new one; keep it allowed in your firewall.",
+    "portsInfoLabel": "About ports",
+    "https": "Use HTTPS mode",
+    "hostname": "HTTPS hostname",
+    "hostnamePlaceholder": "vpn.example.org",
+    "path": "HTTPS path",
+    "httpsNote": "Use a hostname you control. Leave both paths empty to use a generated, pinned certificate.",
+    "httpsInfo": "The server keeps its own copy of your certificate. After renewing it, import it here so devices get the new pin. Some networks may still block HTTPS mode.",
+    "httpsInfoLabel": "About HTTPS certificates",
+    "certificate": "Certificate chain path (optional)",
+    "certificatePlaceholder": "/etc/letsencrypt/live/vpn.example.org/fullchain.pem",
+    "privateKey": "Certificate key path (optional)",
+    "privateKeyPlaceholder": "/etc/letsencrypt/live/vpn.example.org/privkey.pem",
+    "existingNote": "Before changing ports or certificates, cancel open invitations and finish key rotations.",
+    "invalid": "Check the ports, hostname, path and certificate paths."
+  }
+}

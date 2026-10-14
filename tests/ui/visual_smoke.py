@@ -19,7 +19,7 @@ OUTPUT.mkdir(parents=True, exist_ok=True)
 violations = []
 
 def inspect(page, name):
-    mobile_navigation = page.get_by_role('navigation', name='Mobile navigation')
+    mobile_navigation = page.get_by_role('navigation', name='Bottom navigation')
     if mobile_navigation.count():
         expect(mobile_navigation).to_be_in_viewport(ratio=1)
     page.screenshot(path=str(OUTPUT / f'{name}.png'), full_page=page.get_by_role('menu').count() == 0)
@@ -45,22 +45,23 @@ with sync_playwright() as pw:
         assert page.locator('.metric > span, .server-glyph, .form-heading > span').evaluate_all("elements => elements.every(el => {\n                const icon = el.querySelector('svg'); if (!icon) return true;\n                const a = el.getBoundingClientRect(), b = icon.getBoundingClientRect();\n                return Math.abs(a.x + a.width / 2 - b.x - b.width / 2) < 1 && Math.abs(a.y + a.height / 2 - b.y - b.height / 2) < 1;\n            })"), 'Boxed icons must be centered'
         if scenario == 'onboarding':
             settings = page.get_by_role('button', name='App settings', exact=True).bounding_box()
-            updates = page.get_by_role('button', name='Check for app updates', exact=True).bounding_box()
+            updates = page.get_by_role('button', name='Check for updates', exact=True).bounding_box()
             assert abs(settings['y'] - updates['y']) < 1, 'Onboarding buttons must share a baseline'
             assert settings['x'] + settings['width'] + 8 <= updates['x'], 'Onboarding buttons overlap'
             page.get_by_label('IP address or hostname', exact=True).fill('example.invalid')
+            page.get_by_role('button', name='Private key', exact=True).click()
             page.get_by_label('Private key path', exact=True).fill('/tmp/sirin-synthetic-key')
-            page.get_by_role('button', name='Verify VPS', exact=False).click()
-            page.get_by_role('button', name='Fingerprint matches — inspect network', exact=True).click()
+            page.get_by_role('button', name='Verify server', exact=False).click()
+            page.get_by_role('button', name='Fingerprint matches', exact=True).click()
             page.get_by_role('button', name='Install SirinVPN', exact=True).click()
-            expect(page.get_by_role('heading', name='Securing your VPS')).to_be_visible()
+            expect(page.get_by_role('heading', name='Setting up your server')).to_be_visible()
             inspect(page, prefix + '-provisioning')
             page.evaluate('window.scrollTo(0, 0)')
-            for label, original in [('App settings', settings), ('Check for app updates', updates)]:
+            for label, original in [('App settings', settings), ('Check for updates', updates)]:
                 actual = page.get_by_role('button', name=label, exact=True).bounding_box()
                 assert all((abs(actual[key] - original[key]) < 1 for key in actual)), (label, original, actual)
         if scenario != 'onboarding':
-            nav = page.get_by_role('navigation', name='Main navigation' if True and width > 760 else 'Mobile navigation')
+            nav = page.get_by_role('navigation', name='Main navigation' if True and width > 760 else 'Bottom navigation')
             for name in ['Devices', 'Settings', 'Servers', 'Home']:
                 nav.get_by_role('button', name=name, exact=False).click()
                 inspect(page, prefix + '-' + name.lower())
@@ -86,9 +87,9 @@ with sync_playwright() as pw:
                     expect(row.get_by_role('button', name='Actions for Android phone')).to_be_focused()
                     row.locator('.device-row-summary').press('Enter')
                     expect(row.locator('.device-row-details')).not_to_be_visible()
-                    expect(page.get_by_text('No active invitations.', exact=False)).to_be_visible()
+                    expect(page.get_by_text('No active invitations', exact=False)).to_be_visible()
                 if name == 'Settings' and True:
-                    trigger = page.get_by_role('button', name='App updates', exact=True)
+                    trigger = page.get_by_role('button', name='Check for updates', exact=True)
                     trigger.click()
                     dialog = page.get_by_role('dialog')
                     expect(dialog).to_be_visible()
@@ -106,7 +107,7 @@ with sync_playwright() as pw:
                             expect(page.get_by_role('button', name='Open port', exact=True)).to_be_visible()
                             page.get_by_label('Public port', exact=True).fill('48080')
                             page.get_by_label('Device port', exact=True).fill('8080')
-                            expect(page.get_by_label('Mapping preview')).to_contain_text('48080')
+                            expect(page.get_by_label('Forwarding preview')).to_contain_text('48080')
                             inspect(page, prefix + '-port-forward-preview')
                     general = page.get_by_role('tab', name='General', exact=True)
                     general.press('End')
@@ -121,7 +122,7 @@ with sync_playwright() as pw:
                     page.get_by_role('button', name='Test notification').click()
                     expect(page.get_by_role('status').filter(has_text='Test notification sent')).to_be_visible()
                     page.get_by_role('switch', name='Close to tray').check()
-                    page.get_by_role('switch', name='Start on system startup').check()
+                    page.get_by_role('switch', name='Start at sign-in').check()
                     page.reload(wait_until='networkidle')
                     expect(page.locator('html')).to_have_attribute('data-motion', 'reduced')
                     nav.get_by_role('button', name='Settings', exact=False).click()
@@ -131,7 +132,7 @@ with sync_playwright() as pw:
                     expect(page.locator('.connection-options')).to_have_count(0)
                     nav.get_by_role('button', name='Settings', exact=False).click()
                     page.get_by_role('tab', name='Connection', exact=True).click()
-                    page.get_by_role('switch', name='Choose transport automatically').uncheck()
+                    page.get_by_role('switch', name='Choose method automatically').uncheck()
                     page.get_by_role('radio', name='Direct UDP Standard WireGuard', exact=True).check()
                     expect(page.get_by_role('button', name='Save preferences', exact=True)).to_be_in_viewport(ratio=1)
                     page.get_by_role('button', name='Save preferences', exact=True).click()
@@ -150,10 +151,10 @@ with sync_playwright() as pw:
             nav.get_by_role('button', name='Home', exact=False).click()
             if scenario == 'connected':
                 page.get_by_role('button', name='Disconnect', exact=True).click()
-                expect(page.get_by_role('button', name='Connect', exact=True)).to_be_enabled()
+                expect(page.get_by_role('region', name='VPN connection').get_by_role('button', name='Connect', exact=True)).to_be_enabled()
                 assert page.evaluate("window.__sirinCommands.includes('disconnect_server')")
             else:
-                page.get_by_role('button', name='Connect', exact=True).click()
+                page.get_by_role('region', name='VPN connection').get_by_role('button', name='Connect', exact=True).click()
                 expect(page.get_by_role('button', name='Disconnect', exact=True)).to_be_enabled()
         assert not errors, errors
         assert not page.evaluate("window.__sirinCommands.some(name => name.includes('check_release'))"), 'Opening pages performed an automatic release check'

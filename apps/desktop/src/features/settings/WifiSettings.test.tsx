@@ -2,6 +2,7 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { WifiSettings } from "./WifiSettings";
 import type { WifiPolicySnapshot } from "../../types";
+import { t } from "../../i18n";
 const mocks = vi.hoisted(() => ({ getWifiPolicy: vi.fn(), listServers: vi.fn(), setWifiPolicy: vi.fn(), trustCurrentWifi: vi.fn(), forgetTrustedWifi: vi.fn(), invoke: vi.fn(), android: false }));
 vi.mock("../../api", () => ({ api: mocks }));
 vi.mock("../../platform", () => ({ get isAndroid() { return mocks.android; }, invoke: mocks.invoke }));
@@ -15,22 +16,22 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.useRealTimers(); vi.restoreAllMocks(); });
 it("requires an explicit opt-in and binds trust to the reviewed network", async () => {
   render(<WifiSettings />);
-  const toggle = await screen.findByRole("switch", { name: "Connect on Wi-Fi not marked trusted" });
+  const toggle = await screen.findByRole("switch", { name: t("settings.wifi.toggle.label") });
   await waitFor(() => expect((toggle as HTMLInputElement).disabled).toBe(false));
   expect(screen.queryByRole("alert")).toBeNull();
   expect(mocks.setWifiPolicy).not.toHaveBeenCalled();
   fireEvent.click(toggle);
   await waitFor(() => expect(mocks.setWifiPolicy).toHaveBeenCalledWith({ enabled: true, server_id: "server-one" }));
-  const input = screen.getByLabelText("Network name (optional)");
+  const input = screen.getByLabelText(t("settings.wifi.trust.label"));
   await waitFor(() => expect((input as HTMLInputElement).disabled).toBe(false));
   fireEvent.change(input, { target: { value: "Home" } });
-  fireEvent.click(screen.getByRole("button", { name: "Trust current Wi-Fi" }));
+  fireEvent.click(screen.getByRole("button", { name: t("settings.wifi.trust.action") }));
   await waitFor(() => expect(mocks.trustCurrentWifi).toHaveBeenCalledWith("network-one", "Home"));
 });
 it("keeps the saved opt-in visible when a native write fails", async () => {
   mocks.setWifiPolicy.mockRejectedValue(new Error("Could not save network policy"));
   render(<WifiSettings />);
-  const toggle = await screen.findByRole("switch", { name: "Connect on Wi-Fi not marked trusted" });
+  const toggle = await screen.findByRole("switch", { name: t("settings.wifi.toggle.label") });
   await waitFor(() => expect((toggle as HTMLInputElement).disabled).toBe(false));
   fireEvent.click(toggle);
   expect(await screen.findByText("Could not save network policy")).toBeTruthy();
@@ -40,7 +41,7 @@ it("keeps the saved opt-in visible when a native write fails", async () => {
 it("does not send the OS display name when trusting a network without a friendly label", async () => {
   mocks.getWifiPolicy.mockResolvedValue({ ...initial, network_names: { "network-one": "Home hotspot" } });
   render(<WifiSettings />);
-  const trust = await screen.findByRole("button", { name: "Trust current Wi-Fi" });
+  const trust = await screen.findByRole("button", { name: t("settings.wifi.trust.action") });
   expect(trust.matches(":disabled")).toBe(false);
   fireEvent.click(trust);
   await waitFor(() => expect(mocks.trustCurrentWifi).toHaveBeenCalledWith("network-one", "Wi-Fi exception"));
@@ -52,9 +53,9 @@ it("resolves existing generic entries, marks the current hotspot, and removes th
     network_names: { "network-one": "Home hotspot", "network-two": "Office hotspot" },
   });
   render(<WifiSettings />);
-  const remove = await screen.findByRole("button", { name: "Remove trust for Home hotspot" });
-  expect(within(remove.closest("li")!).getByText("Current network")).toBeTruthy();
-  expect(screen.getByRole("button", { name: "Remove trust for Office hotspot" })).toBeTruthy();
+  const remove = await screen.findByRole("button", { name: t("settings.wifi.trusted.removeLabel", { name: "Home hotspot" }) });
+  expect(within(remove.closest("li")!).getByText(t("settings.wifi.trusted.current"))).toBeTruthy();
+  expect(screen.getByRole("button", { name: t("settings.wifi.trusted.removeLabel", { name: "Office hotspot" }) })).toBeTruthy();
   expect(screen.queryByText("Wi-Fi exception")).toBeNull();
   fireEvent.click(remove);
   await waitFor(() => expect(mocks.forgetTrustedWifi).toHaveBeenCalledWith("network-one"));
@@ -66,19 +67,19 @@ it("preserves friendly labels and distinguishes unnamed profiles when OS names a
     { id: "office", label: "Work" }, { id: "home", label: "Family" },
   ], network_names: { home: "Home hotspot" } });
   render(<WifiSettings />);
-  expect(await screen.findByText("Saved Wi-Fi (11111111)")).toBeTruthy();
-  expect(screen.getByText("Saved Wi-Fi (22222222)")).toBeTruthy();
+  expect(await screen.findByText(t("settings.wifi.trusted.savedName", { id: "11111111" }))).toBeTruthy();
+  expect(screen.getByText(t("settings.wifi.trusted.savedName", { id: "22222222" }))).toBeTruthy();
   expect(screen.getByText("Work")).toBeTruthy();
-  expect(screen.getByText("Label: Family")).toBeTruthy();
-  expect(screen.getAllByText(/OS name unavailable/)).toHaveLength(3);
+  expect(screen.getByText(t("settings.wifi.trusted.label", { label: "Family" }))).toBeTruthy();
+  expect(screen.getAllByText(t("settings.wifi.trusted.nameUnavailable"), { exact: false })).toHaveLength(3);
 });
 
 it("shows why an unidentified Wi-Fi connection cannot be marked trusted", async () => {
   mocks.getWifiPolicy.mockResolvedValue({ ...initial, can_trust_current: false, current_network_token: null });
   render(<WifiSettings />);
-  const trust = await screen.findByRole("button", { name: "Trust current Wi-Fi" });
+  const trust = await screen.findByRole("button", { name: t("settings.wifi.trust.action") });
   expect(trust.matches(":disabled")).toBe(true);
-  expect(screen.getByText("The operating system cannot reliably identify this saved Wi-Fi connection. It cannot be marked trusted.")).toBeTruthy();
+  expect(screen.getByText(t("settings.wifi.access.unidentified"))).toBeTruthy();
 });
 
 it("guides Android permission denial and requires an explicit trust action after granting access", async () => {
@@ -86,16 +87,16 @@ it("guides Android permission denial and requires an explicit trust action after
   mocks.getWifiPolicy.mockResolvedValue({ ...initial, can_trust_current: false, permission_required: true, location_enabled: true });
   mocks.invoke.mockResolvedValue(false);
   render(<WifiSettings />);
-  fireEvent.click(await screen.findByRole("button", { name: "Allow Wi-Fi access" }));
-  expect(await screen.findByText(/Wi-Fi access was not granted/)).toBeTruthy();
+  fireEvent.click(await screen.findByRole("button", { name: t("settings.wifi.access.allow") }));
+  expect(await screen.findByText(t("settings.wifi.access.denied"))).toBeTruthy();
   expect(mocks.invoke).toHaveBeenCalledWith("android_wifi_permission");
-  expect(screen.queryByRole("button", { name: "Trust current Wi-Fi" })).toBeNull();
-  fireEvent.click(screen.getByRole("button", { name: "App permissions" }));
+  expect(screen.queryByRole("button", { name: t("settings.wifi.trust.action") })).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: t("settings.wifi.access.appPermissions") }));
   expect(mocks.invoke).toHaveBeenCalledWith("android_background_wifi_settings");
   mocks.invoke.mockResolvedValue(true);
   mocks.getWifiPolicy.mockResolvedValue({ ...initial, current_network_token: "identified-network", permission_required: false, location_enabled: true });
-  fireEvent.click(screen.getByRole("button", { name: "Allow Wi-Fi access" }));
-  const trust = await screen.findByRole("button", { name: "Trust current Wi-Fi" });
+  fireEvent.click(screen.getByRole("button", { name: t("settings.wifi.access.allow") }));
+  const trust = await screen.findByRole("button", { name: t("settings.wifi.trust.action") });
   expect(trust.matches(":disabled")).toBe(false);
   expect(mocks.trustCurrentWifi).not.toHaveBeenCalled();
   fireEvent.click(trust);
@@ -106,9 +107,9 @@ it("offers Android Location settings when permission is granted but Location is 
   mocks.android = true;
   mocks.getWifiPolicy.mockResolvedValue({ ...initial, can_trust_current: false, permission_required: false, location_enabled: false });
   render(<WifiSettings />);
-  fireEvent.click(await screen.findByRole("button", { name: "Open Location settings" }));
+  fireEvent.click(await screen.findByRole("button", { name: t("settings.wifi.access.locationSettings") }));
   expect(mocks.invoke).toHaveBeenCalledWith("android_location_settings");
-  expect(screen.queryByRole("button", { name: "Allow Wi-Fi access" })).toBeNull();
+  expect(screen.queryByRole("button", { name: t("settings.wifi.access.allow") })).toBeNull();
   expect(mocks.trustCurrentWifi).not.toHaveBeenCalled();
 });
 
@@ -116,15 +117,15 @@ it("refreshes a manual-disconnect pause but requires review when the network tok
   vi.useFakeTimers();
   mocks.getWifiPolicy.mockResolvedValue({ ...initial, policy: { enabled: true, server_id: "server-one" }, automation_status: "session_active" });
   await act(async () => { render(<WifiSettings />); });
-  fireEvent.change(screen.getByLabelText("Network name (optional)"), { target: { value: "Home" } });
+  fireEvent.change(screen.getByLabelText(t("settings.wifi.trust.label")), { target: { value: "Home" } });
   mocks.getWifiPolicy.mockResolvedValue({ ...initial, policy: { enabled: true, server_id: "server-one" }, current_network_token: "network-two", automation_status: "waiting_for_network_change" });
   await act(async () => { await vi.advanceTimersByTimeAsync(5000); });
-  expect(screen.getByText(/Automation paused on this network/)).toBeTruthy();
-  expect(screen.getByRole("button", { name: "Trust current Wi-Fi" }).matches(":disabled")).toBe(true);
+  expect(screen.getByText(t("settings.wifi.status.paused"))).toBeTruthy();
+  expect(screen.getByRole("button", { name: t("settings.wifi.trust.action") }).matches(":disabled")).toBe(true);
   expect(mocks.trustCurrentWifi).not.toHaveBeenCalled();
-  await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Refresh network" })); });
-  expect((screen.getByLabelText("Network name (optional)") as HTMLInputElement).value).toBe("");
-  await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Trust current Wi-Fi" })); });
+  await act(async () => { fireEvent.click(screen.getByRole("button", { name: t("settings.wifi.refresh") })); });
+  expect((screen.getByLabelText(t("settings.wifi.trust.label")) as HTMLInputElement).value).toBe("");
+  await act(async () => { fireEvent.click(screen.getByRole("button", { name: t("settings.wifi.trust.action") })); });
   expect(mocks.trustCurrentWifi).toHaveBeenCalledWith("network-two", "Wi-Fi exception");
 });
 
@@ -143,7 +144,7 @@ it("pauses hidden network reads and refreshes on return without trusting a chang
   await act(async () => { hidden = false; document.dispatchEvent(new Event("visibilitychange")); });
   expect(mocks.getWifiPolicy).toHaveBeenCalledTimes(initialReads + 1);
   expect(mocks.listServers).toHaveBeenCalledOnce();
-  expect(screen.getByRole("button", { name: "Trust current Wi-Fi" }).matches(":disabled")).toBe(true);
+  expect(screen.getByRole("button", { name: t("settings.wifi.trust.action") }).matches(":disabled")).toBe(true);
   expect(mocks.trustCurrentWifi).not.toHaveBeenCalled();
 });
 
@@ -161,8 +162,8 @@ it("discards a read started before hiding and refreshes once it settles", async 
   mocks.getWifiPolicy.mockResolvedValue({ ...initial, current_network: "other_network", current_network_token: "network-new" });
   await act(async () => { finish({ ...initial, current_network: "trusted_wifi", current_network_token: "network-old" }); });
   expect(mocks.getWifiPolicy).toHaveBeenCalledTimes(3);
-  expect(screen.getByText("The active connection is not Wi-Fi")).toBeTruthy();
-  expect(screen.queryByText("Current network: marked trusted")).toBeNull();
+  expect(screen.getByText(t("settings.wifi.network.otherNetwork"))).toBeTruthy();
+  expect(screen.queryByText(t("settings.wifi.network.trusted"))).toBeNull();
 });
 
 it("lets a pending policy save finish across a hide and show without duplicate writes", async () => {
@@ -171,7 +172,7 @@ it("lets a pending policy save finish across a hide and show without duplicate w
   let finish!: () => void;
   mocks.setWifiPolicy.mockReturnValue(new Promise<void>((resolve) => { finish = resolve; }));
   render(<WifiSettings />);
-  const toggle = await screen.findByRole("switch", { name: "Connect on Wi-Fi not marked trusted" });
+  const toggle = await screen.findByRole("switch", { name: t("settings.wifi.toggle.label") });
   await waitFor(() => expect(toggle.matches(":disabled")).toBe(false));
   fireEvent.click(toggle);
   act(() => { hidden = true; document.dispatchEvent(new Event("visibilitychange")); });
@@ -190,5 +191,5 @@ it("clears a failed first read once a later poll succeeds", async () => {
   expect(screen.getByText("Wi-Fi state is temporarily unavailable")).toBeTruthy();
   await act(async () => { await vi.advanceTimersByTimeAsync(5000); });
   expect(screen.queryByText("Wi-Fi state is temporarily unavailable")).toBeNull();
-  expect(screen.getByRole("switch", { name: "Connect on Wi-Fi not marked trusted" })).toBeTruthy();
+  expect(screen.getByRole("switch", { name: t("settings.wifi.toggle.label") })).toBeTruthy();
 });

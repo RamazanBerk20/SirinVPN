@@ -2,6 +2,7 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, expect, it } from "vitest";
 import type { NetworkPreflight } from "../../types";
 import { ServerNetworkPreflight } from "./ServerNetworkPreflight";
+import { t } from "../../i18n";
 
 afterEach(cleanup);
 const report: NetworkPreflight = {
@@ -12,14 +13,14 @@ const report: NetworkPreflight = {
 };
 it("shows the inspected address mapping and exact provider port requirements", () => {
   render(<ServerNetworkPreflight report={report} />);
-  expect(screen.getByRole("heading", { name: "VPS network inspection" })).toBeTruthy();
-  expect(screen.getByLabelText("UDP port 51820")).toBeTruthy();
-  expect(screen.getByLabelText("TCP port 7443")).toBeTruthy();
+  expect(screen.getByRole("heading", { name: t("ssh.network.title") })).toBeTruthy();
+  expect(screen.getByLabelText(t("ssh.network.port", { protocol: "UDP", port: 51820 }))).toBeTruthy();
+  expect(screen.getByLabelText(t("ssh.network.port", { protocol: "TCP", port: 7443 }))).toBeTruthy();
   expect(screen.getByText("10.2.0.4/24")).toBeTruthy();
   expect(screen.getByText("Forward these ports through the provider NAT mapping.")).toBeTruthy();
 });
 it("makes an occupied port an actionable conflict", () => {
   render(<ServerNetworkPreflight report={{ ...report, issues: [{ code: "port_in_use", blocking: true, message: "TCP port 7443 is occupied. Choose a free port." }] }} />);
-  expect(screen.getByRole("heading", { name: "Resolve these network conflicts" })).toBeTruthy();
+  expect(screen.getByRole("heading", { name: t("ssh.network.titleConflicts") })).toBeTruthy();
   expect(screen.getByText("TCP port 7443 is occupied. Choose a free port.")).toBeTruthy();
 });

@@ -47,7 +47,7 @@ pub(super) async fn create_invitation(
             .map_err(safe_error)?
             .recipient_names_enabled
     {
-        return Err("Update this VPS to support invitations where recipients choose their member and device names.".into());
+        return Err("Update this server to let recipients choose their own names.".into());
     }
     let advanced = input.target_member_id.is_some() || input.administrator;
     let max_uses = input.max_uses.unwrap_or(1);
@@ -60,7 +60,7 @@ pub(super) async fn create_invitation(
             .map_err(safe_error)?
             .reusable_invitations_enabled
     {
-        return Err("Update this VPS before using reusable invitations, member policies or delegated invitations.".into());
+        return Err("Update this server to use reusable invitations, access policies or delegated invitations.".into());
     }
     if advanced
         && !client
@@ -70,7 +70,7 @@ pub(super) async fn create_invitation(
             .advanced_invitations_enabled
     {
         return Err(
-            "Update the SirinVPN server before creating Admin or additional-device invitations."
+            "Update this server to create Admin or extra-device invitations."
                 .to_owned(),
         );
     }
@@ -213,7 +213,7 @@ pub(super) async fn update_device_peer_communication(
         .map_err(safe_error)?
         .peer_isolation_enabled
     {
-        return Err("Repair this SirinVPN server before changing peer communication.".to_owned());
+        return Err("Repair this server to change mutual access.".to_owned());
     }
     client
         .update_device_peer_communication(device_id, input.enabled)
@@ -240,7 +240,7 @@ pub(super) async fn create_port_forward(
         .map_err(safe_error)?
         .port_forwarding_enabled
     {
-        return Err("Repair this SirinVPN server before managing port forwards.".to_owned());
+        return Err("Repair this server to manage port forwarding.".to_owned());
     }
     client
         .create_port_forward(&PortForwardCreateRequest {
@@ -265,7 +265,7 @@ pub(super) async fn remove_port_forward(
         .map_err(safe_error)?
         .port_forwarding_enabled
     {
-        return Err("Repair this SirinVPN server before managing port forwards.".to_owned());
+        return Err("Repair this server to manage port forwarding.".to_owned());
     }
     client
         .remove_port_forward(input.protocol, input.public_port)
@@ -290,7 +290,7 @@ pub(super) async fn update_member_access(
             .await?;
     }
     if status.caller_role != Some(ServerRole::Owner) {
-        return Err("Only the owner can change Admin access.".to_owned());
+        return Err("Only the Owner can change Admin access.".to_owned());
     }
     if !client
         .configuration()
@@ -298,7 +298,7 @@ pub(super) async fn update_member_access(
         .map_err(safe_error)?
         .advanced_invitations_enabled
     {
-        return Err("Update the SirinVPN server before changing Admin access.".to_owned());
+        return Err("Update this server to change Admin access.".to_owned());
     }
     client
         .update_member_access(member_id, input.administrator)
@@ -321,7 +321,7 @@ pub(super) async fn transfer_ownership(
     let client = crate::management_session::connected(&app, &input.server_id).await?;
     let status = client.status().await.map_err(safe_error)?;
     if status.caller_role != Some(ServerRole::Owner) {
-        return Err("Only the owner can transfer ownership.".to_owned());
+        return Err("Only the Owner can transfer ownership.".to_owned());
     }
     if !client
         .configuration()
@@ -329,14 +329,14 @@ pub(super) async fn transfer_ownership(
         .map_err(safe_error)?
         .ownership_transfer_enabled
     {
-        return Err("Update the SirinVPN server before transferring ownership.".to_owned());
+        return Err("Update this server to transfer ownership.".to_owned());
     }
     let snapshot = client
         .transfer_ownership(destination_device_id)
         .await
         .map_err(safe_error)?;
     client.retain_access(&app, ServerRole::Member, true).await.map_err(|_| {
-            "Ownership was transferred on the VPS, but this device's local access level could not be saved. Reconnect to refresh it.".to_owned()
+            "Ownership was transferred, but this device couldn’t save its new role. Reconnect to refresh it.".to_owned()
     })?;
     Ok(snapshot)
 }

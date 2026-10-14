@@ -31,7 +31,7 @@ pub(super) fn prepare_helper_for_connection(interactive: bool) -> Result<()> {
         let current = invoke_helper("status", None)?;
         if !crate::connection_controller::confirmed_disconnected(&current) {
             bail!(
-                "Disconnect the VPN and release its traffic protection before updating the local VPN component."
+                "Disconnect and turn off the kill switch before updating the VPN component."
             );
         }
         install_verified_helper(
@@ -54,7 +54,7 @@ fn install_verified_helper(
     install(packaged)?;
     if !helper_protocol_is_current(installed) || !helper_artifact_matches(installed, packaged) {
         bail!(
-            "The local VPN component could not be verified after installation. Reopen the current SirinVPN package and try again."
+            "Couldn’t verify the VPN component after installing it. Reopen the current SirinVPN package and try again."
         );
     }
     Ok(())
@@ -143,7 +143,7 @@ fn invoke_helper_payload_with_interaction(
     let output = child.wait_with_output()?;
     if !output.status.success() {
         bail!(
-            "The local network operation did not complete. Refresh to verify the tunnel and kill switch state."
+            "The VPN action didn’t finish. Refresh to check the connection and kill switch."
         );
     }
     Ok(output.stdout)
@@ -196,7 +196,7 @@ fn ensure_vpn_authorization(command: &str, interactive: bool) -> Result<()> {
         .status()?;
     if !granted.success() || !wait_for_vpn_authorization(&action) {
         bail!(
-            "VPN-control authorization was not granted. Connect from an active local session to try again."
+            "VPN control wasn’t authorized. Connect again from your active desktop session."
         );
     }
     Ok(())
@@ -250,13 +250,13 @@ pub(super) fn install_helper(source: &Path) -> Result<()> {
         .stderr(Stdio::null())
         .status()?;
     if !status.success() {
-        bail!("privileged helper installation was not authorized");
+        bail!("The VPN component wasn’t installed. Approve the administrator prompt and try again.");
     }
     if !nix::unistd::Uid::effective().is_root() {
         let action = sirinvpn_linux_helper::vpn_control_action("connect-managed").unwrap();
         if !wait_for_vpn_authorization(&action) {
             bail!(
-                "The VPN component was installed, but this account's control permission is unavailable. Connect from an active local session."
+                "The VPN component was installed, but this account can’t control it yet. Connect from your active desktop session."
             );
         }
     }
@@ -288,7 +288,7 @@ pub(super) fn resolve_packaged_helper_binary() -> Result<PathBuf> {
     {
         return Ok(path);
     }
-    bail!("the packaged SirinVPN helper is unavailable")
+    bail!("The bundled VPN component is missing. Reinstall SirinVPN.")
 }
 
 pub(super) fn resolve_binary(
@@ -328,7 +328,7 @@ pub(super) fn resolve_binary(
     if installed.is_file() {
         return Ok(installed);
     }
-    bail!("required SirinVPN component is not installed")
+    bail!("A required SirinVPN component is missing. Reinstall SirinVPN.")
 }
 
 #[cfg(test)]

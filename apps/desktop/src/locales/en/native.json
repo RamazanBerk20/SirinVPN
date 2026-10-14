@@ -1,0 +1,110 @@
+{
+  "tray": {
+    "status": {
+      "unknown": "Status unknown",
+      "connected": "Connected",
+      "connectedTo": "Connected to {{name}}",
+      "paused": "Connection paused",
+      "pausedOn": "Connection paused · {{name}}",
+      "reconnecting": "Reconnecting…",
+      "reconnectingTo": "Reconnecting to {{name}}…",
+      "connecting": "Connecting…",
+      "connectingTo": "Connecting to {{name}}…",
+      "interrupted": "Connection interrupted",
+      "interruptedOn": "Connection interrupted · {{name}}",
+      "disconnected": "Disconnected",
+      "serversUnavailable": "{{status}} · Couldn’t load servers",
+      "busy": "Changing connection…",
+      "legacySession": "More controls on next connection"
+    },
+    "killSwitch": {
+      "on": "Kill switch: On",
+      "onIpv6Unverified": "Kill switch: On · IPv6 not verified",
+      "blocking": "Kill switch: Blocking traffic",
+      "blockingIpv6Unverified": "Kill switch: Blocking traffic · IPv6 not verified",
+      "off": "Kill switch: Off",
+      "failed": "Kill switch: Not working",
+      "unknown": "Kill switch: Unknown"
+    },
+    "menu": {
+      "open": "Open SirinVPN",
+      "connectTo": "Connect to {{name}}",
+      "addServer": "Add server…",
+      "disconnect": "Disconnect…",
+      "resume": "Resume",
+      "reconnect": "Reconnect",
+      "stopReconnecting": "Stop reconnecting…",
+      "stopConnecting": "Stop connecting…",
+      "updateComponent": "Update VPN component…",
+      "switchServer": "Switch server",
+      "connectServer": "Connect to server",
+      "manageServers": "Manage servers",
+      "connectionSettings": "Connection settings",
+      "settings": "Settings",
+      "diagnostics": "Diagnostics",
+      "disconnectQuit": "Disconnect and quit…"
+    },
+    "quit": {
+      "plain": "Quit app",
+      "statusUnknown": "Quit app · Status unknown…",
+      "paused": "Quit app · VPN stays paused",
+      "reconnecting": "Quit app · VPN keeps reconnecting",
+      "connected": "Quit app · VPN keeps running",
+      "service": "Quit app · VPN service keeps running",
+      "blocking": "Quit app · Traffic stays blocked",
+      "killSwitchUnknown": "Quit app · Kill switch unknown…"
+    },
+    "confirm": {
+      "cancel": "Cancel",
+      "switch": {
+        "title": "Switch to {{name}}?",
+        "messageKillSwitchOn": "Your current settings carry over. The kill switch stays on during the switch.",
+        "messageKillSwitchOff": "Your current settings carry over. The kill switch is off, so traffic may bypass the VPN during the switch.",
+        "confirm": "Switch"
+      },
+      "stop": {
+        "title": "Stop connection attempts?",
+        "messageKillSwitchOn": "The kill switch keeps blocking traffic until you reconnect or disconnect.",
+        "messageKillSwitchOff": "The kill switch is off, so traffic bypasses the VPN until you reconnect.",
+        "confirm": "Stop attempts"
+      },
+      "disconnect": {
+        "title": "Disconnect the VPN?",
+        "message": "Any traffic block is lifted, and the VPN stays off until you connect again. Other devices stay connected.",
+        "confirm": "Disconnect"
+      },
+      "disconnectQuit": {
+        "title": "Disconnect and quit?",
+        "confirm": "Disconnect and quit"
+      },
+      "quit": {
+        "title": "Quit SirinVPN?",
+        "message": "{{status}}\nClosing the app doesn’t stop the VPN, reconnecting or the kill switch.",
+        "confirm": "Quit"
+      }
+    },
+    "error": {
+      "title": "Couldn’t change the connection",
+      "alreadyConnected": "Another connection is active. Use Switch server instead.",
+      "statusUnverified": "Couldn’t verify the connection status. Open SirinVPN and try again.",
+      "updateToSwitch": "Update the VPN component to switch servers.",
+      "serverUnconfirmed": "The VPN didn’t confirm the selected server. Check its status.",
+      "connectionChanged": "The connection changed. Open the tray menu again.",
+      "stopUnconfirmed": "The VPN didn’t confirm it stopped trying. Check its status.",
+      "disconnectUnconfirmed": "The VPN didn’t confirm it disconnected. Check its status and the kill switch.",
+      "quitUnconfirmed": "The VPN didn’t confirm it disconnected, so the app stays open. Check its status.",
+      "selectionUnavailable": "Couldn’t update the tray menu. Try again."
+    }
+  },
+  "notification": {
+    "test": "Notifications are ready. Connection alerts will appear here.",
+    "connected": "VPN connected",
+    "disconnected": "VPN disconnected",
+    "reconnecting": "Connection interrupted. Reconnecting…",
+    "statusUnknown": "Couldn’t read the VPN status. Open SirinVPN to check.",
+    "error": {
+      "disabled": "Turn on notifications first.",
+      "failed": "Couldn’t show the notification. Check your system’s notification settings."
+    }
+  }
+}

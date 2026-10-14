@@ -27,6 +27,7 @@ import {
 } from "@phosphor-icons/react";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { api } from "./api";
+import { t } from "./i18n";
 import { type ClientPlatform, type ServerProfile } from "./types";
 import { Brand, PrivacyPromises } from "./components/Brand";
 import {
@@ -82,7 +83,7 @@ function AppContent() {
       );
       setLoadError(null);
     } catch {
-      setLoadError("Local server profiles could not be opened.");
+      setLoadError(t("app.errors.profiles"));
     } finally {
       setLoading(false);
     }
@@ -108,9 +109,7 @@ function AppContent() {
       })
       .catch(() => {
         if (!active) return;
-        setPlatformError(
-          "The app could not verify which protected command surface is available.",
-        );
+        setPlatformError(t("app.errors.platform"));
         setLoading(false);
       });
     return () => {
@@ -145,9 +144,7 @@ function AppContent() {
     (request) => {
       if (request.server_id) {
         if (!servers.some((server) => server.id === request.server_id)) {
-          setLoadError(
-            "The tray's server is no longer saved on this device. Open Servers to review the collection.",
-          );
+          setLoadError(t("app.errors.trayServer"));
           return;
         }
       }
@@ -202,7 +199,7 @@ function AppContent() {
       <PlatformUnavailable
         onRetry={() => setInitializationAttempt((value) => value + 1)}
         message={
-          platformError ?? "The protected command surface is unavailable."
+          platformError ?? t("app.errors.platform")
         }
       />
     );
@@ -223,13 +220,13 @@ function AppContent() {
                 onOpenChange={setAppSettingsOpen}
               >
                 <Dialog.Trigger asChild>
-                  <button className={clientPlatform === "android" ? "icon-button" : "secondary-button"} aria-label="App settings">
-                    <GearSix size={22} /> {clientPlatform !== "android" && "App settings"}
+                  <button className={clientPlatform === "android" ? "icon-button" : "secondary-button"} aria-label={t("app.onboarding.settings")}>
+                    <GearSix size={22} /> {clientPlatform !== "android" && t("app.onboarding.settings")}
                   </button>
                 </Dialog.Trigger>
                 <Dialog.Portal>
                   <Dialog.Overlay className="dialog-overlay" />
-                  <DialogContent className="dialog-content preferences-dialog" heading="App settings" description="Preferences for this device.">
+                  <DialogContent className="dialog-content preferences-dialog" heading={t("app.onboarding.settings")} description={t("app.onboarding.settingsDescription")}>
                     <GeneralSettings platform={clientPlatform} onCheckUpdates={() => setReleaseUpdateOpen(true)} />
                   </DialogContent>
                 </Dialog.Portal>
@@ -239,33 +236,30 @@ function AppContent() {
                 type="button"
                 onClick={() => setReleaseUpdateOpen(true)}
               >
-                <ArrowClockwise size={17} /> Check for app updates
+                <ArrowClockwise size={17} /> {t("app.onboarding.checkUpdates")}
               </button>}
             </div>
           </header>
           <section className="onboarding-copy">
-            <p className="section-label">Welcome to SirinVPN</p>
-            <h1>{clientPlatform === "android" ? <>Your VPN.<br />On your terms.</> : "Set up your VPS"}</h1>
+            <p className="section-label">{t("app.onboarding.welcome")}</p>
+            <h1>{clientPlatform === "android" ? <>{t("app.onboarding.headlineFirst")}<br />{t("app.onboarding.headlineSecond")}</> : t("app.onboarding.desktopTitle")}</h1>
             {clientPlatform !== "android" && <InfrastructureArt />}
             <p>
-              {clientPlatform === "android" ? "Connect to a private server. Your keys stay with you." : "Secure your own VPS over SSH, or join a server through a signed invitation from someone you trust."}
+              {t(clientPlatform === "android" ? "app.onboarding.androidIntro" : "app.onboarding.desktopIntro")}
             </p>
             {clientPlatform !== "android" && <PrivacyPromises />}
           </section>
           <section
             className="onboarding-form-wrap"
-            aria-label="Add your first server"
+            aria-label={t("app.onboarding.firstServer")}
           >
             {loadError ? (
               <div className="local-data-error">
                 <LockKey size={28} weight="duotone" />
-                <h2>Local profiles are unavailable</h2>
-                <p>
-                  SirinVPN will not provision a VPS until its protected local
-                  store can be opened safely.
-                </p>
+                <h2>{t("app.onboarding.storeTitle")}</h2>
+                <p>{t("app.onboarding.storeHelp")}</p>
                 <InlineError message={loadError} />
-                <button className="secondary-button" onClick={() => { setLoading(true); void loadServers(); }}>Retry loading profiles</button>
+                <button className="secondary-button" onClick={() => { setLoading(true); void loadServers(); }}>{t("common.action.retry")}</button>
               </div>
             ) : (
               <AddServerFlow onAdded={handleServerAdded} />
@@ -286,18 +280,18 @@ function AppContent() {
     <div className="app-shell">
       {clientPlatform === "desktop" && <DesktopTitleBar />}
       <a className="skip-link" href="#main-content">
-        Skip to content
+        {t("app.skipToContent")}
       </a>
       <aside className="sidebar">
         <Brand compact />
         <Navigation page={page} onChange={setPage} />
         <div className="sidebar-heading">
-          <span>My Servers</span>
+          <span>{t("app.sidebar.servers")}</span>
           <Dialog.Root open={addOpen} onOpenChange={(open) => { if (open || confirmNavigation()) setAddOpen(open); }}>
             <Dialog.Trigger asChild>
               <button
                 className="icon-button"
-                aria-label="Add server"
+                aria-label={t("servers.add")}
                 onClick={() => setAddMode(undefined)}
               >
                 <Plus size={18} weight="bold" />
@@ -305,7 +299,7 @@ function AppContent() {
             </Dialog.Trigger>
             <Dialog.Portal>
               <Dialog.Overlay className="dialog-overlay" />
-              <DialogContent className="dialog-content setup-dialog" heading="Add a server" description="Choose how you want to connect.">
+              <DialogContent className="dialog-content setup-dialog" heading={t("app.addServer.title")} description={t("app.addServer.description")}>
                 <AddServerFlow
                   onAdded={handleServerAdded}
                   compact
@@ -315,7 +309,7 @@ function AppContent() {
             </Dialog.Portal>
           </Dialog.Root>
         </div>
-        <nav className="server-list" aria-label="Local servers">
+        <nav className="server-list" aria-label={t("app.sidebar.serverList")}>
           {servers.map((server) => {
             const connected =
               localStatus.server_id === server.id &&
@@ -345,7 +339,7 @@ function AppContent() {
         </nav>
         <div className="sidebar-foot">
           <ShieldCheck size={17} weight="duotone" />
-          <span>No account. No telemetry.</span>
+          <span>{t("app.sidebar.privacy")}</span>
         </div>
       </aside>
 
@@ -405,6 +399,12 @@ function AppContent() {
                 await refreshStatus();
               }}
               onRemoved={loadServers}
+              servers={servers}
+              onSelectServer={setSelectedId}
+              onAddServer={() => {
+                setAddMode(undefined);
+                setAddOpen(true);
+              }}
             />
           ) : null}
         </div>

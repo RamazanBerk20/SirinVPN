@@ -9,6 +9,8 @@ import { InlineError } from "../../components/ui";
 import type { ClientPlatform } from "../../types";
 import type { AppPreferences } from "./preferences";
 import { usePreferences } from "./PreferencesProvider";
+import { t } from "../../i18n";
+import { useInfoHint } from "../../components/InfoHint";
 
 export function GeneralSettings({
   platform,
@@ -20,6 +22,10 @@ export function GeneralSettings({
   onReviewComponentUpdate?: () => void;
 }) {
   const [tileMessage, setTileMessage] = useState("");
+  const [notificationInfo, notificationInfoPanel] = useInfoHint(
+    t(platform === "android" ? "settings.general.notifications.infoAndroid" : "settings.general.notifications.infoDesktop"),
+    t("settings.general.notifications.infoLabel"),
+  );
   const {
     snapshot,
     changedKey,
@@ -46,7 +52,7 @@ export function GeneralSettings({
             className={error ? "danger-text" : "preference-feedback"}
             role={error ? "alert" : "status"}
           >
-            {saving ? "Saving…" : error || status}
+            {saving ? t("common.state.saving") : error || status}
           </small>
         )}
       </span>
@@ -71,7 +77,7 @@ export function GeneralSettings({
               disabled={loading}
               onClick={() => void refresh()}
             >
-              Retry
+              {t("common.action.retry")}
             </button>
           )}
         </div>
@@ -80,101 +86,98 @@ export function GeneralSettings({
         <section className="settings-card">
           <div className="settings-section-heading">
             <Desktop size={21} />
-            <h2>Startup & window</h2>
+            <h2>{t("settings.general.startup.title")}</h2>
           </div>
           {row(
             "start_on_login",
-            "Start on system startup",
+            t("settings.general.startup.startOnLogin.label"),
             snapshot && !snapshot.startup_available
-              ? "Startup registration is unavailable on this system."
-              : "Open SirinVPN when you sign in to your computer.",
+              ? t("settings.general.startup.startOnLogin.unavailable")
+              : t("settings.general.startup.startOnLogin.summary"),
             !snapshot?.startup_available,
           )}
           {row(
             "launch_minimized",
-            "Launch minimized",
-            "Start in the taskbar, or in the tray when Close to tray is enabled.",
+            t("settings.general.startup.launchMinimized.label"),
+            t("settings.general.startup.launchMinimized.summary"),
           )}
           {row(
             "close_to_tray",
-            "Close to tray",
+            t("settings.general.startup.closeToTray.label"),
             snapshot && !snapshot.tray_available
-              ? "A system tray is unavailable in this desktop session."
-              : "Keep the app running when you close its window. Reopen it from the tray.",
+              ? t("settings.general.startup.closeToTray.unavailable")
+              : t("settings.general.startup.closeToTray.summary"),
             !snapshot?.tray_available,
           )}
-          <p className="settings-note">
-            These options control the app window. Connect from Home; closing or
-            quitting the app leaves the VPN running.
-          </p>
+          <p className="settings-note">{t("settings.general.startup.note")}</p>
         </section>
       )}
       <WifiSettings />
       {platform === "desktop" && <CredentialStorage />}
       {platform === "android" && <section className="settings-card">
-        <h2>Android VPN controls</h2>
+        <h2>{t("settings.general.android.title")}</h2>
         <QuickProfile />
-        <p>The VPN continues when you close SirinVPN. Android controls Always-on VPN and Block connections without VPN.</p>
-        <div className="settings-action-row"><button className="secondary-button" onClick={() => void invoke("android_vpn_settings")}>VPN & kill switch settings</button>
+        <p>{t("settings.general.android.summary")}</p>
+        <div className="settings-action-row"><button className="secondary-button" onClick={() => void invoke("android_vpn_settings")}>{t("settings.general.android.vpnSettings")}</button>
         <button className="secondary-button" onClick={() => void invoke<unknown>("android_add_tile")
           .then(value => setTileMessage(typeof value === "string" ? value : ""))
-          .catch(() => setTileMessage("Open Quick Settings, tap Edit and add SirinVPN."))}>Add Quick Settings tile</button></div>
+          .catch(() => setTileMessage(t("settings.general.android.addTileManually")))}>{t("settings.general.android.addTile")}</button></div>
         {tileMessage && <p role="status">{tileMessage}</p>}
       </section>}
       <section className="settings-card">
         <div className="settings-section-heading">
           <Bell size={21} />
-          <h2>Notifications & interface</h2>
+          <h2>{t("settings.general.notifications.title")}</h2>
+          {notificationInfo}
         </div>
+        {notificationInfoPanel}
         {(platform === "desktop" || platform === "android") && <>
           {row(
             "notifications",
-            "Connection notifications",
-            platform === "android" ? "Show connection changes and interruptions while the app is closed. The active VPN notification is controlled by Android." : "Show connection changes and interruptions, including while the app is in the tray.",
+            t("settings.general.notifications.connection.label"),
+            t("settings.general.notifications.connection.summary"),
           )}
           <div className="settings-action-row">
-            <p>Alerts never include server names, addresses, or keys.</p>
             <div className="native-settings-actions">
               <button
                 className="secondary-button"
                 disabled={saving || !snapshot?.preferences.notifications}
                 onClick={() => void testNotification()}
               >
-                Test notification
+                {t("settings.general.notifications.test")}
               </button>
-              {platform === "android" && <button className="secondary-button" onClick={() => void invoke("android_notification_settings")}>Android notification settings</button>}
+              {platform === "android" && <button className="secondary-button" onClick={() => void invoke("android_notification_settings")}>{t("settings.general.notifications.androidSettings")}</button>}
             </div>
           </div>
-          {platform === "android" && snapshot?.notification_permission === "denied" && <p>Android is hiding SirinVPN notifications. The VPN can still run; use the Quick Settings tile or this app to control it.</p>}
+          {platform === "android" && snapshot?.notification_permission === "denied" && <p>{t("settings.general.notifications.blockedAndroid")}</p>}
         </>}
         {row(
           "animations",
-          "Interface animations",
-          "Subtle transitions between pages and panels. Your system's reduced-motion setting takes priority.",
+          t("settings.general.notifications.animations.label"),
+          t("settings.general.notifications.animations.summary"),
         )}
       </section>
       {onCheckUpdates && (
         <section className="settings-card settings-action-row">
           <div>
-            <h2>App updates</h2>
-            <p>Check for a verified update when you're ready.</p>
+            <h2>{t("settings.general.updates.title")}</h2>
           </div>
           <button className="secondary-button" onClick={onCheckUpdates}>
-            <ArrowClockwise size={17} /> App updates
+            <ArrowClockwise size={17} /> {t("settings.general.updates.check")}
           </button>
         </section>
       )}
       {platform === "desktop" && onReviewComponentUpdate && <section className="settings-card settings-action-row">
-        <div><h2>Local VPN component</h2><p>Keep this computer's VPN service compatible with the app.</p></div>
-        <button className="secondary-button" onClick={onReviewComponentUpdate}>Review local component</button>
+        <div><h2>{t("settings.general.component.title")}</h2><p>{t("settings.general.component.summary")}</p></div>
+        <button className="secondary-button" onClick={onReviewComponentUpdate}>{t("settings.general.component.review")}</button>
       </section>}
       {!changedKey && (
         <p className="preferences-status" role="status">
           {loading
-            ? "Loading preferences…"
+            ? t("common.state.loading")
             : saving
-              ? "Saving…"
-              : status || "Preferences are saved on this device."}
+              ? t("common.state.saving")
+              : status}
         </p>
       )}
     </div>
@@ -189,11 +192,11 @@ function QuickProfile() {
     let active = true;
     void Promise.all([api.listServers(), invoke<{ quick_profile: string | null }>("android_snapshot")]).then(([list, state]) => {
       if (active) { setProfiles(list); setSelected(state.quick_profile ?? ""); }
-    }).catch(() => { if (active) setError("Quick-connect profiles could not be read."); });
+    }).catch(() => { if (active) setError(t("settings.general.quickServer.loadFailed")); });
     return () => { active = false; };
   }, []);
-  return <label className="field"><span>Quick Settings connection</span><select value={selected} disabled={!profiles.length}
-    onChange={event => { const id = event.target.value; void invoke("android_set_quick_profile", { serverId: id }).then(() => { setSelected(id); setError(""); }).catch(() => setError("The quick-connect choice was not saved.")); }}>
-    <option value="" disabled>Choose a saved server</option>{profiles.map(profile => <option key={profile.id} value={profile.id}>{profile.name}</option>)}
+  return <label className="field"><span>{t("settings.general.quickServer.label")}</span><select value={selected} disabled={!profiles.length}
+    onChange={event => { const id = event.target.value; void invoke("android_set_quick_profile", { serverId: id }).then(() => { setSelected(id); setError(""); }).catch(() => setError(t("settings.general.quickServer.saveFailed"))); }}>
+    <option value="" disabled>{t("settings.general.quickServer.placeholder")}</option>{profiles.map(profile => <option key={profile.id} value={profile.id}>{profile.name}</option>)}
   </select>{error && <span role="alert">{error}</span>}</label>;
 }

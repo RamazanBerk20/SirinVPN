@@ -1,3 +1,8 @@
+import { t } from "../../i18n";
+
+export type HealthState = "unknown" | "reconnecting" | "connected" | "disconnected";
+export type Reachability = "notChecked" | "replied" | "noReply";
+
 /** Shared presentation contract. Handshake inactivity and management outages do
  * not imply a reconnect. A probe describes only the last observed measurement. */
 export function connectionHealth(input: {
@@ -5,12 +10,18 @@ export function connectionHealth(input: {
   handshakeRecent?: boolean; managementAvailable?: boolean;
   probe?: { probes_sent: number; probes_received: number } | null;
 }) {
-  const status = !input.known ? "Connection status unknown" : input.reconnecting ? "Reconnecting" : input.established ? "Connected" : "Disconnected";
-  const reachability = !input.known || !input.established || !input.probe?.probes_sent
-    ? "Reachability not verified"
-    : input.probe.probes_received > 0 ? "Last path probe replied" : "Last path probe unanswered";
+  const state: HealthState = !input.known ? "unknown" : input.reconnecting ? "reconnecting" : input.established ? "connected" : "disconnected";
+  const reachabilityState: Reachability = !input.known || !input.established || !input.probe?.probes_sent
+    ? "notChecked"
+    : input.probe.probes_received > 0 ? "replied" : "noReply";
   const detail = input.handshakeRecent === false
-    ? "The tunnel may be idle. Handshake inactivity alone does not establish a connection failure."
-    : input.managementAvailable === false ? "VPS management is unavailable; tunnel reachability is assessed separately." : null;
-  return { status, reachability, detail };
+    ? t("home.health.idle")
+    : input.managementAvailable === false ? t("home.health.managementUnavailable") : null;
+  return {
+    state,
+    status: t(`home.status.${state}`),
+    reachabilityState,
+    reachability: t(`home.health.reachability.${reachabilityState}`),
+    detail,
+  };
 }

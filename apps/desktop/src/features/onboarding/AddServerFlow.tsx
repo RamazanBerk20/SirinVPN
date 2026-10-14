@@ -9,12 +9,13 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { DialogContent } from "../../components/DialogContent";
 import { QrCode, Database, Key, Archive, CaretRight, ShieldCheck } from "@phosphor-icons/react";
 import { confirmNavigation } from "../../lib/navigationGuard";
+import { t } from "../../i18n";
 
 const choices = [
-  { id: "join", label: "Use an invitation", hint: "Scan a QR code or enter your code", icon: QrCode },
-  { id: "provision", label: "Set up my VPS", hint: "Create a VPN on your own server", icon: Database },
-  { id: "backup", label: "Restore a backup", hint: "Import an encrypted device backup", icon: Archive },
-  { id: "recovery", label: "Use a recovery key", hint: "Recover access to your server", icon: Key },
+  { id: "join", label: "onboarding.choice.join.title", hint: "onboarding.choice.join.summary", icon: QrCode },
+  { id: "provision", label: "onboarding.choice.provision.title", hint: "onboarding.choice.provision.summary", icon: Database },
+  { id: "backup", label: "onboarding.choice.backup.title", hint: "onboarding.choice.backup.summary", icon: Archive },
+  { id: "recovery", label: "onboarding.choice.recovery.title", hint: "onboarding.choice.recovery.summary", icon: Key },
 ] as const;
 
 export function AddServerFlow({
@@ -35,16 +36,17 @@ export function AddServerFlow({
     : mode === "join" ? <JoinFlow onComplete={onAdded} compact={compact} />
     : mode === "recovery" ? <RecoverAccessFlow onComplete={onAdded} compact={compact} />
     : mode === "backup" ? <ImportBackupFlow onComplete={onAdded} compact={compact} /> : null;
+  const current = choices.find(choice => choice.id === mode);
   if (isAndroid) return <div className="mobile-add-server">
-    <div className="mobile-choice-list" aria-label="How to add a server">
+    <div className="mobile-choice-list" aria-label={t("onboarding.choice.listLabel")}>
       {choices.map(({ id, label, hint, icon: Icon }) => <button key={id} className={`mobile-list-row ${id === "join" ? "invitation-choice" : ""}`} onClick={() => setMode(id)}>
-        <span className="mobile-row-icon"><Icon size={24} /></span><span><strong>{label}</strong><small>{hint}</small></span><CaretRight size={18} />
+        <span className="mobile-row-icon"><Icon size={24} /></span><span><strong>{t(label)}</strong><small>{t(hint)}</small></span><CaretRight size={18} />
       </button>)}
     </div>
-    <p className="mobile-privacy"><ShieldCheck size={17} /> No account. No telemetry.</p>
+    <p className="mobile-privacy"><ShieldCheck size={17} /> {t("onboarding.choice.privacy")}</p>
     <Dialog.Root open={mode !== null} onOpenChange={open => { if (!open && confirmNavigation()) setMode(null); }}>
       <Dialog.Portal><Dialog.Overlay className="dialog-overlay" />
-        <DialogContent className="dialog-content mobile-enrollment" heading={choices.find(choice => choice.id === mode)?.label} aria-describedby={undefined} closeLabel="Back to connection options">
+        <DialogContent className="dialog-content mobile-enrollment" heading={current ? t(current.label) : undefined} aria-describedby={undefined} closeLabel={t("onboarding.choice.back")}>
           {flow}
         </DialogContent>
       </Dialog.Portal>
@@ -54,30 +56,30 @@ export function AddServerFlow({
     <div className="add-server-flow">
       <div
         className="segmented-control add-mode"
-        aria-label="How to add a server"
+        aria-label={t("onboarding.choice.listLabel")}
       >
         <button
           type="button"
           aria-pressed={mode === "provision"}
           onClick={() => choose("provision")}
         >
-          My VPS
+          {t("onboarding.mode.provision")}
         </button>
         <button
           type="button"
           aria-pressed={mode === "join"}
           onClick={() => choose("join")}
         >
-          Invitation
+          {t("onboarding.mode.join")}
         </button>
         <button
           type="button"
           aria-pressed={mode === "backup"}
           onClick={() => choose("backup")}
         >
-          Backup
+          {t("onboarding.mode.backup")}
         </button>
-        <button type="button" aria-pressed={mode === "recovery"} onClick={() => choose("recovery")}>Recovery key</button>
+        <button type="button" aria-pressed={mode === "recovery"} onClick={() => choose("recovery")}>{t("onboarding.mode.recovery")}</button>
       </div>
       {flow}
     </div>

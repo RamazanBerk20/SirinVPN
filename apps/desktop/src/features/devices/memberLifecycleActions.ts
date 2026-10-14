@@ -1,5 +1,6 @@
 import type { MenuAction } from "../../components/ActionMenu";
 import { canManageMember } from "../../access";
+import { t } from "../../i18n";
 import type { MemberSummary } from "../../types";
 
 export type MemberLifecycleProps = {
@@ -21,15 +22,15 @@ export function memberLifecycleActions(
     return [];
   return [
     {
-      group: "Member",
-      label: member.suspended ? "Reactivate member" : "Suspend member",
+      group: t("devices.menu.group.member"),
+      label: t(member.suspended ? "devices.menu.reactivate" : "devices.menu.suspend"),
       danger: !member.suspended,
       disabled: props.memberBusy != null || !props.onMemberSuspension,
       run: () => void props.onMemberSuspension?.(member),
     },
     {
-      group: "Member",
-      label: "Revoke all member devices",
+      group: t("devices.menu.group.member"),
+      label: t("devices.menu.revokeAll"),
       danger: true,
       disabled: props.memberBusy != null || !props.onRevokeMemberDevices,
       run: () => void props.onRevokeMemberDevices?.(member),

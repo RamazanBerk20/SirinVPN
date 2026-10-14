@@ -4,6 +4,7 @@ import { api } from "../../api";
 import type { NetworkPreflight, ProvisionResult } from "../../types";
 import { confirmNavigation } from "../../lib/navigationGuard";
 import { SetupFlow } from "./SetupFlow";
+import { t } from "../../i18n";
 
 vi.mock("../../api", () => ({ api: {
   getSshLogin: vi.fn(), saveSshLogin: vi.fn(), forgetSshLogin: vi.fn(),
@@ -24,21 +25,21 @@ afterEach(cleanup);
 
 async function verifyHost(onComplete = vi.fn()) {
   render(<SetupFlow onComplete={onComplete} />);
-  fireEvent.change(screen.getByLabelText("IP address or hostname"), { target: { value: "vps.example" } });
+  fireEvent.change(screen.getByLabelText(t("onboarding.setup.host")), { target: { value: "vps.example" } });
   const agent = screen.getByRole("button", { name: "SSH agent" });
   await waitFor(() => expect(agent.matches(":disabled")).toBe(false));
   fireEvent.click(agent);
-  fireEvent.click(screen.getByRole("button", { name: "Verify VPS" }));
-  return screen.findByRole("button", { name: "Fingerprint matches — inspect network" });
+  fireEvent.click(screen.getByRole("button", { name: t("onboarding.setup.verify") }));
+  return screen.findByRole("button", { name: t("onboarding.setup.fingerprint.matches") });
 }
 
 it("has one fingerprint confirmation and reviews the network before offering installation", async () => {
   const confirm = await verifyHost();
-  expect(screen.getAllByRole("button", { name: /Fingerprint matches/ })).toHaveLength(1);
-  expect(screen.queryByRole("button", { name: "Install SirinVPN" })).toBeNull();
+  expect(screen.getAllByRole("button", { name: t("onboarding.setup.fingerprint.matches") })).toHaveLength(1);
+  expect(screen.queryByRole("button", { name: t("onboarding.setup.fingerprint.install") })).toBeNull();
   expect(api.inspectServerNetwork).not.toHaveBeenCalled();
   fireEvent.click(confirm);
-  const install = await screen.findByRole("button", { name: "Install SirinVPN" });
+  const install = await screen.findByRole("button", { name: t("onboarding.setup.fingerprint.install") });
   expect((install as HTMLButtonElement).disabled).toBe(false);
   expect(api.provisionServer).not.toHaveBeenCalled();
 });
@@ -46,7 +47,7 @@ it("has one fingerprint confirmation and reviews the network before offering ins
 it("prevents installation when the inspected network has a blocking conflict", async () => {
   vi.mocked(api.inspectServerNetwork).mockResolvedValue({ ...report, issues: [{ code: "port_conflict", blocking: true, message: "The selected port is occupied." }] });
   fireEvent.click(await verifyHost());
-  const install = await screen.findByRole("button", { name: "Install SirinVPN" });
+  const install = await screen.findByRole("button", { name: t("onboarding.setup.fingerprint.install") });
   expect((install as HTMLButtonElement).disabled).toBe(true);
   fireEvent.click(install);
   expect(api.provisionServer).not.toHaveBeenCalled();
@@ -62,11 +63,11 @@ it("blocks navigation while installing and hands an unopened result to the app o
   vi.mocked(api.provisionServer).mockImplementation(() => new Promise((resolve) => { finish = resolve; }));
   const onComplete = vi.fn().mockResolvedValue(undefined);
   fireEvent.click(await verifyHost(onComplete));
-  fireEvent.click(await screen.findByRole("button", { name: "Install SirinVPN" }));
+  fireEvent.click(await screen.findByRole("button", { name: t("onboarding.setup.fingerprint.install") }));
   await waitFor(() => expect(api.provisionServer).toHaveBeenCalled());
   expect(confirmNavigation()).toBe(false);
   await act(async () => finish(provisioned));
-  await screen.findByRole("button", { name: "Open server" });
+  await screen.findByRole("button", { name: t("onboarding.setup.success.open") });
   expect(confirmNavigation()).toBe(true);
   expect(onComplete).not.toHaveBeenCalled();
   cleanup();
@@ -77,8 +78,8 @@ it("does not repeat the handoff after Open server", async () => {
   vi.mocked(api.provisionServer).mockResolvedValue(provisioned);
   const onComplete = vi.fn().mockResolvedValue(undefined);
   fireEvent.click(await verifyHost(onComplete));
-  fireEvent.click(await screen.findByRole("button", { name: "Install SirinVPN" }));
-  fireEvent.click(await screen.findByRole("button", { name: "Open server" }));
+  fireEvent.click(await screen.findByRole("button", { name: t("onboarding.setup.fingerprint.install") }));
+  fireEvent.click(await screen.findByRole("button", { name: t("onboarding.setup.success.open") }));
   cleanup();
   expect(onComplete).toHaveBeenCalledExactlyOnceWith(provisioned);
 });

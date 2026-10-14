@@ -1,0 +1,162 @@
+{
+  "tools": {
+    "deviceTitle": "Device keys and backup",
+    "vpsTitle": "VPS backup and recovery",
+    "serverTitle": "{{name}} maintenance",
+    "finishRotationFirst": "Finish key rotation first",
+    "exportBackup": {
+      "label": "Export device backup",
+      "summary": "Encrypted copy of this device’s keys"
+    },
+    "restoreBackup": {
+      "label": "Restore device backup",
+      "summary": "Load device keys from an encrypted backup file"
+    },
+    "rotateKeys": {
+      "label": "Rotate device keys",
+      "resumeLabel": "Resume key rotation",
+      "summary": "Replace this device’s keys",
+      "resumeSummary": "Finish this device’s interrupted rotation",
+      "needsConnection": "Connect to this server first"
+    },
+    "endpoint": {
+      "ownerLabel": "Move to a new address",
+      "ownerSummary": "Point all devices to the server’s new address",
+      "memberLabel": "Apply address update",
+      "memberSummary": "Use a signed update to reach the server’s new address",
+      "otherConnected": "Disconnect the other server first"
+    },
+    "remove": {
+      "label": "Remove or uninstall",
+      "summary": "Forget on this device or uninstall from the VPS"
+    }
+  },
+  "operation": {
+    "interruption": "Services restart, so other devices may briefly disconnect.",
+    "backup": {
+      "title": "Back up VPS",
+      "summary": "Encrypted copy of server settings and access",
+      "steps": {
+        "read": "Server settings and access are read over verified SSH.",
+        "encrypt": "The backup is encrypted with your password and saved on this device."
+      }
+    },
+    "restore": {
+      "title": "Restore or migrate VPS",
+      "summary": "Restore a backup on this or a new VPS",
+      "steps": {
+        "choose": "You choose a VPS backup and verify the target VPS over SSH.",
+        "review": "You review what will be replaced before anything changes."
+      }
+    },
+    "update": {
+      "title": "Update VPS software",
+      "summary": "Install a newer SirinVPN release on the VPS",
+      "steps": {
+        "review": "You review the signed release before it’s installed.",
+        "rollback": "The current release is kept for rollback."
+      }
+    },
+    "repair": {
+      "title": "Repair VPS configuration",
+      "summary": "Reapply networking and services on the VPS",
+      "steps": {
+        "reapply": "Networking, services and DNS are reapplied, and the server software is reinstalled.",
+        "preserve": "Devices and access are kept. You review DNS changes first."
+      }
+    },
+    "dns": {
+      "title": "Configure VPS DNS",
+      "steps": {
+        "choose": "You choose DNS servers or private records for every device on this server.",
+        "apply": "Changes are applied with a repair, which reinstalls the server software."
+      }
+    }
+  },
+  "review": {
+    "description": "What happens on {{name}}",
+    "close": "Close review",
+    "rotationFirst": "Finish this device’s key rotation first.",
+    "reviewRotation": "Review key rotation",
+    "refreshFirst": "Refresh this device’s VPN status first.",
+    "disconnectFirst": "Disconnect the VPN on this device first. Other devices aren’t affected.",
+    "disconnectFirstKillSwitch": "Disconnect the VPN on this device first. This lifts its kill switch and stops automatic reconnect.",
+    "disconnect": "Disconnect this device",
+    "disconnecting": "Disconnecting…",
+    "refresh": "Refresh status",
+    "disconnectFailed": "Couldn’t disconnect the VPN. Try again."
+  },
+  "health": {
+    "title": "System health",
+    "connection": "Connection",
+    "killSwitch": "Kill switch",
+    "autoReconnect": "Automatic reconnect",
+    "autoReconnectOther": "See connected server",
+    "management": "Server management",
+    "managementResponding": "Responding",
+    "managementUnavailable": "Unavailable · VPN still connected",
+    "notChecked": "Not checked",
+    "serverVpn": "Server VPN",
+    "serverVpnUp": "Up",
+    "serverVpnDown": "Down",
+    "serverDns": "Server DNS",
+    "serverDnsRunning": "Running",
+    "serverDnsDown": "Not responding",
+    "diagnosticsSummary": "Checks this device and, while connected, DNS and the server.",
+    "runDiagnostics": "Run diagnostics"
+  },
+  "diagnostics": {
+    "title": "Diagnostics",
+    "description": "Current state of this device and server. Results aren’t saved.",
+    "checking": "Checking this device and server…",
+    "copy": "Copy report",
+    "copied": "Report copied. It stays in your clipboard until replaced.",
+    "copyFailed": "Couldn’t copy the report. Check clipboard access and try again.",
+    "summary": {
+      "attention_one": "{{count}} needs attention",
+      "attention_other": "{{count}} need attention",
+      "review_one": "{{count}} to review",
+      "review_other": "{{count}} to review",
+      "unavailable_one": "{{count}} not checked",
+      "unavailable_other": "{{count}} not checked",
+      "passed_one": "{{count}} passed",
+      "passed_other": "{{count}} passed",
+      "line": "{{attention}} · {{review}} · {{passed}}",
+      "withUnavailable": "{{attention}} · {{review}} · {{unavailable}} · {{passed}}"
+    },
+    "group": {
+      "attention": "Needs attention",
+      "review": "To review",
+      "unavailable": "Not checked",
+      "passed": "Passed"
+    },
+    "passedChecks": "Passed checks · {{count}}",
+    "passedNote": "Passing checks don’t rule out every possible leak.",
+    "evidence": {
+      "configuration": "Configuration checked",
+      "service": "Reported by service",
+      "observed": "Tested",
+      "notChecked": "Not checked",
+      "reported": "Reported"
+    },
+    "report": {
+      "title": "SirinVPN diagnostics",
+      "scope": "Current state only. No activity history.",
+      "evidence": "Evidence: {{evidence}}"
+    }
+  },
+  "workspace": {
+    "metric": {
+      "needsUpdate": "Update server",
+      "sampling": "Measuring…"
+    },
+    "error": {
+      "unsavedSettings": "Save or discard your changes in Settings, then connect.",
+      "settingsNotLoaded": "Connection settings aren’t loaded yet. Open Settings and try again.",
+      "connectionChange": "The connection didn’t change. Refresh the status and try again.",
+      "stopUnconfirmed": "The VPN didn’t confirm it stopped. Check its status.",
+      "resume": "Couldn’t resume. Your traffic settings are unchanged.",
+      "diagnostics": "Couldn’t run diagnostics. Refresh the status and try again."
+    }
+  }
+}

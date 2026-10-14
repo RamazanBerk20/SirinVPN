@@ -23,15 +23,26 @@ object VpnNotifications {
         val manager = context.getSystemService(NotificationManager::class.java)
         // Badge behavior is immutable after creation, so existing installs need new channel IDs.
         val channels = listOf(
-            NotificationChannel(CHANNEL, "VPN connection", NotificationManager.IMPORTANCE_LOW).apply {
-                description = "Current VPN state and controls"; setSound(null, null); enableVibration(false)
+            NotificationChannel(CHANNEL, context.getString(R.string.notification_channel_vpn), NotificationManager.IMPORTANCE_LOW).apply {
+                description = context.getString(R.string.notification_channel_vpn_description); setSound(null, null); enableVibration(false)
                 lockscreenVisibility = Notification.VISIBILITY_PRIVATE
             },
-            NotificationChannel(MAINTENANCE_CHANNEL, "Server operations", NotificationManager.IMPORTANCE_LOW),
-            NotificationChannel(UPDATE_CHANNEL, "App updates", NotificationManager.IMPORTANCE_DEFAULT))
+            NotificationChannel(MAINTENANCE_CHANNEL, context.getString(R.string.notification_channel_maintenance), NotificationManager.IMPORTANCE_LOW).apply {
+                description = context.getString(R.string.notification_channel_maintenance_description)
+            },
+            NotificationChannel(UPDATE_CHANNEL, context.getString(R.string.notification_channel_updates), NotificationManager.IMPORTANCE_DEFAULT).apply {
+                description = context.getString(R.string.notification_channel_updates_description)
+            })
         for (channel in channels) {
             val oldId = channel.id.removeSuffix("_v2")
-            if (manager.getNotificationChannel(channel.id) == null) {
+            val existing = manager.getNotificationChannel(channel.id)
+            if (existing != null && (existing.name != channel.name || existing.description != channel.description)) {
+                // Follow the device language. Re-registering an existing channel only
+                // updates its name and description; the user's settings are kept.
+                existing.name = channel.name; existing.description = channel.description
+                manager.createNotificationChannel(existing)
+            }
+            if (existing == null) {
                 manager.getNotificationChannel(oldId)?.let { old ->
                     channel.importance = old.importance
                     channel.setSound(old.sound, old.audioAttributes)
@@ -56,11 +67,11 @@ object VpnNotifications {
         Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP),
         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
     private fun base(context: Context) = Notification.Builder(context, CHANNEL)
-        .setSmallIcon(R.drawable.ic_sirin_vpn).setContentTitle("SirinVPN")
+        .setSmallIcon(R.drawable.ic_sirin_vpn).setContentTitle(context.getString(R.string.app_name))
         .setContentIntent(openApp(context)).setOnlyAlertOnce(true).setOngoing(true)
         .setBadgeIconType(Notification.BADGE_ICON_NONE)
         .setVisibility(Notification.VISIBILITY_PRIVATE).setCategory(Notification.CATEGORY_SERVICE)
-    fun connecting(context: Context): Notification = base(context).setContentText("Starting VPN…").build()
+    fun connecting(context: Context): Notification = base(context).setContentText(context.getString(R.string.status_connecting)).build()
     private fun controlAction(context: Context, label: String, intent: PendingIntent): Notification.Action {
         val builder = Notification.Action.Builder(null, label, intent)
         // Android closes the shade for authentication-required actions even when already unlocked.
@@ -68,13 +79,15 @@ object VpnNotifications {
         if (Build.VERSION.SDK_INT >= 31) builder.setAuthenticationRequired(context.getSystemService(KeyguardManager::class.java).isDeviceLocked)
         return builder.build()
     }
-    private fun rate(bytes: Long, seconds: Double): String {
-        val units = arrayOf("B/s", "KB/s", "MB/s", "GB/s", "TB/s")
+    private val rateUnits = intArrayOf(R.string.notification_rate_bytes, R.string.notification_rate_kilobytes,
+        R.string.notification_rate_megabytes, R.string.notification_rate_gigabytes, R.string.notification_rate_terabytes)
+    private fun rate(context: Context, bytes: Long, seconds: Double): String {
         var amount = bytes / seconds
         var unit = 0
-        while (amount >= 1024 && unit < units.lastIndex) { amount /= 1024; unit++ }
-        return String.format(java.util.Locale.ROOT,
-            if (unit == 0 || amount >= 10) "%.0f %s" else "%.1f %s", amount, units[unit])
+        while (amount >= 1024 && unit < rateUnits.lastIndex) { amount /= 1024; unit++ }
+        val number = String.format(context.resources.configuration.locales[0],
+            if (unit == 0 || amount >= 10) "%.0f" else "%.1f", amount)
+        return context.getString(rateUnits[unit], number)
     }
     fun update(service: Context, snapshot: JSONObject) {
         val phase = snapshot.getString("phase")
@@ -86,10 +99,14 @@ object VpnNotifications {
         if(state==lastState && sampledAt==lastSample) return
         val rx=status.optLong("rx_bytes");val tx=status.optLong("tx_bytes")
         val elapsed=(sampledAt-lastSample)/1000.0
-        val traffic=if(state==lastState && lastSample>0 && elapsed>0 && elapsed<=20 && rx>=lastRx && tx>=lastTx && status.optBoolean("byte_counters_available")) " · ↓ ${rate(rx-lastRx,elapsed)} · ↑ ${rate(tx-lastTx,elapsed)}" else ""
+        val connectedText=if(state==lastState && lastSample>0 && elapsed>0 && elapsed<=20 && rx>=lastRx && tx>=lastTx && status.optBoolean("byte_counters_available"))
+            service.getString(R.string.notification_status_connected_traffic, rate(service,rx-lastRx,elapsed), rate(service,tx-lastTx,elapsed))
+            else service.getString(R.string.status_connected)
         lastState=state;lastRx=rx;lastTx=tx;lastSample=sampledAt
         val monitoring=snapshot.optBoolean("wifi_automation_enabled") && phase in setOf("paused", "disconnected", "failed", "permission_required")
-        val label = if (policy) "VPN settings" else if (phase in setOf("connected", "degraded")) "Disconnect" else if (monitoring) "Stop Wi-Fi automation" else "Stop attempts"
+        val label = service.getString(if (policy) R.string.notification_action_vpn_settings
+            else if (phase in setOf("connected", "degraded")) R.string.notification_action_disconnect
+            else if (monitoring) R.string.notification_action_stop_auto_connect else R.string.notification_action_stop_connecting)
         val action = if (policy) PendingIntent.getActivity(service, 2, Intent(android.provider.Settings.ACTION_VPN_SETTINGS),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         else PendingIntent.getBroadcast(service, 3, Intent(service, VpnActionReceiver::class.java)
@@ -98,15 +115,15 @@ object VpnNotifications {
             .putExtra("generation", snapshot.getLong("generation")), PendingIntent.FLAG_IMMUTABLE)
         service.getSystemService(NotificationManager::class.java).notify(VPN_ID,
             base(service).setContentText(when (phase) {
-                "connected" -> "Connected$traffic"
-                "degraded" -> "Connection interrupted"
-                "waiting_for_network" -> "Waiting for network"
-                "reconnecting" -> "Reconnecting…"
-                "unknown" -> "Connection status unavailable"
-                "failed" -> "Connection needs attention"
-                "paused" -> if(snapshot.optBoolean("wifi_automation_enabled")) "Wi-Fi automation paused on this network" else "Disconnected"
-                "disconnected" -> if(snapshot.optBoolean("wifi_automation_enabled")) "Monitoring Wi-Fi · VPN disconnected" else "Disconnected"
-                else -> "Connecting…"
+                "connected" -> connectedText
+                "degraded" -> service.getString(R.string.status_interrupted)
+                "waiting_for_network" -> service.getString(R.string.notification_status_waiting_for_network)
+                "reconnecting" -> service.getString(R.string.status_reconnecting)
+                "unknown" -> service.getString(R.string.status_unknown)
+                "failed" -> service.getString(R.string.notification_status_failed)
+                "paused" -> service.getString(if(snapshot.optBoolean("wifi_automation_enabled")) R.string.notification_status_auto_connect_paused else R.string.status_disconnected)
+                "disconnected" -> service.getString(if(snapshot.optBoolean("wifi_automation_enabled")) R.string.notification_status_auto_connect_on else R.string.status_disconnected)
+                else -> service.getString(R.string.status_connecting)
             }).addAction(controlAction(service, label, action)).build())
     }
     fun failed(context:Context,snapshot:JSONObject) {
@@ -115,7 +132,8 @@ object VpnNotifications {
             .setAction("org.sirinvpn.CONNECT").setData(android.net.Uri.parse("sirin-control://retry/${snapshot.getLong("generation")}"))
             .putExtra("generation",snapshot.getLong("generation")),PendingIntent.FLAG_IMMUTABLE)
         context.getSystemService(NotificationManager::class.java).notify(73,base(context).setOngoing(false).setAutoCancel(true)
-            .setContentText("Connection needs attention").addAction(controlAction(context, "Retry", action)).build())
+            .setContentText(context.getString(R.string.notification_failure_text))
+            .addAction(controlAction(context, context.getString(R.string.notification_action_retry), action)).build())
     }
     fun clearFailure(context:Context) {context.getSystemService(NotificationManager::class.java).cancel(73)}
 }

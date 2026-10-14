@@ -22,6 +22,8 @@ import { validateHost } from "../../format";
 import { type ServerProfile, type ServerRestoreResult } from "../../types";
 import { Field, InlineError } from "../../components/ui";
 import { errorMessage } from "../../lib/errors";
+import { t } from "../../i18n";
+import { Rich } from "../../i18n/Rich";
 
 export function VpsRestoreDialog({
   profile,
@@ -94,12 +96,12 @@ export function VpsRestoreDialog({
   const chooseSource = async () => {
     try {
       const selected = await open({
-        title: "Open encrypted SirinVPN VPS backup",
+        title: t("vps.restore.openDialogTitle"),
         multiple: false,
         directory: false,
         filters: [
           {
-            name: "SirinVPN encrypted VPS backup",
+            name: t("vps.common.backupFileType"),
             extensions: ["sirinvpn-server-backup"],
           },
         ],
@@ -110,7 +112,7 @@ export function VpsRestoreDialog({
       }
     } catch (reason) {
       setError(
-        errorMessage(reason, "The VPS backup picker could not be opened."),
+        errorMessage(reason, t("vps.common.error.picker")),
       );
     }
   };
@@ -130,10 +132,7 @@ export function VpsRestoreDialog({
       }
     } catch (reason) {
       setError(
-        errorMessage(
-          reason,
-          "The destination VPS could not be reached over SSH.",
-        ),
+        errorMessage(reason, t("vps.common.error.unreachable")),
       );
     } finally {
       setBusy(false);
@@ -168,10 +167,7 @@ export function VpsRestoreDialog({
       setConfirmed(false);
       setStep("details");
       setError(
-        errorMessage(
-          reason,
-          "Restore stopped safely. The destination rollback guard restores its previous SirinVPN state, and this device keeps its previous endpoint.",
-        ),
+        errorMessage(reason, t("vps.restore.error")),
       );
     } finally {
       setBusy(false);
@@ -184,13 +180,12 @@ export function VpsRestoreDialog({
         <Dialog.Overlay className="dialog-overlay" />
         <DialogContent className="dialog-content remove-server-dialog repair-server-dialog vps-restore-dialog"
           heading={<>{step === "restoring"
-              ? "Restoring VPS state"
+              ? t("vps.restore.titleRunning")
               : step === "success"
-                ? "VPS restore complete"
-                : `Restore ${profile.name}`}</>}
-          description={<>Authenticate an encrypted VPS backup locally, then restore the same
-            server identity onto a pinned SSH destination.</>}
-          closeDisabled={busy || step === "restoring"} closeLabel="Close">
+                ? t("vps.restore.titleDone")
+                : t("vps.restore.title", { name: profile.name })}</>}
+          description={<>{t("vps.restore.description")}</>}
+          closeDisabled={busy || step === "restoring"}>
 
           {step === "details" ? (
             <form
@@ -204,26 +199,19 @@ export function VpsRestoreDialog({
                 <div className="sensitive-backup-warning">
                   <Warning size={19} weight="fill" />
                   <p>
-                    <strong>
-                      A stale backup can restore access you revoked later.
-                    </strong>{" "}
-                    Review members and devices after recovery. The encrypted
-                    file must belong to this local Owner profile.
+                    <Rich id="vps.restore.warning" tags={{ strong: (content) => <strong>{content}</strong> }} />
                   </p>
                 </div>
                 {!disconnected ? (
-                  <InlineError message="Disconnect every active SirinVPN tunnel before restoring a VPS." />
+                  <InlineError message={t("vps.common.disconnectFirst")} />
                 ) : null}
-                <Field
-                  label="Encrypted VPS backup"
-                  hint="The file is authenticated and version-checked locally before SSH changes begin."
-                >
+                <Field label={t("vps.restore.file")}>
                   <div className="file-picker-row">
                     <input
                       className="mono"
                       value={path}
                       readOnly
-                      placeholder="Choose a .sirinvpn-server-backup file"
+                      placeholder={t("vps.common.noFile")}
                     />
                     <button
                       className="secondary-button"
@@ -231,11 +219,11 @@ export function VpsRestoreDialog({
                       onClick={() => void chooseSource()}
                       disabled={busy}
                     >
-                      Choose file
+                      {t("vps.common.chooseFile")}
                     </button>
                   </div>
                 </Field>
-                <Field label="Backup password">
+                <Field label={t("vps.common.backupPassword")}>
                   <SecretInput
                     type="password"
                     value={backupPassword}
@@ -244,8 +232,8 @@ export function VpsRestoreDialog({
                   />
                 </Field>
                 <Field
-                  label="Destination IP address or hostname"
-                  hint="Use the current host for disaster recovery, or a new host for migration."
+                  label={t("vps.restore.host")}
+                  hint={t("vps.restore.hostHint")}
                 >
                   <input
                     value={host}
@@ -266,14 +254,8 @@ export function VpsRestoreDialog({
                     }
                   />
                   <span>
-                    <strong>
-                      Replace destination SirinVPN state if occupied
-                    </strong>
-                    <small>
-                      Only SirinVPN-owned state is replaced, after a five-minute
-                      rollback guard is armed. Unrelated VPS services are
-                      preserved.
-                    </small>
+                    <strong>{t("vps.restore.replace")}</strong>
+                    <small>{t("vps.restore.replaceHint")}</small>
                   </span>
                 </label>
                 {error ? <InlineError message={error} /> : null}
@@ -282,7 +264,7 @@ export function VpsRestoreDialog({
                   type="submit"
                   disabled={!valid || busy}
                 >
-                  {busy ? "Checking destination" : "Restore VPS"}
+                  {busy ? t("vps.common.checking") : t("vps.restore.action")}
                 </button>
               </fieldset>
             </form>
@@ -294,7 +276,7 @@ export function VpsRestoreDialog({
                 className="back-button"
                 onClick={() => setStep("details")}
               >
-                Back
+                {t("common.action.back")}
               </button>
               <SshHostVerification
                 inspection={trust.inspection}
@@ -302,14 +284,14 @@ export function VpsRestoreDialog({
                 onConfirmed={setConfirmed}
               />
               {!disconnected ? (
-                <InlineError message="Disconnect every active SirinVPN tunnel before restoring a VPS." />
+                <InlineError message={t("vps.common.disconnectFirst")} />
               ) : null}
               <button
                 className="primary-button"
                 disabled={!confirmed || !valid || busy}
                 onClick={() => void restore()}
               >
-                <UploadSimple size={18} /> Restore VPS
+                <UploadSimple size={18} /> {t("vps.restore.action")}
               </button>
             </div>
           ) : null}
@@ -317,12 +299,8 @@ export function VpsRestoreDialog({
           {step === "restoring" ? (
             <div className="uninstall-progress repair-progress">
               <ArrowClockwise className="spin" size={26} />
-              <strong>Applying a guarded identity restore</strong>
-              <p>
-                Keep the app open. SirinVPN verifies keys, authorization,
-                networking, DNS, services, SSH reachability, and the installed
-                artifact before committing the new local endpoint.
-              </p>
+              <strong>{t("vps.restore.progress")}</strong>
+              <p>{t("vps.common.keepOpen")}</p>
             </div>
           ) : null}
 
@@ -331,21 +309,17 @@ export function VpsRestoreDialog({
               <span>
                 <Check size={26} weight="bold" />
               </span>
-              <h3>Server identity restored</h3>
-              <p>
-                This Owner device now points to {result.profile.endpoint.host}.
-                Connect it, then open Move devices to a new VPS address to create and distribute the
-                signed endpoint handoff before retiring the old VPS.
-              </p>
-              {onReviewAccess && <button className="secondary-button" onClick={() => { changeOpen(false); onReviewAccess(); }}>Review members and devices</button>}
-              {onMoveDevices && <button className="secondary-button" onClick={() => { changeOpen(false); onMoveDevices(); }}>Move devices to a new VPS address</button>}
+              <h3>{t("vps.restore.done")}</h3>
+              <p>{t("vps.restore.doneNote", { host: result.profile.endpoint.host })}</p>
+              {onReviewAccess && <button className="secondary-button" onClick={() => { changeOpen(false); onReviewAccess(); }}>{t("vps.restore.reviewAccess")}</button>}
+              {onMoveDevices && <button className="secondary-button" onClick={() => { changeOpen(false); onMoveDevices(); }}>{t("vps.restore.moveDevices")}</button>}
               <code>{result.artifact_sha256}</code>
               {result.network_preflight && <ServerNetworkPreflight report={result.network_preflight} />}
               <button
                 className="primary-button"
                 onClick={() => changeOpen(false)}
               >
-                Done
+                {t("common.action.done")}
               </button>
             </div>
           ) : null}

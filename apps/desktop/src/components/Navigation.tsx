@@ -1,21 +1,12 @@
+import { t } from "../i18n";
 import { House, Database, Devices, GearSix } from "@phosphor-icons/react";
 
 export type Page = "home" | "servers" | "devices" | "settings";
 const pages = [
-  { id: "home", label: "Home", hint: "Connect & manage", icon: House },
-  {
-    id: "servers",
-    label: "Servers",
-    hint: "Your infrastructure",
-    icon: Database,
-  },
-  { id: "devices", label: "Devices", hint: "Manage access", icon: Devices },
-  {
-    id: "settings",
-    label: "Settings",
-    hint: "Preferences & maintenance",
-    icon: GearSix,
-  },
+  { id: "home", icon: House },
+  { id: "servers", icon: Database },
+  { id: "devices", icon: Devices },
+  { id: "settings", icon: GearSix },
 ] as const;
 
 export function Navigation({
@@ -30,9 +21,9 @@ export function Navigation({
   return (
     <nav
       className={mobile ? "bottom-navigation" : "primary-navigation"}
-      aria-label={mobile ? "Mobile navigation" : "Main navigation"}
+      aria-label={mobile ? t("app.nav.mobileLabel") : t("app.nav.label")}
     >
-      {pages.map(({ id, label, icon: Icon }) => (
+      {pages.map(({ id, icon: Icon }) => (
         <button
           key={id}
           type="button"
@@ -41,7 +32,7 @@ export function Navigation({
         >
           <Icon size={25} weight={page === id ? "duotone" : "regular"} />
           <span>
-            <strong>{label}</strong>
+            <strong>{t(`app.nav.${id}`)}</strong>
           </span>
         </button>
       ))}

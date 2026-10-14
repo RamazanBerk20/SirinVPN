@@ -5,6 +5,7 @@ import {
   Pulse,
   Devices,
 } from "@phosphor-icons/react";
+import type { ReactElement } from "react";
 import {
   formatBytes,
   formatCount,
@@ -13,9 +14,47 @@ import {
   formatRate,
   formatUptime,
 } from "../../format";
+import { InfoHint } from "../../components/InfoHint";
 import { Metric } from "../../components/ui";
-import { isAndroid } from "../../platform";
+import { formatNumber, t } from "../../i18n";
+import type { ServerStatus } from "../../types";
 import type { ServerWorkspaceModel } from "./useServerWorkspace";
+
+export type ServerFreshness = "unavailable" | "live" | "polling" | "connecting" | "reconnecting";
+
+export function serverFreshness(connected: boolean, status: ServerStatus | null, freshness: ServerWorkspaceModel["freshness"]): ServerFreshness {
+  if (!connected) return "unavailable";
+  if (status && freshness.management === "ready" && freshness.mode === "live") return "live";
+  if (status && freshness.mode === "polling") return "polling";
+  return freshness.management === "refreshing" ? "connecting" : "reconnecting";
+}
+
+const usage = (used?: number, total?: number) =>
+  used !== undefined && total !== undefined && total > 0 ? Math.min(100, (used / total) * 100) : undefined;
+
+/** The five server resource readings, shared by the desktop tiles and the Android detail rows. */
+export function serverMetrics(status: ServerStatus): { id: string; label: string; value: string; detail?: string; percent?: number; measured: boolean; icon: ReactElement }[] {
+  const resource = (used?: number, total?: number) => {
+    const percent = usage(used, total);
+    return {
+      value: percent === undefined ? t("format.unavailable") : formatNumber(percent / 100, { style: "percent", maximumFractionDigits: 0 }),
+      detail: used === undefined || total === undefined ? t("home.server.noMeasurement") : t("home.server.usedOf", { used: formatBytes(used), total: formatBytes(total) }),
+      percent,
+      measured: percent !== undefined,
+    };
+  };
+  const activity = status.recently_active_peer_count;
+  return [
+    { id: "cpu", label: t("home.server.cpu"), value: status.cpu_usage_basis_points === undefined ? t("format.unavailable") : formatCpuUsage(status.cpu_usage_basis_points),
+      percent: status.cpu_usage_basis_points === undefined ? undefined : status.cpu_usage_basis_points / 100, measured: status.cpu_usage_basis_points !== undefined, icon: <Cpu /> },
+    { id: "memory", label: t("home.server.memory"), ...resource(status.memory_used_bytes, status.memory_total_bytes), icon: <HardDrives /> },
+    { id: "storage", label: t("home.server.storage"), ...resource(status.disk_used_bytes, status.disk_total_bytes), icon: <HardDrives /> },
+    { id: "uptime", label: t("home.server.uptime"), value: formatUptime(status.uptime_seconds), measured: Number.isFinite(status.uptime_seconds), icon: <Pulse /> },
+    { id: "devices", label: t("home.server.devices"),
+      value: activity === undefined ? t("home.server.devicesAuthorized", { count: status.peer_count }) : t("home.server.devicesActive", { active: activity, total: status.peer_count }),
+      detail: activity === undefined ? t("home.server.activityUnavailable") : t("home.server.devicesActiveDetail"), measured: activity !== undefined, icon: <Devices /> },
+  ];
+}
 
 export function ServerMetrics({
   model,
@@ -25,51 +64,22 @@ export function ServerMetrics({
   onReviewActivity: () => void;
 }) {
   const { serverStatus: status, connected, freshness } = model;
-  const live =
-    connected &&
-    Boolean(status) &&
-    freshness.management === "ready" &&
-    freshness.mode === "live";
-  const freshnessLabel = !connected
-    ? "Unavailable"
-    : live
-      ? "Live"
-      : status && freshness.mode === "polling"
-        ? "Automatic updates"
-        : freshness.management === "refreshing"
-          ? "Connecting…"
-          : "Reconnecting…";
-  const usage = (used?: number, total?: number) =>
-    used !== undefined && total !== undefined && total > 0
-      ? Math.min(100, (used / total) * 100)
-      : undefined;
-  const resource = (used?: number, total?: number) =>
-    usage(used, total) === undefined
-      ? "Unavailable"
-      : `${Math.round(usage(used, total)!)}%`;
-  const detail = (used?: number, total?: number) =>
-    used === undefined || total === undefined
-      ? "Measurement unavailable"
-      : `${formatBytes(used)} of ${formatBytes(total)}`;
+  const state = serverFreshness(connected, status, freshness);
   return (
-    <section className="server-metrics" aria-label="VPS overview">
+    <section className="server-metrics" aria-label={t("home.server.title")}>
       <div className="section-heading">
-        <h2>VPS overview</h2>
+        <h2>{t("home.server.title")}</h2>
         <span
-          className={`section-meta metrics-stream-state${live ? " is-live" : ""}`}
+          className={`section-meta metrics-stream-state${state === "live" ? " is-live" : ""}`}
           role="status"
         >
-          {freshnessLabel}
+          {t(`home.server.freshness.${state}`)}
         </span>
       </div>
       {!status ? (
         <div className="metrics-unavailable">
           <p>
-            {!model.localKnown
-              ? "Checking the local connection…"
-              : connected
-                ? "VPN connected · Server metrics unavailable"
-                : "Connect to this server to view live VPS metrics."}
+            {t(!model.localKnown ? "common.state.checking" : connected ? "home.server.unavailable" : "home.server.connectToSee")}
           </p>
           {model.localKnown && !connected && (
             <button
@@ -77,170 +87,78 @@ export function ServerMetrics({
               disabled={model.busy || model.anotherConnected || model.active}
               onClick={() => void model.toggle()}
             >
-              Connect to {model.profile.name}
+              {t("home.action.connect")}
             </button>
-          )}
-          {connected && (
-            <small>
-              Readings resume automatically when the management service is
-              available.
-            </small>
           )}
         </div>
       ) : (
         <>
           {freshness.mode === "polling" && (
-            <p className="settings-note">
-              Update the VPS software to enable live streaming. Readings update
-              automatically in the meantime.
-            </p>
+            <p className="settings-note">{t("home.server.pollingNote")}</p>
           )}
           <div className="resource-grid">
-            <Metric
-              label="CPU"
-              detail="CPU usage"
-              value={
-                status.cpu_usage_basis_points === undefined
-                  ? "Unavailable"
-                  : formatCpuUsage(status.cpu_usage_basis_points)
-              }
-              icon={<Cpu />}
-              percent={
-                status.cpu_usage_basis_points === undefined
-                  ? undefined
-                  : status.cpu_usage_basis_points / 100
-              }
-              kind={
-                status.cpu_usage_basis_points === undefined
-                  ? "state"
-                  : "measurement"
-              }
-            />
-            <Metric
-              label="Memory"
-              value={resource(
-                status.memory_used_bytes,
-                status.memory_total_bytes,
-              )}
-              detail={detail(
-                status.memory_used_bytes,
-                status.memory_total_bytes,
-              )}
-              icon={<HardDrives />}
-              percent={usage(
-                status.memory_used_bytes,
-                status.memory_total_bytes,
-              )}
-              kind={
-                usage(status.memory_used_bytes, status.memory_total_bytes) ===
-                undefined
-                  ? "state"
-                  : "measurement"
-              }
-            />
-            <Metric
-              label="Storage"
-              value={resource(status.disk_used_bytes, status.disk_total_bytes)}
-              detail={`${detail(status.disk_used_bytes, status.disk_total_bytes)} · root`}
-              icon={<HardDrives />}
-              percent={usage(status.disk_used_bytes, status.disk_total_bytes)}
-              kind={
-                usage(status.disk_used_bytes, status.disk_total_bytes) ===
-                undefined
-                  ? "state"
-                  : "measurement"
-              }
-            />
-            <Metric
-              label="VPS uptime"
-              value={formatUptime(status.uptime_seconds)}
-              detail="Since host boot"
-              icon={<Pulse />}
-              kind={
-                Number.isFinite(status.uptime_seconds) ? "measurement" : "state"
-              }
-            />
-            <Metric
-              label="Devices"
-              value={
-                status.recently_active_peer_count === undefined
-                  ? `${status.peer_count} authorized`
-                  : `${status.recently_active_peer_count} / ${status.peer_count}`
-              }
-              detail={
-                status.recently_active_peer_count === undefined
-                  ? "Current activity unavailable"
-                  : "Recently active / authorized"
-              }
-              icon={<Devices />}
-              kind={
-                status.recently_active_peer_count === undefined
-                  ? "state"
-                  : "measurement"
-              }
-            />
+            {serverMetrics(status).map(metric => (
+              <Metric
+                key={metric.id}
+                label={metric.label}
+                value={metric.value}
+                detail={metric.detail}
+                icon={metric.icon}
+                percent={metric.percent}
+                kind={metric.measured ? "measurement" : "state"}
+              />
+            ))}
           </div>
           {status.recently_active_peer_count === undefined && (
             <div className="measurement-update">
-              <p>
-                {status.peer_activity_supported
-                  ? "Device activity could not be read from WireGuard on the VPS."
-                  : "This VPS does not provide device activity measurements. Review its software update."}
-              </p>
+              <p>{t(status.peer_activity_supported ? "home.server.activityUnreadable" : "home.server.activityUnsupported")}</p>
               <button className="text-button" onClick={onReviewActivity}>
-                {status.peer_activity_supported
-                  ? "Review VPS health"
-                  : "Review VPS update"}
+                {t(status.peer_activity_supported ? "home.server.reviewHealth" : "home.server.reviewUpdate")}
               </button>
             </div>
           )}
           <details className="metrics-details">
             <summary>
-              Server traffic & technical details{" "}
+              {t("home.server.detailsSummary")}{" "}
               <CaretDown className="disclosure-chevron" size={17} />
             </summary>
             <dl>
               <div>
-                <dt>Server inbound</dt>
+                <dt>{t("home.server.inbound")}</dt>
                 <dd>{formatRate(status.rx_bytes_per_second)}</dd>
               </div>
               <div>
-                <dt>Server outbound</dt>
+                <dt>{t("home.server.outbound")}</dt>
                 <dd>{formatRate(status.tx_bytes_per_second)}</dd>
               </div>
               <div>
-                <dt>VPS received</dt>
+                <dt>{t("home.server.received")}</dt>
                 <dd>{formatBytes(status.rx_bytes)}</dd>
               </div>
               <div>
-                <dt>VPS sent</dt>
+                <dt>{t("home.server.sent")}</dt>
                 <dd>{formatBytes(status.tx_bytes)}</dd>
               </div>
               <div>
-                <dt>VPS received packets</dt>
+                <dt>{t("home.server.receivedPackets")}</dt>
                 <dd>{formatCount(status.rx_packets)}</dd>
               </div>
               <div>
-                <dt>VPS sent packets</dt>
+                <dt>{t("home.server.sentPackets")}</dt>
                 <dd>{formatCount(status.tx_packets)}</dd>
               </div>
               {status.management_latency_ms !== undefined && (
-                <div title="Time for an authenticated management status request; not tunnel latency.">
-                  <dt>Management response</dt>
-                  <dd>{formatLatency(status.management_latency_ms)}{isAndroid && <small>Authenticated management request; separate from tunnel latency.</small>}</dd>
+                <div>
+                  <dt>{t("home.details.serverResponse")}<InfoHint text={t("home.details.serverResponseInfo")} /></dt>
+                  <dd>{formatLatency(status.management_latency_ms)}</dd>
                 </div>
               )}
               <div>
-                <dt>DNS service</dt>
-                <dd>{status.dns_healthy ? "Running" : "Not responding"}</dd>
+                <dt>{t("home.server.dns")}</dt>
+                <dd>{t(status.dns_healthy ? "home.server.dnsRunning" : "home.server.dnsDown")}</dd>
               </div>
             </dl>
-            <p className="settings-note">
-              VPS traffic combines all devices since the server VPN interface
-              started. Live readings are sampled on the VPS once per second.
-              Recently active means a handshake within three minutes; current
-              presence is not guaranteed. Missing measurements stay unavailable.
-            </p>
+            <p className="settings-note">{t("home.server.totalsInfo")}</p>
           </details>
         </>
       )}

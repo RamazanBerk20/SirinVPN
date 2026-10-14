@@ -26,7 +26,7 @@ pub(super) async fn local_component_update_status() -> Result<LocalComponentUpda
         }
     })
     .await
-    .map_err(|_| "Checking the local VPN component was interrupted.".to_owned())?
+    .map_err(|_| "Checking the VPN component was interrupted. Try again.".to_owned())?
 }
 
 #[tauri::command]
@@ -34,7 +34,7 @@ pub(super) async fn install_local_vpn_component(
     confirmed: bool,
 ) -> Result<LocalTunnelStatus, String> {
     if !confirmed {
-        return Err("Confirm updating this computer's VPN component first.".into());
+        return Err("Confirm updating this device’s VPN component first.".into());
     }
     tauri::async_runtime::spawn_blocking(|| {
         let _operation = connection_controller::acquire()?;
@@ -43,7 +43,7 @@ pub(super) async fn install_local_vpn_component(
             helper::prepare_helper_for_connection(true).map_err(safe_error)?;
             let status = invoke_helper("status", None).map_err(safe_error)?;
             if !status.mtu_detection_supported || !status.endpoint_updates_supported {
-                return Err("The local VPN component still lacks required connection capabilities. Install the current SirinVPN package.".into());
+                return Err("The VPN component is still out of date. Install the current SirinVPN package.".into());
             }
             Ok(status)
         }
@@ -53,5 +53,5 @@ pub(super) async fn install_local_vpn_component(
         }
     })
     .await
-    .map_err(|_| "Updating the local VPN component was interrupted. Refresh its status before retrying.".to_owned())?
+    .map_err(|_| "Updating the VPN component was interrupted. Refresh its status before trying again.".to_owned())?
 }

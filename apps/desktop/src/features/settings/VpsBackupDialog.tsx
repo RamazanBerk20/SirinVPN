@@ -23,6 +23,8 @@ import { type ServerBackupResult, type ServerProfile } from "../../types";
 import { Field, InlineError } from "../../components/ui";
 import { preferredBackupPath } from "../../lib/backupPaths";
 import { errorMessage } from "../../lib/errors";
+import { t } from "../../i18n";
+import { Rich } from "../../i18n/Rich";
 
 export function VpsBackupDialog({
   profile,
@@ -91,13 +93,13 @@ export function VpsBackupDialog({
           .replace(/[^a-zA-Z0-9_-]+/g, "-")
           .replace(/^-+|-+$/g, "") || "sirinvpn-vps";
       const selected = await save({
-        title: "Save encrypted SirinVPN VPS backup",
+        title: t("vps.backup.saveDialogTitle"),
         defaultPath: await preferredBackupPath(
           `${safeName}.sirinvpn-server-backup`,
         ),
         filters: [
           {
-            name: "SirinVPN encrypted VPS backup",
+            name: t("vps.common.backupFileType"),
             extensions: ["sirinvpn-server-backup"],
           },
         ],
@@ -108,10 +110,7 @@ export function VpsBackupDialog({
       }
     } catch (reason) {
       setError(
-        errorMessage(
-          reason,
-          "The VPS backup destination picker could not be opened.",
-        ),
+        errorMessage(reason, t("vps.common.error.picker")),
       );
     }
   };
@@ -130,7 +129,7 @@ export function VpsBackupDialog({
         setStep("fingerprint");
       }
     } catch (reason) {
-      setError(errorMessage(reason, "The VPS could not be reached over SSH."));
+      setError(errorMessage(reason, t("vps.common.error.unreachable")));
     } finally {
       setBusy(false);
     }
@@ -161,7 +160,7 @@ export function VpsBackupDialog({
       setConfirmed(false);
       setStep("details");
       setError(
-        errorMessage(reason, "The encrypted VPS backup could not be created."),
+        errorMessage(reason, t("vps.backup.error")),
       );
     } finally {
       setBusy(false);
@@ -174,14 +173,12 @@ export function VpsBackupDialog({
         <Dialog.Overlay className="dialog-overlay" />
         <DialogContent className="dialog-content remove-server-dialog repair-server-dialog vps-backup-dialog"
           heading={<>{step === "exporting"
-              ? "Encrypting VPS state"
+              ? t("vps.backup.titleRunning")
               : step === "success"
-                ? "VPS backup complete"
-                : `Back up ${profile.name}`}</>}
-          description={<>Export the current SirinVPN server identity, authorization, DNS, and
-            transport state through pinned SSH for guarded recovery or
-            migration.</>}
-          closeDisabled={busy || step === "exporting"} closeLabel="Close">
+                ? t("vps.backup.titleDone")
+                : t("vps.backup.title", { name: profile.name })}</>}
+          description={<>{t("vps.backup.description")}</>}
+          closeDisabled={busy || step === "exporting"}>
 
           {step === "details" ? (
             <form
@@ -195,9 +192,7 @@ export function VpsBackupDialog({
                 <div className="sensitive-backup-warning">
                   <Warning size={19} weight="fill" />
                   <p>
-                    <strong>This file can clone the VPS identity.</strong> Store
-                    it and its password separately. It does not include this
-                    device's private identity.
+                    <Rich id="vps.backup.warning" tags={{ strong: (content) => <strong>{content}</strong> }} />
                   </p>
                 </div>
                 <div className="uninstall-target">
@@ -205,18 +200,18 @@ export function VpsBackupDialog({
                   <code>{profile.endpoint.host}</code>
                 </div>
                 {!disconnected ? (
-                  <InlineError message="Disconnect every active SirinVPN tunnel before backing up this VPS." />
+                  <InlineError message={t("vps.common.disconnectFirst")} />
                 ) : null}
                 <Field
-                  label="Save destination"
-                  hint="SirinVPN refuses to overwrite an existing file."
+                  label={t("vps.backup.destination")}
+                  hint={t("vps.backup.destinationHint")}
                 >
                   <div className="file-picker-row">
                     <input
                       className="mono"
                       value={path}
                       readOnly
-                      placeholder="Choose a protected destination"
+                      placeholder={t("vps.common.noFile")}
                     />
                     <button
                       className="secondary-button"
@@ -224,14 +219,14 @@ export function VpsBackupDialog({
                       onClick={() => void chooseDestination()}
                       disabled={busy}
                     >
-                      Choose file
+                      {t("vps.common.chooseFile")}
                     </button>
                   </div>
                 </Field>
                 <div className="field-grid two-column backup-passwords">
                   <Field
-                    label="Backup password"
-                    hint="Use at least 12 characters."
+                    label={t("vps.common.backupPassword")}
+                    hint={t("vps.backup.passwordHint")}
                   >
                     <SecretInput
                       type="password"
@@ -242,7 +237,7 @@ export function VpsBackupDialog({
                       autoComplete="new-password"
                     />
                   </Field>
-                  <Field label="Repeat password">
+                  <Field label={t("vps.backup.repeatPassword")}>
                     <SecretInput
                       type="password"
                       value={backupPasswordConfirmation}
@@ -260,7 +255,7 @@ export function VpsBackupDialog({
                   type="submit"
                   disabled={!valid || busy}
                 >
-                  {busy ? "Checking VPS" : "Create VPS backup"}
+                  {busy ? t("vps.common.checking") : t("vps.backup.create")}
                 </button>
               </fieldset>
             </form>
@@ -272,7 +267,7 @@ export function VpsBackupDialog({
                 className="back-button"
                 onClick={() => setStep("details")}
               >
-                Back
+                {t("common.action.back")}
               </button>
               <SshHostVerification
                 inspection={trust.inspection}
@@ -280,14 +275,14 @@ export function VpsBackupDialog({
                 onConfirmed={setConfirmed}
               />
               {!disconnected ? (
-                <InlineError message="Disconnect every active SirinVPN tunnel before backing up this VPS." />
+                <InlineError message={t("vps.common.disconnectFirst")} />
               ) : null}
               <button
                 className="primary-button"
                 disabled={!confirmed || !valid || busy}
                 onClick={() => void exportBackup()}
               >
-                <DownloadSimple size={18} /> Create VPS backup
+                <DownloadSimple size={18} /> {t("vps.backup.create")}
               </button>
             </div>
           ) : null}
@@ -295,11 +290,8 @@ export function VpsBackupDialog({
           {step === "exporting" ? (
             <div className="uninstall-progress repair-progress">
               <ArrowClockwise className="spin" size={26} />
-              <strong>Validating and encrypting current state</strong>
-              <p>
-                Keep the app open. This read-only operation does not stop or
-                reconfigure the VPS.
-              </p>
+              <strong>{t("vps.backup.progress")}</strong>
+              <p>{t("vps.common.keepOpen")}</p>
             </div>
           ) : null}
 
@@ -308,19 +300,15 @@ export function VpsBackupDialog({
               <span>
                 <Check size={26} weight="bold" />
               </span>
-              <h3>Encrypted VPS backup created</h3>
+              <h3>{t("vps.backup.done")}</h3>
               <ShareEncryptedFile uri={path} />
-              <p>
-                Current server identity and authorization were validated with
-                the packaged server component. Store the file and password
-                separately.
-              </p>
+              <p>{t("vps.backup.doneNote")}</p>
               <code>{result.artifact_sha256}</code>
               <button
                 className="primary-button"
                 onClick={() => changeOpen(false)}
               >
-                Done
+                {t("common.action.done")}
               </button>
             </div>
           ) : null}

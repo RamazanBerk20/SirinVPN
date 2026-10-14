@@ -101,7 +101,8 @@ def run(engine, cases, resume=False, dry=False):
             if snapshot['unknown']: raise RuntimeError('Missing fixtures: '+str(snapshot['unknown']))
             checks=case.get('assertions', []) + ([{'text':case['expect']}] if case.get('expect') else [])
             result['visible_assertions']=[engine.call('assertVisible', check) for check in checks]
-            if len(snapshot['text']) < 12: raise RuntimeError('Empty app screen')
+            # The shortest real screen is the loading state (“Loading…”).
+            if len(snapshot['text'].strip()) < 8: raise RuntimeError('Empty app screen')
             result['observed']=snapshot
             if not dry:
                 if checks:

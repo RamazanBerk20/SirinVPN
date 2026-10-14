@@ -1,6 +1,3 @@
-.live-section {
-  margin-top: 26px;
-}
 .section-heading {
   display: flex;
   align-items: center;
@@ -21,11 +18,7 @@
   color: var(--quiet);
   font-size: 11px;
 }
-.metrics-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-}
+
 .access-section {
   margin-top: 24px;
 }
@@ -176,18 +169,14 @@ details[open] > summary > .disclosure-chevron {
   margin: 0;
   overflow-wrap: anywhere;
 }
-.device-actions,
+
 .member-actions {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
 }
-.device-actions .secondary-button {
-  min-height: 32px;
-  padding: 7px 11px;
-  font-size: 11px;
-}
+
 .device-member-controls {
   display: flex;
   justify-content: space-between;
@@ -247,9 +236,7 @@ details[open] > summary > .disclosure-chevron {
   align-items: center;
   gap: 5px;
 }
-.peer-policy-button.enabled {
-  color: var(--cyan);
-}
+
 .access-disclosure {
   border: 1px solid var(--line);
   border-radius: 10px;
@@ -314,12 +301,7 @@ details[open] > summary > .disclosure-chevron {
   color: var(--muted);
   overflow-wrap: anywhere;
 }
-.advanced-access > .port-forward-panel {
-  border: 0;
-  border-top: 1px solid var(--line);
-  border-radius: 0;
-  background: transparent;
-}
+
 @media (max-width: 600px) {
   .device-list .device-row-summary {
     padding: 12px;

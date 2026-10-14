@@ -89,7 +89,7 @@ with tempfile.TemporaryDirectory(prefix="Şirin VPN ", dir=OUTPUT) as directory:
             inspector = Inspector(PORT)
             before = inspector.invoke("get_app_preferences")["preferences"]
             assert not before["notifications"]
-            assert "Enable notifications" in inspector.invoke("test_notification", error=True)
+            assert "Turn on notifications first" in inspector.invoke("test_notification", error=True)
             assert not capture.exists()
             inspector.invoke("set_app_preferences", {"preferences": {**before, "notifications": True}})
             inspector.invoke("test_notification")

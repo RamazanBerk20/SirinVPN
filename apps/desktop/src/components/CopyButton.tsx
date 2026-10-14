@@ -1,3 +1,4 @@
+import { t } from "../i18n";
 import { Check, Copy, Warning } from "@phosphor-icons/react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { copyText } from "../lib/clipboard";
@@ -35,7 +36,7 @@ export function CopyButton({
         type="button"
         className={className}
         aria-label={label}
-        title={result === "failed" ? "Copy failed. Check clipboard access, or select the text and copy it manually." : undefined}
+        title={result === "failed" ? t("app.copy.failedManual") : undefined}
         onClick={() => void copy()}
       >
         <Icon size={17} />
@@ -43,7 +44,7 @@ export function CopyButton({
       </button>
       {/* Positioned out of flow, so grid rows that pair a value with this button keep their layout. */}
       <span className="sr-only" role="status">
-        {result === "copied" ? "Copied" : result === "failed" ? "Copy failed. Select the text and copy it manually." : ""}
+        {result === "copied" ? t("common.action.copied") : result === "failed" ? t("app.copy.failedManual") : ""}
       </span>
     </>
   );

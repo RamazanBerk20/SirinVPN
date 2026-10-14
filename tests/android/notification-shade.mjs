@@ -34,7 +34,7 @@ function tap(node) {
   const [x,y,r,b]=bounds(node);adb('shell','input','tap',String((x+r)>>1),String((y+b)>>1));
 }
 try {
-  for(const [phase,label] of [['connected','Disconnect'],['reconnecting','Stop attempts']]) {
+  for(const [phase,label] of [['connected','Disconnect'],['reconnecting','Stop connecting']]) {
     await stage(phase);
     adb('shell','cmd','statusbar','collapse');adb('shell','cmd','statusbar','expand-notifications');await delay(500);
     let visible=nodes();

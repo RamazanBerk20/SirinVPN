@@ -3,7 +3,6 @@ import { InvitationReviewFields, useInvitationReview } from "./InvitationReview"
 import {
   ArrowClockwise,
   Key,
-  LockKey,
   ShieldCheck,
 } from "@phosphor-icons/react";
 import { useState } from "react";
@@ -12,6 +11,10 @@ import { api } from "../../api";
 import { type ServerProfile } from "../../types";
 import { Field, InlineError } from "../../components/ui";
 import { errorMessage } from "../../lib/errors";
+import { t } from "../../i18n";
+
+/** Invitation codes begin with this prefix; it is a format hint, not language. */
+const codePlaceholder = "sirin1.…";
 
 export function JoinFlow({
   onComplete,
@@ -21,7 +24,7 @@ export function JoinFlow({
   compact?: boolean;
 }) {
   const [code, setCode] = useState("");
-  const review = useInvitationReview(code, isAndroid ? "My Android device" : "My computer");
+  const review = useInvitationReview(code, isAndroid ? t("onboarding.join.defaultDeviceNameAndroid") : t("onboarding.join.defaultDeviceNameDesktop"));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,12 +37,7 @@ export function JoinFlow({
       setCode("");
       await onComplete(profile);
     } catch (reason) {
-      setError(
-        errorMessage(
-          reason,
-          "The invitation could not be redeemed. It may be invalid, expired, used, or revoked.",
-        ),
-      );
+      setError(errorMessage(reason, t("onboarding.join.error")));
     } finally {
       setBusy(false);
     }
@@ -58,22 +56,19 @@ export function JoinFlow({
           <Key size={20} />
         </span>
         <div>
-          <h2>Join a private server</h2>
-          <p>
-            Your permanent device keys are generated here. The code is validated
-            directly by the VPS.
-          </p>
+          <h2>{t("onboarding.join.title")}</h2>
+          <p>{t("onboarding.join.summary")}</p>
         </div>
       </div>
       <Field
-        label="Invitation code"
-        hint="Treat this code like a password. It is cleared after a successful join."
+        label={t("onboarding.join.code")}
+        hint={t("onboarding.join.codeHint")}
       >
         <SecretTextarea
           className="secret-code-input mono"
           value={code}
           onChange={(event) => setCode(event.target.value)}
-          placeholder="sirin1.…"
+          placeholder={codePlaceholder}
           autoCapitalize="none"
           autoComplete="off"
           spellCheck={false}
@@ -82,7 +77,7 @@ export function JoinFlow({
       {review.error && <InlineError message={review.error} />}
       <InvitationReviewFields review={review} disabled={busy} />
       {error ? <InlineError message={error} /> : null}
-      {!review.preview && <button type="button" className="primary-button" disabled={busy || review.busy || !code.trim()} onClick={() => void review.review()}>{review.busy ? "Checking invitation…" : "Review invitation"}</button>}
+      {!review.preview && <button type="button" className="primary-button" disabled={busy || review.busy || !code.trim()} onClick={() => void review.review()}>{review.busy ? t("common.state.checking") : t("onboarding.join.review")}</button>}
       {review.preview && <>
       <button
         className="primary-button"
@@ -94,12 +89,9 @@ export function JoinFlow({
         ) : (
           <ShieldCheck size={18} />
         )}
-        {busy ? "Joining directly" : "Join server"}
+        {busy ? t("onboarding.join.submitting") : t("onboarding.join.submit")}
       </button>
       </>}
-      <p className="form-footnote">
-        <LockKey size={15} /> No cloud account. No shared permanent private key.
-      </p>
     </form>
   );
 }

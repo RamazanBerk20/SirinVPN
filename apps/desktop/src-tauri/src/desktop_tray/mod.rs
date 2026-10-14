@@ -10,6 +10,7 @@ use crate::{
     AppState,
     connection_notifications::{self, Phase},
     desktop_lifecycle::show_main,
+    native_text::text,
 };
 use serde::Serialize;
 use sirinvpn_protocol::{ConnectionState, ServerId};
@@ -184,6 +185,7 @@ fn build_menu(
                     enabled: bool|
      -> tauri::Result<MenuItem<tauri::Wry>> {
         let id = format!("tray:{sequence}:{}", actions.len());
+        let label = model::escape(label);
         if let Some(action) = action {
             actions.insert(id.clone(), action);
             MenuItem::with_id(app, id, label, enabled, None::<&str>)
@@ -205,41 +207,53 @@ fn build_menu(
     )?)?;
     if m.legacy_session && !m.needs_update {
         menu.append(&item(
-            "Additional tray controls need a fresh connection",
+            &text("native.tray.status.legacySession"),
             None,
             false,
         )?)?;
     }
     if m.busy {
-        menu.append(&item("Connection operation in progress…", None, false)?)?;
+        menu.append(&item(&text("native.tray.status.busy"), None, false)?)?;
     }
     menu.append(&PredefinedMenuItem::separator(app)?)?;
-    menu.append(&item("Open SirinVPN", Some(Action::Open), true)?)?;
+    menu.append(&item(
+        &text("native.tray.menu.open"),
+        Some(Action::Open),
+        true,
+    )?)?;
     if let Some((label, action)) = &m.primary {
         menu.append(&item(label, Some(action.clone()), !m.busy)?)?;
     }
     if let Some(id) = m.active {
         if m.extra_disconnect {
-            menu.append(&item("Disconnect…", Some(Action::Disconnect(id)), !m.busy)?)?;
+            menu.append(&item(
+                &text("native.tray.menu.disconnect"),
+                Some(Action::Disconnect(id)),
+                !m.busy,
+            )?)?;
         }
         if m.reconnect {
-            menu.append(&item("Reconnect", Some(Action::Reconnect(id)), !m.busy)?)?;
+            menu.append(&item(
+                &text("native.tray.menu.reconnect"),
+                Some(Action::Reconnect(id)),
+                !m.busy,
+            )?)?;
         }
     }
     if m.needs_update {
         menu.append(&item(
-            "Review local VPN component update…",
+            &text("native.tray.menu.updateComponent"),
             Some(Action::Navigate(Destination::ComponentUpdate, m.active)),
             true,
         )?)?;
     }
     let servers = Submenu::new(
         app,
-        if m.active.is_some() {
-            "Switch server"
+        model::escape(&text(if m.active.is_some() {
+            "native.tray.menu.switchServer"
         } else {
-            "Connect to server"
-        },
+            "native.tray.menu.connectServer"
+        })),
         true,
     )?;
     for server in &m.servers {
@@ -263,7 +277,7 @@ fn build_menu(
         servers.append(&PredefinedMenuItem::separator(app)?)?;
     }
     servers.append(&item(
-        "Manage servers…",
+        &text("native.tray.menu.manageServers"),
         Some(Action::Navigate(Destination::Servers, None)),
         true,
     )?)?;
@@ -272,28 +286,28 @@ fn build_menu(
     let target = m.active.or(m.selected);
     if target.is_some() {
         menu.append(&item(
-            "Connection settings…",
+            &text("native.tray.menu.connectionSettings"),
             Some(Action::Navigate(Destination::Connection, target)),
             true,
         )?)?;
     }
     menu.append(&item(
-        "Settings…",
+        &text("native.tray.menu.settings"),
         Some(Action::Navigate(Destination::Settings, None)),
         true,
     )?)?;
     if target.is_some() {
         menu.append(&item(
-            "Diagnostics…",
+            &text("native.tray.menu.diagnostics"),
             Some(Action::Navigate(Destination::Diagnostics, target)),
             true,
         )?)?;
     }
     menu.append(&PredefinedMenuItem::separator(app)?)?;
-    menu.append(&item(&m.quit, Some(Action::Quit), !m.busy)?)?;
+    menu.append(&item(&m.quit.label(), Some(Action::Quit), !m.busy)?)?;
     if let Some(id) = m.active {
         menu.append(&item(
-            "Disconnect and quit…",
+            &text("native.tray.menu.disconnectQuit"),
             Some(Action::DisconnectQuit(id)),
             !m.busy && !m.needs_update,
         )?)?;

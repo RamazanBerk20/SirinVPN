@@ -59,7 +59,7 @@ class ApkInstallResult : BroadcastReceiver() {
             VpnNotifications.channels(context)
             manager.notify(74,Notification.Builder(context,VpnNotifications.UPDATE_CHANNEL).setSmallIcon(R.drawable.ic_sirin_vpn)
                 .setBadgeIconType(Notification.BADGE_ICON_NONE)
-                .setContentTitle("Confirm SirinVPN update").setContentText("Android needs your approval to install the verified package.")
+                .setContentTitle(context.getString(R.string.notification_update_title)).setContentText(context.getString(R.string.notification_update_text))
                 .setContentIntent(PendingIntent.getActivity(context,74,consent,PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)).setAutoCancel(true).build())
             try { context.startActivity(consent) } catch (_:Exception) { /* The notification retains Android's approval action. */ }
         } else manager.cancel(74)

@@ -45,7 +45,7 @@ fn request(
 ) -> Result<ServerReleaseRequest, String> {
     let profile = crate::find_profile(paths, server_id)?;
     if profile.role != ServerRole::Owner {
-        return Err("Only the Owner can establish a signed VPS baseline.".to_owned());
+        return Err("Only the Owner can set up updates for this VPS.".to_owned());
     }
     let secret = crate::explicit_secret(paths, &profile.identity_reference)?;
     let identity = secret
@@ -81,7 +81,7 @@ fn local_release_floor(
         let state = app
             .path()
             .app_local_data_dir()
-            .map_err(|_| "The private app-update folder is unavailable.".to_owned())?
+            .map_err(|_| "The app’s private update folder is unavailable.".to_owned())?
             .join("appimage-releases")
             .join(file.state_key());
         return sirinvpn_release::InstalledReleaseStore::new(state)
@@ -106,7 +106,7 @@ pub(crate) async fn prepare_vps_baseline(
         let mut current = runtime
             .0
             .lock()
-            .map_err(|_| "The baseline state is unavailable.".to_owned())?;
+            .map_err(|_| "Update status is unavailable. Reopen SirinVPN.".to_owned())?;
         current.generation = current.generation.wrapping_add(1);
         current.server_id = Some(input.server_id.clone());
         current.pending = None;
@@ -120,15 +120,15 @@ pub(crate) async fn prepare_vps_baseline(
         Provisioner::inspect_signed_baseline_target(&request).map_err(|error| error.to_string())
     })
     .await
-    .map_err(|_| "The signed baseline preflight was interrupted.".to_owned())??;
+    .map_err(|_| "Checking the VPS was interrupted. Try again.".to_owned())??;
     if runtime
         .0
         .lock()
-        .map_err(|_| "The baseline state is unavailable.".to_owned())?
+        .map_err(|_| "Update status is unavailable. Reopen SirinVPN.".to_owned())?
         .generation
         != generation
     {
-        return Err("The baseline preparation was cancelled.".to_owned());
+        return Err("The release check was cancelled.".to_owned());
     }
     let temporary = tempfile::tempdir().map_err(crate::safe_error)?;
     let destination = temporary.path().join("bundle");
@@ -150,15 +150,15 @@ pub(crate) async fn prepare_vps_baseline(
                 .map_err(|error| error.to_string())
         })
         .await
-        .map_err(|_| "The signed baseline verification was interrupted.".to_owned())??,
+        .map_err(|_| "Verifying the release was interrupted. Try again.".to_owned())??,
     );
     let summary = bundle.summary().clone();
     let mut current = runtime
         .0
         .lock()
-        .map_err(|_| "The signed baseline state is unavailable.".to_owned())?;
+        .map_err(|_| "Update status is unavailable. Reopen SirinVPN.".to_owned())?;
     if current.generation != generation {
-        return Err("The baseline preparation was cancelled.".to_owned());
+        return Err("The release check was cancelled.".to_owned());
     }
     current.pending = Some(Pending {
         server_id: input.server_id,
@@ -178,17 +178,17 @@ pub(crate) async fn install_vps_baseline(
         let pending = runtime
             .0
             .lock()
-            .map_err(|_| "The signed baseline state is unavailable.".to_owned())?;
+            .map_err(|_| "Update status is unavailable. Reopen SirinVPN.".to_owned())?;
         let generation = pending.generation;
         let pending = pending
             .pending
             .as_ref()
-            .ok_or_else(|| "Check the signed baseline release first.".to_owned())?;
+            .ok_or_else(|| "Check the release first.".to_owned())?;
         if pending.server_id != input.server_id
             || pending.host_key != input.ssh.host_key_sha256
             || pending.bundle.summary().manifest_sha256 != input.manifest_sha256
         {
-            return Err("The VPS or checked baseline changed. Check the release again.".to_owned());
+            return Err("The VPS or the checked release changed. Check the release again.".to_owned());
         }
         (pending.bundle.clone(), generation)
     };
@@ -196,23 +196,23 @@ pub(crate) async fn install_vps_baseline(
     let result = tauri::async_runtime::spawn_blocking(move || {
         let status = crate::invoke_helper("status", None).map_err(crate::safe_error)?;
         if status.state != ConnectionState::Disconnected || status.kill_switch_enabled || status.auto_reconnect_enabled {
-            return Err("Disconnect this computer before installing the signed VPS baseline.".to_owned());
+            return Err("Disconnect this device and turn off the kill switch before installing.".to_owned());
         }
         let request = request(&paths, &input.server_id, input.ssh)?;
         if sirinvpn_core::has_pending_key_rotation(&paths, request.profile.id).map_err(crate::safe_error)? {
-            return Err("Finish this device's pending key rotation first.".to_owned());
+            return Err("Finish this device’s key rotation first.".to_owned());
         }
         let profile = request.profile.clone();
         let outcome = Provisioner::install_signed_baseline(request, bundle).map_err(|error| error.to_string())?;
         paths.profile_store().upsert(outcome.repair.updated_profile(&profile))
-            .map_err(|_| "The signed baseline is installed, but the local profile could not be saved. Refresh the profile before connecting.".to_owned())?;
+            .map_err(|_| "The release is installed, but this device couldn’t save the server’s updated settings. Refresh before connecting.".to_owned())?;
         Ok(outcome.release)
-    }).await.map_err(|_| "The guarded baseline installation was interrupted.".to_owned())?;
+    }).await.map_err(|_| "Installing the release was interrupted. Check the VPS status before trying again.".to_owned())?;
     if result.is_ok() {
         let mut current = runtime
             .0
             .lock()
-            .map_err(|_| "The baseline state could not be cleared.".to_owned())?;
+            .map_err(|_| "Couldn’t clear the checked release.".to_owned())?;
         if current.generation == generation {
             current.pending = None;
             current.server_id = None;
@@ -229,7 +229,7 @@ pub(crate) fn discard_vps_baseline(
     let mut pending = runtime
         .0
         .lock()
-        .map_err(|_| "The baseline state could not be cleared.".to_owned())?;
+        .map_err(|_| "Couldn’t clear the checked release.".to_owned())?;
     if pending.server_id.as_ref() == Some(&server_id) {
         pending.generation = pending.generation.wrapping_add(1);
         pending.pending = None;

@@ -29,6 +29,9 @@ class NotificationTrafficTest {
             status.put("rx_bytes", rx).put("tx_bytes", tx).put("counter_sampled_at_ms", sampledAt)
             VpnNotifications.update(context, state)
         }
+        val connected = context.getString(R.string.status_connected)
+        val disconnect = context.getString(R.string.notification_action_disconnect)
+        fun traffic(download: String, upload: String) = context.getString(R.string.notification_status_connected_traffic, download, upload)
         fun expectText(expected: String): android.service.notification.StatusBarNotification {
             val deadline = SystemClock.uptimeMillis() + 750
             while (SystemClock.uptimeMillis() < deadline) {
@@ -41,19 +44,20 @@ class NotificationTrafficTest {
         }
         try {
             publish()
-            expectText("Connected")
+            expectText(connected)
+            // Rates are formatted for an English emulator.
             val readings = listOf(
-                Triple(512L, 128L, "512 B/s · ↑ 128 B/s"),
-                Triple(1536L, 3L * 1024 * 1024, "1.5 KB/s · ↑ 3.0 MB/s"),
-                Triple(12L * 1024 * 1024, 1536L * 1024 * 1024, "12 MB/s · ↑ 1.5 GB/s"),
-                Triple(1L shl 40, 0L, "1.0 TB/s · ↑ 0 B/s"),
+                Triple(512L, 128L, traffic("512 B/s", "128 B/s")),
+                Triple(1536L, 3L * 1024 * 1024, traffic("1.5 KB/s", "3.0 MB/s")),
+                Triple(12L * 1024 * 1024, 1536L * 1024 * 1024, traffic("12 MB/s", "1.5 GB/s")),
+                Triple(1L shl 40, 0L, traffic("1.0 TB/s", "0 B/s")),
             )
             for ((download, upload, expected) in readings) {
                 SystemClock.sleep(1000)
                 sampledAt += 1000; rx += download; tx += upload
                 publish()
-                val notice = expectText("Connected · ↓ $expected")
-                assertEquals("Disconnect", notice.notification.actions.single().title)
+                val notice = expectText(expected)
+                assertEquals(disconnect, notice.notification.actions.single().title)
                 // Lookup proves this is the existing broadcast token on API 29 too;
                 // PendingIntent.isBroadcast() was only added in API 31.
                 val broadcast = android.app.PendingIntent.getBroadcast(context, 3,
@@ -66,20 +70,20 @@ class NotificationTrafficTest {
                 assertFalse(manager.getNotificationChannel(notice.notification.channelId).canShowBadge())
                 repeat(3) { SystemClock.sleep(40); publish() }
                 assertEquals("Repeated status must not replace the notification", notice.postTime,
-                    expectText("Connected · ↓ $expected").postTime)
+                    expectText(expected).postTime)
             }
             // A new counter epoch must not reuse the previous connection's totals.
             status.put("counter_epoch", "reconnected")
             sampledAt += 1000; rx = 0; tx = 0
             publish()
-            expectText("Connected")
+            expectText(connected)
             SystemClock.sleep(1000)
             sampledAt += 1000
             publish()
-            expectText("Connected · ↓ 0 B/s · ↑ 0 B/s")
+            expectText(traffic("0 B/s", "0 B/s"))
             state.put("phase", "degraded")
             publish()
-            assertEquals("Disconnect", expectText("Connection interrupted").notification.actions.single().title)
+            assertEquals(disconnect, expectText(context.getString(R.string.status_interrupted)).notification.actions.single().title)
         } finally { manager.cancel(VpnNotifications.VPN_ID) }
     }
 }

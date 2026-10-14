@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { Minus, Square, CopySimple, X } from "@phosphor-icons/react";
 import { usePreferences } from "../features/settings/PreferencesProvider";
+import { t } from "../i18n";
 
 const edges: Parameters<
   ReturnType<typeof getCurrentWindow>["startResizeDragging"]
@@ -55,18 +56,18 @@ export function DesktopTitleBar() {
     try {
       await getCurrentWindow()[action]();
     } catch {
-      setError("Window action failed. Try your desktop's window controls.");
+      setError(t("app.window.actionFailed"));
     }
   };
   const closeLabel =
     snapshot?.preferences.close_to_tray && snapshot.tray_available
-      ? "Close to tray · VPN keeps running"
-      : "Quit app · VPN keeps running";
+      ? t("app.window.closeToTray")
+      : t("app.window.quit");
   return (
     <>
-      <header className="desktop-titlebar" aria-label="Application window">
+      <header className="desktop-titlebar" aria-label={t("app.window.label")}>
         <div className="titlebar-drag-region" data-tauri-drag-region>
-          <span data-tauri-drag-region>SirinVPN</span>
+          <span data-tauri-drag-region>{t("common.appName")}</span>
           <span className="titlebar-error" role="status">
             {error}
           </span>
@@ -74,16 +75,16 @@ export function DesktopTitleBar() {
         <div className="titlebar-controls">
           <button
             type="button"
-            aria-label="Minimize window"
-            title="Minimize"
+            aria-label={t("app.window.minimize")}
+            title={t("app.window.minimize")}
             onClick={() => void run("minimize")}
           >
             <Minus size={16} />
           </button>
           <button
             type="button"
-            aria-label={maximized ? "Restore window" : "Maximize window"}
-            title={maximized ? "Restore" : "Maximize"}
+            aria-label={maximized ? t("app.window.restore") : t("app.window.maximize")}
+            title={maximized ? t("app.window.restore") : t("app.window.maximize")}
             onClick={() => void run("toggleMaximize")}
           >
             {maximized ? <CopySimple size={15} /> : <Square size={14} />}
@@ -113,9 +114,7 @@ export function DesktopTitleBar() {
                 try {
                   await getCurrentWindow().startResizeDragging(direction);
                 } catch {
-                  setError(
-                    "Window resizing is unavailable. Use your desktop's resize shortcut.",
-                  );
+                  setError(t("app.window.resizeFailed"));
                 }
               })();
             }}

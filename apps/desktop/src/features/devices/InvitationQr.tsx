@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { t } from "../../i18n";
 
 /** Avoid uneven QR cells when a dense invitation is scaled to fit the window. */
 export function InvitationQr({ source, enlarged = false, kind = "invitation" }: { source: string; enlarged?: boolean; kind?: "invitation" | "recovery" }) {
@@ -56,7 +57,9 @@ export function InvitationQr({ source, enlarged = false, kind = "invitation" }: 
           }
           setModules(count);
         }}
-        alt={`${enlarged ? "Enlarged " : ""}SirinVPN ${kind} QR code`}
+        alt={t(kind === "recovery"
+          ? enlarged ? "devices.share.altRecoveryEnlarged" : "devices.share.altRecovery"
+          : enlarged ? "devices.share.altInvitationEnlarged" : "devices.share.altInvitation")}
       />
     </div>
   );

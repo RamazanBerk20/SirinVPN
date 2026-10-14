@@ -6,6 +6,7 @@ import type {
   TunnelRoutingPolicy,
 } from "../../types";
 import { formatTransport } from "../../format";
+import { formatNumber, t } from "../../i18n";
 
 export interface ConnectionPreferences {
   android_applications?: { mode: "all" | "include" | "exclude"; packages: string[] } | null;
@@ -27,7 +28,12 @@ export const defaultConnectionPreferences: ConnectionPreferences = {
 };
 
 // Obfuscated UDP limits a manual MTU to this value; Android reports the limited value.
-const OBFUSCATED_UDP_MAX_MTU = 1398;
+export const OBFUSCATED_UDP_MAX_MTU = 1398;
+
+/** MTU values are technical sizes: localized digits, but no thousands separator. */
+export function formatMtu(value: number): string {
+  return formatNumber(value, { useGrouping: false });
+}
 
 function manualMtuMatches(saved: number | null, local: LocalTunnelStatus): boolean {
   const actual = local.mtu?.policy.mode === "manual" ? local.mtu.policy.value : null;
@@ -51,39 +57,30 @@ export function preferenceDifferences(
   )
     return [];
   const differences: string[] = [];
-  if (local.mtu && !manualMtuMatches(saved.manual_mtu ?? null, local)) differences.push(`MTU: ${local.mtu.configured} (${local.mtu.policy.mode})`);
+  if (local.mtu && !manualMtuMatches(saved.manual_mtu ?? null, local))
+    differences.push(t(`connection.differences.mtu.${local.mtu.policy.mode}`, { value: formatMtu(local.mtu.configured) }));
   // Automatic is a selection policy, not the transport that happened to win.
   if (
     saved.transport !== "automatic" &&
     local.transport &&
     saved.transport !== local.transport
   )
-    differences.push(`Transport: ${formatTransport(local.transport)}`);
-  for (const [key, actual, label] of [
-    ["kill_switch", local.kill_switch_enabled, "Kill switch"],
-    [
-      "automatic_reconnect",
-      local.auto_reconnect_enabled,
-      "Automatic reconnect",
-    ],
-    [
-      "connect_on_startup",
-      local.connect_on_startup,
-      "Connect on system startup",
-    ],
+    differences.push(t("connection.differences.method", { method: formatTransport(local.transport) }));
+  for (const [key, actual] of [
+    ["kill_switch", local.kill_switch_enabled],
+    ["automatic_reconnect", local.auto_reconnect_enabled],
+    ["connect_on_startup", local.connect_on_startup],
   ] as const) {
     if (actual !== undefined && saved.policy[key] !== actual)
-      differences.push(`${label}: ${actual ? "on" : "off"}`);
+      differences.push(t(`connection.differences.policy.${key}.${actual ? "on" : "off"}`));
   }
   if (local.routing_mode && saved.routing.mode !== local.routing_mode)
-    differences.push(
-      `Routing: ${local.routing_mode === "full_tunnel" ? "full tunnel" : local.routing_mode === "selected_applications" ? "selected applications" : "selected routes"}`,
-    );
+    differences.push(t(`connection.differences.routing.${local.routing_mode}`));
   if (
     local.allow_lan !== undefined &&
     saved.routing.allow_lan !== local.allow_lan
   )
-    differences.push(`Local network bypass: ${local.allow_lan ? "on" : "off"}`);
+    differences.push(t(`connection.differences.localNetwork.${local.allow_lan ? "on" : "off"}`));
   if (
     saved.routing.mode === "selected_routes" &&
     local.routing_mode === "selected_routes" &&
@@ -91,6 +88,6 @@ export function preferenceDifferences(
     [...saved.routing.included_routes].sort().join(",") !==
       [...local.included_routes].sort().join(",")
   )
-    differences.push("Selected IP ranges differ");
+    differences.push(t("connection.differences.routes"));
   return differences;
 }

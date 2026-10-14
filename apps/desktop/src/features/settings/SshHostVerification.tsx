@@ -2,6 +2,7 @@ import { SshVerificationGuide } from "./SshVerificationGuide";
 import { Key, Warning } from "@phosphor-icons/react";
 import { CopyButton } from "../../components/CopyButton";
 import type { InspectedSshHost } from "../../hooks/useSshHostTrust";
+import { t } from "../../i18n";
 
 export function SshHostVerification({
   inspection,
@@ -17,7 +18,7 @@ export function SshHostVerification({
     <>
       <Key size={27} weight="duotone" />
       <h3>
-        {changed ? "The VPS SSH key has changed" : "Verify this VPS once"}
+        {changed ? t("ssh.verify.titleChanged") : t("ssh.verify.title")}
       </h3>
       <div className="uninstall-target">
         <code>
@@ -25,22 +26,17 @@ export function SshHostVerification({
         </code>
       </div>
       <p>
-        {changed
-          ? "This key differs from the one you saved. Verify it before replacing the saved key."
-          : "SirinVPN will remember this key for future VPS actions. Verify it using your hosting provider’s console:"}
+        {changed ? t("ssh.verify.bodyChanged") : t("ssh.verify.body")}
       </p>
       <div className="fingerprint-value">
         <code>{inspection.fingerprint}</code>
-        <CopyButton value={inspection.fingerprint} label="Copy fingerprint" />
+        <CopyButton value={inspection.fingerprint} label={t("ssh.verify.copyFingerprint")} />
       </div>
       <SshVerificationGuide />
       {changed && (
         <div className="warning-note replacement-warning">
           <Warning size={18} weight="fill" />
-          <span>
-            If you did not rebuild this VPS or change its SSH keys, stop and
-            check with your hosting provider.
-          </span>
+          <span>{t("ssh.verify.changedWarning")}</span>
         </div>
       )}
       <label className={`replacement-option ${confirmed ? "selected" : ""}`}>
@@ -51,14 +47,10 @@ export function SshHostVerification({
         />
         <span>
           <strong>
-            {changed
-              ? "I verified the new SSH key"
-              : "I verified this VPS fingerprint"}
+            {changed ? t("ssh.verify.confirmChanged") : t("ssh.verify.confirm")}
           </strong>
           <small>
-            {changed
-              ? "Replace the saved key for this address and port."
-              : "Remember this key. Ask again only if it changes."}
+            {changed ? t("ssh.verify.confirmChangedNote") : t("ssh.verify.confirmNote")}
           </small>
         </span>
       </label>

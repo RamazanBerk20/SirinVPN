@@ -12,7 +12,7 @@ pub(super) async fn credential_storage(
         operate(&paths, action.as_deref(), server_id.as_deref())
     })
     .await
-    .map_err(|_| "Credential storage worker was interrupted.".to_owned())?
+    .map_err(|_| "The credential storage request was interrupted.".to_owned())?
 }
 
 fn operate(
@@ -39,7 +39,7 @@ fn operate(
                     .map_err(safe_error)?
                     .into_iter()
                     .find(|p| Some(p.id.to_string()).as_deref() == server_id)
-                    .ok_or_else(|| "Choose an existing profile.".to_owned())?;
+                    .ok_or_else(|| "Choose a saved server.".to_owned())?;
                 store
                     .migrate(
                         &profile.identity_reference,
@@ -73,7 +73,7 @@ fn operate(
     {
         let _ = paths;
         if action.is_some() || server_id.is_some() {
-            return Err("Windows uses DPAPI; Linux storage policy does not apply.".into());
+            return Err("This setting doesn’t apply on Windows.".into());
         }
         Ok(serde_json::json!({"supported":false,"protection":"windows_dpapi"}))
     }

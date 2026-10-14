@@ -3,7 +3,6 @@ import {
   formatBytes,
   formatCpuUsage,
   formatDnsPolicy,
-  formatDnsStatus,
   formatLatency,
   formatMemoryUsage,
   formatRate,
@@ -52,17 +51,11 @@ describe("desktop formatting", () => {
     expect(formatLatency(18.6)).toBe("19 ms");
   });
 
-  it("shows the active DNS policy without claiming health before verification", () => {
-    expect(formatDnsStatus(undefined, undefined, true)).toBe("Checking");
-    expect(formatDnsStatus({ mode: "recursive" }, true, true)).toBe("Recursive");
-    expect(formatDnsStatus({ mode: "dns_over_tls", endpoints: [] }, true, true)).toBe("DoT active");
-    expect(formatDnsStatus({ mode: "dns_over_https", endpoints: [] }, true, true)).toBe("DoH active");
-    expect(formatDnsStatus({ mode: "dns_over_tls", endpoints: [] }, false, true)).toBe("Unavailable");
-    expect(formatDnsStatus({ mode: "recursive" }, true, false)).toBe("Inactive");
+  it("describes the configured DNS policy", () => {
     expect(formatDnsPolicy({
       mode: "dns_over_tls",
       endpoints: [{ address: "1.1.1.1", authentication_name: "one.one.one.one" }],
-    })).toBe("DNS over TLS · 1 endpoint");
+    })).toBe("DNS over TLS · 1 server");
     expect(formatDnsPolicy({
       mode: "dns_over_https",
       endpoints: [{
@@ -70,6 +63,6 @@ describe("desktop formatting", () => {
         authentication_name: "cloudflare-dns.com",
         path: "/dns-query",
       }],
-    })).toBe("DNS over HTTPS · 1 endpoint");
+    })).toBe("DNS over HTTPS · 1 server");
   });
 });

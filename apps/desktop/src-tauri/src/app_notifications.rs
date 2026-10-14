@@ -1,18 +1,19 @@
 //! App-owned delivery keeps Linux sender metadata separate from the message title.
-use crate::app_preferences::PreferencesState;
+use crate::{app_preferences::PreferencesState, native_text::text};
 use tauri::{AppHandle, Manager};
 
-pub async fn show(app: AppHandle, id: i32, body: &'static str) -> Result<(), String> {
+pub async fn show(app: AppHandle, id: i32, body: impl Into<String>) -> Result<(), String> {
+    let body = body.into();
     if !app.state::<PreferencesState>().current().notifications {
-        return Err("Enable notifications first.".to_owned());
+        return Err(text("native.notification.error.disabled"));
     }
     #[cfg(target_os = "linux")]
     {
         // File access and the acknowledged D-Bus call must not block the UI thread.
-        tauri::async_runtime::spawn_blocking(move || linux::show(&app, id, body))
+        tauri::async_runtime::spawn_blocking(move || linux::show(&app, id, &body))
             .await
-            .map_err(|_| "The notification task could not finish.".to_owned())?
-            .map_err(|_| "The system could not display a notification.".to_owned())
+            .map_err(|_| text("native.notification.error.failed"))?
+            .map_err(|_| text("native.notification.error.failed"))
     }
     #[cfg(not(target_os = "linux"))]
     {
@@ -23,7 +24,7 @@ pub async fn show(app: AppHandle, id: i32, body: &'static str) -> Result<(), Str
             .title("SirinVPN")
             .body(body)
             .show()
-            .map_err(|_| "The system could not display a notification.".to_owned())
+            .map_err(|_| text("native.notification.error.failed"))
     }
 }
 

@@ -41,7 +41,7 @@ pub fn setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     crate::connection_preferences::setup(app)?;
     let path = app.path().app_config_dir()?.join("app-preferences.json");
     let data = store::read(&path).map_err(|_| {
-        "App preferences could not be read. Your existing settings were preserved.".to_owned()
+        "Couldn’t read app preferences. Your saved settings were kept.".to_owned()
     });
     app.manage(PreferencesState {
         path,
@@ -102,7 +102,7 @@ pub async fn set_app_preferences(
         && !previous.close_to_tray
         && !state.tray_available.load(Ordering::Relaxed)
     {
-        return Err("A system tray is unavailable. The window will stay accessible.".to_owned());
+        return Err("No system tray is available. The window stays accessible.".to_owned());
     }
     if preferences.notifications
         && !previous.notifications
@@ -125,7 +125,7 @@ pub async fn set_app_preferences(
             && enabled != preferences.start_on_login
             && change_startup(&app, enabled).is_err()
         {
-            return Err("Preferences could not be saved and startup could not be restored. Check your system's startup applications.".to_owned());
+            return Err("Couldn’t save preferences or restore the previous startup setting. Check your system’s startup apps.".to_owned());
         }
         return Err(
             "App preferences could not be saved. Previous settings remain active.".to_owned(),
@@ -139,7 +139,7 @@ pub async fn set_app_preferences(
 
 fn change_startup(app: &AppHandle, enabled: bool) -> Result<(), String> {
     crate::desktop_startup::set_enabled(app, enabled).map_err(|_| {
-        "Could not change startup registration. Check your system's startup applications."
+        "Couldn’t change the startup setting. Check your system’s startup apps."
             .to_owned()
     })
 }
@@ -152,7 +152,7 @@ pub async fn request_notification_permission(app: AppHandle) -> Result<Permissio
     }
     app.notification()
         .request_permission()
-        .map_err(|_| "Notification permission could not be requested.".to_owned())
+        .map_err(|_| "Couldn’t request notification permission.".to_owned())
 }
 
 #[tauri::command]
@@ -160,7 +160,7 @@ pub async fn test_notification(app: AppHandle) -> Result<(), String> {
     crate::app_notifications::show(
         app,
         7401,
-        "Notifications are ready. Connection alerts will appear here.",
+        crate::native_text::text("native.notification.test"),
     )
     .await
 }

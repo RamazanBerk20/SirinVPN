@@ -11,9 +11,7 @@ h3 {
 .primary-navigation button {
   min-height: 60px;
 }
-.sidebar-update-wrap {
-  padding-top: 45px;
-}
+
 .server-list {
   min-height: 90px;
   max-height: 200px;
@@ -53,9 +51,7 @@ h3 {
   .sidebar > .brand {
     padding-bottom: 8px;
   }
-  .sidebar-update-wrap {
-    padding-top: 15px;
-  }
+  
   .primary-navigation {
     gap: 3px;
   }

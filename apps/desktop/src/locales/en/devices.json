@@ -1,0 +1,301 @@
+{
+  "panel": {
+    "title": "Members and devices",
+    "refresh": "Refresh devices",
+    "invite": "Invite member",
+    "connectFirst": "Connect to see and manage devices.",
+    "openHome": "Open Home",
+    "loading": "Loading devices…",
+    "savedRefreshing": "Showing saved devices. Refreshing…",
+    "savedRefreshingAt": "Showing devices saved at {{time}}. Refreshing…",
+    "savedStale": "Showing saved devices. Changes are off until the list refreshes.",
+    "savedStaleAt": "Showing devices saved at {{time}}. Changes are off until the list refreshes.",
+    "lifecycleUnsupported": "Update the server to suspend members or revoke all their devices.",
+    "search": "Search devices",
+    "searchPlaceholder": "Name or VPN address",
+    "summary": {
+      "label": "Access summary",
+      "members_one": "<strong>{{count}}</strong> member",
+      "members_other": "<strong>{{count}}</strong> members",
+      "devices_one": "<strong>{{count}}</strong> device",
+      "devices_other": "<strong>{{count}}</strong> devices",
+      "invitations_one": "<strong>{{count}}</strong> invitation",
+      "invitations_other": "<strong>{{count}}</strong> invitations"
+    }
+  },
+  "row": {
+    "subtitle": "<address>{{address}}</address> · {{role}}",
+    "activity": {
+      "suspended": "Suspended",
+      "recent": "Recently active",
+      "idle": "No recent activity",
+      "unknown": "Activity unknown"
+    },
+    "facts": {
+      "address": "VPN address",
+      "activity": "Activity",
+      "network": "Network access",
+      "fingerprint": "Identity fingerprint"
+    },
+    "activityDetail": {
+      "suspended": "Member is suspended",
+      "recent": "Seen in the last 3 minutes",
+      "idle": "Not seen in the last 3 minutes",
+      "unknown": "Not reported by the server"
+    },
+    "network": {
+      "suspended": "Blocked until the member is reactivated",
+      "mutual": "Can reach devices that also allow mutual access",
+      "isolated": "Internet only, isolated from other devices"
+    },
+    "fingerprintLabel": "{{name}} fingerprint",
+    "lastOwnerDevice": "The last Owner device can’t be revoked.",
+    "addOwnerDevice": "Add Owner device",
+    "transferToOther": "Transfer to another member",
+    "transferTo": "Transfer to {{name}}",
+    "noDevices": "No devices",
+    "suspendedNoDevices": "Suspended · No devices",
+    "noMatches": "No devices match your search."
+  },
+  "menu": {
+    "deviceActions": "Actions for {{name}}",
+    "memberActions": "Member actions for {{name}}",
+    "group": {
+      "device": "Device",
+      "member": "Member",
+      "ownership": "Ownership"
+    },
+    "rename": "Rename device",
+    "addDevice": "Add device",
+    "addDeviceFor": "Add device for {{name}}",
+    "accessPolicy": "Access policy",
+    "allowMutual": "Allow mutual access",
+    "isolate": "Isolate device",
+    "revoke": "Revoke {{name}}",
+    "makeAdmin": "Make Admin",
+    "removeAdmin": "Remove Admin",
+    "applying": "Applying…",
+    "transfer": "Transfer ownership",
+    "portForwarding": "Port forwarding",
+    "suspend": "Suspend member",
+    "reactivate": "Reactivate member",
+    "revokeAll": "Revoke all devices",
+    "reactivateFirst": "Reactivate this member first.",
+    "cancelInvitationFirst": "Cancel this member’s invitation first."
+  },
+  "invitations": {
+    "empty": "No active invitations",
+    "title": "Active invitations",
+    "newMember": "New member invitation",
+    "row": "{{role}} · Expires {{date}}"
+  },
+  "invite": {
+    "title": "Invite member",
+    "titleForMember": "Add device for {{name}}",
+    "titleReady": "Invitation ready",
+    "targetSummary_one": "{{role}} · {{count}} device",
+    "targetSummary_other": "{{role}} · {{count}} devices",
+    "description": "Their device creates its own keys and joins this server directly.",
+    "descriptionForMember": "The new device creates its own keys and joins {{name}}.",
+    "descriptionReady_one": "Copy or share this code before closing. It’s shown only once and adds one device.",
+    "descriptionReady_other": "Copy or share this code before closing. It’s shown only once and adds up to {{count}} devices.",
+    "expires": "Expires {{date}}",
+    "copyCode": "Copy code",
+    "copyFailed": "Couldn’t copy the code. Select it and copy it manually.",
+    "secretWarning": "Anyone with this code can join until it’s used, cancelled or expired. Share it privately.",
+    "role": "Access level",
+    "roleHint": "Admins can invite and manage Members.",
+    "checking": "Checking the server…",
+    "checkAgain": "Check again",
+    "recipientNames": "The recipient names the device when joining.",
+    "olderServer": "This server needs the device name now. Update the server to let recipients choose it.",
+    "deviceName": "Device name",
+    "lifetime": "Expires after",
+    "hours_one": "{{count}} hour",
+    "hours_other": "{{count}} hours",
+    "days_one": "{{count}} day",
+    "days_other": "{{count}} days",
+    "uses": "Number of uses",
+    "usesHint": "Each use adds one device with its own keys. Device limits still apply.",
+    "permissions": "Permissions and schedule",
+    "creating": "Creating…",
+    "createForMember": "Create device code",
+    "createReusable": "Create reusable code",
+    "createSingleUse": "Create single-use code",
+    "createFailed": "Couldn’t create the invitation. Try again."
+  },
+  "share": {
+    "showInvitation": "View or share invitation",
+    "showRecovery": "View or share recovery key",
+    "qrNote": "Scan this instead of copying the code.",
+    "code": "Code",
+    "codeLabel": "Invitation code",
+    "enlarge": "Enlarge QR code",
+    "enlargeInvitation": "Enlarge invitation QR code",
+    "enlargeRecovery": "Enlarge recovery key QR code",
+    "scanInvitation": "Scan invitation code",
+    "scanRecovery": "Scan recovery key",
+    "closeQr": "Close QR code",
+    "copyInvitation": "Copy invitation code",
+    "copyRecovery": "Copy recovery key",
+    "altInvitation": "Invitation QR code",
+    "altInvitationEnlarged": "Enlarged invitation QR code",
+    "altRecovery": "Recovery key QR code",
+    "altRecoveryEnlarged": "Enlarged recovery key QR code"
+  },
+  "policy": {
+    "title": "Access policy for {{name}}",
+    "description": "Applies to all their devices. Saving cancels invitations for or from this member.",
+    "fixFields": "Fix the highlighted fields.",
+    "saveFailed": "Couldn’t save the access policy. Try again.",
+    "save": "Save policy",
+    "deviceLimit": "Device limit",
+    "deviceLimitHint": "Leave empty for no limit. Revoke extra devices before lowering it.",
+    "expires": "Access expires (UTC)",
+    "expiresHint": "Leave empty to never expire.",
+    "permission": {
+      "inviteMembers": "Invite members",
+      "addOwnDevices": "Add their own devices",
+      "manageMutualAccess": "Manage mutual access for their devices",
+      "managePortForwards": "Forward ports to their devices"
+    },
+    "error": {
+      "limit": "Enter a limit from 1 to 222, or leave it empty.",
+      "expires": "Enter a valid UTC date and time.",
+      "format": "Use one window per line, like {{example}}.",
+      "order": "Each window must end after it starts, on the same day. Use 24:00 for midnight.",
+      "overlap": "Use up to 28 windows that don’t overlap.",
+      "invalid": "Check this value."
+    }
+  },
+  "schedule": {
+    "label": "Weekly schedule",
+    "title": "Weekly access (UTC)",
+    "allWeek": "With no intervals, access is allowed all week.",
+    "day": "Day {{number}}",
+    "start": "Start {{number}} (UTC)",
+    "end": "End {{number}} (UTC)",
+    "midnight": "Midnight, end of day",
+    "remove": "Remove interval {{number}}",
+    "add": "Add interval",
+    "useControls": "Use time pickers",
+    "editText": "Edit as text",
+    "textHint": "One window per line, like {{example}}. Up to 28.",
+    "preview": "Preview in local time",
+    "previewNote": "Local times can shift with daylight saving.",
+    "range": "{{start}} → {{end}}"
+  },
+  "ports": {
+    "title": "Port forwarding",
+    "count": "{{used}} of {{max}} used",
+    "unavailable": "Repair this server to enable port forwarding.",
+    "exposure": "Anyone on the internet can reach a forwarded service.",
+    "noTargetsMember": "You can’t forward ports to any device. Ask an Owner or Admin.",
+    "noTargets": "Add an active device to forward ports.",
+    "manageDevices": "Manage devices",
+    "protocol": "Protocol",
+    "publicPort": "Public port",
+    "device": "Device",
+    "devicePort": "Device port",
+    "noDevice": "No device available",
+    "targetOption": "{{member}} / {{device}} · {{address}}",
+    "publicPortLow": "Use a port from 1024 to 65535. Lower ports are reserved.",
+    "publicPortRange": "Use a port from 1024 to 65535.",
+    "devicePortRange": "Use a port from 1 to 65535.",
+    "previewLabel": "Forwarding preview",
+    "preview": "Public {{protocol}} port <strong>{{publicPort}}</strong> → <strong>{{device}}</strong> → port <strong>{{devicePort}}</strong>",
+    "chooseDevice": "Choose a device",
+    "previewEmpty": "Enter both ports to see a preview.",
+    "previewInvalid": "Fix the highlighted fields to see a preview.",
+    "open": "Open port",
+    "opening": "Opening…",
+    "visitorAddress": "The service sees visitors as <address>{{address}}</address>, not their real IP.",
+    "empty": "No open ports",
+    "target": "{{member}} / {{device}}",
+    "targetPaused": "{{member}} / {{device}} · Paused while suspended",
+    "targetUnavailable": "Device unavailable",
+    "close": "Close port",
+    "closing": "Closing…",
+    "closeLabel": "Close {{protocol}} port {{publicPort}} to {{device}}:{{devicePort}}",
+    "ownerManaged": "Owner managed",
+    "connectFirst": "Connect to {{server}} to manage port forwarding.",
+    "settingsUnavailable": "Server settings are unavailable."
+  },
+  "rename": {
+    "prompt": "Device name"
+  },
+  "confirm": {
+    "revoke": {
+      "title": "Revoke {{name}}?",
+      "message": "Its VPN and management access stops immediately.",
+      "action": "Revoke"
+    },
+    "allowMutual": {
+      "title": "Allow mutual access for {{name}}?",
+      "message": "It can reach other devices that also allow mutual access.",
+      "action": "Allow"
+    },
+    "isolate": {
+      "title": "Isolate {{name}}?",
+      "message": "Its direct connections to other devices stop. Internet access continues.",
+      "action": "Isolate"
+    },
+    "openPort": {
+      "title": "Open public port {{publicPort}}?",
+      "message": "{{protocol}} port {{publicPort}} will forward to {{member}} / {{device}}, port {{devicePort}}. Anyone on the internet can try to reach it.",
+      "action": "Open port"
+    },
+    "closePort": {
+      "title": "Close {{protocol}} port {{publicPort}}?",
+      "message": "Connections through it stop immediately.",
+      "action": "Close port"
+    },
+    "makeAdmin": {
+      "title": "Make {{name}} an Admin?",
+      "message": "Admins can invite and manage Members.",
+      "action": "Make Admin"
+    },
+    "removeAdmin": {
+      "title": "Remove Admin from {{name}}?",
+      "message": "Their devices keep VPN access.",
+      "action": "Remove Admin"
+    },
+    "transfer": {
+      "title": "Transfer ownership to {{name}}?",
+      "message": "{{device}} ({{fingerprint}}) and their other devices become Owner devices. This device becomes an Admin.",
+      "action": "Transfer"
+    },
+    "suspend": {
+      "title": "Suspend {{name}}?",
+      "message_one": "{{count}} device loses access until reactivated. Pending invitations and key changes are cancelled.",
+      "message_other": "{{count}} devices lose access until reactivated. Pending invitations and key changes are cancelled.",
+      "action": "Suspend"
+    },
+    "reactivate": {
+      "title": "Reactivate {{name}}?",
+      "message": "Their devices regain access with saved settings. Cancelled invitations aren’t restored.",
+      "action": "Reactivate"
+    },
+    "revokeAll": {
+      "title": "Revoke all devices for {{name}}?",
+      "message_one": "This permanently removes {{count}} device, plus port forwards and invitations. They’ll need a new invitation to return.",
+      "message_other": "This permanently removes {{count}} devices, plus port forwards and invitations. They’ll need a new invitation to return.",
+      "action": "Revoke all"
+    }
+  },
+  "error": {
+    "load": "Couldn’t load devices from the server.",
+    "features": "Couldn’t check the server’s features.",
+    "rename": "Couldn’t rename the device. Try again.",
+    "revoke": "Couldn’t revoke the device. Try again.",
+    "mutualAccess": "Couldn’t change device access. Try again.",
+    "portsInvalid": "Choose a device, a public port (1024–65535) and a device port (1–65535).",
+    "openPort": "Couldn’t open the port. Try again.",
+    "closePort": "Couldn’t close the port. Try again.",
+    "cancelInvitation": "Couldn’t cancel the invitation. Try again.",
+    "role": "Couldn’t change the role. Try again.",
+    "transfer": "Couldn’t transfer ownership. Try again.",
+    "revokeAll": "Couldn’t revoke the member’s devices. Refresh to see their current state.",
+    "suspension": "Couldn’t change the member’s access. Refresh to see their current state."
+  }
+}

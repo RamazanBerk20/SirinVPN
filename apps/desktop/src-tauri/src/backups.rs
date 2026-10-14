@@ -10,7 +10,7 @@ pub(super) async fn remove_server(
 ) -> Result<(), String> {
     let paths = state.paths.clone();
     tauri::async_runtime::spawn_blocking(move || remove_server_blocking(&app, &paths, &server_id))
-        .await.map_err(|_| "The profile cleanup worker was interrupted.".to_owned())?
+        .await.map_err(|_| "Removing the server from this device was interrupted.".to_owned())?
 }
 
 fn remove_server_blocking(app: &tauri::AppHandle, paths: &ClientPaths, server_id: &str) -> Result<(), String> {
@@ -20,19 +20,19 @@ fn remove_server_blocking(app: &tauri::AppHandle, paths: &ClientPaths, server_id
         .map_err(|_| "The local server ID is invalid.".to_owned())?;
     if has_pending_key_rotation(paths, id).map_err(safe_error)? {
         return Err(
-            "Complete or resume this device's pending key rotation before removing its profile."
+            "Finish this device’s key rotation before removing this server."
                 .to_owned(),
         );
     }
-    let status = invoke_helper("status", None).map_err(|_| "Local tunnel status could not be verified. Refresh status before removing this profile.".to_owned())?;
+    let status = invoke_helper("status", None).map_err(|_| "Couldn’t check the VPN status. Refresh, then try removing the server again.".to_owned())?;
     if status.server_id == Some(id) {
-        return Err("Disconnect this server before removing its local profile.".to_owned());
+        return Err("Disconnect from this server before removing it.".to_owned());
     }
     let profiles = paths.profile_store().load().map_err(safe_error)?;
     let profile = profiles
         .into_iter()
         .find(|profile| profile.id == id)
-        .ok_or_else(|| "The local server profile was not found.".to_owned())?;
+        .ok_or_else(|| "This server is no longer saved on this device.".to_owned())?;
     crate::connection_preferences::forget(app, server_id)?;
     paths
         .secret_store()
@@ -51,7 +51,7 @@ pub(super) async fn export_server_backup(
     let paths = state.paths.clone();
     tauri::async_runtime::spawn_blocking(move || export_backup_blocking(paths, input))
         .await
-        .map_err(|_| "The backup worker was interrupted.".to_owned())?
+        .map_err(|_| "Saving the backup was interrupted.".to_owned())?
 }
 
 pub(super) fn export_backup_blocking(
@@ -59,7 +59,7 @@ pub(super) fn export_backup_blocking(
     input: BackupExportInput,
 ) -> Result<(), String> {
     if !input.confirmed {
-        return Err("Confirm the sensitive identity export before continuing.".to_owned());
+        return Err("Confirm the sensitive backup export first.".to_owned());
     }
     let server_id = input
         .server_id
@@ -82,7 +82,7 @@ pub(super) async fn import_server_backup(
     let paths = state.paths.clone();
     tauri::async_runtime::spawn_blocking(move || import_backup_blocking(paths, input))
         .await
-        .map_err(|_| "The backup worker was interrupted.".to_owned())?
+        .map_err(|_| "Restoring the backup was interrupted.".to_owned())?
 }
 
 pub(super) fn import_backup_blocking(
@@ -105,7 +105,7 @@ pub(super) async fn export_vps_backup(
     let paths = state.paths.clone();
     tauri::async_runtime::spawn_blocking(move || export_vps_backup_blocking(paths, input))
         .await
-        .map_err(|_| "The VPS backup worker was interrupted.".to_owned())?
+        .map_err(|_| "The VPS backup was interrupted.".to_owned())?
 }
 
 pub(super) fn export_vps_backup_blocking(
@@ -113,22 +113,22 @@ pub(super) fn export_vps_backup_blocking(
     mut input: VpsBackupInput,
 ) -> Result<ServerBackupOutcome, String> {
     if !input.confirmed {
-        return Err("Confirm the sensitive VPS-state export before continuing.".to_owned());
+        return Err("Confirm the sensitive VPS backup first.".to_owned());
     }
     if input.path.trim().is_empty() {
         return Err("Choose where to save the encrypted VPS backup.".to_owned());
     }
     let status = invoke_helper("status", None).map_err(safe_error)?;
     if status.state != ConnectionState::Disconnected {
-        return Err("Disconnect SirinVPN before backing up its VPS over SSH.".to_owned());
+        return Err("Disconnect the VPN before backing up this VPS.".to_owned());
     }
     let profile = find_profile(&paths, &input.server_id)?;
     if profile.role != ServerRole::Owner {
-        return Err("Only the Owner can back up SirinVPN state from this VPS.".to_owned());
+        return Err("Only the Owner can back up this VPS.".to_owned());
     }
     if has_pending_key_rotation(&paths, profile.id).map_err(safe_error)? {
         return Err(
-            "Complete or resume this device's pending key rotation before backing up its VPS."
+            "Finish this device’s key rotation before backing up this VPS."
                 .to_owned(),
         );
     }
@@ -171,7 +171,7 @@ pub(super) async fn restore_vps_backup(
     let paths = state.paths.clone();
     tauri::async_runtime::spawn_blocking(move || restore_vps_backup_blocking(paths, input))
         .await
-        .map_err(|_| "The VPS restore worker was interrupted.".to_owned())?
+        .map_err(|_| "The VPS restore was interrupted.".to_owned())?
 }
 
 pub(super) fn restore_vps_backup_blocking(
@@ -179,22 +179,22 @@ pub(super) fn restore_vps_backup_blocking(
     mut input: VpsRestoreInput,
 ) -> Result<ServerRestoreOutcome, String> {
     if !input.confirmed {
-        return Err("Confirm the VPS restore risks before continuing.".to_owned());
+        return Err("Confirm the restore risks first.".to_owned());
     }
     if input.path.trim().is_empty() || input.host.trim().is_empty() {
         return Err("Choose an encrypted VPS backup and destination host.".to_owned());
     }
     let status = invoke_helper("status", None).map_err(safe_error)?;
     if status.state != ConnectionState::Disconnected {
-        return Err("Disconnect SirinVPN before restoring a VPS over SSH.".to_owned());
+        return Err("Disconnect the VPN before restoring a VPS.".to_owned());
     }
     let profile = find_profile(&paths, &input.server_id)?;
     if profile.role != ServerRole::Owner {
-        return Err("Only the Owner can restore this server identity onto a VPS.".to_owned());
+        return Err("Only the Owner can restore this server onto a VPS.".to_owned());
     }
     if has_pending_key_rotation(&paths, profile.id).map_err(safe_error)? {
         return Err(
-            "Complete or resume this device's pending key rotation before restoring its VPS."
+            "Finish this device’s key rotation before restoring this server."
                 .to_owned(),
         );
     }
@@ -233,7 +233,7 @@ pub(super) fn restore_vps_backup_blocking(
         .profile_store()
         .upsert(outcome.profile.clone())
         .map_err(|_| {
-            "The VPS restore committed, but the new local endpoint could not be saved. Repeat the same restore with explicit destination replacement before connecting."
+            "The VPS was restored, but this device couldn’t save its new address. Before connecting, restore again with “Replace an existing SirinVPN install” on."
                 .to_owned()
         })?;
     Ok(outcome)

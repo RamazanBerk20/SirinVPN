@@ -31,7 +31,7 @@ impl Context {
         let store = self.store();
         if self.status()?.rollback_version.as_deref() != Some(expected) {
             return Err(
-                "The previous version changed. Reopen app updates and review it again.".into(),
+                "The previous version changed. Reopen App updates to review it.".into(),
             );
         }
         let prepared = store
@@ -42,7 +42,7 @@ impl Context {
                 .cancel_client_release(file.path())
                 .map_err(|error| error.to_string())?;
             return Err(
-                "The previous version changed. Reopen app updates and review it again.".into(),
+                "The previous version changed. Reopen App updates to review it.".into(),
             );
         }
         store
@@ -57,12 +57,12 @@ impl Context {
             return Ok(None);
         };
         let file = AppImageFile::inspect(&path, current_artifact_target()?).map_err(|_| {
-            "Move the AppImage into a folder you own, with no symlinks or shared write permissions, before updating it.".to_owned()
+            "Move the AppImage to a folder only you can write to, with no symlinks, then try again.".to_owned()
         })?;
         let state = app
             .path()
             .app_local_data_dir()
-            .map_err(|_| "The private app-update folder is unavailable.")?
+            .map_err(|_| "The app’s private update folder is unavailable.")?
             .join("appimage-releases")
             .join(file.state_key());
         let context = Self { path, state };
@@ -118,7 +118,7 @@ impl Context {
             || bundle.verified.artifact.size_bytes != snapshot.candidate.artifact_size_bytes
             || bundle.verified.manifest.release_version != snapshot.candidate.release_version
         {
-            return Err("The checked AppImage changed. Check this release again.".into());
+            return Err("The downloaded AppImage changed. Check this release again.".into());
         }
         let store = self.store();
         store

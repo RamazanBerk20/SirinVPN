@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "../../api";
 import { invoke } from "../../platform";
 import { errorMessage } from "../../lib/errors";
+import { t } from "../../i18n";
 import {
   defaultConnectionPreferences,
   type ConnectionPreferences,
@@ -54,10 +55,7 @@ export function useConnectionPreferences(serverId: string | undefined) {
     } catch (reason) {
       if (request === generation.current)
         setError(
-          errorMessage(
-            reason,
-            "Saved connection preferences could not be opened.",
-          ),
+          errorMessage(reason, t("connection.preferences.loadError")),
         );
     }
   }, [serverId]);
@@ -107,14 +105,11 @@ export function useConnectionPreferences(serverId: string | undefined) {
       setSaved(value);
       setDraft(value);
       setRoutesText((value.routing.included_routes ?? []).join("\n"));
-      setNotice("Connection preferences saved.");
+      setNotice(t("connection.preferences.saved"));
     } catch (reason) {
       if (request === generation.current)
         setError(
-          errorMessage(
-            reason,
-            "Could not save. Previous preferences remain stored.",
-          ),
+          errorMessage(reason, t("connection.preferences.saveError")),
         );
     } finally {
       inFlight.current = false;
@@ -132,9 +127,9 @@ export function useConnectionPreferences(serverId: string | undefined) {
       setSaved(value);
       // This switch saves only its own value, not incomplete routing or transport drafts.
       setDraft(current => ({ ...current, policy: { ...current.policy, automatic_reconnect: value.policy.automatic_reconnect } }));
-      setNotice(`Automatic reconnect ${enabled ? "enabled" : "disabled"}.`);
+      setNotice(enabled ? t("connection.preferences.reconnectOn") : t("connection.preferences.reconnectOff"));
     } catch (reason) {
-      if (request === generation.current) setError(errorMessage(reason, "Automatic reconnect could not be changed."));
+      if (request === generation.current) setError(errorMessage(reason, t("connection.preferences.reconnectError")));
     } finally {
       inFlight.current = false; setSaving(false);
     }
