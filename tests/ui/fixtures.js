@@ -26,6 +26,7 @@ const local = () => ({state: connected ? "connected" : "disconnected", interface
   rx_bytes: 234580992 + Math.floor((performance.now() - sampleStarted) * 100), tx_bytes: 35082421 + Math.floor((performance.now() - sampleStarted) * 20), ipv6_blocked: connected, ipv6_tunneled: false, kill_switch_enabled: false,
   auto_reconnect_enabled: false, transport_fallback_enabled: false, routing_mode: "full_tunnel", allow_lan: false, transport: connected ? "direct_udp" : null});
 const remoteStatus = () => { if (window.__sirinRemoteFails) throw new Error("Management unavailable"); return {api_version:"v1",server_name:profile.name,connection_state:"connected",interface_up:true,dns_healthy:true,dns_upstream:{mode:"recursive"},transport:"direct_udp",peer_count:3,peer_activity_supported:true,recently_active_peer_count:2,rx_bytes:234580992,tx_bytes:35082421,uptime_seconds:3645234,disk_used_bytes:12600000000,disk_total_bytes:100000000000,rx_packets:12458392,tx_packets:8911732,cpu_usage_basis_points:1240,memory_used_bytes:450000000,memory_total_bytes:2000000000,rx_bytes_per_second:15675000,tx_bytes_per_second:5337500,caller_role:"owner",caller_administrator:false,caller_device_id:device,...(window.__sirinServerOverride || {})}; };
+const membership = {api_version:"v1",members:[{id:member,name:"You",role:"owner",administrator:false,devices:[{id:device,name:"My Linux desktop",identity_fingerprint:"SHA256:"+"A".repeat(43),client_tunnel_address:"10.77.0.2",peer_communication_enabled:false}]},{id:"guest",name:"Family",role:"member",administrator:false,devices:[{id:"phone",name:"Android phone",client_tunnel_address:"10.77.0.3",recent_handshake:true,peer_communication_enabled:false},{id:"laptop",name:"Work laptop",client_tunnel_address:"10.77.0.4",recent_handshake:false,peer_communication_enabled:false}]}],active_invitations:[],port_forwards:[]};
 const statusSubscriptions = new Map();
 const nativeCallbacks = new Map();
 let nextCallback = 1;
@@ -55,7 +56,7 @@ window.__TAURI_INTERNALS__ = {
         publish(); return;
       }
       case "unsubscribe_local_status": clearInterval(statusSubscriptions.get(args.subscriptionId)); statusSubscriptions.delete(args.subscriptionId); return;
-      case "local_component_update_status": return { install_available: true, update_required: !window.__sirinComponentUpdated };
+      case "local_component_update_status": return { install_available: window.__sirinComponentBundled !== false, update_required: !window.__sirinComponentUpdated };
       case "install_local_vpn_component":
         if (!args.confirmed || connected) throw new Error("Disconnect before updating the local VPN component.");
         window.__sirinComponentUpdated = true; return local();
@@ -86,7 +87,9 @@ window.__TAURI_INTERNALS__ = {
         const publish = async () => {
           try {
             const status = remoteStatus();
-            args.onEvent.onmessage({kind:"status",status,mode:window.__sirinStreamMode || "live",management_latency_ms:null});
+            // As in the desktop backend, only polled reads (VPS without streaming) carry request timing.
+            const mode = window.__sirinStreamMode || "live";
+            args.onEvent.onmessage({kind:"status",status,mode,management_latency_ms:mode === "polling" ? 38 : null});
           } catch {
             args.onEvent.onmessage({kind:"state",state:"reconnecting"});
           }
@@ -103,8 +106,20 @@ window.__TAURI_INTERNALS__ = {
       case "connect_server": connected = true; return local();
       case "disconnect_server": connected = false; return local();
       case "server_configuration": return {port_forwarding_enabled:true};
-      case "membership": if (window.__sirinMembership) return window.__sirinMembership; return {api_version:"v1",members:[{id:member,name:"You",role:"owner",administrator:false,devices:[{id:device,name:"My Linux desktop",identity_fingerprint:"SHA256:"+"A".repeat(43),client_tunnel_address:"10.77.0.2",peer_communication_enabled:false}]},{id:"guest",name:"Family",role:"member",administrator:false,devices:[{id:"phone",name:"Android phone",client_tunnel_address:"10.77.0.3",recent_handshake:true,peer_communication_enabled:false},{id:"laptop",name:"Work laptop",client_tunnel_address:"10.77.0.4",recent_handshake:false,peer_communication_enabled:false}]}],active_invitations:[],port_forwards:[]};
+      case "membership": return window.__sirinMembership || structuredClone(membership);
+      case "create_port_forward": {
+        const snapshot = window.__sirinMembership || membership, {protocol, public_port, device_id, device_port} = args.input;
+        snapshot.port_forwards.push({protocol, public_port, device_id, device_port});
+        return structuredClone(snapshot);
+      }
       case "discard_release_update": return;
+      case "plugin:dialog|message": {
+        // plugin-dialog's confirm()/ask() resolve true only when the pressed button's label comes back.
+        // Accepts by default; set __sirinDeclineDialog to press the last (cancel/no) button once.
+        const labels = typeof args.buttons === "object" ? [].concat(Object.values(args.buttons)[0]) : (args.buttons || "Ok").match(/Ok|Yes|No|Cancel/g);
+        const declined = Boolean(window.__sirinDeclineDialog); window.__sirinDeclineDialog = false;
+        return declined ? labels.at(-1) : labels[0];
+      }
       default: throw new Error("Unexpected visual fixture command: " + command);
     }
   }

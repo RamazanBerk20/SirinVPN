@@ -44,18 +44,20 @@ with sync_playwright() as pw:
     navigation.get_by_role('button', name='Devices', exact=False).click()
     expect(page.get_by_role('button', name='Actions for Android phone')).to_be_visible()
 
-    def action(label, accept=True):
+    def action(label, confirm, accept=True):
         page.get_by_role('button', name='Actions for Android phone').click()
-        def confirm(dialog):
-            assert 'Family' in dialog.message
-            (dialog.accept if accept else dialog.dismiss)()
-        page.once('dialog', confirm)
+        before = page.evaluate('accept => { window.__sirinDeclineDialog = !accept; return window.__sirinCommands.length; }', accept)
         page.get_by_role('menuitem', name=label, exact=True).click()
+        # The native confirmation's title names the member; its button names the action.
+        prompt = page.wait_for_function('''before => window.__sirinCommandArguments.slice(before)
+            .find(item => item.command === "plugin:dialog|message")?.args''', arg=before).json_value()
+        assert 'Family' in prompt['title'] and prompt['buttons'] == {'OkCancelCustom': [confirm, 'Cancel']}, prompt
 
-    action('Suspend member', False)
+    action('Suspend member', 'Suspend', False)
     assert page.evaluate('window.__sirinCommands.includes("update_member_suspension")') is False
-    action('Suspend member')
+    action('Suspend member', 'Suspend')
     expect(page.locator('.device-row[data-suspended="true"]')).to_have_count(2)
+    assert page.evaluate('window.__sirinCommands.filter(command => command === "update_member_suspension").length') == 1
     expect(page.get_by_text('Suspended', exact=True)).to_have_count(2)
     page.get_by_role('button', name='Actions for Android phone').click()
     expect(page.get_by_role('menuitem', name='Add device for Family', exact=False)).to_be_disabled()
@@ -71,9 +73,9 @@ with sync_playwright() as pw:
     expect(page.get_by_text('Paused', exact=False).first).to_be_visible()
     expect(page.get_by_role('option', name='Family', exact=False)).to_have_count(0)
     navigation.get_by_role('button', name='Devices', exact=False).click()
-    action('Reactivate member')
+    action('Reactivate member', 'Reactivate')
     expect(page.locator('.device-row[data-suspended="true"]')).to_have_count(0)
-    action('Revoke all devices')
+    action('Revoke all devices', 'Revoke all')
     expect(page.get_by_role('button', name='Actions for Android phone')).to_have_count(0)
     expect(page.get_by_role('button', name='Actions for Work laptop')).to_have_count(0)
     expect(page.get_by_role('button', name='Actions for Other phone')).to_be_visible()

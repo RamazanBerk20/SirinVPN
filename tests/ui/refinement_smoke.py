@@ -17,10 +17,16 @@ with sync_playwright() as pw:
     assert page.locator(".resource-grid").evaluate("el => el.getBoundingClientRect().bottom <= innerHeight"), "Ordinary summary extends below the window"
     widths = page.locator(".resource-grid meter").evaluate_all("els => els.map(el => el.getBoundingClientRect().width)")
     assert max(widths) - min(widths) < 1, widths
-    expect(page.locator(".connection-facts")).to_contain_text("Server response")
+    # Live streams carry no request timing, so the server response row appears only for polled status.
+    expect(page.locator(".connection-facts")).not_to_contain_text("Server response")
     expect(page.locator(".primary-navigation small")).to_have_count(0)
     page.screenshot(path=str(OUTPUT / "home-viewport.png"))
     checks.append("At 1220×780, device traffic and complete VPS summary fit; resource tracks are equal width")
+    page.evaluate("window.__sirinStreamMode = 'polling'")
+    expect(page.locator(".connection-facts div").filter(has_text="Server response").locator("dd")).to_have_text("38 ms")
+    page.evaluate("window.__sirinStreamMode = 'live'")
+    expect(page.locator(".connection-facts")).not_to_contain_text("Server response")
+    checks.append("Server response time is shown for polled VPS status and withdrawn when live streaming resumes")
     nav.get_by_role("button", name="Settings", exact=True).click()
     page.get_by_role("tab", name="Connection", exact=True).click()
     positions = page.locator(".condition-choices .choice-row").evaluate_all("els => els.map(el => ({x:el.offsetLeft,y:el.offsetTop}))")
@@ -66,10 +72,12 @@ with sync_playwright() as pw:
     page.get_by_label("Public port", exact=True).fill("48080")
     page.get_by_label("Device port", exact=True).fill("8080")
     expect(preview).to_have_text("Public TCP port 48080 → My Linux desktop → port 8080")
-    page.once("dialog", lambda dialog: dialog.accept())
     page.get_by_role("button", name="Open port", exact=True).click()
-    args = page.evaluate("window.__sirinCommandArguments.findLast(item => item.command === 'create_port_forward').args")
+    args = page.wait_for_function("window.__sirinCommandArguments.findLast(item => item.command === 'create_port_forward')?.args").json_value()
     assert args["input"]["public_port"] == 48080 and args["input"]["device_port"] == 8080, args
+    prompt = page.evaluate("window.__sirinCommandArguments.findLast(item => item.command === 'plugin:dialog|message').args")
+    assert prompt["title"] == "Open public port 48080?" and prompt["message"].startswith("TCP port 48080 will forward to") and prompt["buttons"] == {"OkCancelCustom": ["Open port", "Cancel"]}, prompt
+    expect(page.get_by_label("Public port", exact=True)).to_have_value("")  # Cleared only after the VPS accepts the forward.
     checks.append("Empty port placeholders are explicit; the complete preview and submitted mapping use the same inputs")
     page.get_by_role("tab", name="VPS maintenance", exact=True).click()
     expect(page.get_by_role("button", name="Run diagnostics", exact=True)).to_have_count(1)
@@ -85,15 +93,25 @@ with sync_playwright() as pw:
     page.keyboard.press("Escape")
     checks.append("Connected maintenance opens a read-only plan; only an explicit local disconnect unlocks SSH setup")
     nav.get_by_role("button", name="Home", exact=True).click()
-    page.evaluate("window.__sirinLocalOverride = {state:'connected',server_id:'123e4567-e89b-42d3-a456-426614174000',traffic_metrics_supported:false,counter_epoch:undefined,tunnel_uptime_seconds:undefined}")
-    # There is no manual refresh control; the local status stream delivers the override.
+    page.get_by_role("region", name="VPN connection").get_by_role("button", name="Connect", exact=True).click()
+    expect(page.get_by_text("Connected to My private VPS", exact=True)).to_be_visible()
+    # Overrides reach the page through the local status stream, which republishes every second.
+    page.evaluate("window.__sirinLocalOverride = {traffic_metrics_supported:false,counter_epoch:undefined,tunnel_uptime_seconds:undefined}")
     expect(page.locator(".device-traffic .metric").first.locator("strong")).to_have_text("Unavailable")
+    expect(page.get_by_text("Couldn’t read counters")).to_have_count(0)
     page.get_by_role("button", name="Review update", exact=True).click()
-    expect(page.get_by_role("dialog")).to_contain_text("Disconnect and turn off the kill switch first.")
-    page.get_by_role("button", name="Open app updates", exact=True).click()
+    dialog = page.get_by_role("dialog")
+    expect(dialog).to_contain_text("Disconnect and turn off the kill switch first.")
+    expect(dialog.get_by_role("button", name="Update component", exact=True)).to_be_disabled()
+    page.keyboard.press("Escape")
+    # Without a bundled component the only remedy is a newer app package.
+    page.evaluate("window.__sirinComponentBundled = false")
+    page.get_by_role("button", name="Review update", exact=True).click()
+    expect(dialog).to_contain_text("Server updates don’t update the VPN component on this device.")
+    dialog.get_by_role("button", name="Open app updates", exact=True).click()
     expect(page.get_by_role("dialog")).to_contain_text("App updates")
     page.keyboard.press("Escape")
-    checks.append("A legacy helper gets explicit unavailable measurements and an actionable app-update review")
+    checks.append("A legacy helper gets explicit unavailable measurements; the review requires disconnecting before a bundled update, and otherwise leads to an app update")
     page.evaluate("window.__sirinLocalOverride.traffic_metrics_supported = true; window.__sirinLocalOverride.byte_counters_available = false")
     expect(page.get_by_text("Couldn’t read counters")).to_have_count(2)
     expect(page.get_by_role("button", name="Review update", exact=True)).to_have_count(0)
