@@ -51,7 +51,8 @@ with sync_playwright() as pw:
     expect(page.get_by_role("button", name="Connect", exact=True)).to_have_count(0)
     capture(page, "local-unknown")
     checks.append("Unknown local state does not become disconnected or protection Off")
-    page.evaluate("window.__sirinLocalFails = false; window.__sirinRemoteFails = false; window.__sirinLocalOverride = {state:'degraded',kill_switch_enabled:true,auto_reconnect_enabled:true}")
+    # A helper that reports the kill switch as configured but no enforcement state; current helpers report it.
+    page.evaluate("window.__sirinLocalFails = false; window.__sirinRemoteFails = false; window.__sirinLocalOverride = {state:'degraded',kill_switch_enabled:true,auto_reconnect_enabled:true,kill_switch_state:undefined}")
     page.get_by_role("button", name="Refresh status").click()
     expect(page.get_by_role("button", name="Disconnect and turn off kill switch block", exact=True)).to_be_visible()
     expect(page.locator(".connection-facts")).to_contain_text("not verified")
