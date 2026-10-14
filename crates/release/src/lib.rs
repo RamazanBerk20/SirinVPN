@@ -25,13 +25,13 @@ pub use installed_release::{
 pub use linux_debian_update::{DebianRecoveryAction, DebianRecoveryResult};
 pub use trust::{
     BUNDLED_RELEASE_TRUST_ROOT_PEM, INSTALLED_RELEASE_TRUST_SCHEMA_VERSION, InstalledReleaseTrust,
-    InstalledReleaseTrustSummary, LINUX_RELEASE_TRUST_STATE_NAME, MAX_TRUST_POLICY_BYTES,
-    MAX_TRUST_SIGNATURE_BYTES, ReleaseTrustKey, ReleaseTrustPolicy, ReleaseTrustSignature,
-    TrustPolicyAction, TrustPolicyDecision, VerifiedReleaseTrustPolicy, build_trust_policy,
-    bundled_release_trust_root_id, encode_trust_policy, encode_trust_signature, parse_trust_policy,
-    parse_trust_signature, sign_trust_policy, verify_manifest_with_trust_policy,
-    verify_release_artifact_with_trust_policy, verify_release_directory_with_trust_policy,
-    verify_trust_policy, verify_trust_policy_update,
+    InstalledReleaseTrustSummary, LINUX_RELEASE_TRUST_STATE_NAME, LocalReleaseFloor,
+    MAX_TRUST_POLICY_BYTES, MAX_TRUST_SIGNATURE_BYTES, ReleaseTrustKey, ReleaseTrustPolicy,
+    ReleaseTrustSignature, TrustPolicyAction, TrustPolicyDecision, VerifiedReleaseTrustPolicy,
+    build_trust_policy, bundled_release_trust_root_id, encode_trust_policy, encode_trust_signature,
+    parse_trust_policy, parse_trust_signature, sign_trust_policy,
+    verify_manifest_with_trust_policy, verify_release_artifact_with_trust_policy,
+    verify_release_directory_with_trust_policy, verify_trust_policy, verify_trust_policy_update,
 };
 
 use base64::{Engine as _, engine::general_purpose::STANDARD};

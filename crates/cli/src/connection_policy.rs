@@ -13,7 +13,13 @@ pub(super) async fn connect(
     json: bool,
 ) -> Result<()> {
     let profile = resolve_profile(&paths.profile_store(), selector)?;
-    let secret = paths.secret_store().get(&profile.identity_reference)?;
+    // Match the desktop: a half-rotated identity must not start a new session.
+    if has_pending_key_rotation(paths, profile.id)? {
+        bail!(
+            "finish this device's pending key rotation with `sirinvpn server rotate-keys` before connecting"
+        );
+    }
+    let secret = explicit_secret(paths, &profile.identity_reference)?;
     let store = paths.network_policy_store();
     let network_profile =
         requested_network_profile.unwrap_or_else(|| store.network_profile().unwrap_or_default());
@@ -49,7 +55,9 @@ pub(super) async fn connect(
         }
         tokio::time::sleep(std::time::Duration::from_secs(5)).await;
         status = invoke_helper("status", None)?;
-        if let Some(head) = &status.endpoint_checkpoint {
+        if let Some(head) = &status.endpoint_checkpoint
+            && !has_pending_key_rotation(paths, head.claims.server_id).unwrap_or(true)
+        {
             let _ = paths
                 .profile_store()
                 .apply_endpoint_checkpoint(head.clone());
@@ -101,9 +109,9 @@ pub(super) fn connect_managed_with_mtu(
     let mut ordered = vec![TransportEngine.select(profile, transport)?];
     ordered.extend(plan.iter().filter(|s| s.kind != transport).cloned());
     if let Some(value) = manual_mtu {
-        request.mtu = value;
+        request.mtu = sirinvpn_transport::manual_mtu_for(request.transport, value);
         for candidate in &mut ordered {
-            candidate.mtu = value;
+            candidate.mtu = sirinvpn_transport::manual_mtu_for(candidate.kind, value);
         }
     }
     request.reconnect_candidates = sirinvpn_tunnel_model::policy_transport_candidates(&ordered);

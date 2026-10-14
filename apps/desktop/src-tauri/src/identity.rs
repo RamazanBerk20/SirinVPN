@@ -229,6 +229,20 @@ pub(super) async fn join_server(
     }
 }
 
+/// Explicit user actions may show the system's bounded keyring unlock prompt.
+/// Background and automatic reads use `SecretStore::get`, which never prompts.
+pub(super) fn explicit_secret(
+    paths: &ClientPaths,
+    reference: &str,
+) -> Result<SecretIdentity, String> {
+    let secrets = paths.secret_store();
+    #[cfg(target_os = "linux")]
+    let secret = secrets.get_with_unlock(reference);
+    #[cfg(not(target_os = "linux"))]
+    let secret = secrets.get(reference);
+    secret.map_err(safe_error)
+}
+
 pub(super) fn find_profile(paths: &ClientPaths, id: &str) -> Result<ServerProfile, String> {
     let id: ServerId = id
         .parse()

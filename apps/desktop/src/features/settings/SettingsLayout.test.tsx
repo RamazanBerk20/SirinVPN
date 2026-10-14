@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { SettingsLayout } from "./SettingsLayout";
+import { registerNavigationGuard } from "../../lib/navigationGuard";
 
 const scrollBy = vi.hoisted(() => vi.fn());
 vi.mock("../../lib/scrolling", () => ({ pageScrollPort: () => ({ scrollBy }) }));
@@ -40,4 +41,20 @@ it("leaves a visible control in place", () => {
   vi.spyOn(control, "getBoundingClientRect").mockReturnValue({ top: 200 } as DOMRect);
   fireEvent.focus(control);
   expect(scrollBy).not.toHaveBeenCalled();
+});
+
+it("asks navigation guards before arrow keys switch settings categories", () => {
+  const onChange = vi.fn();
+  render(<SettingsLayout category="recovery" onChange={onChange}><p>Recovery</p></SettingsLayout>);
+  let allow = false;
+  const guard = vi.fn(() => allow);
+  const unregister = registerNavigationGuard(guard);
+  const current = screen.getByRole("tab", { name: "Keys & recovery" });
+  fireEvent.keyDown(current, { key: "ArrowRight" });
+  expect(guard).toHaveBeenCalledOnce();
+  expect(onChange).not.toHaveBeenCalled();
+  allow = true;
+  fireEvent.keyDown(current, { key: "Home" });
+  expect(onChange).toHaveBeenCalledExactlyOnceWith("general");
+  unregister();
 });

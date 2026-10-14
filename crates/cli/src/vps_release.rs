@@ -110,7 +110,7 @@ pub(super) fn run(paths: &ClientPaths, arguments: Arguments, json: bool) -> Resu
     } else {
         Some(prompt_nonempty_secret("sudo password: ")?)
     };
-    let secret = paths.secret_store().get(&profile.identity_reference)?;
+    let secret = explicit_secret(paths, &profile.identity_reference)?;
     let identity = secret.public_identity(&profile.client_management_certificate_pem)?;
     let request = ServerReleaseRequest {
         target: SshTarget {
@@ -127,9 +127,12 @@ pub(super) fn run(paths: &ClientPaths, arguments: Arguments, json: bool) -> Resu
     };
     let value = if let Some((directory, digest)) = bootstrap {
         let discovery = Provisioner::inspect_signed_baseline_target(&request)?;
+        // The CLI shares the package's root-private release store; without
+        // root it has no readable state and keeps the empty floor.
         let bundle = std::sync::Arc::new(sirinvpn_installer::SignedServerBundle::open(
             &directory,
             &discovery.architecture,
+            &sirinvpn_installer::LocalReleaseFloor::system()?,
         )?);
         if bundle.summary().manifest_sha256 != digest {
             bail!("the selected bundle differs from the reviewed signed manifest");

@@ -26,7 +26,19 @@ export function useSecretNavigationGuard(pending: boolean, scope: RefObject<HTML
     window.addEventListener("beforeunload", unload);
     let active = true;
     let stop: (() => void) | undefined;
-    void import("@tauri-apps/api/window").then(({ getCurrentWindow }) => getCurrentWindow().onCloseRequested((event) => { if (!check()) event.preventDefault(); })).then((unlisten) => { if (active) stop = unlisten; else unlisten(); }).catch(() => {});
+    void import("@tauri-apps/api/window").then(({ getCurrentWindow }) => {
+      const appWindow = getCurrentWindow();
+      let closing = false;
+      // destroy() is not granted, which keeps close-to-tray intact. Hold every request;
+      // once released, close again only after this listener is gone, so it cannot loop.
+      const listening: Promise<() => void> = appWindow.onCloseRequested((event) => {
+        event.preventDefault();
+        if (closing || !check()) return;
+        closing = true;
+        void listening.then((unlisten) => unlisten()).then(() => appWindow.close()).catch(() => { closing = false; });
+      });
+      return listening;
+    }).then((unlisten) => { if (active) stop = unlisten; else unlisten(); }).catch(() => {});
     return () => { active = false; stop?.(); unregister(); document.removeEventListener("click", click, true); window.removeEventListener("popstate", back, true); window.removeEventListener("beforeunload", unload); };
   }, [pending, scope, abandon, busy]);
 }

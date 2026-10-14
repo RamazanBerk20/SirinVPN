@@ -3,12 +3,15 @@ import { open } from "../../lib/nativeDialog";
 import { SecretInput } from "../../components/SecretInput";
 import { Field, InlineError } from "../../components/ui";
 import type { useSshLogin } from "../../hooks/useSshLogin";
+import { errorMessage } from "../../lib/errors";
+import { useState } from "react";
 
 export function SshLoginFields({
   login,
 }: {
   login: ReturnType<typeof useSshLogin>;
 }) {
+  const [pickerError, setPickerError] = useState("");
   return (
     <div className="ssh-login-fields" aria-busy={login.loading}>
       <p className="ssh-login-status settings-note" role="status">
@@ -94,8 +97,8 @@ export function SshLoginFields({
           </fieldset>
           {login.auth === "private_key" && (
             <div className="field-grid two-column key-fields">
-              <Field label="Private key path">
-                {isAndroid ? <button type="button" className="secondary-button" onClick={() => void open({ multiple: false }).then(path => { if (typeof path === "string") login.setKeyPath(path); })}>{login.keyPath ? "SSH key selected · Change" : "Choose SSH key"}</button> : <input value={login.keyPath} onChange={(e) => login.setKeyPath(e.target.value)} placeholder="/home/me/.ssh/vps" />}
+              <Field label="Private key path" error={isAndroid && pickerError ? pickerError : undefined}>
+                {isAndroid ? <button type="button" className="secondary-button" onClick={() => { setPickerError(""); void open({ multiple: false }).then(path => { if (typeof path === "string") login.setKeyPath(path); }).catch(reason => setPickerError(errorMessage(reason, "The SSH key picker could not be opened."))); }}>{login.keyPath ? "SSH key selected · Change" : "Choose SSH key"}</button> : <input value={login.keyPath} onChange={(e) => login.setKeyPath(e.target.value)} placeholder="/home/me/.ssh/vps" />}
               </Field>
               <Field label="Key passphrase" hint="Leave empty if unencrypted">
                 <SecretInput

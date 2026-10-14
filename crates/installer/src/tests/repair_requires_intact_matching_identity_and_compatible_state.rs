@@ -480,9 +480,16 @@ fn server_backup_request_is_owner_bound_and_keeps_secrets_out_of_remote_argument
         "/tmp/staged/sirinvpn-server",
         server_id,
         "/tmp/staged/owner.crt",
+        "fixture",
+        &"a".repeat(64),
     );
     assert!(command.contains("backup-state"));
     assert!(command.contains("--state-directory /etc/sirinvpn"));
+    // Root runs only its verified private copy, never the SSH user's upload.
+    assert!(command.contains("\"$STAGED_BINARY\" --state-directory /etc/sirinvpn"));
+    assert!(!command.contains("'/tmp/staged/sirinvpn-server' --state-directory"));
+    assert!(command.contains("mktemp -d '/usr/local/lib/.sirinvpn-stage-fixture."));
+    assert!(command.contains(&"a".repeat(64)));
     assert!(!command.contains(request.password.as_str()));
     assert!(!command.contains(request.destination.to_string_lossy().as_ref()));
 

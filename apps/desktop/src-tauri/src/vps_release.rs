@@ -1,5 +1,4 @@
 use serde::Deserialize;
-use sirinvpn_core::SecretStore;
 use sirinvpn_installer::{Provisioner, ServerReleaseAction, ServerReleaseRequest};
 use sirinvpn_protocol::{ConnectionState, ServerRole};
 use tauri::State;
@@ -30,7 +29,7 @@ pub(crate) async fn manage_vps_release(
                 return Err("Finish this device's pending key rotation before updating its VPS.".to_owned());
             }
         }
-        let secret = paths.secret_store().get(&profile.identity_reference).map_err(crate::safe_error)?;
+        let secret = crate::explicit_secret(&paths, &profile.identity_reference)?;
         let identity = secret.public_identity(&profile.client_management_certificate_pem).map_err(crate::safe_error)?;
         let target = crate::ssh_login::resolve_target(input.ssh)?;
         let mut value = Provisioner::manage_server_release(ServerReleaseRequest { profile, target, identity, action: input.operation })

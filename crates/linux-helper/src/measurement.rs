@@ -129,7 +129,7 @@ pub(super) fn sample_candidate(
     let helper = LinuxNetworkHelper::system();
     // Only this command uses the fixed probe resources; measurement.lock owns
     // their lifetime. Stale resources from a killed worker are safe to remove.
-    if !cleanup_probe() {
+    if !cleanup_probe(&SystemRunner) {
         return None;
     }
     let runtime = tokio::runtime::Builder::new_current_thread()
@@ -305,12 +305,13 @@ pub(super) fn sample_candidate(
         }
         result
     });
-    cleanup_probe();
+    cleanup_probe(&SystemRunner);
     result
 }
 
-fn cleanup_probe() -> bool {
-    let runner = SystemRunner;
+/// Removes only a probe link carrying this helper's alias, with its rule.
+/// Disconnect also calls this: a supervisor stopped mid-measurement leaves it.
+pub(super) fn cleanup_probe(runner: &impl CommandRunner) -> bool {
     let Ok(bytes) = runner.output("ip", &["-j", "link", "show", "dev", PROBE_INTERFACE]) else {
         // Do not take over another program's routing table or rule priority.
         return runner

@@ -6,7 +6,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { canManageMember } from "../../access";
+import { canManagePortForwards } from "../../access";
 import { api } from "../../api";
 import type {
   MemberSummary,
@@ -16,7 +16,7 @@ import type {
 } from "../../types";
 import { errorMessage } from "../../lib/errors";
 import { useMemberLifecycle } from "./useMemberLifecycle";
-import { cachedMembership, readMembership, retainMembership, withoutLiveActivity } from "./membershipCache";
+import { cachedMembership, invalidateMembership, readMembership, retainMembership, withoutLiveActivity } from "./membershipCache";
 export interface AccessProps {
   profile: Pick<ServerProfile, "id" | "name" | "device_id">;
   platform?: "desktop";
@@ -146,6 +146,11 @@ export function useAccessController({
     await Promise.all([membership, capabilities]);
   }, [connected, profile.id, cacheKey]);
 
+  const refreshAfterChange = useCallback(() => {
+    invalidateMembership(cacheKey);
+    return refresh();
+  }, [cacheKey, refresh]);
+
   useEffect(() => {
     let active = true;
     let timer: number | undefined;
@@ -224,7 +229,7 @@ export function useAccessController({
     event.preventDefault();
     if (!snapshot || !portForwardingAvailable) return;
     const targets = snapshot.members.flatMap((member) =>
-      !member.suspended && (canManageMember(accessLevel, member) || (accessLevel === "member" && member.policy?.manage_own_port_forwards))
+      !member.suspended && canManagePortForwards(accessLevel, member)
         ? member.devices.map((device) => ({ member, device }))
         : [],
     );
@@ -302,7 +307,7 @@ export function useAccessController({
     setError(null);
     try {
       await api.cancelInvitation(profile.id, invitationId);
-      await refresh();
+      await refreshAfterChange();
     } catch (reason) {
       setError(errorMessage(reason, "The invitation could not be cancelled."));
     }
@@ -393,6 +398,7 @@ export function useAccessController({
     setQuery,
     owner,
     refresh,
+    refreshAfterChange,
     rename,
     revoke,
     updatePeerCommunication,

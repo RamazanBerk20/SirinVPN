@@ -29,6 +29,8 @@ export function AddServerFlow({
   const [mode, setMode] = useState<"provision" | "join" | "backup" | "recovery" | null>(
     initialMode ?? (isAndroid ? null : "provision"),
   );
+  // Switching unmounts the current flow; an installation in progress blocks it.
+  const choose = (next: NonNullable<typeof mode>) => { if (next !== mode && confirmNavigation()) setMode(next); };
   const flow = mode === "provision" ? <SetupFlow onComplete={(result) => onAdded(result.profile)} compact={compact} />
     : mode === "join" ? <JoinFlow onComplete={onAdded} compact={compact} />
     : mode === "recovery" ? <RecoverAccessFlow onComplete={onAdded} compact={compact} />
@@ -57,25 +59,25 @@ export function AddServerFlow({
         <button
           type="button"
           aria-pressed={mode === "provision"}
-          onClick={() => setMode("provision")}
+          onClick={() => choose("provision")}
         >
           My VPS
         </button>
         <button
           type="button"
           aria-pressed={mode === "join"}
-          onClick={() => setMode("join")}
+          onClick={() => choose("join")}
         >
           Invitation
         </button>
         <button
           type="button"
           aria-pressed={mode === "backup"}
-          onClick={() => setMode("backup")}
+          onClick={() => choose("backup")}
         >
           Backup
         </button>
-        <button type="button" aria-pressed={mode === "recovery"} onClick={() => setMode("recovery")}>Recovery key</button>
+        <button type="button" aria-pressed={mode === "recovery"} onClick={() => choose("recovery")}>Recovery key</button>
       </div>
       {flow}
     </div>

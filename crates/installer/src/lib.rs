@@ -31,6 +31,7 @@ mod signed_baseline;
 pub use signed_baseline::{
     SignedBaselineCandidate, SignedBaselineOutcome, SignedServerBundle, release_target,
 };
+pub use sirinvpn_release::LocalReleaseFloor;
 
 use anyhow::{anyhow, bail};
 use base64::{
@@ -234,6 +235,8 @@ pub struct ServerDiscovery {
     pub default_interface: String,
     pub ipv6_default_interface: Option<String>,
     pub ssh_server_port: u16,
+    #[serde(default)]
+    pub ssh_local_address: Option<IpAddr>,
     pub ipv4_available: bool,
     pub ipv6_available: bool,
     pub nftables_available: bool,
@@ -558,6 +561,7 @@ impl Provisioner {
             &session,
             &request,
             &remote_directory,
+            &nonce,
             &artifact,
             &artifact_sha256,
         );

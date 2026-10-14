@@ -101,7 +101,7 @@ pub(super) async fn apply_endpoint_update(
                 "connect to the old VPS to retrieve its published update, or pass --code-stdin while disconnected"
             );
         }
-        let secret = paths.secret_store().get(&profile.identity_reference)?;
+        let secret = explicit_secret(paths, &profile.identity_reference)?;
         let response = ManagementClient::new(&profile, &secret)?
             .endpoint_transition()
             .await?
@@ -379,15 +379,19 @@ pub(super) fn disconnect(json: bool) -> Result<()> {
 pub(super) async fn status(paths: &ClientPaths, json: bool) -> Result<()> {
     let local = invoke_helper("status", None)?;
     if let Some(head) = &local.endpoint_checkpoint
-        && !has_pending_key_rotation(paths, head.claims.server_id)?
+        && !has_pending_key_rotation(paths, head.claims.server_id).unwrap_or(true)
     {
         let _ = paths
             .profile_store()
             .apply_endpoint_checkpoint(head.clone());
     }
-    let server = if let Some(server_id) = local.server_id {
-        let mut profile = resolve_profile(&paths.profile_store(), &server_id.to_string())?;
-        let secret = paths.secret_store().get(&profile.identity_reference)?;
+    // A missing profile or locked keyring must not hide the local tunnel and traffic block.
+    let identity = local.server_id.and_then(|server_id| {
+        let profile = resolve_profile(&paths.profile_store(), &server_id.to_string()).ok()?;
+        let secret = paths.secret_store().get(&profile.identity_reference).ok()?;
+        Some((profile, secret))
+    });
+    let server = if let Some((mut profile, secret)) = identity {
         match ManagementClient::new(&profile, &secret) {
             Ok(client) => match client.status().await {
                 Ok(status) => {
@@ -402,7 +406,7 @@ pub(super) async fn status(paths: &ClientPaths, json: bool) -> Result<()> {
                         if status.caller_device_id.is_some() {
                             profile.device_id = status.caller_device_id;
                         }
-                        paths.profile_store().upsert(profile)?;
+                        let _ = paths.profile_store().upsert(profile);
                     }
                     Some(status)
                 }

@@ -200,3 +200,12 @@ it("does not start maintenance after unmounting during key confirmation", async 
   await act(async () => resolve());
   expect(api.repairServer).not.toHaveBeenCalled();
 });
+
+it("rebuilds the transport draft from the profile saved when the dialog reopens", async () => {
+  const props = { onOpenChange: vi.fn(), disconnected: true, onCompleted: vi.fn().mockResolvedValue(undefined) };
+  const { rerender } = render(<RepairServerDialog {...props} profile={profile} open={false} />);
+  const restored = { ...profile, endpoint: { ...profile.endpoint, host: "restored.example", wireguard_port: 51900 } } as ServerProfile;
+  rerender(<RepairServerDialog {...props} profile={restored} open />);
+  expect((await screen.findByLabelText("Public VPN address (optional)") as HTMLInputElement).value).toBe("restored.example");
+  expect((screen.getByLabelText("Direct UDP port") as HTMLInputElement).value).toBe("51900");
+});

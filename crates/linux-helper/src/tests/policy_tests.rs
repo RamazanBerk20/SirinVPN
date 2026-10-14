@@ -398,6 +398,97 @@ fn verification_rejects_rule_changes_extra_accepts_and_future_or_stale_observati
 }
 
 #[test]
+fn full_tunnel_guard_blocks_forwarded_traffic_outside_the_tunnel() {
+    let endpoint: IpAddr = "203.0.113.8".parse().unwrap();
+    let forward_rules = |request: &TunnelConnectRequest| {
+        let guard = guard_objects(request, endpoint);
+        // Every mode adds and flushes the same two base chains.
+        assert_eq!(
+            guard[2],
+            serde_json::json!({"chain": {"family": "inet", "table": "sirinvpn_guard",
+                "name": "forward", "type": "filter", "hook": "forward", "prio": 0,
+                "policy": "accept"}})
+        );
+        guard
+            .into_iter()
+            .filter(|object| object["rule"]["chain"] == "forward")
+            .map(|object| object["rule"]["expr"].clone())
+            .collect::<Vec<_>>()
+    };
+    let interface = |key: &str| {
+        serde_json::json!({"match": {"op": "==", "left": {"meta": {"key": key}},
+            "right": INTERFACE_NAME}})
+    };
+    let reply = |state: &str| {
+        serde_json::json!([interface("iifname"),
+            {"match": {"op": "==", "left": {"ct": {"key": "state"}}, "right": state}},
+            {"accept": null}])
+    };
+    let mut request = independent(true, false, false);
+    assert_eq!(
+        forward_rules(&request),
+        vec![
+            serde_json::json!([interface("oifname"), {"accept": null}]),
+            reply("established"),
+            reply("related"),
+            serde_json::json!([{"drop": null}]),
+        ]
+    );
+
+    // Allowed LAN destinations mirror the output chain, after its DNS leak drops.
+    request.routing = TunnelRoutingPolicy::full_tunnel(true);
+    let rules = forward_rules(&request);
+    assert_eq!(
+        rules.len(),
+        4 + 5 + IPV4_LAN_ROUTES.len() + IPV6_LAN_ROUTES.len()
+    );
+    assert_eq!(
+        rules[..3],
+        forward_rules(&independent(true, false, false))[..3]
+    );
+    let text = |rule: &Value| serde_json::to_string(rule).unwrap();
+    assert!(text(&rules[3]).contains("10.77.0.1") && text(&rules[3]).contains("drop"));
+    assert!(text(&rules[8]).contains("10.0.0.0") && text(&rules[8]).contains("accept"));
+    assert_eq!(rules.last().unwrap(), &serde_json::json!([{"drop": null}]));
+
+    // Other modes keep forwarding unchanged.
+    for routing in [
+        TunnelRoutingPolicy::selected_routes(["198.51.100.0/24".into()], true).unwrap(),
+        TunnelRoutingPolicy::selected_applications(true),
+    ] {
+        request.routing = routing;
+        assert!(forward_rules(&request).is_empty());
+    }
+
+    let dir = tempfile::tempdir().unwrap();
+    let runner = runner();
+    let helper = LinuxNetworkHelper::new(runner.clone(), dir.path().to_owned());
+    let request = independent(true, false, false);
+    helper.apply_policy_guard(&request, endpoint).unwrap();
+    assert!(helper.guard_is_verified(&request, endpoint));
+    let commands = runner.base.commands.lock().unwrap();
+    let (_, _, input) = commands
+        .iter()
+        .rev()
+        .find(|(p, a, _)| p == "nft" && a == &["-j", "-f", "-"])
+        .unwrap();
+    let transaction: Value = serde_json::from_slice(input).unwrap();
+    let transaction = transaction["nftables"].as_array().unwrap();
+    // Base chains are added and flushed in place, never deleted and recreated.
+    for chain in ["output", "forward"] {
+        assert!(
+            transaction.contains(&serde_json::json!({"flush": {"chain": {
+            "family": "inet", "table": "sirinvpn_guard", "name": chain}}}))
+        );
+    }
+    assert!(
+        !transaction
+            .iter()
+            .any(|command| command.get("delete").is_some())
+    );
+}
+
+#[test]
 fn schema_boundary_and_legacy_policy_are_explicit() {
     for enabled in [false, true] {
         let mut legacy = request();

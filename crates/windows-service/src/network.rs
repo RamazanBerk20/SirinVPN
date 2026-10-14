@@ -16,7 +16,7 @@ use std::{
 };
 use windows_sys::{
     Win32::{
-        Foundation::{ERROR_NOT_FOUND, ERROR_OBJECT_ALREADY_EXISTS},
+        Foundation::{ERROR_FILE_NOT_FOUND, ERROR_NOT_FOUND, ERROR_OBJECT_ALREADY_EXISTS},
         NetworkManagement::{IpHelper::*, Ndis::NET_LUID_LH},
         Networking::WinSock::*,
     },
@@ -301,7 +301,7 @@ pub(crate) fn tunnel_routes(
 pub(crate) fn route_exists(record: &RouteRecord) -> io::Result<bool> {
     let mut row = row(record)?;
     let code = unsafe { GetIpForwardEntry2(&mut row) };
-    if code == ERROR_NOT_FOUND {
+    if route_gone(code) {
         return Ok(false);
     }
     check(code)?;
@@ -330,7 +330,7 @@ pub(crate) fn remove_owned_route(record: &RouteRecord) -> io::Result<()> {
     }
     let mut row = row(record)?;
     let code = unsafe { GetIpForwardEntry2(&mut row) };
-    if code == ERROR_NOT_FOUND {
+    if route_gone(code) {
         return Ok(());
     }
     check(code)?;
@@ -338,11 +338,17 @@ pub(crate) fn remove_owned_route(record: &RouteRecord) -> io::Result<()> {
         return Ok(());
     }
     let code = unsafe { DeleteIpForwardEntry2(&row) };
-    if code == ERROR_NOT_FOUND {
+    if route_gone(code) {
         Ok(())
     } else {
         check(code)
     }
+}
+
+/// ERROR_FILE_NOT_FOUND reports that the row's interface no longer exists, for
+/// example an unplugged dock; its routes were removed with that interface.
+fn route_gone(code: u32) -> bool {
+    code == ERROR_NOT_FOUND || code == ERROR_FILE_NOT_FOUND
 }
 
 fn row(record: &RouteRecord) -> io::Result<MIB_IPFORWARD_ROW2> {

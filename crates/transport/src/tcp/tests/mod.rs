@@ -40,5 +40,6 @@ fn tls_acceptor() -> (TlsAcceptor, String) {
 
 mod authorized_tcp_relay_round_trips_udp_datagrams;
 mod endpoint_control;
+mod handshake_freshness;
 mod https_camouflage;
 mod server_relay_preserves_a_fragmented_inbound_frame_during_outbound_traffic;

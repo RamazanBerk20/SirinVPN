@@ -7,21 +7,22 @@ import { SshVerificationGuide } from "../settings/SshVerificationGuide";
 import {
   CaretRight,
   Check,
-  Copy,
   Key,
   LockKey,
   ShieldCheck,
   TerminalWindow,
   Warning,
 } from "@phosphor-icons/react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api } from "../../api";
 import { privateDnsDraftIsValid, privateDnsRecordsFromDraft } from "../../dns";
 import { formatDnsPolicy, validateHost } from "../../format";
 import { type NetworkPreflight, type ProvisionResult } from "../../types";
 import { ServerNetworkPreflight } from "../settings/ServerNetworkPreflight";
 import { Field, InlineError } from "../../components/ui";
+import { CopyButton } from "../../components/CopyButton";
 import { errorMessage } from "../../lib/errors";
+import { registerNavigationGuard } from "../../lib/navigationGuard";
 import {
   type DnsPolicyChoice,
   type DnsEndpointDraft,
@@ -59,6 +60,22 @@ export function SetupFlow({
   const [result, setResult] = useState<ProvisionResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [preflight, setPreflight] = useState<NetworkPreflight | null>(null);
+  // The backend saves the profile once provisioning succeeds. Until "Open
+  // server" hands it to the app, report it on unmount so it is never lost.
+  const unopened = useRef<ProvisionResult | null>(null);
+  const mounted = useRef(false);
+  const complete = useRef(onComplete);
+  complete.current = onComplete;
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      const pending = unopened.current;
+      unopened.current = null;
+      if (pending) void complete.current(pending);
+    };
+  }, []);
+  useEffect(() => step === "installing" ? registerNavigationGuard(() => false) : undefined, [step]);
 
   const valid =
     validateHost(host) &&
@@ -136,8 +153,13 @@ export function SetupFlow({
             : { mode: "recursive" }, splitDns),
         private_dns_records: privateDnsRecordsFromDraft(privateDnsRecords),
       });
-      setResult(provisioned);
       login.clearSecrets();
+      if (!mounted.current) {
+        void complete.current(provisioned);
+        return;
+      }
+      unopened.current = provisioned;
+      setResult(provisioned);
       setStep("success");
     } catch (reason) {
       login.clearSecrets();
@@ -194,7 +216,10 @@ export function SetupFlow({
         {result.network_preflight && <ServerNetworkPreflight report={result.network_preflight} />}
         <button
           className="primary-button"
-          onClick={() => void onComplete(result)}
+          onClick={() => {
+            unopened.current = null;
+            void onComplete(result);
+          }}
         >
           Open server
         </button>
@@ -217,13 +242,7 @@ export function SetupFlow({
         </p>
         <div className="fingerprint-value">
           <code>{fingerprint}</code>
-          <button
-            className="icon-button"
-            aria-label="Copy fingerprint"
-            onClick={() => void navigator.clipboard.writeText(fingerprint)}
-          >
-            <Copy size={17} />
-          </button>
+          <CopyButton value={fingerprint} label="Copy fingerprint" />
         </div>
         {!preflight && <SshVerificationGuide confirmation="button" />}
         <div className="warning-note">

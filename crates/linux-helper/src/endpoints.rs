@@ -248,7 +248,7 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
         }
         if let Some(sirinvpn_protocol::MtuPolicy::Manual { value }) = current.mtu_policy {
             for selection in &mut selections {
-                selection.mtu = value;
+                selection.mtu = sirinvpn_transport::manual_mtu_for(selection.kind, value);
             }
         }
         let selection = selections

@@ -18,6 +18,14 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 describe("saved connection preferences", () => {
+  it("treats a reverted optional field as unchanged", async () => {
+    const { result } = renderHook(() => useConnectionPreferences("a"));
+    await waitFor(() => expect(result.current.ready).toBe(true));
+    act(() => result.current.change({ manual_mtu: 1400 }));
+    expect(result.current.dirty).toBe(true);
+    act(() => result.current.change({ manual_mtu: null, android_applications: null }));
+    expect(result.current.dirty).toBe(false);
+  });
   it("saves complete server-scoped preferences and reloads them after remount", async () => {
     const data = new Map();
     vi.mocked(api.getConnectionPreferences).mockImplementation(
@@ -175,4 +183,18 @@ it("does not apply a late reconnect response to another Android server", async (
   });
   expect(result.current.saved?.policy.automatic_reconnect).toBe(false);
   expect(result.current.draft.policy.automatic_reconnect).toBe(false);
+});
+
+it("accepts a manual MTU limited by Obfuscated UDP as the saved value", () => {
+  const local = {
+    ...emptyLocalStatus,
+    state: "connected" as const,
+    server_id: "a",
+    transport: "obfuscated_udp" as const,
+    mtu: { policy: { mode: "manual" as const, value: 1398 }, configured: 1398, suggested: null, outcome: "pending" as const },
+  };
+  const saved = { ...defaults, manual_mtu: 1420 };
+  expect(preferenceDifferences(saved, local, "a")).toEqual([]);
+  expect(preferenceDifferences(saved, { ...local, transport: "direct_udp" }, "a")).toEqual(["MTU: 1398 (manual)"]);
+  expect(preferenceDifferences({ ...defaults, manual_mtu: 1300 }, local, "a")).toEqual(["MTU: 1398 (manual)"]);
 });

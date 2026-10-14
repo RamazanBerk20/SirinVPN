@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { api } from "../../api";
 import { invoke, isAndroid } from "../../platform";
 import { InlineError } from "../../components/ui";
+import { errorMessage } from "../../lib/errors";
 import type { ServerProfile, WifiPolicySnapshot } from "../../types";
 
 const networkLabels = {
@@ -32,6 +33,8 @@ export function WifiSettings() {
   const generation = useRef(0);
   const active = useRef(false);
   const writing = useRef(false);
+  // A later successful poll clears only errors that polling itself reported.
+  const pollFailed = useRef(false);
   const applySnapshot = (next: WifiPolicySnapshot, profiles?: ServerProfile[]) => {
     setSnapshot(next);
     if (profiles) setServers(profiles);
@@ -60,6 +63,7 @@ export function WifiSettings() {
           initialized ? Promise.resolve(undefined) : api.listServers(),
         ]);
         if (!current()) return;
+        if (pollFailed.current) { pollFailed.current = false; setError(""); }
         if (!initialized) {
           applySnapshot(next, profiles);
           setReviewedToken(next.current_network_token);
@@ -69,9 +73,12 @@ export function WifiSettings() {
           if (next.policy.server_id) setSelected(next.policy.server_id);
         }
       } catch (reason) {
-        if (current()) setError(initialized
-          ? "The current network status could not be refreshed. Refresh network to try again."
-          : String(reason));
+        if (current()) {
+          pollFailed.current = true;
+          setError(initialized
+            ? "The current network status could not be refreshed. Refresh network to try again."
+            : errorMessage(reason, "Wi-Fi trust settings could not be loaded."));
+        }
       } finally {
         polling = false;
         if (refreshAfterPending) {
@@ -101,7 +108,7 @@ export function WifiSettings() {
     if (writing.current) return;
     const epoch = ++generation.current;
     writing.current = true;
-    setBusy(true); setError("");
+    setBusy(true); setError(""); pollFailed.current = false;
     try {
       await operation();
       const [next, profiles] = await Promise.all([api.getWifiPolicy(), api.listServers()]);
@@ -110,7 +117,7 @@ export function WifiSettings() {
       if (reviewNetwork) { setReviewedToken(next.current_network_token); setLabel(""); }
     } catch (e) {
       if (active.current && epoch === generation.current) {
-        setError(String(e));
+        setError(errorMessage(e, "The Wi-Fi trust setting could not be changed."));
         setSelected(snapshot?.policy.server_id ?? servers[0]?.id ?? "");
       }
     } finally {

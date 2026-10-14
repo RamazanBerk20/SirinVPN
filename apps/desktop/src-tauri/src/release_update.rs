@@ -12,7 +12,7 @@ use std::{
     process::{Command, Stdio},
     sync::Mutex,
 };
-use tauri::State;
+use tauri::{Manager, State};
 use tempfile::{Builder as TempBuilder, TempDir};
 
 const RELEASE_FETCH_BINARY: &str = "/usr/lib/sirinvpn/sirinvpn-release-fetch";
@@ -28,22 +28,27 @@ const RELEASE_MANIFEST_FILE_NAME: &str = "sirinvpn-release.json";
 const RELEASE_SIGNATURE_FILE_NAME: &str = "sirinvpn-release.sig.json";
 
 #[tauri::command]
-pub(crate) fn get_release_update_status(
+pub(crate) async fn get_release_update_status(
     app: tauri::AppHandle,
-    runtime: State<'_, ReleaseUpdateRuntime>,
 ) -> Result<crate::release_update_status::ReleaseUpdateStatus, String> {
-    let state = runtime.lock()?;
-    if state.busy {
-        return Err("Wait for the active release operation.".into());
-    }
-    match appimage::Context::capture(&app)? {
-        Some(context) => context.status(),
-        None => Ok(crate::release_update_status::ReleaseUpdateStatus {
-            installer_kind: "debian",
-            rollback_version: None,
-            baseline_required: false,
-        }),
-    }
+    // Capture hashes the whole AppImage; keep it off the main thread.
+    tauri::async_runtime::spawn_blocking(move || {
+        let runtime = app.state::<ReleaseUpdateRuntime>();
+        let state = runtime.lock()?;
+        if state.busy {
+            return Err("Wait for the active release operation.".into());
+        }
+        match appimage::Context::capture(&app)? {
+            Some(context) => context.status(),
+            None => Ok(crate::release_update_status::ReleaseUpdateStatus {
+                installer_kind: "debian",
+                rollback_version: None,
+                baseline_required: false,
+            }),
+        }
+    })
+    .await
+    .map_err(|_| "The release status check was interrupted.".to_owned())?
 }
 
 #[tauri::command]
@@ -190,11 +195,13 @@ pub(crate) async fn check_release_update(
     .map_err(|_| "The packaged release verifier is unavailable.".to_owned())?;
     let artifact_target = current_artifact_target()?.to_owned();
     let channel = input.channel.as_str().to_owned();
-    let appimage = appimage::Context::capture(&app)?;
+    // Claim the operation first: capture cancels an interrupted AppImage
+    // replacement and must never race an in-flight install.
     let discarded = runtime.begin_check()?;
     drop(discarded);
 
     let outcome = match tauri::async_runtime::spawn_blocking(move || {
+        let appimage = appimage::Context::capture(&app)?;
         fetch_candidate(fetcher, input.source, channel, artifact_target, appimage)
     })
     .await

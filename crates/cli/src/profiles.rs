@@ -2,6 +2,17 @@
 
 use super::*;
 
+/// Explicit commands may show the system's bounded keyring unlock prompt;
+/// status reads use `SecretStore::get`, which never prompts.
+pub(super) fn explicit_secret(paths: &ClientPaths, reference: &str) -> Result<SecretIdentity> {
+    let secrets = paths.secret_store();
+    #[cfg(target_os = "linux")]
+    let secret = secrets.get_with_unlock(reference)?;
+    #[cfg(not(target_os = "linux"))]
+    let secret = secrets.get(reference)?;
+    Ok(secret)
+}
+
 pub(super) fn connected_identity(
     paths: &ClientPaths,
     selector: &str,
@@ -11,7 +22,7 @@ pub(super) fn connected_identity(
     if local.server_id != Some(profile.id) || local.state == ConnectionState::Disconnected {
         bail!("connect to this server before using its private management API");
     }
-    let secret = paths.secret_store().get(&profile.identity_reference)?;
+    let secret = explicit_secret(paths, &profile.identity_reference)?;
     Ok((profile, secret))
 }
 
@@ -146,7 +157,8 @@ pub(super) fn remove_server(paths: &ClientPaths, selector: &str) -> Result<()> {
     }
     let status = invoke_helper("status", None)
         .context("Local tunnel status could not be verified; retry before removing this profile")?;
-    if status.server_id == Some(profile.id) && status.state != ConnectionState::Disconnected {
+    // A paused or retained session still owns this identity, as on the desktop.
+    if status.server_id == Some(profile.id) {
         bail!("disconnect this server before removing its local profile");
     }
     paths.secret_store().delete(&profile.identity_reference)?;

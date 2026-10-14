@@ -11,10 +11,10 @@ use sirinvpn_protocol::TransportKind;
 use snow::{Builder, HandshakeState, StatelessTransportState, params::NoiseParams};
 use socket2::{Domain, Protocol, Socket, Type};
 use std::{
-    collections::{HashMap, HashSet, VecDeque},
+    collections::HashMap,
     future::Future,
     io,
-    net::{IpAddr, SocketAddr},
+    net::SocketAddr,
     sync::{Arc, Mutex},
     time::{Duration, Instant},
 };
@@ -27,7 +27,10 @@ use tokio::{
 use tokio_rustls::{TlsAcceptor, TlsConnector};
 use zeroize::{Zeroize, Zeroizing};
 
-use crate::relay::{ActiveTransportRegistry, AuthorizedPeers, RelayError};
+use crate::relay::{
+    ActiveTransportRegistry, AuthorizedPeers, HandshakeReplayCache, ProbeLimiter, RelayError,
+    client_handshake_payload,
+};
 
 mod client;
 mod discovery;
@@ -188,77 +191,6 @@ pub struct TcpServerRelayConfig {
     pub server_private_key: Zeroizing<[u8; 32]>,
 }
 
-#[derive(Default)]
-struct HandshakeReplayCache {
-    entries: VecDeque<(Instant, [u8; 32])>,
-    digests: HashSet<[u8; 32]>,
-}
-
-impl HandshakeReplayCache {
-    fn insert_once(&mut self, message: &[u8]) -> bool {
-        self.prune();
-        let digest: [u8; 32] = Sha256::digest(message).into();
-        if self.digests.contains(&digest) {
-            return false;
-        }
-        while self.entries.len() >= 4_096 {
-            if let Some((_, removed)) = self.entries.pop_front() {
-                self.digests.remove(&removed);
-            }
-        }
-        self.entries.push_back((Instant::now(), digest));
-        self.digests.insert(digest);
-        true
-    }
-
-    fn prune(&mut self) {
-        while self
-            .entries
-            .front()
-            .is_some_and(|(seen, _)| seen.elapsed() > Duration::from_secs(180))
-        {
-            if let Some((_, digest)) = self.entries.pop_front() {
-                self.digests.remove(&digest);
-            }
-        }
-    }
-}
-
-#[derive(Default)]
-struct ProbeLimiter {
-    peers: HashMap<IpAddr, ProbeWindow>,
-}
-
-struct ProbeWindow {
-    started: Instant,
-    attempts: u8,
-}
-
-impl ProbeLimiter {
-    fn allow(&mut self, address: IpAddr) -> bool {
-        if self.peers.len() >= 1_024 {
-            self.peers
-                .retain(|_, window| window.started.elapsed() < Duration::from_secs(60));
-            if self.peers.len() >= 1_024 && !self.peers.contains_key(&address) {
-                return false;
-            }
-        }
-        let window = self.peers.entry(address).or_insert(ProbeWindow {
-            started: Instant::now(),
-            attempts: 0,
-        });
-        if window.started.elapsed() >= Duration::from_secs(10) {
-            window.started = Instant::now();
-            window.attempts = 0;
-        }
-        if window.attempts >= 12 {
-            return false;
-        }
-        window.attempts += 1;
-        true
-    }
-}
-
 #[derive(Clone, Default)]
 struct ClientConnectionRegistry(Arc<Mutex<HashMap<[u8; 32], usize>>>);
 
@@ -346,7 +278,12 @@ where
         let mut outbound_nonce = 1_u64;
         let mut local_buffer = [0_u8; MAX_INNER_PACKET_LENGTH];
         loop {
-            let (length, peer) = local_socket.recv_from(&mut local_buffer).await?;
+            let (length, peer) = match local_socket.recv_from(&mut local_buffer).await {
+                Ok(received) => received,
+                // Windows reports an earlier ICMP port-unreachable on the next receive.
+                Err(error) if error.kind() == std::io::ErrorKind::ConnectionReset => continue,
+                Err(error) => return Err(error.into()),
+            };
             if !peer.ip().is_loopback() {
                 continue;
             }
@@ -489,13 +426,20 @@ async fn run_tcp_server_relay_inner(
 
     loop {
         let accepted = tokio::select! {
-            accepted = listener.accept() => accepted?,
+            accepted = listener.accept() => accepted,
             _ = activity_cleanup.tick() => {
                 activity.prune(CONNECTION_IDLE_TIMEOUT);
                 continue;
             }
         };
-        let (stream, source) = accepted;
+        // Descriptor exhaustion or an aborted connection is transient; it must not stop the server.
+        let (stream, source) = match accepted {
+            Ok(accepted) => accepted,
+            Err(_) => {
+                tokio::time::sleep(Duration::from_millis(100)).await;
+                continue;
+            }
+        };
         if !probe_limiter
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner())
@@ -712,9 +656,9 @@ where
 {
     timeout(HANDSHAKE_TIMEOUT, async {
         let mut handshake = initiator_handshake(client_private, server_public, prologue)?;
-        let padding = random_bytes(OsRng.gen_range(48..=144));
+        let payload = client_handshake_payload();
         let mut request = [0_u8; HANDSHAKE_MAX_LENGTH];
-        let request_length = handshake.write_message(&padding, &mut request)?;
+        let request_length = handshake.write_message(&payload, &mut request)?;
         write_frame(stream, &request[..request_length]).await?;
         let response = read_frame(stream, HANDSHAKE_MAX_LENGTH).await?;
         let mut payload = [0_u8; HANDSHAKE_MAX_LENGTH];
@@ -753,12 +697,9 @@ fn accept_handshake_message(
     }
     let mut handshake = responder_handshake(&config.server_private_key, prologue)?;
     let mut client_payload = [0_u8; HANDSHAKE_MAX_LENGTH];
-    if handshake
-        .read_message(request, &mut client_payload)
-        .is_err()
-    {
+    let Ok(client_payload_length) = handshake.read_message(request, &mut client_payload) else {
         return Ok(None);
-    }
+    };
     let Some(remote_static) = handshake.get_remote_static() else {
         return Ok(None);
     };
@@ -769,7 +710,11 @@ fn accept_handshake_message(
         || !replay_cache
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner())
-            .insert_once(request)
+            .accept_client_handshake(
+                request,
+                client_static,
+                &client_payload[..client_payload_length],
+            )
     {
         return Ok(None);
     }

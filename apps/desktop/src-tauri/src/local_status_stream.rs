@@ -60,6 +60,16 @@ pub(crate) fn unsubscribe_local_status(subscription_id: String) {
     }
 }
 
+/// A reloaded page never unsubscribes, and its stale channels still accept sends.
+pub(crate) fn clear() {
+    let mut hub = HUB.lock().unwrap_or_else(|error| error.into_inner());
+    hub.listeners.clear();
+    if let Some(worker) = hub.worker.take() {
+        worker.abort();
+    }
+    hub.last = None;
+}
+
 async fn read(app: &tauri::AppHandle) -> Result<serde_json::Value, String> {
     let status = crate::connection::local_status(app.state::<crate::AppState>()).await?;
     serde_json::to_value(status).map_err(|_| "Native status unavailable.".into())

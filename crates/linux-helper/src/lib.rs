@@ -345,17 +345,38 @@ fn ipv6_blocked_for_state(state: &RuntimeState, ipv6_tunneled: bool) -> bool {
         && (state.persistent_protection || state.client_ipv6_address.is_none())
 }
 
-const CLIENT_FIREWALL: &str = r#"table inet sirinvpn_client {
-  chain premangle {
+// As wg-quick does (CVE-2019-14899), packets for a tunnel address that arrive
+// on another interface from a non-local source are dropped before conntrack.
+// Replies to marked carrier sockets regain the mark before reverse-path
+// filtering (with src_valid_mark). TCP carriers are restored only for their mark.
+fn client_firewall(client_address: Ipv4Addr, client_ipv6_address: Option<Ipv6Addr>) -> String {
+    let ipv6_rule = client_ipv6_address
+        .map(|address| {
+            format!(
+                "    iifname != \"{INTERFACE_NAME}\" ip6 daddr {address} fib saddr type != local drop\n"
+            )
+        })
+        .unwrap_or_default();
+    format!(
+        r#"table inet sirinvpn_client {{
+  chain preraw {{
+    type filter hook prerouting priority raw; policy accept;
+    iifname != "{INTERFACE_NAME}" ip daddr {client_address} fib saddr type != local drop
+{ipv6_rule}  }}
+  chain premangle {{
     type filter hook prerouting priority mangle; policy accept;
     meta l4proto udp meta mark set ct mark
-  }
-  chain postmangle {
+    meta l4proto tcp ct mark 0xca6c meta mark set ct mark
+  }}
+  chain postmangle {{
     type filter hook postrouting priority mangle; policy accept;
     meta l4proto udp ct mark set meta mark
-  }
+    meta l4proto tcp meta mark 0xca6c ct mark set meta mark
+  }}
+}}
+"#
+    )
 }
-"#;
 
 #[cfg(test)]
 mod tests;

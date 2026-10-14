@@ -260,6 +260,113 @@ fn failed_supervisor_start_rolls_back_persistent_protection() {
 }
 
 #[test]
+fn failed_persistent_start_retains_state_when_cleanup_leaves_residue() {
+    let directory = tempfile::tempdir().unwrap();
+    let runner = RecordingRunner {
+        fail_apply: true,
+        cleanup_residue: true,
+        ..RecordingRunner::default()
+    };
+    let helper = LinuxNetworkHelper::new(runner, directory.path().to_path_buf());
+    let mut request = request();
+    request.persistent_protection = true;
+
+    assert!(matches!(
+        helper.connect(&request),
+        Err(HelperError::PersistentProtectionUnavailable)
+    ));
+    // Without saved state, Disconnect could not prove ownership of the residue.
+    assert!(directory.path().join("client-state.json").exists());
+    assert!(
+        directory
+            .path()
+            .join("persistent/desired-connection.json")
+            .exists()
+    );
+}
+
+#[test]
+fn tunnel_restores_carrier_marks_for_strict_reverse_path_filtering() {
+    let directory = tempfile::tempdir().unwrap();
+    let runner = RecordingRunner::default();
+    let helper = LinuxNetworkHelper::new(runner.clone(), directory.path().to_path_buf());
+    helper.connect(&request()).unwrap();
+
+    let commands = runner.commands.lock().unwrap();
+    assert!(commands.iter().any(|(program, arguments, _)| {
+        program == "sysctl" && arguments == &["-q", "-w", "net.ipv4.conf.all.src_valid_mark=1"]
+    }));
+    let (_, _, firewall) = commands
+        .iter()
+        .find(|(program, arguments, input)| {
+            program == "nft"
+                && arguments == &["-f", "-"]
+                && String::from_utf8_lossy(input).contains("table inet sirinvpn_client {")
+        })
+        .unwrap();
+    let firewall = String::from_utf8_lossy(firewall);
+    // TCP carriers use the same socket mark as WireGuard's UDP socket.
+    assert_eq!(0xca6c, sirinvpn_transport::TUNNEL_SOCKET_MARK);
+    assert!(firewall.contains("meta l4proto udp meta mark set ct mark"));
+    assert!(firewall.contains("meta l4proto tcp ct mark 0xca6c meta mark set ct mark"));
+    assert!(firewall.contains("meta l4proto tcp meta mark 0xca6c ct mark set meta mark"));
+    assert!(
+        firewall
+            .contains("iifname != \"sirinvpn0\" ip daddr 10.77.0.2 fib saddr type != local drop")
+    );
+}
+
+#[derive(Clone)]
+struct ProbeRunner {
+    base: RecordingRunner,
+    alias: &'static str,
+}
+
+impl CommandRunner for ProbeRunner {
+    fn run(&self, program: &str, arguments: &[&str], stdin: Option<&[u8]>) -> Result<()> {
+        self.base.run(program, arguments, stdin)
+    }
+
+    fn output(&self, program: &str, arguments: &[&str]) -> Result<Vec<u8>> {
+        if program == "ip" && arguments == ["-j", "link", "show", "dev", "sirinprobe0"] {
+            return Ok(serde_json::to_vec(&serde_json::json!([
+                {"ifname": "sirinprobe0", "ifalias": self.alias}
+            ]))?);
+        }
+        self.base.output(program, arguments)
+    }
+}
+
+#[test]
+fn disconnect_removes_only_an_owned_measurement_probe() {
+    for (alias, owned) in [
+        ("SirinVPN isolated measurement", true),
+        ("another program", false),
+    ] {
+        let directory = tempfile::tempdir().unwrap();
+        let runner = ProbeRunner {
+            base: RecordingRunner::default(),
+            alias,
+        };
+        let helper = LinuxNetworkHelper::new(runner.clone(), directory.path().to_path_buf());
+        helper.connect(&request()).unwrap();
+        helper.disconnect().unwrap();
+
+        let commands = runner.base.commands.lock().unwrap();
+        let removed = |expected: &[&str]| {
+            commands
+                .iter()
+                .any(|(program, arguments, _)| program == "ip" && arguments == expected)
+        };
+        assert_eq!(removed(&["link", "delete", "sirinprobe0"]), owned);
+        assert_eq!(
+            removed(&["-4", "rule", "delete", "table", "51824", "priority", "9988"]),
+            owned
+        );
+    }
+}
+
+#[test]
 fn explicit_disconnect_removes_persistent_intent_and_disables_services() {
     let directory = tempfile::tempdir().unwrap();
     let runner = RecordingRunner::default();
@@ -301,6 +408,23 @@ fn kill_switch_only_allows_recovery_paths() {
     assert!(firewall.contains("meta mark 0xca6c ip daddr 203.0.113.8 udp dport 51820 accept"));
     assert!(firewall.contains("udp sport 68 udp dport 67 accept"));
     assert!(!firewall.contains("dport 53"));
+    assert!(!firewall.contains("icmpv6"));
+
+    // An IPv6 endpoint needs neighbour discovery, as in the policy guard.
+    let ipv6_firewall = kill_switch_firewall(&request, "2001:db8::8".parse().unwrap(), false);
+    assert!(
+        ipv6_firewall.contains("meta mark 0xca6c ip6 daddr 2001:db8::8 udp dport 51820 accept")
+    );
+    assert!(ipv6_firewall.contains(
+        "    ip6 hoplimit 255 icmpv6 type { nd-router-solicit, nd-router-advert, nd-neighbor-solicit, nd-neighbor-advert } accept\n"
+    ));
+    assert!(ipv6_firewall.contains("    ip6 daddr ff02::1:2 udp sport 546 udp dport 547 accept\n"));
+    assert!(
+        ipv6_firewall.find("icmpv6").unwrap()
+            < ipv6_firewall
+                .find("udp sport 68 udp dport 67 accept")
+                .unwrap()
+    );
 
     request.endpoint_port = 443;
     request.transport = TransportKind::TcpFallback;
@@ -333,7 +457,17 @@ fn kill_switch_only_allows_recovery_paths() {
 #[test]
 fn reconnect_units_restore_the_guard_before_networking_without_logs() {
     assert!(KILL_SWITCH_SERVICE.contains("Before=network-pre.target"));
-    assert!(KILL_SWITCH_SERVICE.contains("WantedBy=network-pre.target"));
+    // network-pre.target is passive; sysinit.target always starts the guard.
+    assert!(KILL_SWITCH_SERVICE.contains("DefaultDependencies=no"));
+    assert!(KILL_SWITCH_SERVICE.contains("WantedBy=sysinit.target"));
+    assert!(!KILL_SWITCH_SERVICE.contains("WantedBy=network-pre.target"));
+    // A ruleset flush by nftables.service must not remove an installed guard.
+    assert!(KILL_SWITCH_SERVICE.contains("After=local-fs.target nftables.service"));
+    // IPv6 can be disabled at boot; its sysctl tree is then absent.
+    assert!(
+        RECONNECT_SERVICE
+            .contains("ReadWritePaths=/proc/sys/net/ipv4/conf -/proc/sys/net/ipv6/conf")
+    );
     assert!(RECONNECT_SERVICE.contains("After=sirinvpn-killswitch.service"));
     assert!(RECONNECT_SERVICE.contains("Restart=on-failure"));
     assert!(TRANSPORT_SERVICE.contains("Type=notify"));

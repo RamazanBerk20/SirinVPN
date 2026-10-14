@@ -1,6 +1,7 @@
 //! A single privileged request owns initial selection and independent recovery.
 use super::*;
 use sirinvpn_tunnel_model::{ConnectionPolicy, ReconnectCandidate, policy_transport_candidates};
+use std::sync::atomic::{AtomicU64, Ordering};
 
 #[tauri::command]
 pub(super) async fn connect_server_with_policy(
@@ -66,16 +67,14 @@ pub(crate) fn connect_native(
             "Finish this device's pending key rotation before connecting from the tray.".into(),
         );
     }
-    let secrets = paths.secret_store();
-    #[cfg(target_os = "linux")]
     let secret = if interactive {
-        secrets.get_with_unlock(&profile.identity_reference)
+        explicit_secret(&paths, &profile.identity_reference)?
     } else {
-        secrets.get(&profile.identity_reference)
+        paths
+            .secret_store()
+            .get(&profile.identity_reference)
+            .map_err(safe_error)?
     };
-    #[cfg(not(target_os = "linux"))]
-    let secret = secrets.get(&profile.identity_reference);
-    let secret = secret.map_err(safe_error)?;
     let network = NetworkContext::discover();
     let store = paths.network_policy_store();
     let _ = store.set_network_profile(preferences.network_profile);
@@ -103,7 +102,7 @@ pub(crate) fn connect_native(
         .map_err(str::to_owned)?;
     if let Some(value) = preferences.manual_mtu {
         for selection in &mut plan {
-            selection.mtu = value;
+            selection.mtu = sirinvpn_transport::manual_mtu_for(selection.kind, value);
         }
     }
     let first = plan
@@ -182,22 +181,30 @@ pub(crate) fn connect_native(
     {
         return Err("The local VPN component did not acknowledge the independent connection policy. Review its update in Settings.".into());
     }
+    // Tray disconnects do not advance the epoch; each connect retires older observers.
+    let observer = OBSERVER.fetch_add(1, Ordering::AcqRel) + 1;
     if preferences.transport == TransportPreference::Automatic {
-        observe_transport_success(paths, profile.id, network);
+        observe_transport_success(paths, profile.id, network, observer);
     }
     Ok(status)
 }
+
+static OBSERVER: AtomicU64 = AtomicU64::new(0);
 
 fn observe_transport_success(
     paths: ClientPaths,
     server_id: ServerId,
     network: Option<NetworkContext>,
+    observer: u64,
 ) {
     let connection_epoch = crate::connection_controller::epoch();
     tauri::async_runtime::spawn_blocking(move || {
         let mut recorded = None;
         loop {
             std::thread::sleep(std::time::Duration::from_secs(5));
+            if OBSERVER.load(Ordering::Acquire) != observer {
+                return;
+            }
             let Ok(local) = invoke_helper("status", None) else {
                 return;
             };

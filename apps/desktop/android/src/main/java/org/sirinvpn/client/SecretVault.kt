@@ -30,10 +30,32 @@ class SecretVault(context: Context) {
         require(reference.matches(Regex("[a-zA-Z0-9-]{1,128}")))
         return AtomicFile(File(directory, "$reference.enc"))
     }
-    private fun deletionRequested(reference: String) = listOf(".deleted", ".deleted.bak", ".deleted.new").any { File(directory, reference + it).exists() }
+    private val markers = listOf(".deleted", ".deleted.bak", ".deleted.new")
+    private fun deletionRequested(reference: String) = markers.any { File(directory, reference + it).exists() }
     @Synchronized fun put(reference: String, value: ByteArray) {
         val file = file(reference) // Validate before accessing or generating a Keystore key.
         check(!deletionRequested(reference)) { "Credential deletion was requested" }
+        write(file, reference, value)
+    }
+    /**
+     * Fixed-name runtime state (checkpoints, saved logins), never identities: a
+     * later write supersedes an earlier removal. The marker is cleared only after
+     * the new value is durable, so an interrupted write still reads as absent.
+     */
+    @Synchronized fun replace(reference: String, value: ByteArray) {
+        write(file(reference), reference, value)
+        clearDeletion(reference)
+    }
+    /** Removes fixed-name runtime state without permanently reserving its name. */
+    @Synchronized fun discard(reference: String) {
+        delete(reference)
+        clearDeletion(reference)
+    }
+    private fun clearDeletion(reference: String) {
+        for (marker in markers) File(directory, reference + marker).let { check(!it.exists() || it.delete()) { "Credential cleanup incomplete; retry removal" } }
+        syncDirectory()
+    }
+    private fun write(file: AtomicFile, reference: String, value: ByteArray) {
         require(value.size <= 73728)
         val cipher = Cipher.getInstance("AES/GCM/NoPadding")
         cipher.init(Cipher.ENCRYPT_MODE, key())

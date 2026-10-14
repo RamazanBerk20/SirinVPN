@@ -1,5 +1,5 @@
 //! Preserve keyring-rs attributes. Background reads never prompt; explicit
-//! connections can request a bounded system unlock prompt.
+//! user actions can request a bounded system unlock prompt.
 use super::*;
 use dbus_secret_service::{EncryptionType, Item, SecretService};
 use std::collections::HashMap;
@@ -7,7 +7,7 @@ use std::collections::HashMap;
 fn unavailable(error: dbus_secret_service::Error) -> SecretStoreError {
     let message = match error {
         dbus_secret_service::Error::Locked | dbus_secret_service::Error::Prompt => {
-            "the system keyring is locked or its unlock prompt was cancelled; connect again to retry"
+            "the system keyring is locked or its unlock prompt was cancelled; unlock your desktop keyring (or retry the action to be prompted) and try again"
         }
         _ => {
             "the system keyring service could not be reached; check that your desktop wallet is running and retry"

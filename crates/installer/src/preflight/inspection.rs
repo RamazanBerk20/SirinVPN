@@ -19,8 +19,6 @@ pub(super) fn inspection_command(ports: &[RequiredPort]) -> String {
     );
     format!(
         r#"set -eu
-printf '\036ssh\n'
-printf '%s' "${{SSH_CONNECTION:-}}" | awk '{{print $3}}'
 printf '\036addresses\n'
 ip -j address show
 printf '\036routes\n'
@@ -55,7 +53,6 @@ pub(super) fn sections(output: &str) -> anyhow::Result<HashMap<&str, &str>> {
         bail!("network inspection exceeded its size limit");
     }
     let names = [
-        "ssh",
         "addresses",
         "routes",
         "links",

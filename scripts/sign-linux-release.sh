@@ -80,7 +80,10 @@ STAGING=$(mktemp -d "$OUTPUT_PARENT/.sirinvpn-release.XXXXXX")
 cleanup_release_staging() {
   rm -rf -- "$STAGING"
 }
-trap cleanup_release_staging 0 HUP INT TERM
+trap cleanup_release_staging 0
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 APPIMAGE_NAME=$(basename -- "$APPIMAGE")
 DEB_NAME=$(basename -- "$DEB")

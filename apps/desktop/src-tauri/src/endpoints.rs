@@ -32,11 +32,11 @@ pub(super) async fn available_endpoint_update(
             "Connect to this VPS before checking for a published endpoint update.".to_owned(),
         );
     }
-    let secret = state
-        .paths
-        .secret_store()
-        .get(&profile.identity_reference)
-        .map_err(safe_error)?;
+    // An unlock prompt may wait for the user; keep it off the async workers.
+    let (paths, reference) = (state.paths.clone(), profile.identity_reference.clone());
+    let secret = tauri::async_runtime::spawn_blocking(move || explicit_secret(&paths, &reference))
+        .await
+        .map_err(|_| "The credential worker was interrupted.".to_owned())??;
     let response = ManagementClient::new(&profile, &secret)
         .map_err(safe_error)?
         .endpoint_transition()

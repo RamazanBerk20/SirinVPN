@@ -6,6 +6,7 @@ pub(super) fn install_verification_command(
     expected_binary_sha256: &str,
     bootstrap: &BootstrapOutput,
     server_id: ServerId,
+    owner_client_tunnel_address: IpAddr,
     discovery: &ServerDiscovery,
 ) -> String {
     let obfuscated_udp = bootstrap
@@ -45,8 +46,11 @@ pub(super) fn install_verification_command(
     let ipv6_verification = if bootstrap.ipv6_tunnel_enabled {
         let server_ipv6 = ipv6_tunnel_address(server_id, Ipv4Addr::new(10, 77, 0, 1))
             .expect("built-in server address has an IPv6 mapping");
-        let owner_ipv6 = ipv6_tunnel_address(server_id, Ipv4Addr::new(10, 77, 0, 2))
-            .expect("built-in owner address has an IPv6 mapping");
+        let IpAddr::V4(owner_ipv4) = owner_client_tunnel_address else {
+            unreachable!("validated owner tunnel address must be IPv4")
+        };
+        let owner_ipv6 = ipv6_tunnel_address(server_id, owner_ipv4)
+            .expect("validated owner address has an IPv6 mapping");
         format!(
             r#"ip -o -6 address show dev sirinvpn0 | grep -Fq 'inet6 {server_ipv6}/64 '
 nft list table ip6 sirinvpn_nat6 >/dev/null 2>&1

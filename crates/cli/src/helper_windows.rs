@@ -5,9 +5,6 @@ pub(super) fn invoke_helper(command: &str, input: Option<&[u8]>) -> Result<Local
         command, input,
     )?)
 }
-pub(super) fn invoke_helper_payload(command: &str, input: Option<&[u8]>) -> Result<Vec<u8>> {
-    Ok(serde_json::to_vec(&invoke_helper(command, input)?)?)
-}
 pub(super) fn resolve_server_binary(explicit: Option<PathBuf>) -> Result<PathBuf> {
     if let Some(path) = explicit {
         if path.is_file() {

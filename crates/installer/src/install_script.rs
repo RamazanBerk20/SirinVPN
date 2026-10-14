@@ -188,6 +188,9 @@ fi"#,
     } else {
         String::new()
     };
+    let record_original_sysctl = super::uninstall::record_original_sysctl(
+        transaction.ipv6_tunnel_enabled.then_some(ipv6_interface),
+    );
     let ipv6_accept_ra_restore = if transaction.ipv6_tunnel_enabled {
         format!(
             r#"if [ -s "$BACKUP_DIR/ipv6_accept_ra" ]; then
@@ -288,7 +291,10 @@ for unit in sirinvpn-network sirinvpn-firewall sirinvpn-doh unbound sirinvpn-ser
   systemctl is-enabled --quiet "$unit" && : >"$BACKUP_DIR/enabled.$unit" || true
 done
 cat /proc/sys/net/ipv4/ip_forward >"$BACKUP_DIR/ip_forward"
-cat /proc/sys/net/ipv6/conf/all/forwarding >"$BACKUP_DIR/ipv6_forwarding"
+# Absent when the kernel was booted with ipv6.disable=1.
+if [ -r /proc/sys/net/ipv6/conf/all/forwarding ]; then
+  cat /proc/sys/net/ipv6/conf/all/forwarding >"$BACKUP_DIR/ipv6_forwarding"
+fi
 {ipv6_accept_ra_backup}
 
 ROLLBACK_SCRIPT=/var/lib/sirinvpn-maintenance/sirinvpn-rollback-{nonce}.sh
@@ -375,6 +381,11 @@ install -d -o root -g root -m 0755 /usr/local/lib/sirinvpn
 if [ "$SIRINVPN_USER_CREATED" -eq 1 ] || [ "{manage_existing_user}" -eq 1 ]; then
   : >/etc/sirinvpn/installer-managed-user
   chmod 0600 /etc/sirinvpn/installer-managed-user
+fi
+# A running server keeps authorization state in memory and would overwrite what init
+# writes below. The snapshot recorded whether it was active; rollback restarts it.
+if systemctl cat sirinvpn-server.service >/dev/null 2>&1; then
+  systemctl stop sirinvpn-server.service
 fi
 printf '%s\n' 'SIRINVPN_INSTALL_STEP=server_files'
 install -o root -g root -m 0755 {binary} /usr/local/lib/sirinvpn/sirinvpn-server
@@ -628,6 +639,7 @@ printf '%s\n' 'SIRINVPN_INSTALL_STEP=dns_validation'
 unbound-checkconf /etc/unbound/unbound.conf >/dev/null
 printf '%s\n' 'SIRINVPN_INSTALL_STEP=service_configuration'
 
+{record_original_sysctl}
 cat >/etc/sysctl.d/90-sirinvpn.conf <<'SYSCTL'
 net.ipv4.ip_forward=1
 {ipv6_sysctl}
@@ -753,6 +765,7 @@ systemctl restart sirinvpn-server
         ipv6_sysctl = ipv6_sysctl,
         ipv6_accept_ra_backup = ipv6_accept_ra_backup,
         ipv6_accept_ra_restore = ipv6_accept_ra_restore,
+        record_original_sysctl = record_original_sysctl,
         restore_stdin_setup = restore_stdin_setup,
         restore_state = restore_state,
         owner_allowed_ips = owner_allowed_ips,

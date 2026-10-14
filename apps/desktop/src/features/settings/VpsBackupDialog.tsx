@@ -279,9 +279,12 @@ export function VpsBackupDialog({
                 confirmed={confirmed}
                 onConfirmed={setConfirmed}
               />
+              {!disconnected ? (
+                <InlineError message="Disconnect every active SirinVPN tunnel before backing up this VPS." />
+              ) : null}
               <button
                 className="primary-button"
-                disabled={!confirmed || busy}
+                disabled={!confirmed || !valid || busy}
                 onClick={() => void exportBackup()}
               >
                 <DownloadSimple size={18} /> Create VPS backup

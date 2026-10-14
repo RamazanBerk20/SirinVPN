@@ -7,6 +7,7 @@ import { EndpointUpdateDialog } from "./EndpointUpdateDialog";
 vi.mock("../../api", () => ({ api: {
   applyEndpointUpdate: vi.fn(),
   publishEndpointUpdate: vi.fn(),
+  availableEndpointUpdate: vi.fn(),
   disconnect: vi.fn(),
   connect: vi.fn(),
 } }));
@@ -39,4 +40,20 @@ it("retains the session and code when checkpoint verification fails", async () =
   expect(completed).not.toHaveBeenCalled();
   expect(api.disconnect).not.toHaveBeenCalled();
   expect(api.connect).not.toHaveBeenCalled();
+});
+
+it("ties the update summary to its own code and publishes the signed code from the share tab", async () => {
+  const signed = { code: "sirm1.signed", generation: 2, previous_endpoint: { host: "old.example", wireguard_port: 51820 }, endpoint: { host: "new.example", wireguard_port: 51820 } };
+  vi.mocked(api.availableEndpointUpdate).mockResolvedValue(signed as never);
+  vi.mocked(api.publishEndpointUpdate).mockResolvedValue(undefined as never);
+  const owner = { ...profile, role: "owner" } as ServerProfile;
+  render(<EndpointUpdateDialog profile={owner} open connected onOpenChange={vi.fn()} onCompleted={vi.fn().mockResolvedValue(undefined)} />);
+  fireEvent.click(screen.getByRole("button", { name: /Retrieve from current VPS/ }));
+  await screen.findByText("new.example:51820");
+  fireEvent.change(screen.getByRole("textbox"), { target: { value: "sirm1.different" } });
+  expect(screen.queryByText("new.example:51820")).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Share migration" }));
+  expect((screen.getByLabelText("Signed endpoint update code") as HTMLTextAreaElement).value).toBe("sirm1.signed");
+  fireEvent.click(screen.getByRole("button", { name: /Publish on old VPS/ }));
+  await waitFor(() => expect(api.publishEndpointUpdate).toHaveBeenCalledWith(owner.id, "sirm1.signed"));
 });

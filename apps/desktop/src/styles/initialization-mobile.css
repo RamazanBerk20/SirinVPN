@@ -47,7 +47,7 @@
   bottom: 0;
   min-height: 72px;
   padding: 8px 12px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--line);
   background: var(--bg);
 }
 .initialization-shell .bottom-navigation button { min-width: 48px; min-height: 48px; }

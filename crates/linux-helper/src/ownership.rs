@@ -370,8 +370,11 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
         let _ = self
             .runner
             .run("systemctl", &["stop", RECONNECT_UNIT], None);
-        if let Ok(_lock) = self.lock_operations() {
-            let _ = self.cleanup_all_owned();
+        // Keep the saved state when cleanup fails: it is what lets an explicit
+        // Disconnect prove ownership of the remaining guard and retry.
+        if let Ok(_lock) = self.lock_operations()
+            && self.cleanup_all_owned().is_ok()
+        {
             let _ = remove_file_if_exists(&self.state_path());
             let _ = remove_file_if_exists(&self.persistent_path());
         }
@@ -511,6 +514,7 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
             {
                 return Err(HelperError::InvalidState);
             }
+            state.request.reapply_manual_mtu();
             validate_request(&state.request)?;
             if !endpoints::validate_resolved(&state) {
                 return Err(HelperError::InvalidState);
@@ -555,6 +559,7 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
             state.request.schema_version = 6;
             state.request.routing = routing;
         }
+        state.request.reapply_manual_mtu();
         validate_request(&state.request)?;
         Ok(state)
     }

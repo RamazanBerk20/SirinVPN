@@ -32,6 +32,7 @@ fn script_has_scoped_firewall_ownership_and_docker_interop() {
         default_interface: "eth0".into(),
         ipv6_default_interface: None,
         ssh_server_port: 22,
+        ssh_local_address: None,
         ipv4_available: true,
         ipv6_available: false,
         nftables_available: true,
@@ -48,6 +49,13 @@ fn script_has_scoped_firewall_ownership_and_docker_interop() {
         script_transaction("10.77.0.2", false, false),
     );
     assert!(script.contains("table inet sirinvpn_filter"));
+    // The running server must stop before init rewrites the authorization it holds.
+    let stop = script
+        .find("systemctl stop sirinvpn-server.service")
+        .unwrap();
+    let snapshot = script.find("SIRINVPN_INSTALL_STEP=snapshot").unwrap();
+    let initialize = script.find("SIRINVPN_INSTALL_STEP=initialize").unwrap();
+    assert!(snapshot < stop && stop < initialize);
     assert!(script.contains("set peer_communication4"));
     assert!(script.contains("set peer_communication6"));
     assert!(script.contains("ip saddr @peer_communication4 ip daddr @peer_communication4 accept"));
@@ -168,8 +176,13 @@ fn script_has_scoped_firewall_ownership_and_docker_interop() {
             https: None,
         }),
     };
-    let verification =
-        install_verification_command("artifact-digest", &bootstrap, request.server_id, &discovery);
+    let verification = install_verification_command(
+        "artifact-digest",
+        &bootstrap,
+        request.server_id,
+        "10.77.0.2".parse().unwrap(),
+        &discovery,
+    );
     assert!(verification.contains("attempt=0"));
     assert!(verification.contains("[ \"$attempt\" -lt 15 ]"));
     assert!(verification.contains("validate-state"));
@@ -242,6 +255,7 @@ fn script_has_scoped_firewall_ownership_and_docker_interop() {
         "artifact-digest",
         &bootstrap,
         request.server_id,
+        "10.77.0.2".parse().unwrap(),
         &dual_stack_discovery,
     );
     let retry_end = dual_stack_verification.find("sleep 1\ndone").unwrap();
@@ -251,6 +265,18 @@ fn script_has_scoped_firewall_ownership_and_docker_interop() {
     assert!(retry_end < ipv6_check);
     assert!(dual_stack_verification.contains("nft list table ip6 sirinvpn_nat6"));
     assert!(dual_stack_verification.contains(&format!("{owner_ipv6}/128")));
+    // A repaired or restored profile keeps its own owner address.
+    let transferred_owner_ipv6 =
+        ipv6_tunnel_address(request.server_id, Ipv4Addr::new(10, 77, 0, 9)).unwrap();
+    let transferred_owner_verification = install_verification_command(
+        "artifact-digest",
+        &bootstrap,
+        request.server_id,
+        "10.77.0.9".parse().unwrap(),
+        &dual_stack_discovery,
+    );
+    assert!(transferred_owner_verification.contains(&format!("{transferred_owner_ipv6}/128")));
+    assert!(!transferred_owner_verification.contains(&format!("{owner_ipv6}/128")));
     assert!(
         std::process::Command::new("/bin/sh")
             .arg("-n")

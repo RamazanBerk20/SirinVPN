@@ -97,8 +97,17 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
         if request.routing.mode == TunnelRoutingMode::SelectedApplications {
             self.apply_application_routing(request)?;
         }
+        // As wg-quick does: reverse-path filtering must use the restored carrier
+        // mark, or strict rp_filter drops server replies on the physical link.
+        // Best effort; loose or disabled rp_filter does not need it.
+        let _ = self.runner.run(
+            "sysctl",
+            &["-q", "-w", "net.ipv4.conf.all.src_valid_mark=1"],
+            None,
+        );
+        let firewall = client_firewall(request.client_address, request.client_ipv6_address);
         self.runner
-            .run("nft", &["-f", "-"], Some(CLIENT_FIREWALL.as_bytes()))?;
+            .run("nft", &["-f", "-"], Some(firewall.as_bytes()))?;
         if !persistent_protection
             && request.client_ipv6_address.is_none()
             && request.routing.mode == TunnelRoutingMode::FullTunnel

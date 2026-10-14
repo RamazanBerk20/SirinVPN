@@ -28,8 +28,8 @@ pub fn is_enabled(executable: &Path) -> io::Result<bool> {
     }
     if !expected
         .iter()
-        .zip(bytes.chunks_exact(2))
-        .all(|(a, b)| *a == u16::from_le_bytes([b[0], b[1]]))
+        .zip(bytes.as_chunks::<2>().0)
+        .all(|(a, b)| *a == u16::from_le_bytes(*b))
     {
         return Ok(false);
     }

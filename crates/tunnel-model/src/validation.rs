@@ -135,10 +135,10 @@ pub fn validate_request(request: &TunnelConnectRequest) -> Result<(), HelperErro
             .validate(request.client_ipv6_address.is_some())
             .map_err(|message| HelperError::InvalidConfiguration(message.into()))?;
         if let sirinvpn_protocol::MtuPolicy::Manual { value } = policy
-            && request.mtu != value
+            && request.mtu != manual_mtu_for(request.transport, value)
         {
             return Err(HelperError::InvalidConfiguration(
-                "manual MTU must match the requested transport MTU".into(),
+                "the requested MTU must be the manual MTU limited to this transport".into(),
             ));
         }
     }
@@ -394,3 +394,6 @@ pub fn request_for_reconnect_candidate(
     request.mtu = candidate.mtu;
     request
 }
+
+#[cfg(test)]
+mod tests;

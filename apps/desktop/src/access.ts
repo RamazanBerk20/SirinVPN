@@ -37,6 +37,14 @@ export function canManageMember(
   return caller === "owner" || (caller === "admin" && member.role === "member" && !member.administrator);
 }
 
+/** Mirrors the VPS rule: managers, or a member whose policy allows forwarding to their own devices. */
+export function canManagePortForwards(
+  caller: AccessLevel,
+  member: Pick<MemberSummary, "role" | "administrator" | "policy">,
+): boolean {
+  return canManageMember(caller, member) || (caller === "member" && Boolean(member.policy?.manage_own_port_forwards));
+}
+
 export function canCancelInvitation(
   caller: AccessLevel,
   invitation: ActiveInvitationSummary,

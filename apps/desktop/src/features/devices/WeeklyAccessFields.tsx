@@ -6,14 +6,15 @@ const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 type Row = { day: string; start: string; end: string };
 function rowsFrom(value: string): Row[] {
   return value.split("\n").filter(Boolean).map(line => {
-    const match = /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+(\d\d:\d\d)[-–](\d\d:\d\d)$/i.exec(line.trim());
+    const match = /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+(\d\d:\d\d)\s*[-–]\s*(\d\d:\d\d)$/i.exec(line.trim());
     return match ? { day: days.find(day => day.toLowerCase() === match[1].toLowerCase())!, start: match[2], end: match[3] } : { day: "Mon", start: "", end: "" };
   });
 }
 export function serializeWeeklyRows(rows: Row[]) {
   return rows.flatMap(row => {
     const day = days.indexOf(row.day);
-    if (row.start && row.end && row.end < row.start) {
+    // A time control cannot enter 24:00, so an end of 00:00 always means midnight at the end of the day.
+    if (row.start && row.end && (row.end < row.start || row.end === "00:00")) {
       return [`${row.day} ${row.start}-24:00`, ...(row.end === "00:00" ? [] : [`${days[(day + 1) % 7]} 00:00-${row.end}`])];
     }
     return [`${row.day} ${row.start}-${row.end}`];

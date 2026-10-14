@@ -36,13 +36,25 @@ fn account(host: &str) -> Result<String, String> {
     ssh_trust::endpoint(host, 22)
 }
 
-fn entry(host: &str) -> Result<Entry, String> {
-    Entry::new(SERVICE, &account(host)?)
-        .map_err(|_| "The desktop credential store is unavailable.".into())
+/// Automatic lookups never prompt. Explicit saves, removals and operations may
+/// show the wallet's bounded unlock prompt on Linux.
+fn entry(host: &str, prompt: bool) -> Result<Entry, String> {
+    let account = account(host)?;
+    #[cfg(target_os = "linux")]
+    {
+        let wallet = wallet::Wallet::new(SERVICE, account, prompt);
+        Ok(Entry::new_with_credential(Box::new(wallet)))
+    }
+    #[cfg(not(target_os = "linux"))]
+    {
+        let _ = prompt;
+        Entry::new(SERVICE, &account)
+            .map_err(|_| "The desktop credential store is unavailable.".into())
+    }
 }
 
-fn read(host: &str) -> Result<Option<SshLoginInput>, String> {
-    read_entry(host, &entry(host)?)
+fn read(host: &str, prompt: bool) -> Result<Option<SshLoginInput>, String> {
+    read_entry(host, &entry(host, prompt)?)
 }
 
 fn read_entry(host: &str, store: &Entry) -> Result<Option<SshLoginInput>, String> {
@@ -109,7 +121,7 @@ fn target(mut login: SshLoginInput) -> Result<SshTarget, String> {
 }
 
 fn saved_target(host: &str, port: u16, fingerprint: &str) -> Result<SshTarget, String> {
-    let login = read(host)?.ok_or("The saved SSH login was removed. Enter it again.")?;
+    let login = read(host, true)?.ok_or("The saved SSH login was removed. Enter it again.")?;
     bound_target(login, port, fingerprint)
 }
 
@@ -132,7 +144,7 @@ pub(crate) fn resolve_target(login: SshLoginInput) -> Result<SshTarget, String> 
 #[tauri::command]
 pub(crate) async fn get_ssh_login(host: String) -> Result<Option<SavedSshLogin>, String> {
     tauri::async_runtime::spawn_blocking(move || {
-        read(&host).map(|value| value.as_ref().map(summary))
+        read(&host, false).map(|value| value.as_ref().map(summary))
     })
     .await
     .map_err(|_| "Reading the saved SSH login was interrupted.".to_owned())?
@@ -141,7 +153,7 @@ pub(crate) async fn get_ssh_login(host: String) -> Result<Option<SavedSshLogin>,
 #[tauri::command]
 pub(crate) async fn save_ssh_login(input: SshLoginInput) -> Result<SavedSshLogin, String> {
     tauri::async_runtime::spawn_blocking(move || {
-        let store = entry(&input.host)?;
+        let store = entry(&input.host, true)?;
         save_entry(input, &store, |target| {
             Provisioner::verify_ssh_login(target).map_err(|error| error.to_string())
         })
@@ -171,10 +183,12 @@ fn save_entry(
 
 #[cfg(test)]
 mod tests;
+#[cfg(target_os = "linux")]
+mod wallet;
 
 #[tauri::command]
 pub(crate) async fn forget_ssh_login(host: String) -> Result<(), String> {
-    tauri::async_runtime::spawn_blocking(move || match entry(&host)?.delete_credential() {
+    tauri::async_runtime::spawn_blocking(move || match entry(&host, true)?.delete_credential() {
         Ok(()) | Err(keyring::Error::NoEntry) => Ok(()),
         Err(_) => Err(
             "The saved SSH login could not be removed. Unlock your desktop wallet and try again."

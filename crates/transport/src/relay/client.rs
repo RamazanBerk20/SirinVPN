@@ -108,18 +108,27 @@ where
     loop {
         tokio::select! {
             received = local_socket.recv_from(&mut local_buffer) => {
-                let (length, peer) = received?;
+                let (length, peer) = match received {
+                    Ok(received) => received,
+                    // Windows reports an earlier ICMP port-unreachable on the next receive.
+                    Err(error) if error.kind() == std::io::ErrorKind::ConnectionReset => continue,
+                    Err(error) => return Err(error.into()),
+                };
                 if !peer.ip().is_loopback() {
                     continue;
                 }
                 local_peer = Some(peer);
                 last_local_packet = Instant::now();
-                let packet = encode_transport_packet(
+                // An oversized packet (manual MTU above this transport's limit) is dropped, as the
+                // server relay does, instead of ending the tunnel.
+                let Ok(packet) = encode_transport_packet(
                     &session.id,
                     session.next_outbound,
                     &session.noise,
                     &local_buffer[..length],
-                )?;
+                ) else {
+                    continue;
+                };
                 session.next_outbound = session
                     .next_outbound
                     .checked_add(1)

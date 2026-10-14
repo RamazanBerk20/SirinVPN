@@ -307,6 +307,20 @@ pub fn install_system_integration() -> Result<()> {
     if !daemon_reload.success() {
         bail!("systemd did not accept the SirinVPN service definitions");
     }
+    // An enabled boot kill switch moves from network-pre.target, which is not
+    // always started, to sysinit.target.
+    let systemctl = |arguments: &[&str]| {
+        Command::new("systemctl")
+            .args(arguments)
+            .stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .status()
+            .is_ok_and(|status| status.success())
+    };
+    if systemctl(&["is-enabled", "--quiet", KILL_SWITCH_UNIT]) {
+        let _ = systemctl(&["reenable", KILL_SWITCH_UNIT]);
+    }
     let runtime_state = Path::new("/run/sirinvpn/client-state.json");
     if runtime_state.exists() {
         fs::set_permissions(runtime_state, fs::Permissions::from_mode(0o644))?;
@@ -381,9 +395,19 @@ pub(super) fn write_system_file(path: &Path, contents: &str) -> Result<()> {
     Ok(())
 }
 
+/// The same request is accepted by switch-session with this limit.
+const CONNECT_REQUEST_LIMIT: u64 = 65_536;
+
 pub fn read_connect_request() -> Result<TunnelConnectRequest> {
     let mut bytes = Zeroizing::new(Vec::new());
-    io::Read::read_to_end(&mut io::stdin(), &mut bytes)?;
+    io::Read::read_to_end(
+        &mut io::Read::take(io::stdin().lock(), CONNECT_REQUEST_LIMIT + 1),
+        &mut bytes,
+    )?;
+    anyhow::ensure!(
+        bytes.len() as u64 <= CONNECT_REQUEST_LIMIT,
+        "connect request too large"
+    );
     Ok(serde_json::from_slice(&bytes)?)
 }
 

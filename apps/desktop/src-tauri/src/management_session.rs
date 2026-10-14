@@ -131,16 +131,20 @@ async fn prepare(
             {
                 return Ok(entry);
             }
-            let secret = paths
-                .secret_store()
-                .get(&profile.identity_reference)
-                .map_err(crate::safe_error)?;
+            // Only explicit changes may prompt; read-only views never unlock the keyring.
+            let secret = if read_only {
+                paths
+                    .secret_store()
+                    .get(&profile.identity_reference)
+                    .map_err(crate::safe_error)?
+            } else {
+                crate::identity::explicit_secret(&paths, &profile.identity_reference)?
+            };
             let client = ManagementClient::new(&profile, &secret).map_err(crate::safe_error)?;
             Ok(retain(profile, connection, 0, client))
         })
         .await
         .map_err(|_| "The management worker was interrupted.".to_owned())??;
-        let _ = read_only;
         Ok(ManagementSession {
             profile: entry.profile,
             client: entry.client,

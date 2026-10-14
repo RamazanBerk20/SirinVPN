@@ -225,7 +225,7 @@ fn inspect(app: &tauri::AppHandle, entry: &mut NetworkEntry) -> Result<Automatio
     if crate::helper::prepare_helper_for_connection(false).is_err() {
         return Ok(AutomationStatus::NeedsAuthorization);
     }
-    let Ok(_operation) = crate::connection_controller::acquire() else {
+    let Ok(_operation) = crate::connection_controller::acquire_connection() else {
         return Ok(AutomationStatus::SessionActive);
     };
     let id = snapshot

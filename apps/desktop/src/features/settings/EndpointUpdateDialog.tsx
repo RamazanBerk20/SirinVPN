@@ -4,7 +4,6 @@ import {
   ArrowClockwise,
   CaretRight,
   Check,
-  Copy,
   DownloadSimple,
   GlobeHemisphereWest,
   Key,
@@ -17,6 +16,7 @@ import { api } from "../../api";
 import { type EndpointUpdateCodeResult, type ServerProfile } from "../../types";
 import { Field, InlineError } from "../../components/ui";
 import { errorMessage } from "../../lib/errors";
+import { CopyButton } from "../../components/CopyButton";
 
 export function EndpointUpdateDialog({
   profile,
@@ -101,11 +101,12 @@ export function EndpointUpdateDialog({
   };
 
   const publish = async () => {
-    if (!code.trim()) return;
+    // Publish exactly the signed code shown in this tab, not the apply tab's draft.
+    if (!update?.code.trim()) return;
     setBusy(true);
     setError(null);
     try {
-      await api.publishEndpointUpdate(profile.id, code.trim());
+      await api.publishEndpointUpdate(profile.id, update.code.trim());
       setPublished(true);
       await onCompleted();
     } catch (reason) {
@@ -231,18 +232,15 @@ export function EndpointUpdateDialog({
                   >
                     <textarea
                       className="secret-code-output mono"
-                      value={code}
+                      value={update.code}
                       readOnly
                       aria-label="Signed endpoint update code"
                     />
                   </Field>
                   <div className="dialog-actions">
-                    <button
-                      className="secondary-button"
-                      onClick={() => void navigator.clipboard.writeText(code)}
-                    >
-                      <Copy size={17} /> Copy code
-                    </button>
+                    <CopyButton className="secondary-button" value={update.code}>
+                      {" "}Copy code
+                    </CopyButton>
                     <button
                       className="primary-button"
                       disabled={busy || published}
@@ -301,7 +299,7 @@ export function EndpointUpdateDialog({
                       spellCheck={false}
                     />
                   </Field>
-                  {update ? (
+                  {update && update.code.trim() === code.trim() ? (
                     <div className="endpoint-transition-summary">
                       <code>
                         {endpointLabel(update.previous_endpoint)}

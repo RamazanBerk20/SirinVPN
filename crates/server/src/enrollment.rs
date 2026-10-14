@@ -10,7 +10,7 @@ pub(super) async fn prepare_key_rotation_handler(
     authorize_device(&state, &caller, false).await?;
     validate_wireguard_public_key(&request.new_wireguard_public_key)
         .map_err(|error| ApiError::invalid(error.to_string()))?;
-    certificate_fingerprint(&request.new_management_certificate_pem)
+    submitted_certificate_fingerprint(&request.new_management_certificate_pem)
         .map_err(|_| ApiError::invalid("the new management certificate is invalid"))?;
     let authorization = require_authorization(&state)?;
     let mut current = authorization.write().await;
@@ -22,7 +22,10 @@ pub(super) async fn prepare_key_rotation_handler(
     let response = next
         .prepare_key_rotation(&caller.certificate_fingerprint, &request, now)
         .map_err(|error| ApiError::conflict(error.to_string()))?;
-    commit_authorization(&state, &mut current, next).await?;
+    // A repeated prepare returns the existing rotation without another containing commit.
+    if next != *current {
+        commit_authorization(&state, &mut current, next).await?;
+    }
     Ok(Json(ApiEnvelope::new(response)))
 }
 
@@ -154,8 +157,9 @@ pub(super) async fn enrollment_handler(
     let (member_name, device_name) = resolve_enrollment_names(&request)?;
     validate_wireguard_public_key(&request.device_wireguard_public_key)
         .map_err(|error| ApiError::invalid(error.to_string()))?;
-    let device_fingerprint = certificate_fingerprint(&request.device_management_certificate_pem)
-        .map_err(|error| ApiError::invalid(error.to_string()))?;
+    let device_fingerprint =
+        submitted_certificate_fingerprint(&request.device_management_certificate_pem)
+            .map_err(|error| ApiError::invalid(error.to_string()))?;
     if request.device_wireguard_public_key == invitation.claims.bootstrap_wireguard_public_key
         || device_fingerprint == caller.certificate_fingerprint
         || current.devices.iter().any(|device| {

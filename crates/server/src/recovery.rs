@@ -80,8 +80,9 @@ pub(super) async fn create_key_handler(
     validate_host(&request.endpoint.host).map_err(|error| ApiError::invalid(error.to_string()))?;
     validate_wireguard_public_key(&request.recovery_wireguard_public_key)
         .map_err(|error| ApiError::invalid(error.to_string()))?;
-    let fingerprint = certificate_fingerprint(&request.recovery_management_certificate_pem)
-        .map_err(|error| ApiError::invalid(error.to_string()))?;
+    let fingerprint =
+        submitted_certificate_fingerprint(&request.recovery_management_certificate_pem)
+            .map_err(|error| ApiError::invalid(error.to_string()))?;
     let authorization = require_authorization(&state)?;
     let mut current = authorization.write().await;
     let caller = authorize_current(&current, &identity, true)?;

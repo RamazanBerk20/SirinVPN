@@ -26,6 +26,19 @@ export const defaultConnectionPreferences: ConnectionPreferences = {
   routing: { mode: "full_tunnel", included_routes: [], allow_lan: false },
 };
 
+// Obfuscated UDP limits a manual MTU to this value; Android reports the limited value.
+const OBFUSCATED_UDP_MAX_MTU = 1398;
+
+function manualMtuMatches(saved: number | null, local: LocalTunnelStatus): boolean {
+  const actual = local.mtu?.policy.mode === "manual" ? local.mtu.policy.value : null;
+  return (
+    saved === actual ||
+    (saved !== null &&
+      local.transport === "obfuscated_udp" &&
+      actual === Math.min(saved, OBFUSCATED_UDP_MAX_MTU))
+  );
+}
+
 export function preferenceDifferences(
   saved: ConnectionPreferences,
   local: LocalTunnelStatus,
@@ -38,7 +51,7 @@ export function preferenceDifferences(
   )
     return [];
   const differences: string[] = [];
-  if (local.mtu && (saved.manual_mtu ?? null) !== (local.mtu.policy.mode === "manual" ? local.mtu.policy.value : null)) differences.push(`MTU: ${local.mtu.configured} (${local.mtu.policy.mode})`);
+  if (local.mtu && !manualMtuMatches(saved.manual_mtu ?? null, local)) differences.push(`MTU: ${local.mtu.configured} (${local.mtu.policy.mode})`);
   // Automatic is a selection policy, not the transport that happened to win.
   if (
     saved.transport !== "automatic" &&

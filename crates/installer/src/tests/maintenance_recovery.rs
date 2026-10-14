@@ -10,12 +10,19 @@ struct Fixture {
 }
 impl Fixture {
     fn new() -> Self {
+        Self::with_authorization(true)
+    }
+    /// Repair accepts a pre-authorization layout with neither marker.
+    fn legacy() -> Self {
+        Self::with_authorization(false)
+    }
+    fn with_authorization(authorization: bool) -> Self {
         let directory = tempfile::tempdir().unwrap();
         let root = directory.path();
         for path in [
             "bin",
             "run",
-            "etc/sirinvpn/authorization",
+            "etc/sirinvpn",
             "etc/systemd/system",
             "usr/local/lib/sirinvpn",
             "var/lib/sirinvpn-maintenance/sirinvpn-install-fixture.backup",
@@ -27,11 +34,9 @@ impl Fixture {
             script: rollback_script(),
         };
         fixture.write("etc/sirinvpn/server.json", "old configuration");
-        fixture.write("etc/sirinvpn/authorization-required", "required");
-        fixture.write(
-            "etc/sirinvpn/authorization/authorization.json",
-            "before repair",
-        );
+        if authorization {
+            fixture.migrate_authorization("before repair");
+        }
         fixture.write("usr/local/lib/sirinvpn/sirinvpn-server", "old executable");
         fixture.write(
             "var/lib/sirinvpn-maintenance/sirinvpn-install-fixture.backup/existing",
@@ -55,10 +60,12 @@ impl Fixture {
             fs::write(fixture.backup().join(file), "").unwrap();
         }
         fixture.write("etc/sirinvpn/server.json", "candidate configuration");
-        fixture.write(
-            "etc/sirinvpn/authorization/authorization.json",
-            "revoked during health checks",
-        );
+        if authorization {
+            fixture.write(
+                "etc/sirinvpn/authorization/authorization.json",
+                "revoked during health checks",
+            );
+        }
         fixture.shim(
             "systemctl",
             r#"printf '%s\n' "$*" >>"$SIRINVPN_TEST_ROOT/service-calls"
@@ -86,6 +93,11 @@ exit 0"#,
         self.directory
             .path()
             .join("var/lib/sirinvpn-maintenance/sirinvpn-install-fixture.backup")
+    }
+    fn migrate_authorization(&self, document: &str) {
+        fs::create_dir_all(self.directory.path().join("etc/sirinvpn/authorization")).unwrap();
+        self.write("etc/sirinvpn/authorization-required", "required");
+        self.write("etc/sirinvpn/authorization/authorization.json", document);
     }
     fn write(&self, path: &str, data: &str) {
         fs::write(self.directory.path().join(path), data).unwrap();
@@ -175,6 +187,55 @@ fn retry_after_a_failed_service_restart_keeps_later_authorization_changes() {
         String::from_utf8_lossy(&recovered.stderr)
     );
     fixture.assert_restored("another device revoked after recovery");
+}
+
+#[test]
+fn legacy_layout_rollback_never_requires_or_keeps_migrated_authorization() {
+    for (migrated, failed_restart) in [(false, false), (true, false), (true, true)] {
+        let fixture = Fixture::legacy();
+        if migrated {
+            fixture.migrate_authorization("created by the failed repair");
+        }
+        if failed_restart {
+            fixture.write("fail-restart", "");
+            assert_eq!(fixture.run(&fixture.script, false).status.code(), Some(66));
+            assert!(fixture.backup().join("restoration-complete").exists());
+            fs::remove_file(fixture.directory.path().join("fail-restart")).unwrap();
+        }
+        let recovered = fixture.run(&fixture.script, false);
+        assert!(
+            recovered.status.success(),
+            "{}",
+            String::from_utf8_lossy(&recovered.stderr)
+        );
+        assert_eq!(
+            fixture.read("etc/sirinvpn/server.json"),
+            "old configuration"
+        );
+        for path in [
+            "etc/sirinvpn/authorization",
+            "etc/sirinvpn/authorization-required",
+        ] {
+            assert!(!fixture.directory.path().join(path).exists(), "{path}");
+        }
+        assert!(!fixture.backup().exists());
+    }
+}
+
+#[test]
+fn lost_authorization_after_an_authorized_snapshot_still_fails_closed() {
+    let fixture = Fixture::new();
+    fs::remove_dir_all(fixture.directory.path().join("etc/sirinvpn/authorization")).unwrap();
+    for _ in 0..2 {
+        assert!(!fixture.run(&fixture.script, false).status.success());
+        assert!(
+            !fixture
+                .backup()
+                .join("preserved-authorization.tar")
+                .exists()
+        );
+        assert!(!fixture.backup().join("restoration-complete").exists());
+    }
 }
 
 #[test]
@@ -308,6 +369,7 @@ fn rollback_script() -> String {
         default_interface: "eth0".into(),
         ipv6_default_interface: None,
         ssh_server_port: 22,
+        ssh_local_address: None,
         ipv4_available: true,
         ipv6_available: false,
         nftables_available: true,

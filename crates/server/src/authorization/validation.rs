@@ -2,8 +2,12 @@
 
 use super::*;
 
+const MAX_AUTHORIZATION_BYTES: usize = 1024 * 1024;
+/// Generated Ed25519 management certificates are under 1 KiB; the cap bounds stored state.
+const MAX_SUBMITTED_CERTIFICATE_PEM_BYTES: usize = 4096;
+
 pub(crate) fn load_authorization(path: &Path) -> Result<AuthorizationDocument> {
-    let bytes = sirinvpn_platform::files::read_bounded(path, 1024 * 1024)
+    let bytes = sirinvpn_platform::files::read_bounded(path, MAX_AUTHORIZATION_BYTES)
         .context("authorization state is unavailable")?;
     let document: AuthorizationDocument =
         serde_json::from_slice(&bytes).context("authorization state is invalid")?;
@@ -14,8 +18,20 @@ pub(crate) fn load_authorization(path: &Path) -> Result<AuthorizationDocument> {
 pub(crate) fn write_authorization(path: &Path, document: &AuthorizationDocument) -> Result<()> {
     document.validate()?;
     let bytes = serde_json::to_vec_pretty(document)?;
+    // A document that could not be loaded again must never replace the current one.
+    if bytes.len() > MAX_AUTHORIZATION_BYTES {
+        bail!("authorization state would exceed its size limit");
+    }
     sirinvpn_platform::files::atomic_write(path, &bytes, true)?;
     Ok(())
+}
+
+/// Certificates arriving in requests are size-bounded before they can enter authorization state.
+pub(crate) fn submitted_certificate_fingerprint(certificate_pem: &str) -> Result<String> {
+    if certificate_pem.len() > MAX_SUBMITTED_CERTIFICATE_PEM_BYTES {
+        bail!("client certificate is too large");
+    }
+    certificate_fingerprint(certificate_pem)
 }
 
 pub(crate) fn certificate_fingerprint(certificate_pem: &str) -> Result<String> {

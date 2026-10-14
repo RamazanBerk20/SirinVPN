@@ -120,7 +120,7 @@ export function RecoveryKeys({ profile, connected, owner }: { profile: Pick<Serv
         <details><summary>Recovery QR code</summary><SecretQr source={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(created.qr_svg)}`} kind="recovery" code={created.key} /></details>
         <Field label="Recovery package password" hint="At least 12 characters. The package contains the complete recovery key."><SecretInput type="password" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} /></Field>
         <Field label="Repeat package password"><SecretInput type="password" autoComplete="new-password" value={repeat} onChange={(event) => setRepeat(event.target.value)} /></Field>
-        <button className="secondary-button" disabled={busy || !accepted || password.length < 12 || password !== repeat} onClick={() => void exportPackage()}><DownloadSimple size={17} />Save encrypted recovery package</button>
+        <button className="secondary-button" disabled={busy || !accepted || [...password].length < 12 || password !== repeat} onClick={() => void exportPackage()}><DownloadSimple size={17} />Save encrypted recovery package</button>
         <ConfirmationRow checked={retained} onChange={setRetained}>I have saved this recovery key or its encrypted package offline and can access it.</ConfirmationRow>
         <ShareEncryptedFile uri={exportedPath} />
         <button className="primary-button" disabled={!retained || busy} onClick={() => { clearMaterial(); setNotice("Recovery material acknowledged. The key has been cleared from this view."); }}>Finish recovery setup</button>

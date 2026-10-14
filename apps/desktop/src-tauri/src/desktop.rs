@@ -138,6 +138,18 @@ fn run_inner() -> tauri::Result<()> {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_notification::init())
         .setup(desktop_lifecycle::setup)
+        .on_page_load(|webview, payload| {
+            // Reloads skip React cleanup; drop the previous document's status channels.
+            if webview.label() == "main"
+                && payload.event() == tauri::webview::PageLoadEvent::Started
+            {
+                use tauri::Manager;
+                local_status_stream::clear();
+                webview
+                    .state::<server_status_stream::StatusSubscriptions>()
+                    .abort_all();
+            }
+        })
         .manage(connection_notifications::ConnectionNotifications::default())
         .manage(AppState { paths })
         .manage(server_status_stream::StatusSubscriptions::default())

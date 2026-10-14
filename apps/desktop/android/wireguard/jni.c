@@ -1,5 +1,6 @@
 #include <jni.h>
 #include <stdint.h>
+#include <unistd.h>
 extern int sirinStart(int, const char *);
 extern int sirinCommit(int);
 extern void sirinStop(int);
@@ -11,7 +12,8 @@ extern int sirinEndpoint(int,const char *);
 
 JNIEXPORT jint JNICALL Java_org_sirinvpn_client_WireGuard_start(JNIEnv *env, jobject self, jint fd, jstring configuration) {
     const char *value = (*env)->GetStringUTFChars(env, configuration, 0);
-    if (!value) return -1;
+    // Kotlin detached fd; sirinStart owns it only once called.
+    if (!value) { close(fd); return -1; }
     int result = sirinStart(fd, value);
     (*env)->ReleaseStringUTFChars(env, configuration, value);
     return result;

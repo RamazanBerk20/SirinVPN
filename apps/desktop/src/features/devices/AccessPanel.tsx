@@ -33,6 +33,7 @@ export function AccessPanel(
     setQuery,
     owner,
     refresh,
+    refreshAfterChange,
     rename,
     revoke,
     updatePeerCommunication,
@@ -186,9 +187,9 @@ export function AccessPanel(
         issuer={issuer}
         delegated={accessLevel === "member"}
         onOpenChange={changeInvitationOpen}
-        onCreated={refresh}
+        onCreated={refreshAfterChange}
       />
-      {policyTarget && <MemberPolicyDialog key={policyTarget.id} serverId={profile.id} member={policyTarget} onClose={() => setPolicyTarget(null)} onSaved={refresh} />}
+      {policyTarget && <MemberPolicyDialog key={policyTarget.id} serverId={profile.id} member={policyTarget} onClose={() => setPolicyTarget(null)} onSaved={refreshAfterChange} />}
     </section>
   );
 }

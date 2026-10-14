@@ -88,6 +88,7 @@ fn repair_uses_committed_signed_bytes_and_never_falls_back_to_the_desktop_bundle
         default_interface: "eth0".into(),
         ipv6_default_interface: None,
         ssh_server_port: 22,
+        ssh_local_address: None,
         ipv4_available: true,
         ipv6_available: false,
         nftables_available: true,
@@ -301,4 +302,71 @@ fn isolated_root_staging_runs_when_run_is_noexec() {
         !Path::new(staging.trim()).exists(),
         "staging must be removed on exit"
     );
+}
+
+#[test]
+fn server_backup_runs_only_a_verified_private_copy_of_the_upload() {
+    let directory = tempfile::tempdir().unwrap();
+    let root = directory.path();
+    let execution = root.join("lib");
+    fs::create_dir(&execution).unwrap();
+    fs::set_permissions(&execution, fs::Permissions::from_mode(0o755)).unwrap();
+    let upload = root.join("upload");
+    fs::create_dir(&upload).unwrap();
+    let source = upload.join("sirinvpn-server");
+    let owner = upload.join("owner.crt");
+    fs::write(&owner, b"owner certificate").unwrap();
+    let executed = root.join("executed");
+    let binary = format!(
+        r#"#!/bin/sh
+printf '%s\n' "$0" >'{executed}'
+[ "$1 $2 $3" = '--state-directory /etc/sirinvpn backup-state' ] || exit 9
+[ "$6" = --owner-certificate ] || exit 9
+# Replacing the SSH user's files cannot replace the private copies in use.
+printf 'replaced\n' >'{owner}'
+printf 'snapshot:%s' "$(cat "$7")"
+"#,
+        executed = executed.display(),
+        owner = owner.display(),
+    );
+    let uid = String::from_utf8(Command::new("id").arg("-u").output().unwrap().stdout).unwrap();
+    // Root ownership cannot be granted in an unprivileged test; everything
+    // else (location, digest, private copy, cleanup) runs exactly as on a VPS.
+    let script = server_backup_snapshot_command(
+        source.to_str().unwrap(),
+        "00000000-0000-0000-0000-000000000000".parse().unwrap(),
+        owner.to_str().unwrap(),
+        "fixture",
+        &hex::encode(Sha256::digest(binary.as_bytes())),
+    )
+    .replace(EXECUTION_DIRECTORY, execution.to_str().unwrap())
+    .replace("-uid 0", &format!("-uid {}", uid.trim()))
+    .replace("install -o root -g root", "install");
+    let run = || {
+        Command::new("/bin/sh")
+            .args(["-c", &script])
+            .output()
+            .unwrap()
+    };
+
+    fs::write(&source, b"changed before staging").unwrap();
+    let rejected = run();
+    assert!(!rejected.status.success());
+    assert!(rejected.stdout.is_empty());
+    assert!(!executed.exists());
+
+    fs::write(&source, &binary).unwrap();
+    let result = run();
+    assert!(
+        result.status.success(),
+        "{}",
+        String::from_utf8_lossy(&result.stderr)
+    );
+    assert_eq!(result.stdout, b"snapshot:owner certificate");
+    let executed = fs::read_to_string(executed).unwrap();
+    assert!(
+        executed.starts_with(&format!("{}/.sirinvpn-stage-fixture.", execution.display())),
+        "{executed}"
+    );
+    assert_eq!(fs::read_dir(&execution).unwrap().count(), 0);
 }

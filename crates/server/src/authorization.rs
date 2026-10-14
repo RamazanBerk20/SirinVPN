@@ -33,9 +33,9 @@ use std::{
 use validation::*;
 pub(crate) use validation::{
     certificate_fingerprint, load_authorization, sign_claims, sign_endpoint_transition,
-    validate_display_name, validate_endpoint_descriptor, validate_wireguard_public_key,
-    verify_endpoint_transition_signature, verify_endpoint_transition_signature_with_key,
-    write_authorization,
+    submitted_certificate_fingerprint, validate_display_name, validate_endpoint_descriptor,
+    validate_wireguard_public_key, verify_endpoint_transition_signature,
+    verify_endpoint_transition_signature_with_key, write_authorization,
 };
 
 pub(crate) fn sign_recovery_claims(
@@ -622,7 +622,7 @@ impl AuthorizationDocument {
         }
         validate_wireguard_public_key(&request.new_wireguard_public_key)?;
         let new_certificate_fingerprint =
-            certificate_fingerprint(&request.new_management_certificate_pem)?;
+            submitted_certificate_fingerprint(&request.new_management_certificate_pem)?;
         let device = self
             .device_for_fingerprint(caller_fingerprint)
             .context("the current device is not authorized")?

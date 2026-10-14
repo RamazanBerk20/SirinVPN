@@ -91,7 +91,7 @@ pub(super) fn repair_server(
     if status.state != ConnectionState::Disconnected {
         bail!("disconnect SirinVPN before repairing or updating its VPS");
     }
-    let secret = paths.secret_store().get(&profile.identity_reference)?;
+    let secret = explicit_secret(paths, &profile.identity_reference)?;
     let identity = secret.public_identity(&profile.client_management_certificate_pem)?;
     let authentication = if arguments.ssh_agent {
         SshAuthentication::Agent
@@ -199,7 +199,7 @@ pub(super) fn backup_vps(
     if status.state != ConnectionState::Disconnected {
         bail!("disconnect SirinVPN before backing up its VPS over SSH");
     }
-    let secret = paths.secret_store().get(&profile.identity_reference)?;
+    let secret = explicit_secret(paths, &profile.identity_reference)?;
     let identity = secret.public_identity(&profile.client_management_certificate_pem)?;
     let authentication = if arguments.ssh_agent {
         SshAuthentication::Agent
@@ -279,7 +279,7 @@ pub(super) fn restore_vps(
         bail!("disconnect SirinVPN before restoring a VPS over SSH");
     }
     let backup_password = prompt_nonempty_secret("Server backup password (hidden): ")?;
-    let secret = paths.secret_store().get(&profile.identity_reference)?;
+    let secret = explicit_secret(paths, &profile.identity_reference)?;
     let identity = secret.public_identity(&profile.client_management_certificate_pem)?;
     drop(secret);
     let authentication = if arguments.ssh_agent {

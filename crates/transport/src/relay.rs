@@ -14,7 +14,7 @@ use std::{
         Arc, Mutex, RwLock,
         atomic::{AtomicBool, AtomicU64, Ordering},
     },
-    time::{Duration, Instant},
+    time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
 use thiserror::Error;
 use tokio::{net::UdpSocket, task::JoinHandle, time::timeout};
@@ -271,14 +271,79 @@ impl ReplayWindow {
     }
 }
 
+/// Client handshakes start their encrypted payload with this marker and a wall-clock
+/// timestamp. Older servers never read the payload and older clients send only random
+/// padding, so both directions stay compatible.
+const HANDSHAKE_TIMESTAMP_MARKER: [u8; 8] = *b"SVPNts01";
+const HANDSHAKE_TIMESTAMP_LENGTH: usize = HANDSHAKE_TIMESTAMP_MARKER.len() + 12;
+/// Concurrent carriers and quality probes from one client can arrive out of order.
+const HANDSHAKE_TIMESTAMP_TOLERANCE: Duration = Duration::from_secs(10);
+
+fn unix_now() -> Duration {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+}
+
+/// The first initiator payload: a timestamp followed by random padding.
+pub(crate) fn client_handshake_payload() -> Vec<u8> {
+    let mut payload = random_bytes(OsRng.gen_range(48..=144));
+    let now = unix_now();
+    payload[..HANDSHAKE_TIMESTAMP_MARKER.len()].copy_from_slice(&HANDSHAKE_TIMESTAMP_MARKER);
+    payload[8..16].copy_from_slice(&now.as_secs().to_be_bytes());
+    payload[16..HANDSHAKE_TIMESTAMP_LENGTH].copy_from_slice(&now.subsec_nanos().to_be_bytes());
+    payload
+}
+
+fn handshake_timestamp(payload: &[u8]) -> Option<Duration> {
+    let rest = payload.strip_prefix(&HANDSHAKE_TIMESTAMP_MARKER)?;
+    let seconds = u64::from_be_bytes(rest.get(..8)?.try_into().ok()?);
+    let nanos = u32::from_be_bytes(rest.get(8..12)?.try_into().ok()?);
+    (nanos < 1_000_000_000).then(|| Duration::new(seconds, nanos))
+}
+
+/// Rejects repeated handshake messages, and older handshakes from a client that has
+/// since sent a newer one. The digest window alone forgets everything after 180 s and
+/// on restart, which let a captured handshake be replayed to occupy a client's slots.
 #[derive(Default)]
-struct HandshakeReplayCache {
+pub(crate) struct HandshakeReplayCache {
     entries: VecDeque<(Instant, [u8; 32])>,
     digests: HashSet<[u8; 32]>,
+    /// Newest accepted timestamp per authorized client key, clamped to this server's
+    /// clock so a client whose clock ran ahead is not locked out once it is corrected.
+    latest: HashMap<[u8; 32], Duration>,
 }
 
 impl HandshakeReplayCache {
-    fn insert_once(&mut self, message: &[u8]) -> bool {
+    /// For tunnel handshakes whose initiator payload came from `client_handshake_payload`.
+    pub(crate) fn accept_client_handshake(
+        &mut self,
+        message: &[u8],
+        client_static: [u8; 32],
+        payload: &[u8],
+    ) -> bool {
+        let timestamp = handshake_timestamp(payload);
+        match (timestamp, self.latest.get(&client_static)) {
+            // A client that sends timestamps never sends an unmarked handshake again.
+            (None, Some(_)) => return false,
+            (Some(timestamp), Some(latest))
+                if timestamp.saturating_add(HANDSHAKE_TIMESTAMP_TOLERANCE) <= *latest =>
+            {
+                return false;
+            }
+            _ => {}
+        }
+        if !self.insert_once(message) {
+            return false;
+        }
+        if let Some(timestamp) = timestamp {
+            let latest = self.latest.entry(client_static).or_default();
+            *latest = (*latest).max(timestamp.min(unix_now()));
+        }
+        true
+    }
+
+    pub(crate) fn insert_once(&mut self, message: &[u8]) -> bool {
         self.prune();
         let digest: [u8; 32] = Sha256::digest(message).into();
         if self.digests.contains(&digest) {
@@ -307,24 +372,73 @@ impl HandshakeReplayCache {
     }
 }
 
+/// Bounds handshake attempts per source, and in total, before any Noise work is done.
 #[derive(Default)]
-struct ProbeLimiter {
+pub(crate) struct ProbeLimiter {
     peers: HashMap<IpAddr, ProbeWindow>,
+    global: Option<ProbeWindow>,
 }
 
 struct ProbeWindow {
     started: Instant,
-    attempts: u8,
+    attempts: u16,
+}
+
+const PROBE_SOURCES: usize = 1_024;
+const PROBE_ATTEMPTS_PER_SOURCE: u16 = 12;
+const PROBE_ATTEMPTS_PER_SECOND: u16 = 1_024;
+
+/// IPv6 sources are limited per /64, which one subscriber can occupy entirely.
+fn probe_source(address: IpAddr) -> IpAddr {
+    match address {
+        IpAddr::V6(address) => match address.to_ipv4_mapped() {
+            Some(mapped) => IpAddr::V4(mapped),
+            None => {
+                let segments = address.segments();
+                IpAddr::V6(std::net::Ipv6Addr::new(
+                    segments[0],
+                    segments[1],
+                    segments[2],
+                    segments[3],
+                    0,
+                    0,
+                    0,
+                    0,
+                ))
+            }
+        },
+        address => address,
+    }
 }
 
 impl ProbeLimiter {
-    fn allow(&mut self, address: IpAddr) -> bool {
-        if self.peers.len() >= 1_024 {
+    pub(crate) fn allow(&mut self, address: IpAddr) -> bool {
+        let address = probe_source(address);
+        if self.peers.len() >= PROBE_SOURCES && !self.peers.contains_key(&address) {
             self.peers
                 .retain(|_, window| window.started.elapsed() < Duration::from_secs(60));
-            if self.peers.len() >= 1_024 && !self.peers.contains_key(&address) {
-                return false;
+            // A full table must not lock every new source out: replace the oldest window and
+            // rely on the global budget below to bound the work a flood can cause.
+            if self.peers.len() >= PROBE_SOURCES
+                && let Some(oldest) = self
+                    .peers
+                    .iter()
+                    .min_by_key(|(_, window)| window.started)
+                    .map(|(address, _)| *address)
+            {
+                self.peers.remove(&oldest);
             }
+        }
+        let global = self.global.get_or_insert(ProbeWindow {
+            started: Instant::now(),
+            attempts: 0,
+        });
+        if global.started.elapsed() >= Duration::from_secs(1) {
+            global.started = Instant::now();
+            global.attempts = 0;
+        }
+        if global.attempts >= PROBE_ATTEMPTS_PER_SECOND {
+            return false;
         }
         let window = self.peers.entry(address).or_insert(ProbeWindow {
             started: Instant::now(),
@@ -334,10 +448,11 @@ impl ProbeLimiter {
             window.started = Instant::now();
             window.attempts = 0;
         }
-        if window.attempts >= 12 {
+        if window.attempts >= PROBE_ATTEMPTS_PER_SOURCE {
             return false;
         }
         window.attempts += 1;
+        global.attempts += 1;
         true
     }
 }
@@ -374,7 +489,14 @@ pub async fn run_server_relay(
     let mut buffer = [0_u8; MAX_DATAGRAM_LENGTH];
 
     loop {
-        let (length, source) = socket.recv_from(&mut buffer).await?;
+        // Errors from one datagram (ENOBUFS, ICMP-induced resets) must not stop the shared relay.
+        let (length, source) = match socket.recv_from(&mut buffer).await {
+            Ok(received) => received,
+            Err(_) => {
+                tokio::time::sleep(Duration::from_millis(10)).await;
+                continue;
+            }
+        };
         let packet = &buffer[..length];
         if let Some((session_id, sequence, ciphertext)) = parse_server_transport_packet(packet) {
             let session = sessions.read().await.get(&session_id).cloned();
@@ -392,7 +514,9 @@ pub async fn run_server_relay(
             }
         }
 
-        if !(HANDSHAKE_MIN_LENGTH..=HANDSHAKE_MAX_LENGTH).contains(&length)
+        // A reply to port 0 cannot be sent, so such a handshake can never complete.
+        if source.port() == 0
+            || !(HANDSHAKE_MIN_LENGTH..=HANDSHAKE_MAX_LENGTH).contains(&length)
             || !probe_limiter
                 .lock()
                 .unwrap_or_else(|poisoned| poisoned.into_inner())
@@ -400,8 +524,8 @@ pub async fn run_server_relay(
         {
             continue;
         }
-        let Some((session, response)) =
-            accept_server_handshake(packet, source, &config, &authorized, &replay_cache).await?
+        let Ok(Some((session, response))) =
+            accept_server_handshake(packet, source, &config, &authorized, &replay_cache).await
         else {
             continue;
         };
@@ -409,8 +533,13 @@ pub async fn run_server_relay(
         if !insert_server_session(&sessions, session.clone()).await {
             continue;
         }
+        if socket.send_to(&response, source).await.is_err() {
+            if let Some(unanswered) = sessions.write().await.remove(&session.id) {
+                unanswered.active.store(false, Ordering::Release);
+            }
+            continue;
+        }
         activity.record(session.client_static, TransportKind::ObfuscatedUdp);
-        socket.send_to(&response, source).await?;
         spawn_backend_forwarder(session, socket.clone());
     }
 }
@@ -451,10 +580,9 @@ async fn establish_client_session(
     let mut response = [0_u8; MAX_DATAGRAM_LENGTH];
     for _ in 0..HANDSHAKE_ATTEMPTS {
         let mut handshake = initiator_handshake(client_private, server_public)?;
-        let padding_length = OsRng.gen_range(48..=144);
-        let padding = random_bytes(padding_length);
+        let payload = client_handshake_payload();
         let mut request = [0_u8; HANDSHAKE_MAX_LENGTH];
-        let request_length = handshake.write_message(&padding, &mut request)?;
+        let request_length = handshake.write_message(&payload, &mut request)?;
         socket.send(&request[..request_length]).await?;
         let received = timeout(HANDSHAKE_TIMEOUT, socket.recv(&mut response)).await;
         let Ok(Ok(length)) = received else {
@@ -489,9 +617,9 @@ async fn accept_server_handshake(
 ) -> Result<Option<(ServerSession, Vec<u8>)>, RelayError> {
     let mut handshake = responder_handshake(&config.server_private_key)?;
     let mut client_payload = [0_u8; HANDSHAKE_MAX_LENGTH];
-    if handshake.read_message(packet, &mut client_payload).is_err() {
+    let Ok(client_payload_length) = handshake.read_message(packet, &mut client_payload) else {
         return Ok(None);
-    }
+    };
     let Some(remote_static) = handshake.get_remote_static() else {
         return Ok(None);
     };
@@ -502,7 +630,11 @@ async fn accept_server_handshake(
         || !replay_cache
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner())
-            .insert_once(packet)
+            .accept_client_handshake(
+                packet,
+                client_static,
+                &client_payload[..client_payload_length],
+            )
     {
         return Ok(None);
     }

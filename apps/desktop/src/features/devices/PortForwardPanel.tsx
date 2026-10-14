@@ -1,6 +1,6 @@
 import { CaretRight, Plus, Warning, Wrench } from "@phosphor-icons/react";
 import { type FormEvent } from "react";
-import { canManageMember } from "../../access";
+import { canManagePortForwards } from "../../access";
 import { type MembershipSnapshot, type PortForwardProtocol } from "../../types";
 
 export function PortForwardPanel({
@@ -42,7 +42,7 @@ export function PortForwardPanel({
   ) => Promise<void>;
 }) {
   const targets = snapshot.members.flatMap((member) =>
-    !member.suspended && (canManageMember(accessLevel, member) || (accessLevel === "member" && member.policy?.manage_own_port_forwards))
+    !member.suspended && canManagePortForwards(accessLevel, member)
       ? member.devices.map((device) => ({ member, device }))
       : [],
   );
@@ -213,7 +213,7 @@ export function PortForwardPanel({
               forwards.map((forward) => {
                 const target = targetFor(forward.device_id);
                 const removable = Boolean(
-                  target && canManageMember(accessLevel, target.member),
+                  target && canManagePortForwards(accessLevel, target.member),
                 );
                 const key = `${forward.protocol}:${forward.public_port}`;
                 return (

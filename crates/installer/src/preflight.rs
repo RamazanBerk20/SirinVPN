@@ -182,7 +182,7 @@ fn analyze(
     let mut report = NetworkPreflight {
         public_endpoint: endpoint.into(),
         endpoint_addresses,
-        ssh_local_address: sections["ssh"].trim().parse().ok(),
+        ssh_local_address: discovery.ssh_local_address,
         exposure: AddressExposure::Unresolved,
         assigned_addresses: Vec::new(),
         required_ports,

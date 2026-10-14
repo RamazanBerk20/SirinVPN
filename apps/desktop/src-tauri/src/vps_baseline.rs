@@ -1,5 +1,5 @@
 use serde::Deserialize;
-use sirinvpn_core::{ClientPaths, SecretStore};
+use sirinvpn_core::ClientPaths;
 use sirinvpn_installer::{
     Provisioner, ServerReleaseAction, ServerReleaseRequest, SignedBaselineCandidate,
     SignedServerBundle,
@@ -47,10 +47,7 @@ fn request(
     if profile.role != ServerRole::Owner {
         return Err("Only the Owner can establish a signed VPS baseline.".to_owned());
     }
-    let secret = paths
-        .secret_store()
-        .get(&profile.identity_reference)
-        .map_err(crate::safe_error)?;
+    let secret = crate::explicit_secret(paths, &profile.identity_reference)?;
     let identity = secret
         .public_identity(&profile.client_management_certificate_pem)
         .map_err(crate::safe_error)?;
@@ -63,8 +60,42 @@ fn request(
     })
 }
 
+/// This device's own authenticated release state bounds what a fresh VPS may
+/// adopt. A portable AppImage keeps it in a store this process owns (the path
+/// matches `release_update::appimage`). The Debian package's system store is
+/// root-private and Windows keeps it in the service's administrator-only
+/// store, so those builds can read it only when running with that authority.
+fn local_release_floor(
+    app: &tauri::AppHandle,
+) -> Result<sirinvpn_release::LocalReleaseFloor, String> {
+    #[cfg(target_os = "linux")]
+    if let Some(path) = tauri::Manager::env(app).appimage {
+        use tauri::Manager;
+        let target = sirinvpn_installer::release_target(std::env::consts::ARCH)
+            .map_err(|error| error.to_string())?;
+        // The AppImage updater refuses such a file, so it keeps no state.
+        let Ok(file) = sirinvpn_release::AppImageFile::inspect(std::path::Path::new(&path), target)
+        else {
+            return Ok(Default::default());
+        };
+        let state = app
+            .path()
+            .app_local_data_dir()
+            .map_err(|_| "The private app-update folder is unavailable.".to_owned())?
+            .join("appimage-releases")
+            .join(file.state_key());
+        return sirinvpn_release::InstalledReleaseStore::new(state)
+            .release_floor()
+            .map_err(|error| error.to_string());
+    }
+    #[cfg(not(target_os = "linux"))]
+    let _ = app;
+    sirinvpn_release::LocalReleaseFloor::system().map_err(|error| error.to_string())
+}
+
 #[tauri::command]
 pub(crate) async fn prepare_vps_baseline(
+    app: tauri::AppHandle,
     state: State<'_, crate::AppState>,
     runtime: State<'_, BaselineRuntime>,
     input: PrepareBaselineInput,
@@ -112,9 +143,14 @@ pub(crate) async fn prepare_vps_baseline(
     })
     .await
     .map_err(|error| error.to_string())?;
+    let architecture = discovery.architecture.clone();
     let bundle = Arc::new(
-        SignedServerBundle::open(&destination, &discovery.architecture)
-            .map_err(|error| error.to_string())?,
+        tauri::async_runtime::spawn_blocking(move || {
+            SignedServerBundle::open(&destination, &architecture, &local_release_floor(&app)?)
+                .map_err(|error| error.to_string())
+        })
+        .await
+        .map_err(|_| "The signed baseline verification was interrupted.".to_owned())??,
     );
     let summary = bundle.summary().clone();
     let mut current = runtime

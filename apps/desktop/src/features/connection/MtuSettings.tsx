@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Field } from "../../components/ui";
 import type { LocalTunnelStatus } from "../../types";
 import type { ServerWorkspaceModel } from "./useServerWorkspace";
@@ -14,6 +15,11 @@ export function mtuDescription(mtu: NonNullable<LocalTunnelStatus["mtu"]>): stri
 
 export function MtuSettings({ model }: { model: ServerWorkspaceModel }) {
   const manual = model.preferences.draft.manual_mtu ?? null;
+  // An empty field is an edit in progress, not a request for automatic MTU.
+  const [manualText, setManualText] = useState(manual === null ? "" : String(manual));
+  useEffect(() => {
+    setManualText(current => current !== "" && Number(current) === manual ? current : manual === null ? "" : String(manual));
+  }, [manual]);
   const mtu = model.localStatus.server_id === model.profile.id && model.localStatus.state === "connected" ? model.localStatus.mtu : null;
   const minimum = model.profile.ipv6_tunnel_enabled ? 1280 : 576;
   const disabled = model.busy || model.preferences.saving || !model.preferences.ready;
@@ -23,9 +29,10 @@ export function MtuSettings({ model }: { model: ServerWorkspaceModel }) {
       <input type="checkbox" role="switch" aria-label="Determine a safe packet size" checked={manual === null} disabled={disabled}
         onChange={(event) => model.preferences.change({ manual_mtu: event.target.checked ? null : mtu?.configured ?? 1420 })} />
     </label>
-    {manual !== null && <Field label="Manual MTU" hint={`${minimum}–1420 bytes. This value applies to every selected transport and stays fixed during the connection.`}>
-      <input aria-label="Manual MTU" type="number" min={minimum} max={1420} step={1} value={manual} disabled={disabled}
-        onChange={(event) => model.preferences.change({ manual_mtu: event.target.value ? Number(event.target.value) : null })} />
+    {manual !== null && <Field label="Manual MTU" hint={`${minimum}–1420 bytes. This value applies to every selected transport and stays fixed during the connection. Obfuscated UDP uses at most 1398.`}>
+      <input aria-label="Manual MTU" type="number" min={minimum} max={1420} step={1} value={manualText} disabled={disabled}
+        onChange={(event) => { setManualText(event.target.value); if (event.target.value) model.preferences.change({ manual_mtu: Number(event.target.value) }); }}
+        onBlur={() => { if (!manualText) setManualText(String(manual)); }} />
     </Field>}
     {manual !== null && (!Number.isInteger(manual) || manual < minimum || manual > 1420) && <p className="warning-note">Choose a whole number between {minimum} and 1420{minimum === 1280 ? " while tunneled IPv6 is enabled" : ""}.</p>}
     <p className="settings-note">Changes to this preference apply on the next connection.</p>

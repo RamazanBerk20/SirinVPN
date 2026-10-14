@@ -211,6 +211,7 @@ fn server_restore_is_profile_bound_stdin_only_and_guarded_before_identity_replac
         default_interface: "eth0".into(),
         ipv6_default_interface: None,
         ssh_server_port: 22,
+        ssh_local_address: None,
         ipv4_available: true,
         ipv6_available: false,
         nftables_available: true,

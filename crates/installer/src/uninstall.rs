@@ -11,6 +11,83 @@ for table in sirinvpn_handoff sirinvpn_measurement; do
   fi
 done"#;
 
+/// Kernel values found before SirinVPN first changed each key. Install adds a
+/// key only before its first change and never rewrites one, so later repairs
+/// cannot replace an original with SirinVPN's own value. An installation
+/// without this record predates it; uninstall then leaves forwarding as-is.
+pub(super) const ORIGINAL_SYSCTL_RECORD: &str = "/etc/sirinvpn/installer-original-sysctl";
+
+pub(super) fn record_original_sysctl(accept_ra_interface: Option<&str>) -> String {
+    let accept_ra = accept_ra_interface
+        .map(|interface| format!(" net/ipv6/conf/{interface}/accept_ra"))
+        .unwrap_or_default();
+    format!(
+        r#"if [ -f {record} ] || [ ! -e /etc/sysctl.d/90-sirinvpn.conf ]; then
+  for key in net/ipv4/ip_forward net/ipv6/conf/all/forwarding{accept_ra}; do
+    # IPv6 keys are absent when the kernel was booted with ipv6.disable=1.
+    [ -r "/proc/sys/$key" ] || continue
+    if [ -f {record} ] && cut -d= -f1 {record} | grep -Fqx -- "$key"; then continue; fi
+    printf '%s=%s\n' "$key" "$(cat "/proc/sys/$key")" >>{record}
+  done
+  if [ -f {record} ]; then chmod 0600 {record}; fi
+fi"#,
+        record = ORIGINAL_SYSCTL_RECORD,
+    )
+}
+
+/// Copies the validated original entries into the uninstall backup, with the
+/// current values of the same keys so a failed uninstall can return to them.
+pub(super) fn snapshot_original_sysctl() -> String {
+    format!(
+        r#": >"$BACKUP_DIR/original-sysctl"
+: >"$BACKUP_DIR/sysctl"
+if [ -f {record} ]; then
+  while IFS='=' read -r key value; do
+    case "$key" in
+      net/ipv4/ip_forward|net/ipv6/conf/all/forwarding) ;;
+      net/ipv6/conf/*/accept_ra)
+        interface=${{key#net/ipv6/conf/}}
+        interface=${{interface%/accept_ra}}
+        case "$interface" in ''|*[!A-Za-z0-9_.:-]*) continue ;; esac
+        ;;
+      *) continue ;;
+    esac
+    case "$value" in ''|*[!0-9]*) continue ;; esac
+    # IPv6 keys are absent when the kernel was booted with ipv6.disable=1.
+    [ -r "/proc/sys/$key" ] || continue
+    printf '%s=%s\n' "$key" "$value" >>"$BACKUP_DIR/original-sysctl"
+    printf '%s=%s\n' "$key" "$(cat "/proc/sys/$key")" >>"$BACKUP_DIR/sysctl"
+  done <{record}
+fi"#,
+        record = ORIGINAL_SYSCTL_RECORD,
+    )
+}
+
+/// Persistent sysctl configuration. SirinVPN's own file is already removed
+/// when uninstall reads it.
+pub(super) const SYSCTL_CONFIGURATION: &str = "/etc/sysctl.conf /etc/sysctl.d/*.conf /run/sysctl.d/*.conf /usr/local/lib/sysctl.d/*.conf /usr/lib/sysctl.d/*.conf";
+
+pub(super) fn restore_original_sysctl() -> String {
+    format!(
+        r#"# Docker enables forwarding when it starts, and other configuration may
+# require it too. Then leave forwarding as a reboot would, rather than break
+# those users; accept_ra stays paired with forwarding, so it is kept as well.
+if ! systemctl is-active --quiet docker &&
+  ! grep -Eqs '^[[:space:]]*-?net[./](ipv4[./]ip_forward|ipv6[./]conf[./]all[./]forwarding)[[:space:]]*=' {configuration}; then
+  while IFS='=' read -r key value; do
+    sysctl -q -w "$key=$value"
+  done <"$BACKUP_DIR/original-sysctl"
+fi"#,
+        configuration = SYSCTL_CONFIGURATION,
+    )
+}
+
+pub(super) const ROLLBACK_SYSCTL: &str = r#"if [ -f "$BACKUP_DIR/sysctl" ]; then
+  while IFS='=' read -r key value; do
+    [ ! -r "/proc/sys/$key" ] || sysctl -q -w "$key=$value"
+  done <"$BACKUP_DIR/sysctl"
+fi"#;
+
 pub(super) fn uninstall_script(nonce: &str) -> String {
     format!(
         r#"#!/bin/sh
@@ -36,7 +113,11 @@ for unit in sirinvpn-network sirinvpn-firewall sirinvpn-doh unbound sirinvpn-ser
   systemctl is-enabled --quiet "$unit" && : >"$BACKUP_DIR/enabled.$unit" || true
 done
 cat /proc/sys/net/ipv4/ip_forward >"$BACKUP_DIR/ip_forward"
-cat /proc/sys/net/ipv6/conf/all/forwarding >"$BACKUP_DIR/ipv6_forwarding"
+# Absent when the kernel was booted with ipv6.disable=1.
+if [ -r /proc/sys/net/ipv6/conf/all/forwarding ]; then
+  cat /proc/sys/net/ipv6/conf/all/forwarding >"$BACKUP_DIR/ipv6_forwarding"
+fi
+{snapshot_original_sysctl}
 [ -f /etc/sirinvpn/installer-managed-user ] && : >"$BACKUP_DIR/remove-user" || true
 [ -f /etc/sirinvpn/installer-managed-update-fetch ] && : >"$BACKUP_DIR/remove-update-fetch-user" || true
 
@@ -65,6 +146,7 @@ fi
 if [ -s "$BACKUP_DIR/ipv6_forwarding" ]; then
   sysctl -q -w "net.ipv6.conf.all.forwarding=$(cat "$BACKUP_DIR/ipv6_forwarding")"
 fi
+{rollback_sysctl}
 {rollback_finish}
 ROLLBACK
 {arm_recovery}
@@ -88,6 +170,8 @@ fi
 for path in $MANAGED_PATHS; do
   rm -rf -- "/$path"
 done
+# The tunnel is gone; return forwarding to the values found before SirinVPN.
+{restore_original_sysctl}
 rmdir /usr/local/lib/sirinvpn 2>/dev/null || true
 rmdir /etc/systemd/system/unbound.service.d 2>/dev/null || true
 systemctl daemon-reload
@@ -105,6 +189,9 @@ fi
         rollback_finish = maintenance::rollback_finish(),
         arm_recovery = maintenance::arm(nonce, true),
         runtime_table_cleanup = RUNTIME_TABLE_CLEANUP,
+        snapshot_original_sysctl = snapshot_original_sysctl(),
+        rollback_sysctl = ROLLBACK_SYSCTL,
+        restore_original_sysctl = restore_original_sysctl(),
     )
 }
 

@@ -15,7 +15,14 @@ impl Controller {
             // No error path removes persistent protection. Stop further attempts
             // until the owner explicitly resumes after an enforcement/storage error.
             self.enforcement_failed = true;
-            let _ = self.hold().await;
+            // A committed Disconnect is retried on the next tick, never held.
+            if self
+                .saved
+                .as_ref()
+                .is_none_or(|saved| saved.phase != SessionPhase::Disconnecting)
+            {
+                let _ = self.hold().await;
+            }
         }
         self.publish();
     }
@@ -24,16 +31,17 @@ impl Controller {
         let Some(saved) = &self.saved else {
             return Ok(());
         };
+        // Finishing a committed Disconnect does not depend on the routing driver.
+        if saved.phase == SessionPhase::Disconnecting {
+            self.disconnect().await.map_err(|_| io::ErrorKind::Other)?;
+            return Ok(());
+        }
         if saved.phase != SessionPhase::Held
             && saved.request.routing.mode
                 == sirinvpn_tunnel_model::TunnelRoutingMode::SelectedApplications
             && !self.application_driver_ready()
         {
             return Err(io::ErrorKind::PermissionDenied.into());
-        }
-        if saved.phase == SessionPhase::Disconnecting {
-            self.disconnect().await.map_err(|_| io::ErrorKind::Other)?;
-            return Ok(());
         }
         if saved.phase == SessionPhase::Held {
             return Ok(());

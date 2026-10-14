@@ -96,7 +96,10 @@ pub(super) async fn remove(
     next.measurement_leases.retain(|lease| {
         Some(lease.device) != authorized.device_id || lease.public_key != request.public_key
     });
-    commit_authorization(&state, &mut current, next).await?;
+    // Each commit briefly contains tunnel traffic; a removal that changes nothing must not.
+    if next.measurement_leases.len() != current.measurement_leases.len() {
+        commit_authorization(&state, &mut current, next).await?;
+    }
     Ok(Json(ApiEnvelope::new(())))
 }
 

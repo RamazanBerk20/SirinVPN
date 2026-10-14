@@ -371,6 +371,14 @@ fn port_forward_policy_is_exact_revocable_and_reserves_control_ports() {
     reserved.protocol = PortForwardProtocol::Udp;
     reserved.public_port = DOH_PROXY_PORT;
     assert!(validate_port_forward(&configuration, &operational, &reserved).is_err());
+
+    // SSH moving onto a forwarded port deactivates that forward instead of failing every commit.
+    let mut moved_ssh = operational.clone();
+    moved_ssh.ssh_port = 48_080;
+    let batch = port_forward_nft_batch(&configuration, Some(&moved_ssh), &authorization)
+        .unwrap()
+        .unwrap();
+    assert!(!batch.contains("dport 48080"));
 }
 
 #[test]

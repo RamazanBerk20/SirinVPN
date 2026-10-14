@@ -36,10 +36,14 @@ fn guard_objects_with_controls(
     endpoint: IpAddr,
     controls: &[SocketAddr],
 ) -> Vec<Value> {
+    // The forward chain always exists so every mode can add and flush it in the
+    // same transaction; only full-tunnel mode gives it rules.
     let mut objects = vec![
         json!({"table": {"family": "inet", "name": TABLE}}),
         json!({"chain": {"family": "inet", "table": TABLE, "name": "output", "type": "filter",
             "hook": "output", "prio": 0, "policy": if request.routing.mode == TunnelRoutingMode::FullTunnel {"drop"} else {"accept"}}}),
+        json!({"chain": {"family": "inet", "table": TABLE, "name": "forward", "type": "filter",
+            "hook": "forward", "prio": 0, "policy": "accept"}}),
     ];
     let mut rule = |mut expressions: Vec<Value>, verdict: &str| {
         expressions.push(json!({verdict: null}));
@@ -200,6 +204,47 @@ fn guard_objects_with_controls(
             rule(vec![eq(payload(family, "daddr"), prefix(route))], "drop");
         }
     }
+    if request.routing.mode == TunnelRoutingMode::FullTunnel {
+        // Containers, VMs and shared connections are forwarded, not output. Apply
+        // the same tunnel-or-allowed-LAN policy to them while the tunnel is down.
+        let mut forward = |mut expressions: Vec<Value>, verdict: &str| {
+            expressions.push(json!({verdict: null}));
+            objects.push(json!({"rule": {"family": "inet", "table": TABLE, "chain": "forward", "expr": expressions}}));
+        };
+        forward(vec![eq(meta("oifname"), json!(INTERFACE_NAME))], "accept");
+        for state in ["established", "related"] {
+            forward(
+                vec![
+                    eq(meta("iifname"), json!(INTERFACE_NAME)),
+                    eq(json!({"ct": {"key": "state"}}), json!(state)),
+                ],
+                "accept",
+            );
+        }
+        if request.routing.allow_lan {
+            forward(
+                vec![eq(
+                    payload("ip", "daddr"),
+                    json!(request.dns_address.to_string()),
+                )],
+                "drop",
+            );
+            for protocol in ["udp", "tcp"] {
+                for port in [53, 853] {
+                    forward(vec![eq(payload(protocol, "dport"), json!(port))], "drop");
+                }
+            }
+            for (family, routes) in [
+                ("ip", IPV4_LAN_ROUTES.as_slice()),
+                ("ip6", IPV6_LAN_ROUTES.as_slice()),
+            ] {
+                for route in routes {
+                    forward(vec![eq(payload(family, "daddr"), prefix(route))], "accept");
+                }
+            }
+        }
+        forward(Vec::new(), "drop");
+    }
     objects
 }
 
@@ -289,17 +334,19 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
         let mut commands = vec![
             json!({"add": objects[0]}),
             json!({"add": objects[1]}),
+            json!({"add": objects[2]}),
             json!({"flush": {"chain": {"family":"inet", "table":TABLE, "name":"output"}}}),
+            json!({"flush": {"chain": {"family":"inet", "table":TABLE, "name":"forward"}}}),
         ];
         commands.extend(
             objects
                 .into_iter()
-                .skip(2)
+                .skip(3)
                 .map(|object| json!({"add":object})),
         );
         let input = serde_json::to_vec(&json!({"nftables": commands}))
             .map_err(|_| HelperError::NetworkOperationFailed)?;
-        // One rule transaction on the same base chain. Failure retains the old rules.
+        // One rule transaction on the same base chains. Failure retains the old rules.
         self.runner
             .run("nft", &["-j", "-f", "-"], Some(&input))
             .map_err(|_| HelperError::PersistentProtectionUnavailable)?;

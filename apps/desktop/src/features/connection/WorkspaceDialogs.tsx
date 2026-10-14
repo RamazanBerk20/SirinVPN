@@ -1,8 +1,6 @@
 import { DialogContent } from "../../components/DialogContent";
 import { DiagnosticResults } from "../../components/DiagnosticResults";
-import { useEffect } from "react";
 import { MaintenanceReview } from "./MaintenanceReview";
-import type { Page } from "../../components/Navigation";
 import * as Dialog from "@radix-ui/react-dialog";
 import { ArrowClockwise } from "@phosphor-icons/react";
 import { EndpointUpdateDialog } from "../settings/EndpointUpdateDialog";
@@ -18,12 +16,10 @@ import type { ServerWorkspaceModel } from "./useServerWorkspace";
 
 export function WorkspaceDialogs({
   model,
-  view,
   onReturnHome,
   onReviewAccess,
 }: {
   model: ServerWorkspaceModel;
-  view: Page;
   onReturnHome?: () => void;
   onReviewAccess?: () => void;
 }) {
@@ -53,7 +49,6 @@ export function WorkspaceDialogs({
     onAccessChanged,
     onRemoved,
   } = model;
-  useEffect(() => { setDiagnosticsOpen(false); }, [view, profile.id, setDiagnosticsOpen]);
   return (
     <>
       <MaintenanceReview model={model} />

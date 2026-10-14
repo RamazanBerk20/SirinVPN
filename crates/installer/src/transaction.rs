@@ -34,12 +34,15 @@ pub(super) fn export_server_backup_staged(
     session: &Session,
     request: &ServerBackupRequest,
     remote_directory: &str,
+    nonce: &str,
     artifact: &[u8],
     artifact_sha256: &str,
 ) -> Result<ServerBackupOutcome, InstallerError> {
     let remote_binary = format!("{remote_directory}/sirinvpn-server");
     let remote_owner = format!("{remote_directory}/owner.crt");
-    upload(session, Path::new(&remote_binary), artifact, 0o700)
+    // Root never executes or reads these SSH-user files in place; the snapshot
+    // command copies them into a root-private directory first.
+    upload(session, Path::new(&remote_binary), artifact, 0o600)
         .map_err(|error| phase_error("server backup artifact upload", error))?;
     upload(
         session,
@@ -64,7 +67,13 @@ pub(super) fn export_server_backup_staged(
     let snapshot = run_privileged_bytes(
         session,
         &request.target,
-        &server_backup_snapshot_command(&remote_binary, request.profile.id, &remote_owner),
+        &server_backup_snapshot_command(
+            &remote_binary,
+            request.profile.id,
+            &remote_owner,
+            nonce,
+            artifact_sha256,
+        ),
         MAX_SERVER_BACKUP_SNAPSHOT_SIZE,
     )
     .map_err(|error| phase_error("server backup snapshot", error))?;
@@ -83,12 +92,15 @@ pub(super) fn server_backup_snapshot_command(
     remote_binary: &str,
     server_id: ServerId,
     remote_owner: &str,
+    nonce: &str,
+    artifact_sha256: &str,
 ) -> String {
+    // stdout carries only the snapshot.
     format!(
-        "{} --state-directory /etc/sirinvpn backup-state --server-id {} --owner-certificate {}",
-        shell_quote(remote_binary),
-        shell_quote(&server_id.to_string()),
-        shell_quote(remote_owner),
+        "set -eu\numask 077\n{staging}\ninstall -o root -g root -m 0600 {owner} \"$STAGING_DIR/owner.crt\"\n\"$STAGED_BINARY\" --state-directory /etc/sirinvpn backup-state --server-id {server_id} --owner-certificate \"$STAGING_DIR/owner.crt\"",
+        staging = release_guard::stage_root_executable(remote_binary, nonce, artifact_sha256),
+        owner = shell_quote(remote_owner),
+        server_id = shell_quote(&server_id.to_string()),
     )
 }
 
@@ -434,7 +446,13 @@ pub(super) fn install_staged(
         &request.target,
         &maintenance::followup(
             nonce,
-            &install_verification_command(&local_digest, &bootstrap, request.server_id, discovery),
+            &install_verification_command(
+                &local_digest,
+                &bootstrap,
+                request.server_id,
+                transaction.owner_client_tunnel_address,
+                discovery,
+            ),
         ),
     ) {
         rollback_now(session, &request.target, nonce);

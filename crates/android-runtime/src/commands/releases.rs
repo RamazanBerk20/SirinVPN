@@ -155,9 +155,11 @@ pub async fn dispatch(runtime: &Runtime, command: &str, input: &Value) -> Result
                 destination: destination.clone(),
             })
             .await?;
+            // The APK update store is this app's own authenticated state.
             let bundle = Arc::new(SignedServerBundle::open(
                 &destination,
                 &discovery.architecture,
+                &store(runtime).release_floor()?,
             )?);
             let value = encode(bundle.summary())?;
             *BASELINE

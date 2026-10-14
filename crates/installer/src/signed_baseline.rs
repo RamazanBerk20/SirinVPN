@@ -1,5 +1,5 @@
 use super::*;
-use sirinvpn_release::{ArtifactKind, ReleaseArtifact};
+use sirinvpn_release::{ArtifactKind, LocalReleaseFloor, ReleaseArtifact};
 use sirinvpn_release_fetch::{
     RELEASE_MANIFEST_FILE_NAME, RELEASE_SIGNATURE_FILE_NAME, TRUST_POLICY_FILE_NAME,
     TRUST_SIGNATURE_FILE_NAME, VerifiedReleaseBundle,
@@ -15,6 +15,9 @@ pub struct SignedServerBundle {
     signature: Vec<u8>,
     trust_policy: Vec<u8>,
     trust_signature: Vec<u8>,
+    /// This device's own installed trust record, if any. A fresh VPS has no
+    /// record, and must not adopt a policy older than the installing device's.
+    trust_floor: Option<Vec<u8>>,
     summary: SignedBaselineCandidate,
 }
 impl std::fmt::Debug for SignedServerBundle {
@@ -35,13 +38,35 @@ pub struct SignedBaselineCandidate {
 }
 
 impl SignedServerBundle {
-    pub fn open(directory: &Path, architecture: &str) -> Result<Self, InstallerError> {
+    /// `floor` is the installing device's own release state; pass an empty
+    /// floor only when this device has none.
+    pub fn open(
+        directory: &Path,
+        architecture: &str,
+        floor: &LocalReleaseFloor,
+    ) -> Result<Self, InstallerError> {
         let bundle = VerifiedReleaseBundle::open(
             directory,
             ArtifactKind::ServerElf,
             release_target(architecture)?,
         )
         .map_err(|error| phase_error("signed baseline verification", anyhow!(error)))?;
+        // The bundle verifies only under the bundled root, which also signed
+        // every superseded policy. Bind it to what this device already trusts.
+        floor
+            .verify_trust_policy(&bundle.trust_policy_bytes, &bundle.trust_signature_bytes)
+            .map_err(|error| {
+                InstallerError::InvalidInput(format!(
+                    "the release source's signing policy is older than or inconsistent with the one this device already trusts; use a current release source ({error})"
+                ))
+            })?;
+        floor
+            .verify_release(&bundle.verified.manifest, &bundle.verified.manifest_sha256)
+            .map_err(|error| {
+                InstallerError::InvalidInput(format!(
+                    "the signed baseline is older than a release this device already accepted; use a current release ({error})"
+                ))
+            })?;
         for name in [
             "server_release_transaction",
             "server_handoff_guard",
@@ -95,6 +120,7 @@ impl SignedServerBundle {
             signature: bundle.signature_bytes,
             trust_policy: bundle.trust_policy_bytes,
             trust_signature: bundle.trust_signature_bytes,
+            trust_floor: floor.trust_record().map(<[u8]>::to_vec),
             summary,
         })
     }
@@ -105,8 +131,10 @@ impl SignedServerBundle {
         &self,
         installed: Option<&[u8]>,
     ) -> Result<(), InstallerError> {
+        // `open` already bound the policy to this device's record. When the
+        // VPS has none, that record remains the floor for its first policy.
         let trust = sirinvpn_release::verify_trust_policy_update(
-            installed,
+            installed.or(self.trust_floor.as_deref()),
             &self.trust_policy,
             &self.trust_signature,
         )

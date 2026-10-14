@@ -27,6 +27,10 @@ use windows_sys::Win32::{
 use zeroize::Zeroizing;
 
 const CONNECT_TIMEOUT: Duration = Duration::from_secs(5);
+/// Clients write their request right after verifying the service identity.
+/// The caller is unknown until that frame arrives, so a silent connection
+/// releases its shared pipe slot quickly.
+const REQUEST_READ_TIMEOUT: Duration = Duration::from_secs(1);
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(120);
 const CLIENT_ACCESS: u32 =
     FILE_GENERIC_READ | FILE_WRITE_DATA | FILE_WRITE_ATTRIBUTES | FILE_WRITE_EA;
@@ -253,7 +257,7 @@ pub struct Connection {
 
 impl Connection {
     pub async fn read(&mut self) -> Result<AuthenticatedRequest, ServiceError> {
-        let bytes = timeout(CONNECT_TIMEOUT, read_frame(&mut self.pipe))
+        let bytes = timeout(REQUEST_READ_TIMEOUT, read_frame(&mut self.pipe))
             .await
             .map_err(|_| ServiceError::InvalidRequest)??;
         // Impersonation is strictly synchronous and is reverted before any await.

@@ -17,3 +17,8 @@ it("rejects overlapping and empty windows while accepting midnight endpoints", (
   expect(() => policyFromDraft({ ...policyDraft(), schedule: "Mon 09:00-09:00" })).toThrow(/end after/);
   expect(policyFromDraft({ ...policyDraft(), schedule: "Mon 00:00-24:00" }).weekly_access).toEqual([{ start_minute: 0, end_minute: 1440 }]);
 });
+it("serializes a full day chosen with time controls as midnight to midnight", () => {
+  const schedule = serializeWeeklyRows([{ day: "Tue", start: "00:00", end: "00:00" }]);
+  expect(schedule).toBe("Tue 00:00-24:00");
+  expect(policyFromDraft({ ...policyDraft(), schedule }).weekly_access).toEqual([{ start_minute: 1440, end_minute: 2880 }]);
+});

@@ -42,6 +42,8 @@ export function dnsDraftIsValid(
       (endpoint) =>
         dnsEndpointAddressIsUsable(endpoint.address) &&
         validateHost(endpoint.authenticationName) &&
+        // TLS names are DNS names; the VPS rejects IPv6 literals here.
+        !endpoint.authenticationName.includes(":") &&
         !endpoint.authenticationName.trim().endsWith(".") &&
         (choice !== "dns_over_https" || dnsOverHttpsPathIsValid(endpoint.path)),
     ) &&

@@ -261,3 +261,34 @@ mod policy_tests;
 mod session_kernel;
 
 mod automatic_kernel;
+
+#[test]
+fn client_firewall_drops_tunnel_address_packets_from_other_interfaces() {
+    let client = Ipv4Addr::new(10, 77, 0, 5);
+    assert_eq!(
+        client_firewall(client, Some("fd77::5".parse().unwrap())),
+        r#"table inet sirinvpn_client {
+  chain preraw {
+    type filter hook prerouting priority raw; policy accept;
+    iifname != "sirinvpn0" ip daddr 10.77.0.5 fib saddr type != local drop
+    iifname != "sirinvpn0" ip6 daddr fd77::5 fib saddr type != local drop
+  }
+  chain premangle {
+    type filter hook prerouting priority mangle; policy accept;
+    meta l4proto udp meta mark set ct mark
+    meta l4proto tcp ct mark 0xca6c meta mark set ct mark
+  }
+  chain postmangle {
+    type filter hook postrouting priority mangle; policy accept;
+    meta l4proto udp ct mark set meta mark
+    meta l4proto tcp meta mark 0xca6c ct mark set meta mark
+  }
+}
+"#
+    );
+    let ipv4_only = client_firewall(client, None);
+    assert!(ipv4_only.contains(
+        "    iifname != \"sirinvpn0\" ip daddr 10.77.0.5 fib saddr type != local drop\n  }\n"
+    ));
+    assert!(!ipv4_only.contains("ip6"));
+}

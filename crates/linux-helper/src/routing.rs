@@ -28,6 +28,13 @@ pub(super) fn kill_switch_firewall(
             )
         }
     };
+    // As in the policy guard: an IPv6 endpoint needs local neighbour/router
+    // discovery with the required hop limit, and DHCPv6, to stay reachable.
+    let ipv6_link_rules = if endpoint.is_ipv6() {
+        "    ip6 hoplimit 255 icmpv6 type { nd-router-solicit, nd-router-advert, nd-neighbor-solicit, nd-neighbor-advert } accept\n    ip6 daddr ff02::1:2 udp sport 546 udp dport 547 accept\n"
+    } else {
+        ""
+    };
     let mut protected_rules = String::new();
     if request.routing.mode != TunnelRoutingMode::SelectedApplications
         && (request.routing.mode == TunnelRoutingMode::SelectedRoutes || request.routing.allow_lan)
@@ -70,7 +77,7 @@ pub(super) fn kill_switch_firewall(
     oifname "lo" accept
     oifname "{INTERFACE_NAME}" accept
     {network_rule}
-    udp sport 68 udp dport 67 accept
+{ipv6_link_rules}    udp sport 68 udp dport 67 accept
 {protected_rules}  }}
 }}
 "#,

@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { invoke, isAndroid, watchAndroidStatus } from "../platform";
 import type { LocalStatusEvent } from "../types";
+import { errorMessage } from "../lib/errors";
+import { InlineError } from "./ui";
 
 export function AndroidOperation() {
   const [operation,setOperation] = useState<LocalStatusEvent["operation"]>();
+  const [dismissError,setDismissError] = useState("");
   useEffect(() => isAndroid ? watchAndroidStatus(event => setOperation(event.operation)) : undefined, []);
   if (!isAndroid || !operation) return null;
   const running=operation.phase==="running";
@@ -13,7 +16,9 @@ export function AndroidOperation() {
   return <div role="status" className="notice-banner">
     <p>{message}</p>
     {!running && <button type="button" className="secondary-button" onClick={() => {
-      void invoke("android_dismiss_operation").then(() => setOperation(null));
+      setDismissError("");
+      void invoke("android_dismiss_operation").then(() => setOperation(null)).catch((reason) => setDismissError(errorMessage(reason, "This notice could not be dismissed. Try again.")));
     }}>Dismiss</button>}
+    <InlineError message={dismissError} />
   </div>;
 }

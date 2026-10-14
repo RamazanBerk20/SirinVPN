@@ -3,10 +3,12 @@ import type { DnsUpstream, TransportKind } from "./types";
 export function formatBytes(value: number): string {
   if (!Number.isFinite(value) || value <= 0) return "0 B";
   const units = ["B", "KB", "MB", "GB", "TB"];
-  const index = Math.min(
-    Math.floor(Math.log(value) / Math.log(1024)),
-    units.length - 1,
+  let index = Math.max(
+    0,
+    Math.min(Math.floor(Math.log(value) / Math.log(1024)), units.length - 1),
   );
+  // Values that round up to 1024 read as the next unit, not "1024 KB".
+  if (index < units.length - 1 && Math.round(value / 1024 ** index) >= 1024) index += 1;
   const amount = value / 1024 ** index;
   return `${amount >= 10 || index === 0 ? amount.toFixed(0) : amount.toFixed(1)} ${units[index]}`;
 }

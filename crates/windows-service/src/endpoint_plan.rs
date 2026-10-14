@@ -1,6 +1,6 @@
 use crate::{ServiceError, network_plan};
 use sirinvpn_protocol::{EndpointTransitionResponse, MtuPolicy};
-use sirinvpn_transport::TransportEngine;
+use sirinvpn_transport::{TransportEngine, manual_mtu_for};
 use sirinvpn_tunnel_model::{TunnelConnectRequest, policy_transport_candidates};
 
 /// Cryptographic validation precedes use of every hostname, port, and TLS pin.
@@ -36,7 +36,7 @@ pub(crate) fn replacement(
     }
     if let Some(MtuPolicy::Manual { value }) = base.mtu_policy {
         for selection in &mut selections {
-            selection.mtu = value;
+            selection.mtu = manual_mtu_for(selection.kind, value);
         }
     }
     let offset = selections

@@ -19,6 +19,13 @@ export function retainMembership(key: string, value: MembershipSnapshot) {
   current.value = value;
   current.at = Date.now();
 }
+/** A read that started before a change on the VPS must not satisfy a refresh that follows it. */
+export function invalidateMembership(key: string) {
+  const current = entries.get(key);
+  if (!current) return;
+  current.revision++;
+  current.pending = undefined;
+}
 export function readMembership(key: string, load: () => Promise<MembershipSnapshot>) {
   const current = entry(key);
   if (current.pending) return current.pending;

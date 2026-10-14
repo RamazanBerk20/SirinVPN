@@ -221,23 +221,29 @@ grep -Eq '"server_maintenance_guard"[[:space:]]*:[[:space:]]*1[[:space:]]*[,}]' 
             ""
         };
         format!(
-            r#"{state_guard}
-# /run can be mounted noexec. Stage on the server installation filesystem,
-# inside a fresh root-private directory under a protected executable parent.
-[ ! -L '{execution_directory}' ]
+            "{state_guard}\n{staging}\n{compatibility}",
+            state_guard = self.state_guard,
+            staging = stage_root_executable(remote_binary, nonce, &self.sha256),
+        )
+    }
+}
+
+/// /run and /tmp can be mounted noexec, and an SSH user's upload stays writable
+/// by that user. Stage on the server installation filesystem, inside a fresh
+/// root-private directory under a protected executable parent, and verify the
+/// root-owned copy before running it. The directory is removed on shell exit.
+pub(super) fn stage_root_executable(source: &str, nonce: &str, sha256: &str) -> String {
+    format!(
+        r#"[ ! -L '{execution_directory}' ]
 [ -n "$(find '{execution_directory}' -maxdepth 0 -type d -uid 0 ! -perm /022 -print)" ]
 STAGING_DIR=$(mktemp -d '{execution_directory}/.sirinvpn-stage-{nonce}.XXXXXX')
 trap 'rm -rf -- "$STAGING_DIR"' EXIT
 STAGED_BINARY="$STAGING_DIR/sirinvpn-server"
 install -o root -g root -m 0700 {source} "$STAGED_BINARY"
-[ "$(sha256sum "$STAGED_BINARY" | cut -d' ' -f1)" = '{sha256}' ] || {{ echo 'The staged server artifact changed' >&2; exit 1; }}
-{compatibility}"#,
-            state_guard = self.state_guard,
-            execution_directory = EXECUTION_DIRECTORY,
-            source = shell_quote(remote_binary),
-            sha256 = self.sha256
-        )
-    }
+[ "$(sha256sum "$STAGED_BINARY" | cut -d' ' -f1)" = '{sha256}' ] || {{ echo 'The staged server artifact changed' >&2; exit 1; }}"#,
+        execution_directory = EXECUTION_DIRECTORY,
+        source = shell_quote(source),
+    )
 }
 
 #[cfg(test)]

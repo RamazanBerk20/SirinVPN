@@ -21,8 +21,10 @@ impl SelectedApplication {
             && String::from_utf16(
                 &self
                     .app_id
-                    .chunks_exact(2)
-                    .map(|pair| u16::from_le_bytes([pair[0], pair[1]]))
+                    .as_chunks::<2>()
+                    .0
+                    .iter()
+                    .map(|pair| u16::from_le_bytes(*pair))
                     .collect::<Vec<_>>(),
             )
             .is_ok_and(|value| {

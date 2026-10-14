@@ -10,8 +10,9 @@ import { PreferencesProvider } from "./features/settings/PreferencesProvider";
 const GeneralSettings = lazy(() => import("./features/settings/GeneralSettings").then(m => ({ default: m.GeneralSettings })));
 import { usePageTransition } from "./hooks/usePageTransition";
 import { usePageNavigation } from "./hooks/usePageNavigation";
+import { confirmNavigation } from "./lib/navigationGuard";
 import { useDesktopTray, type DesktopNavigation } from "./hooks/useDesktopTray";
-import { useDesktopStatus } from "./hooks/useDesktopStatus";
+import { favoritesFirst, useDesktopStatus } from "./hooks/useDesktopStatus";
 import { Navigation } from "./components/Navigation";
 import { InfrastructureArt } from "./components/InfrastructureArt";
 import * as Dialog from "@radix-ui/react-dialog";
@@ -72,12 +73,8 @@ function AppContent() {
 
   const loadServers = useCallback(async () => {
     try {
-      const profiles = await api.listServers();
-      setServers(
-        [...profiles].sort(
-          (a, b) => Number(Boolean(b.favorite)) - Number(Boolean(a.favorite)),
-        ),
-      );
+      const profiles = favoritesFirst(await api.listServers());
+      setServers(profiles);
       setSelectedId((current) =>
         profiles.some((profile) => profile.id === current)
           ? current
@@ -153,8 +150,11 @@ function AppContent() {
           );
           return;
         }
-        setSelectedId(request.server_id);
       }
+      // setPage skips the guard for an unchanged page, but a new server or settings category still unmounts views.
+      const changesServer = Boolean(request.server_id) && request.server_id !== selected?.id;
+      if ((request.destination !== "add_server" || changesServer) && !confirmNavigation()) return;
+      if (request.server_id) setSelectedId(request.server_id);
       switch (request.destination) {
         case "home":
           setPage("home");
@@ -293,7 +293,7 @@ function AppContent() {
         <Navigation page={page} onChange={setPage} />
         <div className="sidebar-heading">
           <span>My Servers</span>
-          <Dialog.Root open={addOpen} onOpenChange={setAddOpen}>
+          <Dialog.Root open={addOpen} onOpenChange={(open) => { if (open || confirmNavigation()) setAddOpen(open); }}>
             <Dialog.Trigger asChild>
               <button
                 className="icon-button"

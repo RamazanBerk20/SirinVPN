@@ -11,7 +11,7 @@ import {
   UploadSimple,
   Warning,
 } from "@phosphor-icons/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api } from "../../api";
 import {
   useSshHostTrust,
@@ -72,6 +72,11 @@ export function VpsRestoreDialog({
     setBusy(false);
     setError(null);
   };
+
+  useEffect(() => {
+    // The dialog stays mounted; default to the endpoint saved when it opens.
+    if (dialogOpen) setHost(profile.endpoint.host);
+  }, [dialogOpen]);
 
   const changeOpen = (next: boolean) => {
     if (!next && (busy || step === "restoring")) return;
@@ -296,9 +301,12 @@ export function VpsRestoreDialog({
                 confirmed={confirmed}
                 onConfirmed={setConfirmed}
               />
+              {!disconnected ? (
+                <InlineError message="Disconnect every active SirinVPN tunnel before restoring a VPS." />
+              ) : null}
               <button
                 className="primary-button"
-                disabled={!confirmed || busy}
+                disabled={!confirmed || !valid || busy}
                 onClick={() => void restore()}
               >
                 <UploadSimple size={18} /> Restore VPS

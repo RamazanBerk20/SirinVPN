@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use sirinvpn_protocol::{
     ConnectionState, EndpointIdentity, ServerId, TransportKind, ipv6_tunnel_address, validate_host,
 };
-use sirinvpn_transport::{TransportEngine, TransportSelection};
+use sirinvpn_transport::{TransportEngine, TransportSelection, manual_mtu_for};
 use std::{
     collections::{BTreeMap, BTreeSet},
     net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr},

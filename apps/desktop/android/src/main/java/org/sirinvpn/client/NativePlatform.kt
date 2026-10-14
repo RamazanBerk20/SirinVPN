@@ -48,6 +48,9 @@ class NativePlatform(private val context: Context) {
     fun secretGet(reference: String): ByteArray? = vault.get(reference)
     fun secretPut(reference: String, value: ByteArray) = vault.put(reference, value)
     fun secretDelete(reference: String) = vault.delete(reference)
+    // Rewritable runtime state; identity deletion stays permanent above.
+    fun blobPut(reference: String, value: ByteArray) = vault.replace(reference, value)
+    fun blobDelete(reference: String) = vault.discard(reference)
     fun readDocument(value: String): ByteArray {
         val uri = android.net.Uri.parse(value); require(uri.scheme == "content")
         return context.contentResolver.openInputStream(uri)!!.use { stream ->
@@ -136,8 +139,11 @@ class NativePlatform(private val context: Context) {
                 val name = packages.getString(i)
                 // Never exclude SirinVPN as a shortcut for transport protection.
                 require(name != context.packageName)
-                if (apps.getString("mode") == "include") builder.addAllowedApplication(name)
-                else if (apps.getString("mode") == "exclude") builder.addDisallowedApplication(name)
+                // A selected application may since have been uninstalled.
+                try {
+                    if (apps.getString("mode") == "include") builder.addAllowedApplication(name)
+                    else if (apps.getString("mode") == "exclude") builder.addDisallowedApplication(name)
+                } catch (_: android.content.pm.PackageManager.NameNotFoundException) {}
             }
             if (apps.getString("mode") == "include") builder.addAllowedApplication(context.packageName)
         }

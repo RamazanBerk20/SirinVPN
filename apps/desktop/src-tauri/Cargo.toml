@@ -20,6 +20,8 @@ tauri = { version = "2.11", features = [] }
 [target.'cfg(target_os = "linux")'.dependencies]
 nix.workspace = true
 keyring = { workspace = true, features = ["linux-native-sync-persistent"] }
+# Bounded wallet prompts for saved SSH logins; the same pin as sirinvpn-core.
+dbus-secret-service = "=4.1.0"
 sirinvpn-linux-helper = { path = "../../../crates/linux-helper" }
 notify-rust = "4.18"
 

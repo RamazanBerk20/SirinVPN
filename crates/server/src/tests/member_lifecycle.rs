@@ -279,3 +279,22 @@ async fn handoff_source_rejects_even_idempotent_member_changes() {
     .await;
     assert_eq!(result.err().unwrap().status, StatusCode::CONFLICT);
 }
+
+#[test]
+fn transactions_refuse_to_overwrite_authorization_changed_by_another_writer() {
+    use authorization_transaction::Effects;
+    let (_directory, state) = fixture();
+    let current = state
+        .authorization
+        .as_ref()
+        .unwrap()
+        .blocking_read()
+        .clone();
+    let host = authorization_transaction::Host(&state);
+    let mut next = current.clone();
+    next.port_forwards.clear();
+    assert!(host.intent(&current, &next, 1).is_ok());
+    // Root maintenance (`init` during repair) replaces the durable document meanwhile.
+    write_authorization(&state.paths.authorization, &next).unwrap();
+    assert!(host.intent(&current, &next, 2).is_err());
+}

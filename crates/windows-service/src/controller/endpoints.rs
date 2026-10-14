@@ -1,5 +1,5 @@
 use super::*;
-use crate::{endpoint_plan, firewall_plan::ControlSocket};
+use crate::{endpoint_plan, firewall_plan::ControlSocket, state::ResolvedEndpoint};
 use sirinvpn_protocol::{EndpointDescriptor, EndpointTransitionResponse};
 use sirinvpn_transport::{
     EndpointDiscoveryConfig, RelayError, decode_key,
@@ -8,10 +8,16 @@ use sirinvpn_transport::{
 };
 use zeroize::Zeroizing;
 
+/// A pending checkpoint that could not be applied yet (no addresses, or not
+/// valid for this session) is retried at most this often. Each attempt
+/// resolves DNS through temporary firewall permissions.
+const DEFERRED_RETRY: Duration = Duration::from_secs(30);
+
 #[derive(Default)]
 pub(super) struct EndpointMonitor {
     checked: Option<Instant>,
     pending: Option<(EndpointTransitionResponse, Instant)>,
+    deferred: Option<Instant>,
     published: Option<u64>,
     idle_counter: Option<(Instant, u64)>,
 }
@@ -21,6 +27,48 @@ impl Controller {
         &mut self,
         head: EndpointTransitionResponse,
     ) -> Result<(), ServiceError> {
+        let Some(request) = self.endpoint_replacement(head)? else {
+            return Ok(());
+        };
+        let resolved = self
+            .endpoint_addresses(&request)
+            .await
+            .map_err(network_error)?;
+        if resolved.is_empty() {
+            return Err(ServiceError::NetworkOperation);
+        }
+        self.replace_endpoint(request, resolved).await
+    }
+
+    /// Monitor path: a checkpoint that cannot be applied yet stays pending and
+    /// leaves the session untouched. Only storage failures and failures after
+    /// the session is held are enforcement failures; resolver errors, including
+    /// cancellation, pass through unchanged.
+    async fn apply_monitored_endpoint(
+        &mut self,
+        head: EndpointTransitionResponse,
+    ) -> io::Result<()> {
+        let request = match self.endpoint_replacement(head) {
+            Ok(Some(request)) => request,
+            Ok(None) => return Ok(()),
+            Err(ServiceError::NetworkOperation) => return Err(io::ErrorKind::Other.into()),
+            Err(_) => return Ok(()),
+        };
+        let resolved = self.endpoint_addresses(&request).await?;
+        if resolved.is_empty() {
+            return Ok(());
+        }
+        self.replace_endpoint(request, resolved)
+            .await
+            .map_err(|_| io::ErrorKind::Other.into())
+    }
+
+    /// Records a current checkpoint, or validates a signed replacement without
+    /// changing the session. Storage is the only NetworkOperation failure here.
+    fn endpoint_replacement(
+        &mut self,
+        head: EndpointTransitionResponse,
+    ) -> Result<Option<TunnelConnectRequest>, ServiceError> {
         let saved = self.saved.as_ref().ok_or(ServiceError::SessionChanged)?;
         let known = saved
             .request
@@ -29,17 +77,22 @@ impl Controller {
             .ok_or(ServiceError::InvalidRequest)?;
         if sirinvpn_core::current_checkpoint_matches(known, &head) {
             if saved.request.endpoint_checkpoint.as_ref() == Some(&head) {
-                return Ok(());
+                return Ok(None);
             }
             let mut saved = saved.clone();
             saved.request.endpoint_checkpoint = Some(head);
             self.store.save(&saved).map_err(network_error)?;
             self.saved = Some(saved);
-            return Ok(());
+            return Ok(None);
         }
-        let base = &saved.request;
-        let request = endpoint_plan::replacement(base, &head)?;
-        let mut resolved = self.resolve(&request).await.map_err(network_error)?;
+        endpoint_plan::replacement(&saved.request, &head).map(Some)
+    }
+
+    async fn endpoint_addresses(
+        &mut self,
+        request: &TunnelConnectRequest,
+    ) -> io::Result<Vec<ResolvedEndpoint>> {
+        let mut resolved = self.resolve(request).await?;
         let saved = self.saved.as_ref().expect("saved session");
         let known = request
             .endpoint_identity
@@ -53,10 +106,15 @@ impl Controller {
                 resolved.push(previous.clone());
             }
         }
-        if resolved.is_empty() {
-            return Err(ServiceError::NetworkOperation);
-        }
-        let held = saved.phase == SessionPhase::Held;
+        Ok(resolved)
+    }
+
+    async fn replace_endpoint(
+        &mut self,
+        request: TunnelConnectRequest,
+        resolved: Vec<ResolvedEndpoint>,
+    ) -> Result<(), ServiceError> {
+        let held = self.saved.as_ref().expect("saved session").phase == SessionPhase::Held;
         self.hold().await?;
         let mut replacement = self.saved.as_ref().expect("held session").clone();
         replacement.request = request;
@@ -207,11 +265,10 @@ impl Controller {
                         .is_none_or(|(pending, _)| pending != &head)
                     {
                         self.endpoints.pending = Some((head.clone(), now));
+                        self.endpoints.deferred = None;
                     }
                 } else if sirinvpn_core::current_checkpoint_matches(&known, &head) {
-                    self.apply_endpoint(head.clone())
-                        .await
-                        .map_err(|_| io::ErrorKind::Other)?;
+                    self.apply_monitored_endpoint(head.clone()).await?;
                 } else {
                     continue;
                 }
@@ -223,7 +280,11 @@ impl Controller {
         }
         if self.endpoints.pending.as_ref().is_some_and(|(_, since)| {
             idle || !healthy || since.elapsed() >= Duration::from_secs(180)
-        }) {
+        }) && self
+            .endpoints
+            .deferred
+            .is_none_or(|at| at.elapsed() >= DEFERRED_RETRY)
+        {
             let head = self
                 .endpoints
                 .pending
@@ -231,9 +292,11 @@ impl Controller {
                 .expect("pending head")
                 .0
                 .clone();
-            self.apply_endpoint(head)
-                .await
-                .map_err(|_| io::ErrorKind::Other)?;
+            self.apply_monitored_endpoint(head).await?;
+            // An applied replacement resets the monitor; one still pending is deferred.
+            if self.endpoints.pending.is_some() {
+                self.endpoints.deferred = Some(Instant::now());
+            }
         }
         Ok(())
     }

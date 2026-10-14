@@ -164,6 +164,25 @@ pub(super) fn objects(request: &TunnelConnectRequest) -> Vec<Value> {
         vec![interface("oifname", HOST_LINK)],
         json!({"drop":null}),
     );
+    // The VPN link forwards for the namespace only. Replies to it are accepted
+    // above; the VPS must never route new traffic through this host.
+    for state in ["established", "related"] {
+        rule(
+            &mut out,
+            "forward",
+            vec![
+                interface("iifname", INTERFACE_NAME),
+                compare(json!({"ct":{"key":"state"}}), json!(state), "=="),
+            ],
+            json!({"accept":null}),
+        );
+    }
+    rule(
+        &mut out,
+        "forward",
+        vec![interface("iifname", INTERFACE_NAME)],
+        json!({"drop":null}),
+    );
     rule(
         &mut out,
         "postrouting",

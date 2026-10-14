@@ -162,10 +162,10 @@ impl Controller {
     }
 
     pub(super) async fn stop_active(&mut self) -> io::Result<()> {
-        if let Some(active) = &self.active {
-            active.adapter.set_up(false)?;
-        }
         if let Some(mut active) = self.active.take() {
+            // A disabled or removed adapter must still be released. Its Drop
+            // repeats the down transition before closing the driver handle.
+            let _ = active.adapter.set_up(false);
             if let Some(carrier) = active.carrier.take() {
                 carrier.stop().await;
             }

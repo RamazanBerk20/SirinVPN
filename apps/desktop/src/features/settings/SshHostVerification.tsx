@@ -1,5 +1,6 @@
 import { SshVerificationGuide } from "./SshVerificationGuide";
-import { Copy, Key, Warning } from "@phosphor-icons/react";
+import { Key, Warning } from "@phosphor-icons/react";
+import { CopyButton } from "../../components/CopyButton";
 import type { InspectedSshHost } from "../../hooks/useSshHostTrust";
 
 export function SshHostVerification({
@@ -30,15 +31,7 @@ export function SshHostVerification({
       </p>
       <div className="fingerprint-value">
         <code>{inspection.fingerprint}</code>
-        <button
-          className="icon-button"
-          aria-label="Copy fingerprint"
-          onClick={() =>
-            void navigator.clipboard.writeText(inspection.fingerprint)
-          }
-        >
-          <Copy size={17} />
-        </button>
+        <CopyButton value={inspection.fingerprint} label="Copy fingerprint" />
       </div>
       <SshVerificationGuide />
       {changed && (

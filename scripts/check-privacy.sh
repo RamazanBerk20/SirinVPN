@@ -36,10 +36,22 @@ if rg -n -i "$FORBIDDEN_DEPENDENCIES" \
   exit 1
 fi
 
-if (
-  cd "$DESKTOP_DIR"
-  pnpm list --prod --json
-) | rg -q -i "$FORBIDDEN_DEPENDENCIES"; then
+# pnpm lists only direct dependencies by default. Scan every transitive package
+# name, but not install paths or registry URLs, which are not package identities.
+if ! PRODUCTION_TREE=$(cd "$DESKTOP_DIR" && pnpm list --prod --json --depth Infinity) \
+  || ! PRODUCTION_PACKAGES=$(printf '%s\n' "$PRODUCTION_TREE" | node -e '
+    const walk = (tree) => Object.entries(tree.dependencies ?? {}).forEach(([alias, dependency]) => {
+      console.log(alias);
+      if (dependency.from) console.log(dependency.from);
+      walk(dependency);
+    });
+    JSON.parse(require("fs").readFileSync(0, "utf8")).forEach(walk);
+  ') \
+  || [ -z "$PRODUCTION_PACKAGES" ]; then
+  echo "privacy check failed: the production frontend dependency tree is unavailable" >&2
+  exit 1
+fi
+if printf '%s\n' "$PRODUCTION_PACKAGES" | rg -q -i "$FORBIDDEN_DEPENDENCIES"; then
   echo "privacy check failed: production frontend dependency tree contains a reporting SDK" >&2
   exit 1
 fi

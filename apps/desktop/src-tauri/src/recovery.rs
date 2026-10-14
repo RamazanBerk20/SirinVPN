@@ -75,8 +75,14 @@ pub(super) struct RecoveryPreviewOutput {
 async fn client(
     app: &tauri::AppHandle,
     server_id: &str,
+    read_only: bool,
 ) -> Result<crate::management_session::ManagementSession, String> {
-    let client = crate::management_session::connected(app, server_id).await?;
+    // Viewing settings never prompts to unlock the keyring; changes may.
+    let client = if read_only {
+        crate::management_session::connected_read(app, server_id).await?
+    } else {
+        crate::management_session::connected(app, server_id).await?
+    };
     if !client
         .configuration()
         .await
@@ -93,7 +99,7 @@ pub(super) async fn recovery_settings(
     app: tauri::AppHandle,
     server_id: String,
 ) -> Result<RecoverySettings, String> {
-    client(&app, &server_id)
+    client(&app, &server_id, true)
         .await?
         .recovery_settings()
         .await
@@ -113,7 +119,7 @@ pub(super) async fn update_recovery_policy(
                 .map_err(|_| "An administrator ID is invalid.".to_owned())
         })
         .collect::<Result<Vec<_>, _>>()?;
-    client(&app, &server_id)
+    client(&app, &server_id, false)
         .await?
         .update_recovery_policy(&RecoveryPolicy {
             administrator_member_ids: ids,
@@ -132,7 +138,7 @@ pub(super) async fn create_recovery_key(
             "Confirm that this key can replace all Owner devices before creating it.".into(),
         );
     }
-    let client = client(&app, &input.server_id).await?;
+    let client = client(&app, &input.server_id, false).await?;
     let replace = input
         .replace_recovery_id
         .as_deref()
@@ -163,7 +169,7 @@ pub(super) async fn revoke_recovery_key(
     let id = recovery_id
         .parse::<RecoveryId>()
         .map_err(|_| "The recovery ID is invalid.".to_owned())?;
-    client(&app, &server_id)
+    client(&app, &server_id, false)
         .await?
         .revoke_recovery_key(id)
         .await

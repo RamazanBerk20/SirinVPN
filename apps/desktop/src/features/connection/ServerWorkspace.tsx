@@ -44,6 +44,9 @@ export function ServerWorkspace(
   const model = useServerWorkspace(props);
   const [componentUpdateOpen, setComponentUpdateOpen] = useState(false);
   const handledTrayRequest = useRef<number | null>(null);
+  // Runs outside the lazy boundary and before the tray effect, so a tray request that changes the view keeps its dialog open.
+  const { setDiagnosticsOpen } = model;
+  useEffect(() => { setDiagnosticsOpen(false); }, [props.view, setDiagnosticsOpen]);
   useEffect(() => {
     const request = props.trayRequest;
     if (!request || handledTrayRequest.current === request.sequence) return;
@@ -254,7 +257,7 @@ export function ServerWorkspace(
         disconnected={model.localKnown && model.localStatus.state === "disconnected" && model.localStatus.server_id === null && model.localStatus.kill_switch_state === "off"}
         onUpdated={async () => { model.clearConnectionError(); await model.onRefresh(); }}
       />}
-      <WorkspaceDialogs onReviewAccess={() => props.onNavigate("devices")} model={model} view={view} onReturnHome={() => props.onNavigate("home")} />
+      <WorkspaceDialogs onReviewAccess={() => props.onNavigate("devices")} model={model} onReturnHome={() => props.onNavigate("home")} />
       </Suspense>
     </div>
   );

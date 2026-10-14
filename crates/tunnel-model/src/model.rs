@@ -352,13 +352,19 @@ impl TunnelConnectRequest {
             8
         };
         self.mtu_policy = Some(policy);
-        if let sirinvpn_protocol::MtuPolicy::Manual { value } = policy {
-            self.mtu = value;
+        self.reapply_manual_mtu();
+        Ok(())
+    }
+
+    /// Applies each transport's ceiling to a manual MTU. Sessions saved before the
+    /// ceiling existed carried the raw value and are normalized when loaded.
+    pub fn reapply_manual_mtu(&mut self) {
+        if let Some(sirinvpn_protocol::MtuPolicy::Manual { value }) = self.mtu_policy {
+            self.mtu = manual_mtu_for(self.transport, value);
             for candidate in &mut self.reconnect_candidates {
-                candidate.mtu = value;
+                candidate.mtu = manual_mtu_for(candidate.transport, value);
             }
         }
-        Ok(())
     }
 }
 

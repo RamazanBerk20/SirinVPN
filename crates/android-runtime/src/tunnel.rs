@@ -76,13 +76,15 @@ pub async fn connect(
     };
     // Negotiate one safe TUN MTU for all automatic candidates, allowing a later
     // endpoint handoff without replacing the TUN or breaking existing TCP flows.
-    let mtu = prefs
-        .manual_mtu
-        .unwrap_or_else(|| selections.iter().map(|item| item.mtu).min().unwrap_or(1280));
+    let automatic_mtu = selections.iter().map(|item| item.mtu).min().unwrap_or(1280);
     let mut failure = anyhow::Error::new(ConnectionFailure(
         "No configured transport reached the server.",
     ));
     for selection in selections {
+        // Each attempt builds its own TUN, so a manual MTU is limited per transport.
+        let mtu = prefs
+            .manual_mtu
+            .map_or(automatic_mtu, |value| manual_mtu_for(selection.kind, value));
         runtime.platform.current(generation)?;
         let previous = runtime
             .relay

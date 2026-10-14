@@ -351,6 +351,9 @@ object Controller {
             if(switching && !connection && !readOnly && !setting) {callback.complete(failure("A transport handoff is being verified. Retry in a moment."));return}
             if (expected >= 0 && !current(expected)) { callback.complete(failure("The connection changed. Refresh its status.")); return }
             if (connection && VpnService.prepare(context) != null) {
+                // Only the user can grant consent: consume the pending retry or handoff
+                // so sample() does not re-run this attempt every second.
+                retryAt = 0; networkHandoff = false
                 phase = "permission_required"; publish(); callback.complete(failure("VPN permission is required.")); return
             }
             if (setting) { settingsUpdating=true; if(wifiSetting) wifiRevision++ }
@@ -435,7 +438,7 @@ object Controller {
                 if (command in setOf("create_invitation","create_recovery_key","import_recovery_package")) {
                     val protected = JSONObject(response)
                     protected.optJSONObject("ok")?.let { output ->
-                        for (key in listOf("code","key")) if (output.has(key)) output.put(key,SecretInputs.remember(output.getString(key),output.optJSONArray("qr_modules")))
+                        for (key in listOf("code","key")) if (output.has(key)) output.put(key,SecretInputs.remember(output.getString(key),output.optJSONArray("qr_modules"),key))
                         output.remove("qr_modules")
                         output.put("qr_svg","")
                     }
@@ -465,7 +468,7 @@ object Controller {
                 if (maintenance) {
                     operationState=JSONObject().put("command",command).put("phase",if(JSONObject(result).has("error")) "failed" else "completed")
                     preferences.edit().remove("maintenance").commit()
-                    context.stopService(Intent(context,MaintenanceService::class.java))
+                    MaintenanceService.stop(context)
                 }
                 if (connection && current(generation) && JSONObject(result).has("error")) {
                     if(!handoff && previousHandle>=0 && handle==previousHandle) {
@@ -474,10 +477,13 @@ object Controller {
                         phase=previousPhase;error=null
                         retryEnabled=tunnelConfiguration?.optBoolean("automatic_reconnect")==true
                     } else {
-                        val shouldRetry=retryRequested() || networkHandoff
+                        val shouldRetry=retryRequested() || networkHandoff || handoff
                         phase = "failed"; error = JSONObject(result).optString("error")
                         synchronized(engineLock) { stopEngine() }
                         if (shouldRetry && !paused && attempts < 8) {
+                            // A handoff to a not-yet-usable carrier stays a bounded handoff
+                            // even when failure retries are off; the retry consumes it again.
+                            if (handoff) networkHandoff = true
                             phase = if (network == null) "waiting_for_network" else "reconnecting"
                             retryAt = SystemClock.elapsedRealtime() + (1000L shl attempts.coerceAtMost(5)); attempts++
                         } else {
@@ -499,7 +505,25 @@ object Controller {
             if (setting || command == "remove_server") refreshWifi()
             try { callback.complete(result) } catch (_: Exception) { /* UI lifetime does not own this operation. */ }
         } } catch (_:java.util.concurrent.RejectedExecutionException) {
-            synchronized(this) { if(setting) settingsUpdating=false else if(!readOnly) operation=false }
+            synchronized(this) {
+                if(setting) settingsUpdating=false else if(!readOnly) operation=false
+                if (maintenance) {
+                    // The foreground service started above; never leave it running for work that was not queued.
+                    operationState=JSONObject().put("command",command).put("phase","failed")
+                    preferences.edit().remove("maintenance").commit()
+                    MaintenanceService.stop(context)
+                }
+                if (connection) {
+                    // The attempt never ran: undo what was prepared for it, as a non-retried failure does.
+                    if (previousHandle >= 0) phase = previousPhase else {
+                        phase = "failed"; error = "Too many pending requests. Retry after the current operation finishes."
+                        preferences.edit().putBoolean("requested", false).commit()
+                        sampling?.cancel(false); sampling = null
+                        if(wifiPolicy?.optJSONObject("policy")?.optBoolean("enabled")!=true) SirinVpnService.instance?.finishSession()
+                    }
+                }
+                publish()
+            }
             if (wifiSetting) refreshWifi()
             callback.complete(failure("Too many pending requests. Retry after the current operation finishes."))
         }

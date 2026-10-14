@@ -166,22 +166,35 @@ sync -f "$BACKUP_DIR""#,
 
 /// Retain current authorization even if a revocation happened after the old
 /// snapshot, while the candidate service was undergoing its health checks.
+/// Repair accepts the legacy layout, which has no authorization state yet. Its
+/// absence is recorded so a retry never captures the restored old snapshot.
 pub(super) const PRESERVE_AUTHORIZATION: &str = r#"
-if [ ! -f "$BACKUP_DIR/preserved-authorization.tar" ] || [ -f "$BACKUP_DIR/restoration-complete" ]; then
-  [ -d /etc/sirinvpn/authorization ] && [ -f /etc/sirinvpn/authorization/authorization.json ]
-  tar -C /etc/sirinvpn -cpf "$BACKUP_DIR/preserved-authorization.preparing" authorization
-  sync -f "$BACKUP_DIR/preserved-authorization.preparing"
-  mv "$BACKUP_DIR/preserved-authorization.preparing" "$BACKUP_DIR/preserved-authorization.tar"
+if [ -f "$BACKUP_DIR/restoration-complete" ] ||
+  { [ ! -f "$BACKUP_DIR/preserved-authorization.tar" ] && [ ! -f "$BACKUP_DIR/preserved-authorization.absent" ]; }; then
+  if [ -d /etc/sirinvpn/authorization ] && [ -f /etc/sirinvpn/authorization/authorization.json ]; then
+    tar -C /etc/sirinvpn -cpf "$BACKUP_DIR/preserved-authorization.preparing" authorization
+    sync -f "$BACKUP_DIR/preserved-authorization.preparing"
+    mv "$BACKUP_DIR/preserved-authorization.preparing" "$BACKUP_DIR/preserved-authorization.tar"
+    rm -f "$BACKUP_DIR/preserved-authorization.absent"
+  else
+    : >"$BACKUP_DIR/preserved-authorization.absent"
+    rm -f "$BACKUP_DIR/preserved-authorization.tar"
+  fi
   sync -f "$BACKUP_DIR"
 fi
 rm -f "$BACKUP_DIR/restoration-complete"
 sync -f "$BACKUP_DIR"
 "#;
 
+/// Runs after /etc/sirinvpn was replaced by the snapshot. A legacy snapshot
+/// has neither marker, so state a failed migration created is already gone and
+/// must not return. Otherwise a missing preserved archive fails closed.
 pub(super) const RESTORE_AUTHORIZATION: &str = r#"
-rm -rf -- /etc/sirinvpn/authorization
-tar -C /etc/sirinvpn -xpf "$BACKUP_DIR/preserved-authorization.tar"
-[ -f /etc/sirinvpn/authorization-required ]
+if [ -e /etc/sirinvpn/authorization-required ] || [ -d /etc/sirinvpn/authorization ]; then
+  rm -rf -- /etc/sirinvpn/authorization
+  tar -C /etc/sirinvpn -xpf "$BACKUP_DIR/preserved-authorization.tar"
+  [ -f /etc/sirinvpn/authorization/authorization.json ]
+fi
 sync -f /etc/sirinvpn
 "#;
 

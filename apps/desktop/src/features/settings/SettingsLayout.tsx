@@ -10,6 +10,7 @@ import {
 import { useId, useRef, type ReactNode } from "react";
 import { usePageTransition } from "../../hooks/usePageTransition";
 import { pageScrollPort } from "../../lib/scrolling";
+import { confirmNavigation } from "../../lib/navigationGuard";
 
 export type SettingsCategory =
   "general" | "connection" | "network" | "recovery" | "maintenance";
@@ -75,6 +76,8 @@ export function SettingsLayout({
               else if (event.key === "End") next = categories.length - 1;
               else return;
               event.preventDefault();
+              // Clicks are guarded by capture listeners; keyboard selection must ask too.
+              if (next === index || !confirmNavigation()) return;
               onChange(categories[next].id);
               document.getElementById(`${id}-${categories[next].id}`)?.focus();
             }}

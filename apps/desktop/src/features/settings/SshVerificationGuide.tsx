@@ -1,4 +1,4 @@
-import { Copy } from "@phosphor-icons/react";
+import { CopyButton } from "../../components/CopyButton";
 
 const command =
   'for key in /etc/ssh/ssh_host_*_key.pub; do ssh-keygen -l -E sha256 -f "$key"; done';
@@ -19,14 +19,7 @@ export function SshVerificationGuide({
         fingerprints:
         <div className="ssh-verification-command">
           <code>{command}</code>
-          <button
-            type="button"
-            className="icon-button"
-            aria-label="Copy verification command"
-            onClick={() => void navigator.clipboard.writeText(command)}
-          >
-            <Copy size={17} />
-          </button>
+          <CopyButton value={command} label="Copy verification command" />
         </div>
       </li>
       <li>

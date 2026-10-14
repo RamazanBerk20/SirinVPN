@@ -1,7 +1,8 @@
 [Unit]
 Description=SirinVPN persistent kill switch
 DefaultDependencies=no
-After=local-fs.target
+# Debian's nftables.service flushes the whole ruleset; install the guard after it.
+After=local-fs.target nftables.service
 Before=network-pre.target
 Wants=network-pre.target
 ConditionPathExists=/var/lib/sirinvpn/desired-connection.json
@@ -36,4 +37,5 @@ StandardOutput=null
 StandardError=null
 
 [Install]
-WantedBy=network-pre.target
+# network-pre.target is passive and is not always pulled into the boot.
+WantedBy=sysinit.target

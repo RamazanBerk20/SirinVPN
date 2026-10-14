@@ -10,6 +10,20 @@ use tauri::ipc::Channel;
 #[derive(Default)]
 pub(super) struct StatusSubscriptions(Mutex<HashMap<String, tauri::async_runtime::JoinHandle<()>>>);
 
+impl StatusSubscriptions {
+    /// A reloaded page never unsubscribes, and its stale channels still accept sends.
+    pub(super) fn abort_all(&self) {
+        for (_, task) in self
+            .0
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .drain()
+        {
+            task.abort();
+        }
+    }
+}
+
 impl Drop for StatusSubscriptions {
     fn drop(&mut self) {
         for (_, task) in self

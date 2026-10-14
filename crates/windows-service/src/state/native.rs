@@ -61,7 +61,9 @@ impl SessionStore {
         if bytes.len() > MAX_STATE {
             return Err(invalid());
         }
-        let saved: SavedConnection = serde_json::from_slice(&bytes).map_err(|_| invalid())?;
+        let mut saved: SavedConnection = serde_json::from_slice(&bytes).map_err(|_| invalid())?;
+        // Sessions saved before per-transport MTU ceilings carried the raw manual value.
+        saved.request.reapply_manual_mtu();
         saved.validate().map_err(|_| invalid())?;
         Ok(Some(saved))
     }

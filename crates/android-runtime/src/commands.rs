@@ -57,7 +57,12 @@ pub async fn dispatch(
 ) -> Result<Value> {
     let mut args = args;
     if command == "trust_ssh_host" {
-        args["input"]["fingerprint"] = args["fingerprint"].clone();
+        // Never index-assign untrusted JSON: a non-object would panic and abort :vpn.
+        let fingerprint = args["fingerprint"].clone();
+        args.get_mut("input")
+            .and_then(Value::as_object_mut)
+            .context("Missing or invalid field")?
+            .insert("fingerprint".into(), fingerprint);
     }
     let input = args.get("input").unwrap_or(&args);
     if matches!(

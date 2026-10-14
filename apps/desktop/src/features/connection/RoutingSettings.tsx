@@ -2,6 +2,9 @@ import { Check } from "@phosphor-icons/react";
 import type { ServerWorkspaceModel } from "./useServerWorkspace";
 import { ApplicationLauncher } from "./ApplicationLauncher";
 import { invoke, isAndroid } from "../../platform";
+import { useState } from "react";
+import { InlineError } from "../../components/ui";
+import { errorMessage } from "../../lib/errors";
 export function RoutingSettings({ model }: { model: ServerWorkspaceModel }) {
   const {
     routingMode,
@@ -12,6 +15,7 @@ export function RoutingSettings({ model }: { model: ServerWorkspaceModel }) {
     setAllowLan,
     profile,
   } = model;
+  const [pickerError, setPickerError] = useState("");
   const disabled =
     model.busy || model.preferences.saving || !model.preferences.ready;
   const windows = model.localStatus.application_routing_backend === "windows_bind_redirect";
@@ -65,7 +69,8 @@ export function RoutingSettings({ model }: { model: ServerWorkspaceModel }) {
       {!windows && !isAndroid && routingMode === "selected_applications" && <p className="settings-note">Already-running processes are unaffected. Other applications keep their normal network connection.</p>}
       {isAndroid && routingMode === "selected_applications" && <div>
         <p>Android applies the selected packages on the next connection. With Block connections without VPN, excluded apps lose network access.</p>
-        <button className="secondary-button" disabled={disabled} onClick={() => void invoke<import("./connectionPreferences").ConnectionPreferences["android_applications"]>("android_choose_applications", { selection: model.preferences.draft.android_applications }).then(selection => { if (selection) model.preferences.change({ android_applications: selection }); })}>Choose applications</button>
+        <button className="secondary-button" disabled={disabled} onClick={() => { setPickerError(""); void invoke<import("./connectionPreferences").ConnectionPreferences["android_applications"]>("android_choose_applications", { selection: model.preferences.draft.android_applications }).then(selection => { if (selection) model.preferences.change({ android_applications: selection }); }).catch(reason => setPickerError(errorMessage(reason, "The application list could not be opened. Try again."))); }}>Choose applications</button>
+        <InlineError message={pickerError} />
         <p>{model.preferences.draft.android_applications?.packages.length ?? 0} applications selected · {model.preferences.draft.android_applications?.mode ?? "include"}</p>
       </div>}
       {routingMode === "selected_routes" && (

@@ -1,7 +1,8 @@
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { api } from "../../api";
-import type { NetworkPreflight } from "../../types";
+import type { NetworkPreflight, ProvisionResult } from "../../types";
+import { confirmNavigation } from "../../lib/navigationGuard";
 import { SetupFlow } from "./SetupFlow";
 
 vi.mock("../../api", () => ({ api: {
@@ -21,8 +22,8 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 
-async function verifyHost() {
-  render(<SetupFlow onComplete={vi.fn()} />);
+async function verifyHost(onComplete = vi.fn()) {
+  render(<SetupFlow onComplete={onComplete} />);
   fireEvent.change(screen.getByLabelText("IP address or hostname"), { target: { value: "vps.example" } });
   const agent = screen.getByRole("button", { name: "SSH agent" });
   await waitFor(() => expect(agent.matches(":disabled")).toBe(false));
@@ -49,4 +50,35 @@ it("prevents installation when the inspected network has a blocking conflict", a
   expect((install as HTMLButtonElement).disabled).toBe(true);
   fireEvent.click(install);
   expect(api.provisionServer).not.toHaveBeenCalled();
+});
+
+const provisioned = {
+  profile: { id: "new-server", name: "My VPS" }, dns_upstream: { mode: "recursive" },
+  private_dns_records: [], network_preflight: null,
+} as unknown as ProvisionResult;
+
+it("blocks navigation while installing and hands an unopened result to the app once on close", async () => {
+  let finish!: (result: ProvisionResult) => void;
+  vi.mocked(api.provisionServer).mockImplementation(() => new Promise((resolve) => { finish = resolve; }));
+  const onComplete = vi.fn().mockResolvedValue(undefined);
+  fireEvent.click(await verifyHost(onComplete));
+  fireEvent.click(await screen.findByRole("button", { name: "Install SirinVPN" }));
+  await waitFor(() => expect(api.provisionServer).toHaveBeenCalled());
+  expect(confirmNavigation()).toBe(false);
+  await act(async () => finish(provisioned));
+  await screen.findByRole("button", { name: "Open server" });
+  expect(confirmNavigation()).toBe(true);
+  expect(onComplete).not.toHaveBeenCalled();
+  cleanup();
+  expect(onComplete).toHaveBeenCalledExactlyOnceWith(provisioned);
+});
+
+it("does not repeat the handoff after Open server", async () => {
+  vi.mocked(api.provisionServer).mockResolvedValue(provisioned);
+  const onComplete = vi.fn().mockResolvedValue(undefined);
+  fireEvent.click(await verifyHost(onComplete));
+  fireEvent.click(await screen.findByRole("button", { name: "Install SirinVPN" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Open server" }));
+  cleanup();
+  expect(onComplete).toHaveBeenCalledExactlyOnceWith(provisioned);
 });

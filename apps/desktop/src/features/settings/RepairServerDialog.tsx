@@ -74,7 +74,11 @@ export function RepairServerDialog({
   };
 
   useEffect(() => {
-    if (!open) {
+    if (open) {
+      // The dialog stays mounted; a restore or endpoint update may have changed
+      // the saved transport since the draft was last built.
+      setTransport(newTransportDraft(profile));
+    } else {
       clearSecrets();
       setStep("details");
       trust.reset();
@@ -204,7 +208,7 @@ export function RepairServerDialog({
             : <>
               <button className="secondary-button" type="button" disabled={busy} onClick={() => changeOpen(false)}>Cancel</button>
               {step === "details" ? <button className="primary-button" type="submit" form={formId} disabled={!sshValid || busy}>{busy ? "Checking VPS…" : intent === "dns" ? "Review DNS changes" : "Repair VPS"}</button>
-                : <button className="primary-button" type="button" disabled={busy || step === "fingerprint" && !confirmed} onClick={() => { if (intent === "dns" && step === "fingerprint") setStep("review"); else void repair(); }}>{intent === "dns" ? step === "fingerprint" ? "Review DNS changes" : "Apply DNS configuration" : "Repair VPS"}</button>}
+                : <button className="primary-button" type="button" disabled={busy || !sshValid || step === "fingerprint" && !confirmed} onClick={() => { if (intent === "dns" && step === "fingerprint") setStep("review"); else void repair(); }}>{intent === "dns" ? step === "fingerprint" ? "Review DNS changes" : "Apply DNS configuration" : "Repair VPS"}</button>}
             </>}
         >
 
@@ -265,6 +269,7 @@ export function RepairServerDialog({
                 confirmed={confirmed}
                 onConfirmed={setConfirmed}
               />
+              {!disconnected && <InlineError message="Disconnect every active SirinVPN tunnel before repairing this VPS." />}
             </div>
           ) : null}
 
@@ -272,6 +277,7 @@ export function RepairServerDialog({
             <button type="button" className="back-button" disabled={busy} onClick={() => setStep("details")}>Back to DNS settings</button>
             <p>{profile.name} · SSH {profile.endpoint.host}:{port}</p>
             <DnsChangeReview choice={dnsChoice} endpoints={dnsEndpoints} privateChoice={privateDnsChoice} records={privateDnsRecords} splitDns={splitDns} />
+            {!disconnected && <InlineError message="Disconnect every active SirinVPN tunnel before repairing this VPS." />}
             {error && <InlineError message={error} />}
           </>}
 

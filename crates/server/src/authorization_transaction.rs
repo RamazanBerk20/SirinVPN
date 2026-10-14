@@ -223,6 +223,13 @@ impl Effects for Host<'_> {
         next: &AuthorizationDocument,
         generation: u64,
     ) -> Result<()> {
+        // Root maintenance (`init` during repair) can replace the file while this process
+        // holds an older copy. Committing would silently discard that change; failing here
+        // sends the commit into recovery, which adopts the durable document instead.
+        let durable = load_authorization(&self.0.paths.authorization)?;
+        if fingerprint(&durable)? != fingerprint(previous)? {
+            bail!("authorization state changed outside this process");
+        }
         journal::write(&self.0.paths, previous, next, generation)
     }
     fn authority(&self) -> Result<AuthorizationDocument> {

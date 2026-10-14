@@ -41,6 +41,9 @@ export interface StatusFreshness {
 }
 
 /** Local tunnel checks and the VPS stream have independent lifetimes. */
+export const favoritesFirst = (profiles: ServerProfile[]) =>
+  [...profiles].sort((a, b) => Number(Boolean(b.favorite)) - Number(Boolean(a.favorite)));
+
 export function useDesktopStatus(
   platform: ClientPlatform | null,
   setServers: Dispatch<SetStateAction<ServerProfile[]>>,
@@ -73,7 +76,7 @@ export function useDesktopStatus(
         if (endpointCheckpoint.current !== key) {
           endpointCheckpoint.current = key;
           // Profile metadata must not delay publishing an already-read tunnel state.
-          void api.listServers().then(profiles => { if (endpointCheckpoint.current === key) setServers(profiles); }).catch(() => { endpointCheckpoint.current = ""; });
+          void api.listServers().then(profiles => { if (endpointCheckpoint.current === key) setServers(favoritesFirst(profiles)); }).catch(() => { endpointCheckpoint.current = ""; });
         }
       }
       const at = performance.now();

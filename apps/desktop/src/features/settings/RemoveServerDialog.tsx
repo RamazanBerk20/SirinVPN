@@ -252,7 +252,7 @@ export function RemoveServerDialog({
               />
               <button
                 className="primary-button danger-action"
-                disabled={!confirmed || busy}
+                disabled={!confirmed || !sshValid || busy}
                 onClick={() => void uninstall()}
               >
                 Uninstall SirinVPN

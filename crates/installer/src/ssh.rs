@@ -106,6 +106,7 @@ printf 'default_interface=%s\n' "$IPV4_INTERFACE"
 IPV6_INTERFACE=$(ip -6 route show default | awk 'NR==1 {for (i=1; i<=NF; i++) if ($i == "dev") {print $(i+1); exit}}')
 printf 'ipv6_default_interface=%s\n' "$IPV6_INTERFACE"
 printf 'ssh_server_port=%s\n' "$(printf '%s' "$SSH_CONNECTION" | awk '{print $4}')"
+printf 'ssh_local_address=%s\n' "$(printf '%s' "$SSH_CONNECTION" | awk '{print $3}')"
 [ -n "$IPV4_INTERFACE" ] && printf 'ipv4_available=1\n' || printf 'ipv4_available=0\n'
 [ -n "$IPV6_INTERFACE" ] && ip -o -6 address show dev "$IPV6_INTERFACE" scope global | awk '{print $4}' | grep -Eq '^[23][0-9A-Fa-f]*:' && printf 'ipv6_available=1\n' || printf 'ipv6_available=0\n'
 command -v nft >/dev/null 2>&1 && printf 'nftables_available=1\n' || printf 'nftables_available=0\n'
@@ -154,6 +155,11 @@ pub(super) fn parse_discovery(output: &str) -> anyhow::Result<ServerDiscovery> {
         default_interface,
         ipv6_default_interface,
         ssh_server_port: value("ssh_server_port")?.parse()?,
+        // Informational, and only visible here: sudo's env_reset drops
+        // SSH_CONNECTION before the privileged network inspection.
+        ssh_local_address: value("ssh_local_address")
+            .ok()
+            .and_then(|address| address.parse().ok()),
         ipv4_available: boolean("ipv4_available")?,
         ipv6_available,
         nftables_available: boolean("nftables_available")?,

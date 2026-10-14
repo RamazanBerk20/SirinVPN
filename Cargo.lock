@@ -4549,6 +4549,7 @@ name = "sirinvpn-desktop"
 version = "0.1.1"
 dependencies = [
  "anyhow",
+ "dbus-secret-service",
  "keyring",
  "nix",
  "notify-rust",

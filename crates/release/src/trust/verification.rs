@@ -11,7 +11,7 @@ pub fn verify_trust_policy_update(
     verify_update_with_root(installed, policy, signature, BUNDLED_RELEASE_TRUST_ROOT_PEM)
 }
 
-fn verify_update_with_root(
+pub(super) fn verify_update_with_root(
     installed: Option<&[u8]>,
     policy: &[u8],
     signature: &[u8],

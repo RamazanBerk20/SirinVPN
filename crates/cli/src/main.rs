@@ -184,6 +184,12 @@ async fn run() -> Result<()> {
                 "Resuming the active connection policy. The traffic block was retained.",
             )
         }
+        // The Windows service only guards an executable path; it never launches processes.
+        #[cfg(windows)]
+        Commands::Run(_) => bail!(
+            "`sirinvpn run` is not available on Windows. Use Launch in VPN in the SirinVPN app."
+        ),
+        #[cfg(not(windows))]
         Commands::Run(arguments) => {
             let profile = resolve_profile(&paths.profile_store(), &arguments.server)?;
             let launch = sirinvpn_tunnel_model::ApplicationLaunchRequest {

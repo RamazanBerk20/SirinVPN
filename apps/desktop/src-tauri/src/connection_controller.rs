@@ -47,10 +47,9 @@ impl Drop for OperationGuard {
     }
 }
 
+/// A connect stays cancellable by Disconnect; other operations are protected.
 pub fn acquire_connection() -> Result<OperationGuard, String> {
-    let guard = acquire()?;
-    CONNECTING.store(true, Ordering::Release);
-    Ok(guard)
+    acquire_gate(true)
 }
 
 pub fn is_busy() -> bool {
@@ -65,6 +64,10 @@ pub fn require_finished_rotation(paths: &ClientPaths, id: ServerId) -> Result<()
 }
 
 pub fn acquire() -> Result<OperationGuard, String> {
+    acquire_gate(false)
+}
+
+fn acquire_gate(connecting: bool) -> Result<OperationGuard, String> {
     if CANCELLING.load(Ordering::Acquire) {
         return Err("Wait for Disconnect to finish.".into());
     }
@@ -72,6 +75,11 @@ pub fn acquire() -> Result<OperationGuard, String> {
         .compare_exchange(false, true, Ordering::Acquire, Ordering::Relaxed)
         .and_then(|_| {
             let guard = OperationGuard;
+            // Mark a connect before the re-check, so a concurrent Disconnect
+            // never mistakes it for a protected operation.
+            if connecting {
+                CONNECTING.store(true, Ordering::Release);
+            }
             if CANCELLING.load(Ordering::Acquire) {
                 drop(guard);
                 return Err(true);

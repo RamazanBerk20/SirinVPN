@@ -40,6 +40,25 @@ pub const DIRECT_MTU: u16 = 1_420;
 pub const OBFUSCATED_UDP_MTU: u16 = 1_320;
 pub const TCP_FALLBACK_MTU: u16 = 1_280;
 pub const TLS_LIKE_MTU: u16 = 1_280;
+/// An obfuscated UDP datagram carries at most 1472 − 24 (session header) −
+/// 16 (AEAD tag) − 2 (length) = 1430 inner bytes, and a WireGuard data packet
+/// is the tunnel MTU plus 32 bytes.
+pub const OBFUSCATED_UDP_MAX_MTU: u16 = 1_398;
+
+/// The largest tunnel MTU whose full-size packets this transport delivers.
+pub const fn max_mtu(kind: TransportKind) -> u16 {
+    match kind {
+        TransportKind::ObfuscatedUdp => OBFUSCATED_UDP_MAX_MTU,
+        TransportKind::DirectUdp | TransportKind::TcpFallback | TransportKind::TlsLike => {
+            sirinvpn_protocol::MAX_TUNNEL_MTU
+        }
+    }
+}
+
+/// A manual MTU applies to every transport candidate, limited to what it can carry.
+pub fn manual_mtu_for(kind: TransportKind, value: u16) -> u16 {
+    value.min(max_mtu(kind))
+}
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct TransportSelection {

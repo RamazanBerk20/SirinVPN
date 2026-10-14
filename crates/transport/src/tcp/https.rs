@@ -42,10 +42,7 @@ where
     let (websocket, noise) = timeout(HANDSHAKE_TIMEOUT, async {
         let mut handshake = initiator_handshake(client_private, server_public, PROLOGUE)?;
         let mut request_message = [0_u8; HANDSHAKE_MAX_LENGTH];
-        let length = handshake.write_message(
-            &random_bytes(OsRng.gen_range(48..=144)),
-            &mut request_message,
-        )?;
+        let length = handshake.write_message(&client_handshake_payload(), &mut request_message)?;
         let mut request = format!("wss://{}:{}{}", https.server_name, port, https.path)
             .into_client_request()
             .map_err(|_| RelayError::InvalidConfiguration)?;

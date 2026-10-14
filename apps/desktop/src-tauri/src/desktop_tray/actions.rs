@@ -44,7 +44,12 @@ fn confirm(app: &AppHandle, message: &str, button: &str) -> bool {
 }
 
 fn run(app: &AppHandle, action: Action) -> Result<(), String> {
-    let _operation = connection_controller::acquire()?;
+    // Connect and Switch stay cancellable from the window's Disconnect.
+    let _operation = if matches!(action, Action::Connect(_) | Action::Switch(_)) {
+        connection_controller::acquire_connection()
+    } else {
+        connection_controller::acquire()
+    }?;
     let status = crate::helper::invoke_helper("status", None).map_err(crate::safe_error);
     if action == Action::Quit {
         let state = app.state::<TrayState>();

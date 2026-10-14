@@ -22,6 +22,14 @@ def main():
     destination = ROOT / "docs/android/scenarios.json"
     previous = json.loads(destination.read_text()) if destination.exists() else {}
     records = previous.get("scenarios", {})
+    expected = {f'{s["family"]}/{s["id"]}' for s in manifest["scenarios"]}
+    if args.check:
+        # Check the committed inventory itself; only an update may add missing rows.
+        missing = sorted(expected - set(records))
+        if missing:
+            raise SystemExit(f"Committed inventory {destination.relative_to(ROOT)} lacks "
+                             f"{len(missing)} catalog scenarios: {', '.join(missing[:10])}"
+                             + (", ..." if len(missing) > 10 else ""))
     for scenario in manifest["scenarios"]:
         key = f'{scenario["family"]}/{scenario["id"]}'
         records.setdefault(key, {
@@ -36,7 +44,6 @@ def main():
             "status": "missing",
             "evidence": [],
         })
-    expected = {f'{s["family"]}/{s["id"]}' for s in manifest["scenarios"]}
     assert set(records) == expected, "Scenario inventory differs from the catalog"
     if args.capture_evidence:
         assert not args.check, "Import and check are separate operations"

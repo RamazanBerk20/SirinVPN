@@ -10,6 +10,7 @@ import android.content.pm.PackageManager
 import android.graphics.drawable.Icon
 import android.net.VpnService
 import android.os.Build
+import android.os.IBinder
 import android.provider.Settings
 import android.webkit.WebView
 import androidx.appcompat.app.AppCompatActivity
@@ -63,17 +64,15 @@ class SirinPlugin(private val activity: Activity) : Plugin(activity) {
             attach()
             link!!.ready.whenComplete {control,error ->
                 if(error!=null) reject(invoke,"The service is unavailable")
-                else control.execute("authorize_document_share",args.toString(),UUID.randomUUID().toString(),-1,object:IResult.Stub(){
-                    override fun complete(result:String) {activity.runOnUiThread {
-                        if(JSONObject(result).has("error")) reject(invoke,"Export the encrypted file again before sharing it.")
-                        else try {
-                            val intent=Intent(Intent.ACTION_SEND).setType("application/octet-stream").putExtra(Intent.EXTRA_STREAM,uri)
-                                .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                            intent.clipData=android.content.ClipData.newRawUri("Encrypted SirinVPN backup",uri)
-                            activity.startActivity(Intent.createChooser(intent,"Share encrypted file"));resolve(invoke)
-                        } catch (_:Exception) {reject(invoke,"This document provider could not share the file.")}
-                    }}
-                })
+                else execute(control,"authorize_document_share",args.toString(),-1,{reject(invoke,"The service is unavailable")}) {result -> activity.runOnUiThread {
+                    if(JSONObject(result).has("error")) reject(invoke,"Export the encrypted file again before sharing it.")
+                    else try {
+                        val intent=Intent(Intent.ACTION_SEND).setType("application/octet-stream").putExtra(Intent.EXTRA_STREAM,uri)
+                            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        intent.clipData=android.content.ClipData.newRawUri("Encrypted SirinVPN backup",uri)
+                        activity.startActivity(Intent.createChooser(intent,"Share encrypted file"));resolve(invoke)
+                    } catch (_:Exception) {reject(invoke,"This document provider could not share the file.")}
+                }}
             };return
         }
         if(command=="android_scan_code") {
@@ -113,15 +112,13 @@ class SirinPlugin(private val activity: Activity) : Plugin(activity) {
             attach()
             link!!.ready.whenComplete { control,error ->
                 if (error != null) { reject(invoke,"Protected value unavailable"); return@whenComplete }
-                control.execute("reveal_secret",JSONObject().put("reference",args.getString("reference")).toString(),UUID.randomUUID().toString(),-1,object:IResult.Stub(){
-                    override fun complete(result:String) {
-                        val response=JSONObject(result)
-                        activity.runOnUiThread {
-                            if (response.has("error")) reject(invoke,"Protected value expired")
-                            else { ProtectedValue.show(activity,response.getJSONObject("ok"),command == "android_copy_secret"); resolve(invoke) }
-                        }
+                execute(control,"reveal_secret",JSONObject().put("reference",args.getString("reference")).toString(),-1,{reject(invoke,"Protected value unavailable")}) { result ->
+                    val response=JSONObject(result)
+                    activity.runOnUiThread {
+                        if (response.has("error")) reject(invoke,"Protected value expired")
+                        else { ProtectedValue.show(activity,response.getJSONObject("ok"),command == "android_copy_secret"); resolve(invoke) }
                     }
-                })
+                }
             }; return
         }
         if (command == "android_secret_input") {
@@ -248,12 +245,32 @@ class SirinPlugin(private val activity: Activity) : Plugin(activity) {
         attach()
         link!!.ready.whenComplete { control,error ->
             if (error != null) { reject(invoke,"The Android service is unavailable."); return@whenComplete }
-            try {
-                val expected = if (command in setOf("disconnect_server","cancel_connection","reconnect_server")) JSONObject(control.snapshot()).getLong("generation") else -1L
-                control.execute(command,args.toString(),UUID.randomUUID().toString(),expected,object : IResult.Stub() {
-                    override fun complete(result: String) { invoke.resolve(JSObject(result)) }
-                })
-            } catch (_: Exception) { reject(invoke,"The service connection was interrupted.") }
+            val expected = try {
+                if (command in setOf("disconnect_server","cancel_connection","reconnect_server")) JSONObject(control.snapshot()).getLong("generation") else -1L
+            } catch (_: Exception) { reject(invoke,"The service connection was interrupted."); return@whenComplete }
+            execute(control,command,args.toString(),expected,{reject(invoke,"The service connection was interrupted.")}) { result -> invoke.resolve(JSObject(result)) }
+        }
+    }
+    /**
+     * IResult never completes if :vpn dies mid-operation. Settle each request exactly
+     * once, from its result or from the service binder's death. Unbinding on pause
+     * keeps the callback deliverable, so only process death interrupts a request.
+     */
+    private fun execute(control: IControl, command: String, args: String, expected: Long, interrupted: () -> Unit, completed: (String) -> Unit) {
+        val settled = java.util.concurrent.atomic.AtomicBoolean(false)
+        val binder = control.asBinder()
+        val death = IBinder.DeathRecipient { if (settled.compareAndSet(false,true)) interrupted() }
+        try {
+            binder.linkToDeath(death,0)
+            control.execute(command,args,UUID.randomUUID().toString(),expected,object : IResult.Stub() {
+                override fun complete(result: String) {
+                    try { binder.unlinkToDeath(death,0) } catch (_: Exception) {}
+                    if (settled.compareAndSet(false,true)) completed(result)
+                }
+            })
+        } catch (_: Exception) {
+            try { binder.unlinkToDeath(death,0) } catch (_: Exception) {}
+            if (settled.compareAndSet(false,true)) interrupted()
         }
     }
     // Expected, reviewed user-facing errors share the service response envelope.

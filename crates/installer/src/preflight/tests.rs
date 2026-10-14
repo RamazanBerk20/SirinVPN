@@ -8,6 +8,7 @@ fn discovery() -> ServerDiscovery {
         default_interface: "eth0".into(),
         ipv6_default_interface: None,
         ssh_server_port: 22,
+        ssh_local_address: Some("10.2.0.4".parse().unwrap()),
         ipv4_available: true,
         ipv6_available: false,
         nftables_available: true,
@@ -25,7 +26,6 @@ fn output(
     wireguard: &str,
 ) -> String {
     [
-        ("ssh", "10.2.0.4".to_owned()),
         ("addresses", addresses.to_string()),
         ("routes", routes.to_string()),
         ("links", links.to_string()),

@@ -80,7 +80,7 @@ pub(super) async fn create_invitation_handler(
     validate_wireguard_public_key(&request.bootstrap_wireguard_public_key)
         .map_err(|error| ApiError::invalid(error.to_string()))?;
     let bootstrap_fingerprint =
-        certificate_fingerprint(&request.bootstrap_management_certificate_pem)
+        submitted_certificate_fingerprint(&request.bootstrap_management_certificate_pem)
             .map_err(|error| ApiError::invalid(error.to_string()))?;
 
     let authorization = require_authorization(&state)?;

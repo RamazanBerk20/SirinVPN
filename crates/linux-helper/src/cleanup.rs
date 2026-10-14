@@ -265,6 +265,9 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
     pub(super) fn cleanup_all_owned(&self) -> Result<(), HelperError> {
         let _ = remove_file_if_exists(&self.persistent_directory.join("measurement-identity.json"));
         let _ = remove_file_if_exists(&self.runtime_directory.join("measurement-last"));
+        // A supervisor stopped mid-measurement cannot remove its probe peer.
+        // Only a link with the probe's ownership alias is removed.
+        let _ = measurement::cleanup_probe(&self.runner);
         self.cleanup_tunnel_owned()?;
         self.destroy_applications()?;
         let _ = self

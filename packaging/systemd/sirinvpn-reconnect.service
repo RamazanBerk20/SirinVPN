@@ -33,9 +33,10 @@ RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
 ReadWritePaths=/run/sirinvpn
 # Recovery saves verified endpoint changes and the current connection policy.
 ReadWritePaths=/var/lib/sirinvpn
-# Only the VPN link's forwarding flag is changed by the helper. Interface
+# The helper changes only the VPN link's forwarding flags and src_valid_mark. Interface
 # directories appear after service startup, so bind the network configuration roots.
-ReadWritePaths=/proc/sys/net/ipv4/conf /proc/sys/net/ipv6/conf
+# The IPv6 tree is absent when IPv6 is disabled at boot.
+ReadWritePaths=/proc/sys/net/ipv4/conf -/proc/sys/net/ipv6/conf
 StandardOutput=null
 StandardError=null
 

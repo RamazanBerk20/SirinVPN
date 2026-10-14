@@ -144,6 +144,7 @@ fn dns_over_https_uses_a_pinned_loopback_proxy_and_scoped_service() {
         default_interface: "eth0".into(),
         ipv6_default_interface: Some("eth0".into()),
         ssh_server_port: 22,
+        ssh_local_address: None,
         ipv4_available: true,
         ipv6_available: true,
         nftables_available: true,
@@ -209,8 +210,8 @@ fn private_dns_records_are_rendered_and_verified_exactly() {
     assert!(verification.contains("nas.home. 60 IN A 10.20.30.40"));
 
     let cleared = unbound_dns_verification(&DnsUpstream::Recursive, &[]);
-    assert!(cleared.contains("! grep -Fq '  local-zone: '"));
-    assert!(cleared.contains("! grep -Fq '  local-data: '"));
+    assert!(cleared.contains("if grep -Fq '  local-zone: ' "));
+    assert!(cleared.contains("if grep -Fq '  local-data: ' "));
 }
 
 #[test]
@@ -262,6 +263,17 @@ fn discovery_parser_binds_ipv6_availability_to_a_safe_default_interface() {
     let parsed = parse_discovery(ipv4_only).unwrap();
     assert!(!parsed.ipv6_available);
     assert_eq!(parsed.ipv6_default_interface, None);
+    assert_eq!(parsed.ssh_local_address, None);
+    let with_ssh_address = ipv4_only.replace(
+        "ssh_server_port=22\n",
+        "ssh_server_port=22\nssh_local_address=10.2.0.4\n",
+    );
+    assert_eq!(
+        parse_discovery(&with_ssh_address)
+            .unwrap()
+            .ssh_local_address,
+        Some("10.2.0.4".parse().unwrap())
+    );
 
     let dual_stack = ipv4_only
         .replace("ipv6_default_interface=\n", "ipv6_default_interface=ens6\n")

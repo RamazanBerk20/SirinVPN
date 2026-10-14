@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"syscall"
 )
 
 type tunnel struct {
@@ -29,11 +30,30 @@ var next int32
 func sirinStart(fd C.int, settings *C.char) C.int {
 	lock.Lock()
 	defer lock.Unlock()
+	// This call owns fd. Failing before wireguard-go wraps it closes it directly.
+	if syscall.SetNonblock(int(fd), true) != nil {
+		syscall.Close(int(fd))
+		return -1
+	}
 	adapter, _, err := tun.CreateUnmonitoredTUNFromFD(int(fd))
 	if err != nil {
+		release(int(fd))
 		return -1
 	}
 	return start(adapter, C.GoString(settings), nil)
+}
+
+// release drops the TUN after wireguard-go wrapped fd in an unreachable
+// *os.File. Closing fd here would let that file's finalizer later close a
+// reused descriptor, so fd is pointed at /dev/null instead: the TUN goes away
+// now and the finalizer closes only the placeholder.
+func release(fd int) {
+	null, err := syscall.Open("/dev/null", syscall.O_RDWR|syscall.O_CLOEXEC, 0)
+	if err != nil {
+		return
+	}
+	syscall.Dup3(null, fd, syscall.O_CLOEXEC)
+	syscall.Close(null)
 }
 
 func start(adapter tun.Device, value string, probe *probeTun) C.int {

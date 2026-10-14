@@ -98,6 +98,38 @@ fn application_request() -> TunnelConnectRequest {
 }
 
 #[test]
+fn vpn_link_forwards_only_replies_and_namespace_traffic() {
+    let mut request = crate::tests::request();
+    request.routing = TunnelRoutingPolicy::selected_applications(true);
+    let forward = firewall::objects(&request)
+        .into_iter()
+        .filter(|object| object["rule"]["chain"] == "forward")
+        .map(|object| object["rule"]["expr"].clone())
+        .collect::<Vec<_>>();
+    let vpn_ingress = serde_json::json!({"match": {"op": "==",
+        "left": {"meta": {"key": "iifname"}}, "right": INTERFACE_NAME}});
+    let reply = |link: &str, key: &str, state: &str| {
+        serde_json::json!([
+            {"match": {"op": "==", "left": {"meta": {"key": key}}, "right": link}},
+            {"match": {"op": "==", "left": {"ct": {"key": "state"}}, "right": state}},
+            {"accept": null}
+        ])
+    };
+    // The VPS cannot route new traffic through this host to its LAN.
+    assert_eq!(
+        forward.last().unwrap(),
+        &serde_json::json!([vpn_ingress, {"drop": null}])
+    );
+    let position = |rule: &serde_json::Value| forward.iter().position(|r| r == rule).unwrap();
+    let ingress_drop = forward.len() - 1;
+    for state in ["established", "related"] {
+        // Replies into the namespace and to other forwarded VPN flows still pass.
+        assert!(position(&reply(HOST_LINK, "oifname", state)) < ingress_drop);
+        assert!(position(&reply(INTERFACE_NAME, "iifname", state)) < ingress_drop);
+    }
+}
+
+#[test]
 fn application_forwarding_does_not_apply_dns_blocks_to_other_apps() {
     let mut request = crate::tests::request();
     request.routing = TunnelRoutingPolicy::selected_applications(true);

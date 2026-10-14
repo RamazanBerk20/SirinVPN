@@ -481,3 +481,16 @@ fn direct_engine_rejects_an_unusable_endpoint() {
             .is_err()
     );
 }
+
+#[test]
+fn manual_mtu_is_limited_to_each_transport_ceiling() {
+    assert_eq!(manual_mtu_for(TransportKind::ObfuscatedUdp, 1_420), 1_398);
+    assert_eq!(manual_mtu_for(TransportKind::ObfuscatedUdp, 1_300), 1_300);
+    for kind in [
+        TransportKind::DirectUdp,
+        TransportKind::TcpFallback,
+        TransportKind::TlsLike,
+    ] {
+        assert_eq!(manual_mtu_for(kind, 1_420), 1_420);
+    }
+}

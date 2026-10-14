@@ -60,11 +60,20 @@ pub(super) fn unbound_dns_configuration(
             server.push_str("\n  tls-cert-bundle: \"/etc/ssl/certs/ca-certificates.crt\"");
         }
         for zone in zones {
-            if !private_dns_records
+            let transparent = format!("  local-zone: \"{}.\" transparent", zone.suffix);
+            if private_dns_records
                 .iter()
                 .any(|record| record.name == zone.suffix)
             {
-                server.push_str(&format!("\n  local-zone: \"{}.\" transparent", zone.suffix));
+                // A static zone would answer every other name under the
+                // forwarded suffix locally; keep only its own local-data.
+                server = server.replace(
+                    &format!("  local-zone: \"{}.\" static", zone.suffix),
+                    &transparent,
+                );
+            } else {
+                server.push('\n');
+                server.push_str(&transparent);
             }
             server.push_str(&format!("\n  private-domain: \"{}.\"", zone.suffix));
             if zone.allow_unsigned_answers {
@@ -161,26 +170,33 @@ pub(super) fn unbound_dns_verification(
     let configuration = "/etc/unbound/unbound.conf.d/sirinvpn.conf";
     if let DnsUpstream::Split { default, zones } = dns_upstream {
         let (server, forwarding) = unbound_dns_configuration(dns_upstream, private_dns_records);
-        let expected = STANDARD.encode(
-            serde_json::to_vec(&(server, forwarding)).expect("DNS configuration serializes"),
-        );
         let count = zones.len() + usize::from(!default.is_recursive());
+        // POSIX sh only: the installer does not install python3. Quoted case
+        // patterns match the multi-line blocks literally.
         return format!(
-            r#"python3 - <<'SIRINVPN_VERIFY_SPLIT_DNS'
-import base64, json, pathlib
-actual = pathlib.Path('{configuration}').read_text()
-server, forwarding = json.loads(base64.b64decode('{expected}'))
-assert server in actual and forwarding in actual, 'split DNS configuration differs from requested policy'
-assert actual.count('forward-zone:') == {count}
-assert 'forward-first: yes' not in actual, 'split DNS fallback is forbidden'
-SIRINVPN_VERIFY_SPLIT_DNS"#
+            r#"split_dns_configuration=$(cat {configuration})
+for split_dns_expected in {server} {forwarding}; do
+  case $split_dns_configuration in
+    *"$split_dns_expected"*) ;;
+    *) echo 'split DNS configuration differs from requested policy' >&2; exit 1 ;;
+  esac
+done
+[ "$(grep -Fc 'forward-zone:' {configuration} || true)" -eq {count} ]
+if grep -Fq 'forward-first: yes' {configuration}; then
+  echo 'split DNS fallback is forbidden' >&2
+  exit 1
+fi"#,
+            server = shell_quote(&server),
+            forwarding = shell_quote(&forwarding),
         );
     }
+    // These lines run under `set -e`, which ignores a failing `! command`; absence checks
+    // therefore exit explicitly.
     let upstream_checks = match dns_upstream {
         DnsUpstream::Recursive => format!(
-            r#"! grep -Fq 'forward-tls-upstream:' {configuration}
-! grep -Fq 'forward-addr:' {configuration}
-! grep -Fq '  do-not-query-localhost: no' {configuration}"#
+            r#"if grep -Fq 'forward-tls-upstream:' {configuration}; then exit 1; fi
+if grep -Fq 'forward-addr:' {configuration}; then exit 1; fi
+if grep -Fq '  do-not-query-localhost: no' {configuration}; then exit 1; fi"#
         ),
         DnsUpstream::DnsOverTls { endpoints } => {
             let address_checks = endpoints
@@ -200,7 +216,7 @@ SIRINVPN_VERIFY_SPLIT_DNS"#
                 r#"grep -Fxq '  tls-cert-bundle: "/etc/ssl/certs/ca-certificates.crt"' {configuration}
 grep -Fxq '  forward-tls-upstream: yes' {configuration}
 grep -Fxq '  forward-first: no' {configuration}
-! grep -Fq '  forward-first: yes' {configuration}
+if grep -Fq '  forward-first: yes' {configuration}; then exit 1; fi
 [ "$(grep -Fc '  forward-addr: ' {configuration} || true)" -eq {endpoint_count} ]
 {address_checks}"#,
                 endpoint_count = endpoints.len(),
@@ -211,16 +227,16 @@ grep -Fxq '  forward-first: no' {configuration}
 grep -Fxq '  forward-first: no' {configuration}
 grep -Fxq '  forward-addr: 127.0.0.1@{DOH_PROXY_PORT}' {configuration}
 [ "$(grep -Fc '  forward-addr: ' {configuration} || true)" -eq 1 ]
-! grep -Fq '  forward-tls-upstream:' {configuration}
-! grep -Fq '  tls-cert-bundle:' {configuration}"#,
+if grep -Fq '  forward-tls-upstream:' {configuration}; then exit 1; fi
+if grep -Fq '  tls-cert-bundle:' {configuration}; then exit 1; fi"#,
         ),
         DnsUpstream::Split { .. } => unreachable!("split policy handled above"),
     };
     if private_dns_records.is_empty() {
         return format!(
             r#"{upstream_checks}
-! grep -Fq '  local-zone: ' {configuration}
-! grep -Fq '  local-data: ' {configuration}"#
+if grep -Fq '  local-zone: ' {configuration}; then exit 1; fi
+if grep -Fq '  local-data: ' {configuration}; then exit 1; fi"#
         );
     }
 

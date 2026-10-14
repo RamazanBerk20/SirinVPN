@@ -257,10 +257,7 @@ pub(super) fn repair_blocking(
     if profile.role != ServerRole::Owner {
         return Err("Only the Owner can repair or update SirinVPN on this VPS.".to_owned());
     }
-    let secret = paths
-        .secret_store()
-        .get(&profile.identity_reference)
-        .map_err(safe_error)?;
+    let secret = explicit_secret(&paths, &profile.identity_reference)?;
     let identity = secret
         .public_identity(&profile.client_management_certificate_pem)
         .map_err(safe_error)?;

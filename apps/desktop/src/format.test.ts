@@ -17,6 +17,8 @@ describe("desktop formatting", () => {
     expect(formatBytes(0)).toBe("0 B");
     expect(formatBytes(1536)).toBe("1.5 KB");
     expect(formatBytes(12 * 1024 * 1024)).toBe("12 MB");
+    expect(formatBytes(0.3)).toBe("0 B");
+    expect(formatBytes(1024 * 1024 - 1)).toBe("1.0 MB");
   });
 
   it("rejects command-shaped hosts", () => {

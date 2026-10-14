@@ -26,96 +26,112 @@ pub fn runtime() -> Result<&'static Runtime> {
 }
 
 impl Platform {
+    /// Runs one Java callback. A thrown Java exception is cleared before the
+    /// error is returned: later JNI calls on this thread, and detaching it,
+    /// are invalid while an exception is pending.
+    fn with_env<T>(&self, call: impl FnOnce(&mut JNIEnv<'_>) -> Result<T>) -> Result<T> {
+        let mut env = self.vm.attach_current_thread()?;
+        let result = call(&mut env);
+        if env.exception_check().unwrap_or(true) {
+            let _ = env.exception_clear();
+        }
+        result
+    }
     pub fn quality_result(
         &self,
         result: Option<&serde_json::Value>,
         generation: i64,
     ) -> Result<()> {
-        let mut env = self.vm.attach_current_thread()?;
-        let result = if let Some(result) = result {
-            JObject::from(env.new_string(result.to_string())?)
-        } else {
-            JObject::null()
-        };
-        env.call_method(
-            &self.object,
-            "qualityResult",
-            "(Ljava/lang/String;J)V",
-            &[JValue::Object(&result), JValue::Long(generation)],
-        )?;
-        Ok(())
+        self.with_env(|env| {
+            let result = if let Some(result) = result {
+                JObject::from(env.new_string(result.to_string())?)
+            } else {
+                JObject::null()
+            };
+            env.call_method(
+                &self.object,
+                "qualityResult",
+                "(Ljava/lang/String;J)V",
+                &[JValue::Object(&result), JValue::Long(generation)],
+            )?;
+            Ok(())
+        })
     }
     pub fn quality_state(&self, generation: i64) -> Result<serde_json::Value> {
-        let mut env = self.vm.attach_current_thread()?;
-        let value = env
-            .call_method(
-                &self.object,
-                "qualityState",
-                "(J)Ljava/lang/String;",
-                &[JValue::Long(generation)],
-            )?
-            .l()?;
-        if value.is_null() {
-            bail!("Connection changed")
-        }
-        let value: String = env.get_string(&JString::from(value))?.into();
-        Ok(serde_json::from_str(&value)?)
+        self.with_env(|env| {
+            let value = env
+                .call_method(
+                    &self.object,
+                    "qualityState",
+                    "(J)Ljava/lang/String;",
+                    &[JValue::Long(generation)],
+                )?
+                .l()?;
+            if value.is_null() {
+                bail!("Connection changed")
+            }
+            let value: String = env.get_string(&JString::from(value))?.into();
+            Ok(serde_json::from_str(&value)?)
+        })
     }
     pub fn handoff(&self, config: &serde_json::Value, generation: i64) -> Result<()> {
-        let mut env = self.vm.attach_current_thread()?;
-        let value = env.new_string(config.to_string())?;
-        if !env
-            .call_method(
-                &self.object,
-                "handoff",
-                "(Ljava/lang/String;J)Z",
-                &[JValue::Object(&value), JValue::Long(generation)],
-            )?
-            .z()?
-        {
-            bail!("Connection changed")
-        }
-        Ok(())
+        self.with_env(|env| {
+            let value = env.new_string(config.to_string())?;
+            if !env
+                .call_method(
+                    &self.object,
+                    "handoff",
+                    "(Ljava/lang/String;J)Z",
+                    &[JValue::Object(&value), JValue::Long(generation)],
+                )?
+                .z()?
+            {
+                bail!("Connection changed")
+            }
+            Ok(())
+        })
     }
     pub fn measure(
         &self,
         config: &serde_json::Value,
         generation: i64,
     ) -> Result<Option<sirinvpn_protocol::TransportQualitySample>> {
-        let mut env = self.vm.attach_current_thread()?;
-        let serialized = Zeroizing::new(config.to_string());
-        let value = env.new_string(&*serialized)?;
-        let result = env
-            .call_method(
-                &self.object,
-                "measure",
-                "(Ljava/lang/String;J)Ljava/lang/String;",
-                &[JValue::Object(&value), JValue::Long(generation)],
-            )?
-            .l()?;
-        if result.is_null() {
-            return Ok(None);
-        }
-        let result: String = env.get_string(&JString::from(result))?.into();
-        let sample: sirinvpn_protocol::TransportQualitySample = serde_json::from_str(&result)?;
-        Ok(sample.valid().then_some(sample))
+        self.with_env(|env| {
+            let serialized = Zeroizing::new(config.to_string());
+            let value = env.new_string(&*serialized)?;
+            let result = env
+                .call_method(
+                    &self.object,
+                    "measure",
+                    "(Ljava/lang/String;J)Ljava/lang/String;",
+                    &[JValue::Object(&value), JValue::Long(generation)],
+                )?
+                .l()?;
+            if result.is_null() {
+                return Ok(None);
+            }
+            let result: String = env.get_string(&JString::from(result))?.into();
+            let sample: sirinvpn_protocol::TransportQualitySample = serde_json::from_str(&result)?;
+            Ok(sample.valid().then_some(sample))
+        })
     }
     pub fn connection_preferences(&self, id: &str) -> Result<Option<serde_json::Value>> {
-        let mut env = self.vm.attach_current_thread()?;
-        let id = env.new_string(id)?;
-        let value = env
-            .call_method(
-                &self.object,
-                "connectionPreferences",
-                "(Ljava/lang/String;)Ljava/lang/String;",
-                &[JValue::Object(&id)],
-            )?
-            .l()?;
-        if value.is_null() {
-            return Ok(None);
-        }
-        let value: String = env.get_string(&JString::from(value))?.into();
-        Ok(Some(serde_json::from_str(&value)?))
+        self.with_env(|env| {
+            let id = env.new_string(id)?;
+            let value = env
+                .call_method(
+                    &self.object,
+                    "connectionPreferences",
+                    "(Ljava/lang/String;)Ljava/lang/String;",
+                    &[JValue::Object(&id)],
+                )?
+                .l()?;
+            if value.is_null() {
+                return Ok(None);
+            }
+            let value: String = env.get_string(&JString::from(value))?.into();
+            Ok(Some(serde_json::from_str(&value)?))
+        })
     }
     pub fn prepare_connection(
         &self,
@@ -123,145 +139,160 @@ impl Platform {
         preferences: &sirinvpn_tunnel_model::ConnectionPreferences,
         generation: i64,
     ) -> Result<()> {
-        let mut env = self.vm.attach_current_thread()?;
-        let value = env
-            .new_string(serde_json::json!({"serverId":id,"preferences":preferences}).to_string())?;
-        env.call_method(
-            &self.object,
-            "prepareConnection",
-            "(Ljava/lang/String;J)V",
-            &[JValue::Object(&value), JValue::Long(generation)],
-        )?;
-        Ok(())
+        self.with_env(|env| {
+            let value = env.new_string(
+                serde_json::json!({"serverId":id,"preferences":preferences}).to_string(),
+            )?;
+            env.call_method(
+                &self.object,
+                "prepareConnection",
+                "(Ljava/lang/String;J)V",
+                &[JValue::Object(&value), JValue::Long(generation)],
+            )?;
+            Ok(())
+        })
     }
     pub fn wifi(&self) -> Result<serde_json::Value> {
-        let mut env = self.vm.attach_current_thread()?;
-        let value = env
-            .call_method(&self.object, "wifi", "()Ljava/lang/String;", &[])?
-            .l()?;
-        let text: String = env.get_string(&JString::from(value))?.into();
-        Ok(serde_json::from_str(&text)?)
+        self.with_env(|env| {
+            let value = env
+                .call_method(&self.object, "wifi", "()Ljava/lang/String;", &[])?
+                .l()?;
+            let text: String = env.get_string(&JString::from(value))?.into();
+            Ok(serde_json::from_str(&text)?)
+        })
     }
     pub fn installed_apk(&self) -> Result<std::path::PathBuf> {
-        let mut env = self.vm.attach_current_thread()?;
-        let value = env
-            .call_method(&self.object, "installedApk", "()Ljava/lang/String;", &[])?
-            .l()?;
-        let value: String = env.get_string(&JString::from(value))?.into();
-        Ok(value.into())
+        self.with_env(|env| {
+            let value = env
+                .call_method(&self.object, "installedApk", "()Ljava/lang/String;", &[])?
+                .l()?;
+            let value: String = env.get_string(&JString::from(value))?.into();
+            Ok(value.into())
+        })
     }
     pub fn install_apk(&self, path: &std::path::Path) -> Result<()> {
-        let mut env = self.vm.attach_current_thread()?;
-        let path = env.new_string(path.to_str().context("Invalid package path")?)?;
-        env.call_method(
-            &self.object,
-            "installApk",
-            "(Ljava/lang/String;)V",
-            &[JValue::Object(&path)],
-        )?;
-        Ok(())
+        self.with_env(|env| {
+            let path = env.new_string(path.to_str().context("Invalid package path")?)?;
+            env.call_method(
+                &self.object,
+                "installApk",
+                "(Ljava/lang/String;)V",
+                &[JValue::Object(&path)],
+            )?;
+            Ok(())
+        })
     }
     pub fn abandon_apk(&self) -> Result<()> {
-        let mut env = self.vm.attach_current_thread()?;
-        env.call_method(&self.object, "abandonApk", "()V", &[])?;
-        Ok(())
+        self.with_env(|env| {
+            env.call_method(&self.object, "abandonApk", "()V", &[])?;
+            Ok(())
+        })
     }
     pub fn has_handshake(&self) -> Result<bool> {
-        let mut env = self.vm.attach_current_thread()?;
-        Ok(env
-            .call_method(&self.object, "hasHandshake", "()Z", &[])?
-            .z()?)
+        self.with_env(|env| {
+            Ok(env
+                .call_method(&self.object, "hasHandshake", "()Z", &[])?
+                .z()?)
+        })
     }
     pub fn blob(&self, name: &str) -> Result<Option<Zeroizing<Vec<u8>>>> {
-        let mut env = self.vm.attach_current_thread()?;
-        let name = env.new_string(name)?;
-        let array = env
-            .call_method(
-                &self.object,
-                "secretGet",
-                "(Ljava/lang/String;)[B",
-                &[JValue::Object(&name)],
-            )?
-            .l()?;
-        if array.is_null() {
-            return Ok(None);
-        }
-        let array = JByteArray::from(array);
-        let bytes = Zeroizing::new(env.convert_byte_array(&array)?);
-        env.set_byte_array_region(&array, 0, &vec![0; bytes.len()])?;
-        Ok(Some(bytes))
+        self.with_env(|env| {
+            let name = env.new_string(name)?;
+            let array = env
+                .call_method(
+                    &self.object,
+                    "secretGet",
+                    "(Ljava/lang/String;)[B",
+                    &[JValue::Object(&name)],
+                )?
+                .l()?;
+            if array.is_null() {
+                return Ok(None);
+            }
+            let array = JByteArray::from(array);
+            let bytes = Zeroizing::new(env.convert_byte_array(&array)?);
+            env.set_byte_array_region(&array, 0, &vec![0; bytes.len()])?;
+            Ok(Some(bytes))
+        })
     }
+    /// Fixed-name runtime state: unlike identities, a removed blob may be
+    /// written again (a later key rotation, SSH login or provision request).
     pub fn put_blob(&self, name: &str, bytes: &[u8]) -> Result<()> {
-        let mut env = self.vm.attach_current_thread()?;
-        let name = env.new_string(name)?;
-        let array = env.byte_array_from_slice(bytes)?;
-        let result = env.call_method(
-            &self.object,
-            "secretPut",
-            "(Ljava/lang/String;[B)V",
-            &[JValue::Object(&name), JValue::Object(&array)],
-        );
-        if result.is_err() {
-            let _ = env.exception_clear();
-        }
-        env.set_byte_array_region(&array, 0, &vec![0; bytes.len()])?;
-        result?;
-        Ok(())
+        self.with_env(|env| {
+            let name = env.new_string(name)?;
+            let array = env.byte_array_from_slice(bytes)?;
+            let result = env.call_method(
+                &self.object,
+                "blobPut",
+                "(Ljava/lang/String;[B)V",
+                &[JValue::Object(&name), JValue::Object(&array)],
+            );
+            if result.is_err() {
+                let _ = env.exception_clear();
+            }
+            env.set_byte_array_region(&array, 0, &vec![0; bytes.len()])?;
+            result?;
+            Ok(())
+        })
     }
     pub fn delete_blob(&self, name: &str) -> Result<()> {
-        let mut env = self.vm.attach_current_thread()?;
-        let name = env.new_string(name)?;
-        env.call_method(
-            &self.object,
-            "secretDelete",
-            "(Ljava/lang/String;)V",
-            &[JValue::Object(&name)],
-        )?;
-        Ok(())
+        self.with_env(|env| {
+            let name = env.new_string(name)?;
+            env.call_method(
+                &self.object,
+                "blobDelete",
+                "(Ljava/lang/String;)V",
+                &[JValue::Object(&name)],
+            )?;
+            Ok(())
+        })
     }
     pub fn document(&self, uri: &str) -> Result<Zeroizing<Vec<u8>>> {
-        let mut env = self.vm.attach_current_thread()?;
-        let uri = env.new_string(uri)?;
-        let array = env
-            .call_method(
-                &self.object,
-                "readDocument",
-                "(Ljava/lang/String;)[B",
-                &[JValue::Object(&uri)],
-            )?
-            .l()?;
-        let array = JByteArray::from(array);
-        let bytes = Zeroizing::new(env.convert_byte_array(&array)?);
-        env.set_byte_array_region(&array, 0, &vec![0; bytes.len()])?;
-        Ok(bytes)
+        self.with_env(|env| {
+            let uri = env.new_string(uri)?;
+            let array = env
+                .call_method(
+                    &self.object,
+                    "readDocument",
+                    "(Ljava/lang/String;)[B",
+                    &[JValue::Object(&uri)],
+                )?
+                .l()?;
+            let array = JByteArray::from(array);
+            let bytes = Zeroizing::new(env.convert_byte_array(&array)?);
+            env.set_byte_array_region(&array, 0, &vec![0; bytes.len()])?;
+            Ok(bytes)
+        })
     }
     pub fn write_document(&self, uri: &str, bytes: &[u8]) -> Result<()> {
-        let mut env = self.vm.attach_current_thread()?;
-        let uri = env.new_string(uri)?;
-        let array = env.byte_array_from_slice(bytes)?;
-        env.call_method(
-            &self.object,
-            "writeDocument",
-            "(Ljava/lang/String;[B)V",
-            &[JValue::Object(&uri), JValue::Object(&array)],
-        )?;
-        Ok(())
+        self.with_env(|env| {
+            let uri = env.new_string(uri)?;
+            let array = env.byte_array_from_slice(bytes)?;
+            env.call_method(
+                &self.object,
+                "writeDocument",
+                "(Ljava/lang/String;[B)V",
+                &[JValue::Object(&uri), JValue::Object(&array)],
+            )?;
+            Ok(())
+        })
     }
     fn check_state(&self, method: &str, id: &str) -> Result<()> {
-        let mut env = self.vm.attach_current_thread()?;
-        let id = env.new_string(id)?;
-        if !env
-            .call_method(
-                &self.object,
-                method,
-                "(Ljava/lang/String;)Z",
-                &[JValue::Object(&id)],
-            )?
-            .z()?
-        {
-            bail!("The active tunnel does not permit this operation")
-        }
-        Ok(())
+        self.with_env(|env| {
+            let id = env.new_string(id)?;
+            if !env
+                .call_method(
+                    &self.object,
+                    method,
+                    "(Ljava/lang/String;)Z",
+                    &[JValue::Object(&id)],
+                )?
+                .z()?
+            {
+                bail!("The active tunnel does not permit this operation")
+            }
+            Ok(())
+        })
     }
     pub fn require_active(&self, id: &str) -> Result<()> {
         self.check_state("isActive", id)
@@ -273,70 +304,75 @@ impl Platform {
         self.check_state("isInactive", "")
     }
     pub fn current(&self, generation: i64) -> Result<()> {
-        let mut env = self.vm.attach_current_thread()?;
-        if !env
-            .call_method(
-                &self.object,
-                "isCurrent",
-                "(J)Z",
-                &[JValue::Long(generation)],
-            )?
-            .z()?
-        {
-            bail!("Connection cancelled")
-        }
-        Ok(())
+        self.with_env(|env| {
+            if !env
+                .call_method(
+                    &self.object,
+                    "isCurrent",
+                    "(J)Z",
+                    &[JValue::Long(generation)],
+                )?
+                .z()?
+            {
+                bail!("Connection cancelled")
+            }
+            Ok(())
+        })
     }
     pub fn protect(&self, fd: i32) -> Result<()> {
-        let mut env = self.vm.attach_current_thread()?;
-        if !env
-            .call_method(&self.object, "protectSocket", "(I)Z", &[JValue::Int(fd)])?
-            .z()?
-        {
-            bail!("Transport socket protection failed")
-        }
-        Ok(())
+        self.with_env(|env| {
+            if !env
+                .call_method(&self.object, "protectSocket", "(I)Z", &[JValue::Int(fd)])?
+                .z()?
+            {
+                bail!("Transport socket protection failed")
+            }
+            Ok(())
+        })
     }
     pub fn resolve(&self, host: &str) -> Result<String> {
-        let mut env = self.vm.attach_current_thread()?;
-        let name = env.new_string(host)?;
-        let value = env
-            .call_method(
-                &self.object,
-                "resolve",
-                "(Ljava/lang/String;)Ljava/lang/String;",
-                &[JValue::Object(&name)],
-            )?
-            .l()?;
-        Ok(env.get_string(&JString::from(value))?.into())
+        self.with_env(|env| {
+            let name = env.new_string(host)?;
+            let value = env
+                .call_method(
+                    &self.object,
+                    "resolve",
+                    "(Ljava/lang/String;)Ljava/lang/String;",
+                    &[JValue::Object(&name)],
+                )?
+                .l()?;
+            Ok(env.get_string(&JString::from(value))?.into())
+        })
     }
     pub fn activate(&self, config: &serde_json::Value, generation: i64) -> Result<()> {
         self.current(generation)?;
-        let mut env = self.vm.attach_current_thread()?;
-        let serialized = Zeroizing::new(serde_json::to_string(config)?);
-        let data = env.new_string(&*serialized)?;
-        if !env
-            .call_method(
-                &self.object,
-                "activate",
-                "(Ljava/lang/String;J)Z",
-                &[JValue::Object(&data), JValue::Long(generation)],
-            )?
-            .z()?
-        {
-            bail!("Android could not establish the tunnel")
-        }
-        Ok(())
+        self.with_env(|env| {
+            let serialized = Zeroizing::new(serde_json::to_string(config)?);
+            let data = env.new_string(&*serialized)?;
+            if !env
+                .call_method(
+                    &self.object,
+                    "activate",
+                    "(Ljava/lang/String;J)Z",
+                    &[JValue::Object(&data), JValue::Long(generation)],
+                )?
+                .z()?
+            {
+                bail!("Android could not establish the tunnel")
+            }
+            Ok(())
+        })
     }
     pub fn deactivate(&self, generation: i64) -> Result<()> {
-        let mut env = self.vm.attach_current_thread()?;
-        env.call_method(
-            &self.object,
-            "deactivate",
-            "(J)V",
-            &[JValue::Long(generation)],
-        )?;
-        Ok(())
+        self.with_env(|env| {
+            env.call_method(
+                &self.object,
+                "deactivate",
+                "(J)V",
+                &[JValue::Long(generation)],
+            )?;
+            Ok(())
+        })
     }
     fn store_error(&self) -> SecretStoreError {
         if let Ok(env) = self.vm.attach_current_thread() {
@@ -351,62 +387,63 @@ impl Platform {
 struct AndroidSecrets(Arc<Platform>);
 impl SecretStore for AndroidSecrets {
     fn get(&self, reference: &str) -> Result<SecretIdentity, SecretStoreError> {
-        let result = (|| -> Result<Option<SecretIdentity>> {
-            let mut env = self.0.vm.attach_current_thread()?;
-            let name = env.new_string(reference)?;
-            let array = env
-                .call_method(
-                    &self.0.object,
-                    "secretGet",
-                    "(Ljava/lang/String;)[B",
-                    &[JValue::Object(&name)],
-                )?
-                .l()?;
-            if array.is_null() {
-                return Ok(None);
-            }
-            let array = JByteArray::from(array);
-            let bytes = Zeroizing::new(env.convert_byte_array(&array)?);
-            env.set_byte_array_region(&array, 0, &vec![0; bytes.len()])?;
-            Ok(Some(serde_json::from_slice(&bytes)?))
-        })()
-        .map_err(|_| self.0.store_error())?;
+        let result = self
+            .0
+            .with_env(|env| -> Result<Option<SecretIdentity>> {
+                let name = env.new_string(reference)?;
+                let array = env
+                    .call_method(
+                        &self.0.object,
+                        "secretGet",
+                        "(Ljava/lang/String;)[B",
+                        &[JValue::Object(&name)],
+                    )?
+                    .l()?;
+                if array.is_null() {
+                    return Ok(None);
+                }
+                let array = JByteArray::from(array);
+                let bytes = Zeroizing::new(env.convert_byte_array(&array)?);
+                env.set_byte_array_region(&array, 0, &vec![0; bytes.len()])?;
+                Ok(Some(serde_json::from_slice(&bytes)?))
+            })
+            .map_err(|_| self.0.store_error())?;
         result.ok_or(SecretStoreError::NotFound)
     }
     fn put(&self, reference: &str, identity: &SecretIdentity) -> Result<(), SecretStoreError> {
-        (|| -> Result<()> {
-            let mut env = self.0.vm.attach_current_thread()?;
-            let name = env.new_string(reference)?;
-            let bytes = Zeroizing::new(serde_json::to_vec(identity)?);
-            let array = env.byte_array_from_slice(&bytes)?;
-            let result = env.call_method(
-                &self.0.object,
-                "secretPut",
-                "(Ljava/lang/String;[B)V",
-                &[JValue::Object(&name), JValue::Object(&array)],
-            );
-            if result.is_err() {
-                let _ = env.exception_clear();
-            }
-            env.set_byte_array_region(&array, 0, &vec![0; bytes.len()])?;
-            result?;
-            Ok(())
-        })()
-        .map_err(|_| self.0.store_error())
+        self.0
+            .with_env(|env| {
+                let name = env.new_string(reference)?;
+                let bytes = Zeroizing::new(serde_json::to_vec(identity)?);
+                let array = env.byte_array_from_slice(&bytes)?;
+                let result = env.call_method(
+                    &self.0.object,
+                    "secretPut",
+                    "(Ljava/lang/String;[B)V",
+                    &[JValue::Object(&name), JValue::Object(&array)],
+                );
+                if result.is_err() {
+                    let _ = env.exception_clear();
+                }
+                env.set_byte_array_region(&array, 0, &vec![0; bytes.len()])?;
+                result?;
+                Ok(())
+            })
+            .map_err(|_| self.0.store_error())
     }
     fn delete(&self, reference: &str) -> Result<(), SecretStoreError> {
-        (|| -> Result<()> {
-            let mut env = self.0.vm.attach_current_thread()?;
-            let name = env.new_string(reference)?;
-            env.call_method(
-                &self.0.object,
-                "secretDelete",
-                "(Ljava/lang/String;)V",
-                &[JValue::Object(&name)],
-            )?;
-            Ok(())
-        })()
-        .map_err(|_| self.0.store_error())
+        self.0
+            .with_env(|env| {
+                let name = env.new_string(reference)?;
+                env.call_method(
+                    &self.0.object,
+                    "secretDelete",
+                    "(Ljava/lang/String;)V",
+                    &[JValue::Object(&name)],
+                )?;
+                Ok(())
+            })
+            .map_err(|_| self.0.store_error())
     }
 }
 

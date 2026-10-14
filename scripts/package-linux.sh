@@ -13,7 +13,10 @@ SIRINVPN_PACKAGE_TMP=$(mktemp -d)
 cleanup_package_tmp() {
   rm -rf -- "$SIRINVPN_PACKAGE_TMP"
 }
-trap cleanup_package_tmp 0 HUP INT TERM
+trap cleanup_package_tmp 0
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 prepare_appimage_runtime() {
   [ "$(uname -m)" = x86_64 ] || { echo "The reviewed AppImage runtime is x86_64 only" >&2; return 1; }

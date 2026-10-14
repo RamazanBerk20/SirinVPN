@@ -343,7 +343,9 @@ pub(super) struct ConnectArguments {
     pub(super) allow_lan: bool,
 }
 
+// Parsed on Windows only to report that `run` is unsupported there.
 #[derive(Args)]
+#[cfg_attr(windows, allow(dead_code))]
 pub(super) struct ApplicationArguments {
     pub(super) server: String,
     pub(super) executable: PathBuf,

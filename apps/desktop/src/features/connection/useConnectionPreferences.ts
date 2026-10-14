@@ -15,6 +15,15 @@ const normalize = (value: ConnectionPreferences): ConnectionPreferences => ({
   },
 });
 
+// The backend omits unset optional fields while the editor writes explicit nulls; compare them as equal.
+const comparable = (value: ConnectionPreferences | null) =>
+  value &&
+  JSON.stringify({
+    ...value,
+    manual_mtu: value.manual_mtu ?? undefined,
+    android_applications: value.android_applications ?? undefined,
+  });
+
 /** Explicit saves keep incomplete routing drafts out of the next connection. */
 export function useConnectionPreferences(serverId: string | undefined) {
   const [saved, setSaved] = useState<ConnectionPreferences | null>(null);
@@ -69,7 +78,7 @@ export function useConnectionPreferences(serverId: string | undefined) {
           : [],
     },
   };
-  const dirty = ready && JSON.stringify(saved) !== JSON.stringify(edited);
+  const dirty = ready && comparable(saved) !== comparable(edited);
   const change = (patch: Partial<ConnectionPreferences>) => {
     setDraft((value) => ({ ...value, ...patch }));
     setNotice("");

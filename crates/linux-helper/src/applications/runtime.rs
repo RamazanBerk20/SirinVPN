@@ -50,6 +50,9 @@ pub(super) fn isolate(
     request: &mut ApplicationLaunchRequest,
     user: &nix::unistd::User,
 ) -> Result<()> {
+    // pkexec keeps the caller's umask. Directories recreated below must be
+    // neither group-writable (0002) nor unreachable by the user (0077).
+    let caller_umask = nix::sys::stat::umask(nix::sys::stat::Mode::from_bits_truncate(0o022));
     // Always create our own mount namespace even if invoked by another root
     // launcher. Never rely on the caller's mount namespace already being private.
     nix::sched::unshare(nix::sched::CloneFlags::CLONE_NEWNS)?;
@@ -137,5 +140,7 @@ pub(super) fn isolate(
     request
         .environment
         .insert("XDG_RUNTIME_DIR".into(), path_string(&runtime)?.to_owned());
+    // The launched application keeps the caller's own umask.
+    nix::sys::stat::umask(caller_umask);
     Ok(())
 }

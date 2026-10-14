@@ -288,7 +288,11 @@ pub(super) fn port_forward_nft_batch(
         .into_iter()
         .filter(|_| !authorization.endpoint_transition_source)
     {
-        validate_port_forward(configuration, operational, &forward)?;
+        // A forward that later collides with a reserved port stays inactive instead of failing
+        // every commit and recovery, which would leave it impossible to remove.
+        if validate_port_forward(configuration, operational, &forward).is_err() {
+            continue;
+        }
         let device = authorization
             .devices
             .iter()

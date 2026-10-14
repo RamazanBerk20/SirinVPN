@@ -6,16 +6,16 @@ pub(super) fn plan_artifact_transition(
     kind: ArtifactKind,
     allow_rollback: bool,
 ) -> Result<crate::UpdatePlan, ReleaseError> {
-    if !matches!(
-        kind,
-        ArtifactKind::ServerElf | ArtifactKind::WindowsInstaller | ArtifactKind::AndroidApk
-    ) {
-        return plan_transition(current, candidate, allow_rollback);
-    }
     // Desktop/mobile formats do not exist on a VPS. Their migrations must not
     // prevent an otherwise compatible server update. The signed records remain
     // intact; only the already-authenticated compatibility plan is projected.
     let relevant = |state: &crate::StateCompatibility| {
+        if matches!(kind, ArtifactKind::LinuxDeb | ArtifactKind::LinuxAppImage) {
+            // Linux desktop also carries the installer and bundled server, so
+            // only the other client platforms' private state is excluded.
+            let name = &state.state;
+            return !name.starts_with("android_") && !name.starts_with("windows_");
+        }
         if kind == ArtifactKind::AndroidApk {
             let name = &state.state;
             return name.starts_with("android_")

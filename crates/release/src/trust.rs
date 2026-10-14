@@ -3,12 +3,14 @@ use crate::{
     canonical_public_key_pem, parse_signature, public_key_id, verify_manifest,
     verify_release_artifact, verify_release_directory,
 };
+mod floor;
 mod verification;
 use base64::{Engine as _, engine::general_purpose::STANDARD};
 use ed25519_dalek::{
     Signature, Signer, SigningKey, VerifyingKey,
     pkcs8::{DecodePrivateKey, DecodePublicKey},
 };
+pub use floor::LocalReleaseFloor;
 use fs2::FileExt;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};

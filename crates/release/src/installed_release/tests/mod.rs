@@ -164,5 +164,6 @@ fn apply_trust(
 }
 
 mod absent_state_plans_without_writing_and_first_commit_is_private;
+mod linux_desktop;
 mod same_signed_release_can_rebind_to_another_declared_artifact;
 mod windows;
