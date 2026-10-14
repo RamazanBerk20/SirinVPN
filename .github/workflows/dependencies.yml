@@ -1,7 +1,38 @@
 name: Dependency advisories and licenses
+# Commits that change dependency inputs must scan clean. New advisories against
+# unchanged dependencies are the weekly scan's job, so they do not fail every
+# unrelated commit until the lockfile is updated.
 on:
   pull_request:
+    paths:
+      - '**/Cargo.toml'
+      - 'Cargo.lock'
+      - 'rust-toolchain.toml'
+      - 'vendor/**'
+      - 'apps/desktop/package.json'
+      - 'apps/desktop/pnpm-lock.yaml'
+      - 'apps/desktop/android/gradle.lockfile'
+      - 'apps/desktop/android/wireguard/**'
+      - 'osv-scanner.toml'
+      - 'scripts/check-dependencies.py'
+      - 'scripts/check-vendored.py'
+      - 'scripts/record-evidence.py'
+      - '.github/workflows/dependencies.yml'
   push:
+    paths:
+      - '**/Cargo.toml'
+      - 'Cargo.lock'
+      - 'rust-toolchain.toml'
+      - 'vendor/**'
+      - 'apps/desktop/package.json'
+      - 'apps/desktop/pnpm-lock.yaml'
+      - 'apps/desktop/android/gradle.lockfile'
+      - 'apps/desktop/android/wireguard/**'
+      - 'osv-scanner.toml'
+      - 'scripts/check-dependencies.py'
+      - 'scripts/check-vendored.py'
+      - 'scripts/record-evidence.py'
+      - '.github/workflows/dependencies.yml'
   workflow_dispatch:
   schedule:
     - cron: '23 5 * * 1'
