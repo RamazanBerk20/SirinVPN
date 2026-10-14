@@ -238,3 +238,39 @@ it("shows suspension over stale activity and prevents enrollment and ownership t
     screen.queryByRole("button", { name: t("devices.row.transferTo", { name: "Family" }) }),
   ).toBeNull();
 });
+
+it("restores expanded details in the same update that dismisses the menu", async () => {
+  setup();
+  const summary = screen.getByRole("button", { name: /^My desktop/ });
+  fireEvent.click(summary);
+  menu("My desktop");
+  const details = document.getElementById(summary.getAttribute("aria-controls")!)!;
+  expect(details.hasAttribute("inert")).toBe(true);
+  // Dispatch outside act() so React schedules the dismissal as in a browser,
+  // and record the details' state when the menu first leaves the DOM.
+  const env = globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean };
+  const actEnvironment = env.IS_REACT_ACT_ENVIRONMENT;
+  env.IS_REACT_ACT_ENVIRONMENT = false;
+  let inertWhenClosed: boolean;
+  try {
+    inertWhenClosed = await new Promise<boolean>((resolve) => {
+      const observer = new MutationObserver(() => {
+        if (document.querySelector('[role="menu"]')) return;
+        observer.disconnect();
+        resolve(details.hasAttribute("inert"));
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+      document
+        .querySelector(".action-menu-backdrop")!
+        .dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, cancelable: true }));
+    });
+    await new Promise((resolve) => setTimeout(resolve));
+  } finally {
+    env.IS_REACT_ACT_ENVIRONMENT = actEnvironment;
+  }
+  expect(inertWhenClosed).toBe(false);
+  expect(details.hasAttribute("inert")).toBe(false);
+  expect(document.activeElement).toBe(
+    screen.getByRole("button", { name: "Actions for My desktop" }),
+  );
+});

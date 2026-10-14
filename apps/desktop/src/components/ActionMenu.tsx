@@ -39,7 +39,9 @@ export function ActionMenu({
   const root = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
   const id = useId();
-  useEffect(() => {
+  // A layout effect applies the owner's update in the same commit, so content it
+  // made inert never outlives the menu.
+  useLayoutEffect(() => {
     onOpenChange?.(open);
     return () => onOpenChange?.(false);
   }, [open, onOpenChange]);
