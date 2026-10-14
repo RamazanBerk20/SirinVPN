@@ -24,12 +24,12 @@ published binary releases or AUR packages yet.
 
 ## A look at the app
 
-<img src="docs/images/desktop.png" alt="SirinVPN desktop: connection controls, device traffic, and VPS metrics" width="960" />
+<img src="docs/images/desktop.png" alt="SirinVPN desktop Home: connect button, connection method and kill switch status, this device's traffic, and server stats" width="960" />
 
 <details>
 <summary>Android interface</summary>
 <p>
-  <img src="docs/images/android.png" alt="SirinVPN Android: connection button, selected server, live traffic, and bottom navigation" width="320" />
+  <img src="docs/images/android.png" alt="SirinVPN Android Home: connect button, server picker, live traffic, connection settings, and bottom navigation" width="320" />
 </p>
 </details>
 
@@ -38,9 +38,11 @@ Screenshots use fictional profiles and example data.
 ## What it does
 
 - **Set up your own server.** Provision a Debian 13 VPS over SSH, verify its host
-  fingerprint, and manage SirinVPN-owned services and firewall rules.
-- **Choose a connection transport.** Direct WireGuard UDP, obfuscated UDP, TCP
-  fallback, and pinned TLS/HTTPS transport, with configurable endpoints and
+  fingerprint, review its network before installation, and manage SirinVPN-owned
+  services and firewall rules.
+- **Choose a connection method.** Direct UDP (standard WireGuard), Obfuscated UDP,
+  TLS fallback with a pinned certificate, and TCP fallback. Pick one yourself or let
+  SirinVPN choose for your network conditions, with configurable endpoints and
   bounded automatic fallback.
 - **Manage people and devices.** Owner, Admin, and Member roles; signed invitations
   and QR enrollment; device revocation, access limits, and delegated permissions.
@@ -50,11 +52,11 @@ Screenshots use fictional profiles and example data.
 - **Keep the VPN independent of the interface.** Native services own the tunnel.
   Android includes notification controls, a Quick Settings tile, and integration
   with Android's Always-on VPN and lockdown settings.
-- **See current measurements.** Download/upload rates, tunnel duration, VPS
+- **See current measurements.** Download and upload rates, connection time, server
   resource use, private-tunnel quality, and MTU measurements without an activity
   timeline or stored traffic history.
 - **Recover and maintain access.** Encrypted device and VPS backups, recovery
-  packages, key rotation, server repair, and signed endpoint migration.
+  keys, key rotation, server repair, and signed endpoint migration.
 
 Availability and verification vary by platform. The
 [desktop feature map](docs/overhaul-feature-map.md) and
@@ -85,22 +87,36 @@ background status checks and Wi-Fi automation never display an unlock prompt.
 ## Getting started
 
 You need a VPS you administer, running Debian 13, with privileged SSH access and
-reachable ports for the transports you choose. SirinVPN does not provide servers
-or a VPN subscription.
+reachable ports for the connection methods you choose. SirinVPN does not provide
+servers or a VPN subscription.
 
 1. **Build the client** for your platform using the instructions below.
-2. **Set up your VPS** from the app. Verify the SSH fingerprint through your VPS
-   provider's console or another trusted channel before accepting it.
-3. **Connect**, accepting the operating system's VPN or administrator prompt when
-   needed. Run desktop clients as your ordinary user; the native service handles
-   privileged networking.
-4. **Add other devices** by creating an invitation on an authorized device, then
-   scanning its QR code or entering the invitation in another client.
+2. **Set up your VPS.** On the first screen choose **My VPS** (**Set up my VPS** on
+   Android), enter the server address and an SSH login, and select **Verify server**.
+   Compare the fingerprint with your hosting provider's web console or another
+   trusted channel before you select **Fingerprint matches**. After the network
+   check, select **Install SirinVPN**.
+3. **Connect** from Home, accepting the operating system's VPN or administrator
+   prompt when needed. Run desktop clients as your ordinary user; the native
+   service handles privileged networking.
+4. **Add other devices.** On a device that is already set up, open **Devices** and
+   select **Invite member**, or **Add device** in a member's menu. On the new
+   device, choose **Invitation** (**Use an invitation** on Android) and scan the QR
+   code or enter the code.
 
-On Android, notification permission enables app notifications. Trusting Wi-Fi
-requires Android's location permission and Location setting so the app can read
-the network identity; it does not request GPS coordinates. Marking a network
-trusted is a separate action.
+### Finding your way around
+
+| Page | What it holds |
+| --- | --- |
+| **Home** | Connect and disconnect, the active server, and this device's traffic and connection time. The desktop layout also shows live server stats; on Android, **Connection** opens the method, kill switch, and reconnect options, and **Connection details** shows status, addresses, and server stats. |
+| **Servers** | Your saved servers: search, switch, rename, mark favorites, add a server, and open maintenance. |
+| **Devices** | Members and devices on the selected server: invitations, roles, access policies, port forwarding, and revocation. |
+| **Settings** | **General** (Wi-Fi auto-connect, startup, notifications, app updates, credential storage), **Connection** (method, kill switch, reconnect), **Network** (app routing, DNS, ports), **Keys & recovery** (keys, backups, recovery keys), and **VPS maintenance** (health, diagnostics, updates; **Diagnostics** on Android). |
+
+On Android, notification permission enables app notifications. Wi-Fi auto-connect
+needs Android's location permission and Location setting so the app can identify
+the network; it does not request GPS coordinates. Trusting a network is a separate
+action (**Trust this Wi-Fi**).
 
 ## Build from source
 

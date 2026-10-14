@@ -346,13 +346,29 @@
 }
 
 .ssh-login-fields {
+  position: relative;
   display: grid;
   gap: 16px;
   min-width: 0;
 }
 .ssh-login-fields .field-grid { margin: 0; }
-.ssh-login-status { min-height: 1.5em; margin: 0; }
-.ssh-login-status:empty { display: none; }
+.ssh-login-fields > .ssh-login-status {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 1;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto;
+  text-align: center;
+  pointer-events: none;
+}
+.ssh-login-fields > .ssh-login-status:not(:empty) {
+  padding: 6px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--surface-2);
+}
+.ssh-login-status:not(:empty) ~ .ssh-login-content { opacity: 0.45; }
 .ssh-login-content {
   display: grid;
   gap: 16px;
