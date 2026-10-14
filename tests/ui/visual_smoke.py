@@ -49,7 +49,10 @@ with sync_playwright() as pw:
             assert abs(settings['y'] - updates['y']) < 1, 'Onboarding buttons must share a baseline'
             assert settings['x'] + settings['width'] + 8 <= updates['x'], 'Onboarding buttons overlap'
             page.get_by_label('IP address or hostname', exact=True).fill('example.invalid')
+            # Password is the default method; the key path field appears only for private-key logins.
+            expect(page.get_by_label('Private key path', exact=True)).to_have_count(0)
             page.get_by_role('button', name='Private key', exact=True).click()
+            expect(page.get_by_role('button', name='Private key', exact=True)).to_have_attribute('aria-pressed', 'true')
             page.get_by_label('Private key path', exact=True).fill('/tmp/sirin-synthetic-key')
             page.get_by_role('button', name='Verify server', exact=False).click()
             page.get_by_role('button', name='Fingerprint matches', exact=True).click()

@@ -52,29 +52,36 @@ with sync_playwright() as pw:
     expect(overview.locator(".resource-grid")).to_have_count(0)
     assert not errors, errors
     page.close()
-    for status in ["unknown", "trusted", "changed"]:
-        page = browser.new_page(viewport={"width": 1220, "height": 780}, reduced_motion="reduce")
-        page.on("pageerror", lambda error: errors.append(str(error)))
-        page.add_init_script('window.__sirinPlatform="desktop";window.__sirinScenario="disconnected";' + FIXTURE + f'window.__sirinSshTrust={json.dumps(status)};')
-        page.goto("http://127.0.0.1:1420", wait_until="networkidle")
-        page.get_by_role("navigation", name="Main navigation").get_by_role("button", name="Settings", exact=False).click()
-        page.get_by_role("tab", name="VPS maintenance", exact=True).click()
-        page.get_by_role("button", name="Update VPS software", exact=False).click()
-        page.get_by_role("button", name="Continue", exact=True).click()
-        page.get_by_role("button", name="SSH agent", exact=True).click()
-        # The update dialog signs in, verifies the host key when needed, then reads the release status.
-        page.get_by_role("button", name="Continue", exact=True).click()
-        if status != "trusted":
-            expect(page.get_by_role("heading", name="Server key changed" if status == "changed" else "Verify this server")).to_be_visible()
-            expect(page.get_by_role("button", name="Continue", exact=True)).to_be_disabled()
-            assert page.evaluate("window.__sirinCommands.filter(c=>c==='manage_vps_release').length") == 0
-            page.screenshot(path=str(OUT / f"ssh-{status}.png"))
-            page.get_by_role("checkbox", name="I verified", exact=False).check()
+    # Both SSH maintenance workflows share the host-key gate: (menu item, submit, proceed, completion heading, command).
+    workflows = [
+        ("Update VPS software", "Continue", "Continue", "Set up updates for My private VPS", "manage_vps_release"),
+        ("Repair VPS configuration", "Repair server", "Repair server", "Repair complete", "repair_server"),
+    ]
+    for item, submit, proceed, completed, command in workflows:
+        for status in ["unknown", "trusted", "changed"]:
+            page = browser.new_page(viewport={"width": 1220, "height": 780}, reduced_motion="reduce")
+            page.on("pageerror", lambda error: errors.append(str(error)))
+            page.add_init_script('window.__sirinPlatform="desktop";window.__sirinScenario="disconnected";' + FIXTURE + f'window.__sirinSshTrust={json.dumps(status)};')
+            page.goto("http://127.0.0.1:1420", wait_until="networkidle")
+            page.get_by_role("navigation", name="Main navigation").get_by_role("button", name="Settings", exact=False).click()
+            page.get_by_role("tab", name="VPS maintenance", exact=True).click()
+            page.get_by_role("button", name=item, exact=False).click()
             page.get_by_role("button", name="Continue", exact=True).click()
-        expect(page.get_by_role("heading", name="Set up updates for My private VPS", exact=True)).to_be_visible()
-        assert page.evaluate("window.__sirinCommands.filter(c=>c==='trust_ssh_host').length") == (0 if status == "trusted" else 1)
-        assert page.evaluate("window.__sirinCommandArguments.find(c=>c.command==='manage_vps_release').args.input.ssh.host_key_sha256") == "SHA256:" + "A" * 43
-        page.close()
+            dialog = page.get_by_role("dialog")
+            dialog.get_by_role("button", name="SSH agent", exact=True).click()
+            dialog.get_by_role("button", name=submit, exact=True).click()
+            if status != "trusted":
+                expect(dialog.get_by_role("heading", name="Server key changed" if status == "changed" else "Verify this server")).to_be_visible()
+                expect(dialog.get_by_role("button", name=proceed, exact=True)).to_be_disabled()
+                assert page.evaluate(f"window.__sirinCommands.filter(c=>c==='{command}').length") == 0
+                page.screenshot(path=str(OUT / f"{command}-ssh-{status}.png"))
+                dialog.get_by_role("checkbox", name="I verified", exact=False).check()
+                dialog.get_by_role("button", name=proceed, exact=True).click()
+            expect(dialog.get_by_role("heading", name=completed, exact=True)).to_be_visible()
+            assert page.evaluate("window.__sirinCommands.filter(c=>c==='trust_ssh_host').length") == (0 if status == "trusted" else 1)
+            sent = page.evaluate(f"window.__sirinCommandArguments.find(c=>c.command==='{command}').args.input")
+            assert (sent.get("ssh") or sent)["host_key_sha256"] == "SHA256:" + "A" * 43, sent
+            page.close()
     assert not errors, errors
     browser.close()
 
@@ -82,6 +89,6 @@ checks = ["Pushed CPU reading updates over a single subscription without snapsho
     "Stable Live indicator and no manual refresh button", "Stream interruption and recovery preserve local VPN",
     "Legacy polling is labelled honestly", "Disconnect cancels the subscription and clears metrics",
     "Tunnel duration changes every second between local samples",
-    "Trusted VPS updates skip fingerprint review; unknown and changed keys require explicit verification"]
+    "Trusted VPS update and repair skip fingerprint review; unknown and changed keys require explicit verification"]
 (OUT / "checks.json").write_text(json.dumps(checks, indent=2) + "\n")
 print(json.dumps(checks, indent=2))

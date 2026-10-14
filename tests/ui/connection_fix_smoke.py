@@ -59,9 +59,12 @@ with sync_playwright() as pw:
         page.get_by_role("button", name="Continue", exact=True).click()
         dialog = page.get_by_role("dialog")
         dialog.get_by_role("button", name="SSH agent", exact=True).click()
+        # A trusted host key skips fingerprint review and reads the release state directly.
         dialog.get_by_role("button", name="Continue", exact=True).click()
+        expect(dialog.get_by_role("heading", name="Set up updates for My private VPS")).to_be_visible()
         source = dialog.get_by_label("Release source", exact=True)
         expect(source).to_be_visible()
+        expect(source).to_have_attribute("placeholder", "HTTPS folder URL")
         expect(dialog.get_by_role("combobox", name="Release channel", exact=True)).to_be_visible()
         assert source.bounding_box()["height"] >= 40
         capture(page, f"{width}-vps-update-fields")
@@ -76,7 +79,9 @@ with sync_playwright() as pw:
         capture(page, f"{width}-ssh-lookup")
         expect(username).to_be_enabled()
         after = username.bounding_box()
-        assert all(abs(before[key] - after[key]) < 1 for key in ["x", "y", "width", "height"]), (before, after)
+        # The lookup status line must keep its space; collapsing it moves every SSH field.
+        assert all(abs(before[key] - after[key]) < 1 for key in ["x", "y", "width", "height"]), \
+            ("SSH fields moved when the saved-login lookup finished", before, after)
         page.get_by_role("button", name="SSH agent", exact=True).click()
         page.get_by_role("button", name="Verify server", exact=False).click()
         confirm = page.get_by_role("button", name="Fingerprint matches", exact=True)
@@ -84,7 +89,7 @@ with sync_playwright() as pw:
         expect(page.get_by_role("button", name="Install SirinVPN", exact=True)).to_have_count(0)
         capture(page, f"{width}-fingerprint-confirmation")
         confirm.click()
-        expect(page.get_by_role("heading", name="Server network check", exact=True)).to_be_visible()
+        expect(page.get_by_role("region", name="Server network check").get_by_role("heading", name="Server network check", exact=True)).to_be_visible()
         expect(page.get_by_role("button", name="Install SirinVPN", exact=True)).to_be_enabled()
         assert not page.evaluate("window.__sirinCommands.includes('provision_server')")
         capture(page, f"{width}-network-before-install")

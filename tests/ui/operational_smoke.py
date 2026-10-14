@@ -1,11 +1,17 @@
-"""Fault-state, collection, enlarged-text and long-content UI checks with synthetic data."""
+"""Fault-state, collection, enlarged-text and long-content UI checks with synthetic data.
+
+Start Vite on 127.0.0.1:1420. Requires Python Playwright + Chromium. Pass --axe with a
+local axe-core bundle (axe.min.js from the axe-core npm package, e.g.
+node_modules/axe-core/axe.min.js) to also check every captured screen against WCAG 2.2 AA.
+Without it the functional checks still run and the report records the scan as skipped.
+"""
 import argparse
 import json
 from pathlib import Path
 from playwright.sync_api import expect, sync_playwright
 ROOT = Path(__file__).resolve().parents[2]
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument("--axe", type=Path, required=True, help="Local axe-core JavaScript bundle")
+parser.add_argument("--axe", type=Path, help="Local axe-core JavaScript bundle (axe.min.js); omit to skip the WCAG scan")
 parser.add_argument("--output", type=Path, default=ROOT / ".cache/operational-ux")
 args = parser.parse_args()
 OUTPUT = args.output
@@ -19,6 +25,8 @@ def capture(page, name):
     # A full-page capture resizes the viewport and correctly dismisses open menus.
     page.screenshot(path=str(OUTPUT / "screenshots" / f"operational-{name}.png"), full_page=page.get_by_role("menu").count() == 0)
     assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), name
+    if not AXE:
+        return
     page.add_script_tag(path=str(AXE))
     results = page.evaluate("async () => await axe.run(document, { runOnly: { type: 'tag', values: ['wcag2a','wcag2aa','wcag21aa','wcag22aa'] } })")
     if results["violations"]:
@@ -46,16 +54,24 @@ with sync_playwright() as pw:
     checks.append("Network settings distinguish unavailable DNS measurements from a disconnected tunnel")
     nav.get_by_role("button", name="Home", exact=False).click()
     page.evaluate("window.__sirinLocalFails = true")
-    expect(page.get_by_role("button", name="Refresh status", exact=True)).to_be_visible()
+    refresh = page.get_by_role("button", name="Refresh status", exact=True)
+    expect(refresh).to_be_visible()
     expect(page.locator(".connection-facts")).to_contain_text("Unknown")
     expect(page.get_by_role("button", name="Connect", exact=True)).to_have_count(0)
     capture(page, "local-unknown")
+    # A manual refresh while the helper is unreachable reads again and stays Unknown.
+    reads = page.evaluate("window.__sirinCommands.filter(c => c === 'local_status').length")
+    refresh.click()
+    page.wait_for_function("n => window.__sirinCommands.filter(c => c === 'local_status').length > n", arg=reads)
+    expect(refresh).to_be_visible()
+    expect(page.get_by_role("button", name="Connect", exact=True)).to_have_count(0)
     checks.append("Unknown local state does not become disconnected or protection Off")
-    # A helper that reports the kill switch as configured but no enforcement state; current helpers report it.
+    # Recovery arrives over the 1-second local status stream. This helper reports the kill
+    # switch as enabled but no enforcement state, so the app must not claim it is armed.
     page.evaluate("window.__sirinLocalFails = false; window.__sirinRemoteFails = false; window.__sirinLocalOverride = {state:'degraded',kill_switch_enabled:true,auto_reconnect_enabled:true,kill_switch_state:undefined}")
-    page.get_by_role("button", name="Refresh status").click()
     expect(page.get_by_role("button", name="Disconnect and turn off kill switch block", exact=True)).to_be_visible()
-    expect(page.locator(".connection-facts")).to_contain_text("not verified")
+    expect(page.locator(".connection-state")).to_have_text("Reconnecting")
+    expect(page.locator(".connection-facts")).to_contain_text("On · not verified")
     capture(page, "reconnecting")
     checks.append("Reconnecting reports configured protection without claiming firewall verification")
     page.evaluate("window.__sirinLocalOverride = {}")
@@ -127,6 +143,9 @@ with sync_playwright() as pw:
     checks.append("The last device's menu opens above its row and stays clear of bottom navigation")
     page.close()
     browser.close()
-(OUTPUT / "operational-checks.json").write_text(json.dumps({"checks": checks, "accessibility": violations}, indent=2) + "\n")
+accessibility = violations if AXE else "skipped: no --axe bundle"
+(OUTPUT / "operational-checks.json").write_text(json.dumps({"checks": checks, "accessibility": accessibility}, indent=2) + "\n")
 assert not violations, violations
 print(json.dumps(checks, indent=2))
+if not AXE:
+    print("WCAG scan skipped: pass --axe path/to/axe.min.js to include it.")

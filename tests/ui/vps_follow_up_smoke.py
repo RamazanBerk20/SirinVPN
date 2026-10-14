@@ -49,7 +49,7 @@ with sync_playwright() as pw:
  expect(p.get_by_text('Saved SSH login',exact=True)).to_be_visible()
  expect(p.get_by_label('SSH password',exact=True)).to_have_count(0)
  p.screenshot(path=str(OUT/'saved-ssh-login.png'))
- p.get_by_role('button',name='Continue',exact=True).click()
+ p.get_by_role('dialog').get_by_role('button',name='Continue',exact=True).click()
  expect(p.get_by_text('Updates aren’t set up for this server yet.',exact=True)).to_be_visible()
  payload=p.evaluate("window.__sirinCommandArguments.find(c=>c.command==='manage_vps_release').args.input.ssh")
  assert payload['authentication']=='saved' and payload['ssh_port']==2222 and payload['password'] is None,payload
