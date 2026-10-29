@@ -283,4 +283,5 @@ if vm_ssh sudo nft list table ip6 sirinvpn_nat6 >/dev/null 2>&1; then
   exit 1
 fi
 
-echo "Disposable Debian 13 VM installation, authenticated UDP/TCP listeners, IPv4-only fallback, identity-preserving repair, and rollback checks passed."
+GUEST_OS=$(vm_ssh grep '^PRETTY_NAME=' /etc/os-release | cut -d= -f2 | tr -d '"')
+echo "Disposable $GUEST_OS VM installation, authenticated UDP/TCP listeners, IPv4-only fallback, identity-preserving repair, and rollback checks passed."

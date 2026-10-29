@@ -194,9 +194,9 @@ The observers have accept policy and retain only aggregate in-memory counters; n
 
 The 2026-09-04 P2S run passed with zero unexpected counters. Direct observed 93 client/49 server carrier packets, Obfuscated UDP 103/61, pinned TLS 228/147, and raw TCP 187/162. Each phase independently observed 22 private-management packets and two private-DNS packets, while the complete run observed configured encrypted upstream traffic. Exact cleanup passed. The same repository state passed 206 Rust tests, 40 frontend tests, warning-free formatting and Clippy, the production frontend build, and the static privacy gate. This proves the current Linux manual-transport and DNS-over-TLS ownership map together with the static privacy scan; Android, IPv6, DNS-over-HTTPS, recursive DNS, provisioning, repair, backup/restore, and future signed-update traffic require their own dynamic audit lanes.
 
-## Disposable Debian 13 VM
+## Disposable Debian 13 or Ubuntu 24.04 VM
 
-`tests/vm/debian13.sh` provisions a disposable cloud-image VM, installs SirinVPN, and verifies service health and reinstall rollback. It requires QEMU, either `cloud-localds` or `xorriso`, `ssh`, `ssh-keygen`, `ssh-agent`, either `jq` or Python 3, and a local Debian 13 generic cloud qcow2 image.
+`tests/vm/debian13.sh` provisions a disposable cloud-image VM, installs SirinVPN, and verifies service health and reinstall rollback. It requires QEMU, either `cloud-localds` or `xorriso`, `ssh`, `ssh-keygen`, `ssh-agent`, either `jq` or Python 3, and a local Debian 13 generic cloud qcow2 image or Ubuntu 24.04 server cloud image (both are passed through `SIRINVPN_DEBIAN13_IMAGE`). The final line names the guest OS that passed.
 
 ```sh
 SIRINVPN_DEBIAN13_IMAGE=/absolute/path/to/debian-13-genericcloud-amd64.qcow2 \
