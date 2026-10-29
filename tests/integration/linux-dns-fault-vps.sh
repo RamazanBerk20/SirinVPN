@@ -262,7 +262,7 @@ assert_local_baseline() {
 }
 
 # Called indirectly by the exit/signal cleanup trap.
-# shellcheck disable=SC2317
+# shellcheck disable=SC2317,SC2329
 cleanup() {
   result=$?
   if [ "$CLEANUP_RUNNING" -eq 1 ]; then
