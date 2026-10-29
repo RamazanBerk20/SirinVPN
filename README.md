@@ -37,7 +37,7 @@ Screenshots use fictional profiles and example data.
 
 ## What it does
 
-- **Set up your own server.** Provision a Debian 13 VPS over SSH, verify its host
+- **Set up your own server.** Provision a Debian 13 or Ubuntu 24.04 LTS VPS over SSH, verify its host
   fingerprint, review its network before installation, and manage SirinVPN-owned
   services and firewall rules.
 - **Choose a connection method.** Direct UDP (standard WireGuard), Obfuscated UDP,
@@ -69,7 +69,7 @@ Availability and verification vary by platform. The
 | **Linux** | Desktop, CLI, privileged helper, systemd and nftables; Debian/AppImage packaging. | Disposable kernel and exact Debian package acceptance passed. Two earlier fallback DNS observations remain unresolved; AppImage runtime and wider desktops need qualification. |
 | **Android 10+** | Separate VPN process, Keystore, QR, notifications and Quick Settings; ARM64/x86_64 APK build paths. | Debug APK, API 29/36 instrumentation and Samsung S25+ lifecycle/lockdown checks passed. Other OEMs, overnight power behavior and physical 16 KB pages remain unqualified. No home-screen widget is implemented. |
 | **Windows** | LocalSystem service, WireGuardNT, WFP and DPAPI; MSVC/NSIS tooling. | Native Windows 11 units, cross-user controls, four transports and crash/reboot checks passed; exact scope is in the remediation ledger. Broader release qualification remains open. Executable routing requires a signed, qualified driver. |
-| **VPS** | Debian 13 x86_64/ARM64 server payloads with private management, DNS and relays. | Cross-architecture builds do not establish ARM64 native runtime acceptance. |
+| **VPS** | Debian 13 and Ubuntu 24.04 LTS x86_64/ARM64 server payloads with private management, DNS and relays. | Cross-architecture builds do not establish ARM64 native runtime acceptance. Ubuntu 24.04 passed static and container checks only; no Ubuntu VPS or VM provisioning run has passed yet ([record](docs/ubuntu-24-04-vps-2026-10-29.md)). |
 
 macOS and iOS clients are not implemented. Android parity, device-specific power
 behavior, and several recovery/update workflows still need broader verification;
@@ -86,7 +86,7 @@ background status checks and Wi-Fi automation never display an unlock prompt.
 
 ## Getting started
 
-You need a VPS you administer, running Debian 13, with privileged SSH access and
+You need a VPS you administer, running Debian 13 or Ubuntu 24.04 LTS, with privileged SSH access and
 reachable ports for the connection methods you choose. SirinVPN does not provide
 servers or a VPN subscription.
 

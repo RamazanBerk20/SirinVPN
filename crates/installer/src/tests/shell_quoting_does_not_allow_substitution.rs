@@ -287,3 +287,38 @@ fn discovery_parser_binds_ipv6_availability_to_a_safe_default_interface() {
     let unsafe_interface = dual_stack.replace("ens6", "ens6;reboot");
     assert!(parse_discovery(&unsafe_interface).is_err());
 }
+
+#[test]
+fn compatibility_gate_accepts_debian_13_and_ubuntu_24_04_on_supported_architectures() {
+    let debian = "os_id=debian\nos_version=13\narchitecture=x86_64\ndefault_interface=eth0\nipv6_default_interface=\nssh_server_port=22\nipv4_available=1\nipv6_available=0\nnftables_available=1\nwireguard_available=1\nunbound_installed=0\nsirinvpn_installed=0\n";
+    // `. /etc/os-release` unquotes Ubuntu's VERSION_ID="24.04" for every 24.04.x point release.
+    let ubuntu = debian.replace(
+        "os_id=debian\nos_version=13",
+        "os_id=ubuntu\nos_version=24.04",
+    );
+    for host in [debian, ubuntu.as_str()] {
+        for architecture in ["x86_64", "aarch64"] {
+            let discovery = parse_discovery(&host.replace("x86_64", architecture)).unwrap();
+            assert!(check_compatibility(&discovery).is_ok());
+        }
+        let riscv = parse_discovery(&host.replace("x86_64", "riscv64")).unwrap();
+        assert!(check_compatibility(&riscv).is_err());
+    }
+    for (os_id, os_version) in [
+        ("debian", "12"),
+        ("debian", "24.04"),
+        ("ubuntu", "13"),
+        ("ubuntu", "22.04"),
+        ("ubuntu", "24.10"),
+        ("ubuntu", "24.04.1"),
+        ("linuxmint", "22"),
+    ] {
+        let mut discovery = parse_discovery(debian).unwrap();
+        discovery.os_id = os_id.into();
+        discovery.os_version = os_version.into();
+        assert!(matches!(
+            check_compatibility(&discovery),
+            Err(InstallerError::Incompatible(message)) if message.contains("Ubuntu 24.04")
+        ));
+    }
+}

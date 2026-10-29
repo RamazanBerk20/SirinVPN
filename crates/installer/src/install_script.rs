@@ -263,6 +263,8 @@ command -v ip >/dev/null 2>&1 || set -- "$@" iproute2
 test -s /etc/ssl/certs/ca-certificates.crt || set -- "$@" ca-certificates
 if [ "$#" -gt 0 ]; then
   export DEBIAN_FRONTEND=noninteractive
+  # Ubuntu's needrestart apt hook would otherwise restart unrelated services mid-install.
+  export NEEDRESTART_SUSPEND=1
   apt-get update -qq
   apt-get install -y -qq --no-install-recommends "$@"
 fi

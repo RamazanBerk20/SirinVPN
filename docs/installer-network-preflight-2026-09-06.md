@@ -20,7 +20,8 @@ listeners, foreign ownership of `sirinvpn0`, and specific overlapping
 WireGuard and transport listeners remain eligible for repair. TCP and UDP
 conflicts are evaluated separately. Wider overlapping private routes, other VPN
 interfaces, active nftables tables, Docker/UFW/firewalld and existing dropping
-firewall policies appear for review. SirinVPN preserves those configurations.
+firewall policies appear for review. UFW is detected from `ufw status`, because
+Ubuntu's `ufw.service` stays active while UFW itself is disabled. SirinVPN preserves those configurations.
 The normal installation transaction and exact service/listener checks still
 handle failures or changes occurring after inspection.
 

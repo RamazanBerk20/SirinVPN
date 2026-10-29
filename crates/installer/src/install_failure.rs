@@ -23,7 +23,7 @@ impl InstallFailure {
             "recovery" => "checking interrupted maintenance",
             "guards" => "checking maintenance locks",
             "staged_server" => "validating the staged server component",
-            "dependencies" => "checking required Debian packages",
+            "dependencies" => "checking required system packages",
             "ports" => "checking service port ownership",
             "snapshot" => "saving the existing VPS configuration",
             "recovery_guard" => "arming configuration recovery",

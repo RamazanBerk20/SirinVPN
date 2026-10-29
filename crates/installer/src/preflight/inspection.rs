@@ -32,9 +32,11 @@ if command -v wg >/dev/null 2>&1; then wg show all listen-port; fi
 printf '\036nftables\n'
 if command -v nft >/dev/null 2>&1; then nft -j list tables; else printf '{{"nftables":[]}}\n'; fi
 printf '\036firewall_services\n'
-for service in docker ufw firewalld; do
+for service in docker firewalld; do
   if systemctl is-active --quiet "$service"; then printf '%s\n' "$service"; fi
 done
+# ufw.service stays active after boot even while UFW itself is disabled.
+if command -v ufw >/dev/null 2>&1 && LC_ALL=C ufw status | grep -qx 'Status: active'; then printf 'ufw\n'; fi
 printf '\036legacy_policies\n'
 for program in iptables ip6tables; do
   if command -v "$program" >/dev/null 2>&1; then
@@ -138,7 +140,14 @@ pub(super) fn check_firewalls_and_links(
         if !["docker", "ufw", "firewalld"].contains(&service) {
             bail!("invalid firewall service response");
         }
-        report.issue(false, "firewall_service", format!("{service} is active. Its configuration is preserved. SirinVPN adds scoped Docker forwarding rules when DOCKER-USER exists; verify any additional firewall policy."));
+        let message = if service == "ufw" {
+            "UFW is active. SirinVPN leaves its rules unchanged. Unless UFW already allows them, it drops the listed UDP/TCP ports, tunnel DNS and management traffic on sirinvpn0, and forwarded tunnel traffic; add matching UFW rules before connecting.".to_owned()
+        } else {
+            format!(
+                "{service} is active. Its configuration is preserved. SirinVPN adds scoped Docker forwarding rules when DOCKER-USER exists; verify any additional firewall policy."
+            )
+        };
+        report.issue(false, "firewall_service", message);
     }
     if sections["legacy_policies"]
         .lines()

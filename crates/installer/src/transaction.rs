@@ -261,7 +261,7 @@ pub(super) fn install_staged(
         .map_err(|error| phase_error("installer upload", error))?;
     events.push(event(
         InstallPhase::InstallingDependencies,
-        "Installing only the required Debian packages.",
+        "Installing only the required system packages.",
     ));
     session.set_timeout(INSTALL_OPERATION_TIMEOUT_MS);
     let installation_command = format!("/bin/sh {}", shell_quote(&remote_script));

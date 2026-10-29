@@ -124,6 +124,6 @@ Release signing, root-policy rotation/revocation, explicit HTTPS retrieval, inst
 
 `scripts/package-linux.sh` builds the five native binaries, including the separate unprivileged release fetcher and offline privileged release coordinator, stages them into the Tauri bundle, runs frontend tests/build, and produces `.deb` and AppImage targets.
 
-Use `scripts/package-linux-container.sh` for release candidates. It builds against Debian Bookworm so the resulting binaries have a conservative glibc baseline for Debian 13. Build separately on `x86_64` and `aarch64`; the installer rejects an artifact whose ELF architecture does not match the VPS.
+Use `scripts/package-linux-container.sh` for release candidates. It builds against Debian Bookworm so the resulting binaries have a conservative glibc baseline for Debian 13 and Ubuntu 24.04. Build separately on `x86_64` and `aarch64`; the installer rejects an artifact whose ELF architecture does not match the VPS.
 
 Engineering packages are unsigned unless real publisher credentials are supplied. The client update paths support authenticated Debian installation and user-owned AppImage replacement/rollback. AppImages still require the documented system helper/service integration. These engineering builds have not qualified a production update chain; see the release documentation and remediation ledger.

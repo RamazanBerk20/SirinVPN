@@ -101,9 +101,9 @@ and [diagnostics design](current-diagnostics-2026-09-07.md).
 
 1. The client connects over SSH and displays the presented host-key fingerprint.
 2. Provisioning continues only with the caller-supplied fingerprint pin.
-3. The server is checked for Debian 13, a supported architecture, the active SSH port, a safe IPv4 default interface, and an IPv4 route. IPv6 is enabled only when discovery also finds a safe IPv6 default interface with a `2000::/3` globally routable address.
+3. The server is checked for Debian 13 or Ubuntu 24.04 LTS, a supported architecture, the active SSH port, a safe IPv4 default interface, and an IPv4 route. IPv6 is enabled only when discovery also finds a safe IPv6 default interface with a `2000::/3` globally routable address.
 4. A locally built server executable and the public owner certificate are uploaded to a mode 0700 temporary directory and SHA-256 verified.
-5. Missing Debian packages only are installed.
+5. Only missing distribution packages are installed. Ubuntu's needrestart apt hook is suspended for that step so it cannot restart unrelated services.
 6. Any prior unfinished SirinVPN rollback is completed. Existing SirinVPN-owned files and relevant service state are copied to a root-owned mode-0700 maintenance backup that survives reboot until recovery or commit cleanup.
 7. A five-minute systemd rollback timer is armed before network changes.
 8. A normal reinstall proves that the requesting device certificate and WireGuard key belong to the sole current Owner in the VPS authorization document. Legacy installations without that document fall back to the original bootstrap Owner certificate. An explicit SSH-authorized replacement instead stops SirinVPN services and removes only the old SirinVPN identity/authorization after the backup and rollback timer exist.
@@ -111,7 +111,7 @@ and [diagnostics design](current-diagnostics-2026-09-07.md).
 10. The still-open SSH session verifies all services, the interface, private management listener, transport-key binding, and both public transport listeners.
 11. On success the guard and backup are removed. On detected failure rollback runs immediately; if the process or connection disappears, the timer runs it.
 
-The installer does not flush, replace, or change the policy of the host's existing firewall tables and does not change the SSH daemon configuration. Docker's later `FORWARD` drop policy would otherwise override an earlier nftables accept, so when `DOCKER-USER` already exists the firewall lifecycle inserts one exact `sirinvpn-forward-*` pair for IPv4 and, when enabled, one `sirinvpn-forward6-*` pair for the SirinVPN ULA. They accept only tunnel egress to the discovered interface and established replies in reverse. Start is idempotent; stop and rollback delete only those exact comment-tagged rules. Package installation is not rolled back, but installed packages are limited to the required Debian components.
+The installer does not flush, replace, or change the policy of the host's existing firewall tables and does not change the SSH daemon configuration. Docker's later `FORWARD` drop policy would otherwise override an earlier nftables accept, so when `DOCKER-USER` already exists the firewall lifecycle inserts one exact `sirinvpn-forward-*` pair for IPv4 and, when enabled, one `sirinvpn-forward6-*` pair for the SirinVPN ULA. They accept only tunnel egress to the discovered interface and established replies in reverse. Start is idempotent; stop and rollback delete only those exact comment-tagged rules. Package installation is not rolled back, but installed packages are limited to the required distribution components. An active UFW is reported by preflight and left unchanged.
 
 ## Removal and uninstall transaction
 

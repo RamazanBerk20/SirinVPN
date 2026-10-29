@@ -397,7 +397,7 @@ impl Provisioner {
         let discovery = discover(&session)?;
         events.push(event(
             InstallPhase::CheckingCompatibility,
-            "Checking Debian, architecture, SSH, and network compatibility.",
+            "Checking operating system, architecture, SSH, and network compatibility.",
         ));
         check_compatibility(&discovery)?;
         ensure_dns_upstream_compatible(&request.dns_upstream, discovery.ipv6_available)?;
@@ -608,7 +608,7 @@ impl Provisioner {
         let discovery = discover(&session)?;
         events.push(event(
             InstallPhase::CheckingCompatibility,
-            "Checking backup, Debian, architecture, network, and replacement boundaries.",
+            "Checking backup, operating system, architecture, network, and replacement boundaries.",
         ));
         check_compatibility(&discovery)?;
         ensure_restore_ipv6_compatible(

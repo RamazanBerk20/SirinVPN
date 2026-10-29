@@ -184,6 +184,8 @@ fn inspection_is_valid_shell_and_contains_only_local_discovery_commands() {
             .success()
     );
     assert!(script.contains("sport = :7443"));
+    assert!(script.contains("for service in docker firewalld;"));
+    assert!(script.contains("LC_ALL=C ufw status | grep -qx 'Status: active'"));
     assert!(!script.contains("curl"));
     assert!(!script.contains("systemctl stop"));
     assert!(!script.contains("ip link add"));
@@ -195,7 +197,9 @@ fn private_management_and_dns_conflicts_do_not_override_existing_resolvers() {
         serde_json::json!([]),
         serde_json::json!([]),
         serde_json::json!([]),
-        "udp UNCONN 0 0 127.0.0.53:53 0.0.0.0:* users:((\"systemd-resolved\",pid=1,fd=4))\n\
+        // systemd-resolved's stub listeners, with and without the `%lo` suffix `ss` prints for device-bound sockets.
+        "udp UNCONN 0 0 127.0.0.53%lo:53 0.0.0.0:* users:((\"systemd-resolved\",pid=1,fd=4))\n\
+         tcp LISTEN 0 4096 127.0.0.54:53 0.0.0.0:* users:((\"systemd-resolved\",pid=1,fd=5))\n\
          tcp LISTEN 0 128 0.0.0.0:8443 0.0.0.0:* users:((\"other-api\",pid=2,fd=4))\n\
          udp UNCONN 0 0 127.0.0.1:53 0.0.0.0:* users:((\"unbound\",pid=3,fd=4))",
         "",
@@ -217,6 +221,46 @@ fn private_management_and_dns_conflicts_do_not_override_existing_resolvers() {
         .collect::<Vec<_>>();
     assert_eq!(blocked.len(), 1);
     assert!(blocked[0].message.contains("management API"));
+}
+
+#[test]
+fn active_ufw_gets_its_own_actionable_note_without_blocking() {
+    let raw = output(
+        serde_json::json!([]),
+        serde_json::json!([]),
+        serde_json::json!([]),
+        "",
+        "",
+    );
+    let analyze_services = |services: &str| {
+        analyze(
+            &discovery(),
+            "8.8.8.8",
+            vec!["8.8.8.8".parse().unwrap()],
+            required_ports(&TransportSetup::default(), None),
+            &raw.replace(
+                "\x1efirewall_services\ndocker\n",
+                &format!("\x1efirewall_services\n{services}\n"),
+            ),
+        )
+        .unwrap()
+    };
+    let report = analyze_services("ufw");
+    assert!(report.can_install());
+    let notes = report
+        .issues
+        .iter()
+        .filter(|issue| issue.code == "firewall_service")
+        .collect::<Vec<_>>();
+    assert_eq!(notes.len(), 1);
+    assert!(notes[0].message.starts_with("UFW is active."));
+    assert!(notes[0].message.contains("sirinvpn0"));
+    assert!(
+        !analyze_services("")
+            .issues
+            .iter()
+            .any(|issue| issue.code == "firewall_service")
+    );
 }
 
 #[test]

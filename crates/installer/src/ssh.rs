@@ -170,9 +170,12 @@ pub(super) fn parse_discovery(output: &str) -> anyhow::Result<ServerDiscovery> {
 }
 
 pub(super) fn check_compatibility(discovery: &ServerDiscovery) -> Result<(), InstallerError> {
-    if discovery.os_id != "debian" || discovery.os_version != "13" {
+    if !matches!(
+        (discovery.os_id.as_str(), discovery.os_version.as_str()),
+        ("debian", "13") | ("ubuntu", "24.04")
+    ) {
         return Err(InstallerError::Incompatible(
-            "P0 supports Debian 13 only".to_owned(),
+            "P0 supports Debian 13 and Ubuntu 24.04 LTS only".to_owned(),
         ));
     }
     if !matches!(discovery.architecture.as_str(), "x86_64" | "aarch64") {
