@@ -14,7 +14,7 @@ in the same app.
 There is no SirinVPN account or hosted control service. The clients communicate
 directly with your VPS, with no built-in analytics or traffic-history database.
 
-**Version 0.1** · `0.1.0` in package manifests · [AGPL-3.0-only](LICENSE)
+**Version 0.1** · `0.1.1` in package manifests · [AGPL-3.0-only](LICENSE)
 
 This is an early development version, published as source code. There are no
 published binary releases or AUR packages yet.
@@ -111,12 +111,10 @@ servers or a VPN subscription.
 | **Home** | Connect and disconnect, the active server, and this device's traffic and connection time. The desktop layout also shows live server stats; on Android, **Connection** opens the method, kill switch, and reconnect options, and **Connection details** shows status, addresses, and server stats. |
 | **Servers** | Your saved servers: search, switch, rename, mark favorites, add a server, and open maintenance. |
 | **Devices** | Members and devices on the selected server: invitations, roles, access policies, port forwarding, and revocation. |
-| **Settings** | **General** (Wi-Fi auto-connect, startup, notifications, app updates, credential storage), **Connection** (method, kill switch, reconnect), **Network** (app routing, DNS, ports), **Keys & recovery** (keys, backups, recovery keys), and **VPS maintenance** (health, diagnostics, updates; **Diagnostics** on Android). |
+| **Settings** | **General** (Wi-Fi auto-connect on desktop, startup, notifications, app updates, credential storage), **Connection** (method, kill switch, reconnect), **Network** (app routing, DNS, ports), **Keys & recovery** (keys, backups, recovery keys), and **VPS maintenance** (health, diagnostics, updates; **Diagnostics** on Android). |
 
-On Android, notification permission enables app notifications. Wi-Fi auto-connect
-needs Android's location permission and Location setting so the app can identify
-the network; it does not request GPS coordinates. Trusting a network is a separate
-action (**Trust this Wi-Fi**).
+On Android, notification permission enables app notifications. The Android app has
+no Wi-Fi auto-connect and does not request location permission.
 
 ## Build from source
 
@@ -155,7 +153,7 @@ development server alone does not install them.
 
 ### Android
 
-Android builds require JDK 17, Android SDK 36, NDK `30.0.16248370`, Go 1.27.1,
+Android builds require JDK 17, Android SDK 36, NDK `30.0.16248370`, Go 1.27.3,
 the Android Rust targets, and both bundled VPS server payloads. Follow the
 [Android build guide](docs/android/build-and-test.md) to prepare those inputs.
 With them in place:
