@@ -74,7 +74,7 @@ Current client transport-quality probes send eight small ICMP echo requests to t
 private VPS tunnel address at a bounded interval. Only the current comparison and
 counter baseline are retained in volatile runtime state. No public speed-test
 service, destination traffic capture, or measurement history is used. Optional
-Wi-Fi automation stores the chosen server and an explicit list of trusted labels
+desktop Wi-Fi automation stores the chosen server and an explicit list of trusted labels
 and salted platform network fingerprints. It does not store raw network IDs,
 SSIDs, BSSIDs, discovered-network history, or network-entry times. The list is user
 configuration; discovery alone does not add entries.
@@ -116,9 +116,8 @@ AppImage updates use the same explicit source and root-authorized public release
 On Android, credentials and sensitive operation checkpoints are encrypted with
 Android Keystore in app-private storage excluded from automatic backup and device
 transfer. The app stores current configuration and unfinished operations, not
-traffic samples or connection history. Location permission is used to identify
-Wi-Fi for the explicit trusted-network setting, not to request GPS coordinates
-or record visited networks. See [Android storage and platform
+traffic samples or connection history. The Android app has no Wi-Fi automation
+and requests no location permission. See [Android storage and platform
 boundaries](docs/android/security-and-platform.md).
 
 On Windows, user identities and remembered credentials use user-scoped DPAPI and private ACLs. The LocalSystem service stores one machine-scoped DPAPI session under its protected ProgramData directory, containing only current intent and exact owned networking records. Current network fingerprints are salted; no SSID inventory or network-visit history is retained. Manual app updates retain authenticated public candidate/receipt/transaction data in a protected directory. The chosen HTTPS source can observe ordinary request metadata; no automatic desktop check or default source is added. Windows application routing retains up to 24 current executable paths and their native WFP path identities with the authenticated current account in that encrypted session. It retains no launch arguments, process IDs, launch times, connection destinations or selection history. Selections stay protected across recovery and server switches; explicit Disconnect clears them. The kernel driver exposes no user device interface and keeps no packet payloads or history. See [Windows implementation](docs/windows-integration-2026-09-07.md).

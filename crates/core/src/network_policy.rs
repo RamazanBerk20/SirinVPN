@@ -52,13 +52,6 @@ impl fmt::Debug for NetworkContext {
 }
 
 impl NetworkContext {
-    #[cfg(target_os = "android")]
-    pub fn android(identifier: String, wifi: bool, trustable: bool) -> Option<Self> {
-        let mut context = Self::from_stable_identifier(format!("android-wifi:v1:{identifier}"))?;
-        context.wifi = wifi;
-        context.trustable = wifi && trustable;
-        Some(context)
-    }
     #[cfg(windows)]
     pub fn discover() -> Option<Self> {
         let current = sirinvpn_platform::windows::network_context::discover()?;

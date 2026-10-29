@@ -95,7 +95,6 @@
     "title": "Wi-Fi auto-connect",
     "infoLabel": "About Wi-Fi auto-connect",
     "infoDesktop": "Trusted Wi-Fi is an exception to auto-connect, not a safety rating. Wi-Fi names are only displayed, never saved or sent. Auto-connect runs while the app is in the tray and stops when you quit.",
-    "infoAndroid": "Trusted Wi-Fi is an exception to auto-connect, not a safety rating. Wi-Fi names are only displayed, never saved or sent. While it’s on, a notification lets you pause or stop it.",
     "toggle": {
       "label": "Auto-connect on Wi-Fi",
       "summary": "Uses the server below, except on trusted Wi-Fi"
@@ -122,14 +121,8 @@
       "needsAuthorization": "Connect once from Home to allow auto-connect."
     },
     "access": {
-      "permission": "Android needs precise location to identify this Wi-Fi. SirinVPN never collects your location.",
-      "locationOff": "Turn on Location so Android can identify this Wi-Fi.",
       "unidentified": "This Wi-Fi can’t be identified reliably, so it can’t be trusted.",
-      "changed": "The network changed. Select Refresh network before trusting it.",
-      "denied": "Wi-Fi access wasn’t granted. Open App permissions and allow precise location.",
-      "allow": "Allow Wi-Fi access",
-      "locationSettings": "Open Location settings",
-      "appPermissions": "App permissions"
+      "changed": "The network changed. Select Refresh network before trusting it."
     },
     "trust": {
       "label": "Label (optional)",
@@ -146,10 +139,6 @@
       "removeLabel": "Remove trust for {{name}}"
     },
     "refresh": "Refresh network",
-    "background": {
-      "summary": "Set Location to Allow all the time so trusted Wi-Fi works in the background.",
-      "action": "Background location"
-    },
     "loadFailed": "Couldn’t load Wi-Fi settings. Try again.",
     "refreshFailed": "Couldn’t refresh the network status. Select Refresh network to try again.",
     "saveFailed": "Couldn’t change the Wi-Fi setting. Try again."

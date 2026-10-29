@@ -29,8 +29,6 @@
     <string name="notification_status_connected_traffic">Connected · ↓ %1$s · ↑ %2$s</string>
     <string name="notification_status_waiting_for_network">Waiting for network</string>
     <string name="notification_status_failed">Couldn’t connect</string>
-    <string name="notification_status_auto_connect_paused">Auto-connect paused on this network</string>
-    <string name="notification_status_auto_connect_on">Disconnected · Wi-Fi auto-connect is on</string>
     <!-- Transfer rates. %1$s is a formatted number. -->
     <string name="notification_rate_bytes">%1$s B/s</string>
     <string name="notification_rate_kilobytes">%1$s KB/s</string>
@@ -40,7 +38,6 @@
     <!-- Notification actions: 1–3 words, verb first. -->
     <string name="notification_action_vpn_settings">VPN settings</string>
     <string name="notification_action_disconnect">Disconnect</string>
-    <string name="notification_action_stop_auto_connect">Turn off auto-connect</string>
     <string name="notification_action_stop_connecting">Stop connecting</string>
     <string name="notification_action_retry">Retry</string>
     <!-- Dismissible alert after a connection attempt fails. -->

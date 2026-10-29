@@ -30,7 +30,7 @@ function reset(permission) {
 await openApp();
 const state=(await call('android_snapshot')).ok;
 assert(['disconnected','paused','failed'].includes(state.phase));
-assert(!state.always_on&&!state.wifi_automation_enabled,'Do not interrupt a VPN or Wi-Fi automation');
+assert(!state.always_on,'Do not interrupt a VPN');
 adb('shell','am','force-stop',pkg);
 // Reset only our one-shot prompt marker, preserving all user preferences/profiles.
 const file='shared_prefs/presentation.xml';
@@ -54,22 +54,5 @@ await start('test_notification');tap('permission_allow_button');assert('ok' in a
 assert.equal((await call('get_app_preferences')).ok.notification_permission,'granted');
 assert.equal((await call('request_notification_permission')).ok,'granted');
 assert(adb('shell','dumpsys','activity','activities').split('\n').some(line=>line.includes('ResumedActivity')&&line.includes(pkg+'/.MainActivity')),'An already granted request must leave the app in the foreground');
-reset('ACCESS_FINE_LOCATION');reset('ACCESS_COARSE_LOCATION');
-adb('shell','cmd','location','set-location-enabled','true');await openApp();
-let wifi=(await call('get_wifi_policy')).ok;
-assert.equal(wifi.current_network,'untrusted_wifi');assert.equal(wifi.permission_required,true);assert.equal(wifi.can_trust_current,false);
-await start('android_wifi_permission');tap('permission_allow_foreground_only_button');assert.equal((await result()).ok,true);
-wifi=(await call('get_wifi_policy')).ok;
-assert.equal(wifi.permission_required,false);assert.equal(wifi.location_enabled,true);assert.equal(wifi.can_trust_current,true);
-const token=wifi.current_network_token,previousTrust=wifi.trusted_networks.find(n=>n.id===token);
-assert((await call('trust_current_wifi',{expectedNetworkToken:'stale-network',label:'Permission test'})).error);
-assert('ok' in await call('trust_current_wifi',{expectedNetworkToken:token,label:previousTrust?.label??'Permission test'}));
-assert.equal((await call('get_wifi_policy')).ok.current_network,'trusted_wifi');
-if(!previousTrust)assert('ok' in await call('forget_trusted_wifi',{id:token}));
-adb('shell','cmd','location','set-location-enabled','false');
-try {
-  wifi=(await call('get_wifi_policy')).ok;
-  assert.equal(wifi.location_enabled,false);assert.equal(wifi.can_trust_current,false);
-} finally {adb('shell','cmd','location','set-location-enabled','true');}
-writeFileSync(out+'/permissions.json',JSON.stringify({serial,passed:true,notificationPromptOnFirstConnect:true,notificationDenialContinues:true,noRepeatedAutomaticPrompt:true,testNotificationRequestsPermission:true,grantedRequestDoesNotNeedSettings:true,wifiPermissionPrompt:true,wifiIdentifiedAfterGrant:true,staleTrustRejected:true,explicitTrustSucceeded:true,locationOffCannotTrust:true},null,2)+'\n');
-console.log('PASS: notification first-connect/deny/retry/test and Wi-Fi permission/identity/trust/location-off flows.');
+writeFileSync(out+'/permissions.json',JSON.stringify({serial,passed:true,notificationPromptOnFirstConnect:true,notificationDenialContinues:true,noRepeatedAutomaticPrompt:true,testNotificationRequestsPermission:true,grantedRequestDoesNotNeedSettings:true},null,2)+'\n');
+console.log('PASS: notification first-connect/deny/retry/test flows.');

@@ -20,16 +20,15 @@ Repeat with `--api 36` and a new output directory. The required system image
 must already be installed. Build both APKs first; instrumentation is a separate
 test package. These native checks do not qualify established-tunnel continuity,
 physical devices, OEM battery policy or production signing.
-The harness grants VPN consent and location permissions only inside its fresh
-AVD to exercise the existing native reconnect/Wi-Fi/package-replacement tests.
-It does not qualify the OS consent dialog. Wi-Fi trust uses a synthetic saved
-network; no location coordinates are collected by these tests.
+The harness grants VPN consent only inside its fresh AVD to exercise the
+existing native reconnect/package-replacement tests. It does not qualify the OS
+consent dialog.
 For the API 36 image, use `MemoryHigh=3800M`: the interrupted-upgrade fixture
 showed sustained reclaim and service startup timeouts at lower soft limits.
 Keep `MemoryMax=4G`, no swap, and the CPU/process limits. The harness records
 the actual limits, peak memory and memory events in its result. It waits for
 post-boot broadcasts and verifies connection to the synthetic `AndroidWifi`
-network before the Wi-Fi trust case. Each upgrade invocation keeps its own log.
+network before the native network tests. Each upgrade invocation keeps its own log.
 
 The tracked Android sources are in `apps/desktop/android`. The generated Tauri
 project in `apps/desktop/src-tauri/gen/android` is an output, not the source of
@@ -271,12 +270,10 @@ ANDROID_SERIAL=emulator-5560 node tests/android/traffic-sampling.mjs
 adb -s emulator-5560 shell am instrument -w \
   -e class org.sirinvpn.client.NotificationBadgeTest \
   org.sirinvpn.client.test/androidx.test.runner.AndroidJUnitRunner
-# Isolated emulator only: VPN consent, notifications and foreground/background
-# precise location allowed, Location on, Always-on off. Creates and removes a
-# temporary profile pointing only to host-loopback UDP port 9; no VPS is needed.
-# Checks option persistence, pending retry cancellation, Wi-Fi off/on trust,
-# notification stop-monitoring and disabled connection alerts. The synthetic
-# access-point roaming check additionally requires API 30+.
+# Isolated emulator only: VPN consent and notifications allowed, Always-on off.
+# Creates and removes a temporary profile pointing only to host-loopback UDP
+# port 9; no VPS is needed. Checks option persistence, pending retry
+# cancellation and disabled connection alerts.
 adb -s emulator-5560 shell am instrument -w \
   -e class org.sirinvpn.client.OptionHandlingTest \
   org.sirinvpn.client.test/androidx.test.runner.AndroidJUnitRunner

@@ -183,15 +183,12 @@ try {
     assert.equal(adb('shell', 'settings', 'get', 'global', 'wifi_on'), '1');
     assert.equal(adb('shell', 'settings', 'get', 'global', 'mobile_data'), '1');
     assert(initial.status.auto_reconnect_enabled, 'Saved reconnect policy must already be enabled');
-    assert(['trusted_wifi', 'untrusted_wifi'].includes((await call('get_wifi_policy')).ok.current_network));
     restoreNetworks = true;
     adb('shell', 'svc', 'wifi', 'disable'); await delay(5000); await waitPhase('connected');
-    assert.equal((await call('get_wifi_policy')).ok.current_network, 'other_network');
     await observe('Wi-Fi to mobile-data transition', false);
     adb('shell', 'svc', 'data', 'disable'); await waitPhase('waiting_for_network');
     result.checks.push({name: 'Loss of both networks reports waiting', passed: true});
     adb('shell', 'svc', 'wifi', 'enable'); await waitPhase('connected');
-    assert(['trusted_wifi', 'untrusted_wifi'].includes((await call('get_wifi_policy')).ok.current_network));
     await observe('Network return reconnects over Wi-Fi', false);
     adb('shell', 'svc', 'data', 'enable'); restoreNetworks = false;
   }

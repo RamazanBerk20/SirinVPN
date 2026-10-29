@@ -94,7 +94,7 @@ object VpnNotifications {
         val policy = snapshot.optBoolean("always_on")
         val status=snapshot.getJSONObject("status")
         val sampledAt=status.optLong("counter_sampled_at_ms")
-        val state="$phase:$policy:${snapshot.getLong("generation")}:${snapshot.optBoolean("wifi_automation_enabled")}:${service.getSystemService(KeyguardManager::class.java).isDeviceLocked}:${status.optString("counter_epoch")}:${status.optBoolean("byte_counters_available")}"
+        val state="$phase:$policy:${snapshot.getLong("generation")}:${service.getSystemService(KeyguardManager::class.java).isDeviceLocked}:${status.optString("counter_epoch")}:${status.optBoolean("byte_counters_available")}"
         // Publish every fresh counter sample; unrelated status events keep the current rates.
         if(state==lastState && sampledAt==lastSample) return
         val rx=status.optLong("rx_bytes");val tx=status.optLong("tx_bytes")
@@ -103,14 +103,13 @@ object VpnNotifications {
             service.getString(R.string.notification_status_connected_traffic, rate(service,rx-lastRx,elapsed), rate(service,tx-lastTx,elapsed))
             else service.getString(R.string.status_connected)
         lastState=state;lastRx=rx;lastTx=tx;lastSample=sampledAt
-        val monitoring=snapshot.optBoolean("wifi_automation_enabled") && phase in setOf("paused", "disconnected", "failed", "permission_required")
         val label = service.getString(if (policy) R.string.notification_action_vpn_settings
             else if (phase in setOf("connected", "degraded")) R.string.notification_action_disconnect
-            else if (monitoring) R.string.notification_action_stop_auto_connect else R.string.notification_action_stop_connecting)
+            else R.string.notification_action_stop_connecting)
         val action = if (policy) PendingIntent.getActivity(service, 2, Intent(android.provider.Settings.ACTION_VPN_SETTINGS),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         else PendingIntent.getBroadcast(service, 3, Intent(service, VpnActionReceiver::class.java)
-            .setAction(if(monitoring) "org.sirinvpn.STOP_AUTOMATION" else "org.sirinvpn.STOP")
+            .setAction("org.sirinvpn.STOP")
             .setData(android.net.Uri.parse("sirin-control://stop/${snapshot.getLong("generation")}"))
             .putExtra("generation", snapshot.getLong("generation")), PendingIntent.FLAG_IMMUTABLE)
         service.getSystemService(NotificationManager::class.java).notify(VPN_ID,
@@ -121,8 +120,7 @@ object VpnNotifications {
                 "reconnecting" -> service.getString(R.string.status_reconnecting)
                 "unknown" -> service.getString(R.string.status_unknown)
                 "failed" -> service.getString(R.string.notification_status_failed)
-                "paused" -> service.getString(if(snapshot.optBoolean("wifi_automation_enabled")) R.string.notification_status_auto_connect_paused else R.string.status_disconnected)
-                "disconnected" -> service.getString(if(snapshot.optBoolean("wifi_automation_enabled")) R.string.notification_status_auto_connect_on else R.string.status_disconnected)
+                "paused", "disconnected" -> service.getString(R.string.status_disconnected)
                 else -> service.getString(R.string.status_connecting)
             }).addAction(controlAction(service, label, action)).build())
     }

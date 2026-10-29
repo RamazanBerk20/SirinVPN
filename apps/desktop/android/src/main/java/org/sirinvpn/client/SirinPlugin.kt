@@ -26,7 +26,7 @@ import app.tauri.plugin.JSObject
 import org.json.JSONObject
 import java.util.UUID
 
-@TauriPlugin(permissions=[Permission(alias="camera",strings=[Manifest.permission.CAMERA]),Permission(alias="wifi",strings=[Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION]),Permission(alias="notifications",strings=[Manifest.permission.POST_NOTIFICATIONS])])
+@TauriPlugin(permissions=[Permission(alias="camera",strings=[Manifest.permission.CAMERA]),Permission(alias="notifications",strings=[Manifest.permission.POST_NOTIFICATIONS])])
 class SirinPlugin(private val activity: Activity) : Plugin(activity) {
     private var link: ServiceLink? = null
     private var scanner: CodeScanner? = null
@@ -77,15 +77,6 @@ class SirinPlugin(private val activity: Activity) : Plugin(activity) {
         }
         if(command=="android_scan_code") {
             requestPermissionForAlias("camera",invoke,"scanGranted");return
-        }
-        if(command=="android_wifi_permission") {
-            requestPermissionForAlias("wifi",invoke,"wifiGranted");return
-        }
-        if(command=="android_background_wifi_settings") {
-            activity.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,android.net.Uri.parse("package:${activity.packageName}")));resolve(invoke);return
-        }
-        if(command=="android_location_settings") {
-            activity.startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));resolve(invoke);return
         }
         if (command == "install_release_update" && args.optJSONObject("input")?.optBoolean("baseline_only")!=true && !activity.packageManager.canRequestPackageInstalls()) {
             activity.startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,android.net.Uri.parse("package:${activity.packageName}")))
@@ -199,9 +190,6 @@ class SirinPlugin(private val activity: Activity) : Plugin(activity) {
         else {val request=invoke.getArgs();send(invoke,request.getString("command")!!,request.optJSONObject("args") ?: JSONObject())}
     }
     @PermissionCallback private fun connectionNotificationsGranted(invoke:Invoke) { prepareVpnCommand(invoke) }
-    @PermissionCallback private fun wifiGranted(invoke:Invoke) {
-        resolve(invoke,activity.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)==PackageManager.PERMISSION_GRANTED)
-    }
     @PermissionCallback private fun notificationsGranted(invoke:Invoke) {
         if(invoke.getArgs().getString("command")=="test_notification") testNotification(invoke)
         else resolve(invoke,notificationPermission())

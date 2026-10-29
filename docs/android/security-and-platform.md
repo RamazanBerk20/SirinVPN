@@ -56,12 +56,11 @@ during boot. Ordinary recovery uses bounded retries; an explicit Stop cancels
 pending work and pauses automation.
 
 Reconnect changes update both saved preferences and the live retry state before
-the app confirms the save. Turning reconnect off cancels pending attempts;
-turning Wi-Fi automation off cancels a pending connection started by that rule.
+the app confirms the save. Turning reconnect off cancels pending attempts.
 An established VPN stays connected until Disconnect. Pending retries and network
 reads cannot restore settings or connection intent superseded by a newer command.
-The paused monitoring notification offers “Stop Wi-Fi automation,” which disables
-the rule and removes its foreground notification.
+Wi-Fi auto-connect is desktop-only: Android cannot watch for new Wi-Fi without a
+running service and its notification, so the Android app omits it.
 
 Home, Back, UI process loss and task removal do not stop an active service.
 Actual VPN-process loss, reboot and package replacement interrupt traffic;
@@ -73,13 +72,8 @@ battery policies remain separate verification requirements.
 Full routing includes IPv6 containment for an IPv4-only profile; configured
 split routes and app exclusions are represented explicitly. An observed
 containment route is not an external IPv6 leak test. Per-app exclusions remain
-subject to system lockdown. Unknown/redacted Wi-Fi identities are never
-classified as trusted. Fine location is used for Wi-Fi identity; background
-recognition needs the corresponding Android permission/settings.
-Trust fingerprints use Android's saved network ID and SSID, salted locally;
-an access point's BSSID is not part of the identity. Roaming between access points
-of the same saved network preserves trust. Old BSSID-based entries require one
-explicit re-trust after upgrading; hidden identifiers never inherit old trust.
+subject to system lockdown. The app reads no Wi-Fi identity and requests no
+location permission.
 Notification and animation preferences have one owner in the VPN process, with
 a one-time migration from the older UI preferences. Connection failure alerts
 honor the notification switch; Android still controls the foreground VPN notice.
@@ -93,7 +87,7 @@ The VPN uses the documented authorized-VPN `systemExempted` foreground-service
 eligibility; finite maintenance uses `dataSync`. There is no wake lock, overlay,
 device administrator, broad filesystem permission or permanent hidden WebView.
 
-Camera, notification and location requests have explicit user flows. Package
+Camera and notification requests have explicit user flows. Package
 enumeration is used for VPN app selection; package installation permission is
 used only for direct APK updates. Android-specific Tauri capabilities exclude
 the desktop dialog/notification/tray layer. No telemetry, analytics, crash-upload

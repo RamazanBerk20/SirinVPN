@@ -14200,42 +14200,13 @@
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
       ],
-      "android_approach": "Shared production React workflow with the native service-owned Rust command adapter. Backend role/capability enforcement is retained.",
-      "status": "implemented_unverified",
-      "evidence": [],
-      "verification_scope": "Presentation results and related native evidence are separate. Related evidence does not verify every error, role, compatibility or interruption branch in this row.",
-      "android_presentation": {
-        "status": "passed",
-        "scope": "Fictional presentation only; no runtime verification implied.",
-        "bundle_sha256": "e44e47baf02482b12d93d4d3a9ec0d8262392c9f1edf46844a8dedafb21bb2a5",
-        "serial": "emulator-5560",
-        "files": [
-          {
-            "path": "target/android-catalog-evidence/wifi/trusted-wifi--top.png",
-            "sha256": "d17b0935cd97642f7eaf322e1020cf1ebc8c51db3452ba8c0ea824b6d2867ad6"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/trusted-wifi--scroll-0-1.png",
-            "sha256": "d4b7fe2e1635a8d628959465139b196ae04667ae832d3b0e66097ffdabe8ccdb"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/trusted-wifi--scroll-0-2.png",
-            "sha256": "21b58b2c69211c6488442656d2d734986f0a9158153b49f9ef5276e2f54be253"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/trusted-wifi--scroll-0-3.png",
-            "sha256": "c0b03c720d007a3782a40df79d49cabb846e192a3a5b43517d3e2f967591c41e"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/trusted-wifi--scroll-0-4.png",
-            "sha256": "77ad93f3d00a3059d0be36b2adfd0fc12b9a7b1a5bed5219db6f8be5a3c40e48"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/trusted-wifi--scroll-0-5.png",
-            "sha256": "9733dac2e56e5e7e6f89e7cbb592a0e87b157c5dcb69a86040f7beb42ecad73d"
-          }
-        ]
-      },
+      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
+      "status": "platform_restriction",
+      "evidence": [
+        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "docs/android/security-and-platform.md"
+      ],
+      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
       "related_runtime_evidence": []
     },
     "wifi/other-network": {
@@ -14272,38 +14243,13 @@
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
       ],
-      "android_approach": "Shared production React workflow with the native service-owned Rust command adapter. Backend role/capability enforcement is retained.",
-      "status": "implemented_unverified",
-      "evidence": [],
-      "verification_scope": "Presentation results and related native evidence are separate. Related evidence does not verify every error, role, compatibility or interruption branch in this row.",
-      "android_presentation": {
-        "status": "passed",
-        "scope": "Fictional presentation only; no runtime verification implied.",
-        "bundle_sha256": "e44e47baf02482b12d93d4d3a9ec0d8262392c9f1edf46844a8dedafb21bb2a5",
-        "serial": "emulator-5560",
-        "files": [
-          {
-            "path": "target/android-catalog-evidence/wifi/other-network--top.png",
-            "sha256": "d17b0935cd97642f7eaf322e1020cf1ebc8c51db3452ba8c0ea824b6d2867ad6"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/other-network--scroll-0-1.png",
-            "sha256": "c9a47c31b5c95c0c8cb2b9faf9e14b6d97a7e4d1f48b8ed51e3a9c8a474ab7ee"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/other-network--scroll-0-2.png",
-            "sha256": "b9f3e8d3ae218c37c6500f44c0a1a5615a4f10c3a8008e5322a17dd08704b827"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/other-network--scroll-0-3.png",
-            "sha256": "e2f2d3f65da1305405877f602e99c03d1b40cc1c09bdf6e931fe80206da27776"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/other-network--scroll-0-4.png",
-            "sha256": "15f7345e91c1a6f508cb02a07cf1e7b242c3c6d7ee9a56b4b693f1219d3f5bd7"
-          }
-        ]
-      },
+      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
+      "status": "platform_restriction",
+      "evidence": [
+        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "docs/android/security-and-platform.md"
+      ],
+      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
       "related_runtime_evidence": []
     },
     "wifi/wifi-unavailable": {
@@ -14340,38 +14286,13 @@
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
       ],
-      "android_approach": "Shared production React workflow with the native service-owned Rust command adapter. Backend role/capability enforcement is retained.",
-      "status": "implemented_unverified",
-      "evidence": [],
-      "verification_scope": "Presentation results and related native evidence are separate. Related evidence does not verify every error, role, compatibility or interruption branch in this row.",
-      "android_presentation": {
-        "status": "passed",
-        "scope": "Fictional presentation only; no runtime verification implied.",
-        "bundle_sha256": "e44e47baf02482b12d93d4d3a9ec0d8262392c9f1edf46844a8dedafb21bb2a5",
-        "serial": "emulator-5560",
-        "files": [
-          {
-            "path": "target/android-catalog-evidence/wifi/wifi-unavailable--top.png",
-            "sha256": "d17b0935cd97642f7eaf322e1020cf1ebc8c51db3452ba8c0ea824b6d2867ad6"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/wifi-unavailable--scroll-0-1.png",
-            "sha256": "3034f35230c5ec43fb2a2a9f773429c800af236db00db0521cadedc0c9c583af"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/wifi-unavailable--scroll-0-2.png",
-            "sha256": "b9f3e8d3ae218c37c6500f44c0a1a5615a4f10c3a8008e5322a17dd08704b827"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/wifi-unavailable--scroll-0-3.png",
-            "sha256": "e2f2d3f65da1305405877f602e99c03d1b40cc1c09bdf6e931fe80206da27776"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/wifi-unavailable--scroll-0-4.png",
-            "sha256": "15f7345e91c1a6f508cb02a07cf1e7b242c3c6d7ee9a56b4b693f1219d3f5bd7"
-          }
-        ]
-      },
+      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
+      "status": "platform_restriction",
+      "evidence": [
+        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "docs/android/security-and-platform.md"
+      ],
+      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
       "related_runtime_evidence": []
     },
     "wifi/recognition-allowed": {
@@ -14408,42 +14329,13 @@
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
       ],
-      "android_approach": "Shared production React workflow with the native service-owned Rust command adapter. Backend role/capability enforcement is retained.",
-      "status": "implemented_unverified",
-      "evidence": [],
-      "verification_scope": "Presentation results and related native evidence are separate. Related evidence does not verify every error, role, compatibility or interruption branch in this row.",
-      "android_presentation": {
-        "status": "passed",
-        "scope": "Fictional presentation only; no runtime verification implied.",
-        "bundle_sha256": "e44e47baf02482b12d93d4d3a9ec0d8262392c9f1edf46844a8dedafb21bb2a5",
-        "serial": "emulator-5560",
-        "files": [
-          {
-            "path": "target/android-catalog-evidence/wifi/recognition-allowed--top.png",
-            "sha256": "d17b0935cd97642f7eaf322e1020cf1ebc8c51db3452ba8c0ea824b6d2867ad6"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/recognition-allowed--scroll-0-1.png",
-            "sha256": "db1be5e8ab0d55061a6e5fb7224aa69279556124f3f3d54f83e1138df9bebfd9"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/recognition-allowed--scroll-0-2.png",
-            "sha256": "01a5f631467ec84fd7909fff5fb5c56d3369358d556e85eea47f3cb0292ce12b"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/recognition-allowed--scroll-0-3.png",
-            "sha256": "a31b4a6fcb545e813c903ecabb66e013643d4537a19243b7a6059f01d29a10c0"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/recognition-allowed--scroll-0-4.png",
-            "sha256": "c1e90cd385bc142fca8bf7b0767f2677373935c6358be0620b5bae83b2abc0de"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/recognition-allowed--scroll-0-5.png",
-            "sha256": "daa2f210e4a589c79a5d24d49e39d06d328155788476d1e7907fbf5e567019a9"
-          }
-        ]
-      },
+      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
+      "status": "platform_restriction",
+      "evidence": [
+        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "docs/android/security-and-platform.md"
+      ],
+      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
       "related_runtime_evidence": []
     },
     "wifi/automation-armed": {
@@ -14484,42 +14376,13 @@
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
       ],
-      "android_approach": "Shared production React workflow with the native service-owned Rust command adapter. Backend role/capability enforcement is retained.",
-      "status": "implemented_unverified",
-      "evidence": [],
-      "verification_scope": "Presentation results and related native evidence are separate. Related evidence does not verify every error, role, compatibility or interruption branch in this row.",
-      "android_presentation": {
-        "status": "passed",
-        "scope": "Fictional presentation only; no runtime verification implied.",
-        "bundle_sha256": "e44e47baf02482b12d93d4d3a9ec0d8262392c9f1edf46844a8dedafb21bb2a5",
-        "serial": "emulator-5560",
-        "files": [
-          {
-            "path": "target/android-catalog-evidence/wifi/automation-armed--top.png",
-            "sha256": "d17b0935cd97642f7eaf322e1020cf1ebc8c51db3452ba8c0ea824b6d2867ad6"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/automation-armed--scroll-0-1.png",
-            "sha256": "0c73ad97bf052d26a2f56982411490bf54cb50186d85fe9f407cdca10554ff9c"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/automation-armed--scroll-0-2.png",
-            "sha256": "f86a0c7bffa52eb1e2b5a57ed3432b08bba18d368ea3e0d27f8ec9d17a75dec2"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/automation-armed--scroll-0-3.png",
-            "sha256": "97a4fb5eeffdd2ce403e2b260fdac1d41095599bed5860c9e8457c0fd405339e"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/automation-armed--scroll-0-4.png",
-            "sha256": "d76280b2e72a3b924fb1dc3d47142a38dd967c8a2af3c4694c6d6056ea237cad"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/automation-armed--scroll-0-5.png",
-            "sha256": "728a3102c91126626e39e90bb63eb9eb6d5b24edd36d3c4f360648762a8bf8c9"
-          }
-        ]
-      },
+      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
+      "status": "platform_restriction",
+      "evidence": [
+        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "docs/android/security-and-platform.md"
+      ],
+      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
       "related_runtime_evidence": []
     },
     "wifi/automation-paused": {
@@ -14561,42 +14424,13 @@
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
       ],
-      "android_approach": "Shared production React workflow with the native service-owned Rust command adapter. Backend role/capability enforcement is retained.",
-      "status": "implemented_unverified",
-      "evidence": [],
-      "verification_scope": "Presentation results and related native evidence are separate. Related evidence does not verify every error, role, compatibility or interruption branch in this row.",
-      "android_presentation": {
-        "status": "passed",
-        "scope": "Fictional presentation only; no runtime verification implied.",
-        "bundle_sha256": "e44e47baf02482b12d93d4d3a9ec0d8262392c9f1edf46844a8dedafb21bb2a5",
-        "serial": "emulator-5560",
-        "files": [
-          {
-            "path": "target/android-catalog-evidence/wifi/automation-paused--top.png",
-            "sha256": "d17b0935cd97642f7eaf322e1020cf1ebc8c51db3452ba8c0ea824b6d2867ad6"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/automation-paused--scroll-0-1.png",
-            "sha256": "c8a90b11920a5c0965afa121332ae3d5c223e31507b7f0c0f58e79723df6bb85"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/automation-paused--scroll-0-2.png",
-            "sha256": "287e86ab4621b64d23b46262e9f61f00f85935e2ef350e0700518cd8e15c11a6"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/automation-paused--scroll-0-3.png",
-            "sha256": "98af7e762866a4e021316822b417ce83b0abb433f49888980d7fa6d1793eb4fa"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/automation-paused--scroll-0-4.png",
-            "sha256": "2a3aa6804060c49a4768f10cc388f108a058cfc02360222a665e3b996493286c"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/automation-paused--scroll-0-5.png",
-            "sha256": "4a4ffe3eacc5ded57d2a1a3f814444d5ad361ed55a1c6d3aaba1f34fbf88aab7"
-          }
-        ]
-      },
+      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
+      "status": "platform_restriction",
+      "evidence": [
+        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "docs/android/security-and-platform.md"
+      ],
+      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
       "related_runtime_evidence": []
     },
     "wifi/recognition-unsupported": {
@@ -14631,42 +14465,13 @@
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
       ],
-      "android_approach": "Shared production React workflow with the native service-owned Rust command adapter. Backend role/capability enforcement is retained.",
-      "status": "implemented_unverified",
-      "evidence": [],
-      "verification_scope": "Presentation results and related native evidence are separate. Related evidence does not verify every error, role, compatibility or interruption branch in this row.",
-      "android_presentation": {
-        "status": "passed",
-        "scope": "Fictional presentation only; no runtime verification implied.",
-        "bundle_sha256": "e44e47baf02482b12d93d4d3a9ec0d8262392c9f1edf46844a8dedafb21bb2a5",
-        "serial": "emulator-5560",
-        "files": [
-          {
-            "path": "target/android-catalog-evidence/wifi/recognition-unsupported--top.png",
-            "sha256": "d17b0935cd97642f7eaf322e1020cf1ebc8c51db3452ba8c0ea824b6d2867ad6"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/recognition-unsupported--scroll-0-1.png",
-            "sha256": "aa0638545e098a5a338d2fb4e7e5e0ba01c7dbf904163d01bbd39f6a669763d1"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/recognition-unsupported--scroll-0-2.png",
-            "sha256": "abbd68f36b0f19c906e908aaefe28e79b8c5de75ce6c228637a865a684628b3d"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/recognition-unsupported--scroll-0-3.png",
-            "sha256": "6f266d826b13b225cc4a8f9e39e169de2acc8f8014505be376f61d2a57a73334"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/recognition-unsupported--scroll-0-4.png",
-            "sha256": "89fc392404a5fe9d9acfb06b39f77571fe9326b0879203a40d4d093552022838"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/recognition-unsupported--scroll-0-5.png",
-            "sha256": "422e45f9594325a51f92d95eb4090be57073c9945d5670596c07d80565ab81f5"
-          }
-        ]
-      },
+      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
+      "status": "platform_restriction",
+      "evidence": [
+        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "docs/android/security-and-platform.md"
+      ],
+      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
       "related_runtime_evidence": []
     },
     "wifi/refresh-network-in-progress": {
@@ -14697,42 +14502,13 @@
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
       ],
-      "android_approach": "Shared production React workflow with the native service-owned Rust command adapter. Backend role/capability enforcement is retained.",
-      "status": "implemented_unverified",
-      "evidence": [],
-      "verification_scope": "Presentation results and related native evidence are separate. Related evidence does not verify every error, role, compatibility or interruption branch in this row.",
-      "android_presentation": {
-        "status": "passed",
-        "scope": "Fictional presentation only; no runtime verification implied.",
-        "bundle_sha256": "e44e47baf02482b12d93d4d3a9ec0d8262392c9f1edf46844a8dedafb21bb2a5",
-        "serial": "emulator-5560",
-        "files": [
-          {
-            "path": "target/android-catalog-evidence/wifi/refresh-network-in-progress--top.png",
-            "sha256": "22d55c26ad5965032a9cd5766fc81108e3429211b54c56a45e931317aa9085b8"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/refresh-network-in-progress--scroll-0-1.png",
-            "sha256": "946844999609ced4b75444c91fc3bcbe3b46f0cb51e63b28cda09d148459f0ce"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/refresh-network-in-progress--scroll-0-2.png",
-            "sha256": "8b8e4527af44205144b8637997a9dead05ed1bdd26b11f79a05dcd2adcee853f"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/refresh-network-in-progress--scroll-0-3.png",
-            "sha256": "48e73b02041e6a1dec51d80a063d9b7210328f339336b12516076403c044a324"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/refresh-network-in-progress--scroll-0-4.png",
-            "sha256": "89fc392404a5fe9d9acfb06b39f77571fe9326b0879203a40d4d093552022838"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/refresh-network-in-progress--scroll-0-5.png",
-            "sha256": "422e45f9594325a51f92d95eb4090be57073c9945d5670596c07d80565ab81f5"
-          }
-        ]
-      },
+      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
+      "status": "platform_restriction",
+      "evidence": [
+        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "docs/android/security-and-platform.md"
+      ],
+      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
       "related_runtime_evidence": []
     },
     "wifi/refresh-network-failed": {
@@ -14763,42 +14539,13 @@
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
       ],
-      "android_approach": "Shared production React workflow with the native service-owned Rust command adapter. Backend role/capability enforcement is retained.",
-      "status": "implemented_unverified",
-      "evidence": [],
-      "verification_scope": "Presentation results and related native evidence are separate. Related evidence does not verify every error, role, compatibility or interruption branch in this row.",
-      "android_presentation": {
-        "status": "passed",
-        "scope": "Fictional presentation only; no runtime verification implied.",
-        "bundle_sha256": "e44e47baf02482b12d93d4d3a9ec0d8262392c9f1edf46844a8dedafb21bb2a5",
-        "serial": "emulator-5560",
-        "files": [
-          {
-            "path": "target/android-catalog-evidence/wifi/refresh-network-failed--top.png",
-            "sha256": "f7e59d4b8fe2dff37b27414b5b552e7d6b4f47666b22c32b874ef319cad665fa"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/refresh-network-failed--scroll-0-1.png",
-            "sha256": "bfc838d816c49d8bbf405d5625c36672b8e703e5b51507d14ae9bdc25a2c8d8e"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/refresh-network-failed--scroll-0-2.png",
-            "sha256": "f33a23f912b5652ae8fba591a8e087be3033103b14a6a7df7f25c4c9ed410a31"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/refresh-network-failed--scroll-0-3.png",
-            "sha256": "1c771147e63f5e8edcd4ec59ed71f56f334bf733a4c199597871da2eedecabeb"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/refresh-network-failed--scroll-0-4.png",
-            "sha256": "6d83ba1f11baf953a65eaae2493b9e879980e469c5d852889cf11656a36ae466"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/refresh-network-failed--scroll-0-5.png",
-            "sha256": "16018575e8ba4a6ee2207b50458f8db0869c9d9b720fdb5f92533fe584125738"
-          }
-        ]
-      },
+      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
+      "status": "platform_restriction",
+      "evidence": [
+        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "docs/android/security-and-platform.md"
+      ],
+      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
       "related_runtime_evidence": []
     },
     "wifi/refresh-network-completed": {
@@ -14829,42 +14576,13 @@
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
       ],
-      "android_approach": "Shared production React workflow with the native service-owned Rust command adapter. Backend role/capability enforcement is retained.",
-      "status": "implemented_unverified",
-      "evidence": [],
-      "verification_scope": "Presentation results and related native evidence are separate. Related evidence does not verify every error, role, compatibility or interruption branch in this row.",
-      "android_presentation": {
-        "status": "passed",
-        "scope": "Fictional presentation only; no runtime verification implied.",
-        "bundle_sha256": "e44e47baf02482b12d93d4d3a9ec0d8262392c9f1edf46844a8dedafb21bb2a5",
-        "serial": "emulator-5560",
-        "files": [
-          {
-            "path": "target/android-catalog-evidence/wifi/refresh-network-completed--top.png",
-            "sha256": "5e61d49910db4221afb588a2bc7cf9c692751d78c37d3de964fe708876c87e52"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/refresh-network-completed--scroll-0-1.png",
-            "sha256": "3c238fa2ffc35c66b7f4fb2e05acd285928812fc313b93b501b702e6f46b8223"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/refresh-network-completed--scroll-0-2.png",
-            "sha256": "8f6f76495a43b6c916a4b2e1093a74b31994193d42c4cd5f1ee623e1c903db5f"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/refresh-network-completed--scroll-0-3.png",
-            "sha256": "011e562dcf1185bb96184ed738c443d7d0e229072eb48f598712c37b16c1b935"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/refresh-network-completed--scroll-0-4.png",
-            "sha256": "ba6badef2fe5b27e8df59ba4cb53af05ea3c08ff44f6d0ebd6e889b3c8653ba5"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/refresh-network-completed--scroll-0-5.png",
-            "sha256": "38f22e26e732f199e3ddec50e11365b28bdc873a49b4d6488aa994b8407238da"
-          }
-        ]
-      },
+      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
+      "status": "platform_restriction",
+      "evidence": [
+        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "docs/android/security-and-platform.md"
+      ],
+      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
       "related_runtime_evidence": []
     },
     "join/invitation-code-entered": {
@@ -31331,42 +31049,13 @@
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
       ],
-      "android_approach": "Shared production React workflow with the native service-owned Rust command adapter. Backend role/capability enforcement is retained.",
-      "status": "implemented_unverified",
-      "evidence": [],
-      "verification_scope": "Presentation results and related native evidence are separate. Related evidence does not verify every error, role, compatibility or interruption branch in this row.",
-      "android_presentation": {
-        "status": "passed",
-        "scope": "Fictional presentation only; no runtime verification implied.",
-        "bundle_sha256": "e44e47baf02482b12d93d4d3a9ec0d8262392c9f1edf46844a8dedafb21bb2a5",
-        "serial": "emulator-5560",
-        "files": [
-          {
-            "path": "target/android-catalog-evidence/wifi/automation-trusted--top.png",
-            "sha256": "8ef9d441ad9490911cfb4d60c5630ba6f38b6d02400d7338acd11e3fac45dc5f"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/automation-trusted--scroll-0-1.png",
-            "sha256": "ea8d054c034376638ad75b9fc0a894dfb23d788a2005285abdb106738e5d7c5d"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/automation-trusted--scroll-0-2.png",
-            "sha256": "cc5da954c9e977d20fd2fa8ff17ad3859aab981fad59c353c4a7f9a1bbfaac13"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/automation-trusted--scroll-0-3.png",
-            "sha256": "0f5b709f9ba178188c847857a7eb6466017112ecfbccd0c42de0c7b1f0288895"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/automation-trusted--scroll-0-4.png",
-            "sha256": "2d23f1c3a4608bb41380d401fc8a1cc5d47763d01d5c5e30d68ca23f2dedccb6"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/automation-trusted--scroll-0-5.png",
-            "sha256": "c4a951396b78e8248119d5c36244f938d3930d438ee873ee5bbc4c75735831c7"
-          }
-        ]
-      },
+      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
+      "status": "platform_restriction",
+      "evidence": [
+        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "docs/android/security-and-platform.md"
+      ],
+      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
       "related_runtime_evidence": []
     },
     "wifi/automation-connecting": {
@@ -31405,42 +31094,13 @@
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
       ],
-      "android_approach": "Shared production React workflow with the native service-owned Rust command adapter. Backend role/capability enforcement is retained.",
-      "status": "implemented_unverified",
-      "evidence": [],
-      "verification_scope": "Presentation results and related native evidence are separate. Related evidence does not verify every error, role, compatibility or interruption branch in this row.",
-      "android_presentation": {
-        "status": "passed",
-        "scope": "Fictional presentation only; no runtime verification implied.",
-        "bundle_sha256": "e44e47baf02482b12d93d4d3a9ec0d8262392c9f1edf46844a8dedafb21bb2a5",
-        "serial": "emulator-5560",
-        "files": [
-          {
-            "path": "target/android-catalog-evidence/wifi/automation-connecting--top.png",
-            "sha256": "8ef9d441ad9490911cfb4d60c5630ba6f38b6d02400d7338acd11e3fac45dc5f"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/automation-connecting--scroll-0-1.png",
-            "sha256": "68bc6aeaf4f3f57a76931b19432cde0bec45fd090742f26e9b6d71eb12387e31"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/automation-connecting--scroll-0-2.png",
-            "sha256": "6fecf1450c75cd041ca19362aa576372999dab1b1fc65731f977de8c90dce614"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/automation-connecting--scroll-0-3.png",
-            "sha256": "0f5b709f9ba178188c847857a7eb6466017112ecfbccd0c42de0c7b1f0288895"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/automation-connecting--scroll-0-4.png",
-            "sha256": "2d23f1c3a4608bb41380d401fc8a1cc5d47763d01d5c5e30d68ca23f2dedccb6"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/automation-connecting--scroll-0-5.png",
-            "sha256": "c4a951396b78e8248119d5c36244f938d3930d438ee873ee5bbc4c75735831c7"
-          }
-        ]
-      },
+      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
+      "status": "platform_restriction",
+      "evidence": [
+        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "docs/android/security-and-platform.md"
+      ],
+      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
       "related_runtime_evidence": []
     },
     "wifi/automation-session-active": {
@@ -31479,42 +31139,13 @@
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
       ],
-      "android_approach": "Shared production React workflow with the native service-owned Rust command adapter. Backend role/capability enforcement is retained.",
-      "status": "implemented_unverified",
-      "evidence": [],
-      "verification_scope": "Presentation results and related native evidence are separate. Related evidence does not verify every error, role, compatibility or interruption branch in this row.",
-      "android_presentation": {
-        "status": "passed",
-        "scope": "Fictional presentation only; no runtime verification implied.",
-        "bundle_sha256": "e44e47baf02482b12d93d4d3a9ec0d8262392c9f1edf46844a8dedafb21bb2a5",
-        "serial": "emulator-5560",
-        "files": [
-          {
-            "path": "target/android-catalog-evidence/wifi/automation-session-active--top.png",
-            "sha256": "8ef9d441ad9490911cfb4d60c5630ba6f38b6d02400d7338acd11e3fac45dc5f"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/automation-session-active--scroll-0-1.png",
-            "sha256": "708f465b81ebdbc6434ac3b11a5fed5b50faf0a3885caeccac938eb9520febb8"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/automation-session-active--scroll-0-2.png",
-            "sha256": "8c7a82b84a4b8bd7a776f779f7557366a9e20cc0741b82e985add14694f4aef0"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/automation-session-active--scroll-0-3.png",
-            "sha256": "0f5b709f9ba178188c847857a7eb6466017112ecfbccd0c42de0c7b1f0288895"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/automation-session-active--scroll-0-4.png",
-            "sha256": "2d23f1c3a4608bb41380d401fc8a1cc5d47763d01d5c5e30d68ca23f2dedccb6"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/automation-session-active--scroll-0-5.png",
-            "sha256": "c4a951396b78e8248119d5c36244f938d3930d438ee873ee5bbc4c75735831c7"
-          }
-        ]
-      },
+      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
+      "status": "platform_restriction",
+      "evidence": [
+        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "docs/android/security-and-platform.md"
+      ],
+      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
       "related_runtime_evidence": []
     },
     "wifi/automation-needs-attention": {
@@ -31553,42 +31184,13 @@
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
       ],
-      "android_approach": "Shared production React workflow with the native service-owned Rust command adapter. Backend role/capability enforcement is retained.",
-      "status": "implemented_unverified",
-      "evidence": [],
-      "verification_scope": "Presentation results and related native evidence are separate. Related evidence does not verify every error, role, compatibility or interruption branch in this row.",
-      "android_presentation": {
-        "status": "passed",
-        "scope": "Fictional presentation only; no runtime verification implied.",
-        "bundle_sha256": "e44e47baf02482b12d93d4d3a9ec0d8262392c9f1edf46844a8dedafb21bb2a5",
-        "serial": "emulator-5560",
-        "files": [
-          {
-            "path": "target/android-catalog-evidence/wifi/automation-needs-attention--top.png",
-            "sha256": "8ef9d441ad9490911cfb4d60c5630ba6f38b6d02400d7338acd11e3fac45dc5f"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/automation-needs-attention--scroll-0-1.png",
-            "sha256": "a998732ea31c0ab12634a59bb067c8f2a3ebfc63d7111ed27576e061ebae7d7b"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/automation-needs-attention--scroll-0-2.png",
-            "sha256": "1ede25f826e0373c217442c742cad9a6a4b11cbbde53b57dadc35574395c8cac"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/automation-needs-attention--scroll-0-3.png",
-            "sha256": "c1b72ab9dbdc59d9bdff9741d4398b6dd06605d89a1a6d6b610b18eec032a26b"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/automation-needs-attention--scroll-0-4.png",
-            "sha256": "208824a4b1f1a03a1cd941d6740a50b187b95faff889fea2f2d44d93ea3c637c"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/automation-needs-attention--scroll-0-5.png",
-            "sha256": "ea4f2314e9442921379d1745e073292e3b28ee88336fb84e0c22991c780f7929"
-          }
-        ]
-      },
+      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
+      "status": "platform_restriction",
+      "evidence": [
+        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "docs/android/security-and-platform.md"
+      ],
+      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
       "related_runtime_evidence": []
     },
     "wifi/automation-needs-authorization": {
@@ -31627,42 +31229,13 @@
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
       ],
-      "android_approach": "Shared production React workflow with the native service-owned Rust command adapter. Backend role/capability enforcement is retained.",
-      "status": "implemented_unverified",
-      "evidence": [],
-      "verification_scope": "Presentation results and related native evidence are separate. Related evidence does not verify every error, role, compatibility or interruption branch in this row.",
-      "android_presentation": {
-        "status": "passed",
-        "scope": "Fictional presentation only; no runtime verification implied.",
-        "bundle_sha256": "e44e47baf02482b12d93d4d3a9ec0d8262392c9f1edf46844a8dedafb21bb2a5",
-        "serial": "emulator-5560",
-        "files": [
-          {
-            "path": "target/android-catalog-evidence/wifi/automation-needs-authorization--top.png",
-            "sha256": "8ef9d441ad9490911cfb4d60c5630ba6f38b6d02400d7338acd11e3fac45dc5f"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/automation-needs-authorization--scroll-0-1.png",
-            "sha256": "13a8869496186945bb2d3177d73820104553c0ff168ff8e18ebac16fb8e81c6a"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/automation-needs-authorization--scroll-0-2.png",
-            "sha256": "1f59c0d4e92d6e356f5a6e76ce836433688564b0473d22e9f52e56aef83f747e"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/automation-needs-authorization--scroll-0-3.png",
-            "sha256": "0f5b709f9ba178188c847857a7eb6466017112ecfbccd0c42de0c7b1f0288895"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/automation-needs-authorization--scroll-0-4.png",
-            "sha256": "2d23f1c3a4608bb41380d401fc8a1cc5d47763d01d5c5e30d68ca23f2dedccb6"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/automation-needs-authorization--scroll-0-5.png",
-            "sha256": "c4a951396b78e8248119d5c36244f938d3930d438ee873ee5bbc4c75735831c7"
-          }
-        ]
-      },
+      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
+      "status": "platform_restriction",
+      "evidence": [
+        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "docs/android/security-and-platform.md"
+      ],
+      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
       "related_runtime_evidence": []
     },
     "wifi/network-identity-unavailable": {
@@ -31698,42 +31271,13 @@
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
       ],
-      "android_approach": "Shared production React workflow with the native service-owned Rust command adapter. Backend role/capability enforcement is retained.",
-      "status": "implemented_unverified",
-      "evidence": [],
-      "verification_scope": "Presentation results and related native evidence are separate. Related evidence does not verify every error, role, compatibility or interruption branch in this row.",
-      "android_presentation": {
-        "status": "passed",
-        "scope": "Fictional presentation only; no runtime verification implied.",
-        "bundle_sha256": "e44e47baf02482b12d93d4d3a9ec0d8262392c9f1edf46844a8dedafb21bb2a5",
-        "serial": "emulator-5560",
-        "files": [
-          {
-            "path": "target/android-catalog-evidence/wifi/network-identity-unavailable--top.png",
-            "sha256": "8ef9d441ad9490911cfb4d60c5630ba6f38b6d02400d7338acd11e3fac45dc5f"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/network-identity-unavailable--scroll-0-1.png",
-            "sha256": "b6c4f8d54f55cc46740cefba4cc61314521770ea07236fa6cfc50505857058fd"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/network-identity-unavailable--scroll-0-2.png",
-            "sha256": "5b3a2c0cf1aa7fd57773e80b46430f9cb16140df670447a769fd5b9969c01b84"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/network-identity-unavailable--scroll-0-3.png",
-            "sha256": "0f5b709f9ba178188c847857a7eb6466017112ecfbccd0c42de0c7b1f0288895"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/network-identity-unavailable--scroll-0-4.png",
-            "sha256": "2d23f1c3a4608bb41380d401fc8a1cc5d47763d01d5c5e30d68ca23f2dedccb6"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/network-identity-unavailable--scroll-0-5.png",
-            "sha256": "c4a951396b78e8248119d5c36244f938d3930d438ee873ee5bbc4c75735831c7"
-          }
-        ]
-      },
+      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
+      "status": "platform_restriction",
+      "evidence": [
+        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "docs/android/security-and-platform.md"
+      ],
+      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
       "related_runtime_evidence": []
     },
     "wifi/network-changed-before-trust": {
@@ -31765,42 +31309,13 @@
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
       ],
-      "android_approach": "Shared production React workflow with the native service-owned Rust command adapter. Backend role/capability enforcement is retained.",
-      "status": "implemented_unverified",
-      "evidence": [],
-      "verification_scope": "Presentation results and related native evidence are separate. Related evidence does not verify every error, role, compatibility or interruption branch in this row.",
-      "android_presentation": {
-        "status": "passed",
-        "scope": "Fictional presentation only; no runtime verification implied.",
-        "bundle_sha256": "e44e47baf02482b12d93d4d3a9ec0d8262392c9f1edf46844a8dedafb21bb2a5",
-        "serial": "emulator-5560",
-        "files": [
-          {
-            "path": "target/android-catalog-evidence/wifi/network-changed-before-trust--top.png",
-            "sha256": "6d7559265f5f40b7cf475bd5b39574beb812d1e1ee8386c369ec733fa7f1402d"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/network-changed-before-trust--scroll-0-1.png",
-            "sha256": "b6c4f8d54f55cc46740cefba4cc61314521770ea07236fa6cfc50505857058fd"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/network-changed-before-trust--scroll-0-2.png",
-            "sha256": "403aa948a70e7627afdeecf69ee78d0bfa5ff91cb840aa11fbf0474d78c47337"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/network-changed-before-trust--scroll-0-3.png",
-            "sha256": "0f5b709f9ba178188c847857a7eb6466017112ecfbccd0c42de0c7b1f0288895"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/network-changed-before-trust--scroll-0-4.png",
-            "sha256": "2d23f1c3a4608bb41380d401fc8a1cc5d47763d01d5c5e30d68ca23f2dedccb6"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/network-changed-before-trust--scroll-0-5.png",
-            "sha256": "c4a951396b78e8248119d5c36244f938d3930d438ee873ee5bbc4c75735831c7"
-          }
-        ]
-      },
+      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
+      "status": "platform_restriction",
+      "evidence": [
+        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "docs/android/security-and-platform.md"
+      ],
+      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
       "related_runtime_evidence": []
     },
     "wifi/enable-wifi-automation-in-progress": {
@@ -31832,42 +31347,13 @@
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
       ],
-      "android_approach": "Shared production React workflow with the native service-owned Rust command adapter. Backend role/capability enforcement is retained.",
-      "status": "implemented_unverified",
-      "evidence": [],
-      "verification_scope": "Presentation results and related native evidence are separate. Related evidence does not verify every error, role, compatibility or interruption branch in this row.",
-      "android_presentation": {
-        "status": "passed",
-        "scope": "Fictional presentation only; no runtime verification implied.",
-        "bundle_sha256": "e44e47baf02482b12d93d4d3a9ec0d8262392c9f1edf46844a8dedafb21bb2a5",
-        "serial": "emulator-5560",
-        "files": [
-          {
-            "path": "target/android-catalog-evidence/wifi/enable-wifi-automation-in-progress--top.png",
-            "sha256": "52519fe5b72b5b9b4be25f7473644c6515134fdb8f5d8db4f581940d6475409c"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/enable-wifi-automation-in-progress--scroll-0-1.png",
-            "sha256": "56092153cc5b65925ddf34ed3d795156c1d8fe07e7a3a9eb41a75fe5eec726c4"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/enable-wifi-automation-in-progress--scroll-0-2.png",
-            "sha256": "75e31d6fee01b4afebdf4b518d3a60e371d61cd8473a9ebc90c2b85a9ef11665"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/enable-wifi-automation-in-progress--scroll-0-3.png",
-            "sha256": "b2f866e22102b30f6627783b32d80533237169c6f416643c17549c4645050d5d"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/enable-wifi-automation-in-progress--scroll-0-4.png",
-            "sha256": "87c91c5643f5b258fb5bc6fdfb80fadaab2219249f9feef3fdade71db1e08177"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/enable-wifi-automation-in-progress--scroll-0-5.png",
-            "sha256": "d1e6f6e910756a8dcfa07d4c1cb148e51e9f61a68fd9cde67c2389a5a8fdf943"
-          }
-        ]
-      },
+      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
+      "status": "platform_restriction",
+      "evidence": [
+        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "docs/android/security-and-platform.md"
+      ],
+      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
       "related_runtime_evidence": []
     },
     "wifi/enable-wifi-automation-failed": {
@@ -31899,42 +31385,13 @@
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
       ],
-      "android_approach": "Shared production React workflow with the native service-owned Rust command adapter. Backend role/capability enforcement is retained.",
-      "status": "implemented_unverified",
-      "evidence": [],
-      "verification_scope": "Presentation results and related native evidence are separate. Related evidence does not verify every error, role, compatibility or interruption branch in this row.",
-      "android_presentation": {
-        "status": "passed",
-        "scope": "Fictional presentation only; no runtime verification implied.",
-        "bundle_sha256": "e44e47baf02482b12d93d4d3a9ec0d8262392c9f1edf46844a8dedafb21bb2a5",
-        "serial": "emulator-5560",
-        "files": [
-          {
-            "path": "target/android-catalog-evidence/wifi/enable-wifi-automation-failed--top.png",
-            "sha256": "da8b3bddf5668a441e02c191d6efae20072dba6c48776fe09e8b929d805d96e7"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/enable-wifi-automation-failed--scroll-0-1.png",
-            "sha256": "1df050fb7e69eacb0b29dab5b5b8858d23e84719662be1cd2e9feb29f6e4f9b5"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/enable-wifi-automation-failed--scroll-0-2.png",
-            "sha256": "954d5d771ad4b9059859d4dd1bba19a07356d643799f3a07c98b21f9abfe44d8"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/enable-wifi-automation-failed--scroll-0-3.png",
-            "sha256": "f6bdb344f7fe6f36b3728b9422cba0d8815d978032b8322347c58c6d64404c85"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/enable-wifi-automation-failed--scroll-0-4.png",
-            "sha256": "266235e8be6e482032763e2568a1834fd208dbaa5ff58dd97cc209fc6a1c09c5"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/enable-wifi-automation-failed--scroll-0-5.png",
-            "sha256": "f326ecf0c7cdcb423a1e6d552af5eda9d7daf83ea327e5a6c207b78738b4746d"
-          }
-        ]
-      },
+      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
+      "status": "platform_restriction",
+      "evidence": [
+        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "docs/android/security-and-platform.md"
+      ],
+      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
       "related_runtime_evidence": []
     },
     "wifi/enable-wifi-automation-completed": {
@@ -31966,42 +31423,13 @@
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
       ],
-      "android_approach": "Shared production React workflow with the native service-owned Rust command adapter. Backend role/capability enforcement is retained.",
-      "status": "implemented_unverified",
-      "evidence": [],
-      "verification_scope": "Presentation results and related native evidence are separate. Related evidence does not verify every error, role, compatibility or interruption branch in this row.",
-      "android_presentation": {
-        "status": "passed",
-        "scope": "Fictional presentation only; no runtime verification implied.",
-        "bundle_sha256": "e44e47baf02482b12d93d4d3a9ec0d8262392c9f1edf46844a8dedafb21bb2a5",
-        "serial": "emulator-5560",
-        "files": [
-          {
-            "path": "target/android-catalog-evidence/wifi/enable-wifi-automation-completed--top.png",
-            "sha256": "8992f3a1c607f3603bbf3c5dd290dd96ebfcd114d74d928c48964f88b95778be"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/enable-wifi-automation-completed--scroll-0-1.png",
-            "sha256": "6cade641286f0856398b20d8632fa5decf6c80601d9219a2c5880e15e28f483f"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/enable-wifi-automation-completed--scroll-0-2.png",
-            "sha256": "234dc2b8931c6ad4c2e5c29690e1e13f4352d9124818c6870024da05ef4785ec"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/enable-wifi-automation-completed--scroll-0-3.png",
-            "sha256": "c196ca8a413bb6931beb2c172fb88ad4b2b6845c1e0cbea3b995f48e12553805"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/enable-wifi-automation-completed--scroll-0-4.png",
-            "sha256": "9eeacf11be9ae19186e68178bfb6d5be37c955f7ae0b8c0624afc5329e7f6933"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/enable-wifi-automation-completed--scroll-0-5.png",
-            "sha256": "79022a25b140bc5f3e6e6314aac5bd4ccda4c4eb378e70f09d29f0f4d3aaf574"
-          }
-        ]
-      },
+      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
+      "status": "platform_restriction",
+      "evidence": [
+        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "docs/android/security-and-platform.md"
+      ],
+      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
       "related_runtime_evidence": []
     },
     "wifi/trust-current-network-in-progress": {
@@ -32033,42 +31461,13 @@
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
       ],
-      "android_approach": "Shared production React workflow with the native service-owned Rust command adapter. Backend role/capability enforcement is retained.",
-      "status": "implemented_unverified",
-      "evidence": [],
-      "verification_scope": "Presentation results and related native evidence are separate. Related evidence does not verify every error, role, compatibility or interruption branch in this row.",
-      "android_presentation": {
-        "status": "passed",
-        "scope": "Fictional presentation only; no runtime verification implied.",
-        "bundle_sha256": "e44e47baf02482b12d93d4d3a9ec0d8262392c9f1edf46844a8dedafb21bb2a5",
-        "serial": "emulator-5560",
-        "files": [
-          {
-            "path": "target/android-catalog-evidence/wifi/trust-current-network-in-progress--top.png",
-            "sha256": "990bfbe15750ef2f740798abf1b25510793d732b18d05bc098104f977ceeba58"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/trust-current-network-in-progress--scroll-0-1.png",
-            "sha256": "29f81fee2e1dc113685726670bb7313b666b838537f2ca77baad98ec9295a9ca"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/trust-current-network-in-progress--scroll-0-2.png",
-            "sha256": "a230fafce5e2cd3cd15a4c73e6241e102ca8c3bbd48db4d957bbd49d7bd22bf6"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/trust-current-network-in-progress--scroll-0-3.png",
-            "sha256": "7067556d0fd044541b3413d8968958e3fb75bab98cff084fbff70fb25ae4b42e"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/trust-current-network-in-progress--scroll-0-4.png",
-            "sha256": "6b3c76273f4a27ebec73971cacac5caf17627bfa82108f4a32ab09ebe15c4fae"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/trust-current-network-in-progress--scroll-0-5.png",
-            "sha256": "33d7edefa2d00ab6e6c18e63b65e8bf5956ca3d60c352b01069f614a0d329460"
-          }
-        ]
-      },
+      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
+      "status": "platform_restriction",
+      "evidence": [
+        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "docs/android/security-and-platform.md"
+      ],
+      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
       "related_runtime_evidence": []
     },
     "wifi/trust-current-network-failed": {
@@ -32100,42 +31499,13 @@
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
       ],
-      "android_approach": "Shared production React workflow with the native service-owned Rust command adapter. Backend role/capability enforcement is retained.",
-      "status": "implemented_unverified",
-      "evidence": [],
-      "verification_scope": "Presentation results and related native evidence are separate. Related evidence does not verify every error, role, compatibility or interruption branch in this row.",
-      "android_presentation": {
-        "status": "passed",
-        "scope": "Fictional presentation only; no runtime verification implied.",
-        "bundle_sha256": "e44e47baf02482b12d93d4d3a9ec0d8262392c9f1edf46844a8dedafb21bb2a5",
-        "serial": "emulator-5560",
-        "files": [
-          {
-            "path": "target/android-catalog-evidence/wifi/trust-current-network-failed--top.png",
-            "sha256": "fd5a3749e7dbdf07f6c5c8ea34142c7dc53914f61b745209a5a64bf6a7168d0f"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/trust-current-network-failed--scroll-0-1.png",
-            "sha256": "a8336213f3488df6497ee6e1982614d387938d0dc1332f6bed259ed37fd01122"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/trust-current-network-failed--scroll-0-2.png",
-            "sha256": "16996db70aa7a124b3974238bb93e53f8871443fb15a265d32db88269260ecec"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/trust-current-network-failed--scroll-0-3.png",
-            "sha256": "96c598e584e7dada72a5808c422ca97565f230100f4063943c99c00a9a3edb5c"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/trust-current-network-failed--scroll-0-4.png",
-            "sha256": "bb33501c3aaf34172d49b94e150de8ea98ab9409de2ad497361c48faa401be38"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/trust-current-network-failed--scroll-0-5.png",
-            "sha256": "ac4917069fe1b8bc3d9d0b22c4165fd306b43b6ce69402af19a49789c0b77685"
-          }
-        ]
-      },
+      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
+      "status": "platform_restriction",
+      "evidence": [
+        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "docs/android/security-and-platform.md"
+      ],
+      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
       "related_runtime_evidence": []
     },
     "wifi/trust-current-network-completed": {
@@ -32167,42 +31537,13 @@
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
       ],
-      "android_approach": "Shared production React workflow with the native service-owned Rust command adapter. Backend role/capability enforcement is retained.",
-      "status": "implemented_unverified",
-      "evidence": [],
-      "verification_scope": "Presentation results and related native evidence are separate. Related evidence does not verify every error, role, compatibility or interruption branch in this row.",
-      "android_presentation": {
-        "status": "passed",
-        "scope": "Fictional presentation only; no runtime verification implied.",
-        "bundle_sha256": "e44e47baf02482b12d93d4d3a9ec0d8262392c9f1edf46844a8dedafb21bb2a5",
-        "serial": "emulator-5560",
-        "files": [
-          {
-            "path": "target/android-catalog-evidence/wifi/trust-current-network-completed--top.png",
-            "sha256": "c57884381fe1da9a1e65d4f44f334d109d4d4cf38809d9e631d4df839b12c1dd"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/trust-current-network-completed--scroll-0-1.png",
-            "sha256": "67db720542c4cc8e0bac7f555f54b15f973d7a466bd3bd7f790993ab987cd201"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/trust-current-network-completed--scroll-0-2.png",
-            "sha256": "9e04b0311f4973eda6308c573c0c13f4c987a4044329e2873bd9293da64db127"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/trust-current-network-completed--scroll-0-3.png",
-            "sha256": "8ccd0eb07f222881ee2ef6080a5720b05d44d5a6bbcad11ef29340184f2334b3"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/trust-current-network-completed--scroll-0-4.png",
-            "sha256": "bedca48d5cb02714098fb975f9a7f67cc864f6d85caaa51564702b5a4143d383"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/trust-current-network-completed--scroll-0-5.png",
-            "sha256": "3c524578dc0538113e7e2fa5b1783ba061ad6af5cd0ee3f62b2fa30fbaa37360"
-          }
-        ]
-      },
+      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
+      "status": "platform_restriction",
+      "evidence": [
+        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "docs/android/security-and-platform.md"
+      ],
+      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
       "related_runtime_evidence": []
     },
     "wifi/remove-trusted-network-in-progress": {
@@ -32243,42 +31584,13 @@
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
       ],
-      "android_approach": "Shared production React workflow with the native service-owned Rust command adapter. Backend role/capability enforcement is retained.",
-      "status": "implemented_unverified",
-      "evidence": [],
-      "verification_scope": "Presentation results and related native evidence are separate. Related evidence does not verify every error, role, compatibility or interruption branch in this row.",
-      "android_presentation": {
-        "status": "passed",
-        "scope": "Fictional presentation only; no runtime verification implied.",
-        "bundle_sha256": "e44e47baf02482b12d93d4d3a9ec0d8262392c9f1edf46844a8dedafb21bb2a5",
-        "serial": "emulator-5560",
-        "files": [
-          {
-            "path": "target/android-catalog-evidence/wifi/remove-trusted-network-in-progress--top.png",
-            "sha256": "f15d578ea0c3e9f58ff03fcd60e1528ac9f3dbbde8469898a70201262020e936"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/remove-trusted-network-in-progress--scroll-0-1.png",
-            "sha256": "f4b82eee6dc446a405100b1e06a4ecea421b1af1296815c1decd639c33b83e44"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/remove-trusted-network-in-progress--scroll-0-2.png",
-            "sha256": "c8c7c8689dc281995562d6bcf69f3c09c29f3e8bd3b35d7e53c44cf9f5762dd1"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/remove-trusted-network-in-progress--scroll-0-3.png",
-            "sha256": "1cedf7526c5902bad193bbf5d5cbb7b9a3d0cb5bfdd2be572d11c8d486bb0b87"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/remove-trusted-network-in-progress--scroll-0-4.png",
-            "sha256": "7e21f88c52b1ceb92dfc74485f3fe97257f349fddf7098d601f18cc63705682b"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/remove-trusted-network-in-progress--scroll-0-5.png",
-            "sha256": "9b49c649d276456c8b57138a4dfccdc4a26b0edebdf26945a6345c1159a0deac"
-          }
-        ]
-      },
+      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
+      "status": "platform_restriction",
+      "evidence": [
+        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "docs/android/security-and-platform.md"
+      ],
+      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
       "related_runtime_evidence": []
     },
     "wifi/remove-trusted-network-failed": {
@@ -32319,42 +31631,13 @@
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
       ],
-      "android_approach": "Shared production React workflow with the native service-owned Rust command adapter. Backend role/capability enforcement is retained.",
-      "status": "implemented_unverified",
-      "evidence": [],
-      "verification_scope": "Presentation results and related native evidence are separate. Related evidence does not verify every error, role, compatibility or interruption branch in this row.",
-      "android_presentation": {
-        "status": "passed",
-        "scope": "Fictional presentation only; no runtime verification implied.",
-        "bundle_sha256": "e44e47baf02482b12d93d4d3a9ec0d8262392c9f1edf46844a8dedafb21bb2a5",
-        "serial": "emulator-5560",
-        "files": [
-          {
-            "path": "target/android-catalog-evidence/wifi/remove-trusted-network-failed--top.png",
-            "sha256": "7b0d34f673b760cc1f6953ad605e9882f89f7b7e1482c2c52d35202d15a36f12"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/remove-trusted-network-failed--scroll-0-1.png",
-            "sha256": "7817fbed42293f8de85f6e81ed4f59a6c68925babcecbe1034aba7a600cf3bb7"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/remove-trusted-network-failed--scroll-0-2.png",
-            "sha256": "8c94e5b37d5991372e4fab21645f0d53a2fee610d35f94cc7315024df6f2e1e6"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/remove-trusted-network-failed--scroll-0-3.png",
-            "sha256": "9b0f898d18f4860315bc2bc3211f0ac085fcdba8ef302ab9a4df31f74b37fad2"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/remove-trusted-network-failed--scroll-0-4.png",
-            "sha256": "446bf81360378a735a13e3d3ebe0f1e406d8774e341ca7a73c9ea9b34a6ba545"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/remove-trusted-network-failed--scroll-0-5.png",
-            "sha256": "61b69517993b79902bedceed5a3c2aadf0156f74e6269a14e9f10d73b38dfc5e"
-          }
-        ]
-      },
+      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
+      "status": "platform_restriction",
+      "evidence": [
+        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "docs/android/security-and-platform.md"
+      ],
+      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
       "related_runtime_evidence": []
     },
     "wifi/remove-trusted-network-completed": {
@@ -32395,42 +31678,13 @@
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
       ],
-      "android_approach": "Shared production React workflow with the native service-owned Rust command adapter. Backend role/capability enforcement is retained.",
-      "status": "implemented_unverified",
-      "evidence": [],
-      "verification_scope": "Presentation results and related native evidence are separate. Related evidence does not verify every error, role, compatibility or interruption branch in this row.",
-      "android_presentation": {
-        "status": "passed",
-        "scope": "Fictional presentation only; no runtime verification implied.",
-        "bundle_sha256": "e44e47baf02482b12d93d4d3a9ec0d8262392c9f1edf46844a8dedafb21bb2a5",
-        "serial": "emulator-5560",
-        "files": [
-          {
-            "path": "target/android-catalog-evidence/wifi/remove-trusted-network-completed--top.png",
-            "sha256": "c57884381fe1da9a1e65d4f44f334d109d4d4cf38809d9e631d4df839b12c1dd"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/remove-trusted-network-completed--scroll-0-1.png",
-            "sha256": "131fb9a6d0295f34cd43efe8eb9bf3b430c662997403fc90d785e168e17f3718"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/remove-trusted-network-completed--scroll-0-2.png",
-            "sha256": "970554720fe83909cb575d4dc7ea84b35211bf39b2a57a282fbdc5251c15eb4f"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/remove-trusted-network-completed--scroll-0-3.png",
-            "sha256": "1c2266681932cfc439cebf0520a5d9ab780af360a4242f10241a7bc2ff943ad7"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/remove-trusted-network-completed--scroll-0-4.png",
-            "sha256": "6b3c76273f4a27ebec73971cacac5caf17627bfa82108f4a32ab09ebe15c4fae"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/remove-trusted-network-completed--scroll-0-5.png",
-            "sha256": "33d7edefa2d00ab6e6c18e63b65e8bf5956ca3d60c352b01069f614a0d329460"
-          }
-        ]
-      },
+      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
+      "status": "platform_restriction",
+      "evidence": [
+        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "docs/android/security-and-platform.md"
+      ],
+      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
       "related_runtime_evidence": []
     },
     "wifi/os-wifi-names-existing-trust-records": {
@@ -32480,42 +31734,13 @@
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
       ],
-      "android_approach": "Shared production React workflow with the native service-owned Rust command adapter. Backend role/capability enforcement is retained.",
-      "status": "implemented_unverified",
-      "evidence": [],
-      "verification_scope": "Presentation results and related native evidence are separate. Related evidence does not verify every error, role, compatibility or interruption branch in this row.",
-      "android_presentation": {
-        "status": "passed",
-        "scope": "Fictional presentation only; no runtime verification implied.",
-        "bundle_sha256": "e44e47baf02482b12d93d4d3a9ec0d8262392c9f1edf46844a8dedafb21bb2a5",
-        "serial": "emulator-5560",
-        "files": [
-          {
-            "path": "target/android-catalog-evidence/wifi/os-wifi-names-existing-trust-records--top.png",
-            "sha256": "44bf04007c6d755398be3a2acbb5ea55f6d50d1afbbf769cec07dcdad30e5104"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/os-wifi-names-existing-trust-records--scroll-0-1.png",
-            "sha256": "111aa00205bd30ec92aeb4435f9063497263f6eb2e62fd6122709244edababd6"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/os-wifi-names-existing-trust-records--scroll-0-2.png",
-            "sha256": "604ea4bad9b640a0d405d6708df58eb45ba79877942b5af63f5b00e4519a26cf"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/os-wifi-names-existing-trust-records--scroll-0-3.png",
-            "sha256": "6e809b14a19ebae7a82efdf41113eff6ee00abd1fb453819bd73e639ac75dd6c"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/os-wifi-names-existing-trust-records--scroll-0-4.png",
-            "sha256": "9eca032585f08c2f18fd14ce0d25137c0f9ba6fec8a94ba7d2924a1fa06d7227"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/os-wifi-names-existing-trust-records--scroll-0-5.png",
-            "sha256": "b4b0816b661ff8695ce9dfc2e53aad82032025f3bdc738930824e5ba52e4fd0b"
-          }
-        ]
-      },
+      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
+      "status": "platform_restriction",
+      "evidence": [
+        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "docs/android/security-and-platform.md"
+      ],
+      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
       "related_runtime_evidence": []
     },
     "wifi/os-wifi-names-custom-labels": {
@@ -32565,42 +31790,13 @@
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
       ],
-      "android_approach": "Shared production React workflow with the native service-owned Rust command adapter. Backend role/capability enforcement is retained.",
-      "status": "implemented_unverified",
-      "evidence": [],
-      "verification_scope": "Presentation results and related native evidence are separate. Related evidence does not verify every error, role, compatibility or interruption branch in this row.",
-      "android_presentation": {
-        "status": "passed",
-        "scope": "Fictional presentation only; no runtime verification implied.",
-        "bundle_sha256": "e44e47baf02482b12d93d4d3a9ec0d8262392c9f1edf46844a8dedafb21bb2a5",
-        "serial": "emulator-5560",
-        "files": [
-          {
-            "path": "target/android-catalog-evidence/wifi/os-wifi-names-custom-labels--top.png",
-            "sha256": "07d5c8f420bd00402d0c549f31e1f76bf30f7f384694ceec17cc729d3f774112"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/os-wifi-names-custom-labels--scroll-0-1.png",
-            "sha256": "69e85cf1ef2f93e5d2281b13ed4d04f0497f283441a35927c8fc5fe4aa228c24"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/os-wifi-names-custom-labels--scroll-0-2.png",
-            "sha256": "795d27e9add69277efc9a47de957f3e7b81d0343b962c80875ff875ef245c8db"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/os-wifi-names-custom-labels--scroll-0-3.png",
-            "sha256": "f2259ca0551e0328f38d6025cd097d22b45ff7b52b540980d2ea868f5b5e8dd5"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/os-wifi-names-custom-labels--scroll-0-4.png",
-            "sha256": "97e42a265e59ff62a6bc6409f1402d27f65c81ac655d862975036e13c0a936e4"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/os-wifi-names-custom-labels--scroll-0-5.png",
-            "sha256": "79fa8d312cb9c1583d0d3b1d5576ae8f1e90d0a8a7ae03b1ca959cdbd6141193"
-          }
-        ]
-      },
+      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
+      "status": "platform_restriction",
+      "evidence": [
+        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "docs/android/security-and-platform.md"
+      ],
+      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
       "related_runtime_evidence": []
     },
     "wifi/os-wifi-names-unavailable": {
@@ -32647,42 +31843,13 @@
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
       ],
-      "android_approach": "Shared production React workflow with the native service-owned Rust command adapter. Backend role/capability enforcement is retained.",
-      "status": "implemented_unverified",
-      "evidence": [],
-      "verification_scope": "Presentation results and related native evidence are separate. Related evidence does not verify every error, role, compatibility or interruption branch in this row.",
-      "android_presentation": {
-        "status": "passed",
-        "scope": "Fictional presentation only; no runtime verification implied.",
-        "bundle_sha256": "e44e47baf02482b12d93d4d3a9ec0d8262392c9f1edf46844a8dedafb21bb2a5",
-        "serial": "emulator-5560",
-        "files": [
-          {
-            "path": "target/android-catalog-evidence/wifi/os-wifi-names-unavailable--top.png",
-            "sha256": "a416def77060d15257a471241c4e400fb8513985a55d98810c435efc3aaadb62"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/os-wifi-names-unavailable--scroll-0-1.png",
-            "sha256": "9e7f2c731fb342ce72e8800d489b2a4843929341cc72a226d4a99afb25e38bb1"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/os-wifi-names-unavailable--scroll-0-2.png",
-            "sha256": "319015e2332959c5a15788097717afa68436b8bfa1b4c563dc1912d18319395f"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/os-wifi-names-unavailable--scroll-0-3.png",
-            "sha256": "5dcdfbe3e982a08a313140b2848a8f1b2367a1cbc4d5d163f521fa64999ea247"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/os-wifi-names-unavailable--scroll-0-4.png",
-            "sha256": "211ebfc53f31f04c691bad2e9a6b401855eca8fdd3c77ffea0dbb3e9e82498a9"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/os-wifi-names-unavailable--scroll-0-5.png",
-            "sha256": "292343e9fbeddb02951da0aff7fde65c03f2bc9de030fb3c3c5d5b763e6ca679"
-          }
-        ]
-      },
+      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
+      "status": "platform_restriction",
+      "evidence": [
+        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "docs/android/security-and-platform.md"
+      ],
+      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
       "related_runtime_evidence": []
     },
     "wifi/os-wifi-names-long-and-unicode": {
@@ -32732,42 +31899,13 @@
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
       ],
-      "android_approach": "Shared production React workflow with the native service-owned Rust command adapter. Backend role/capability enforcement is retained.",
-      "status": "implemented_unverified",
-      "evidence": [],
-      "verification_scope": "Presentation results and related native evidence are separate. Related evidence does not verify every error, role, compatibility or interruption branch in this row.",
-      "android_presentation": {
-        "status": "passed",
-        "scope": "Fictional presentation only; no runtime verification implied.",
-        "bundle_sha256": "e44e47baf02482b12d93d4d3a9ec0d8262392c9f1edf46844a8dedafb21bb2a5",
-        "serial": "emulator-5560",
-        "files": [
-          {
-            "path": "target/android-catalog-evidence/wifi/os-wifi-names-long-and-unicode--top.png",
-            "sha256": "02e70989524434dffed9e02ea711bdb64a1f67c04a15231c0a51d9d0107d6f5c"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/os-wifi-names-long-and-unicode--scroll-0-1.png",
-            "sha256": "819a035b8aea635b19c727b9b99b930cbe45156b0eb6677de3f5bc92837f7272"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/os-wifi-names-long-and-unicode--scroll-0-2.png",
-            "sha256": "85a43a5e41776fba712ea95b80a7e9d0e684006329061eab4cc404229a8a88fc"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/os-wifi-names-long-and-unicode--scroll-0-3.png",
-            "sha256": "6a320fd82febd4124f54df203cbae88cd1b8e9fab23cb7d23bda8d2c876e8a37"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/os-wifi-names-long-and-unicode--scroll-0-4.png",
-            "sha256": "fab189c6ff82f6242b4611cf60796007219823ef6515cefd1c0a13204adb806d"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/os-wifi-names-long-and-unicode--scroll-0-5.png",
-            "sha256": "f3c8acb718d1882883f4594f14f9719f29e5c929ac7f103f7e313e8128fbd11d"
-          }
-        ]
-      },
+      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
+      "status": "platform_restriction",
+      "evidence": [
+        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "docs/android/security-and-platform.md"
+      ],
+      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
       "related_runtime_evidence": []
     },
     "wifi/os-wifi-names-unbroken": {
@@ -32817,42 +31955,13 @@
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
       ],
-      "android_approach": "Shared production React workflow with the native service-owned Rust command adapter. Backend role/capability enforcement is retained.",
-      "status": "implemented_unverified",
-      "evidence": [],
-      "verification_scope": "Presentation results and related native evidence are separate. Related evidence does not verify every error, role, compatibility or interruption branch in this row.",
-      "android_presentation": {
-        "status": "passed",
-        "scope": "Fictional presentation only; no runtime verification implied.",
-        "bundle_sha256": "e44e47baf02482b12d93d4d3a9ec0d8262392c9f1edf46844a8dedafb21bb2a5",
-        "serial": "emulator-5560",
-        "files": [
-          {
-            "path": "target/android-catalog-evidence/wifi/os-wifi-names-unbroken--top.png",
-            "sha256": "02e70989524434dffed9e02ea711bdb64a1f67c04a15231c0a51d9d0107d6f5c"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/os-wifi-names-unbroken--scroll-0-1.png",
-            "sha256": "0ddb2e58c8ac9717db2d667f983eb75cf8f32d99881107a305189f5425476155"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/os-wifi-names-unbroken--scroll-0-2.png",
-            "sha256": "2e54746b48c2139dee1dff154b0625e66b1dbd3c3134349a31afca3e6f265d5c"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/os-wifi-names-unbroken--scroll-0-3.png",
-            "sha256": "4fd37a7fcf35e0b4f6a6f52308b382c5890492e4184eea5add790d21c916b608"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/os-wifi-names-unbroken--scroll-0-4.png",
-            "sha256": "ce5da3e8e77d31d988420631db532cc29abfbb5bcd688c379fb58b8349b4baaf"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/os-wifi-names-unbroken--scroll-0-5.png",
-            "sha256": "79f452c2a1fef7986d0bf07a679eddedf5616226779983e04ed4b4da19217eca"
-          }
-        ]
-      },
+      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
+      "status": "platform_restriction",
+      "evidence": [
+        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "docs/android/security-and-platform.md"
+      ],
+      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
       "related_runtime_evidence": []
     },
     "wifi/os-wifi-name-network-change": {
@@ -32883,42 +31992,13 @@
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
       ],
-      "android_approach": "Shared production React workflow with the native service-owned Rust command adapter. Backend role/capability enforcement is retained.",
-      "status": "implemented_unverified",
-      "evidence": [],
-      "verification_scope": "Presentation results and related native evidence are separate. Related evidence does not verify every error, role, compatibility or interruption branch in this row.",
-      "android_presentation": {
-        "status": "passed",
-        "scope": "Fictional presentation only; no runtime verification implied.",
-        "bundle_sha256": "e44e47baf02482b12d93d4d3a9ec0d8262392c9f1edf46844a8dedafb21bb2a5",
-        "serial": "emulator-5560",
-        "files": [
-          {
-            "path": "target/android-catalog-evidence/wifi/os-wifi-name-network-change--top.png",
-            "sha256": "4831904a30e2aadbe1a2f25e3530488e2a5c01aa597cb4803feb47c39e3afe1b"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/os-wifi-name-network-change--scroll-0-1.png",
-            "sha256": "3417b496fe48961785bbf213470713d6ec62b0555639b4ae94bca5d3e965523b"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/os-wifi-name-network-change--scroll-0-2.png",
-            "sha256": "08b474a53a6b01187c8b7fc3c8db8f5ed58fb585739d841feb3f5cfe6985221c"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/os-wifi-name-network-change--scroll-0-3.png",
-            "sha256": "35183928af040ee96f9042e8d35e54d6cfdc00caaf79290e633f1760267e4975"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/os-wifi-name-network-change--scroll-0-4.png",
-            "sha256": "72cc00daf2a19988316b49919eb789521c560906c010f45197d3be0ba236ee94"
-          },
-          {
-            "path": "target/android-catalog-evidence/wifi/os-wifi-name-network-change--scroll-0-5.png",
-            "sha256": "baf629eda5b4c6231ab2513059f803286a6d0363f579ed85c1b432858d071cf0"
-          }
-        ]
-      },
+      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
+      "status": "platform_restriction",
+      "evidence": [
+        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "docs/android/security-and-platform.md"
+      ],
+      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
       "related_runtime_evidence": []
     },
     "connection/startup-status-unknown": {
@@ -44066,7 +43146,7 @@
     }
   },
   "android_presentation_counts": {
-    "passed": 552,
+    "passed": 520,
     "android_native_workflow_requires_separate_evidence": 33,
     "native_equivalent_requires_separate_evidence": 61
   }

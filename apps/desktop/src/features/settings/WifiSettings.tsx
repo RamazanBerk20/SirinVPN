@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { api } from "../../api";
-import { invoke, isAndroid } from "../../platform";
 import { InlineError } from "../../components/ui";
 import { errorMessage } from "../../lib/errors";
 import type { ServerProfile, WifiPolicySnapshot } from "../../types";
@@ -40,10 +39,7 @@ export function WifiSettings() {
   const writing = useRef(false);
   // A later successful poll clears only errors that polling itself reported.
   const pollFailed = useRef(false);
-  const [info, infoPanel] = useInfoHint(
-    t(isAndroid ? "settings.wifi.infoAndroid" : "settings.wifi.infoDesktop"),
-    t("settings.wifi.infoLabel"),
-  );
+  const [info, infoPanel] = useInfoHint(t("settings.wifi.infoDesktop"), t("settings.wifi.infoLabel"));
   const applySnapshot = (next: WifiPolicySnapshot, profiles?: ServerProfile[]) => {
     setSnapshot(next);
     if (profiles) setServers(profiles);
@@ -136,12 +132,7 @@ export function WifiSettings() {
   }
   const networkChanged = snapshot?.current_network_token !== reviewedToken;
   const currentName = snapshot?.network_names?.[snapshot.current_network_token ?? ""];
-  const permissionRequired = isAndroid && snapshot?.permission_required === true;
-  const locationOff = isAndroid && snapshot?.location_enabled === false;
-  const trustReason = permissionRequired
-    ? t("settings.wifi.access.permission")
-    : locationOff ? t("settings.wifi.access.locationOff")
-    : !snapshot?.can_trust_current || !snapshot.current_network_token
+  const trustReason = !snapshot?.can_trust_current || !snapshot.current_network_token
     ? t("settings.wifi.access.unidentified")
     : networkChanged ? t("settings.wifi.access.changed") : "";
   return <section className="settings-card wifi-settings" aria-label={t("settings.wifi.title")} aria-busy={busy}>
@@ -166,17 +157,6 @@ export function WifiSettings() {
         : t(networkLabels[snapshot.current_network])}</p>
       {snapshot.policy.enabled && <p className={snapshot.automation_status === "waiting_for_network_change" ? "wifi-paused" : "settings-note"} role="status">{t(statusLabels[snapshot.automation_status])}</p>}
       {snapshot.current_network === "untrusted_wifi" && <>
-        {permissionRequired || locationOff ? <div className="wifi-access">
-          <p id="wifi-trust-reason" className="settings-note">{trustReason}</p>
-          <div className="settings-action-row">
-            {permissionRequired && <button className="secondary-button" disabled={busy} onClick={() => void action(async () => {
-              if (!await invoke<boolean>("android_wifi_permission"))
-                throw new Error(t("settings.wifi.access.denied"));
-            }, true)}>{t("settings.wifi.access.allow")}</button>}
-            {locationOff && <button className="secondary-button" disabled={busy} onClick={() => void invoke("android_location_settings")}>{t("settings.wifi.access.locationSettings")}</button>}
-            <button className="text-button" onClick={() => void invoke("android_background_wifi_settings")}>{t("settings.wifi.access.appPermissions")}</button>
-          </div>
-        </div> : <>
         <div className="settings-action-row">
           <label className="field"><span>{t("settings.wifi.trust.label")}</span><input value={label} maxLength={80} placeholder={t("settings.wifi.trust.placeholder")} onChange={(e) => setLabel(e.target.value)} disabled={busy || Boolean(trustReason)} /></label>
           <button className="secondary-button" disabled={busy || Boolean(trustReason)}
@@ -184,7 +164,6 @@ export function WifiSettings() {
             onClick={() => void action(() => api.trustCurrentWifi(reviewedToken!, label.trim() || UNNAMED_NETWORK_LABEL), true)}>{t("settings.wifi.trust.action")}</button>
         </div>
         {trustReason && <p id="wifi-trust-reason" className="settings-note">{trustReason}</p>}
-        </>}
       </>}
       {snapshot.trusted_networks.length > 0 && <ul className="plain-list">{snapshot.trusted_networks.map((network) => {
         const osName = snapshot.network_names?.[network.id];
@@ -196,15 +175,11 @@ export function WifiSettings() {
             {osName && friendly && friendly !== osName && <p className="settings-note">{t("settings.wifi.trusted.label", { label: friendly })}</p>}
             <p className="settings-note">{osName ? kind : t("common.separator.pair", { first: kind, second: t("settings.wifi.trusted.nameUnavailable") })}</p>
           </div>
-          <button className={isAndroid ? "secondary-button" : "text-button"} aria-label={t("settings.wifi.trusted.removeLabel", { name })} disabled={busy} onClick={() => void action(() => api.forgetTrustedWifi(network.id))}>{t("settings.wifi.trusted.remove")}</button>
+          <button className="text-button" aria-label={t("settings.wifi.trusted.removeLabel", { name })} disabled={busy} onClick={() => void action(() => api.forgetTrustedWifi(network.id))}>{t("settings.wifi.trusted.remove")}</button>
         </li>;
       })}</ul>}
     </>}
     <button className="text-button" disabled={busy} onClick={() => void action(async () => {}, true)}>{t("settings.wifi.refresh")}</button>
-    {isAndroid && snapshot?.can_trust_current && <div>
-      <p className="settings-note">{t("settings.wifi.background.summary")}</p>
-      <button className="text-button" onClick={() => void invoke("android_background_wifi_settings")}>{t("settings.wifi.background.action")}</button>
-    </div>}
     <InlineError message={error} />
   </section>;
 }

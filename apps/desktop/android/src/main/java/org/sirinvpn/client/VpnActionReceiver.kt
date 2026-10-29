@@ -11,7 +11,6 @@ class VpnActionReceiver : BroadcastReceiver() {
         if (intent.getLongExtra("generation",-1) < 0) return
         val command=when(intent.action) {
             "org.sirinvpn.CONNECT" -> "connect_saved"
-            "org.sirinvpn.STOP_AUTOMATION" -> "disable_wifi_automation"
             else -> "disconnect_server"
         }
         if (context.getSystemService(KeyguardManager::class.java).isDeviceLocked) {

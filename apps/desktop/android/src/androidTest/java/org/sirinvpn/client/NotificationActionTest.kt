@@ -41,7 +41,7 @@ class NotificationActionTest {
             SystemClock.sleep(1000)
             val before = snapshot()
             assertTrue(before.getString("phase") in setOf("disconnected", "paused", "failed"))
-            assertFalse(before.optBoolean("always_on") || before.optBoolean("wifi_automation_enabled") || before.optBoolean("operation_in_progress"))
+            assertFalse(before.optBoolean("always_on") || before.optBoolean("operation_in_progress"))
             assertNull("Grant VPN consent on this isolated emulator first", android.net.VpnService.prepare(context))
             VpnNotifications.channels(context)
             for (phase in listOf("connected", "reconnecting")) {

@@ -15,7 +15,8 @@ happy path does not verify an entire family. See [actual coverage](progress.md).
 | key-rotation, recovery-keys, device-backups | Shared transactions, Keystore, protected QR/SAF; policy-preserving rotation and encrypted round trips | Every interrupted/recovery-policy branch; camera decoding |
 | endpoint | Signed migration/publication/checkpoints; invalid inputs retain the tunnel | Positive cross-address migration end to end |
 | diagnostics, vps-backup, vps-restore, vps-repair, vps-updates, removal | Service-owned operations; backup/restore/repair and guarded uninstall exercised; shared release verification | Signed VPS update/rollback, diagnostics and interruption coverage |
-| general, settings, wifi | Shared preferences, native policy/permission entry points, salted local Wi-Fi trust; real draft/Back/font checks | Physical Wi-Fi permission/trust and process-death draft restoration |
+| general, settings | Shared preferences; real draft/Back/font checks | Process-death draft restoration |
+| wifi | Desktop-only: the Android app omits Wi-Fi auto-connect and requests no location permission | None |
 | app-updates | Signed releases, APK package/version/signer checks, OS consent; rejection/cancellation exercised | Actual artifact download, replacement and reconstruction |
 | compact-window, dialogs, tooltips | SirinVPN mobile styling, four destinations, insets/IME, touch help, Back guards; narrow/landscape/200% tests | TalkBack, split-screen, complete process-death restoration |
 | native-confirmations, native-file-dialogs, native-selects | Native confirmation, SAF, package/permission controls; real protected entry/QR/share cancellation | Every confirmation/select and completed external sharing |

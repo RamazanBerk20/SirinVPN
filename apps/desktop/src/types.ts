@@ -144,8 +144,6 @@ export interface WifiPolicySnapshot {
   current_network: "unavailable" | "other_network" | "trusted_wifi" | "untrusted_wifi";
   can_trust_current: boolean;
   current_network_token: string | null;
-  permission_required?: boolean;
-  location_enabled?: boolean;
   network_names?: Record<string, string>;
   automation_status: "disabled" | "waiting_for_wifi" | "trusted" | "connecting" | "session_active" | "waiting_for_network_change" | "needs_attention" | "needs_authorization";
 }

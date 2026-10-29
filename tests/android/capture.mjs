@@ -52,6 +52,11 @@ for(const [index,s] of cases.entries()) {
     row.disposition='native_equivalent_requires_separate_evidence';
     appendFileSync(log,JSON.stringify(row)+'\n');continue;
   }
+  if(key.startsWith('wifi/')) {
+    row.disposition='desktop_only';
+    row.adaptation='Wi-Fi auto-connect is desktop-only; the Android app omits it. See docs/android/scenarios.json.';
+    appendFileSync(log,JSON.stringify(row)+'\n');continue;
+  }
   if(/local-component|update-local-vpn-component|retained-appimage|application-launch|launch-application|launched-command|startup-|activate-startup/.test(key) ||
       s.actions.some(a=>/Start at sign-in|Start minimized|Close to tray/.test(a.css??''))) {
     row.disposition='android_native_workflow_requires_separate_evidence';

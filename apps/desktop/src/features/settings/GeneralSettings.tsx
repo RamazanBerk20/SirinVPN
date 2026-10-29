@@ -112,7 +112,7 @@ export function GeneralSettings({
           <p className="settings-note">{t("settings.general.startup.note")}</p>
         </section>
       )}
-      <WifiSettings />
+      {platform === "desktop" && <WifiSettings />}
       {platform === "desktop" && <CredentialStorage />}
       {platform === "android" && <section className="settings-card">
         <h2>{t("settings.general.android.title")}</h2>

@@ -29,7 +29,7 @@ class ControlActionActivity : Activity() {
         if(requestCode==1 && resultCode==RESULT_OK) performCommand() else finish()
     }
     private fun performCommand() {
-        val command=intent.getStringExtra("command").takeIf { it in setOf("connect_saved", "disable_wifi_automation") } ?: "disconnect_server"
+        val command=intent.getStringExtra("command").takeIf { it == "connect_saved" } ?: "disconnect_server"
         val link = ServiceLink(this); link.bind()
         link.ready.whenComplete { service, error ->
             if (error == null) service.execute(command, "{}", UUID.randomUUID().toString(), intent.getLongExtra("generation", -2),

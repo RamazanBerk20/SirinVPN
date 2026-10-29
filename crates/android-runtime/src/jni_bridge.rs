@@ -152,15 +152,6 @@ impl Platform {
             Ok(())
         })
     }
-    pub fn wifi(&self) -> Result<serde_json::Value> {
-        self.with_env(|env| {
-            let value = env
-                .call_method(&self.object, "wifi", "()Ljava/lang/String;", &[])?
-                .l()?;
-            let text: String = env.get_string(&JString::from(value))?.into();
-            Ok(serde_json::from_str(&text)?)
-        })
-    }
     pub fn installed_apk(&self) -> Result<std::path::PathBuf> {
         self.with_env(|env| {
             let value = env

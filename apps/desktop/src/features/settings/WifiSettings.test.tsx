@@ -3,13 +3,11 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testi
 import { WifiSettings } from "./WifiSettings";
 import type { WifiPolicySnapshot } from "../../types";
 import { t } from "../../i18n";
-const mocks = vi.hoisted(() => ({ getWifiPolicy: vi.fn(), listServers: vi.fn(), setWifiPolicy: vi.fn(), trustCurrentWifi: vi.fn(), forgetTrustedWifi: vi.fn(), invoke: vi.fn(), android: false }));
+const mocks = vi.hoisted(() => ({ getWifiPolicy: vi.fn(), listServers: vi.fn(), setWifiPolicy: vi.fn(), trustCurrentWifi: vi.fn(), forgetTrustedWifi: vi.fn() }));
 vi.mock("../../api", () => ({ api: mocks }));
-vi.mock("../../platform", () => ({ get isAndroid() { return mocks.android; }, invoke: mocks.invoke }));
 const initial: WifiPolicySnapshot = { policy: { enabled: false, server_id: null }, trusted_networks: [], current_network: "untrusted_wifi", current_network_token: "network-one", can_trust_current: true, automation_status: "disabled" };
 beforeEach(() => {
   vi.resetAllMocks();
-  mocks.android = false;
   mocks.getWifiPolicy.mockResolvedValue(structuredClone(initial));
   mocks.listServers.mockResolvedValue([{ id: "server-one", name: "Personal VPS" }]);
 });
@@ -80,37 +78,6 @@ it("shows why an unidentified Wi-Fi connection cannot be marked trusted", async 
   const trust = await screen.findByRole("button", { name: t("settings.wifi.trust.action") });
   expect(trust.matches(":disabled")).toBe(true);
   expect(screen.getByText(t("settings.wifi.access.unidentified"))).toBeTruthy();
-});
-
-it("guides Android permission denial and requires an explicit trust action after granting access", async () => {
-  mocks.android = true;
-  mocks.getWifiPolicy.mockResolvedValue({ ...initial, can_trust_current: false, permission_required: true, location_enabled: true });
-  mocks.invoke.mockResolvedValue(false);
-  render(<WifiSettings />);
-  fireEvent.click(await screen.findByRole("button", { name: t("settings.wifi.access.allow") }));
-  expect(await screen.findByText(t("settings.wifi.access.denied"))).toBeTruthy();
-  expect(mocks.invoke).toHaveBeenCalledWith("android_wifi_permission");
-  expect(screen.queryByRole("button", { name: t("settings.wifi.trust.action") })).toBeNull();
-  fireEvent.click(screen.getByRole("button", { name: t("settings.wifi.access.appPermissions") }));
-  expect(mocks.invoke).toHaveBeenCalledWith("android_background_wifi_settings");
-  mocks.invoke.mockResolvedValue(true);
-  mocks.getWifiPolicy.mockResolvedValue({ ...initial, current_network_token: "identified-network", permission_required: false, location_enabled: true });
-  fireEvent.click(screen.getByRole("button", { name: t("settings.wifi.access.allow") }));
-  const trust = await screen.findByRole("button", { name: t("settings.wifi.trust.action") });
-  expect(trust.matches(":disabled")).toBe(false);
-  expect(mocks.trustCurrentWifi).not.toHaveBeenCalled();
-  fireEvent.click(trust);
-  await waitFor(() => expect(mocks.trustCurrentWifi).toHaveBeenCalledWith("identified-network", "Wi-Fi exception"));
-});
-
-it("offers Android Location settings when permission is granted but Location is off", async () => {
-  mocks.android = true;
-  mocks.getWifiPolicy.mockResolvedValue({ ...initial, can_trust_current: false, permission_required: false, location_enabled: false });
-  render(<WifiSettings />);
-  fireEvent.click(await screen.findByRole("button", { name: t("settings.wifi.access.locationSettings") }));
-  expect(mocks.invoke).toHaveBeenCalledWith("android_location_settings");
-  expect(screen.queryByRole("button", { name: t("settings.wifi.access.allow") })).toBeNull();
-  expect(mocks.trustCurrentWifi).not.toHaveBeenCalled();
 });
 
 it("refreshes a manual-disconnect pause but requires review when the network token changes", async () => {

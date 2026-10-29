@@ -144,14 +144,10 @@ def main():
         # This fresh AVD alone receives fixture consent/permissions. These native
         # service checks do not qualify the OS consent-dialog interaction.
         run([*adb, "shell", "appops", "set", "org.sirinvpn.client", "ACTIVATE_VPN", "allow"])
-        for permission in ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION", "ACCESS_BACKGROUND_LOCATION"]:
-            run([*adb, "shell", "pm", "grant", "org.sirinvpn.client", "android.permission." + permission])
-        run([*adb, "shell", "settings", "put", "secure", "location_mode", "3"])
         if args.api == 36:
             # Boot completion alone does not mean broadcasts have drained or the
             # synthetic Wi-Fi is the active underlay after an interrupted update.
             run([*adb, "shell", "am", "wait-for-broadcast-barrier"], timeout=180)
-            run([*adb, "shell", "cmd", "location", "set-location-enabled", "true"])
             run([*adb, "shell", "svc", "wifi", "enable"])
             selected = run([*adb, "shell", "cmd", "wifi", "connect-network", "AndroidWifi", "open"], timeout=60)
             (output / "wifi-connect.log").write_bytes(selected.stdout+selected.stderr)
@@ -169,8 +165,6 @@ def main():
         cases = ["VaultAcceptanceTest", "NotificationTrafficTest", "QrScannerTest", "NetworkRecoveryTest",
                  "OptionHandlingTest#packageReplacementUsesOrdinaryRecovery",
                  "OptionHandlingTest#optionsControlTheRunningService"]
-        if args.api >= 30:
-            cases.append("OptionHandlingTest#savedWifiIdentitySurvivesRoaming")
         result = run([*adb, "shell", "am", "instrument", "-w", "-r", "-e", "class",
             ",".join("org.sirinvpn.client." + case for case in cases),
             "org.sirinvpn.client.test/androidx.test.runner.AndroidJUnitRunner"], timeout=300)

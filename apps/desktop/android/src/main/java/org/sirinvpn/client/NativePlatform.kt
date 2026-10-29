@@ -1,7 +1,6 @@
 package org.sirinvpn.client
 
 import android.content.Context
-import android.net.ConnectivityManager
 import android.os.ParcelFileDescriptor
 import org.json.JSONObject
 import java.net.InetAddress
@@ -25,21 +24,6 @@ class NativePlatform(private val context: Context) {
                 check(digest(file)==expected)
             }
         }
-    }
-    fun wifi(): String {
-        val manager=context.getSystemService(ConnectivityManager::class.java)
-        val underlying=Controller.network ?: return "{}"
-        val wifi=manager.getNetworkCapabilities(underlying)?.hasTransport(android.net.NetworkCapabilities.TRANSPORT_WIFI)==true
-        val permitted=context.checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION)==android.content.pm.PackageManager.PERMISSION_GRANTED
-        val locationEnabled=context.getSystemService(android.location.LocationManager::class.java).isLocationEnabled
-        @Suppress("DEPRECATION") val info=if(wifi && permitted) context.getSystemService(android.net.wifi.WifiManager::class.java).connectionInfo else null
-        val name=info?.ssid?.takeIf { it.isNotBlank() && it != "<unknown ssid>" }
-        val identifier=savedWifiIdentifier(info)
-        val trustable=locationEnabled && identifier!=null
-        return JSONObject().put("wifi",wifi).put("trustable",trustable)
-            .put("identifier",if(trustable) identifier else "unknown:${underlying.networkHandle}")
-            .put("name",name?.removeSurrounding("\"") ?: JSONObject.NULL).put("permission_required",wifi && !permitted)
-            .put("location_enabled",locationEnabled).toString()
     }
     fun installedApk(): String = context.applicationInfo.sourceDir
     fun installApk(path: String) = ApkInstaller.install(context,path)
@@ -163,11 +147,4 @@ class NativePlatform(private val context: Context) {
     fun deactivate(generation: Long) = synchronized(Controller.engineLock) {
         if (Controller.current(generation)) Controller.stopEngine()
     }
-}
-
-/** Bind trust to Android's saved configuration, not a roaming access point or transient Network. */
-internal fun savedWifiIdentifier(info: android.net.wifi.WifiInfo?): String? {
-    val name=info?.ssid?.takeIf { it.isNotBlank() && it != "<unknown ssid>" } ?: return null
-    val id=info.networkId.takeIf { it>=0 } ?: return null
-    return "saved:v1:$id:${name.length}:$name"
 }

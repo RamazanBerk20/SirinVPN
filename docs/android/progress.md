@@ -31,6 +31,15 @@ the app launched successfully. Physical QR retesting remains pending.
 This is a **debug-signed, debuggable development build**, not a production release.
 Existing desktop changes and the existing signing identity were retained.
 
+## Wi-Fi auto-connect removed, 29 October
+
+Wi-Fi auto-connect is now desktop-only. Android cannot watch for a new Wi-Fi
+connection without a running service and its notification, so the Android app
+omits the feature: the settings section, the controller rule and its monitoring
+notification, the Wi-Fi identity bridge and the location permissions are gone.
+The 32 `wifi` scenarios are recorded as a platform restriction. Earlier sections
+below describe the removed Android behavior as it was tested then.
+
 ## Android option handling, 22 September
 
 Reconnect saves previously left the running service's retry state and saved
@@ -373,7 +382,7 @@ and every role/error/compatibility branch in the matrix.
 Native/device coverage still needed: physical ARM64/16 KB hardware, secure-PIN
 locked boot and tile authentication, a competing VPN, physical Wi-Fi/mobile
 handoff and OEM power policies, TalkBack/reading order, split-screen, physical
-camera decoding, blocked notification channels, Wi-Fi permission/identity branches,
+camera decoding, blocked notification channels,
 completed external sharing, and external IPv6 leak tests. An observed containment
 route and short emulator Doze test do not establish those outcomes.
 
