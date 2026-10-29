@@ -30,7 +30,7 @@ class DependencyPolicy(unittest.TestCase):
         report = fixture()
         original = copy.deepcopy(report)
         reviewed, blocked = CHECK.review_results(report, 1, ["Cargo.lock"], TODAY)
-        self.assertEqual((len(reviewed), blocked), (9, []))
+        self.assertEqual((len(reviewed), blocked), (13, []))
         self.assertEqual(report, original)
         for change in ("id", "version", "ecosystem", "license", "classification", "severity", "expiry"):
             with self.subTest(change=change):

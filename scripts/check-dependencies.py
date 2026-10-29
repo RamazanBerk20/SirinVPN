@@ -31,8 +31,14 @@ REVIEWS = {
     "RUSTSEC-2025-0080": ("crates.io", "unic-common", "0.9.0", "unmaintained"),
     "RUSTSEC-2025-0100": ("crates.io", "unic-ucd-ident", "0.9.0", "unmaintained"),
     "RUSTSEC-2025-0098": ("crates.io", "unic-ucd-version", "0.9.0", "unmaintained"),
-    # Rechecked 2026-10-09 for the x/net security update; expiry is unchanged.
-    "GO-2026-5932": ("Go", "golang.org/x/crypto", "0.57.0", "OpenPGP not imported"),
+    # Added 2026-10-29: merged into zbus 6, which no stable Tauri notification stack uses yet.
+    "RUSTSEC-2026-0370": ("crates.io", "zvariant", "5.15.0", "unmaintained"),
+    "RUSTSEC-2026-0371": ("crates.io", "zbus_names", "4.3.4", "unmaintained"),
+    "RUSTSEC-2026-0372": ("crates.io", "zvariant_derive", "5.15.0", "unmaintained"),
+    # 0.10.x keeps its cursor in a separate field; the advisory's inline-cursor buffers start in 0.11.
+    "GHSA-qwgh-2vcv-g2f7": ("crates.io", "block-buffer", "0.10.4", "separate cursor field"),
+    # Rechecked 2026-10-29 for the x/net 0.62.0 security update; expiry is unchanged.
+    "GO-2026-5932": ("Go", "golang.org/x/crypto", "0.58.0", "OpenPGP not imported"),
 }
 
 
