@@ -33,12 +33,14 @@ class Acceptance:
         self.logs.mkdir(exist_ok=True)
         self.identity = str(uuid.uuid4())
         self.report = {
-            "scope": "Packaged Linux CLI, Polkit helper and real WireGuard VPS in two Debian 13 VMs",
+            "scope": "Packaged Linux CLI, Polkit helper and real WireGuard VPS in two disposable VMs",
             "host_root": False, "host_privileged_networking": False,
             "limits": {"memory_bytes": 4 * 1024**3, "swap_bytes": 0,
                        "cpu_percent": 150, "server_memory_mib": 1024,
                        "client_memory_mib": 1536},
             "package_sha256": digest(args.package), "base_image_sha256": digest(args.base),
+            "vps_base_image_sha256": digest(args.vps_base or args.base),
+            "vps_dns_upstream": args.vps_dns_over_tls or "recursive",
             "checks": [],
         }
 
@@ -119,7 +121,9 @@ class Acceptance:
         guest.put(ROOT / "tests/vm/acceptance_guest.py", "/home/sirin/acceptance-guest.py")
         if client:
             guest.put((self.args.upgrade_from or self.args.package).resolve(), "/home/sirin/sirinvpn.deb")
-        if self.args.dependency_archives:
+        # The optional caches hold Debian downloads and indexes; a VPS guest from --vps-base fetches its own.
+        debian_caches = guest.base == self.args.base.resolve()
+        if self.args.dependency_archives and debian_caches:
             # Only public .deb downloads enter apt's cache. Apt still verifies
             # their signed repository hashes before installing dependencies.
             with tarfile.open(self.args.dependency_archives) as archive:
@@ -132,7 +136,7 @@ class Acceptance:
             guest.ssh(['sudo', '-n', 'mkdir', '-p', '/var/cache/apt/archives'], timeout=10)
             guest.ssh(['sudo', '-n', 'tar', '-xzf', '/home/sirin/dependencies.tar.gz',
                        '-C', '/var/cache/apt/archives', '--no-same-owner'], timeout=60)
-        if self.args.dependency_indexes:
+        if self.args.dependency_indexes and debian_caches:
             with tarfile.open(self.args.dependency_indexes) as archive:
                 assert all(m.isfile() and Path(m.name).name == m.name and
                            m.name.startswith('_etc_apt_mirrors_') and m.size < 128 * 1024**2
@@ -151,7 +155,7 @@ class Acceptance:
             packages += " xvfb xauth python3-xlib dbus-x11 gnome-keyring /home/sirin/sirinvpn.deb"
         with (self.logs / f"{guest.name}-setup.log").open("wb") as log:
             guest.ssh(["sudo", "-n", "env", "DEBIAN_FRONTEND=noninteractive", "sh", "-ec",
-                       "sed -i '/^Types:/s/ deb-src//g' /etc/apt/sources.list.d/debian.sources\n"
+                       "sed -i '/^Types:/s/ deb-src//g' /etc/apt/sources.list.d/*.sources\n"
                        "apt-get -o Acquire::Retries=2 -o Acquire::ForceIPv4=true -o Acquire::Languages=none update\n"
                        f"apt-get -o Acquire::ForceIPv4=true install -y --no-install-recommends {packages}\n"
                        "install -m 0755 /home/sirin/acceptance-guest.py /opt/sirin-acceptance.py\n"
@@ -185,7 +189,9 @@ class Acceptance:
             guest.run(["systemctl", "start", "systemd-resolved"])
             assert self.cli("status")["local"]["state"] == "disconnected"
             guest.run([*USER_PREFIX, "pkexec", "--disable-internal-agent", HELPER, "status"])
-        return {"kernel": guest.run(["uname", "-r"]).stdout.decode().strip()}
+        return {"kernel": guest.run(["uname", "-r"]).stdout.decode().strip(),
+                "os": guest.run(["grep", "^PRETTY_NAME=", "/etc/os-release"]).stdout.decode()
+                .strip().partition("=")[2].strip('"')}
 
     def provision(self):
         self.client.put(self.server.key, "/home/sirin/vps-fixture-key")
@@ -206,7 +212,9 @@ class Acceptance:
         profile = self.cli("server", "add", "--name", "Acceptance", "--host", SERVER,
                            *self.ssh_options, "--server-binary", "/usr/lib/sirinvpn/sirinvpn-server",
                            "--private-dns-record", "probe.test=10.0.2.100",
-                           "--private-dns-record", "dns-failure.test=10.0.2.100", timeout=600)
+                           "--private-dns-record", "dns-failure.test=10.0.2.100",
+                           *(["--dns-over-tls-endpoint", self.args.vps_dns_over_tls]
+                             if self.args.vps_dns_over_tls else []), timeout=600)
         self.server_id = profile["id"]
         assert not profile.get("ipv6_tunnel_enabled", False), "the fixture needs an IPv4-only profile"
         return {"profile_created": True, "server_id": self.server_id}
@@ -546,7 +554,7 @@ class Acceptance:
             with Lab(self.output) as lab:
                 port = free_port()
                 net = "stream,id=private,addr.type=inet,addr.host=127.0.0.1,addr.port=" + str(port)
-                self.server = lab.guest(self.args.base, "sirin-vps", memory=1024,
+                self.server = lab.guest(self.args.vps_base or self.args.base, "sirin-vps", memory=1024,
                                         canary=("vps", self.identity), ipv6=False,
                                         extra_network=["-netdev", net + ",server=on", "-device",
                                                        "virtio-net-pci,netdev=private,mac=52:54:00:78:70:01"])
@@ -623,6 +631,11 @@ class Acceptance:
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--base", type=Path, required=True)
+    parser.add_argument("--vps-base", type=Path,
+                        help="Separate cloud image for the VPS guest, such as Ubuntu 24.04; defaults to --base")
+    parser.add_argument("--vps-dns-over-tls", metavar="IP#NAME",
+                        help="Provision the VPS with this DNS-over-TLS upstream instead of recursion, "
+                             "for host networks that intercept outbound DNS")
     parser.add_argument("--package", type=Path, required=True)
     parser.add_argument("--upgrade-from", type=Path,
                         help="Install/provision this older unbound development package before interrupted candidate upgrade")

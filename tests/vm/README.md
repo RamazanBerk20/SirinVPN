@@ -42,6 +42,14 @@ sh tests/vm/run-linux-acceptance.sh \
   --output .cache/linux-acceptance
 ```
 
+Add `--vps-base .cache/ubuntu-24.04-server-cloudimg-amd64.img` to boot only the
+VPS guest from an Ubuntu 24.04 server cloud image; the client stays on `--base`.
+The optional dependency caches apply only to guests booted from `--base`.
+A host network that intercepts outbound DNS breaks the VPS's default recursive
+resolver, and with it the public HTTPS check. Add
+`--vps-dns-over-tls 9.9.9.9#dns.quad9.net` to provision a DNS-over-TLS upstream
+instead.
+
 Use a new output directory for each run. An optional `--installer-tests PATH`
 runs the installer library's isolated root staging regression in the VPS guest.
 The executable must be built for a glibc version supported by that guest.
