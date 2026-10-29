@@ -1,0 +1,6 @@
+# Copied from the root Cargo.lock before each build; see docs/testing.md#fuzzing.
+Cargo.lock
+target/
+corpus/
+artifacts/
+coverage/

@@ -155,6 +155,36 @@ pub(crate) fn decrypt(
     bytes: &[u8],
     password: &str,
 ) -> Result<Zeroizing<Vec<u8>>, EncryptedBackupError> {
+    let opened = open(expected_format, bytes)?;
+    let key = derive_key(password, &opened.salt)?;
+    let cipher_instance = XChaCha20Poly1305::new_from_slice(key.as_ref())
+        .map_err(|_| EncryptedBackupError::InvalidFormat)?;
+    let nonce = XNonce::from(opened.nonce);
+    Ok(Zeroizing::new(
+        cipher_instance
+            .decrypt(
+                &nonce,
+                Payload {
+                    msg: &opened.ciphertext,
+                    aad: &opened.authenticated_header,
+                },
+            )
+            .map_err(|_| EncryptedBackupError::AuthenticationFailed)?,
+    ))
+}
+
+/// An envelope validated up to key derivation, the last step without the password.
+pub(crate) struct OpenedEnvelope {
+    salt: [u8; SALT_LENGTH],
+    nonce: [u8; NONCE_LENGTH],
+    ciphertext: Vec<u8>,
+    authenticated_header: Vec<u8>,
+}
+
+pub(crate) fn open(
+    expected_format: &str,
+    bytes: &[u8],
+) -> Result<OpenedEnvelope, EncryptedBackupError> {
     let envelope: BackupEnvelope =
         serde_json::from_slice(bytes).map_err(|_| EncryptedBackupError::InvalidFormat)?;
     if envelope.format != expected_format {
@@ -185,21 +215,12 @@ pub(crate) fn decrypt(
     };
     let authenticated_header =
         serde_json::to_vec(&header).map_err(|_| EncryptedBackupError::InvalidFormat)?;
-    let key = derive_key(password, &salt)?;
-    let cipher_instance = XChaCha20Poly1305::new_from_slice(key.as_ref())
-        .map_err(|_| EncryptedBackupError::InvalidFormat)?;
-    let nonce = XNonce::from(nonce);
-    Ok(Zeroizing::new(
-        cipher_instance
-            .decrypt(
-                &nonce,
-                Payload {
-                    msg: &ciphertext,
-                    aad: &authenticated_header,
-                },
-            )
-            .map_err(|_| EncryptedBackupError::AuthenticationFailed)?,
-    ))
+    Ok(OpenedEnvelope {
+        salt,
+        nonce,
+        ciphertext,
+        authenticated_header,
+    })
 }
 
 pub(crate) fn read_file(

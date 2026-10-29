@@ -45,3 +45,7 @@ keyring = { workspace = true }
 [target.'cfg(target_os = "linux")'.dependencies]
 keyring = { workspace = true, features = ["linux-native-sync-persistent"] }
 dbus-secret-service = "=4.1.0"
+
+[lints.rust]
+# `cargo fuzz` sets this cfg to build the `fuzzing` entry points used by fuzz/.
+unexpected_cfgs = { level = "warn", check-cfg = ["cfg(fuzzing)"] }

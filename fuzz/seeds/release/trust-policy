@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "product": "sirinvpn",
+  "sequence": 1,
+  "active_release_keys": [
+    {
+      "key_id_sha256": "294f7a3aabfcd7dff5adece524d59bc97fee6011825619644384e5758b5d0e8b",
+      "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEALqZ7mqRSYyhSTUwdk83KI4VSw2nr+0afzAH7kHV22Ng=\n-----END PUBLIC KEY-----\n"
+    }
+  ],
+  "revoked_release_key_ids": []
+}

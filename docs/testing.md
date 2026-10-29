@@ -95,6 +95,56 @@ Build the release-mode coordinator in the Debian toolchain image, then exercise 
 
 The gate creates ephemeral signed fixture packages, installs and binds release A, installs B, explicitly rolls back to A without lowering the high watermark, restores B, and installs an unhealthy C whose helper check forces automatic B restoration. Every committed/rolled-back phase requires exact `dpkg-query`, receipt active/high sequences, one content-addressed cache digest, and no journal. The container is destroyed at exit and neither the host package database nor `/var/lib/sirinvpn-release` is mounted. This proves real Debian command/output semantics without network access and complements the full-package reboot gate below.
 
+## Fuzzing
+
+`fuzz/` holds cargo-fuzz (libFuzzer) targets for the parsers that read untrusted
+input. It is excluded from the workspace and needs a nightly toolchain, so
+`scripts/test.sh` never builds it. Install the tools once:
+
+```sh
+rustup toolchain install nightly --profile minimal
+cargo install cargo-fuzz --locked
+```
+
+| Target | Input |
+|---|---|
+| `relay_datagram` | One obfuscated UDP datagram: session framing and the Noise IK responder, then the plaintext an authorized peer chooses inside a record, and replay-window sequence numbers |
+| `tcp_connection` | Everything a client sends on raw TCP or inside TLS: Noise frames, the HTTPS cover server, endpoint discovery and publication requests, and WebSocket frames after an authenticated upgrade |
+| `invitation` | Invitation codes as text, as a long-code payload, or as a compressed QR payload |
+| `backup` | The encrypted device-backup envelope up to Argon2id, which is too slow to fuzz through, and the decrypted payload |
+| `release` | Release manifests and signatures, compatibility contracts, trust policies and their signatures, and release public keys |
+
+The first input byte selects a target's mode, documented at its entry point.
+Entry points that reach private parsers are `sirinvpn_transport::fuzzing` and
+`sirinvpn_core::fuzzing`; they exist only under `--cfg fuzzing`, which cargo-fuzz
+sets. `tcp_connection` prefixes a valid handshake from an authorized client when
+bit 2 of the mode is set, so it also reaches the authenticated framing.
+
+The fuzz lockfile is not committed. Copy the root lockfile first so the fuzzed
+code uses the reviewed dependency versions, then run one target at a time under
+the [development resource limits](development.md#resource-limits). The committed
+`fuzz/seeds/` inputs are read-only; new corpus entries go to the ignored
+`fuzz/corpus/`:
+
+```sh
+cp Cargo.lock fuzz/Cargo.lock
+mkdir -p fuzz/corpus/release
+cargo +nightly fuzz run release fuzz/corpus/release fuzz/seeds/release -- -max_total_time=300
+```
+
+A crash is saved under `fuzz/artifacts/<target>/`. Reproduce it with
+`cargo +nightly fuzz run <target> <file>`, then add a regression unit test in the
+owning crate before fixing it. The seeds were generated from the unit-test
+fixtures; private keys and the invitation token are placeholders, so a seed
+stops at the first check that needs real secrets.
+
+The first run, on 2026-10-29 with AddressSanitizer, found no crash, leak or
+timeout: `tcp_connection` 15 minutes (0.65 million inputs), `relay_datagram`
+15 minutes (3.8 million), and 5 minutes each for `invitation` (3.5 million),
+`backup` (15.6 million) and `release` (17.8 million). The seeds reached the
+authenticated raw and TLS-like sessions, the WebSocket upgrade, invitation
+validation up to its signature check, and complete backup-profile validation.
+
 ## Android verification
 
 The current port has isolated emulator, instrumentation and presentation checks.

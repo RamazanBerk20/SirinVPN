@@ -66,3 +66,9 @@ workflow installs that pinned Go version and publishes both raw findings and
 their review summary, including on failure. A green result means this scoped
 policy passed; it does not mean the scanner returned no notices or that release
 qualification is complete.
+
+The [fuzz targets](testing.md#fuzzing) are a separate, never-shipped crate outside
+this scan. Their lockfile is a copy of `Cargo.lock` plus `libfuzzer-sys` and
+`arbitrary`. `libfuzzer-sys` bundles LLVM libFuzzer under
+`(MIT OR Apache-2.0) AND NCSA`, and NCSA is not on the license allowlist, so no
+workspace crate may depend on it; the license scan of `Cargo.lock` would block it.

@@ -11,3 +11,6 @@ vendor/glib/** -text
 
 # Publisher notice hashes bind the original bytes, including upstream line endings.
 packaging/third-party/** -text -whitespace
+
+# Fuzz seeds are exact protocol bytes, including HTTP CRLFs.
+fuzz/seeds/** -text

@@ -34,6 +34,8 @@ use crate::relay::{
 
 mod client;
 mod discovery;
+#[cfg(fuzzing)]
+pub(crate) mod fuzzing;
 mod publication;
 pub use client::{
     run_tcp_client_relay, run_tcp_client_relay_with_remote_socket_setup,

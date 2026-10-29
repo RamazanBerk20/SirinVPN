@@ -84,6 +84,8 @@ pub struct ServerRelayConfig {
 }
 
 mod authorization;
+#[cfg(fuzzing)]
+pub(crate) mod fuzzing;
 pub use authorization::{AuthorizedPeers, EndpointPublicationRequest};
 
 type TransportActivity = HashMap<[u8; 32], (TransportKind, Instant, u64)>;

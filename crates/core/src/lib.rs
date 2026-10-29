@@ -5,6 +5,8 @@ pub mod diagnostics;
 mod encrypted_backup;
 mod endpoint_discovery;
 mod endpoint_transition;
+#[cfg(fuzzing)]
+pub mod fuzzing;
 pub use endpoint_discovery::{
     current_checkpoint_matches, discover_endpoint_checkpoint, discover_endpoint_checkpoint_at,
     endpoint_connection_candidates, offer_endpoint_checkpoint_at, validate_endpoint_identity,

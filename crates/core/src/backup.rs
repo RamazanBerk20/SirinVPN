@@ -246,8 +246,12 @@ pub fn decrypt_device_backup(
     }
     let plaintext = encrypted_backup::decrypt(BACKUP_FORMAT, bytes, password)
         .map_err(map_encrypted_backup_error)?;
+    parse_payload(&plaintext)
+}
+
+pub(crate) fn parse_payload(plaintext: &[u8]) -> Result<DecryptedDeviceBackup, BackupError> {
     let payload: BackupPayload =
-        serde_json::from_slice(&plaintext).map_err(|_| BackupError::InvalidFormat)?;
+        serde_json::from_slice(plaintext).map_err(|_| BackupError::InvalidFormat)?;
     match payload.schema_version {
         LEGACY_PAYLOAD_SCHEMA_VERSION if payload.recovery_metadata.is_none() => {}
         RECOVERY_METADATA_PAYLOAD_SCHEMA_VERSION if payload.recovery_metadata.is_some() => {}

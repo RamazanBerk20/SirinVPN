@@ -27,3 +27,7 @@ sirinvpn-platform = { path = "../platform" }
 
 [dev-dependencies]
 rcgen.workspace = true
+
+[lints.rust]
+# `cargo fuzz` sets this cfg to build the `fuzzing` entry points used by fuzz/.
+unexpected_cfgs = { level = "warn", check-cfg = ["cfg(fuzzing)"] }

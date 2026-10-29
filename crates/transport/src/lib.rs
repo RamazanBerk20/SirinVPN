@@ -4,6 +4,13 @@ mod relay;
 mod socket_policy;
 mod tcp;
 
+/// Untrusted-input entry points for `fuzz/`, compiled only under `--cfg fuzzing`.
+#[cfg(fuzzing)]
+pub mod fuzzing {
+    pub use crate::relay::fuzzing::datagram;
+    pub use crate::tcp::fuzzing::connection;
+}
+
 use base64::{Engine as _, engine::general_purpose::STANDARD};
 use sirinvpn_protocol::{
     NetworkProfile, ObfuscatedUdpEndpoint, ServerEndpoint, ServerProfile, TcpFallbackEndpoint,
