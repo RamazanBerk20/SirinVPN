@@ -117,7 +117,9 @@ pub(super) async fn enrollment_handler(
             if current.access_for_device(device).is_none() {
                 return Err(ApiError::forbidden());
             }
-            return Ok(Json(ApiEnvelope::new(receipt.result)));
+            if device.preshared_key == request.device_preshared_key {
+                return Ok(Json(ApiEnvelope::new(receipt.result)));
+            }
         }
         record_redemption_failure(&state, rate_key, now);
         return Err(ApiError::conflict(
@@ -157,6 +159,10 @@ pub(super) async fn enrollment_handler(
     let (member_name, device_name) = resolve_enrollment_names(&request)?;
     validate_wireguard_public_key(&request.device_wireguard_public_key)
         .map_err(|error| ApiError::invalid(error.to_string()))?;
+    if let Some(preshared_key) = &request.device_preshared_key {
+        validate_preshared_key(preshared_key)
+            .map_err(|error| ApiError::invalid(error.to_string()))?;
+    }
     let device_fingerprint =
         submitted_certificate_fingerprint(&request.device_management_certificate_pem)
             .map_err(|error| ApiError::invalid(error.to_string()))?;
@@ -258,6 +264,7 @@ pub(super) async fn enrollment_handler(
         tcp_fallback: invitation.claims.tcp_fallback.clone(),
         tls_like: invitation.claims.tls_like.clone(),
         ipv6_tunnel_enabled: state.configuration.ipv6_tunnel_enabled,
+        preshared_key: request.device_preshared_key.is_some(),
     };
     let mut next = current.clone();
     if let Some(grant) = next
@@ -288,6 +295,7 @@ pub(super) async fn enrollment_handler(
         management_certificate_pem: request.device_management_certificate_pem.clone(),
         certificate_fingerprint: device_fingerprint,
         peer_communication_enabled: false,
+        preshared_key: request.device_preshared_key.clone(),
     });
     next.enrollment_receipts.push(EnrollmentReceipt {
         invitation_id: invitation.claims.invitation_id,

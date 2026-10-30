@@ -303,7 +303,7 @@ fn validate_snapshot(
         Some(encoded) => {
             let authorization: BackupAuthorizationState =
                 serde_json::from_str(encoded).map_err(|_| ServerBackupError::InvalidSnapshot)?;
-            if !matches!(authorization.schema_version, 1..=5)
+            if !matches!(authorization.schema_version, 1..=6)
                 || authorization.server_id != snapshot.server_id
             {
                 return Err(ServerBackupError::InvalidSnapshot);

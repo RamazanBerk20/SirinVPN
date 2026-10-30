@@ -17,6 +17,8 @@ use zeroize::Zeroizing;
 const BACKUP_FORMAT: &str = "sirinvpn-device-backup";
 const LEGACY_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 const RECOVERY_METADATA_PAYLOAD_SCHEMA_VERSION: u16 = 2;
+// Readers before schema 3 would silently drop the identity's preshared key.
+const PRESHARED_KEY_PAYLOAD_SCHEMA_VERSION: u16 = 3;
 pub const MAX_DEVICE_BACKUP_BYTES: usize = 256 * 1024;
 
 #[derive(Debug, Error)]
@@ -221,7 +223,9 @@ pub fn encrypt_device_backup(
     validate_profile_and_identity(profile, identity)?;
     validate_recovery_metadata(profile, recovery_metadata.as_ref())?;
     let payload = BackupPayload {
-        schema_version: if recovery_metadata.is_some() {
+        schema_version: if identity.wireguard_preshared_key.is_some() {
+            PRESHARED_KEY_PAYLOAD_SCHEMA_VERSION
+        } else if recovery_metadata.is_some() {
             RECOVERY_METADATA_PAYLOAD_SCHEMA_VERSION
         } else {
             LEGACY_PAYLOAD_SCHEMA_VERSION
@@ -252,10 +256,15 @@ pub fn decrypt_device_backup(
 pub(crate) fn parse_payload(plaintext: &[u8]) -> Result<DecryptedDeviceBackup, BackupError> {
     let payload: BackupPayload =
         serde_json::from_slice(plaintext).map_err(|_| BackupError::InvalidFormat)?;
+    let preshared_key = payload.identity.wireguard_preshared_key.is_some();
     match payload.schema_version {
-        LEGACY_PAYLOAD_SCHEMA_VERSION if payload.recovery_metadata.is_none() => {}
-        RECOVERY_METADATA_PAYLOAD_SCHEMA_VERSION if payload.recovery_metadata.is_some() => {}
-        LEGACY_PAYLOAD_SCHEMA_VERSION | RECOVERY_METADATA_PAYLOAD_SCHEMA_VERSION => {
+        LEGACY_PAYLOAD_SCHEMA_VERSION if payload.recovery_metadata.is_none() && !preshared_key => {}
+        RECOVERY_METADATA_PAYLOAD_SCHEMA_VERSION
+            if payload.recovery_metadata.is_some() && !preshared_key => {}
+        PRESHARED_KEY_PAYLOAD_SCHEMA_VERSION if preshared_key => {}
+        LEGACY_PAYLOAD_SCHEMA_VERSION
+        | RECOVERY_METADATA_PAYLOAD_SCHEMA_VERSION
+        | PRESHARED_KEY_PAYLOAD_SCHEMA_VERSION => {
             return Err(BackupError::InvalidFormat);
         }
         _ => return Err(BackupError::IncompatibleVersion),
@@ -712,5 +721,80 @@ mod tests {
             ),
             Err(BackupError::InvalidIdentity)
         ));
+    }
+
+    #[test]
+    fn preshared_keys_round_trip_as_schema_three_and_older_schemas_still_import() {
+        let directory = tempfile::tempdir().unwrap();
+        let password = "correct horse battery staple";
+        let (profile, mut identity) = profile_and_secret("Quantum resistant");
+        let legacy = encrypt_device_backup(&profile, &identity, None, password).unwrap();
+        identity.wireguard_preshared_key = Some(crate::generate_preshared_key());
+        let metadata = Some(DeviceBackupRecoveryMetadata { owner_ssh_port: 22 });
+        for recovery_metadata in [None, metadata] {
+            let bytes =
+                encrypt_device_backup(&profile, &identity, recovery_metadata.clone(), password)
+                    .unwrap();
+            let plaintext = encrypted_backup::decrypt(BACKUP_FORMAT, &bytes, password).unwrap();
+            let shape: serde_json::Value = serde_json::from_slice(&plaintext).unwrap();
+            assert_eq!(
+                shape["schema_version"],
+                PRESHARED_KEY_PAYLOAD_SCHEMA_VERSION
+            );
+            let decrypted = decrypt_device_backup(&bytes, password).unwrap();
+            assert_eq!(
+                decrypted.identity.wireguard_preshared_key,
+                identity.wireguard_preshared_key
+            );
+            assert_eq!(decrypted.recovery_metadata, recovery_metadata);
+
+            // A key-bearing identity must never hide behind an older schema number.
+            for older in [
+                LEGACY_PAYLOAD_SCHEMA_VERSION,
+                RECOVERY_METADATA_PAYLOAD_SCHEMA_VERSION,
+            ] {
+                let mut downgraded = shape.clone();
+                downgraded["schema_version"] = older.into();
+                assert!(matches!(
+                    parse_payload(&serde_json::to_vec(&downgraded).unwrap()),
+                    Err(BackupError::InvalidFormat)
+                ));
+            }
+        }
+        let mut keyless = serde_json::to_value(BackupPayload {
+            schema_version: PRESHARED_KEY_PAYLOAD_SCHEMA_VERSION,
+            profile: profile.clone(),
+            identity: identity.clone(),
+            recovery_metadata: None,
+        })
+        .unwrap();
+        keyless["identity"]
+            .as_object_mut()
+            .unwrap()
+            .remove("wireguard_preshared_key");
+        assert!(matches!(
+            parse_payload(&serde_json::to_vec(&keyless).unwrap()),
+            Err(BackupError::InvalidFormat)
+        ));
+
+        let source = directory.path().join("psk.sirinvpn-backup");
+        fs::write(
+            &source,
+            encrypt_device_backup(&profile, &identity, None, password).unwrap(),
+        )
+        .unwrap();
+        let target_store = ProfileStore::new(directory.path().join("target/servers.json"));
+        let target_secrets = MemorySecretStore::default();
+        let imported =
+            import_device_backup(&target_store, &target_secrets, &source, password).unwrap();
+        assert_eq!(
+            target_secrets
+                .get(&imported.identity_reference)
+                .unwrap()
+                .wireguard_preshared_key,
+            identity.wireguard_preshared_key
+        );
+        let legacy = decrypt_device_backup(&legacy, password).unwrap();
+        assert!(legacy.identity.wireguard_preshared_key.is_none());
     }
 }

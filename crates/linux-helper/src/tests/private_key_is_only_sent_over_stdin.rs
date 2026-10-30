@@ -19,6 +19,69 @@ fn private_key_is_only_sent_over_stdin() {
 }
 
 #[test]
+fn preshared_key_is_only_sent_over_stdin_before_the_link_is_up() {
+    let directory = tempfile::tempdir().unwrap();
+    let runner = RecordingRunner::default();
+    let helper = LinuxNetworkHelper::new(runner.clone(), directory.path().to_path_buf());
+    let mut request = request();
+    let preshared_key = STANDARD.encode([5_u8; 32]);
+    request.preshared_key = Some(preshared_key.clone());
+    helper.connect(&request).unwrap();
+    let commands = runner.commands.lock().unwrap();
+    assert!(
+        commands
+            .iter()
+            .all(|(_, arguments, _)| !arguments.contains(&preshared_key))
+    );
+    let position =
+        |matches: &dyn Fn(&RecordedCommand) -> bool| commands.iter().position(matches).unwrap();
+    let applied = position(&|(program, arguments, stdin)| {
+        program == "wg"
+            && arguments
+                == &[
+                    "set",
+                    INTERFACE_NAME,
+                    "peer",
+                    &request.server_public_key,
+                    "preshared-key",
+                    "/dev/stdin",
+                ]
+            && String::from_utf8_lossy(stdin).trim() == preshared_key
+    });
+    let link_up = position(&|(program, arguments, _)| {
+        program == "ip" && arguments.iter().any(|value| value == "up")
+    });
+    assert!(applied < link_up);
+
+    let mut invalid = request.clone();
+    invalid.preshared_key = Some("not-a-key".into());
+    assert!(validate_request(&invalid).is_err());
+}
+
+#[test]
+fn requests_without_a_preshared_key_keep_their_shape_and_commands() {
+    let directory = tempfile::tempdir().unwrap();
+    let runner = RecordingRunner::default();
+    let helper = LinuxNetworkHelper::new(runner.clone(), directory.path().to_path_buf());
+    let request = request();
+    assert!(
+        serde_json::to_value(&request)
+            .unwrap()
+            .get("preshared_key")
+            .is_none()
+    );
+    helper.connect(&request).unwrap();
+    assert!(
+        !runner
+            .commands
+            .lock()
+            .unwrap()
+            .iter()
+            .any(|(_, arguments, _)| arguments.iter().any(|value| value == "preshared-key"))
+    );
+}
+
+#[test]
 fn rejects_invalid_keys_before_network_changes() {
     let directory = tempfile::tempdir().unwrap();
     let runner = RecordingRunner::default();

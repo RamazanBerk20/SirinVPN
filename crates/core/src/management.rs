@@ -151,6 +151,10 @@ impl ManagementClient {
         timeout: Option<Duration>,
         bind_tunnel: bool,
     ) -> Result<Self, ManagementError> {
+        // Without a process default reqwest uses ring, which offers only classical key
+        // exchange. aws-lc-rs prefers hybrid X25519MLKEM768, which the VPS also accepts,
+        // so recorded management traffic (including device preshared keys) stays sealed.
+        let _ = rustls::crypto::aws_lc_rs::default_provider().install_default();
         let server_certificate =
             Certificate::from_pem(profile.pinned_server_certificate_pem.as_bytes())
                 .map_err(|_| ManagementError::InvalidServerIdentity)?;

@@ -45,6 +45,7 @@ fn request(transport: TransportKind, policy: MtuPolicy, mtu: u16) -> TunnelConne
         persistent_protection: false,
         policy: Some(ConnectionPolicy::default()),
         routing: TunnelRoutingPolicy::default(),
+        preshared_key: None,
     }
 }
 

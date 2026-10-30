@@ -39,7 +39,7 @@ pub(super) async fn sync_wireguard_peers(
     for public_key in removed {
         arguments.extend(["peer".to_owned(), public_key, "remove".to_owned()]);
     }
-    for peer in desired {
+    for peer in &desired {
         let IpAddr::V4(address) = peer.address else {
             bail!("only IPv4 SirinVPN peer addresses are supported");
         };
@@ -54,7 +54,7 @@ pub(super) async fn sync_wireguard_peers(
         };
         arguments.extend([
             "peer".to_owned(),
-            peer.public_key,
+            peer.public_key.clone(),
             "allowed-ips".to_owned(),
             allowed_ips,
         ]);
@@ -66,7 +66,55 @@ pub(super) async fn sync_wireguard_peers(
     diagnostics::output("wg", &arguments)
         .await
         .context("could not update WireGuard peers within its bounds")?;
+    sync_preshared_keys(&configuration.interface_name, &desired).await
+}
+
+/// Keys travel on stdin, never in arguments visible to other local processes.
+async fn sync_preshared_keys(interface: &str, desired: &[DesiredPeer]) -> Result<()> {
+    if desired.is_empty() {
+        return Ok(());
+    }
+    let current = Zeroizing::new(
+        diagnostics::output("wg", &["show", interface, "preshared-keys"])
+            .await
+            .context("could not inspect WireGuard preshared keys within its bounds")?,
+    );
+    for (public_key, preshared_key) in preshared_key_updates(&current, desired) {
+        let (path, input) = match preshared_key {
+            Some(key) => ("/dev/stdin", Zeroizing::new(format!("{key}\n"))),
+            None => ("/dev/null", Zeroizing::new(String::new())),
+        };
+        run_with_input(
+            "wg",
+            &["set", interface, "peer", public_key, "preshared-key", path],
+            input.as_bytes(),
+            "WireGuard preshared key update",
+        )
+        .await?;
+    }
     Ok(())
+}
+
+/// Desired peers whose kernel preshared key differs, given `wg show <if> preshared-keys`.
+pub(super) fn preshared_key_updates<'a>(
+    current: &str,
+    desired: &'a [DesiredPeer],
+) -> Vec<(&'a str, Option<&'a str>)> {
+    let current: HashMap<&str, &str> = current
+        .lines()
+        .filter_map(|line| line.trim().split_once('\t'))
+        .collect();
+    desired
+        .iter()
+        .filter(|peer| {
+            let kernel = current
+                .get(peer.public_key.as_str())
+                .copied()
+                .filter(|key| *key != "(none)");
+            kernel != peer.preshared_key.as_deref()
+        })
+        .map(|peer| (peer.public_key.as_str(), peer.preshared_key.as_deref()))
+        .collect()
 }
 
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
@@ -335,9 +383,18 @@ pub(super) async fn sync_port_forwards(
 }
 
 pub(super) async fn apply_nft_batch(batch: &str, description: &str) -> Result<()> {
+    run_with_input("nft", &["-f", "-"], batch.as_bytes(), description).await
+}
+
+async fn run_with_input(
+    program: &str,
+    arguments: &[&str],
+    input: &[u8],
+    description: &str,
+) -> Result<()> {
     tokio::time::timeout(Duration::from_secs(5), async {
-        let mut child = Command::new("nft")
-            .args(["-f", "-"])
+        let mut child = Command::new(program)
+            .args(arguments)
             .stdin(Stdio::piped())
             .stdout(Stdio::null())
             .stderr(Stdio::null())
@@ -349,7 +406,7 @@ pub(super) async fn apply_nft_batch(batch: &str, description: &str) -> Result<()
             .take()
             .with_context(|| format!("could not open {description} input"))?;
         stdin
-            .write_all(batch.as_bytes())
+            .write_all(input)
             .await
             .with_context(|| format!("could not apply {description}"))?;
         drop(stdin);
@@ -363,7 +420,7 @@ pub(super) async fn apply_nft_batch(batch: &str, description: &str) -> Result<()
         Ok(())
     })
     .await
-    .context("firewall operation timed out")?
+    .with_context(|| format!("{description} timed out"))?
 }
 
 pub(super) fn peer_allowed_ips(
@@ -377,4 +434,37 @@ pub(super) fn peer_allowed_ips(
     let ipv6_address = ipv6_tunnel_address(server_id, address)
         .context("could not derive the peer IPv6 tunnel address")?;
     Ok(format!("{address}/32,{ipv6_address}/128"))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn only_peers_whose_kernel_preshared_key_differs_are_updated() {
+        let peer = |name: &str, key: Option<&str>| DesiredPeer {
+            public_key: name.to_owned(),
+            address: IpAddr::V4(Ipv4Addr::new(10, 77, 0, 2)),
+            preshared_key: key.map(str::to_owned),
+        };
+        let desired = [
+            peer("same", Some("kept")),
+            peer("changed", Some("new")),
+            peer("added", Some("fresh")),
+            peer("removed", None),
+            peer("keyless", None),
+            peer("unlisted", Some("late")),
+        ];
+        let current = "same\tkept\nchanged\told\nadded\t(none)\nremoved\tstale\nkeyless\t(none)\n";
+        assert_eq!(
+            preshared_key_updates(current, &desired),
+            [
+                ("changed", Some("new")),
+                ("added", Some("fresh")),
+                ("removed", None),
+                ("unlisted", Some("late")),
+            ]
+        );
+        assert!(preshared_key_updates("same\tkept\n", &desired[..1]).is_empty());
+    }
 }

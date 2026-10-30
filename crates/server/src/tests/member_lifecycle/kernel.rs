@@ -363,3 +363,99 @@ async fn kernel_member_lifecycle_updates_access_and_rolls_back_failed_storage() 
         "member lifecycle: IPv4/IPv6 traffic, WireGuard peers, relay authorization, nftables, storage rollback, restart and retry passed"
     );
 }
+
+#[tokio::test]
+#[ignore = "requires disposable networking; use tests/network/run-member-lifecycle.sh <name>"]
+async fn kernel_preshared_keys_gate_handshakes_and_keyless_peers_keep_working() {
+    assert_eq!(
+        std::env::var("SIRINVPN_POLICY_ISOLATED").as_deref(),
+        Ok("1")
+    );
+    assert!(Path::new("/.dockerenv").exists());
+    let (directory, state) = fixture();
+    let mut document = state.authorization.as_ref().unwrap().read().await.clone();
+    let key = |byte: u8| Some(STANDARD.encode([byte; 32]));
+    // Device 1 matches, 2 lacks the VPS key, 3 is a pre-PSK peer, 4 holds another key.
+    let server_keys = [None, key(1), key(2), None, key(4)];
+    let client_keys = [None, key(1), None, None, key(40)];
+    for (device, preshared_key) in document.devices.iter_mut().zip(&server_keys) {
+        device.preshared_key = preshared_key.clone();
+    }
+    document.schema_version = document.required_schema_version();
+    assert_eq!(document.schema_version, 6);
+    document.validate().unwrap();
+    let devices: Vec<_> = document.devices.iter().enumerate().skip(1).map(|(index, device)| {
+        let IpAddr::V4(address) = device.client_tunnel_address else { unreachable!() };
+        let preshared_key_path = client_keys[index].as_ref().map(|value| {
+            let path = directory.path().join(format!("{}.psk", device.id));
+            write_private(&path, value.as_bytes()).unwrap();
+            path
+        });
+        serde_json::json!({"index": index, "ipv4": address, "ipv6": ipv6_tunnel_address(document.server_id, address).unwrap(),
+            "private_key_path": directory.path().join(format!("{}.key", device.id)), "preshared_key_path": preshared_key_path})
+    }).collect();
+    let configuration = serde_json::json!({"devices": devices,
+        "server_private_key_path": state.paths.wireguard_private_key,
+        "server_ipv6": ipv6_tunnel_address(document.server_id, Ipv4Addr::new(10,77,0,1)).unwrap()});
+    let mut prepare = Command::new("python3")
+        .args(["tests/network/member_lifecycle.py", "prepare"])
+        .stdin(Stdio::piped())
+        .stdout(Stdio::null())
+        .spawn()
+        .unwrap();
+    prepare
+        .stdin
+        .take()
+        .unwrap()
+        .write_all(serde_json::to_string(&configuration).unwrap().as_bytes())
+        .await
+        .unwrap();
+    assert!(prepare.wait().await.unwrap().success());
+    sync_wireguard_peers(&state.configuration, &document)
+        .await
+        .unwrap();
+    let kernel_keys = || async {
+        inspect("wg", &["show", "sirinvpn0", "preshared-keys"])
+            .await
+            .lines()
+            .map(|line| {
+                let (peer, key) = line.split_once('\t').unwrap();
+                (peer.to_owned(), (key != "(none)").then(|| key.to_owned()))
+            })
+            .collect::<HashMap<_, _>>()
+    };
+    let applied = kernel_keys().await;
+    for device in &document.devices {
+        assert_eq!(applied[&device.wireguard_public_key], device.preshared_key);
+    }
+    for index in [1, 3] {
+        probe(index, false, true).await;
+    }
+    for index in [2, 4] {
+        probe(index, false, false).await;
+    }
+    let handshakes = inspect("wg", &["show", "sirinvpn0", "latest-handshakes"]).await;
+    for (index, completed) in [(1, true), (2, false), (3, true), (4, false)] {
+        let line = handshakes
+            .lines()
+            .find(|line| line.starts_with(&document.devices[index].wireguard_public_key))
+            .unwrap();
+        assert_eq!(
+            !line.ends_with("\t0"),
+            completed,
+            "device {index} handshake"
+        );
+    }
+    println!("preshared keys gate handshakes; keyless peers still connect");
+
+    // Authorization is the source of truth: a dropped key is removed, a new one replaces it.
+    document.devices[1].preshared_key = None;
+    document.devices[3].preshared_key = key(3);
+    sync_wireguard_peers(&state.configuration, &document)
+        .await
+        .unwrap();
+    let applied = kernel_keys().await;
+    for device in &document.devices {
+        assert_eq!(applied[&device.wireguard_public_key], device.preshared_key);
+    }
+}

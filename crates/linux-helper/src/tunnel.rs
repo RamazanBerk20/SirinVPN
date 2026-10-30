@@ -56,6 +56,22 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
             ],
             Some(private_key.as_bytes()),
         )?;
+        // stdin already carried the private key; the link stays down until both are set.
+        if let Some(preshared_key) = &request.preshared_key {
+            let preshared_key = Zeroizing::new(format!("{preshared_key}\n"));
+            self.runner.run(
+                "wg",
+                &[
+                    "set",
+                    INTERFACE_NAME,
+                    "peer",
+                    &request.server_public_key,
+                    "preshared-key",
+                    "/dev/stdin",
+                ],
+                Some(preshared_key.as_bytes()),
+            )?;
+        }
         self.runner.run(
             "ip",
             &[

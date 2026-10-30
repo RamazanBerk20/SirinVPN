@@ -49,11 +49,12 @@ pub(super) async fn join_server(
             )
             .await?;
             let client = ManagementClient::new(&bootstrap_profile, invitation.bootstrap_secret())?;
-            let request = invitation.enrollment_request(&pending.identity.public);
+            let request = invitation.enrollment_request(&pending.identity);
             let result = match client.enroll(&request).await {
                 Err(ManagementError::ConnectionFailed) => client.enroll(&request).await?,
                 result => result?,
             };
+            pending.confirm_preshared_key(&secrets, result.preshared_key)?;
             invitation.permanent_profile(
                 &result,
                 &pending.identity.public,

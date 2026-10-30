@@ -71,3 +71,32 @@ func TestDelayedPacketsCannotUndoControllerEndpoint(t *testing.T) {
 		t.Fatal("A packet undid the controller's carrier change")
 	}
 }
+
+func TestPresharedKeySurvivesStagingCommitAndEndpointUpdates(t *testing.T) {
+	key := device.NoisePublicKey{9}
+	peer := "public_key=" + hex.EncodeToString(key[:]) + "\n"
+	preshared := "preshared_key=" + strings.Repeat("05", 32) + "\n"
+	handle := start(newProbe(), "private_key="+strings.Repeat("01", 32)+"\nreplace_peers=true\n"+peer+preshared+"endpoint=127.0.0.1:51820\n", nil)
+	if handle < 0 {
+		t.Fatal("Could not create engine")
+	}
+	defer sirinStop(handle)
+	engine := tunnels[int32(handle)].engine
+	for _, step := range []string{"staged", "committed", "moved"} {
+		switch step {
+		case "committed":
+			if sirinCommit(handle) != 1 {
+				t.Fatal("Could not commit protected configuration")
+			}
+		case "moved":
+			// The controller's carrier change names only the peer and its endpoint.
+			if engine.IpcSet(peer+"endpoint=127.0.0.1:51825\n") != nil {
+				t.Fatal("Could not move the endpoint")
+			}
+		}
+		actual, err := engine.IpcGet()
+		if err != nil || !strings.Contains(actual, preshared) {
+			t.Fatalf("The preshared key was not applied after the %s step", step)
+		}
+	}
+}

@@ -93,6 +93,7 @@ async fn kernel_offline_recovery_consumes_authority_and_revokes_all_previous_own
         wireguard_public_key: owner2.public.wireguard_public_key,
         management_certificate_pem: owner2.public.management_certificate_pem,
         peer_communication_enabled: true,
+        preshared_key: None,
     });
     write_authorization(&state.paths.authorization, &document).unwrap();
     *state.authorization.as_ref().unwrap().write().await = document.clone();

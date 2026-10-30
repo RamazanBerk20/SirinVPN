@@ -438,8 +438,9 @@ async fn join(runtime: &Runtime, input: &Value, generation: i64) -> Result<Value
             .await?;
             let client = ManagementClient::new(&bootstrap, invitation.bootstrap_secret())?;
             let result = client
-                .enroll(&invitation.enrollment_request(&pending.identity.public))
+                .enroll(&invitation.enrollment_request(&pending.identity))
                 .await?;
+            pending.confirm_preshared_key(&secrets, result.preshared_key)?;
             invitation.permanent_profile(
                 &result,
                 &pending.identity.public,

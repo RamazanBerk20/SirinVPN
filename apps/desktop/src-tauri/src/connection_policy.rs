@@ -280,6 +280,7 @@ pub(super) fn tunnel_request(
         client_address,
         server_public_key: profile.server_wireguard_public_key.clone(),
         private_key: secret.wireguard_private_key.clone(),
+        preshared_key: secret.wireguard_preshared_key.clone(),
         dns_address,
         client_ipv6_address: if profile.ipv6_tunnel_enabled {
             Some(

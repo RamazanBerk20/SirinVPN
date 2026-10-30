@@ -239,20 +239,9 @@ async fn activate(
         .relay
         .lock()
         .map_err(|_| anyhow::anyhow!("Transport unavailable"))? = carrier.task.take();
-    let private =
-        zeroize::Zeroizing::new(hex::encode(STANDARD.decode(&secret.wireguard_private_key)?));
     let public = hex::encode(STANDARD.decode(&profile.server_wireguard_public_key)?);
-    let wireguard = zeroize::Zeroizing::new(format!(
-        "private_key={}\nreplace_peers=true\npublic_key={}\nendpoint={}\nallowed_ip=0.0.0.0/0\n{}persistent_keepalive_interval=25\n",
-        *private,
-        public,
-        endpoint,
-        if profile.ipv6_tunnel_enabled {
-            "allowed_ip=::/0\n"
-        } else {
-            ""
-        }
-    ));
+    let wireguard =
+        crate::uapi::wireguard_settings(secret, &public, endpoint, profile.ipv6_tunnel_enabled)?;
     let mut addresses = vec![format!("{}/32", profile.client_tunnel_address)];
     if profile.ipv6_tunnel_enabled {
         addresses.push(format!(

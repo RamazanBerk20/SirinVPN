@@ -76,7 +76,12 @@ impl PendingEnrollment {
             }
             (journal, LocalIdentity { public, secret })
         } else {
-            let identity = LocalIdentity::generate(device_label)?;
+            let mut identity = LocalIdentity::generate(device_label)?;
+            // Recovery requests reject unknown fields on older servers, so only
+            // invitation enrollment offers a preshared key.
+            if authority.starts_with("invitation-") {
+                identity.secret.wireguard_preshared_key = Some(crate::generate_preshared_key());
+            }
             let identity_reference = format!("enrollment-{}", sirinvpn_protocol::DeviceId::new());
             secrets.put(&identity_reference, &identity.secret)?;
             let journal = EnrollmentJournal {
@@ -113,6 +118,34 @@ impl PendingEnrollment {
         }
         self.journal.invitation_names = names;
         self.persist()
+    }
+
+    /// Keeps the offered preshared key only when the VPS reports storing it; an
+    /// older VPS ignores the field and would never complete a handshake with it.
+    pub fn confirm_preshared_key(
+        &mut self,
+        secrets: &dyn SecretStore,
+        stored_by_server: bool,
+    ) -> Result<()> {
+        match (
+            stored_by_server,
+            &self.identity.secret.wireguard_preshared_key,
+        ) {
+            (true, Some(_)) | (false, None) => return Ok(()),
+            (true, None) => bail!("the VPS confirmed a preshared key this device did not offer"),
+            (false, Some(_)) => {}
+        }
+        // Stored secret references are immutable; the key-less copy needs its own.
+        let mut secret = self.identity.secret.clone();
+        secret.wireguard_preshared_key = None;
+        let reference = format!("enrollment-{}", sirinvpn_protocol::DeviceId::new());
+        secrets.put(&reference, &secret)?;
+        let previous = std::mem::replace(&mut self.journal.identity_reference, reference.clone());
+        self.persist()?;
+        self.identity_reference = reference;
+        self.identity.secret = secret;
+        secrets.delete(&previous)?;
+        Ok(())
     }
 
     pub fn completed_profile(&self) -> Option<ServerProfile> {
@@ -235,5 +268,62 @@ mod tests {
             )
             .is_err()
         );
+    }
+
+    #[test]
+    fn invitation_preshared_keys_survive_retries_and_follow_the_server_answer() {
+        let directory = tempfile::tempdir().unwrap();
+        let paths = ClientPaths::under(directory.path().into());
+        let secrets = MemorySecrets::default();
+        let server = ServerId::new();
+        let first =
+            PendingEnrollment::open(&paths, &secrets, server, "invitation-psk", "Phone").unwrap();
+        let key = first
+            .identity
+            .secret
+            .wireguard_preshared_key
+            .clone()
+            .unwrap();
+        crate::validate_preshared_key(&key).unwrap();
+        assert!(!fs::read_to_string(&first.path).unwrap().contains(&key));
+        drop(first);
+
+        // A retry after a lost response offers the same key, as the receipt requires.
+        let mut kept =
+            PendingEnrollment::open(&paths, &secrets, server, "invitation-psk", "Phone").unwrap();
+        assert_eq!(
+            kept.identity.secret.wireguard_preshared_key.as_deref(),
+            Some(key.as_str())
+        );
+        let reference = kept.identity_reference.clone();
+        kept.confirm_preshared_key(&secrets, true).unwrap();
+        assert_eq!(kept.identity_reference, reference);
+        drop(kept);
+
+        // An older VPS ignored the key: continue with a key-less identity under a new reference.
+        let mut ignored =
+            PendingEnrollment::open(&paths, &secrets, server, "invitation-psk", "Phone").unwrap();
+        let public = ignored.identity.public.clone();
+        ignored.confirm_preshared_key(&secrets, false).unwrap();
+        assert_ne!(ignored.identity_reference, reference);
+        assert!(ignored.identity.secret.wireguard_preshared_key.is_none());
+        assert!(matches!(
+            secrets.get(&reference),
+            Err(SecretStoreError::NotFound)
+        ));
+        let stored = secrets.get(&ignored.identity_reference).unwrap();
+        assert!(stored.wireguard_preshared_key.is_none());
+        assert!(ignored.confirm_preshared_key(&secrets, true).is_err());
+        drop(ignored);
+        let resumed =
+            PendingEnrollment::open(&paths, &secrets, server, "invitation-psk", "Phone").unwrap();
+        assert_eq!(resumed.identity.public, public);
+        assert!(resumed.identity.secret.wireguard_preshared_key.is_none());
+        drop(resumed);
+
+        let recovery =
+            PendingEnrollment::open(&paths, &secrets, ServerId::new(), "recovery-psk", "Laptop")
+                .unwrap();
+        assert!(recovery.identity.secret.wireguard_preshared_key.is_none());
     }
 }

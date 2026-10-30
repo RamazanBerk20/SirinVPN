@@ -50,6 +50,7 @@ fn fixture() -> (tempfile::TempDir, AppState) {
                 wireguard_public_key: identity.public.wireguard_public_key,
                 management_certificate_pem: identity.public.management_certificate_pem,
                 peer_communication_enabled: true,
+                preshared_key: None,
             });
         }
     }

@@ -154,7 +154,10 @@ pub fn validate_request(request: &TunnelConnectRequest) -> Result<(), HelperErro
             "port or MTU is outside the supported range".to_owned(),
         ));
     }
-    for key in [&request.private_key, &request.server_public_key] {
+    for key in [&request.private_key, &request.server_public_key]
+        .into_iter()
+        .chain(&request.preshared_key)
+    {
         let decoded =
             zeroize::Zeroizing::new(STANDARD.decode(key).map_err(|_| {
                 HelperError::InvalidConfiguration("invalid WireGuard key".to_owned())

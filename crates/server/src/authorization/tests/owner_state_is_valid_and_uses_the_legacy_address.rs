@@ -243,6 +243,7 @@ fn current_device_key_rotation_is_staged_idempotently_then_committed() {
         server_id: state.server_id,
         new_wireguard_public_key: replacement.public.wireguard_public_key.clone(),
         new_management_certificate_pem: replacement.public.management_certificate_pem.clone(),
+        new_wireguard_preshared_key: None,
     };
 
     let prepared = state
@@ -328,6 +329,7 @@ fn expired_or_cancelled_rotation_keeps_the_original_device_identity() {
         server_id: state.server_id,
         new_wireguard_public_key: replacement.public.wireguard_public_key.clone(),
         new_management_certificate_pem: replacement.public.management_certificate_pem.clone(),
+        new_wireguard_preshared_key: None,
     };
     state
         .prepare_key_rotation(&original.certificate_fingerprint, &request, 5)
@@ -361,6 +363,7 @@ fn key_rotation_rejects_reused_identity_material_and_wrong_commit_certificate() 
         server_id: state.server_id,
         new_wireguard_public_key: original.wireguard_public_key.clone(),
         new_management_certificate_pem: original.management_certificate_pem.clone(),
+        new_wireguard_preshared_key: None,
     };
     assert!(
         state
@@ -375,6 +378,7 @@ fn key_rotation_rejects_reused_identity_material_and_wrong_commit_certificate() 
         server_id: state.server_id,
         new_wireguard_public_key: replacement.public.wireguard_public_key,
         new_management_certificate_pem: replacement.public.management_certificate_pem,
+        new_wireguard_preshared_key: None,
     };
     state
         .prepare_key_rotation(&original.certificate_fingerprint, &request, 10)
@@ -422,6 +426,7 @@ fn administrator_state_and_additional_devices_are_legacy_reader_compatible() {
         )
         .unwrap(),
         peer_communication_enabled: false,
+        preshared_key: None,
     });
     let owner = state.devices[0].clone();
     let replacement = LocalIdentity::generate("Pending owner replacement").unwrap();
@@ -433,6 +438,7 @@ fn administrator_state_and_additional_devices_are_legacy_reader_compatible() {
                 server_id: state.server_id,
                 new_wireguard_public_key: replacement.public.wireguard_public_key,
                 new_management_certificate_pem: replacement.public.management_certificate_pem,
+                new_wireguard_preshared_key: None,
             },
             10,
         )

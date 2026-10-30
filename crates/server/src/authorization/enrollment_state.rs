@@ -61,14 +61,14 @@ impl AuthorizationDocument {
     }
 
     pub(crate) fn desired_peers(&self, now: u64) -> Vec<DesiredPeer> {
-        let mut peers: BTreeMap<String, IpAddr> = self
+        let mut peers: BTreeMap<String, (IpAddr, Option<String>)> = self
             .devices
             .iter()
             .filter(|device| self.access_for_device(device).is_some())
             .map(|device| {
                 (
                     device.wireguard_public_key.clone(),
-                    device.client_tunnel_address,
+                    (device.client_tunnel_address, device.preshared_key.clone()),
                 )
             })
             .collect();
@@ -79,7 +79,7 @@ impl AuthorizationDocument {
         {
             peers.insert(
                 invitation.claims.bootstrap_wireguard_public_key.clone(),
-                invitation.claims.bootstrap_tunnel_address,
+                (invitation.claims.bootstrap_tunnel_address, None),
             );
         }
         for receipt in self
@@ -89,13 +89,13 @@ impl AuthorizationDocument {
         {
             peers.insert(
                 receipt.bootstrap_wireguard_public_key.clone(),
-                receipt.bootstrap_tunnel_address,
+                (receipt.bootstrap_tunnel_address, None),
             );
         }
         if let Some(response) = self.recovery_authorization(now) {
             peers.insert(
                 response.claims.recovery_wireguard_public_key.clone(),
-                response.claims.recovery_tunnel_address,
+                (response.claims.recovery_tunnel_address, None),
             );
         }
         for lease in self
@@ -105,13 +105,14 @@ impl AuthorizationDocument {
         {
             peers
                 .entry(lease.public_key.clone())
-                .or_insert(IpAddr::V4(lease.address));
+                .or_insert((IpAddr::V4(lease.address), None));
         }
         peers
             .into_iter()
-            .map(|(public_key, address)| DesiredPeer {
+            .map(|(public_key, (address, preshared_key))| DesiredPeer {
                 public_key,
                 address,
+                preshared_key,
             })
             .collect()
     }

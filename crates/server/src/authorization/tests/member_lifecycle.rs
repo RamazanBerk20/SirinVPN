@@ -15,6 +15,7 @@ fn second_device(document: &mut AuthorizationDocument, member_id: MemberId) -> D
         )
         .unwrap(),
         peer_communication_enabled: true,
+        preshared_key: None,
     });
     device_id
 }
@@ -214,6 +215,7 @@ fn member_lifecycle_cancels_pending_bootstrap_identities_and_rotations_permanent
         server_id: document.server_id,
         new_wireguard_public_key: new_identity.public.wireguard_public_key,
         new_management_certificate_pem: new_identity.public.management_certificate_pem.clone(),
+        new_wireguard_preshared_key: None,
     };
     let fingerprint = document.devices[1].certificate_fingerprint.clone();
     document

@@ -24,6 +24,9 @@ pub struct PublicIdentity {
 pub struct SecretIdentity {
     pub wireguard_private_key: String,
     pub management_private_key_pem: String,
+    /// Present only after the VPS confirmed it stored this key for the device's peer.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub wireguard_preshared_key: Option<String>,
 }
 
 impl std::fmt::Debug for SecretIdentity {
@@ -32,6 +35,10 @@ impl std::fmt::Debug for SecretIdentity {
             .debug_struct("SecretIdentity")
             .field("wireguard_private_key", &"[REDACTED]")
             .field("management_private_key_pem", &"[REDACTED]")
+            .field(
+                "wireguard_preshared_key",
+                &self.wireguard_preshared_key.as_ref().map(|_| "[REDACTED]"),
+            )
             .finish()
     }
 }
@@ -39,6 +46,9 @@ impl std::fmt::Debug for SecretIdentity {
 impl SecretIdentity {
     pub fn public_identity(&self, management_certificate_pem: &str) -> Result<PublicIdentity> {
         let wireguard_public_key = wireguard_public_key_from_private(&self.wireguard_private_key)?;
+        if let Some(preshared_key) = &self.wireguard_preshared_key {
+            validate_preshared_key(preshared_key)?;
+        }
         let signing_key = SigningKey::from_pkcs8_pem(&self.management_private_key_pem)
             .context("management private key is invalid")?;
         if signing_key.verifying_key() != extract_ed25519_public_key(management_certificate_pem)? {
@@ -85,9 +95,29 @@ impl LocalIdentity {
             secret: SecretIdentity {
                 wireguard_private_key: STANDARD.encode(private_bytes.as_ref()),
                 management_private_key_pem: management_private_key_pem.to_string(),
+                wireguard_preshared_key: None,
             },
         })
     }
+}
+
+/// A fresh 256-bit WireGuard preshared key in canonical base64, as `wg genpsk` prints it.
+pub fn generate_preshared_key() -> String {
+    let mut bytes = Zeroizing::new([0_u8; 32]);
+    rand::RngCore::fill_bytes(&mut OsRng, bytes.as_mut());
+    STANDARD.encode(bytes.as_ref())
+}
+
+pub fn validate_preshared_key(preshared_key: &str) -> Result<()> {
+    let bytes = Zeroizing::new(
+        STANDARD
+            .decode(preshared_key)
+            .context("WireGuard preshared key is not valid base64")?,
+    );
+    if bytes.len() != 32 || STANDARD.encode(bytes.as_slice()) != preshared_key {
+        bail!("WireGuard preshared key must be 32 bytes of canonical base64");
+    }
+    Ok(())
 }
 
 pub fn wireguard_public_key_from_private(private_key: &str) -> Result<String> {
@@ -186,5 +216,46 @@ mod tests {
                 .is_err()
         );
         assert!(!format!("{:?}", first.secret).contains("PRIVATE KEY"));
+    }
+
+    #[test]
+    fn preshared_keys_are_canonical_random_and_redacted() {
+        let first = generate_preshared_key();
+        let second = generate_preshared_key();
+        assert_ne!(first, second);
+        validate_preshared_key(&first).unwrap();
+        assert_eq!(STANDARD.decode(&first).unwrap().len(), 32);
+        for invalid in [
+            "",
+            "AAAA",
+            &STANDARD.encode([7_u8; 31]),
+            &format!("{first}\n"),
+        ] {
+            assert!(validate_preshared_key(invalid).is_err());
+        }
+
+        let mut identity = LocalIdentity::generate("psk").unwrap();
+        identity.secret.wireguard_preshared_key = Some(first.clone());
+        let certificate = &identity.public.management_certificate_pem;
+        assert_eq!(
+            identity.secret.public_identity(certificate).unwrap(),
+            identity.public
+        );
+        assert!(!format!("{:?}", identity.secret).contains(&first));
+        identity.secret.wireguard_preshared_key = Some("not a key".into());
+        assert!(identity.secret.public_identity(certificate).is_err());
+    }
+
+    #[test]
+    fn secrets_stored_before_preshared_keys_still_load() {
+        let identity = LocalIdentity::generate("legacy").unwrap();
+        let legacy = serde_json::json!({
+            "wireguard_private_key": identity.secret.wireguard_private_key,
+            "management_private_key_pem": identity.secret.management_private_key_pem,
+        });
+        let loaded: SecretIdentity = serde_json::from_value(legacy.clone()).unwrap();
+        assert!(loaded.wireguard_preshared_key.is_none());
+        // A PSK-less secret keeps its exact stored shape when written back.
+        assert_eq!(serde_json::to_value(&loaded).unwrap(), legacy);
     }
 }

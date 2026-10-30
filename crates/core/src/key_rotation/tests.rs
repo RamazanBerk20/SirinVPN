@@ -90,6 +90,7 @@ fn staged_rotation_journal_contains_no_private_key_and_cleanup_is_atomic() {
         TransportKind::DirectUdp,
         true,
         None,
+        false,
     )
     .unwrap();
     assert!(has_pending_key_rotation(&paths, server_id).unwrap());
@@ -170,6 +171,7 @@ fn corrupt_journal_fails_closed_without_deleting_staged_secrets() {
         TransportKind::DirectUdp,
         false,
         None,
+        false,
     )
     .unwrap();
     fs::write(journals.path(server_id), b"{\"schema_version\":2}").unwrap();
@@ -207,6 +209,7 @@ fn abandoning_an_unaccepted_stage_keeps_the_original_identity() {
         TransportKind::DirectUdp,
         false,
         None,
+        false,
     )
     .unwrap();
 
@@ -250,6 +253,7 @@ fn independent_rotation_policy_survives_journal_reload_and_old_schema_stays_expl
         TransportKind::TlsLike,
         true,
         Some(policy.clone()),
+        false,
     )
     .unwrap();
     assert_eq!(journal.schema_version, 3);
@@ -274,4 +278,72 @@ fn independent_rotation_policy_survives_journal_reload_and_old_schema_stays_expl
         .unwrap()
         .selected_routes = Some(vec!["198.51.100.0/24".into()]);
     assert!(application.validate(server_id).is_err());
+}
+
+#[test]
+fn rotation_replaces_the_preshared_key_only_when_the_vps_accepts_one() {
+    for (enabled, original_preshared_key) in [
+        (true, None),
+        (true, Some(crate::generate_preshared_key())),
+        (false, None),
+    ] {
+        let directory = tempfile::tempdir().unwrap();
+        let paths = ClientPaths::under(directory.path().join("client"));
+        let journals = RotationJournalStore::new(&paths);
+        let secrets = MemorySecretStore::default();
+        let mut original = LocalIdentity::generate("Original").unwrap();
+        original.secret.wireguard_preshared_key = original_preshared_key.clone();
+        let profile = profile(&original, ServerId::new());
+        let journal = stage_rotation(
+            &journals,
+            &secrets,
+            profile,
+            &original.secret,
+            false,
+            TransportKind::DirectUdp,
+            false,
+            None,
+            enabled,
+        )
+        .unwrap();
+        let transition = secrets.get(&journal.transition_identity_reference).unwrap();
+        let final_identity = secrets.get(&journal.final_identity_reference).unwrap();
+        // The commit request still travels through the original peer and its key.
+        assert_eq!(transition.wireguard_preshared_key, original_preshared_key);
+        assert_eq!(final_identity.wireguard_preshared_key.is_some(), enabled);
+        if enabled {
+            assert_ne!(
+                final_identity.wireguard_preshared_key,
+                original_preshared_key
+            );
+        }
+        validate_staged_identities(&journal, &original.secret, &transition, &final_identity)
+            .unwrap();
+        // The secret store, not the journal, holds the key.
+        if let Some(key) = &final_identity.wireguard_preshared_key {
+            let bytes = fs::read(journals.path(journal.original_profile.id)).unwrap();
+            assert!(
+                !bytes
+                    .windows(key.len())
+                    .any(|window| window == key.as_bytes())
+            );
+        }
+
+        let mut reused = final_identity.clone();
+        reused.wireguard_preshared_key = Some(crate::generate_preshared_key());
+        let mut stale = transition.clone();
+        stale.wireguard_preshared_key = reused.wireguard_preshared_key.clone();
+        assert!(
+            validate_staged_identities(&journal, &original.secret, &stale, &final_identity)
+                .is_err()
+        );
+        if original_preshared_key.is_some() {
+            let mut unchanged = final_identity.clone();
+            unchanged.wireguard_preshared_key = original_preshared_key.clone();
+            assert!(
+                validate_staged_identities(&journal, &original.secret, &transition, &unchanged)
+                    .is_err()
+            );
+        }
+    }
 }

@@ -157,6 +157,7 @@ pub(crate) fn request() -> TunnelConnectRequest {
         mtu: 1_420,
         persistent_protection: false,
         routing: TunnelRoutingPolicy::default(),
+        preshared_key: None,
     }
 }
 

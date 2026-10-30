@@ -51,6 +51,9 @@ pub struct CurrentConfiguration {
     pub ownership_transfer_enabled: bool,
     #[serde(default, skip_serializing_if = "is_false")]
     pub key_rotation_enabled: bool,
+    /// Enrollment and key rotation accept a device-generated WireGuard preshared key.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub preshared_keys_enabled: bool,
     #[serde(default, skip_serializing_if = "is_false")]
     pub endpoint_transitions_enabled: bool,
     #[serde(default, skip_serializing_if = "is_false")]
@@ -208,6 +211,9 @@ pub struct EnrollmentRequest {
     pub token: String,
     pub device_wireguard_public_key: String,
     pub device_management_certificate_pem: String,
+    /// Older servers ignore this field; `EnrollmentResult::preshared_key` confirms storage.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub device_preshared_key: Option<String>,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
@@ -240,6 +246,8 @@ pub struct EnrollmentResult {
     pub tls_like: Option<TlsLikeEndpoint>,
     #[serde(default, skip_serializing_if = "is_false")]
     pub ipv6_tunnel_enabled: bool,
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub preshared_key: bool,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
@@ -376,6 +384,8 @@ pub struct KeyRotationPrepareRequest {
     pub server_id: ServerId,
     pub new_wireguard_public_key: String,
     pub new_management_certificate_pem: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub new_wireguard_preshared_key: Option<String>,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]

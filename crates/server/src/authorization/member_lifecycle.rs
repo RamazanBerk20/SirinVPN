@@ -3,7 +3,17 @@ use super::*;
 
 impl AuthorizationDocument {
     pub(crate) fn required_schema_version(&self) -> u16 {
-        if self.endpoint_observed_address.is_some()
+        if self
+            .devices
+            .iter()
+            .any(|device| device.preshared_key.is_some())
+            || self
+                .key_rotations
+                .iter()
+                .any(|rotation| rotation.new_preshared_key.is_some())
+        {
+            PRESHARED_KEY_AUTHORIZATION_SCHEMA_VERSION
+        } else if self.endpoint_observed_address.is_some()
             || self
                 .endpoint_transition
                 .as_ref()

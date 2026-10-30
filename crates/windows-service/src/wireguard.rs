@@ -155,6 +155,7 @@ impl Adapter {
         &self,
         private: &str,
         public: &str,
+        preshared: Option<&str>,
         endpoint: SocketAddr,
         routes: &[IpNet],
     ) -> io::Result<()> {
@@ -163,7 +164,14 @@ impl Adapter {
         }
         let private = Zeroizing::new(STANDARD.decode(private).map_err(|_| invalid())?);
         let public = STANDARD.decode(public).map_err(|_| invalid())?;
-        if private.len() != 32 || public.len() != 32 {
+        let preshared = preshared
+            .map(|key| STANDARD.decode(key).map(Zeroizing::new))
+            .transpose()
+            .map_err(|_| invalid())?;
+        if private.len() != 32
+            || public.len() != 32
+            || preshared.as_ref().is_some_and(|key| key.len() != 32)
+        {
             return Err(invalid());
         }
         let bytes =
@@ -179,6 +187,10 @@ impl Adapter {
         let peer = unsafe { &mut *base.add(size_of::<Interface>()).cast::<Peer>() };
         peer.flags = 1 | 4 | 8 | 32; // public key, keepalive, endpoint, replace allowed IPs
         peer.public_key.copy_from_slice(&public);
+        if let Some(preshared) = &preshared {
+            peer.flags |= 2; // WIREGUARD_PEER_HAS_PRESHARED_KEY
+            peer.preshared_key.copy_from_slice(preshared);
+        }
         peer.keepalive = 25;
         peer.endpoint = socket_address(endpoint);
         peer.allowed_count = routes.len() as u32;

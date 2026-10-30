@@ -148,6 +148,7 @@ fn targeted_device_enrollment_receipt_resolves_to_existing_member() {
         management_certificate_pem: permanent.public.management_certificate_pem.clone(),
         certificate_fingerprint: permanent_fingerprint,
         peer_communication_enabled: false,
+        preshared_key: None,
     });
     let result = EnrollmentResult {
         names: None,
@@ -169,6 +170,7 @@ fn targeted_device_enrollment_receipt_resolves_to_existing_member() {
         obfuscated_udp: claims.obfuscated_udp.clone(),
         tcp_fallback: claims.tcp_fallback.clone(),
         tls_like: claims.tls_like.clone(),
+        preshared_key: false,
     };
     state.enrollment_receipts.push(EnrollmentReceipt {
         invitation_id: claims.invitation_id,
