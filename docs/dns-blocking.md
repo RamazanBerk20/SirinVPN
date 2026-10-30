@@ -170,13 +170,51 @@ On both, all of the following passed:
   and Unbound kept running without the blocked zones.
 
 The VM gate has no VPN client, so these runs wrote the policy field into
-`authorization.json` directly instead of through the management API. The API
-handlers have their own tests (Owner and Admin allowed, Members refused,
-invalid policies rejected), but they ran in process, not over the tunnel.
+`authorization.json` directly instead of through the management API.
+
+### Two-VM lab: CLI and management API over the tunnel
+
+`tests/vm/run-linux-acceptance.sh` now has the step "Owner turns VPS DNS
+blocking on and off through the CLI". With the Direct transport connected,
+the Owner's packaged CLI runs `sirinvpn server dns-blocking enable --list
+oisd-small --allow keep.googlesyndication.com`, waits through `status` until
+the VPS has applied it, and then checks:
+
+- the policy reads back as sent, and Unbound on the VPS holds as many
+  `always_nxdomain` zones as the API reports, plus the transparent allowed
+  zone;
+- from the client, through the tunnel, `googlesyndication.com` and
+  `pagead2.googlesyndication.com` get NXDOMAIN while the private record
+  `probe.test` still answers;
+- `disable` keeps the chosen list, removes the zone file and every blocked
+  zone, and the private record still answers.
+
+The client was Debian 13 with `SirinVPN_0.1.1_amd64.deb` (SHA-256
+`e0b89fde…2313585e`), built by `scripts/package-linux-container.sh` from
+commit 673198d. That package's CLI provisioned the VPS with its bundled
+server. The VPS used a DNS-over-TLS upstream
+(`--vps-dns-over-tls 9.9.9.9#dns.quad9.net`) because this workstation's
+network intercepts outbound DNS.
+
+- **Ubuntu 24.04.5 VPS:** all 28 checks passed in 9.5 minutes, including the
+  new step (59,949 zones), with zero physical DNS or IPv6 leaks and complete
+  guest cleanup.
+- **Debian 13 VPS:** all 28 checks passed in 13.0 minutes, with the same
+  results for the new step and complete guest cleanup.
+
+The step skips the diagnostics check when the VPS uses DNS-over-TLS. With
+that upstream, every VPS diagnostics request currently aborts
+`sirinvpn-server`: `dns_diagnostics.rs` builds its TLS probe with rustls's
+implicit crypto provider. That bug predates DNS blocking and is tracked
+separately. The `dns_blocklist` diagnostic is covered by unit tests on the
+server and in the client's sanitizer.
 
 ## Not verified
 
-- The API, CLI and UI toggle over a real tunnel. The two-VM lab does not
-  include DNS blocking yet; it would need a rebuilt client package.
+- The desktop and Android UI against a real server. The card, its API calls
+  and its Tauri and Android commands are covered by tests and a mocked render,
+  but no lab drives the UI.
+- An Admin (not Owner) turning blocking on over the tunnel. The role rule is
+  tested in process.
 - A real VPS, IPv6-only list hosts, aarch64, and memory use on a small VPS
   with several large lists.

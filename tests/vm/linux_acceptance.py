@@ -19,6 +19,18 @@ FIXTURE = "/opt/sirin-acceptance.py"
 HELPER = "/usr/lib/sirinvpn/sirinvpn-helper"
 CLI = "/usr/bin/sirinvpn"
 SERVER = "198.18.10.1"
+BLOCKLIST_ZONE = "/etc/unbound/unbound.conf.d/sirinvpn-dns-blocklist.conf"
+# One DNS question per name to the tunnel resolver; prints each response code.
+RCODES = r"""
+import socket, struct, sys
+for name in sys.argv[1:]:
+    question = b"".join(bytes([len(part)]) + part.encode() for part in name.split(".")) + b"\0"
+    client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    client.settimeout(5)
+    client.sendto(struct.pack(">HHHHHH", 0x5356, 0x0100, 1, 0, 0, 0) + question + b"\0\1\0\1",
+                  ("10.77.0.1", 53))
+    print(client.recv(4096)[3] & 0x0F)
+"""
 USER_PREFIX = ["runuser", "-u", "sirin", "--", "env",
                "SSH_AUTH_SOCK=/home/sirin/acceptance-agent.sock",
                "DBUS_SESSION_BUS_ADDRESS=unix:path=/home/sirin/acceptance-bus"]
@@ -390,6 +402,59 @@ class Acceptance:
         return {"numeric_path_survived": True, "resolver_recovered": True,
                 "physical_leak_counters": self.counter()}
 
+    def blocklist_settled(self, active, timeout=300):
+        deadline = time.monotonic() + timeout
+        while True:
+            settings = self.cli("server", "dns-blocking", "status", self.server_id)
+            status = settings["status"]
+            assert status.get("failure") is None, f"blocklist refresh failed: {status}"
+            if status["active"] == active and not settings["pending"]:
+                return settings
+            assert time.monotonic() < deadline, f"blocklist did not settle: {settings}"
+            time.sleep(3)
+
+    def rcodes(self, *names):
+        result = self.run_guest(self.client, [*USER_PREFIX, "python3", "-c", RCODES, *names])
+        return [int(value) for value in result.stdout.split()]
+
+    def local_zones(self):
+        return self.server.run(["unbound-control", "list_local_zones"]).stdout.decode().splitlines()
+
+    def dns_blocking(self):
+        """The Owner toggles VPS-wide blocking through the CLI and private management API."""
+        initial = self.cli("server", "dns-blocking", "status", self.server_id)
+        assert not initial["policy"]["enabled"] and not initial["status"]["active"], initial
+        oisd = next(preset["url"] for preset in initial["presets"] if preset["name"] == "OISD Small")
+        self.cli("server", "dns-blocking", "enable", self.server_id,
+                 "--list", "oisd-small", "--allow", "keep.googlesyndication.com")
+        enabled = self.blocklist_settled(True)
+        assert enabled["policy"] == {"enabled": True, "sources": [oisd],
+                                     "allowlist": ["keep.googlesyndication.com"]}, enabled["policy"]
+        count = enabled["status"]["domain_count"]
+        zones = self.local_zones()
+        assert count > 10_000 and sum(zone.endswith(" always_nxdomain") for zone in zones) == count
+        assert "keep.googlesyndication.com. transparent" in zones
+        # Through the tunnel, a listed name and its subdomains are NXDOMAIN; private records still answer.
+        assert self.rcodes("googlesyndication.com", "pagead2.googlesyndication.com",
+                           "probe.test") == [3, 3, 0]
+        assert self.request(host="probe.test") == "vps"
+        # shortcut: VPS diagnostics with a DoT upstream abort on rustls provider selection
+        # (dns_diagnostics.rs); check the diagnostic only with the recursive upstream until fixed.
+        if not self.args.vps_dns_over_tls:
+            checks = {check["code"]: check for check in self.cli("diagnose", self.server_id)["checks"]}
+            assert checks.get("dns_blocklist", {}).get("level") == "pass", \
+                [(code, check["level"]) for code, check in checks.items()]
+        self.cli("server", "dns-blocking", "disable", self.server_id)
+        disabled = self.blocklist_settled(False)
+        assert disabled["policy"]["sources"] == [oisd] and not disabled["policy"]["enabled"]
+        assert not any(zone.endswith(" always_nxdomain") for zone in self.local_zones())
+        self.server.run(["test", "!", "-e", BLOCKLIST_ZONE])
+        assert self.rcodes("probe.test") == [0]
+        return {"blocked_zones": count, "blocked_rcode": 3, "allowed_zone": "transparent",
+                "diagnostics": "not checked" if self.args.vps_dns_over_tls else "pass",
+                "disabled_zone_removed": True,
+                "physical_leak_counters": self.counter()}
+
     def clean_disconnect(self):
         local = self.cli("disconnect")
         assert local["state"] == "disconnected"
@@ -589,6 +654,7 @@ class Acceptance:
                             self.step("Closing the real desktop GUI preserves the active tunnel", self.gui_close)
                             self.step("Reach public HTTPS through the tunnel", self.public_internet)
                             self.step("Resolver failure retains the tunnel and prevents DNS fallback", self.dns_failure)
+                            self.step("Owner turns VPS DNS blocking on and off through the CLI", self.dns_blocking)
                         if transport == "tls":
                             self.step("Recover from abrupt transport-process termination", self.relay_crash)
                         self.step(f"{transport}: explicit disconnect restores networking", self.clean_disconnect)
