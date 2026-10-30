@@ -5,8 +5,8 @@ use crate::{
 };
 use serde::{Deserialize, Serialize};
 use sirinvpn_protocol::{
-    DeviceId, KeyRotationId, KeyRotationPrepareRequest, ServerId, ServerProfile, ServerStatus,
-    TransportKind,
+    CurrentConfiguration, DeviceId, KeyRotationId, KeyRotationPrepareRequest, ServerId,
+    ServerProfile, ServerStatus, TransportKind,
 };
 use std::{fs, io, path::PathBuf};
 use thiserror::Error;
@@ -211,6 +211,18 @@ pub fn has_pending_key_rotation(
     server_id: ServerId,
 ) -> Result<bool, KeyRotationError> {
     RotationJournalStore::new(paths).exists(server_id)
+}
+
+/// Whether to prompt for a key rotation that gives this device a WireGuard
+/// preshared key. Clients only prompt: rotation reconnects, can end in
+/// `RecoveryRequired`, and leaves earlier device backups holding retired keys.
+pub fn preshared_key_rotation_recommended(
+    secret: &SecretIdentity,
+    configuration: &CurrentConfiguration,
+) -> bool {
+    secret.wireguard_preshared_key.is_none()
+        && configuration.key_rotation_enabled
+        && configuration.preshared_keys_enabled
 }
 
 pub async fn rotate_current_device_keys<Disconnect, Connect>(

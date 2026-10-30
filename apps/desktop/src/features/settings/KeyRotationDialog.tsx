@@ -13,6 +13,7 @@ export function KeyRotationDialog({
   open,
   onOpenChange,
   pending,
+  addsPresharedKey = false,
   onCompleted,
   onPendingChanged,
 }: {
@@ -20,6 +21,7 @@ export function KeyRotationDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   pending: boolean;
+  addsPresharedKey?: boolean;
   onCompleted: () => Promise<void>;
   onPendingChanged: () => Promise<void>;
 }) {
@@ -69,7 +71,7 @@ export function KeyRotationDialog({
               : pending
                 ? t("settings.keyRotation.resumeTitle")
                 : t("settings.keyRotation.title")}</>}
-          description={<>{t("settings.keyRotation.description")}</>}
+          description={<>{t(addsPresharedKey && !pending ? "settings.keyRotation.presharedKeyDescription" : "settings.keyRotation.description")}</>}
           closeDisabled={busy} closeLabel={t("common.action.close")}>
 
           {result ? (

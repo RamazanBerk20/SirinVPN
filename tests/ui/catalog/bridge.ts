@@ -80,6 +80,7 @@ export class CatalogBridge {
       case 'localComponentUpdateStatus':return{install_available:true,update_required:s.componentUpdate};
       case 'installLocalVpnComponent':s.componentUpdate=false;return this.local();
       case 'keyRotationPending':return s.pendingRotation;
+      case 'presharedKeyRotationRecommended':return !!s.presharedKeyMissing;
       case 'availableEndpointUpdate':return null;
       case 'inspectSshHost':return D.clone(s.sshInspection);
       case 'probeHostKey':return D.fingerprint;

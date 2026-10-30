@@ -282,6 +282,28 @@ pub(super) async fn transfer_ownership(
     print_membership(&snapshot, json)
 }
 
+/// The rotation that would give this key-less device a WireGuard preshared key,
+/// when its VPS accepts one. Rotation stays explicit; this only names it.
+pub(super) async fn preshared_key_hint(
+    profile: &ServerProfile,
+    secret: &SecretIdentity,
+) -> Option<String> {
+    if secret.wireguard_preshared_key.is_some() {
+        return None;
+    }
+    let configuration = ManagementClient::new(profile, secret)
+        .ok()?
+        .configuration()
+        .await
+        .ok()?;
+    preshared_key_rotation_recommended(secret, &configuration).then(|| {
+        format!(
+            "This device has no WireGuard preshared key. Add one with `sirinvpn server rotate-keys {} --confirm-key-rotation`; the VPN reconnects briefly, and device backups exported before then stop connecting.",
+            profile.id
+        )
+    })
+}
+
 pub(super) async fn rotate_keys(
     paths: &ClientPaths,
     arguments: RotateKeysArguments,

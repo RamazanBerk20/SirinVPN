@@ -64,6 +64,7 @@ export function useServerWorkspace({
   const [rotationOpen, setRotationOpen] = useState(false);
   const [endpointUpdateOpen, setEndpointUpdateOpen] = useState(false);
   const [rotationPending, setRotationPending] = useState(true);
+  const [presharedKeyMissing, setPresharedKeyMissing] = useState(false);
   const [removeOpen, setRemoveOpen] = useState(false);
   const preferences = useConnectionPreferences(profile.id);
   const connectionPolicy = preferences.draft.policy;
@@ -141,6 +142,18 @@ export function useServerWorkspace({
   useEffect(() => {
     void refreshRotationPending();
   }, [refreshRotationPending]);
+
+  // Only offers rotation; it reconnects and can need recovery, so it never runs unasked.
+  useEffect(() => {
+    setPresharedKeyMissing(false);
+    if (!connected || rotationPending) return;
+    let current = true;
+    api.presharedKeyRotationRecommended(profile.id).then(
+      (missing) => { if (current) setPresharedKeyMissing(missing); },
+      () => undefined,
+    );
+    return () => { current = false; };
+  }, [profile.id, connected, rotationPending]);
 
   const toggle = async () => {
     if (!localKnown || busy || anotherConnected) return;
@@ -260,6 +273,8 @@ export function useServerWorkspace({
     endpointUpdateOpen,
     setEndpointUpdateOpen,
     rotationPending,
+    presharedKeyMissing,
+    setPresharedKeyMissing,
     removeOpen,
     setRemoveOpen,
     connectionPolicy,

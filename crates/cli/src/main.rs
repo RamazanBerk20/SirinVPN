@@ -29,7 +29,8 @@ use sirinvpn_core::{
     ClientPaths, DecodedInvitation, EndpointTransitionCode, InvitationDraft, InvitationTarget,
     ManagementClient, ManagementError, NetworkContext, ProfileStore, RotationConnectionPolicy,
     SecretIdentity, SecretStore, apply_endpoint_transition, create_endpoint_transition,
-    has_pending_key_rotation, publish_endpoint_transition, rotate_current_device_keys_with_policy,
+    has_pending_key_rotation, preshared_key_rotation_recommended, publish_endpoint_transition,
+    rotate_current_device_keys_with_policy,
 };
 use sirinvpn_installer::{
     InstallRequest, Provisioner, RepairRequest, ServerBackupRequest, ServerRestoreRequest,

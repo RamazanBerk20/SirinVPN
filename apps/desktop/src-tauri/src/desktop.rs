@@ -243,6 +243,7 @@ fn run_inner() -> tauri::Result<()> {
             revoke_member_devices,
             transfer_ownership,
             key_rotation_pending,
+            preshared_key_rotation_recommended,
             rotate_device_keys,
             join_server,
         ])

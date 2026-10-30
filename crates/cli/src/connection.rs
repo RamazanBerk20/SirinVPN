@@ -392,8 +392,9 @@ pub(super) async fn status(paths: &ClientPaths, json: bool) -> Result<()> {
         let secret = paths.secret_store().get(&profile.identity_reference).ok()?;
         Some((profile, secret))
     });
-    let server = if let Some((mut profile, secret)) = identity {
-        match ManagementClient::new(&profile, &secret) {
+    let server = if let Some((profile, secret)) = &identity {
+        let mut profile = profile.clone();
+        match ManagementClient::new(&profile, secret) {
             Ok(client) => match client.status().await {
                 Ok(status) => {
                     if let Some(role) = status.caller_role
@@ -418,7 +419,16 @@ pub(super) async fn status(paths: &ClientPaths, json: bool) -> Result<()> {
     } else {
         None
     };
-    let combined = CombinedStatus { local, server };
+    // Only a VPS that just answered is asked, so an unreachable one is not waited on twice.
+    let key_hint = match (&server, &identity) {
+        (Some(_), Some((profile, secret))) => preshared_key_hint(profile, secret).await,
+        _ => None,
+    };
+    let combined = CombinedStatus {
+        local,
+        server,
+        preshared_key_rotation_recommended: key_hint.is_some(),
+    };
     if json {
         println!("{}", serde_json::to_string_pretty(&combined)?);
     } else {
@@ -465,6 +475,9 @@ pub(super) async fn status(paths: &ClientPaths, json: bool) -> Result<()> {
                 server.rx_bytes,
                 server.tx_bytes
             );
+        }
+        if let Some(hint) = key_hint {
+            println!("{hint}");
         }
     }
     Ok(())

@@ -347,3 +347,34 @@ fn rotation_replaces_the_preshared_key_only_when_the_vps_accepts_one() {
         }
     }
 }
+
+#[test]
+fn only_a_keyless_device_on_a_capable_vps_is_prompted_to_rotate() {
+    let configuration = |key_rotation: bool, preshared_keys: bool| -> CurrentConfiguration {
+        serde_json::from_value(serde_json::json!({
+            "api_version": "v1", "interface_name": "sirinvpn0", "tunnel_cidr": "10.77.0.0/24",
+            "dns_address": "10.77.0.1", "wireguard_port": 51820, "management_port": 8443,
+            "ipv6_tunnel_enabled": false, "key_rotation_enabled": key_rotation,
+            "preshared_keys_enabled": preshared_keys
+        }))
+        .unwrap()
+    };
+    let mut secret = LocalIdentity::generate("Prompt").unwrap().secret;
+    assert!(preshared_key_rotation_recommended(
+        &secret,
+        &configuration(true, true)
+    ));
+    assert!(!preshared_key_rotation_recommended(
+        &secret,
+        &configuration(true, false)
+    ));
+    assert!(!preshared_key_rotation_recommended(
+        &secret,
+        &configuration(false, true)
+    ));
+    secret.wireguard_preshared_key = Some(crate::generate_preshared_key());
+    assert!(!preshared_key_rotation_recommended(
+        &secret,
+        &configuration(true, true)
+    ));
+}

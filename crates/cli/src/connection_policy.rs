@@ -79,7 +79,14 @@ pub(super) async fn connect(
     } else {
         "Connection is still pending. The helper will follow the configured recovery policy. Use `sirinvpn status` to check it."
     };
-    print_value(&status, json, message)
+    print_value(&status, json, message)?;
+    if !json
+        && status.state == ConnectionState::Connected
+        && let Some(hint) = preshared_key_hint(&profile, &secret).await
+    {
+        println!("{hint}");
+    }
+    Ok(())
 }
 
 pub(super) fn connect_managed_with_mtu(

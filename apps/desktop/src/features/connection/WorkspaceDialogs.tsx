@@ -109,7 +109,9 @@ export function WorkspaceDialogs({
         open={rotationOpen}
         onOpenChange={setRotationOpen}
         pending={rotationPending}
+        addsPresharedKey={model.presharedKeyMissing}
         onCompleted={async () => {
+          model.setPresharedKeyMissing(false);
           await onAccessChanged();
           await refreshRotationPending();
         }}

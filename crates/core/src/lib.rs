@@ -52,7 +52,8 @@ pub use invitation::{
 };
 pub use key_rotation::{
     KeyRotationError, KeyRotationResult, RotationConnectionPolicy, has_pending_key_rotation,
-    rotate_current_device_keys, rotate_current_device_keys_with_policy,
+    preshared_key_rotation_recommended, rotate_current_device_keys,
+    rotate_current_device_keys_with_policy,
 };
 pub use management::{ManagementClient, ManagementError, ManagementStatusStream};
 pub use network_policy::{

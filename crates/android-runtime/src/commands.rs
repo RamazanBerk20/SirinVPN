@@ -357,6 +357,12 @@ pub async fn dispatch(
             encode(status)
         }
         "server_configuration" => encode(client.configuration().await?),
+        "preshared_key_rotation_recommended" => {
+            encode(sirinvpn_core::preshared_key_rotation_recommended(
+                &secret,
+                &client.configuration().await?,
+            ))
+        }
         "membership" => encode(client.membership().await?),
         "run_diagnostics" => encode(client.diagnostics().await?),
         "recovery_settings" => encode(client.recovery_settings().await?),

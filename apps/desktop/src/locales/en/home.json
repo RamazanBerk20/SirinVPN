@@ -85,6 +85,10 @@
     "needed": "Update the VPN component to connect.",
     "review": "Review update"
   },
+  "presharedKey": {
+    "missing": "This device has no preshared key, so recorded VPN traffic isn’t protected against future quantum computers.",
+    "add": "Add preshared key"
+  },
   "health": {
     "idle": "No recent handshake. The connection may just be idle.",
     "managementUnavailable": "Server management is unavailable.",
