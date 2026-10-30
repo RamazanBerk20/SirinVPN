@@ -139,11 +139,7 @@ async fn tls_exchange(
         .map_err(|_| "The VPS certificate trust bundle is unavailable. Repair the CA certificates package.")?
         .collect::<Result<Vec<_>,_>>().map_err(|_| "The VPS certificate trust bundle is invalid.")?;
     roots.add_parsable_certificates(certificates);
-    let tls = TlsConnector::from(Arc::new(
-        ClientConfig::builder()
-            .with_root_certificates(roots)
-            .with_no_client_auth(),
-    ));
+    let tls = TlsConnector::from(Arc::new(tls_configuration(roots)?));
     let name = ServerName::try_from(endpoint.authentication_name.clone())
         .map_err(|_| "The TLS resolver authentication name is invalid.")?;
     let stream = TcpStream::connect(SocketAddr::new(endpoint.address, 853))
@@ -154,6 +150,19 @@ async fn tls_exchange(
     let mut stream = tls.connect(name, stream).await
         .map_err(|_| "TLS authentication failed. Check the resolver's certificate, configured TLS name and VPS clock.")?;
     exchange(&mut stream, query).await
+}
+
+fn tls_configuration(roots: RootCertStore) -> Result<ClientConfig, &'static str> {
+    // reqwest links rustls with ring too, so the implicit `ClientConfig::builder()` aborts.
+    Ok(
+        ClientConfig::builder_with_provider(
+            Arc::new(rustls::crypto::aws_lc_rs::default_provider()),
+        )
+        .with_safe_default_protocol_versions()
+        .map_err(|_| "The VPS TLS configuration is invalid.")?
+        .with_root_certificates(roots)
+        .with_no_client_auth(),
+    )
 }
 
 async fn exchange<S: AsyncRead + AsyncWrite + Unpin>(
@@ -258,6 +267,13 @@ fn validate_reply(query: &[u8], response: &[u8]) -> ProbeResult {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn dns_over_tls_probe_configuration_does_not_need_a_process_default_provider() {
+        // This test binary links both rustls providers, as the server does.
+        assert!(tls_configuration(RootCertStore::empty()).is_ok());
+    }
+
     #[tokio::test]
     async fn server_resolver_check_uses_loopback_without_a_tunnel_interface() {
         let directory = tempfile::tempdir().unwrap();
