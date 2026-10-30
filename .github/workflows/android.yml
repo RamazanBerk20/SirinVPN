@@ -78,6 +78,8 @@ jobs:
             .cache/android-emulator-36/results.json
             .cache/android-emulator-29/instrumentation.log
             .cache/android-emulator-36/instrumentation.log
+            .cache/android-emulator-29/emulator.log
+            .cache/android-emulator-36/emulator.log
             .cache/android-emulator-36/wifi-connect.log
             .cache/android-emulator-36/wifi-before-native.log
             .cache/android-emulator-36/network-before-native.log
