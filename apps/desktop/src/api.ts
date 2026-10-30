@@ -165,6 +165,8 @@ export const api = {
     }),
   keyRotationPending: (serverId: string) =>
     invoke<boolean>("key_rotation_pending", { serverId }),
+  presharedKeyRotationRecommended: (serverId: string) =>
+    invoke<boolean>("preshared_key_rotation_recommended", { serverId }),
   rotateDeviceKeys: (serverId: string, confirmed: boolean) =>
     invoke<KeyRotationResult>("rotate_device_keys", {
       input: { server_id: serverId, confirmed },

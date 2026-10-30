@@ -11,6 +11,7 @@ vi.mock("../../api", () => ({
     getConnectionPreferences: vi.fn(),
     setConnectionPreferences: vi.fn(),
     keyRotationPending: vi.fn(),
+    presharedKeyRotationRecommended: vi.fn(),
     connectWithPolicy: vi.fn(),
     disconnect: vi.fn(),
     resume: vi.fn(),
@@ -45,8 +46,40 @@ beforeEach(() => {
     structuredClone(p),
   );
   vi.mocked(api.keyRotationPending).mockResolvedValue(false);
+  vi.mocked(api.presharedKeyRotationRecommended).mockResolvedValue(false);
 });
 afterEach(cleanup);
+describe("preshared key prompt", () => {
+  const connected = { ...emptyLocalStatus, server_id: profile.id, state: "connected" as const };
+
+  it("asks the VPS only while connected and never rotates by itself", async () => {
+    vi.mocked(api.presharedKeyRotationRecommended).mockResolvedValue(true);
+    const { result, rerender } = renderHook(({ status }) => useServerWorkspace(input(status)), { initialProps: { status: emptyLocalStatus } });
+    await waitFor(() => expect(result.current.rotationPending).toBe(false));
+    expect(api.presharedKeyRotationRecommended).not.toHaveBeenCalled();
+    rerender({ status: connected });
+    await waitFor(() => expect(result.current.presharedKeyMissing).toBe(true));
+    expect(api.presharedKeyRotationRecommended).toHaveBeenCalledWith(profile.id);
+    expect(result.current.rotationOpen).toBe(false);
+    rerender({ status: emptyLocalStatus });
+    expect(result.current.presharedKeyMissing).toBe(false);
+  });
+
+  it("stays hidden while a rotation is pending or the check fails", async () => {
+    vi.mocked(api.keyRotationPending).mockResolvedValue(true);
+    vi.mocked(api.presharedKeyRotationRecommended).mockResolvedValue(true);
+    const pending = renderHook(() => useServerWorkspace(input(connected)));
+    await waitFor(() => expect(api.keyRotationPending).toHaveBeenCalled());
+    expect(api.presharedKeyRotationRecommended).not.toHaveBeenCalled();
+    pending.unmount();
+    vi.mocked(api.keyRotationPending).mockResolvedValue(false);
+    vi.mocked(api.presharedKeyRotationRecommended).mockRejectedValue(new Error("offline"));
+    const { result } = renderHook(() => useServerWorkspace(input(connected)));
+    await waitFor(() => expect(api.presharedKeyRotationRecommended).toHaveBeenCalled());
+    expect(result.current.presharedKeyMissing).toBe(false);
+  });
+});
+
 describe("independent desktop policy", () => {
   it("discards a report closed before the native request finishes", async () => {
     let finish!: (report: DiagnosticReport) => void;

@@ -74,3 +74,69 @@ VM or phone was used.
   and restoring an encrypted server-state backup that contains keys.
 - The hybrid group was asserted against the test TLS server built with the
   same aws-lc-rs defaults as the VPS listener, not against an installed VPS.
+
+## Prompting devices without a key
+
+Devices that have no key (an Owner provisioned over SSH or recovered offline,
+and devices enrolled before this change) gain one only through key rotation.
+Clients now prompt for that rotation instead of leaving it to the user to find.
+
+**Decision: prompt, never rotate automatically.** An automatic one-time
+rotation after connect was rejected because rotation:
+
+- replaces both private keys, so a device backup exported earlier stops
+  connecting. Rotating silently would invalidate the backup of the Owner, the
+  device whose backup matters most, without telling anyone to export a new one;
+- disconnects and reconnects, and under the kill switch pauses traffic. A
+  background run on a startup, always-on or reconnect path would interrupt a
+  session nobody asked to change;
+- can end in `RecoveryRequired`, which blocks ordinary connects until the user
+  resumes the rotation. An unattended run could turn a working connection into
+  a blocked one with nobody watching.
+
+The prompt reuses the existing rotation entry points unchanged, so pause,
+explicit disconnect, the kill switch and recovery behave exactly as for a
+manual rotation. No server endpoint was added.
+
+- **Core.** `preshared_key_rotation_recommended(secret, configuration)` is true
+  only when the stored identity has no key and the VPS advertises both
+  `key_rotation_enabled` and `preshared_keys_enabled`.
+- **Desktop and Android** (shared UI). A read-only
+  `preshared_key_rotation_recommended` command (Tauri; Android runtime, listed
+  as read-only in the controller) reads the identity without unlocking the
+  keyring and asks the connected VPS. While connected with no pending
+  rotation, Home shows "Add preshared key", which opens the rotation dialog
+  with a description that says a preshared key is added and earlier backups
+  stop connecting. The prompt clears on disconnect and after a completed
+  rotation.
+- **CLI.** After a successful `sirinvpn connect` (text output) and in
+  `sirinvpn status`, a device without a key on a capable VPS gets the exact
+  `sirinvpn server rotate-keys <server-id> --confirm-key-rotation` command.
+  `status --json` carries `preshared_key_rotation_recommended`. A device that
+  already has a key makes no extra request.
+
+### Verified
+
+- **`./scripts/test.sh`** passed on this tree: 510 Rust tests (18 ignored),
+  235 frontend tests and 16 Python tests, plus every other gate.
+- `only_a_keyless_device_on_a_capable_vps_is_prompted_to_rotate` (core): the
+  prompt needs a key-less identity and both VPS capabilities.
+- `useServerWorkspace` tests: the VPS is asked only while connected and with no
+  pending rotation, a failed check shows nothing, the prompt clears on
+  disconnect, and the check never opens or starts a rotation.
+- **Rendered UI.** The screenshot catalog (Chromium, fictional API responses)
+  showed the Home prompt after connecting and, from it, the rotation dialog
+  with the preshared-key description; the dialog still waits for its
+  confirmation checkbox and no rotation call was made.
+- **Android.** `cargo clippy -p sirinvpn-android-runtime --target
+  x86_64-linux-android -- -D warnings` passed with NDK 30.
+
+### Not verified
+
+- No desktop, Android or CLI client was run against a VPS to see the prompt or
+  to follow it through a rotation; no emulator or disposable VM was used for
+  this change.
+- The Kotlin change (the new command in the controller's read-only list) was
+  not built, and the Android layout of the prompt was not rendered.
+- The CLI hint was not printed against a real VPS; only its decision function
+  is tested.

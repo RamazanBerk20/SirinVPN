@@ -83,6 +83,7 @@ window.__TAURI_INTERNALS__ = {
       case "repair_server": return { artifact_sha256: "synthetic-artifact", dns_upstream: { mode: "recursive" }, private_dns_records: [], events: [] };
       case "provision_server": return new Promise(() => {});
       case "key_rotation_pending": return false;
+      case "preshared_key_rotation_recommended": return false;
       case "subscribe_server_status": {
         const publish = async () => {
           try {

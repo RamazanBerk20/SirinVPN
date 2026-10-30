@@ -14,6 +14,26 @@ pub(super) fn key_rotation_pending(
 }
 
 #[tauri::command]
+pub(super) async fn preshared_key_rotation_recommended(
+    app: tauri::AppHandle,
+    state: State<'_, AppState>,
+    server_id: String,
+) -> Result<bool, String> {
+    let session = crate::management_session::connected_read(&app, &server_id).await?;
+    // A read-only view never unlocks the keyring.
+    let secret = state
+        .paths
+        .secret_store()
+        .get(&session.profile.identity_reference)
+        .map_err(safe_error)?;
+    let configuration = session.read(session.configuration()).await?;
+    Ok(sirinvpn_core::preshared_key_rotation_recommended(
+        &secret,
+        &configuration,
+    ))
+}
+
+#[tauri::command]
 pub(super) async fn rotate_device_keys(
     state: State<'_, AppState>,
     input: KeyRotationInput,

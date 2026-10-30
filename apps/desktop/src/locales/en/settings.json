@@ -232,6 +232,7 @@
     "resumeTitle": "Resume key rotation",
     "doneTitle": "Keys rotated",
     "description": "Creates new keys for this device. Its access, VPN address and name stay the same.",
+    "presharedKeyDescription": "Creates new keys for this device, including a preshared key that keeps recorded VPN traffic private against future quantum computers. Its access, VPN address and name stay the same. Device backups exported before now stop connecting, so export a new one afterwards.",
     "done": {
       "title": "New keys are active",
       "summary": "Your server accepted them and the old keys were deleted from this device."

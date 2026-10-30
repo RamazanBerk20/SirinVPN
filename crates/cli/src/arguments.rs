@@ -608,6 +608,7 @@ pub(super) struct RotateKeysArguments {
 pub(super) struct CombinedStatus {
     pub(super) local: LocalTunnelStatus,
     pub(super) server: Option<sirinvpn_protocol::ServerStatus>,
+    pub(super) preshared_key_rotation_recommended: bool,
 }
 
 #[derive(Serialize)]

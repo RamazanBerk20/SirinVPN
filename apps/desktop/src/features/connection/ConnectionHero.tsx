@@ -84,6 +84,10 @@ export function ConnectionHero({
       )}
       {state.warning && <InlineError message={state.warning} />}
       {!isAndroid && <ConnectionDetails model={model} />}
+      {model.presharedKeyMissing && <div className="measurement-update">
+        <p>{t("home.presharedKey.missing")}</p>
+        <button className="text-button" disabled={busy} onClick={() => model.setRotationOpen(true)}>{t("home.presharedKey.add")}</button>
+      </div>}
       {componentUpdateRequired && onReviewComponentUpdate && <div className="measurement-update">
         <p>{t("home.componentUpdate.needed")}</p>
         <button className="text-button" disabled={busy} onClick={onReviewComponentUpdate}>{t("home.componentUpdate.review")}</button>
