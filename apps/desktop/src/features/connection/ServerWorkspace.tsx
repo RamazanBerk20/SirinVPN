@@ -17,6 +17,7 @@ const WorkspaceDialogs = lazy(() => import("./WorkspaceDialogs").then(m => ({ de
 import { CopyValue } from "../../components/CopyValue";
 import type { Page } from "../../components/Navigation";
 const AccessPanel = lazy(() => import("../devices/AccessPanel").then(m => ({ default: m.AccessPanel })));
+const DnsBlocklistSettings = lazy(() => import("../dns/DnsBlocklistSettings").then(m => ({ default: m.DnsBlocklistSettings })));
 const PortForwardSettings = lazy(() => import("../devices/PortForwardSettings").then(m => ({ default: m.PortForwardSettings })));
 import { formatDnsPolicy } from "../../format";
 import { useServerWorkspace } from "./useServerWorkspace";
@@ -183,6 +184,7 @@ export function ServerWorkspace(
                   </div>
                 )}
               </section>
+              <DnsBlocklistSettings profile={profile} connected={connected} canManage={model.canManageAccess} />
               {(
                 <PortForwardSettings
                   onManageDevices={() => props.onNavigate("devices")}

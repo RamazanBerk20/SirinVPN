@@ -52,6 +52,11 @@ pub(super) enum ServerCommand {
         #[command(subcommand)]
         command: RecoveryCommand,
     },
+    /// Opt-in ad and tracker blocking on the VPS resolver for every device.
+    DnsBlocking {
+        #[command(subcommand)]
+        command: DnsBlockingCommand,
+    },
     Add(AddServerArguments),
     BackupVps(BackupVpsArguments),
     RestoreVps(RestoreVpsArguments),
@@ -93,6 +98,29 @@ pub(super) enum RecoveryCommand {
     Policy(RecoveryPolicyArguments),
     Revoke(RecoveryRevokeArguments),
     Recover(RecoveryRestoreArguments),
+}
+
+#[derive(Subcommand)]
+pub(super) enum DnsBlockingCommand {
+    /// Show the chosen lists, allowed domains, built-in lists and the latest VPS refresh.
+    Status(ServerSelector),
+    /// Turn blocking on. Given lists or allowed domains replace the stored ones.
+    Enable(DnsBlockingArguments),
+    /// Turn blocking off and keep the chosen lists and allowed domains.
+    Disable(ServerSelector),
+}
+
+#[derive(Args)]
+pub(super) struct DnsBlockingArguments {
+    pub(super) server: String,
+    /// A built-in list name from `status` or an HTTPS address. Repeat for more lists.
+    #[arg(long = "list")]
+    pub(super) lists: Vec<String>,
+    /// A domain and its subdomains that must never be blocked. Repeat for more.
+    #[arg(long = "allow", conflicts_with = "clear_allowlist")]
+    pub(super) allow: Vec<String>,
+    #[arg(long)]
+    pub(super) clear_allowlist: bool,
 }
 
 #[derive(Args)]

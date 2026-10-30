@@ -63,5 +63,34 @@
       "replace": "Replace all records with:"
     },
     "impact": "Affects every device on this server, and the VPN restarts briefly. VPN addresses, ports, devices and access stay the same."
+  },
+  "blocklist": {
+    "title": "Ad and tracker blocking",
+    "summary": "Blocks ad and tracker domains for every device that uses this server’s DNS. The server keeps no record of lookups.",
+    "unsupported": "Repair this server with the current app to use DNS blocking.",
+    "enable": "Block ads and trackers",
+    "lists": "Blocklists",
+    "custom": "Other blocklists",
+    "customHint": "Optional. One HTTPS address per line, hosts or domain-list format.",
+    "customInvalid": "Use up to 8 HTTPS addresses in total.",
+    "allowlist": "Never block",
+    "allowlistHint": "One domain per line. Its subdomains are allowed too.",
+    "allowlistInvalid": "Use valid domain names, up to 512.",
+    "save": "Save blocking",
+    "refresh": "Refresh status",
+    "saved": "Saved. The server applies it within a minute.",
+    "loadFailed": "DNS blocking settings could not be loaded.",
+    "saveFailed": "DNS blocking settings could not be saved.",
+    "status": {
+      "off": "DNS blocking is off.",
+      "pending": "Waiting for the server to apply the latest change.",
+      "active": "Blocking {{count}} domains. List updated {{time}}."
+    },
+    "failure": {
+      "download": "A blocklist could not be downloaded. The last good list stays in effect.",
+      "format": "A blocklist is not in hosts or domain-list format. The last good list stays in effect.",
+      "too_many_domains": "The chosen lists contain more than 300,000 domains. Choose fewer lists; the last good list stays in effect.",
+      "resolver": "The DNS service rejected the new list. The last good list stays in effect."
+    }
   }
 }

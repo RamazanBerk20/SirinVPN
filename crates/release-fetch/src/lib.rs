@@ -124,6 +124,20 @@ pub async fn fetch_release(request: ReleaseFetchRequest) -> Result<FetchedReleas
     fetch_release_with_client_and_root(request, &client, BUNDLED_RELEASE_TRUST_ROOT_PEM).await
 }
 
+/// One public HTTPS file, such as a DNS blocklist: no redirects, no content encoding, bounded
+/// size and a two-minute deadline. The caller validates the address and the content.
+pub async fn fetch_public_file(url: &str, maximum_bytes: u64) -> Result<Vec<u8>, FetchError> {
+    let url = Url::parse(url).map_err(|_| FetchError::InvalidSourceUrl)?;
+    if url.scheme() != "https" {
+        return Err(FetchError::SourceMustUseHttps);
+    }
+    let client = secure_client_builder()
+        .timeout(Duration::from_secs(120))
+        .build()
+        .map_err(FetchError::ClientConfiguration)?;
+    fetch_bounded(&client, url, "public file", maximum_bytes).await
+}
+
 fn secure_client_builder() -> reqwest::ClientBuilder {
     Client::builder()
         .https_only(true)

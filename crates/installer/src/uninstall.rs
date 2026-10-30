@@ -108,7 +108,7 @@ install -d -m 0700 "$BACKUP_DIR"
 for path in $MANAGED_PATHS; do
   [ -e "/$path" ] && printf '%s\n' "$path" >>"$BACKUP_DIR/existing"
 done
-for unit in sirinvpn-network sirinvpn-firewall sirinvpn-doh unbound sirinvpn-server sirinvpn-security-update.timer; do
+for unit in sirinvpn-network sirinvpn-firewall sirinvpn-doh unbound sirinvpn-server sirinvpn-security-update.timer sirinvpn-dns-blocklist.path sirinvpn-dns-blocklist.timer; do
   systemctl is-active --quiet "$unit" && : >"$BACKUP_DIR/active.$unit" || true
   systemctl is-enabled --quiet "$unit" && : >"$BACKUP_DIR/enabled.$unit" || true
 done
@@ -153,6 +153,8 @@ ROLLBACK
 
 systemctl disable --now sirinvpn-security-update.timer >/dev/null 2>&1 || true
 systemctl stop sirinvpn-security-update.service >/dev/null 2>&1 || true
+systemctl disable --now sirinvpn-dns-blocklist.path sirinvpn-dns-blocklist.timer >/dev/null 2>&1 || true
+systemctl stop sirinvpn-dns-blocklist.service >/dev/null 2>&1 || true
 
 for unit in sirinvpn-server sirinvpn-doh sirinvpn-firewall sirinvpn-network; do
   if systemctl cat "$unit.service" >/dev/null 2>&1; then
@@ -181,8 +183,9 @@ fi
 "#,
         nonce = nonce,
         managed_paths = format_args!(
-            "{MANAGED_SERVER_PATHS} {} var/lib/sirinvpn-server-release",
-            super::updates::UPDATE_MANAGED_PATHS
+            "{MANAGED_SERVER_PATHS} {} {} var/lib/sirinvpn-server-release",
+            super::updates::UPDATE_MANAGED_PATHS,
+            super::dns_blocklist::DNS_BLOCKLIST_MANAGED_PATHS
         ),
         maintenance_begin = super::updates::MAINTENANCE_BEGIN,
         rollback_begin = maintenance::rollback_begin(nonce, true),
@@ -225,7 +228,7 @@ if command -v ip6tables-save >/dev/null 2>&1; then
 fi
 sockets=$(ss -H -lnt 'sport = :8443')
 if printf '%s\n' "$sockets" | grep -q 10.77.0.1; then exit 1; fi
-for unit in sirinvpn-network sirinvpn-firewall sirinvpn-doh sirinvpn-server sirinvpn-security-update.timer; do
+for unit in sirinvpn-network sirinvpn-firewall sirinvpn-doh sirinvpn-server sirinvpn-security-update.timer sirinvpn-dns-blocklist.path sirinvpn-dns-blocklist.timer; do
   if systemctl is-active --quiet "$unit"; then exit 1; fi
   if systemctl is-enabled --quiet "$unit"; then exit 1; fi
 done
@@ -236,8 +239,9 @@ if printf '%s\n' "$sockets" | grep -q '127.0.0.1:{doh_proxy_port}'; then exit 1;
 systemctl is-active --quiet unbound.service
 "#,
         managed_paths = format_args!(
-            "{MANAGED_SERVER_PATHS} {} var/lib/sirinvpn-server-release",
-            super::updates::UPDATE_MANAGED_PATHS
+            "{MANAGED_SERVER_PATHS} {} {} var/lib/sirinvpn-server-release",
+            super::updates::UPDATE_MANAGED_PATHS,
+            super::dns_blocklist::DNS_BLOCKLIST_MANAGED_PATHS
         ),
         doh_proxy_port = DOH_PROXY_PORT,
     )

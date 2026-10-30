@@ -227,6 +227,8 @@ fn run_inner() -> tauri::Result<()> {
             rename_device,
             revoke_device,
             update_device_peer_communication,
+            dns_blocklist_settings,
+            update_dns_blocklist,
             create_port_forward,
             remove_port_forward,
             update_member_access,

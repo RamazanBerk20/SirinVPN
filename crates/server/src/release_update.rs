@@ -1,7 +1,7 @@
 //! Root-only VPS release operations, invoked over the owner's authenticated SSH
 //! session. The private management daemon never receives an update privilege.
 mod files;
-mod host;
+pub(crate) mod host;
 mod policy;
 
 use clap::Subcommand;

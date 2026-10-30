@@ -108,6 +108,10 @@ enum Command {
         #[arg(long)]
         owner_certificate: PathBuf,
     },
+    DnsBlocklist {
+        #[command(subcommand)]
+        command: sirinvpn_server::dns_blocklist::DnsBlocklistCommand,
+    },
     DohProxy,
     Serve,
 }
@@ -242,6 +246,9 @@ async fn run() -> anyhow::Result<()> {
                 .take((MAX_SERVER_BACKUP_SNAPSHOT_BYTES + 1) as u64)
                 .read_to_end(&mut snapshot)?;
             restore_backup_state(&paths, server_id, &owner_certificate, snapshot.as_slice())?;
+        }
+        Command::DnsBlocklist { command } => {
+            sirinvpn_server::dns_blocklist::run(command, &paths).await?
         }
         Command::DohProxy => serve_doh_proxy(&paths).await?,
         Command::Serve => serve(&paths).await?,

@@ -18,6 +18,7 @@ use verification::*;
 mod uninstall;
 use uninstall::*;
 mod dns;
+mod dns_blocklist;
 use dns::*;
 mod install_script;
 use install_script::*;

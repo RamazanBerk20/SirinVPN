@@ -365,6 +365,12 @@ pub async fn dispatch(
         }
         "membership" => encode(client.membership().await?),
         "run_diagnostics" => encode(client.diagnostics().await?),
+        "dns_blocklist_settings" => encode(client.dns_blocklist().await?),
+        "update_dns_blocklist" => encode(
+            client
+                .update_dns_blocklist(&serde_json::from_value(args["policy"].clone())?)
+                .await?,
+        ),
         "recovery_settings" => encode(client.recovery_settings().await?),
         "update_recovery_policy" => encode(
             client

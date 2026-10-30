@@ -56,6 +56,36 @@ fn script_has_scoped_firewall_ownership_and_docker_interop() {
     let snapshot = script.find("SIRINVPN_INSTALL_STEP=snapshot").unwrap();
     let initialize = script.find("SIRINVPN_INSTALL_STEP=initialize").unwrap();
     assert!(snapshot < stop && stop < initialize);
+    // The blocklist task stops before the transaction changes Unbound and restarts last;
+    // reloads reread the configuration as the unbound user.
+    let blocklist_stop = script
+        .find(crate::dns_blocklist::DNS_BLOCKLIST_STOP)
+        .unwrap();
+    let unbound_mode = script
+        .find("chmod 0640 /etc/unbound/unbound.conf.d/sirinvpn.conf")
+        .unwrap();
+    let unbound_check = script
+        .find("unbound-checkconf /etc/unbound/unbound.conf")
+        .unwrap();
+    let blocklist_start = script
+        .find("systemctl restart sirinvpn-dns-blocklist.path sirinvpn-dns-blocklist.timer")
+        .unwrap();
+    assert!(snapshot < blocklist_stop && blocklist_stop < initialize);
+    assert!(unbound_mode < unbound_check);
+    assert!(script.contains("chown root:unbound /etc/unbound/unbound.conf.d/sirinvpn.conf"));
+    assert!(
+        script[initialize..]
+            .find("restart sirinvpn-server")
+            .unwrap()
+            + initialize
+            < blocklist_start
+    );
+    assert!(script.contains(crate::dns_blocklist::DNS_BLOCKLIST_SETUP));
+    assert!(script.contains(crate::dns_blocklist::DNS_BLOCKLIST_MANAGED_PATHS));
+    assert!(script.contains("PathChanged=/etc/sirinvpn/authorization/authorization.json"));
+    assert!(
+        script.contains("ExecStart=/usr/local/lib/sirinvpn/sirinvpn-server dns-blocklist apply")
+    );
     assert!(script.contains("set peer_communication4"));
     assert!(script.contains("set peer_communication6"));
     assert!(script.contains("ip saddr @peer_communication4 ip daddr @peer_communication4 accept"));

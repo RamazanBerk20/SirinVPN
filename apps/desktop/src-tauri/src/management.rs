@@ -222,6 +222,28 @@ pub(super) async fn update_device_peer_communication(
 }
 
 #[tauri::command]
+pub(super) async fn dns_blocklist_settings(
+    app: tauri::AppHandle,
+    server_id: String,
+) -> Result<sirinvpn_protocol::DnsBlocklistSettings, String> {
+    let session = crate::management_session::connected_read(&app, &server_id).await?;
+    session.read(session.dns_blocklist()).await
+}
+
+#[tauri::command]
+pub(super) async fn update_dns_blocklist(
+    app: tauri::AppHandle,
+    server_id: String,
+    policy: sirinvpn_protocol::DnsBlocklistPolicy,
+) -> Result<sirinvpn_protocol::DnsBlocklistSettings, String> {
+    crate::management_session::connected(&app, &server_id)
+        .await?
+        .update_dns_blocklist(&policy)
+        .await
+        .map_err(safe_error)
+}
+
+#[tauri::command]
 pub(super) async fn create_port_forward(
     app: tauri::AppHandle,
     input: PortForwardCreateInput,

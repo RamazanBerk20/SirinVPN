@@ -1,0 +1,496 @@
+//! Opt-in DNS ad and tracker blocking. Managers store the policy in authorization state; a
+//! root systemd task builds an Unbound zone file from it. Nothing here sees or records queries.
+use super::*;
+use crate::release_update::host::{SERVER_BINARY, run_command};
+use sirinvpn_protocol::{
+    BUILT_IN_DNS_BLOCKLISTS, DnsBlocklistFailure, DnsBlocklistPolicy, DnsBlocklistPreset,
+    DnsBlocklistSettings, DnsBlocklistStatus, MAX_DNS_BLOCKLIST_DOMAINS,
+    MAX_DNS_BLOCKLIST_DOWNLOAD_BYTES, normalize_dns_blocklist_name, valid_dns_blocklist_url,
+};
+use std::{collections::BTreeSet, io::Write, process::Command as ProcessCommand};
+
+pub const ZONE_FILE: &str = "/etc/unbound/unbound.conf.d/sirinvpn-dns-blocklist.conf";
+pub const STATE_DIRECTORY: &str = "/var/lib/sirinvpn-dns-blocklist";
+const STATUS_FILE: &str = "status.json";
+/// Installed by the SSH installer; older installations need a repair first.
+const PATH_UNIT: &str = "/etc/systemd/system/sirinvpn-dns-blocklist.path";
+const FETCH_USER: &str = "sirinvpn-update-fetch";
+const REFRESH_SECONDS: u64 = 20 * 60 * 60;
+const RETRY_SECONDS: u64 = 60 * 60;
+
+#[derive(clap::Subcommand)]
+pub enum DnsBlocklistCommand {
+    /// Root systemd task: apply the stored policy to Unbound.
+    Apply,
+    /// Unprivileged download worker; never touches resolver configuration.
+    Fetch {
+        #[arg(long)]
+        url: String,
+        #[arg(long)]
+        destination: PathBuf,
+    },
+}
+
+pub async fn run(command: DnsBlocklistCommand, paths: &ServerPaths) -> Result<()> {
+    match command {
+        DnsBlocklistCommand::Apply => apply(paths),
+        DnsBlocklistCommand::Fetch { url, destination } => {
+            anyhow::ensure!(
+                valid_dns_blocklist_url(&url),
+                "blocklist address is invalid"
+            );
+            let bytes =
+                sirinvpn_release_fetch::fetch_public_file(&url, MAX_DNS_BLOCKLIST_DOWNLOAD_BYTES)
+                    .await?;
+            let mut file = sirinvpn_platform::files::create_private_file(&destination)?;
+            file.write_all(&bytes)?;
+            file.sync_all()?;
+            Ok(())
+        }
+    }
+}
+
+/// Accepts hosts (`0.0.0.0 name ...`) and plain domain-list lines. Invalid names are skipped,
+/// but a source that is mostly invalid is the wrong format and fails as a whole.
+pub(crate) fn parse_list(
+    bytes: &[u8],
+    domains: &mut BTreeSet<String>,
+) -> Result<(), DnsBlocklistFailure> {
+    let text = std::str::from_utf8(bytes).map_err(|_| DnsBlocklistFailure::Format)?;
+    let (mut accepted, mut rejected) = (0_usize, 0_usize);
+    for line in text.lines() {
+        let line = line.split('#').next().unwrap_or_default().trim();
+        let mut tokens = line.split_ascii_whitespace();
+        let Some(first) = tokens.next() else {
+            continue;
+        };
+        let address = first.split('%').next().unwrap_or_default();
+        let names = if address.parse::<IpAddr>().is_ok() {
+            tokens.collect::<Vec<_>>()
+        } else if tokens.next().is_none() {
+            vec![first]
+        } else {
+            rejected += 1;
+            continue;
+        };
+        for name in names {
+            match normalize_dns_blocklist_name(name) {
+                // Hosts-file preamble, not a blocking entry.
+                Some(name) if name == "localhost.localdomain" => {}
+                Some(name) => {
+                    accepted += 1;
+                    domains.insert(name);
+                    if domains.len() > MAX_DNS_BLOCKLIST_DOMAINS {
+                        return Err(DnsBlocklistFailure::TooManyDomains);
+                    }
+                }
+                None => rejected += 1,
+            }
+        }
+    }
+    if accepted == 0 || rejected > accepted {
+        return Err(DnsBlocklistFailure::Format);
+    }
+    Ok(())
+}
+
+fn ancestors(name: &str) -> impl Iterator<Item = &str> {
+    name.match_indices('.').map(|(index, _)| &name[index + 1..])
+}
+
+/// Unbound zone text and the number of blocked zones. `always_nxdomain` also covers subdomains,
+/// so listed subdomains of a blocked name are omitted. An allowed name unblocks itself and its
+/// subdomains; one below a blocked name gets a more specific transparent zone. Private records
+/// and split DNS suffixes keep their own zones.
+pub(crate) fn render(
+    domains: &BTreeSet<String>,
+    allowlist: &[String],
+    reserved: &BTreeSet<String>,
+) -> (String, u32) {
+    let allowed = allowlist
+        .iter()
+        .map(String::as_str)
+        .collect::<BTreeSet<_>>();
+    let keep = |name: &str| {
+        !reserved.contains(name)
+            && !allowed.contains(name)
+            && !ancestors(name).any(|parent| allowed.contains(parent))
+    };
+    let blocked_above =
+        |name: &str| ancestors(name).any(|parent| domains.contains(parent) && keep(parent));
+    let mut text = String::from(
+        "# Generated by SirinVPN from the selected DNS blocklists. Changes are replaced.\nserver:\n",
+    );
+    let mut count = 0_u32;
+    for name in domains {
+        if keep(name) && !blocked_above(name) {
+            text.push_str(&format!("  local-zone: \"{name}.\" always_nxdomain\n"));
+            count += 1;
+        }
+    }
+    for name in &allowed {
+        if !reserved.contains(*name) && blocked_above(name) {
+            text.push_str(&format!("  local-zone: \"{name}.\" transparent\n"));
+        }
+    }
+    (text, count)
+}
+
+pub(crate) trait Resolver {
+    /// Group that must read the zone file when Unbound reloads without root.
+    fn group(&self) -> Option<nix::unistd::Gid>;
+    /// Validate one file, or the complete configuration when `None`.
+    fn check(&self, file: Option<&Path>) -> bool;
+    fn reload(&self) -> bool;
+}
+
+/// Atomically replaces (or removes, for `None`) the zone file and reloads Unbound. Any failure
+/// restores the previous file, so the last good list stays in effect.
+pub(crate) fn install_zone(
+    zone: &Path,
+    text: Option<&str>,
+    resolver: &dyn Resolver,
+) -> Result<(), DnsBlocklistFailure> {
+    let failed = |_| DnsBlocklistFailure::Resolver;
+    let directory = zone.parent().ok_or(DnsBlocklistFailure::Resolver)?;
+    let previous = match fs::read(zone) {
+        Ok(bytes) => Some(bytes),
+        Err(error) if error.kind() == io::ErrorKind::NotFound => None,
+        Err(_) => return Err(DnsBlocklistFailure::Resolver),
+    };
+    let stage = |bytes: &[u8]| -> io::Result<tempfile::NamedTempFile> {
+        // A leading dot and the suffix keep the staged file out of Unbound's `*.conf` include.
+        let mut staged = tempfile::Builder::new()
+            .prefix(".sirinvpn-dns-blocklist-")
+            .suffix(".tmp")
+            .tempfile_in(directory)?;
+        staged
+            .as_file()
+            .set_permissions(fs::Permissions::from_mode(0o640))?;
+        nix::unistd::fchown(staged.as_file(), None, resolver.group())?;
+        staged.write_all(bytes)?;
+        Ok(staged)
+    };
+    let swap = |bytes: Option<&[u8]>| -> io::Result<()> {
+        match bytes {
+            Some(bytes) => {
+                sirinvpn_platform::files::persist(stage(bytes)?, zone, true)?;
+            }
+            None => match fs::remove_file(zone) {
+                Ok(()) => sirinvpn_platform::files::sync_directory(directory)?,
+                Err(error) if error.kind() == io::ErrorKind::NotFound => {}
+                Err(error) => return Err(error),
+            },
+        }
+        Ok(())
+    };
+    if let Some(text) = text {
+        let staged = stage(text.as_bytes()).map_err(failed)?;
+        if !resolver.check(Some(staged.path())) {
+            return Err(DnsBlocklistFailure::Resolver);
+        }
+        sirinvpn_platform::files::persist(staged, zone, true).map_err(failed)?;
+    } else {
+        swap(None).map_err(failed)?;
+    }
+    if resolver.check(None) && resolver.reload() {
+        return Ok(());
+    }
+    // Unbound keeps its running configuration when the check fails; return the files to it.
+    if swap(previous.as_deref()).is_ok() && resolver.check(None) {
+        resolver.reload();
+    }
+    Err(DnsBlocklistFailure::Resolver)
+}
+
+/// The fingerprint covers private names too: changing them must rebuild the list.
+pub(crate) fn fingerprint(policy: &DnsBlocklistPolicy, reserved: &BTreeSet<String>) -> String {
+    let mut digest = Sha256::new();
+    digest.update(serde_json::to_vec(policy).unwrap_or_default());
+    for name in reserved {
+        digest.update(b"\n");
+        digest.update(name.as_bytes());
+    }
+    hex::encode(digest.finalize())
+}
+
+pub(crate) fn reserved_names(configuration: &ServerConfiguration) -> BTreeSet<String> {
+    configuration
+        .private_dns_records
+        .iter()
+        .map(|record| record.name.clone())
+        .chain(
+            configuration
+                .dns_upstream
+                .split_zones()
+                .iter()
+                .map(|zone| zone.suffix.clone()),
+        )
+        .collect()
+}
+
+pub(crate) fn refresh(
+    policy: &DnsBlocklistPolicy,
+    reserved: &BTreeSet<String>,
+    previous: &DnsBlocklistStatus,
+    now: u64,
+    zone: &Path,
+    download: &mut dyn FnMut(&str) -> Result<Vec<u8>, DnsBlocklistFailure>,
+    resolver: &dyn Resolver,
+) -> DnsBlocklistStatus {
+    let policy_sha256 = fingerprint(policy, reserved);
+    let failed = |failure| DnsBlocklistStatus {
+        failure: Some(failure),
+        failed_at_unix: Some(now),
+        failed_policy_sha256: Some(policy_sha256.clone()),
+        ..previous.clone()
+    };
+    if !policy.enabled {
+        if (previous.active || zone.exists())
+            && let Err(failure) = install_zone(zone, None, resolver)
+        {
+            return failed(failure);
+        }
+        return DnsBlocklistStatus {
+            policy_sha256: Some(policy_sha256),
+            ..Default::default()
+        };
+    }
+    let recent =
+        |time: Option<u64>, window| time.is_some_and(|time| now.saturating_sub(time) < window);
+    if previous.active
+        && previous.policy_sha256.as_deref() == Some(policy_sha256.as_str())
+        && recent(previous.updated_at_unix, REFRESH_SECONDS)
+    {
+        // A failure here belongs to a different policy that is no longer selected.
+        return DnsBlocklistStatus {
+            failure: None,
+            failed_at_unix: None,
+            failed_policy_sha256: None,
+            ..previous.clone()
+        };
+    }
+    // Authorization changes also start this task; do not retry a failing list on each one.
+    if previous.failed_policy_sha256.as_deref() == Some(policy_sha256.as_str())
+        && recent(previous.failed_at_unix, RETRY_SECONDS)
+    {
+        return previous.clone();
+    }
+    let mut domains = BTreeSet::new();
+    let result = policy
+        .sources
+        .iter()
+        .try_for_each(|url| parse_list(&download(url)?, &mut domains))
+        .and_then(|()| {
+            let (text, count) = render(&domains, &policy.allowlist, reserved);
+            install_zone(zone, Some(&text), resolver).map(|()| count)
+        });
+    match result {
+        Ok(domain_count) => DnsBlocklistStatus {
+            active: true,
+            domain_count,
+            updated_at_unix: Some(now),
+            policy_sha256: Some(policy_sha256),
+            ..Default::default()
+        },
+        Err(failure) => failed(failure),
+    }
+}
+
+struct Unbound {
+    group: Option<nix::unistd::Gid>,
+}
+
+impl Resolver for Unbound {
+    fn group(&self) -> Option<nix::unistd::Gid> {
+        self.group
+    }
+
+    fn check(&self, file: Option<&Path>) -> bool {
+        // Reload rereads every file after Unbound has dropped root, so check as its user.
+        let mut command = ProcessCommand::new("/usr/sbin/runuser");
+        command.args(["-u", "unbound", "--", "/usr/sbin/unbound-checkconf"]);
+        command.args(file);
+        run_command(&mut command, Duration::from_secs(120), "Unbound check").is_ok()
+    }
+
+    fn reload(&self) -> bool {
+        run_command(
+            ProcessCommand::new("/usr/sbin/unbound-control").arg("reload"),
+            Duration::from_secs(120),
+            "Unbound reload",
+        )
+        .is_ok()
+    }
+}
+
+fn download(url: &str) -> Result<Vec<u8>, DnsBlocklistFailure> {
+    let fetch = || -> Result<Vec<u8>> {
+        let user = nix::unistd::User::from_name(FETCH_USER)?
+            .ok_or_else(|| anyhow!("the download account is unavailable"))?;
+        anyhow::ensure!(
+            !user.uid.is_root(),
+            "the download account must be unprivileged"
+        );
+        let staging = tempfile::Builder::new()
+            .prefix(".fetch-")
+            .tempdir_in(STATE_DIRECTORY)?;
+        nix::unistd::chown(staging.path(), Some(user.uid), Some(user.gid))?;
+        let destination = staging.path().join("list");
+        run_command(
+            ProcessCommand::new("/usr/bin/timeout")
+                .args([
+                    "--signal=TERM",
+                    "--kill-after=5s",
+                    "150s",
+                    "/usr/sbin/runuser",
+                ])
+                .args([
+                    "-u",
+                    FETCH_USER,
+                    "--",
+                    SERVER_BINARY,
+                    "dns-blocklist",
+                    "fetch",
+                ])
+                .arg("--url")
+                .arg(url)
+                .arg("--destination")
+                .arg(&destination),
+            Duration::from_secs(160),
+            "bounded unprivileged blocklist download",
+        )?;
+        // The worker owns the staging directory; accept only a regular file within the bound.
+        anyhow::ensure!(fs::symlink_metadata(&destination)?.file_type().is_file());
+        Ok(sirinvpn_platform::files::read_bounded(
+            &destination,
+            MAX_DNS_BLOCKLIST_DOWNLOAD_BYTES as usize,
+        )?)
+    };
+    fetch().map_err(|_| DnsBlocklistFailure::Download)
+}
+
+pub(crate) fn read_status() -> DnsBlocklistStatus {
+    sirinvpn_platform::files::read_bounded(&Path::new(STATE_DIRECTORY).join(STATUS_FILE), 8192)
+        .ok()
+        .and_then(|bytes| serde_json::from_slice(&bytes).ok())
+        .unwrap_or_default()
+}
+
+fn write_status(status: &DnsBlocklistStatus) -> Result<()> {
+    let mut temporary = tempfile::Builder::new()
+        .prefix(".status-")
+        .tempfile_in(STATE_DIRECTORY)?;
+    // The unprivileged management service reads this summary; it contains no names or URLs.
+    temporary
+        .as_file()
+        .set_permissions(fs::Permissions::from_mode(0o644))?;
+    temporary.write_all(&serde_json::to_vec(status)?)?;
+    sirinvpn_platform::files::persist(
+        temporary,
+        &Path::new(STATE_DIRECTORY).join(STATUS_FILE),
+        true,
+    )?;
+    Ok(())
+}
+
+fn apply(paths: &ServerPaths) -> Result<()> {
+    crate::release_update::host::require_root()?;
+    let policy = if paths.authorization.exists() {
+        load_authorization(&paths.authorization)?.dns_blocklist
+    } else {
+        DnsBlocklistPolicy::default()
+    };
+    let reserved = reserved_names(&load_configuration(paths)?);
+    let previous = read_status();
+    let resolver = Unbound {
+        group: nix::unistd::Group::from_name("unbound")?.map(|group| group.gid),
+    };
+    let status = refresh(
+        &policy,
+        &reserved,
+        &previous,
+        unix_time(),
+        Path::new(ZONE_FILE),
+        &mut download,
+        &resolver,
+    );
+    if status != previous {
+        write_status(&status)?;
+    }
+    anyhow::ensure!(
+        status.failed_at_unix == previous.failed_at_unix,
+        "the previous DNS blocklist stays in effect"
+    );
+    Ok(())
+}
+
+pub(super) fn management_available(state: &AppState) -> bool {
+    state.authorization.is_some() && Path::new(PATH_UNIT).exists()
+}
+
+fn settings(state: &AppState, policy: DnsBlocklistPolicy) -> DnsBlocklistSettings {
+    let policy_sha256 = fingerprint(&policy, &reserved_names(&state.configuration));
+    let mut status = read_status();
+    if status.failed_policy_sha256.as_deref() != Some(policy_sha256.as_str()) {
+        status.failure = None;
+        status.failed_at_unix = None;
+        status.failed_policy_sha256 = None;
+    }
+    DnsBlocklistSettings {
+        pending: (policy.enabled || status.active)
+            && status.failure.is_none()
+            && status.policy_sha256.as_deref() != Some(policy_sha256.as_str()),
+        policy,
+        status,
+        presets: BUILT_IN_DNS_BLOCKLISTS
+            .iter()
+            .map(|(name, url)| DnsBlocklistPreset {
+                name: (*name).to_owned(),
+                url: (*url).to_owned(),
+            })
+            .collect(),
+    }
+}
+
+pub(super) async fn settings_handler(
+    State(state): State<AppState>,
+    Extension(identity): Extension<CallerIdentity>,
+) -> Result<Json<ApiEnvelope<DnsBlocklistSettings>>, ApiError> {
+    let authorization = require_authorization(&state)?;
+    let current = authorization.read().await;
+    authorize_current(&current, &identity, true)?;
+    Ok(Json(ApiEnvelope::new(settings(
+        &state,
+        current.dns_blocklist.clone(),
+    ))))
+}
+
+pub(super) async fn update_handler(
+    State(state): State<AppState>,
+    Extension(identity): Extension<CallerIdentity>,
+    Json(policy): Json<DnsBlocklistPolicy>,
+) -> Result<Json<ApiEnvelope<DnsBlocklistSettings>>, ApiError> {
+    let authorization = require_authorization(&state)?;
+    let mut current = authorization.write().await;
+    authorize_current(&current, &identity, true)?;
+    policy.validate().map_err(ApiError::invalid)?;
+    if current.dns_blocklist != policy {
+        if !management_available(&state) {
+            return Err(ApiError::conflict(
+                "repair this SirinVPN server before managing DNS blocking",
+            ));
+        }
+        ensure_active_endpoint_authority(&current)?;
+        let mut next = current.clone();
+        next.dns_blocklist = policy;
+        commit_authorization(&state, &mut current, next).await?;
+    }
+    Ok(Json(ApiEnvelope::new(settings(
+        &state,
+        current.dns_blocklist.clone(),
+    ))))
+}
+
+#[cfg(test)]
+mod tests;

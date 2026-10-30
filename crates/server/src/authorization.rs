@@ -91,6 +91,12 @@ pub(crate) struct AuthorizationDocument {
         skip_serializing_if = "sirinvpn_protocol::RecoveryPolicy::is_default"
     )]
     pub recovery_policy: sirinvpn_protocol::RecoveryPolicy,
+    // Older readers ignore this optional field; see docs/dns-blocking.md for rollback.
+    #[serde(
+        default,
+        skip_serializing_if = "sirinvpn_protocol::DnsBlocklistPolicy::is_default"
+    )]
+    pub dns_blocklist: sirinvpn_protocol::DnsBlocklistPolicy,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
@@ -232,6 +238,7 @@ impl AuthorizationDocument {
             recovery_key: None,
             recovery_receipt: None,
             recovery_policy: Default::default(),
+            dns_blocklist: Default::default(),
         })
     }
 
@@ -239,6 +246,7 @@ impl AuthorizationDocument {
         if self.schema_version != self.required_schema_version() {
             bail!("authorization state version is unsupported");
         }
+        self.dns_blocklist.validate().map_err(anyhow::Error::msg)?;
         if self
             .members
             .iter()

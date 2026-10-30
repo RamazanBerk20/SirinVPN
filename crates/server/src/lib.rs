@@ -49,6 +49,7 @@ pub use network_policy::install_network_guard;
 use network_policy::*;
 
 mod authorization;
+pub mod dns_blocklist;
 mod dns_diagnostics;
 mod doh_proxy;
 

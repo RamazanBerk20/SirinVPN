@@ -126,6 +126,24 @@ impl ManagementClient {
             .map_err(|_| ManagementError::ConnectionFailed)?;
         self.decode(response).await
     }
+    pub async fn dns_blocklist(
+        &self,
+    ) -> Result<sirinvpn_protocol::DnsBlocklistSettings, ManagementError> {
+        self.get("/v1/dns-blocklist").await
+    }
+    pub async fn update_dns_blocklist(
+        &self,
+        policy: &sirinvpn_protocol::DnsBlocklistPolicy,
+    ) -> Result<sirinvpn_protocol::DnsBlocklistSettings, ManagementError> {
+        let response = self
+            .client
+            .put(format!("{}/v1/dns-blocklist", self.base_url))
+            .json(policy)
+            .send()
+            .await
+            .map_err(|_| ManagementError::ConnectionFailed)?;
+        self.decode(response).await
+    }
     pub fn new(profile: &ServerProfile, secret: &SecretIdentity) -> Result<Self, ManagementError> {
         Self::with_timeout(profile, secret, Some(Duration::from_secs(8)))
     }

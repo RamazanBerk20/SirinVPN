@@ -458,6 +458,27 @@ export interface CurrentConfiguration {
   reusable_invitations_enabled?: boolean;
   recipient_names_enabled?: boolean;
   recovery_keys_enabled?: boolean;
+  dns_blocklist_management_enabled?: boolean;
+}
+
+export interface DnsBlocklistPolicy {
+  enabled: boolean;
+  sources?: string[];
+  allowlist?: string[];
+}
+
+export type DnsBlocklistFailure = "download" | "format" | "too_many_domains" | "resolver";
+
+export interface DnsBlocklistSettings {
+  policy: DnsBlocklistPolicy;
+  status: {
+    active: boolean;
+    domain_count: number;
+    updated_at_unix: number | null;
+    failure: DnsBlocklistFailure | null;
+  };
+  pending: boolean;
+  presets: { name: string; url: string }[];
 }
 
 export interface RecoverySettings {

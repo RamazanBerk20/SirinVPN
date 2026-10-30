@@ -285,9 +285,17 @@ fn uninstall_is_guarded_and_scoped_to_sirinvpn_state() {
     assert!(guard_position < backup_position);
     assert!(stop_position < removal_position);
     assert!(script.contains(&format!(
-        "MANAGED_PATHS=\"{MANAGED_SERVER_PATHS} {} var/lib/sirinvpn-server-release\"",
-        crate::updates::UPDATE_MANAGED_PATHS
+        "MANAGED_PATHS=\"{MANAGED_SERVER_PATHS} {} {} var/lib/sirinvpn-server-release\"",
+        crate::updates::UPDATE_MANAGED_PATHS,
+        crate::dns_blocklist::DNS_BLOCKLIST_MANAGED_PATHS
     )));
+    // The blocklist task cannot reload Unbound or rewrite its zone during removal.
+    assert!(
+        script
+            .find("systemctl disable --now sirinvpn-dns-blocklist.path")
+            .unwrap()
+            < script.rfind("for path in $MANAGED_PATHS").unwrap()
+    );
     assert!(script.contains("/etc/sirinvpn/firewall.sh down"));
     assert!(script.contains("/etc/sirinvpn/network.sh down"));
     assert!(script.contains("OnActiveSec=5min"));
@@ -318,6 +326,8 @@ fn uninstall_is_guarded_and_scoped_to_sirinvpn_state() {
     assert!(verification.contains("sirinvpn0"));
     assert!(verification.contains("systemctl is-enabled --quiet"));
     assert!(verification.contains("sirinvpn-doh"));
+    assert!(verification.contains("sirinvpn-dns-blocklist.path sirinvpn-dns-blocklist.timer"));
+    assert!(verification.contains("etc/unbound/unbound.conf.d/sirinvpn-dns-blocklist.conf"));
     assert!(verification.contains(&format!("127.0.0.1:{DOH_PROXY_PORT}")));
     assert!(!verification.contains("flush ruleset"));
     assert!(

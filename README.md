@@ -47,8 +47,9 @@ Screenshots use fictional profiles and example data.
 - **Manage people and devices.** Owner, Admin, and Member roles; signed invitations
   and QR enrollment; device revocation, access limits, and delegated permissions.
 - **Control routing and DNS.** Full-tunnel or selected-subnet routing, explicit LAN
-  access, platform-specific application routing, and recursive, DoT, or DoH DNS
-  with private records and split zones.
+  access, platform-specific application routing, recursive, DoT, or DoH DNS
+  with private records and split zones, and opt-in
+  [ad and tracker blocking](docs/dns-blocking.md) for every device.
 - **Keep the VPN independent of the interface.** Native services own the tunnel.
   Android includes notification controls, a Quick Settings tile, and integration
   with Android's Always-on VPN and lockdown settings.

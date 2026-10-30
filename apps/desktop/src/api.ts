@@ -241,6 +241,8 @@ export const api = {
     invoke<DiagnosticReport>("run_diagnostics", { serverId }),
   membership: (serverId: string) =>
     invoke<MembershipSnapshot>("membership", { serverId }),
+  dnsBlocklistSettings: (serverId: string) => invoke<import("./types").DnsBlocklistSettings>("dns_blocklist_settings", { serverId }),
+  updateDnsBlocklist: (serverId: string, policy: import("./types").DnsBlocklistPolicy) => invoke<import("./types").DnsBlocklistSettings>("update_dns_blocklist", { serverId, policy }),
   recoverySettings: (serverId: string) => invoke<import("./types").RecoverySettings>("recovery_settings", { serverId }),
   updateRecoveryPolicy: (serverId: string, administratorMemberIds: string[]) => invoke<import("./types").RecoverySettings>("update_recovery_policy", { serverId, administratorMemberIds }),
   createRecoveryKey: (serverId: string, replaceRecoveryId: string | null, confirmed: boolean) => invoke<import("./types").RecoveryKeyOutput>("create_recovery_key", { input: { server_id: serverId, replace_recovery_id: replaceRecoveryId, confirmed } }),

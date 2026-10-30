@@ -70,6 +70,8 @@ pub struct CurrentConfiguration {
     pub recipient_names_enabled: bool,
     #[serde(default, skip_serializing_if = "is_false")]
     pub recovery_keys_enabled: bool,
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub dns_blocklist_management_enabled: bool,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]

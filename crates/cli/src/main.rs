@@ -4,6 +4,7 @@ mod provisioning;
 use provisioning::*;
 mod membership;
 use membership::*;
+mod dns_blocking;
 mod member_lifecycle;
 mod recovery;
 use member_lifecycle::*;
@@ -83,6 +84,9 @@ async fn run() -> Result<()> {
         Commands::Server { command } => match *command {
             ServerCommand::Release(arguments) => vps_release::run(&paths, arguments, cli.json),
             ServerCommand::Recovery { command } => recovery::run(&paths, command, cli.json).await,
+            ServerCommand::DnsBlocking { command } => {
+                dns_blocking::run(&paths, command, cli.json).await
+            }
             ServerCommand::Add(arguments) => add_server(&paths, arguments, cli.json),
             ServerCommand::BackupVps(arguments) => backup_vps(&paths, arguments, cli.json),
             ServerCommand::RestoreVps(arguments) => restore_vps(&paths, arguments, cli.json),

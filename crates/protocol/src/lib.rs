@@ -2,8 +2,15 @@
 
 mod android_routing;
 mod dns;
+mod dns_blocklist;
 pub use android_routing::{
     AndroidApplicationMode, AndroidApplicationRouting, valid_android_package,
+};
+pub use dns_blocklist::{
+    BUILT_IN_DNS_BLOCKLISTS, DnsBlocklistFailure, DnsBlocklistPolicy, DnsBlocklistPreset,
+    DnsBlocklistSettings, DnsBlocklistStatus, MAX_DNS_BLOCKLIST_ALLOWLIST,
+    MAX_DNS_BLOCKLIST_DOMAINS, MAX_DNS_BLOCKLIST_DOWNLOAD_BYTES, MAX_DNS_BLOCKLIST_SOURCES,
+    normalize_dns_blocklist_name, valid_dns_blocklist_url,
 };
 mod endpoints;
 pub use endpoints::{

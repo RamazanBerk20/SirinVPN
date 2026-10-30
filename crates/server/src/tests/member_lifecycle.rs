@@ -1,4 +1,5 @@
 use super::*;
+mod dns_blocklist;
 mod policy_enrollment;
 mod recovery;
 

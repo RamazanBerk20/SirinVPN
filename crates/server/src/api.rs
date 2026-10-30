@@ -151,6 +151,10 @@ pub(super) fn management_router(state: AppState) -> Router {
             "/v1/members/{member_id}/devices",
             delete(revoke_member_devices_handler),
         )
+        .route(
+            "/v1/dns-blocklist",
+            get(super::dns_blocklist::settings_handler).put(super::dns_blocklist::update_handler),
+        )
         .route("/v1/ownership", patch(transfer_ownership_handler))
         .route("/v1/key-rotations", post(prepare_key_rotation_handler))
         .route(
@@ -270,5 +274,6 @@ pub(super) async fn configuration_handler(
         reusable_invitations_enabled: state.authorization.is_some(),
         recipient_names_enabled: state.authorization.is_some(),
         recovery_keys_enabled: state.authorization.is_some(),
+        dns_blocklist_management_enabled: super::dns_blocklist::management_available(&state),
     })))
 }

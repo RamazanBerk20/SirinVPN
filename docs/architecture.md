@@ -117,7 +117,7 @@ The installer does not flush, replace, or change the policy of the host's existi
 
 Local removal deletes only the selected profile and its device identity. Admin and Member profiles have no remote-uninstall path. A current Owner may separately request clean VPS uninstall while disconnected; this starts a new privileged SSH session, pins the presented host key, and checks that the authorization document binds the local device certificate to its sole Owner and that its server ID matches the local profile. The immutable schema-1 certificate in `server.json` remains only the legacy bootstrap claim after an in-band ownership transfer.
 
-The uninstall transaction completes any older rollback first, snapshots the exact SirinVPN-managed paths plus service/forwarding state under a root-owned reboot-persistent maintenance directory, and arms a five-minute systemd guard. It then stops/disables only the three SirinVPN units, invokes their owned firewall/network teardown, removes the SirinVPN server/configuration, Unbound drop-in, sysctl file, and service units, reloads systemd, and restarts Unbound without the SirinVPN binding. Commit occurs only after the interface, owned nftables tables, comment-tagged Docker rules, private listener, services, and paths are proven absent. Failure restores the snapshot; success disarms the guard before the desktop deletes the local profile/key. Generic dependency packages and all unrelated VPS paths, services, containers, firewall policy, and SSH configuration remain untouched.
+The uninstall transaction completes any older rollback first, snapshots the exact SirinVPN-managed paths plus service/forwarding state under a root-owned reboot-persistent maintenance directory, and arms a five-minute systemd guard. It then stops/disables only the SirinVPN units (including the DNS blocklist path and timer), invokes their owned firewall/network teardown, removes the SirinVPN server/configuration, Unbound drop-in, sysctl file, and service units, reloads systemd, and restarts Unbound without the SirinVPN binding. Commit occurs only after the interface, owned nftables tables, comment-tagged Docker rules, private listener, services, and paths are proven absent. Failure restores the snapshot; success disarms the guard before the desktop deletes the local profile/key. Generic dependency packages and all unrelated VPS paths, services, containers, firewall policy, and SSH configuration remain untouched.
 
 ## Offline repair/update transaction
 
@@ -231,6 +231,15 @@ bounded typed data. The DoH adapter uses pinned endpoint resolution and normal
 CA/name verification, no proxy/redirects, bounded wire messages and a restricted
 service. Current diagnostics can query the configured paths without recording
 user DNS queries or reachability history.
+
+Opt-in [DNS blocking](dns-blocking.md) adds one generated `local-zone` include.
+Managers store the policy in the authorization document through
+`/v1/dns-blocklist`; the unprivileged daemon cannot touch Unbound. A sandboxed
+root task, started by a path unit on that document and a daily timer,
+downloads lists as the non-login update-fetch account, parses and bounds them,
+swaps the zone file atomically and runs `unbound-control reload` after
+checking the configuration as the `unbound` user. Any failure keeps the last
+good file and is reported in diagnostics. No query or refresh history exists.
 
 ## Management plane
 

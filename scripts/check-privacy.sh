@@ -89,13 +89,27 @@ if printf '%s\n' \
   exit 1
 fi
 
+# Opt-in DNS blocking offers exactly these well-known third-party lists; the VPS
+# fetches nothing until a manager enables blocking. Its tests use reserved hosts.
+DNS_BLOCKLISTS='protocol/src/dns_blocklist[.]rs:[0-9]+: +(\("OISD Small", )?"https://(raw[.]githubusercontent[.]com/(hagezi/dns-blocklists/main/wildcard/(light|multi)-onlydomains[.]txt|StevenBlack/hosts/master/hosts)|small[.]oisd[.]nl/domainswild2)"\)?,$'
+DNS_BLOCKLIST_FIXTURES='(protocol/src/dns_blocklist[.]rs|server/src/(dns_blocklist/tests|tests/member_lifecycle/dns_blocklist)[.]rs|features/dns/DnsBlocklistSettings[.]test[.]tsx):[0-9]+:.*"https?://([a-z]+@)?(([a-z]+[.])+example|localhost|192[.]0[.]2[.]1|)[:/]'
+if printf '%s\n' \
+  'protocol/src/dns_blocklist.rs:1:    ("Other", "https://lists.attacker.test/hosts"),' \
+  'protocol/src/dns_blocklist.rs:1:        "https://raw.githubusercontent.com/attacker/hosts/master/hosts",' \
+  'server/src/dns_blocklist/tests.rs:1:        sources: vec!["https://example.com/a.txt".into()],' \
+  'server/src/runtime.rs:1:        sources: vec!["https://lists.example/a.txt".into()],' \
+  | rg -q "$DNS_BLOCKLISTS|$DNS_BLOCKLIST_FIXTURES"; then
+  echo "privacy check failed: DNS blocklist URL exception accepted another host" >&2
+  exit 1
+fi
+
 URL_MATCHES=$(rg -n -g '!THIRD-PARTY-NOTICES' 'https?://' \
   "$PROJECT_ROOT/crates" \
   "$DESKTOP_DIR/src" \
   "$DESKTOP_DIR/src-tauri/src" || true)
 # These URL-validation fixtures use a reserved .example domain. Production
 # release destinations still come only from explicit user input.
-UNEXPECTED_URLS=$(printf '%s\n' "$URL_MATCHES" | rg -v "$NON_NETWORK_URLS" | rg -v 'windows-service/src/wireguard.rs:[0-9]+://! ABI source: https://git[.]zx2c4[.]com/wireguard-nt/tree/api/wireguard[.]h$' | rg -v '(features/settings/VpsUpdateDialog.test.tsx|installer/src/release_update/tests.rs|server/src/release_update/policy/tests.rs):[0-9]+:.*https?://(user:pass@)?releases[.]example/' | rg -v 'src/format.ts:[0-9]+:      const address = new URL\(`http://\[\$\{host\}\]`\).hostname;$' | rg -v \
+UNEXPECTED_URLS=$(printf '%s\n' "$URL_MATCHES" | rg -v "$NON_NETWORK_URLS" | rg -v "$DNS_BLOCKLISTS" | rg -v "$DNS_BLOCKLIST_FIXTURES" | rg -v 'windows-service/src/wireguard.rs:[0-9]+://! ABI source: https://git[.]zx2c4[.]com/wireguard-nt/tree/api/wireguard[.]h$' | rg -v '(features/settings/VpsUpdateDialog.test.tsx|installer/src/release_update/tests.rs|server/src/release_update/policy/tests.rs):[0-9]+:.*https?://(user:pass@)?releases[.]example/' | rg -v 'src/format.ts:[0-9]+:      const address = new URL\(`http://\[\$\{host\}\]`\).hostname;$' | rg -v \
   'management.rs:.*https://\{\}:8443|installer/src/lib.rs:.*https://\{SERVER_TUNNEL_ADDRESS\}|freedesktop.org/standards/PolicyKit|src/assets/mountains.svg:1:<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 660" fill="none">$|core/src/management/tests.rs:[0-9]+:.*format!\("https://\{address\}"\)|core/src/management/status_stream/tests.rs:[0-9]+:.*format!\("https://\{\}", listener.local_addr\(\).unwrap\(\)\)' || true)
 if [ -n "$UNEXPECTED_URLS" ]; then
   printf '%s\n' "$UNEXPECTED_URLS" >&2

@@ -111,6 +111,22 @@ fn sanitize_check(value: &DiagnosticCheck) -> Option<DiagnosticCheck> {
                 "Local listeners cannot establish public reachability. If a transport fails, check the VPS provider firewall and configured public ports.",
             ));
         }
+        "dns_blocklist" => {
+            return Some(check(
+                "dns_blocklist",
+                "VPS DNS blocking",
+                if value.level == DiagnosticLevel::Pass {
+                    DiagnosticLevel::Pass
+                } else {
+                    DiagnosticLevel::Warning
+                },
+                if value.level == DiagnosticLevel::Pass {
+                    "DNS blocking uses the latest refreshed list."
+                } else {
+                    "The latest blocklist refresh failed, so DNS blocking keeps the last good list. Check the list addresses and the VPS internet access."
+                },
+            ));
+        }
         "diagnostics_busy" => {
             return Some(check(
                 "diagnostics_busy",
@@ -258,6 +274,7 @@ mod tests {
             ),
             check("local_tunnel", secret, DiagnosticLevel::Pass, secret),
             check("interface", secret, DiagnosticLevel::Pass, secret),
+            check("dns_blocklist", secret, DiagnosticLevel::Fail, secret),
         ]));
         let text = serde_json::to_string(&report).unwrap();
         for value in secret.split_whitespace() {
@@ -272,6 +289,13 @@ mod tests {
             1
         );
         assert!(!report.checks.iter().any(|c| c.code == "local_tunnel"));
+        let blocklist = report
+            .checks
+            .iter()
+            .find(|c| c.code == "dns_blocklist")
+            .unwrap();
+        assert_eq!(blocklist.level, DiagnosticLevel::Warning);
+        assert!(blocklist.message.contains("last good list"));
         assert_eq!(
             report
                 .checks

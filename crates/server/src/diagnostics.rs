@@ -78,6 +78,24 @@ pub async fn collect_diagnostics(configuration: &ServerConfiguration) -> Diagnos
     checks.extend(network);
     checks.extend(resources);
     checks.extend(dns);
+    let blocklist = crate::dns_blocklist::read_status();
+    if blocklist.active || blocklist.failure.is_some() {
+        checks.push(if blocklist.failure.is_some() {
+            check(
+                "dns_blocklist",
+                "VPS DNS blocking",
+                DiagnosticLevel::Warning,
+                "The latest blocklist refresh failed. DNS blocking keeps the last good list.",
+            )
+        } else {
+            check(
+                "dns_blocklist",
+                "VPS DNS blocking",
+                DiagnosticLevel::Pass,
+                "DNS blocking uses the latest refreshed list.",
+            )
+        });
+    }
     report(checks)
 }
 
