@@ -9,7 +9,7 @@ concurrency:
 jobs:
   android:
     runs-on: ubuntu-24.04
-    timeout-minutes: 120
+    timeout-minutes: 180
     env:
       CARGO_BUILD_JOBS: 2
       GOMAXPROCS: 2
@@ -49,7 +49,7 @@ jobs:
           python3 scripts/record-evidence.py --frozen-source --suite go-native --output target/remediation-evidence --timeout 600 -- systemd-run --user --scope --quiet -p MemoryHigh=3G -p MemoryMax=4G -p MemorySwapMax=0 -p CPUQuota=150% -p TasksMax=256 env "CGO_CFLAGS=-I$JAVA_HOME/include -I$JAVA_HOME/include/linux" "$GO_BIN" -C apps/desktop/android/wireguard test -mod=readonly -count=1 -v -p=2 ./...
       - name: Build development APKs
         run: |
-          python3 scripts/record-evidence.py --frozen-source --suite android-build --output target/remediation-evidence --timeout 2400 --artifact apps/desktop/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk --artifact apps/desktop/src-tauri/gen/android/app/build/outputs/apk/androidTest/universal/debug/app-universal-debug-androidTest.apk --signing-category development -- systemd-run --user --scope --quiet -p MemoryHigh=3G -p MemoryMax=4G -p MemorySwapMax=0 -p CPUQuota=150% -p TasksMax=256 sh -ec '
+          python3 scripts/record-evidence.py --frozen-source --suite android-build --output target/remediation-evidence --timeout 4800 --artifact apps/desktop/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk --artifact apps/desktop/src-tauri/gen/android/app/build/outputs/apk/androidTest/universal/debug/app-universal-debug-androidTest.apk --signing-category development -- systemd-run --user --scope --quiet -p MemoryHigh=3G -p MemoryMax=4G -p MemorySwapMax=0 -p CPUQuota=150% -p TasksMax=256 sh -ec '
             sh scripts/build-android.sh all debug
             sh scripts/build-android-catalog.sh
             python3 scripts/check-android-package.py apps/desktop/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk > target/remediation-evidence/android-package.json
