@@ -39,8 +39,10 @@ add rule ip sirinvpn_nat prerouting jump port_forward_prerouting
         namespace = "member" + str(device["index"])
         run("ip", "netns", "add", namespace)
         run("ip", "link", "add", "client0", "type", "wireguard")
+        preshared = device.get("preshared_key_path")
         run("wg", "set", "client0", "private-key", device["private_key_path"],
-            "peer", server_public, "allowed-ips", "0.0.0.0/0,::/0", "endpoint", "127.0.0.1:51820")
+            "peer", server_public, "allowed-ips", "0.0.0.0/0,::/0", "endpoint", "127.0.0.1:51820",
+            *(["preshared-key", preshared] if preshared else []))
         run("ip", "link", "set", "client0", "netns", namespace)
         run("ip", "-n", namespace, "link", "set", "lo", "up")
         run("ip", "-n", namespace, "address", "add", device["ipv4"] + "/24", "dev", "client0")

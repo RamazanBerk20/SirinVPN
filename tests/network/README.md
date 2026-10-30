@@ -28,6 +28,13 @@ combinations, failures, migration, pause/resume, and startup intent are tested
 separately in `crates/linux-helper/src/tests/policy_tests.rs` using a mock runner.
 This is not a full WireGuard handshake, live transport, or systemd reboot test.
 
+`run-member-lifecycle.sh [test-name]` runs one ignored kernel test per
+container, by default the member lifecycle test. Pass
+`kernel_preshared_keys_gate_handshakes_and_keyless_peers_keep_working` to check
+that the VPS applies device preshared keys: synthetic clients with the matching
+key, a missing key, a different key and no key at all must handshake only where
+the keys agree.
+
 `run-installer-release-guards.sh` runs the installer release-staging guard in an
 ordinary container with no network, added capabilities or privileged mode. It
 caps compilation at 4 GiB and 1.5 CPU cores, then runs the root ownership checks

@@ -260,6 +260,7 @@ pub(super) async fn configuration_handler(
         advanced_invitations_enabled: true,
         ownership_transfer_enabled: true,
         key_rotation_enabled: state.authorization.is_some(),
+        preshared_keys_enabled: state.authorization.is_some(),
         endpoint_transitions_enabled: state.authorization.is_some(),
         peer_isolation_enabled: state.authorization.is_some(),
         port_forwarding_enabled: state.authorization.is_some()

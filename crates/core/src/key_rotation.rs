@@ -1,6 +1,6 @@
 use crate::{
     ClientPaths, LocalIdentity, ManagementClient, ManagementError, ProfileStoreError,
-    PublicIdentity, SecretIdentity, SecretStore, SecretStoreError,
+    PublicIdentity, SecretIdentity, SecretStore, SecretStoreError, generate_preshared_key,
     management_certificate_fingerprint,
 };
 use serde::{Deserialize, Serialize};
@@ -297,6 +297,7 @@ where
                 transport,
                 transport_fallback_enabled,
                 connection_policy,
+                configuration.preshared_keys_enabled,
             )?
         }
     };
@@ -417,6 +418,7 @@ where
                     .new_public_identity
                     .management_certificate_pem
                     .clone(),
+                new_wireguard_preshared_key: final_secret.wireguard_preshared_key.clone(),
             };
             match old_client.prepare_key_rotation(&request).await {
                 Ok(response) if response.rotation_id == journal.rotation_id => {
@@ -549,14 +551,19 @@ fn stage_rotation(
     transport: TransportKind,
     transport_fallback_enabled: bool,
     connection_policy: Option<RotationConnectionPolicy>,
+    preshared_keys_enabled: bool,
 ) -> Result<RotationJournal, KeyRotationError> {
     let rotation_id = KeyRotationId::new();
     let transition_identity_reference = format!("rotation-{rotation_id}-transition");
     let final_identity_reference = format!("rotation-{rotation_id}-final");
     ensure_unused_secret_reference(secrets, &transition_identity_reference)?;
     ensure_unused_secret_reference(secrets, &final_identity_reference)?;
-    let generated = LocalIdentity::generate("SirinVPN rotated device")
+    let mut generated = LocalIdentity::generate("SirinVPN rotated device")
         .map_err(|_| KeyRotationError::InvalidState)?;
+    // An older VPS would ignore the key and leave the new peer without one.
+    if preshared_keys_enabled {
+        generated.secret.wireguard_preshared_key = Some(generate_preshared_key());
+    }
     if generated.public.wireguard_public_key
         == original_secret
             .public_identity(&profile.client_management_certificate_pem)
@@ -566,9 +573,11 @@ fn stage_rotation(
     {
         return Err(KeyRotationError::InvalidState);
     }
+    // The transition identity still talks through the original peer and its key.
     let transition_secret = SecretIdentity {
         wireguard_private_key: original_secret.wireguard_private_key.clone(),
         management_private_key_pem: generated.secret.management_private_key_pem.clone(),
+        wireguard_preshared_key: original_secret.wireguard_preshared_key.clone(),
     };
     secrets.put(&transition_identity_reference, &transition_secret)?;
     if let Err(error) = secrets.put(&final_identity_reference, &generated.secret) {
@@ -642,8 +651,11 @@ fn validate_staged_identities(
         .public_identity(&journal.new_public_identity.management_certificate_pem)
         .map_err(|_| KeyRotationError::InvalidState)?;
     if transition_public.wireguard_public_key != original_public.wireguard_public_key
+        || transition.wireguard_preshared_key != original.wireguard_preshared_key
         || final_public != journal.new_public_identity
         || final_public.wireguard_public_key == original_public.wireguard_public_key
+        || (final_identity.wireguard_preshared_key.is_some()
+            && final_identity.wireguard_preshared_key == original.wireguard_preshared_key)
     {
         return Err(KeyRotationError::InvalidState);
     }

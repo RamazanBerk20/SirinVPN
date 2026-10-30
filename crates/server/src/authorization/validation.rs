@@ -56,6 +56,19 @@ pub(crate) fn validate_wireguard_public_key(public_key: &str) -> Result<()> {
     Ok(())
 }
 
+/// Canonical form matters: kernel state is compared with `wg show` output as text.
+pub(crate) fn validate_preshared_key(preshared_key: &str) -> Result<()> {
+    let decoded = zeroize::Zeroizing::new(
+        STANDARD
+            .decode(preshared_key)
+            .context("WireGuard preshared key is not valid base64")?,
+    );
+    if decoded.len() != 32 || STANDARD.encode(decoded.as_slice()) != preshared_key {
+        bail!("WireGuard preshared key must be 32 bytes of canonical base64");
+    }
+    Ok(())
+}
+
 pub(crate) fn validate_display_name(name: &str) -> Result<String> {
     let trimmed = name.trim();
     if trimmed.is_empty() || trimmed.chars().count() > 64 || trimmed.chars().any(char::is_control) {

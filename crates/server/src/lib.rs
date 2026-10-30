@@ -56,11 +56,12 @@ pub use doh_proxy::{DOH_PROXY_PORT, serve_doh_proxy};
 
 use anyhow::{Context, Result, anyhow, bail};
 use authorization::{
-    AuthorizationDocument, DeviceRecord, ENROLLMENT_HANDOFF_SECONDS, EnrollmentReceipt,
-    InvitationRecord, MemberRecord, certificate_fingerprint, load_authorization, sign_claims,
-    sign_endpoint_transition, submitted_certificate_fingerprint, validate_display_name,
-    validate_wireguard_public_key, verify_endpoint_transition_signature,
-    verify_endpoint_transition_signature_with_key, write_authorization,
+    AuthorizationDocument, DesiredPeer, DeviceRecord, ENROLLMENT_HANDOFF_SECONDS,
+    EnrollmentReceipt, InvitationRecord, MemberRecord, certificate_fingerprint, load_authorization,
+    sign_claims, sign_endpoint_transition, submitted_certificate_fingerprint,
+    validate_display_name, validate_preshared_key, validate_wireguard_public_key,
+    verify_endpoint_transition_signature, verify_endpoint_transition_signature_with_key,
+    write_authorization,
 };
 use axum::{
     Extension, Json, Router,

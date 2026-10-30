@@ -163,7 +163,7 @@ Use an expand/migrate/contract sequence for a format change:
 2. In a later release, write the new schema only after the previous release can read it.
 3. Contract obsolete readers only after the transition window.
 
-The authoritative current declarations are in `release/state-compatibility.json`. `linux_identity_record` names the current unwrapped `SecretIdentity` JSON shape as implicit schema 1 so it cannot be forgotten during a future envelope migration. `linux_release_receipt` covers the P2U root-owned receipt, `linux_release_transaction` covers P2V's cached package and interruption journal, and `linux_release_trust` covers P2W's current root-signed policy. Change declarations only with the matching reader/writer implementation and migration tests; signed transitions reject adding or removing a persistent-state family.
+The authoritative current declarations are in `release/state-compatibility.json`. `linux_identity_record` names the current unwrapped `SecretIdentity` JSON shape as implicit schema 1 so it cannot be forgotten during a future envelope migration; implicit schema 3 is the same shape with an optional WireGuard preshared key, which older readers would silently drop (see [the candidate migration](release-candidate.md#wireguard-preshared-key-migration)). `linux_release_receipt` covers the P2U root-owned receipt, `linux_release_transaction` covers P2V's cached package and interruption journal, and `linux_release_trust` covers P2W's current root-signed policy. Change declarations only with the matching reader/writer implementation and migration tests; signed transitions reject adding or removing a persistent-state family.
 
 ## Linux installed trust and release receipt
 

@@ -9,7 +9,8 @@ fn recipient_labels_are_separate_from_the_signed_authority() {
     let response = signed_response(&profile, draft.request(), &private_key);
     let code = draft.finish(response.clone()).unwrap();
     let mut decoded = DecodedInvitation::decode(code.expose()).unwrap();
-    let permanent = LocalIdentity::generate("Phone").unwrap();
+    let mut permanent = LocalIdentity::generate("Phone").unwrap();
+    permanent.secret.wireguard_preshared_key = Some(crate::generate_preshared_key());
     assert!(decoded.set_recipient_names(None, Some("Phone")).is_err());
     assert!(
         decoded
@@ -19,7 +20,13 @@ fn recipient_labels_are_separate_from_the_signed_authority() {
     decoded
         .set_recipient_names(Some("Chosen nickname"), Some("My Android"))
         .unwrap();
-    let request = decoded.enrollment_request(&permanent.public);
+    let request = decoded.enrollment_request(&permanent);
+    assert_eq!(
+        request.device_preshared_key,
+        permanent.secret.wireguard_preshared_key
+    );
+    // The scanned code carries only the bootstrap identity, never a preshared key.
+    assert!(decoded.bootstrap_secret().wireguard_preshared_key.is_none());
     assert_eq!(request.claims, response.claims);
     assert_eq!(request.signature, response.signature);
     assert_eq!(

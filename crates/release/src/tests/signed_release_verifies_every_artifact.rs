@@ -293,7 +293,7 @@ fn checked_in_compatibility_contract_is_canonical() {
             .find(|state| state.state == name)
             .unwrap()
     };
-    assert_eq!(state("server_authorization").reads.maximum, 5);
+    assert_eq!(state("server_authorization").reads.maximum, 6);
     assert_eq!(state("server_configuration").reads.maximum, 8);
     assert_eq!(state("linux_tunnel_request").reads.maximum, 11);
     assert_eq!(state("linux_desired_connection").reads.maximum, 6);
@@ -303,10 +303,18 @@ fn checked_in_compatibility_contract_is_canonical() {
     assert_eq!(state("android_persistent_tunnel").reads.maximum, 4);
     assert_eq!(state("android_wifi_trust").reads.maximum, 1);
     assert_eq!(state("android_wifi_tunnel").reads.maximum, 4);
-    assert_eq!(state("windows_identity_record").reads.minimum, 1);
-    assert_eq!(state("windows_identity_record").reads.maximum, 2);
-    assert_eq!(state("windows_identity_record").writes.minimum, 2);
-    assert_eq!(state("windows_identity_record").writes.maximum, 2);
+    // Schema 3 identities and device backups may carry a WireGuard preshared key.
+    for name in [
+        "android_identity_record",
+        "linux_identity_record",
+        "windows_identity_record",
+        "device_backup_payload",
+    ] {
+        assert_eq!(state(name).reads.minimum, 1);
+        assert_eq!(state(name).reads.maximum, 3);
+        assert_eq!(state(name).writes.minimum, 2);
+        assert_eq!(state(name).writes.maximum, 3);
+    }
     assert_eq!(contract.states[0].state, "android_identity_record");
     assert!(
         contract

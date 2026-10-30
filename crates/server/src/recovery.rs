@@ -330,6 +330,7 @@ pub(super) async fn enroll_handler(
         management_certificate_pem: request.device_management_certificate_pem.clone(),
         certificate_fingerprint: fingerprint,
         peer_communication_enabled: false,
+        preshared_key: None,
     });
     let result = EnrollmentResult {
         names: None,
@@ -354,6 +355,7 @@ pub(super) async fn enroll_handler(
         tcp_fallback: state.configuration.tcp_fallback.clone(),
         tls_like: state.configuration.tls_like.clone(),
         ipv6_tunnel_enabled: state.configuration.ipv6_tunnel_enabled,
+        preshared_key: false,
     };
     next.recovery_key = None;
     next.recovery_policy = RecoveryPolicy::default();

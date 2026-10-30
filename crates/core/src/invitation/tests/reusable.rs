@@ -41,6 +41,7 @@ fn reusable_signed_scope_accepts_unique_allocations_but_rejects_changed_authorit
         tcp_fallback: claims.tcp_fallback.clone(),
         tls_like: claims.tls_like.clone(),
         ipv6_tunnel_enabled: false,
+        preshared_key: false,
     };
     let enrolled = decoded
         .permanent_profile(&result, &permanent.public, "permanent".into())

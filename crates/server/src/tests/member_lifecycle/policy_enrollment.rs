@@ -64,6 +64,7 @@ fn redemption(grant: &InvitationCreateResponse, permanent: &LocalIdentity) -> En
         token: "kernel-only-test-token".into(),
         device_wireguard_public_key: permanent.public.wireguard_public_key.clone(),
         device_management_certificate_pem: permanent.public.management_certificate_pem.clone(),
+        device_preshared_key: None,
     }
 }
 
@@ -153,7 +154,9 @@ async fn kernel_reusable_enrollment_quarantines_bootstrap_and_enforces_limits_at
     };
     let first = LocalIdentity::generate("First permanent").unwrap();
     let second = LocalIdentity::generate("Second permanent").unwrap();
-    let first_request = redemption(&grant, &first);
+    let mut first_request = redemption(&grant, &first);
+    let preshared_key = STANDARD.encode([6_u8; 32]);
+    first_request.device_preshared_key = Some(preshared_key.clone());
     let mut missing_names = first_request.clone();
     missing_names.names = None;
     assert!(
@@ -179,6 +182,20 @@ async fn kernel_reusable_enrollment_quarantines_bootstrap_and_enforces_limits_at
     );
     let first_result = first_result.unwrap().0.payload;
     let second_result = second_result.unwrap().0.payload;
+    // Only an offered key is confirmed, so an older client never adopts one it lacks.
+    assert!(first_result.preshared_key);
+    assert!(!second_result.preshared_key);
+    let kernel_keys = Command::new("wg")
+        .args(["show", "sirinvpn0", "preshared-keys"])
+        .output()
+        .await
+        .unwrap();
+    let kernel_keys = String::from_utf8(kernel_keys.stdout).unwrap();
+    assert!(kernel_keys.contains(&format!(
+        "{}\t{preshared_key}",
+        first.public.wireguard_public_key
+    )));
+    assert!(kernel_keys.contains(&format!("{}\t(none)", second.public.wireguard_public_key)));
     assert_eq!(first_result.names, first_request.names);
     let stored_names = state.authorization.as_ref().unwrap().read().await.clone();
     assert_eq!(
@@ -216,6 +233,17 @@ async fn kernel_reusable_enrollment_quarantines_bootstrap_and_enforces_limits_at
     .0
     .payload;
     assert_eq!(retry, first_result);
+    let mut changed_key = first_request.clone();
+    changed_key.device_preshared_key = Some(STANDARD.encode([7_u8; 32]));
+    assert!(
+        enrollment_handler(
+            State(state.clone()),
+            Extension(caller.clone()),
+            Json(changed_key)
+        )
+        .await
+        .is_err()
+    );
     let mut changed_retry = first_request.clone();
     changed_retry.names.as_mut().unwrap().device_name = "Changed on retry".into();
     assert!(
@@ -285,11 +313,14 @@ async fn kernel_reusable_enrollment_quarantines_bootstrap_and_enforces_limits_at
         first.secret.wireguard_private_key.as_bytes(),
     )
     .unwrap();
+    // The enrolled peer now requires the key the device offered.
+    let preshared_key_path = directory.path().join("permanent.psk");
+    write_private(&preshared_key_path, preshared_key.as_bytes()).unwrap();
     let IpAddr::V4(permanent_ip) = first_result.client_tunnel_address else {
         unreachable!()
     };
-    probe(serde_json::json!({"mode":"permanent", "key":permanent_path, "ipv4":permanent_ip,
-        "ipv6":ipv6_tunnel_address(document.server_id, permanent_ip).unwrap(), "server_ipv6":server_ipv6})).await;
+    probe(serde_json::json!({"mode":"permanent", "key":permanent_path, "preshared_key":preshared_key_path,
+        "ipv4":permanent_ip, "ipv6":ipv6_tunnel_address(document.server_id, permanent_ip).unwrap(), "server_ipv6":server_ipv6})).await;
     let extra_bootstrap = LocalIdentity::generate("Own device invitation").unwrap();
     let current = state.authorization.as_ref().unwrap().read().await.clone();
     let mut own_request = request(&current, &extra_bootstrap, 2);
@@ -352,7 +383,8 @@ async fn kernel_reusable_enrollment_quarantines_bootstrap_and_enforces_limits_at
     );
     let stored = load_authorization(&state.paths.authorization).unwrap();
     assert_eq!(stored, *state.authorization.as_ref().unwrap().read().await);
-    assert_eq!(stored.schema_version, 3);
+    // Member policies need schema 3; the enrolled device's preshared key raises it to 6.
+    assert_eq!(stored.schema_version, 6);
     assert_eq!(
         stored
             .enrollment_receipts

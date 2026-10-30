@@ -109,6 +109,28 @@ fn tls_acceptor(cert: rcgen::Certificate, key: KeyPair) -> tokio_rustls::TlsAcce
 }
 
 #[tokio::test]
+async fn management_tls_negotiates_the_hybrid_post_quantum_group() {
+    let (cert, key) = certificate();
+    let mut client = client(&cert.pem());
+    let acceptor = tls_acceptor(cert, key);
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    client.base_url = format!("https://{}", listener.local_addr().unwrap());
+    let server = tokio::spawn(async move {
+        let (stream, _) = listener.accept().await.unwrap();
+        let tls = acceptor.accept(stream).await.unwrap();
+        tls.get_ref()
+            .1
+            .negotiated_key_exchange_group()
+            .map(|group| group.name())
+    });
+    let _ = client.configuration().await;
+    assert_eq!(
+        server.await.unwrap(),
+        Some(rustls::NamedGroup::X25519MLKEM768)
+    );
+}
+
+#[tokio::test]
 async fn idle_management_connections_expire_before_the_server_header_deadline() {
     use tokio::io::{AsyncBufReadExt, BufReader};
 

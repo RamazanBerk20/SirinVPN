@@ -42,8 +42,9 @@ pub use endpoint_transition::{
     publish_endpoint_transition,
 };
 pub use identity::{
-    LocalIdentity, PublicIdentity, SecretIdentity, management_certificate_fingerprint,
-    management_identity_fingerprint, wireguard_public_key_from_private,
+    LocalIdentity, PublicIdentity, SecretIdentity, generate_preshared_key,
+    management_certificate_fingerprint, management_identity_fingerprint, validate_preshared_key,
+    wireguard_public_key_from_private,
 };
 pub use invitation::{
     DecodedInvitation, InvitationDraft, InvitationEnrollmentBinding, InvitationError,

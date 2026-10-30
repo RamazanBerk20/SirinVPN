@@ -5,11 +5,11 @@
       "state": "android_identity_record",
       "reads": {
         "minimum": 1,
-        "maximum": 2
+        "maximum": 3
       },
       "writes": {
         "minimum": 2,
-        "maximum": 2
+        "maximum": 3
       }
     },
     {
@@ -170,11 +170,11 @@
       "state": "device_backup_payload",
       "reads": {
         "minimum": 1,
-        "maximum": 2
+        "maximum": 3
       },
       "writes": {
         "minimum": 2,
-        "maximum": 2
+        "maximum": 3
       }
     },
     {
@@ -214,11 +214,11 @@
       "state": "linux_identity_record",
       "reads": {
         "minimum": 1,
-        "maximum": 2
+        "maximum": 3
       },
       "writes": {
         "minimum": 2,
-        "maximum": 2
+        "maximum": 3
       }
     },
     {
@@ -324,11 +324,11 @@
       "state": "server_authorization",
       "reads": {
         "minimum": 1,
-        "maximum": 5
+        "maximum": 6
       },
       "writes": {
         "minimum": 1,
-        "maximum": 5
+        "maximum": 6
       }
     },
     {
@@ -456,11 +456,11 @@
       "state": "windows_identity_record",
       "reads": {
         "minimum": 1,
-        "maximum": 2
+        "maximum": 3
       },
       "writes": {
         "minimum": 2,
-        "maximum": 2
+        "maximum": 3
       }
     },
     {

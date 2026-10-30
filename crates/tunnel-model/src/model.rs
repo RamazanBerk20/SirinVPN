@@ -136,6 +136,9 @@ pub struct TunnelConnectRequest {
     pub client_address: Ipv4Addr,
     pub server_public_key: String,
     pub private_key: String,
+    /// Optional at every schema; pre-PSK helpers reject it through `deny_unknown_fields`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub preshared_key: Option<String>,
     pub dns_address: Ipv4Addr,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub client_ipv6_address: Option<Ipv6Addr>,
@@ -169,6 +172,10 @@ impl std::fmt::Debug for TunnelConnectRequest {
             .field("client_address", &self.client_address)
             .field("server_public_key", &self.server_public_key)
             .field("private_key", &"[REDACTED]")
+            .field(
+                "preshared_key",
+                &self.preshared_key.as_ref().map(|_| "[REDACTED]"),
+            )
             .field("dns_address", &self.dns_address)
             .field("client_ipv6_address", &self.client_ipv6_address)
             .field("mtu", &self.mtu)
@@ -181,6 +188,7 @@ impl std::fmt::Debug for TunnelConnectRequest {
 impl Drop for TunnelConnectRequest {
     fn drop(&mut self) {
         self.private_key.zeroize();
+        self.preshared_key.zeroize();
     }
 }
 

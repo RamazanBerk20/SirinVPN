@@ -45,8 +45,10 @@ namespace = "invite-" + data["mode"]
 run("ip", "netns", "add", namespace)
 run("ip", "link", "add", "invite0", "type", "wireguard")
 server_public = run("wg", "show", "sirinvpn0", "public-key").decode().strip()
+preshared = data.get("preshared_key")
 run("wg", "set", "invite0", "private-key", data["key"], "peer", server_public,
-    "allowed-ips", "0.0.0.0/0,::/0", "endpoint", "127.0.0.1:51820")
+    "allowed-ips", "0.0.0.0/0,::/0", "endpoint", "127.0.0.1:51820",
+    *(["preshared-key", preshared] if preshared else []))
 run("ip", "link", "set", "invite0", "netns", namespace)
 run("ip", "-n", namespace, "link", "set", "lo", "up")
 run("ip", "-n", namespace, "address", "add", data["ipv4"] + "/32", "dev", "invite0")

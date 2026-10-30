@@ -507,14 +507,15 @@ impl DecodedInvitation {
         profile
     }
 
-    pub fn enrollment_request(&self, permanent: &PublicIdentity) -> EnrollmentRequest {
+    pub fn enrollment_request(&self, permanent: &LocalIdentity) -> EnrollmentRequest {
         EnrollmentRequest {
             names: self.names.clone(),
             claims: self.response.claims.clone(),
             signature: self.response.signature.clone(),
             token: self.token.to_string(),
-            device_wireguard_public_key: permanent.wireguard_public_key.clone(),
-            device_management_certificate_pem: permanent.management_certificate_pem.clone(),
+            device_wireguard_public_key: permanent.public.wireguard_public_key.clone(),
+            device_management_certificate_pem: permanent.public.management_certificate_pem.clone(),
+            device_preshared_key: permanent.secret.wireguard_preshared_key.clone(),
         }
     }
 

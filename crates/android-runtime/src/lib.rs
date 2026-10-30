@@ -12,3 +12,5 @@ mod quality;
 mod routes;
 #[cfg(target_os = "android")]
 mod tunnel;
+#[cfg(any(target_os = "android", test))]
+mod uapi;

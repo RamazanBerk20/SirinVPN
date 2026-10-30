@@ -66,6 +66,41 @@ does not qualify that migration. Do not remove the old app before validating
 the backup/recovery path. Once a deletion has been recorded, an older binary
 that ignores its marker is an unsupported rollback target on every platform.
 
+## WireGuard preshared key migration
+
+The per-device preshared key changes four declared state families. Each
+older reader would have accepted the new shape and silently dropped the key,
+which leaves that device's peer and client disagreeing and its handshake
+failing, so each family moves to a schema an older reader rejects:
+
+| State | Before | Now | Shape |
+| --- | --- | --- | --- |
+| `linux_identity_record`, `windows_identity_record`, `android_identity_record` | reads 1–2, writes 2 | reads 1–3, writes 2–3 | implicit schema 3: `SecretIdentity` may carry `wireguard_preshared_key` |
+| `device_backup_payload` | reads 1–2, writes 2 | reads 1–3, writes 2–3 | explicit schema 3 whenever the identity carries a key |
+| `server_authorization` | reads 1–5, writes 1–5 | reads 1–6, writes 1–6 | explicit schema 6 whenever a device or pending rotation carries a key |
+
+`TunnelConnectRequest` (and the Linux desired/runtime records and Windows
+session that embed it) keeps its schema numbers; the key is an optional
+field that helpers before this change reject through `deny_unknown_fields`.
+Signed client updates already refuse that rollback through the identity
+families above, which ship in the same artifact.
+
+| Existing state | Candidate behavior |
+| --- | --- |
+| Device identity without a key | Read unchanged and written back in the same shape. The tunnel runs without a key, exactly as before. |
+| Server authorization without keys | Read unchanged; it stays at its previous schema until a device first stores a key. Peers without a key keep working beside peers with one. |
+| Device backup schema 1 or 2 | Imported unchanged. A key-bearing identity labelled 1 or 2 is rejected as malformed. |
+| Existing device on an upgraded VPS | Gains a key at its next key rotation over the pinned management channel; re-enrollment is not needed. |
+| New client, older VPS | The VPS ignores the offered key and does not confirm it; the client drops the key before saving the profile (enrollment) or never offers one (rotation, gated on `preshared_keys_enabled`). |
+| Owner provisioned over SSH or recovered offline | Starts without a key; rotate once to add one. |
+
+The updater still requires both readers to cover both writers, so a signed
+transition between this release and one that predates the key is refused in
+both directions, on the client and the VPS. This matches the first-install
+boundary above: there is no qualified release to upgrade from. After a
+release is qualified, a further format change of this kind needs the
+expand-then-write sequence in [releases.md](releases.md).
+
 ## DNS acceptance boundary
 
 Retain the original counter failures. Their counter-only records cannot recover

@@ -236,6 +236,7 @@ impl Controller {
         adapter.configure(
             &request.private_key,
             &request.server_public_key,
+            request.preshared_key.as_deref(),
             wireguard_endpoint,
             &network_plan::allowed_ips(&request),
         )?;
