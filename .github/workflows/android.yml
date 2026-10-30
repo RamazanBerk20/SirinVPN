@@ -70,6 +70,7 @@ jobs:
           path: |
             target/remediation-evidence/go-native.json
             target/remediation-evidence/android-build.json
+            target/remediation-evidence/android-build.log
             target/remediation-evidence/android-package.json
             target/remediation-evidence/android-emulator-29.json
             target/remediation-evidence/android-emulator-36.json
