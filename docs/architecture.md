@@ -190,10 +190,16 @@ transport](https-transport-2026-09-06.md). HTTPS authenticates Noise before the 
 upgrade, masks client frames and answers ordinary web requests with nginx's stock
 404/400 pages. A generated or explicitly imported matching certificate is pinned;
 renewal cannot silently change that pin. Without an HTTPS name, clients connect by
-address and send no TLS name (SNI), so there is no fixed name to match. The
-generated certificate keeps its original name, because every existing pin depends
-on it; TLS 1.3 hides it from passive observers, but an active probe can read it. Browser-identical fingerprints and
-universal censorship resistance are not claimed. [Signed endpoint
+address and send no TLS name (SNI), so there is no fixed name to match. A new TLS
+identity on a server with a public endpoint, which every installer-provisioned server
+has, gets its own self-signed certificate: a random P-256 key and serial, the name
+`localhost` and ten years of validity from its creation. It is stored like an imported
+HTTPS certificate, travels in VPS backups and marks server configuration schema 9.
+Servers installed earlier keep their derived Ed25519 certificate for `www.example.com`,
+because every existing pin depends on it; TLS 1.3 hides it from passive observers, but
+an active probe can read it. Turning HTTPS off later gives such a server a generated
+certificate too. Browser-identical fingerprints and universal censorship resistance
+are not claimed. [Signed endpoint
 checkpoints](endpoints-and-outer-ipv6-2026-09-06.md) bind current ports, alternate
 addresses and public identities; catch-up and background discovery preserve the
 pinned server identity and current protection/routing intent.

@@ -315,7 +315,10 @@ pub fn initialize_with_transport_capabilities(
                     "the TLS-like capability cannot migrate because the installed TCP fallback uses a different public port"
                 );
             }
-            configuration.tls_like = Some(ensure_tls_like_identity(paths, port)?);
+            let (endpoint, certificate) =
+                new_tls_like_identity(paths, port, configuration.public_endpoint.is_some())?;
+            configuration.tls_like = Some(endpoint);
+            configuration.https_certificate_pem = certificate;
             configuration_changed = true;
         }
         if let Some(dns_upstream) = dns_upstream
@@ -335,18 +338,27 @@ pub fn initialize_with_transport_capabilities(
                 .tls_like
                 .as_mut()
                 .ok_or_else(|| anyhow!("HTTPS requires a TLS transport"))?;
+            let current_certificate = configuration
+                .https_certificate_pem
+                .as_deref()
+                .filter(|_| endpoint.https.is_some());
             configuration.https_certificate_pem = configure_https_identity(
                 paths,
                 endpoint,
                 https,
                 https_certificate.as_ref(),
-                configuration.https_certificate_pem.as_deref(),
+                current_certificate,
             )?;
             configuration_changed = true;
         }
         if disable_https && let Some(endpoint) = &mut configuration.tls_like {
-            *endpoint = ensure_tls_like_identity(paths, endpoint.port)?;
-            configuration.https_certificate_pem = None;
+            let (fresh, certificate) = new_tls_like_identity(
+                paths,
+                endpoint.port,
+                configuration.public_endpoint.is_some(),
+            )?;
+            *endpoint = fresh;
+            configuration.https_certificate_pem = certificate;
             configuration_changed = true;
         }
         if let Some(endpoint) = &mut configuration.public_endpoint {
@@ -359,20 +371,7 @@ pub fn initialize_with_transport_capabilities(
                 .or_else(|| configuration.tls_like.as_ref().map(|tls| tls.port));
             configuration_changed = true;
         }
-        let schema_version = if configuration.public_endpoint.is_some() {
-            8
-        } else if configuration
-            .tls_like
-            .as_ref()
-            .is_some_and(|endpoint| endpoint.https.is_some())
-        {
-            7
-        } else {
-            server_dns_configuration_schema_version(
-                &configuration.dns_upstream,
-                &configuration.private_dns_records,
-            )
-        };
+        let schema_version = configuration_schema_version(&configuration);
         if configuration.schema_version != schema_version {
             configuration.schema_version = schema_version;
             configuration_changed = true;
@@ -380,7 +379,7 @@ pub fn initialize_with_transport_capabilities(
         if configuration_changed {
             validate_configuration(&configuration)?;
             write_json(&paths.configuration, &configuration)?;
-            if disable_https && paths.https_private_key.exists() {
+            if configuration.https_certificate_pem.is_none() && paths.https_private_key.exists() {
                 fs::remove_file(&paths.https_private_key)?;
             }
         }
@@ -449,9 +448,14 @@ pub fn initialize_with_transport_capabilities(
             })
         })
         .transpose()?;
-    let mut tls_like = tls_like_port
-        .map(|port| ensure_tls_like_identity(paths, port))
-        .transpose()?;
+    let (mut tls_like, generated_certificate) = match tls_like_port {
+        Some(port) => {
+            let (endpoint, certificate) =
+                new_tls_like_identity(paths, port, public_host.is_some() && https.is_none())?;
+            (Some(endpoint), certificate)
+        }
+        None => (None, None),
+    };
 
     let https_certificate_pem = if let Some(https) = https {
         configure_https_identity(
@@ -464,7 +468,7 @@ pub fn initialize_with_transport_capabilities(
             None,
         )?
     } else {
-        None
+        generated_certificate
     };
 
     write_private(
@@ -476,7 +480,7 @@ pub fn initialize_with_transport_capabilities(
 
     let dns_upstream = dns_upstream.unwrap_or_default();
     let private_dns_records = private_dns_records.unwrap_or_default();
-    let configuration = ServerConfiguration {
+    let mut configuration = ServerConfiguration {
         public_endpoint: public_host.clone().map(|host| ServerEndpoint {
             host,
             wireguard_port,
@@ -485,16 +489,7 @@ pub fn initialize_with_transport_capabilities(
             .as_ref()
             .and_then(|_| tls_like.as_ref().map(|tls| tls.port)),
         alternate_endpoint_hosts: alternate_endpoint_hosts.unwrap_or_default(),
-        schema_version: if public_host.is_some() {
-            8
-        } else if tls_like
-            .as_ref()
-            .is_some_and(|endpoint| endpoint.https.is_some())
-        {
-            7
-        } else {
-            server_dns_configuration_schema_version(&dns_upstream, &private_dns_records)
-        },
+        schema_version: 0,
         https_certificate_pem,
         server_name: server_name.to_owned(),
         interface_name: INTERFACE_NAME.to_owned(),
@@ -511,6 +506,7 @@ pub fn initialize_with_transport_capabilities(
         tcp_fallback: tcp_fallback.clone(),
         tls_like: tls_like.clone(),
     };
+    configuration.schema_version = configuration_schema_version(&configuration);
     write_json(&paths.configuration, &configuration)?;
     initialize_authorization(
         paths,
@@ -559,6 +555,45 @@ pub(super) fn ensure_transport_identity(
         port,
         server_public_key: STANDARD.encode(PublicKey::from(&private).as_bytes()),
     })
+}
+
+/// Schema 8 marks a public endpoint; 9 adds a generated certificate stored without HTTPS.
+fn configuration_schema_version(configuration: &ServerConfiguration) -> u16 {
+    let https = configuration
+        .tls_like
+        .as_ref()
+        .is_some_and(|endpoint| endpoint.https.is_some());
+    if configuration.public_endpoint.is_some() {
+        if configuration.https_certificate_pem.is_some() && !https {
+            9
+        } else {
+            8
+        }
+    } else if https {
+        7
+    } else {
+        server_dns_configuration_schema_version(
+            &configuration.dns_upstream,
+            &configuration.private_dns_records,
+        )
+    }
+}
+
+/// A new TLS identity gets a generated certificate on servers with a public endpoint, which
+/// every installer-provisioned server has. Existing identities keep their derived certificate,
+/// because device pins depend on it.
+pub(super) fn new_tls_like_identity(
+    paths: &ServerPaths,
+    port: u16,
+    generated: bool,
+) -> Result<(TlsLikeEndpoint, Option<String>)> {
+    let mut endpoint = ensure_tls_like_identity(paths, port)?;
+    if !generated {
+        return Ok((endpoint, None));
+    }
+    let (certificate, fingerprint) = generate_tls_certificate(paths)?;
+    endpoint.certificate_sha256 = fingerprint;
+    Ok((endpoint, Some(certificate)))
 }
 
 pub(super) fn ensure_tls_like_identity(paths: &ServerPaths, port: u16) -> Result<TlsLikeEndpoint> {

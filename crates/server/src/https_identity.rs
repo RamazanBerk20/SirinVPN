@@ -17,21 +17,40 @@ pub(super) fn read_https_file(path: &Path) -> Result<Zeroizing<Vec<u8>>> {
     Ok(bytes)
 }
 
+/// `https` is `None` for a generated certificate, which names no real host.
 pub(super) fn custom_certificate_configuration(
     certificate_pem: &[u8],
     key_pem: &[u8],
-    https: &sirinvpn_protocol::HttpsTransport,
+    https: Option<&sirinvpn_protocol::HttpsTransport>,
 ) -> Result<(ServerConfig, String)> {
-    anyhow::ensure!(https.is_valid(), "invalid HTTPS hostname or path");
     let certificates =
         CertificateDer::pem_slice_iter(certificate_pem).collect::<Result<Vec<_>, _>>()?;
     anyhow::ensure!(
         !certificates.is_empty() && certificates.len() <= 8,
         "invalid HTTPS certificate chain"
     );
-    let (_, leaf) = x509_parser::parse_x509_certificate(certificates[0].as_ref())
-        .map_err(|_| anyhow!("invalid HTTPS leaf certificate"))?;
+    if let Some(https) = https {
+        certificate_covers_hostname(&certificates[0], https)?;
+    }
+    let fingerprint = STANDARD.encode(Sha256::digest(certificates[0].as_ref()));
+    let private_key = PrivateKeyDer::from_pem_slice(key_pem)?;
+    let provider = Arc::new(rustls::crypto::aws_lc_rs::default_provider());
+    // rustls checks that the supplied private key matches the certificate.
+    let mut configuration = ServerConfig::builder_with_provider(provider)
+        .with_protocol_versions(&[&rustls::version::TLS13, &rustls::version::TLS12])?
+        .with_no_client_auth()
+        .with_single_cert(certificates, private_key)?;
+    configuration.alpn_protocols = vec![b"http/1.1".to_vec()];
+    Ok((configuration, fingerprint))
+}
 
+fn certificate_covers_hostname(
+    leaf: &CertificateDer<'_>,
+    https: &sirinvpn_protocol::HttpsTransport,
+) -> Result<()> {
+    anyhow::ensure!(https.is_valid(), "invalid HTTPS hostname or path");
+    let (_, leaf) = x509_parser::parse_x509_certificate(leaf.as_ref())
+        .map_err(|_| anyhow!("invalid HTTPS leaf certificate"))?;
     let names = leaf
         .subject_alternative_name()?
         .ok_or_else(|| anyhow!("HTTPS certificate needs a DNS subject alternative name"))?;
@@ -53,16 +72,35 @@ pub(super) fn custom_certificate_configuration(
         name_valid,
         "HTTPS certificate does not cover the configured hostname"
     );
-    let fingerprint = STANDARD.encode(Sha256::digest(certificates[0].as_ref()));
-    let private_key = PrivateKeyDer::from_pem_slice(key_pem)?;
-    let provider = Arc::new(rustls::crypto::aws_lc_rs::default_provider());
-    // rustls checks that the supplied private key matches the certificate.
-    let mut configuration = ServerConfig::builder_with_provider(provider)
-        .with_protocol_versions(&[&rustls::version::TLS13, &rustls::version::TLS12])?
-        .with_no_client_auth()
-        .with_single_cert(certificates, private_key)?;
-    configuration.alpn_protocols = vec![b"http/1.1".to_vec()];
-    Ok((configuration, fingerprint))
+    Ok(())
+}
+
+/// A per-server self-signed certificate with ordinary contents: a random P-256 key and
+/// serial, a generic name and ten years of validity from today. Nothing in it is shared by
+/// every SirinVPN server. Its key goes where an imported HTTPS key would.
+pub(super) fn generate_tls_certificate(paths: &ServerPaths) -> Result<(String, String)> {
+    let key = KeyPair::generate_for(&rcgen::PKCS_ECDSA_P256_SHA256)
+        .context("could not generate the TLS certificate key")?;
+    let mut parameters = CertificateParams::new(vec!["localhost".to_owned()])
+        .context("could not prepare the TLS certificate")?;
+    let mut distinguished_name = DistinguishedName::new();
+    distinguished_name.push(DnType::CommonName, "localhost");
+    parameters.distinguished_name = distinguished_name;
+    let mut serial = [0_u8; 16];
+    rand::RngCore::fill_bytes(&mut OsRng, &mut serial);
+    serial[0] &= 0x7f;
+    parameters.serial_number = Some(rcgen::SerialNumber::from_slice(&serial));
+    let now = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs();
+    parameters.not_before = rcgen::date_time_ymd(1970, 1, 1) + Duration::from_secs(now);
+    parameters.not_after = parameters.not_before + Duration::from_secs(3_650 * 86_400);
+    let certificate = parameters
+        .self_signed(&key)
+        .context("could not self-sign the TLS certificate")?;
+    write_private(&paths.https_private_key, key.serialize_pem().as_bytes())?;
+    Ok((
+        certificate.pem(),
+        STANDARD.encode(Sha256::digest(certificate.der())),
+    ))
 }
 
 pub(super) fn configure_https_identity(
@@ -83,7 +121,7 @@ pub(super) fn configure_https_identity(
             leaf.validity().is_valid(),
             "HTTPS certificate has expired or is not yet valid"
         );
-        let (_, fingerprint) = custom_certificate_configuration(&certificate, &key, &https)?;
+        let (_, fingerprint) = custom_certificate_configuration(&certificate, &key, Some(&https))?;
         let pem =
             String::from_utf8(certificate.to_vec()).context("HTTPS certificate is not PEM text")?;
         write_private(&paths.https_private_key, &key)?;
@@ -92,7 +130,7 @@ pub(super) fn configure_https_identity(
     } else if let Some(certificate) = current_certificate {
         let key = read_https_file(&paths.https_private_key)?;
         let (_, fingerprint) =
-            custom_certificate_configuration(certificate.as_bytes(), &key, &https)?;
+            custom_certificate_configuration(certificate.as_bytes(), &key, Some(&https))?;
         endpoint.certificate_sha256 = fingerprint;
         Some(certificate.to_owned())
     } else {
@@ -116,8 +154,7 @@ pub(super) fn transport_tls_configuration(
         let https = configuration
             .tls_like
             .as_ref()
-            .and_then(|endpoint| endpoint.https.as_ref())
-            .ok_or_else(|| anyhow!("HTTPS certificate has no endpoint metadata"))?;
+            .and_then(|endpoint| endpoint.https.as_ref());
         let key = read_https_file(&paths.https_private_key)?;
         let (tls, fingerprint) =
             custom_certificate_configuration(certificate.as_bytes(), &key, https)?;

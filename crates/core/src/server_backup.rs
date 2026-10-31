@@ -226,7 +226,7 @@ fn validate_snapshot(
     let configuration: BackupServerConfiguration =
         serde_json::from_str(&snapshot.configuration_json)
             .map_err(|_| ServerBackupError::InvalidSnapshot)?;
-    if configuration.schema_version > 8 {
+    if configuration.schema_version > 9 {
         return Err(ServerBackupError::IncompatibleVersion);
     }
     let https = configuration
@@ -236,6 +236,8 @@ fn validate_snapshot(
     if (configuration.schema_version < 7 && https.is_some())
         || (configuration.schema_version == 7 && https.is_none())
         || https.is_some_and(|https| !https.is_valid())
+        || (configuration.schema_version == 9)
+            != (configuration.https_certificate_pem.is_some() && https.is_none())
         || configuration.https_certificate_pem.is_some() != snapshot.https_private_key_pem.is_some()
         || configuration
             .https_certificate_pem
@@ -250,7 +252,7 @@ fn validate_snapshot(
     }
     validate_server_name(&configuration.server_name)
         .map_err(|_| ServerBackupError::InvalidSnapshot)?;
-    if (configuration.schema_version == 8) != configuration.public_endpoint.is_some()
+    if matches!(configuration.schema_version, 8 | 9) != configuration.public_endpoint.is_some()
         || (configuration.public_endpoint.is_none()
             && (!configuration.alternate_endpoint_hosts.is_empty()
                 || configuration.endpoint_discovery_port.is_some()))

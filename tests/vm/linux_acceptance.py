@@ -229,7 +229,10 @@ class Acceptance:
                              if self.args.vps_dns_over_tls else []), timeout=600)
         self.server_id = profile["id"]
         assert not profile.get("ipv6_tunnel_enabled", False), "the fixture needs an IPv4-only profile"
-        return {"profile_created": True, "server_id": self.server_id}
+        schema = json.loads(self.server.run(["cat", "/etc/sirinvpn/server.json"]).stdout)["schema_version"]
+        # A fresh install pins its own generated TLS certificate rather than the old derived one.
+        assert self.args.upgrade_from or schema == 9, f"server configuration schema {schema}"
+        return {"profile_created": True, "server_id": self.server_id, "server_configuration_schema": schema}
 
     def upgrade(self):
         """Qualify an unbound development upgrade, without rewriting signed receipts."""

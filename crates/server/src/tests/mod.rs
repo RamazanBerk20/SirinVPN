@@ -11,6 +11,7 @@ mod management_permissions_keep_owner_admin_and_member_boundaries_separate;
 mod runtime_authorization_load_does_not_require_the_root_wireguard_private_key;
 
 mod endpoints;
+mod generated_tls_certificate;
 mod https_transport;
 mod member_lifecycle;
 mod slow_handshake;

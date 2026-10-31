@@ -191,12 +191,11 @@ pub fn restore_backup_state(
             .tls_like
             .as_ref()
             .ok_or_else(|| anyhow!("backup HTTPS endpoint is missing"))?;
-        let https = endpoint
-            .https
-            .as_ref()
-            .ok_or_else(|| anyhow!("backup HTTPS metadata is missing"))?;
-        let (_, fingerprint) =
-            custom_certificate_configuration(certificate.as_bytes(), key.as_bytes(), https)?;
+        let (_, fingerprint) = custom_certificate_configuration(
+            certificate.as_bytes(),
+            key.as_bytes(),
+            endpoint.https.as_ref(),
+        )?;
         anyhow::ensure!(
             fingerprint == endpoint.certificate_sha256,
             "backup HTTPS certificate pin is inconsistent"

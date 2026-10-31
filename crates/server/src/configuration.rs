@@ -59,17 +59,19 @@ pub(super) fn validate_configuration(configuration: &ServerConfiguration) -> Res
         .tls_like
         .as_ref()
         .and_then(|endpoint| endpoint.https.as_ref());
+    let generated_certificate = configuration.https_certificate_pem.is_some() && https.is_none();
     if (configuration.schema_version < 7 && https.is_some())
         || (configuration.schema_version == 7 && https.is_none())
         || https.is_some_and(|value| !value.is_valid())
         || configuration
             .https_certificate_pem
             .as_ref()
-            .is_some_and(|pem| https.is_none() || pem.is_empty() || pem.len() > 65_536)
+            .is_some_and(|pem| pem.is_empty() || pem.len() > 65_536)
+        || (configuration.schema_version == 9) != generated_certificate
     {
-        bail!("HTTPS transport metadata requires configuration schema 7");
+        bail!("TLS certificate metadata requires configuration schema 7 or 9");
     }
-    if (configuration.schema_version == 8) != configuration.public_endpoint.is_some()
+    if matches!(configuration.schema_version, 8 | 9) != configuration.public_endpoint.is_some()
         || (configuration.public_endpoint.is_none()
             && !configuration.alternate_endpoint_hosts.is_empty())
     {

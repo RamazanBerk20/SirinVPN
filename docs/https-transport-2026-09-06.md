@@ -36,7 +36,8 @@ binary message carries one existing authenticated, padded tunnel record.
 Revocation and idle cleanup retain the existing transport behavior. No request,
 destination or browsing history is recorded.
 
-New HTTPS server configurations use schema 7. Imported certificate keys require
+New HTTPS server configurations use schema 7. A server with a public endpoint uses
+schema 8, or 9 when it stores a generated certificate without HTTPS. Imported certificate keys require
 server-backup snapshot schema 2. Linux helper protocol 14 advertises HTTPS support;
 requests containing HTTPS metadata require schema 9 and saved desired state uses
 schema 4. The app checks helper support before starting the connection. Existing

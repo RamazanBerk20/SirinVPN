@@ -294,7 +294,7 @@ fn checked_in_compatibility_contract_is_canonical() {
             .unwrap()
     };
     assert_eq!(state("server_authorization").reads.maximum, 7);
-    assert_eq!(state("server_configuration").reads.maximum, 8);
+    assert_eq!(state("server_configuration").reads.maximum, 9);
     assert_eq!(state("linux_tunnel_request").reads.maximum, 11);
     assert_eq!(state("linux_desired_connection").reads.maximum, 6);
     assert_eq!(state("linux_runtime_connection").reads.maximum, 5);

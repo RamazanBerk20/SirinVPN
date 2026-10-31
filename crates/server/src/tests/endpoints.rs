@@ -83,7 +83,7 @@ fn root_port_changes_publish_an_idempotent_checkpoint_and_keep_the_original_disc
     )
     .unwrap();
     assert_eq!(retry.endpoint_transition, Some(updated.clone()));
-    assert_eq!(load_configuration(&paths).unwrap().schema_version, 8);
+    assert_eq!(load_configuration(&paths).unwrap().schema_version, 9);
     assert_eq!(
         load_authorization(&paths.authorization)
             .unwrap()
