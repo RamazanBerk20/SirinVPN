@@ -667,7 +667,7 @@ mod tests {
         );
         assert_eq!(
             bundled_release_trust_root_id().unwrap(),
-            "0ff86fa15621859d9145a63b4d3690fd7de3ec4946f8ca7d0645b870ceec954b"
+            "bcf4ee209e88153b7ac8dd0c26b4f4e929f9b44eef4a767ac8984c645937ead5"
         );
     }
 

@@ -18,10 +18,10 @@ SirinVPN's P2T/P2U/P2V/P2W release coordinator is deliberately offline. It creat
 The immutable public root in `release/release-trust-root.pub` is compiled into `sirinvpn-release`. Its SHA-256 key ID is:
 
 ```text
-0ff86fa15621859d9145a63b4d3690fd7de3ec4946f8ca7d0645b870ceec954b
+bcf4ee209e88153b7ac8dd0c26b4f4e929f9b44eef4a767ac8984c645937ead5
 ```
 
-`sirinvpn-release trust root` prints the compiled value. This checked-in key is a pre-distribution bootstrap anchor generated during development. Its private half is not in the repository, but it must be moved to encrypted offline storage and backed up—or the public anchor must be deliberately replaced—before the first public release. Replacing it after distribution is a binary migration, not a policy update.
+`sirinvpn-release trust root` prints the compiled value. This production root was generated on 31 October 2026 and replaced the development bootstrap anchor (`0ff86fa1…`) before any public release. Its private half never touched a disk unencrypted: it is kept passphrase-encrypted on offline media outside the repository, and a second encrypted copy belongs on separate media. Builds made before the replacement trust only the old anchor and must be reinstalled by hand. Replacing the root after distribution is a binary migration, not a policy update.
 
 The root private key signs release-key policies only. Ordinary releases use separate, replaceable Ed25519 keys. Generate each key on an offline encrypted system; the command refuses to replace either output and creates the private key with mode `0600`:
 
