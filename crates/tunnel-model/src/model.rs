@@ -1,6 +1,6 @@
 use super::*;
 
-pub const HELPER_PROTOCOL_VERSION: u16 = 18;
+pub const HELPER_PROTOCOL_VERSION: u16 = 19;
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -117,6 +117,10 @@ pub struct TunnelConnectRequest {
     pub endpoint_publication_enabled: bool,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub endpoint_dns_servers: Vec<SocketAddr>,
+    /// The CDN address for HTTPS through a CDN. The privileged service resolves the
+    /// signed HTTPS name through `endpoint_dns_servers`; apps leave it empty.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cdn_address: Option<IpAddr>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mtu_policy: Option<sirinvpn_protocol::MtuPolicy>,
     pub schema_version: u16,
@@ -162,6 +166,7 @@ impl std::fmt::Debug for TunnelConnectRequest {
             .field("server_id", &self.server_id)
             .field("endpoint_host", &self.endpoint_host)
             .field("endpoint_port", &self.endpoint_port)
+            .field("cdn_address", &self.cdn_address)
             .field("transport", &self.transport)
             .field(
                 "server_transport_public_key",
@@ -320,6 +325,18 @@ impl TunnelConnectRequest {
                 .reconnect_candidates
                 .iter()
                 .any(|candidate| candidate.https.is_some())
+    }
+    /// The signed HTTPS name to resolve for HTTPS through a CDN.
+    pub fn cdn_host(&self) -> Option<&str> {
+        self.endpoint_identity.as_ref()?.descriptor.cdn_host()
+    }
+    /// HTTPS through a CDN leaves for the CDN's address; every other transport for the VPS.
+    pub fn outer_address(&self, endpoint: IpAddr) -> Option<IpAddr> {
+        if self.https.as_ref().is_some_and(|https| https.cdn) {
+            self.cdn_address
+        } else {
+            Some(endpoint)
+        }
     }
     pub fn desired_schema(&self) -> u16 {
         if self.schema_version >= 11 {

@@ -63,5 +63,107 @@ resistance. Actual network and platform qualification belongs to the final
 acceptance run. Alternate endpoints, signed automatic publication and catch-up
 are tracked separately in the remaining implementation checklist.
 
+## CDN mode
+
+CDN mode is for when the VPS address itself is blocked. It is off by default and
+set per server: setup and repair have a "Reach HTTPS through a CDN" option, and
+the CLI takes `--https-cdn true` or `--https-cdn false` beside
+`--https-server-name`. The flag travels in the signed endpoint descriptor
+(`"cdn": true` inside the HTTPS settings). It is omitted when off, so existing
+profiles, checkpoints and server configurations keep their exact bytes.
+
+With CDN mode on, only the HTTPS transport changes, and only on devices:
+
+- The device resolves the HTTPS hostname with the network's normal DNS, outside
+  the tunnel, and connects to that address. On Linux and Windows the privileged
+  helper or service does this through the same scoped DNS exceptions it uses for
+  endpoint names and keeps one address, IPv4 first. Android resolves the name on
+  the underlying network. Direct UDP, Obfuscated UDP and raw TCP still go to the
+  VPS address, so Automatic falls through to the CDN when that address is blocked.
+- TLS is verified against the operating system's WebPKI roots and the hostname
+  (rustls-native-certs; Android's Conscrypt or system CA directory) instead of the
+  origin pin, because the device now meets the CDN's certificate. The hostname is
+  sent as SNI and as the HTTP `Host`, as it already was in HTTPS mode.
+- Noise IK inside the WebSocket still authenticates the server's static key and
+  encrypts every tunnel record end to end. A CDN, a certificate authority or a
+  network that installs its own root can carry or refuse the connection, but cannot
+  impersonate the server or read the tunnel.
+- The kill switch admits only the carrier to that one CDN address on the HTTPS
+  port: on Linux a rule for marked carrier sockets, on Windows a permit for the
+  service's SYSTEM carrier to that address and port, on Android the carrier's
+  protected socket. Nothing else gains a path to the CDN.
+- Background endpoint discovery follows the current transport: while the session
+  runs through the CDN, the checkpoint request goes to the CDN address on the
+  HTTPS port, so the device never probes a VPS address that may be blocked or
+  watched. Discovery during invitation and recovery also tries the hostname.
+  Discovery needs no TLS change: Noise IK already authenticates its response.
+  Owner publication to a previous VPS stays on that VPS's own address: a CDN
+  hostname follows the current origin, so it would reach the new server, not the
+  one being retired.
+
+The VPS keeps serving its generated or imported certificate and needs no other
+change; the request headers a CDN adds are ignored and never stored. A quiet
+tunnel survives CDN idle timeouts (Cloudflare closes WebSockets after about 100
+seconds without data) because every client already sets a 25-second WireGuard
+persistent keepalive (Linux `wg set … persistent-keepalive 25`, Windows peer
+keepalive 25, Android `persistent_keepalive_interval=25`), so a record crosses
+the CDN at least every 25 seconds. The server's own 180-second idle cleanup is
+unchanged.
+
+### What the Owner configures
+
+The steps below are for Cloudflare; other CDNs need the same four things: proxied
+HTTPS for the hostname, WebSockets, TLS to the origin that accepts its certificate,
+and no challenge pages.
+
+1. Add the domain to Cloudflare and create an `A` (and `AAAA`, if the VPS has
+   IPv6) record for the HTTPS hostname pointing at the VPS, with proxy status
+   **Proxied**.
+2. Set SSL/TLS encryption mode to **Full** for that hostname (a Configuration Rule
+   can scope it). Full accepts the VPS's self-signed certificate. Use **Full
+   (strict)** only after importing a publicly trusted or Cloudflare Origin CA
+   certificate for the name.
+3. Leave **WebSockets** on (Network settings; on by default).
+4. Keep the TCP/TLS port on one Cloudflare proxies for HTTPS: 443 (the default),
+   2053, 2083, 2087 or 2096. SirinVPN reserves 8443. Another port needs an Origin
+   Rule that rewrites the destination port.
+5. Exempt the hostname from challenges: no "I'm Under Attack" mode, and if devices
+   get 403 responses, turn off Bot Fight Mode and Browser Integrity Check for it or
+   add a WAF skip rule for the HTTPS path. The client is not a browser.
+6. In SirinVPN, run repair (or setup) with HTTPS on, the same hostname and "Reach
+   HTTPS through a CDN" checked. Devices learn the new signed checkpoint through
+   discovery while the VPS is still reachable, or through an endpoint update code.
+
+### Limits
+
+- The CDN sees connection metadata: device IP addresses, connection times and
+  duration, traffic volume, the hostname and path, and the upgrade request
+  including the opaque Noise token. It never sees tunnel contents. See
+  [PRIVACY.md](../PRIVACY.md).
+- The per-source probe budget (12 connections per 10 seconds) applies to CDN edge
+  addresses, which can carry several devices. That is ample for a personal
+  server.
+- The origin still answers anyone who reaches its address directly with the same
+  nginx-style cover; restricting it to CDN address ranges is not done.
+- One CDN address is kept per lookup. A network that reaches the CDN only over the
+  other IP family fails HTTPS until the next lookup returns a usable address.
+- Older clients and servers cannot read a descriptor or configuration with CDN mode
+  on (`HttpsTransport` rejects unknown fields). Update devices first, and turn CDN
+  mode off before rolling the VPS back to an older release.
+- Linux helper protocol 19 adds the CDN address to the helper-owned part of the
+  request. Apps leave it empty and the helper replaces it with its own lookup.
+
+Evidence on 31 October: a simulated CDN edge terminates TLS with its own
+certificate from a test root, checks the SNI, opens a new TLS connection to the
+origin that accepts any certificate (as Cloudflare Full does), adds proxy headers
+and forwards the WebSocket. The client carries 32-, 1,280- and 1,472-byte
+payloads both ways, and the edge's plaintext view contains the upgrade request but
+no tunnel packet. CDN mode refuses the pinned origin certificate, a WebPKI
+certificate for another name and a valid edge with the wrong server Noise key.
+Helper tests cover the CDN-address validation, the guard rule that admits only the
+CDN address on the HTTPS port, the helper's own lookup replacing an app-supplied
+address, the relay configuration and discovery following the transport. Real
+Cloudflare has not been tested yet.
+
 The implementation uses the [WebSocket protocol](https://www.rfc-editor.org/rfc/rfc6455.html)
 through tokio-tungstenite, and [rustls certificate/key validation](https://docs.rs/rustls/latest/rustls/struct.ConfigBuilder.html#method.with_single_cert).

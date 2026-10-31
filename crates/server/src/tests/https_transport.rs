@@ -20,6 +20,7 @@ fn https_names_ports_and_imported_certificates_survive_backup_without_rotating_s
     let https = sirinvpn_protocol::HttpsTransport {
         server_name: "vpn.example.org".into(),
         path: "/connect".into(),
+        cdn: false,
     };
     let mut capabilities = ServerCapabilities {
         obfuscated_udp_port: Some(9443),
@@ -50,6 +51,28 @@ fn https_names_ports_and_imported_certificates_survive_backup_without_rotating_s
     validate_state(&paths).unwrap();
     configuration.schema_version = 1;
     assert!(validate_configuration(&configuration).is_err());
+
+    // CDN mode changes only how devices connect: the origin keeps its certificate and pin.
+    let mut cdn = capabilities.clone();
+    cdn.https.as_mut().unwrap().cdn = true;
+    let proxied = initialize_with_transport_capabilities(
+        &paths,
+        "HTTPS VPS",
+        &owner.public.management_certificate_pem,
+        server_id,
+        &owner.public.wireguard_public_key,
+        51_825,
+        cdn,
+    )
+    .unwrap();
+    let proxied = proxied.tls_like.unwrap();
+    assert!(proxied.https.unwrap().cdn);
+    assert_eq!(
+        proxied.certificate_sha256,
+        generated.tls_like.as_ref().unwrap().certificate_sha256
+    );
+    assert_eq!(load_configuration(&paths).unwrap().schema_version, 7);
+    validate_state(&paths).unwrap();
 
     let certificate_key = KeyPair::generate_for(&PKCS_ED25519).unwrap();
     let certificate = CertificateParams::new(vec![https.server_name.clone()])

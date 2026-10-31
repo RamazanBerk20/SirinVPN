@@ -26,6 +26,7 @@ fn request(transport: TransportKind, policy: MtuPolicy, mtu: u16) -> TunnelConne
         endpoint_checkpoint: None,
         endpoint_publication_enabled: false,
         endpoint_dns_servers: Vec::new(),
+        cdn_address: None,
         mtu_policy: Some(policy),
         schema_version: 8,
         server_id: ServerId::new(),

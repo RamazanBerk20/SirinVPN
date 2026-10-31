@@ -262,7 +262,9 @@ pub fn validate_endpoint_state(request: &TunnelConnectRequest) -> Result<(), Hel
         || (request.endpoint_identity.is_none()
             && (request.endpoint_checkpoint.is_some()
                 || request.endpoint_publication_enabled
-                || !request.endpoint_dns_servers.is_empty()))
+                || !request.endpoint_dns_servers.is_empty()
+                || request.cdn_address.is_some()
+                || request.https.as_ref().is_some_and(|https| https.cdn)))
     {
         return Err(invalid());
     }
@@ -280,6 +282,12 @@ pub fn validate_endpoint_state(request: &TunnelConnectRequest) -> Result<(), Hel
                 || address.ip().is_multicast()
                 || address.ip().is_loopback()
                 || address.ip() == IpAddr::V4(request.dns_address)
+        })
+        || request.cdn_address.is_some_and(|address| {
+            known.descriptor.cdn_host().is_none()
+                || address.is_unspecified()
+                || address.is_multicast()
+                || address.is_loopback()
         })
     {
         return Err(invalid());

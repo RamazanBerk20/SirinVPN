@@ -54,6 +54,9 @@ struct InitArguments {
     https_certificate: Option<PathBuf>,
     #[arg(long, requires_all = ["https_certificate", "https_server_name"])]
     https_private_key: Option<PathBuf>,
+    /// Devices reach the HTTPS hostname through a CDN that proxies it to this server.
+    #[arg(long, requires = "https_server_name")]
+    https_cdn: bool,
     #[arg(long)]
     update_transport_ports: bool,
     #[arg(long, conflicts_with = "https_server_name")]
@@ -156,6 +159,7 @@ async fn run() -> anyhow::Result<()> {
                 https_path,
                 https_certificate,
                 https_private_key,
+                https_cdn,
                 update_transport_ports,
                 disable_https,
                 recursive_dns,
@@ -213,6 +217,7 @@ async fn run() -> anyhow::Result<()> {
                     https: https_server_name.map(|server_name| sirinvpn_protocol::HttpsTransport {
                         server_name,
                         path: https_path,
+                        cdn: https_cdn,
                     }),
                     https_certificate: https_certificate.zip(https_private_key).map(
                         |(certificate, private_key)| sirinvpn_server::HttpsCertificatePaths {

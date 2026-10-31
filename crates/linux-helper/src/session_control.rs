@@ -29,7 +29,11 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
         }
         let endpoint =
             resolve_endpoint(&change.request.endpoint_host, change.request.endpoint_port)?;
-        self.replace_session(change.expected_server_id, &change.request, endpoint)
+        let mut request = change.request.clone();
+        request.cdn_address = request
+            .cdn_host()
+            .and_then(|host| resolve_endpoint(host, request.endpoint_port).ok());
+        self.replace_session(change.expected_server_id, &request, endpoint)
     }
 
     fn replace_session(

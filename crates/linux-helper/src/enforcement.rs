@@ -68,14 +68,31 @@ fn guard_objects_with_controls(
     // Only privileged, marked carrier sockets can use these exact validated
     // destinations. Keeping the configured candidates allows preparation without
     // replacing the active firewall or interrupting the old carrier.
-    let mut carriers = vec![(request.transport, request.endpoint_port)];
-    for candidate in &request.reconnect_candidates {
-        let value = (candidate.transport, candidate.endpoint_port);
-        if !carriers.contains(&value) {
+    // HTTPS through a CDN may reach only the CDN address resolved for its signed name.
+    let mut carriers = Vec::new();
+    for (kind, port, https) in
+        std::iter::once((request.transport, request.endpoint_port, &request.https)).chain(
+            request.reconnect_candidates.iter().map(|candidate| {
+                (
+                    candidate.transport,
+                    candidate.endpoint_port,
+                    &candidate.https,
+                )
+            }),
+        )
+    {
+        let destination = if https.as_ref().is_some_and(|https| https.cdn) {
+            request.cdn_address
+        } else {
+            Some(endpoint)
+        };
+        if let Some(value) = destination.map(|address| (kind, port, address))
+            && !carriers.contains(&value)
+        {
             carriers.push(value);
         }
     }
-    for (kind, port) in carriers {
+    for (kind, port, destination) in carriers {
         let protocol = match kind {
             TransportKind::TcpFallback | TransportKind::TlsLike => "tcp",
             _ => "udp",
@@ -84,8 +101,8 @@ fn guard_objects_with_controls(
             vec![
                 eq(meta("mark"), json!(51820)),
                 eq(
-                    payload(if endpoint.is_ipv6() { "ip6" } else { "ip" }, "daddr"),
-                    json!(endpoint.to_string()),
+                    payload(if destination.is_ipv6() { "ip6" } else { "ip" }, "daddr"),
+                    json!(destination.to_string()),
                 ),
                 eq(payload(protocol, "dport"), json!(port)),
             ],
@@ -93,11 +110,7 @@ fn guard_objects_with_controls(
         );
     }
     if let Some(identity) = &request.endpoint_identity {
-        if let Some(port) = identity
-            .descriptor
-            .endpoint_discovery_port
-            .or_else(|| identity.descriptor.tls_like.as_ref().map(|tls| tls.port))
-        {
+        if let Some(port) = identity.descriptor.discovery_port() {
             rule(
                 vec![
                     eq(meta("mark"), json!(51820)),
@@ -142,6 +155,7 @@ fn guard_objects_with_controls(
     // IPv6 link maintenance is necessary even when only the outer endpoint uses
     // IPv6. Restrict it to local discovery/router messages with the required hop limit.
     if endpoint.is_ipv6()
+        || request.cdn_address.is_some_and(|address| address.is_ipv6())
         || request.endpoint_dns_servers.iter().any(SocketAddr::is_ipv6)
         || controls.iter().any(SocketAddr::is_ipv6)
     {

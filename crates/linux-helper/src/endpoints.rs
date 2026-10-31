@@ -89,6 +89,24 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
             })
     }
 
+    /// HTTPS through a CDN connects to the CDN's address for the signed name, resolved
+    /// through the same scoped DNS sockets as endpoint names. A failed lookup keeps the
+    /// last address; a request without a CDN name keeps none.
+    pub(super) fn refresh_cdn_address(&self, request: &mut TunnelConnectRequest) {
+        let Some(host) = request.cdn_host() else {
+            request.cdn_address = None;
+            return;
+        };
+        if let Some(address) = self
+            .runner
+            .endpoint_addresses(host, &request.endpoint_dns_servers)
+            .into_iter()
+            .find(|address| !address.is_loopback())
+        {
+            request.cdn_address = Some(address);
+        }
+    }
+
     pub(super) fn resolve_endpoint_set(
         &self,
         request: &TunnelConnectRequest,
@@ -166,11 +184,15 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
         };
         if now.saturating_sub(monitor.checked_at) >= 60 || monitor.checked_at > now {
             monitor.checked_at = now;
-            if let Ok(Some(head)) = self.runner.endpoint_checkpoint(
-                &known,
-                &desired.request.private_key,
-                desired.endpoint,
-            ) {
+            // Discovery follows the current transport, so a session through a CDN never
+            // probes a VPS address that may be blocked or watched.
+            let source = current_request
+                .outer_address(desired.endpoint)
+                .unwrap_or(desired.endpoint);
+            if let Ok(Some(head)) =
+                self.runner
+                    .endpoint_checkpoint(&known, &desired.request.private_key, source)
+            {
                 let newer = sirinvpn_core::verify_endpoint_checkpoint(&known, &head).is_ok();
                 let current = sirinvpn_core::current_checkpoint_matches(&known, &head);
                 if newer || current {
@@ -276,6 +298,7 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
         } else {
             None
         };
+        self.refresh_cdn_address(&mut replacement.request);
         if validate_request(&replacement.request).is_err() {
             return Ok(None);
         }
@@ -520,6 +543,7 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
         if !fresh.is_empty() {
             replacement.resolved_endpoints = fresh;
         }
+        self.refresh_cdn_address(&mut replacement.request);
         if replacement.resolved_endpoints.len() > 1 {
             let index = replacement
                 .resolved_endpoints

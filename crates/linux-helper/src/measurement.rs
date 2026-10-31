@@ -136,6 +136,7 @@ pub(super) fn sample_candidate(
         .enable_all()
         .build()
         .ok()?;
+    let endpoint = request.outer_address(endpoint)?;
     let result = runtime.block_on(async {
         let server = SocketAddr::new(endpoint, request.endpoint_port);
         let (ready, received) = tokio::sync::oneshot::channel();

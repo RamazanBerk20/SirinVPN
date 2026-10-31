@@ -156,9 +156,15 @@ impl Controller {
             // Re-resolve only this session's configured VPN names. A DNS outage
             // retains the last authenticated candidates, never a fallback resolver.
             let request = self.saved.as_ref().expect("saved session").request.clone();
-            let fresh = self.resolve(&request).await?;
-            if !fresh.is_empty() {
-                self.saved.as_mut().expect("saved session").endpoints = fresh;
+            let (fresh, cdn_address) = self.resolve(&request).await?;
+            if !fresh.is_empty() || cdn_address.is_some() {
+                let saved = self.saved.as_mut().expect("saved session");
+                if !fresh.is_empty() {
+                    saved.endpoints = fresh;
+                }
+                if cdn_address.is_some() {
+                    saved.request.cdn_address = cdn_address;
+                }
                 self.persist()?;
             }
             self.retry_passes = self.retry_passes.saturating_add(1);
@@ -216,7 +222,11 @@ impl Controller {
             saved.request.clone()
         };
         request.endpoint_host = endpoint.host.clone();
-        let endpoint = SocketAddr::new(endpoint.address, request.endpoint_port);
+        // HTTPS through a CDN goes to the CDN's address; the firewall admits only that.
+        let address = request
+            .outer_address(endpoint.address)
+            .ok_or(io::ErrorKind::AddrNotAvailable)?;
+        let endpoint = SocketAddr::new(address, request.endpoint_port);
         let underlay = network::underlay(endpoint.ip(), None)?;
         self.close_guard()?;
         self.cleanup_routes()?;

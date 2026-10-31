@@ -113,9 +113,15 @@ pub async fn carrier(
     local: Option<SocketAddr>,
     timeout: u64,
 ) -> Result<Carrier> {
+    // HTTPS through a CDN connects to the CDN's address for the HTTPS name.
+    let host = selection
+        .https
+        .as_ref()
+        .filter(|https| https.cdn)
+        .map_or(&selection.network_endpoint.host, |https| &https.server_name);
     let address: IpAddr = runtime
         .platform
-        .resolve(&selection.network_endpoint.host)
+        .resolve(host)
         .context(ConnectionFailure(
             "The server endpoint could not be resolved on the underlying network.",
         ))?

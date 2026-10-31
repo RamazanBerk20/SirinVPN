@@ -85,6 +85,7 @@ fn new_servers_get_a_generated_certificate_that_survives_repair_https_changes_an
     capabilities.https = Some(sirinvpn_protocol::HttpsTransport {
         server_name: "vpn.example.org".into(),
         path: "/connect".into(),
+        cdn: false,
     });
     initialize(&capabilities);
     let https = load_configuration(&paths).unwrap();

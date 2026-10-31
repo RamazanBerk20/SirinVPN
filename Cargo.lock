@@ -4738,6 +4738,7 @@ dependencies = [
  "rand 0.8.7",
  "rcgen",
  "rustls",
+ "rustls-native-certs",
  "serde",
  "sha2",
  "sirinvpn-platform",

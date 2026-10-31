@@ -13,6 +13,7 @@ fn https_metadata_survives_fallback_and_restart_and_rejects_older_request_schema
     tls.https = Some(sirinvpn_protocol::HttpsTransport {
         server_name: "vpn.example.org".into(),
         path: "/connect".into(),
+        cdn: false,
     });
     let direct = selection(TransportKind::DirectUdp, 51_820, None, 1420);
     request.reconnect_candidates = policy_transport_candidates(&[direct, tls.clone()]);

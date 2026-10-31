@@ -260,6 +260,7 @@ pub(super) fn tunnel_request(
         endpoint_checkpoint: None,
         endpoint_publication_enabled: profile.role == ServerRole::Owner,
         endpoint_dns_servers: Vec::new(),
+        cdn_address: None,
         mtu_policy: Some(sirinvpn_protocol::MtuPolicy::Automatic),
         policy: Some(policy.unwrap_or_else(|| ConnectionPolicy::legacy(persistent_protection))),
         schema_version: if routing.mode

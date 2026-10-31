@@ -535,7 +535,7 @@ export interface SavedSshLogin {
   private_key_path: string | null;
 }
 
-export interface HttpsTransport { server_name: string; path: string }
+export interface HttpsTransport { server_name: string; path: string; cdn?: boolean }
 export interface TransportSetup {
   public_host: string | null;
   alternate_endpoint_hosts: string[];

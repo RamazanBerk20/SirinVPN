@@ -88,14 +88,14 @@ pub async fn discover_endpoint_checkpoint_at(
     socket_mark: Option<u32>,
 ) -> Result<Option<EndpointTransitionResponse>, EndpointTransitionError> {
     validate_endpoint_identity(known)?;
-    let Some(tls) = known.descriptor.tls_like.as_ref() else {
+    let (Some(tls), Some(port)) = (
+        known.descriptor.tls_like.as_ref(),
+        known.descriptor.discovery_port(),
+    ) else {
         return Ok(None);
     };
     let config = EndpointDiscoveryConfig {
-        server_address: std::net::SocketAddr::new(
-            address,
-            known.descriptor.endpoint_discovery_port.unwrap_or(tls.port),
-        ),
+        server_address: std::net::SocketAddr::new(address, port),
         server_name: tls.https.as_ref().map(|https| https.server_name.clone()),
         client_private_key: Zeroizing::new(
             decode_key(client_wireguard_private_key)
@@ -204,7 +204,8 @@ pub fn verify_endpoint_checkpoint(
 /// Best-effort discovery is allowed only while explicitly connecting or under an
 /// active automatic reconnect policy. Callers enforce that lifecycle boundary.
 /// DNS and network attempts have a single eight-second deadline and are bounded
-/// to the primary address and at most three explicitly configured alternatives.
+/// to the primary address, at most three explicitly configured alternatives and
+/// the CDN name, which reaches the current server when its address is blocked.
 pub async fn discover_endpoint_checkpoint(
     known: &EndpointIdentity,
     client_wireguard_private_key: &str,
@@ -234,8 +235,7 @@ pub async fn discover_endpoint_checkpoint(
     );
     let Some(port) = known
         .descriptor
-        .endpoint_discovery_port
-        .or_else(|| known.descriptor.tls_like.as_ref().map(|tls| tls.port))
+        .discovery_port()
         .or_else(|| known.descriptor.tcp_fallback.as_ref().map(|tcp| tcp.port))
     else {
         return Ok(None);
@@ -248,10 +248,17 @@ pub async fn discover_endpoint_checkpoint(
         .map(|https| https.server_name.clone());
     let discovery = async {
         let mut attempts = tokio::task::JoinSet::new();
-        for host in std::iter::once(&known.descriptor.endpoint.host)
-            .chain(&known.descriptor.alternate_endpoint_hosts)
+        for host in std::iter::once(known.descriptor.endpoint.host.as_str())
+            .chain(
+                known
+                    .descriptor
+                    .alternate_endpoint_hosts
+                    .iter()
+                    .map(String::as_str),
+            )
+            .chain(known.descriptor.cdn_host())
         {
-            let host = host.clone();
+            let host = host.to_owned();
             let server_name = server_name.clone();
             let private = private.clone();
             let known = known.clone();

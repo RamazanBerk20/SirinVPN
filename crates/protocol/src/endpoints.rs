@@ -29,6 +29,25 @@ pub struct EndpointDescriptor {
     pub tls_like: Option<TlsLikeEndpoint>,
 }
 
+impl EndpointDescriptor {
+    /// The HTTPS hostname devices reach through a CDN, when CDN mode is on.
+    pub fn cdn_host(&self) -> Option<&str> {
+        let https = self.tls_like.as_ref()?.https.as_ref()?;
+        https.cdn.then_some(https.server_name.as_str())
+    }
+
+    /// A CDN proxies only the HTTPS port, which also serves discovery; the retained
+    /// discovery port is for devices that still know only an older direct port.
+    pub fn discovery_port(&self) -> Option<u16> {
+        let tls = self.tls_like.as_ref()?;
+        Some(if self.cdn_host().is_some() {
+            tls.port
+        } else {
+            self.endpoint_discovery_port.unwrap_or(tls.port)
+        })
+    }
+}
+
 /// Immutable server pins plus the latest accepted public checkpoint. This is
 /// sufficient for a privileged reconnect service; it contains no device secret.
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]

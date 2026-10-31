@@ -5,7 +5,7 @@ impl Controller {
     pub(super) async fn connect(
         &mut self,
         owner: &str,
-        request: TunnelConnectRequest,
+        mut request: TunnelConnectRequest,
         switching: bool,
     ) -> Result<(), ServiceError> {
         network_plan::validate(&request)?;
@@ -25,7 +25,8 @@ impl Controller {
         {
             return Err(ServiceError::SessionChanged);
         }
-        let mut endpoints = self.resolve(&request).await.map_err(network_error)?;
+        let (mut endpoints, cdn_address) = self.resolve(&request).await.map_err(network_error)?;
+        request.cdn_address = cdn_address;
         if endpoints.is_empty()
             && !switching
             && let Some(saved) = &self.saved
@@ -69,10 +70,11 @@ impl Controller {
         Ok(())
     }
 
+    /// Endpoint addresses, plus the CDN address for HTTPS through a CDN.
     pub(super) async fn resolve(
         &mut self,
         request: &TunnelConnectRequest,
-    ) -> io::Result<Vec<ResolvedEndpoint>> {
+    ) -> io::Result<(Vec<ResolvedEndpoint>, Option<std::net::IpAddr>)> {
         let resolvers = network::resolvers(request).unwrap_or_default();
         let previous = self.control_plan();
         if previous.is_none() && !self.firewall.absent()? {
@@ -97,7 +99,12 @@ impl Controller {
         let result = tokio::select! {
             biased;
             _ = cancel.changed(epoch) => Err(io::ErrorKind::Interrupted.into()),
-            resolved = resolver::resolve(request, &resolvers) => Ok(resolved),
+            resolved = async {
+                tokio::join!(
+                    resolver::resolve(request, &resolvers),
+                    resolver::resolve_cdn(request, &resolvers)
+                )
+            } => Ok(resolved),
         };
         if let Some(previous) = previous {
             self.firewall.apply(previous)?;

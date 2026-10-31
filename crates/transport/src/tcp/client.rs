@@ -189,10 +189,16 @@ where
         connect_marked_protected(config.server_address, config.socket_mark, protect).await;
     let release_result = after_remote_socket().await;
     release_result?;
-    let connector = TlsConnector::from(Arc::new(tls_client_configuration(certificate_sha256)?));
     if config.https.as_ref().is_some_and(|https| !https.is_valid()) {
         return Err(RelayError::InvalidConfiguration);
     }
+    let connector = TlsConnector::from(Arc::new(
+        if config.https.as_ref().is_some_and(|https| https.cdn) {
+            tls::cdn_tls_configuration()?
+        } else {
+            tls_client_configuration(certificate_sha256)?
+        },
+    ));
     let (server_name, _) = tls_destination(
         config
             .https

@@ -236,6 +236,12 @@ pub struct TlsLikeEndpoint {
 pub struct HttpsTransport {
     pub server_name: String,
     pub path: String,
+    /// Devices reach `server_name` through a CDN: they resolve it outside the tunnel and
+    /// verify the CDN's WebPKI certificate instead of the origin pin. Noise IK still
+    /// authenticates the server end to end. Omitted when false, so older readers and
+    /// signatures over existing descriptors are unchanged.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub cdn: bool,
 }
 
 impl HttpsTransport {

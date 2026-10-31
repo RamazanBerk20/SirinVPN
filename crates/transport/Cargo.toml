@@ -22,6 +22,9 @@ tokio-rustls.workspace = true
 tokio-tungstenite.workspace = true
 zeroize.workspace = true
 
+[target.'cfg(not(target_os = "android"))'.dependencies]
+rustls-native-certs.workspace = true
+
 [target.'cfg(windows)'.dependencies]
 sirinvpn-platform = { path = "../platform" }
 

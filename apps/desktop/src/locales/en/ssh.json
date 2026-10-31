@@ -91,6 +91,8 @@
     "httpsNote": "Use a hostname you control. Leave both paths empty to use a generated, pinned certificate.",
     "httpsInfo": "The server keeps its own copy of your certificate. After renewing it, import it here so devices get the new pin. Some networks may still block HTTPS mode.",
     "httpsInfoLabel": "About HTTPS certificates",
+    "cdn": "Reach HTTPS through a CDN",
+    "cdnNote": "For when this VPS address is blocked. In your CDN, proxy the hostname to this VPS with WebSockets on and full, not strict, TLS. The CDN sees device addresses, timing and traffic volume, never what goes through the tunnel.",
     "certificate": "Certificate chain path (optional)",
     "certificatePlaceholder": "/etc/letsencrypt/live/vpn.example.org/fullchain.pem",
     "privateKey": "Certificate key path (optional)",

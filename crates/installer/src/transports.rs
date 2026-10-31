@@ -128,6 +128,9 @@ impl TransportSetup {
                 shell_quote(&https.server_name),
                 shell_quote(&https.path)
             ));
+            if https.cdn {
+                arguments.push_str(" --https-cdn");
+            }
         }
         if let (Some(certificate), Some(key)) =
             (&self.https_certificate_path, &self.https_private_key_path)

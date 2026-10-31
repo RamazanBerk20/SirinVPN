@@ -709,6 +709,9 @@ pub(super) struct TransportArguments {
     pub(super) https_server_name: Option<String>,
     #[arg(long, conflicts_with = "disable_https")]
     pub(super) https_path: Option<String>,
+    /// `true` when a CDN such as Cloudflare proxies the HTTPS hostname to this VPS.
+    #[arg(long, conflicts_with = "disable_https")]
+    pub(super) https_cdn: Option<bool>,
     /// Absolute PEM certificate-chain path already present on the VPS.
     #[arg(
         long,
@@ -740,6 +743,7 @@ impl TransportArguments {
             && self.tcp_tls_port.is_none()
             && self.https_server_name.is_none()
             && self.https_path.is_none()
+            && self.https_cdn.is_none()
             && self.https_certificate_path.is_none()
             && !self.disable_https
         {
@@ -767,13 +771,19 @@ impl TransportArguments {
             setup.https = Some(sirinvpn_protocol::HttpsTransport {
                 server_name: name.clone(),
                 path: self.https_path.clone().unwrap_or_else(|| "/connect".into()),
+                cdn: self.https_cdn.unwrap_or(false),
             });
-        } else if let Some(path) = &self.https_path {
-            setup
+        } else if self.https_path.is_some() || self.https_cdn.is_some() {
+            let https = setup
                 .https
                 .as_mut()
-                .context("specify --https-server-name to enable HTTPS first")?
-                .path = path.clone();
+                .context("specify --https-server-name to enable HTTPS first")?;
+            if let Some(path) = &self.https_path {
+                https.path = path.clone();
+            }
+            if let Some(cdn) = self.https_cdn {
+                https.cdn = cdn;
+            }
         }
         setup.https_certificate_path = self.https_certificate_path.clone();
         setup.https_private_key_path = self.https_private_key_path.clone();

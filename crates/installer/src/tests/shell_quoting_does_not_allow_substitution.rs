@@ -7,6 +7,27 @@ fn shell_quoting_does_not_allow_substitution() {
 }
 
 #[test]
+fn https_init_arguments_pass_cdn_mode_only_when_on() {
+    let mut setup = TransportSetup {
+        https: Some(sirinvpn_protocol::HttpsTransport {
+            server_name: "vpn.example.org".into(),
+            path: "/connect".into(),
+            cdn: false,
+        }),
+        ..Default::default()
+    };
+    let direct = setup.init_arguments();
+    assert!(direct.contains(" --https-server-name 'vpn.example.org' --https-path '/connect'"));
+    assert!(!direct.contains("--https-cdn"));
+    setup.https.as_mut().unwrap().cdn = true;
+    assert!(
+        setup
+            .init_arguments()
+            .contains(" --https-path '/connect' --https-cdn")
+    );
+}
+
+#[test]
 fn in_memory_ssh_keys_are_bounded_and_redacted() {
     let marker = "PRIVATE-KEY-SECRET-MARKER";
     let authentication = SshAuthentication::PrivateKeyMemory {

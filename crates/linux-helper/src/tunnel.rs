@@ -9,6 +9,9 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
         endpoint: IpAddr,
         persistent_protection: bool,
     ) -> Result<()> {
+        let endpoint = request
+            .outer_address(endpoint)
+            .ok_or_else(|| anyhow!("the CDN address for HTTPS did not resolve"))?;
         let wireguard_endpoint = match request.transport {
             TransportKind::DirectUdp => {
                 self.stop_transport();

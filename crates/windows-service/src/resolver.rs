@@ -83,6 +83,34 @@ pub(crate) async fn resolve(
     result
 }
 
+/// The CDN address for HTTPS through a CDN, IPv4 first, through the same resolvers.
+pub(crate) async fn resolve_cdn(
+    request: &TunnelConnectRequest,
+    servers: &[Resolver],
+) -> Option<IpAddr> {
+    let host = request.cdn_host()?;
+    let mut queries = tokio::task::JoinSet::new();
+    for server in servers.iter().copied().take(4) {
+        for kind in [RecordType::A, RecordType::AAAA] {
+            let host = host.to_owned();
+            queries.spawn(async move {
+                tokio::time::timeout(Duration::from_millis(1500), query(&host, server, kind))
+                    .await
+                    .ok()
+                    .and_then(Result::ok)
+                    .unwrap_or_default()
+            });
+        }
+    }
+    let mut found = Vec::new();
+    while let Some(Ok(addresses)) = queries.join_next().await {
+        found.extend(addresses);
+    }
+    found.retain(|ip| network_plan::usable_endpoint(*ip));
+    // IPv4 orders before IPv6.
+    found.into_iter().min()
+}
+
 async fn query(host: &str, resolver: Resolver, kind: RecordType) -> anyhow::Result<Vec<IpAddr>> {
     let mut request = Message::query();
     request.metadata.recursion_desired = true;

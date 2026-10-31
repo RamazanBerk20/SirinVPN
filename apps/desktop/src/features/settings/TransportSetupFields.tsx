@@ -11,6 +11,7 @@ export interface TransportDraft {
   obfuscated: string;
   tcpTls: string;
   https: boolean;
+  cdn: boolean;
   hostname: string;
   path: string;
   certificate: string;
@@ -25,6 +26,7 @@ export function newTransportDraft(profile?: ServerProfile): TransportDraft {
     obfuscated: String(profile?.obfuscated_udp?.port ?? 443),
     tcpTls: String(profile?.tcp_fallback?.port ?? 443),
     https: Boolean(profile?.tls_like?.https),
+    cdn: Boolean(profile?.tls_like?.https?.cdn),
     hostname: profile?.tls_like?.https?.server_name ?? "",
     path: profile?.tls_like?.https?.path ?? "/connect",
     certificate: "", privateKey: "",
@@ -50,7 +52,7 @@ export function transportSetupFromDraft(draft: TransportDraft, profile?: ServerP
     public_host: draft.publicHost.trim() || null,
     alternate_endpoint_hosts: draft.alternateHosts.split(/[\s,]+/).filter(Boolean).map((host) => host.toLowerCase()),
     wireguard_port: Number(draft.wireguard), obfuscated_udp_port: Number(draft.obfuscated), tcp_tls_port: Number(draft.tcpTls),
-    https: draft.https ? { server_name: draft.hostname.trim().toLowerCase(), path: draft.path } : null,
+    https: draft.https ? { server_name: draft.hostname.trim().toLowerCase(), path: draft.path, cdn: draft.cdn } : null,
     https_certificate_path: draft.https && draft.certificate ? draft.certificate : null,
     https_private_key_path: draft.https && draft.privateKey ? draft.privateKey : null,
     disable_https: Boolean(profile?.tls_like?.https) && !draft.https,
@@ -83,6 +85,8 @@ export function TransportSetupFields({ value, onChange, existing = false }: {
       </div>
       <p className="settings-note">{t("ssh.transport.httpsNote")}{httpsHint}</p>
       {httpsPanel}
+      <label className="checkbox-row"><input type="checkbox" checked={value.cdn} onChange={(event) => update("cdn", event.target.checked)} />{t("ssh.transport.cdn")}</label>
+      {value.cdn && <p className="settings-note">{t("ssh.transport.cdnNote")}</p>}
       <Field label={t("ssh.transport.certificate")}><input placeholder={t("ssh.transport.certificatePlaceholder")} value={value.certificate} onChange={(event) => update("certificate", event.target.value)} autoCapitalize="none" spellCheck={false} /></Field>
       <Field label={t("ssh.transport.privateKey")}><input placeholder={t("ssh.transport.privateKeyPlaceholder")} value={value.privateKey} onChange={(event) => update("privateKey", event.target.value)} autoCapitalize="none" spellCheck={false} /></Field>
     </>}

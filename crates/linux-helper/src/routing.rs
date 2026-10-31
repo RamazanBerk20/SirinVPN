@@ -166,12 +166,11 @@ pub(super) fn transient_ipv6_firewall(
             "    meta mark 0xca6c ip6 daddr {endpoint} {protocol} dport {} accept\n",
             request.endpoint_port
         ));
-        if let Some(port) = request.endpoint_identity.as_ref().and_then(|identity| {
-            identity
-                .descriptor
-                .endpoint_discovery_port
-                .or_else(|| identity.descriptor.tls_like.as_ref().map(|tls| tls.port))
-        }) {
+        if let Some(port) = request
+            .endpoint_identity
+            .as_ref()
+            .and_then(|identity| identity.descriptor.discovery_port())
+        {
             endpoint_rules.push_str(&format!(
                 "    meta mark 0xca6c ip6 daddr {endpoint} tcp dport {port} accept\n"
             ));

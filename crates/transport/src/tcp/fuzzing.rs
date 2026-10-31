@@ -87,6 +87,7 @@ pub fn connection(data: &[u8]) {
                     https: (mode & 3 == 2).then(|| sirinvpn_protocol::HttpsTransport {
                         server_name: SERVER_NAME.into(),
                         path: PATH.into(),
+                        cdn: false,
                     }),
                     discovery_only: mode & 3 == 3,
                 };

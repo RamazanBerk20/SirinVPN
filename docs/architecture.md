@@ -199,7 +199,11 @@ Servers installed earlier keep their derived Ed25519 certificate for `www.exampl
 because every existing pin depends on it; TLS 1.3 hides it from passive observers, but
 an active probe can read it. Turning HTTPS off later gives such a server a generated
 certificate too. Browser-identical fingerprints and universal censorship resistance
-are not claimed. [Signed endpoint
+are not claimed. Opt-in [CDN mode](https-transport-2026-09-06.md#cdn-mode) sends
+only the HTTPS transport through a CDN under the Owner's domain when the VPS
+address is blocked: the device resolves the signed hostname outside the tunnel,
+verifies the CDN's WebPKI certificate instead of the origin pin, and still
+authenticates the server with Noise IK. [Signed endpoint
 checkpoints](endpoints-and-outer-ipv6-2026-09-06.md) bind current ports, alternate
 addresses and public identities; catch-up and background discovery preserve the
 pinned server identity and current protection/routing intent.
@@ -229,7 +233,9 @@ Full protection blocks ordinary off-tunnel traffic. Selected protection guards
 its selected destinations and system DNS while leaving intentional bypass traffic
 available. Exceptions for outer transport, endpoint discovery and endpoint DNS
 are marked and bounded; IPv6 neighbor discovery and LAN exceptions have explicit
-scope. A failed apply or uncertain cleanup never becomes a healthy connection.
+scope. HTTPS through a CDN gets no wider exception: the helper resolves the signed
+hostname through the same scoped endpoint DNS, and only marked carrier sockets may
+reach that one CDN address, on the HTTPS port. A failed apply or uncertain cleanup never becomes a healthy connection.
 Windows uses native WFP for the analogous scope. Platform acceptance must verify actual packet behavior.
 
 The VPS owns separate filter/NAT tables and exact comment-tagged Docker

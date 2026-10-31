@@ -16,7 +16,8 @@ it("validates collisions, reserved ports, and matching certificate paths before 
   expect(transportDraftIsValid({ ...https, hostname: "203.0.113.8" })).toBe(false);
   expect(transportDraftIsValid({ ...https, privateKey: "" })).toBe(false);
   expect(transportDraftIsValid({ ...https, path: "/../private" })).toBe(false);
-  expect(transportSetupFromDraft(https)).toMatchObject({ https: { server_name: "vpn.example.org", path: "/connect" }, https_certificate_path: "/etc/cert.pem" });
+  expect(transportSetupFromDraft(https)).toMatchObject({ https: { server_name: "vpn.example.org", path: "/connect", cdn: false }, https_certificate_path: "/etc/cert.pem" });
+  expect(transportSetupFromDraft({ ...https, cdn: true }).https).toEqual({ server_name: "vpn.example.org", path: "/connect", cdn: true });
 });
 
 it("shows HTTPS fields only when enabled and accepts custom ports", () => {
@@ -30,5 +31,15 @@ it("shows HTTPS fields only when enabled and accepts custom ports", () => {
   fireEvent.click(screen.getByRole("checkbox", { name: t("ssh.transport.https") }));
   fireEvent.change(screen.getByRole("textbox", { name: t("ssh.transport.hostname") }), { target: { value: "vpn.example.org" } });
   fireEvent.change(screen.getByRole("textbox", { name: t("ssh.transport.tcpTlsPort") }), { target: { value: "4443" } });
+  expect(screen.queryByText(t("ssh.transport.cdnNote"))).toBeNull();
+  fireEvent.click(screen.getByRole("checkbox", { name: t("ssh.transport.cdn") }));
+  expect(screen.getByText(t("ssh.transport.cdnNote"))).toBeTruthy();
   expect(screen.queryByRole("status")).toBeNull();
+});
+
+it("keeps an existing server's CDN mode when repairing", () => {
+  const profile = { endpoint: { host: "203.0.113.8", wireguard_port: 51820 }, tls_like: { https: { server_name: "vpn.example.org", path: "/connect", cdn: true } } };
+  const draft = newTransportDraft(profile as never);
+  expect(draft.cdn).toBe(true);
+  expect(transportSetupFromDraft(draft).https?.cdn).toBe(true);
 });

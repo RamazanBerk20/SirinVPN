@@ -11,6 +11,7 @@ struct EndpointRunner {
     policy: PolicyRunner,
     response: Arc<Mutex<Option<EndpointTransitionResponse>>>,
     queries: Arc<AtomicUsize>,
+    sources: Arc<Mutex<Vec<IpAddr>>>,
 }
 impl CommandRunner for EndpointRunner {
     fn run(&self, p: &str, a: &[&str], input: Option<&[u8]>) -> Result<()> {
@@ -23,10 +24,120 @@ impl CommandRunner for EndpointRunner {
         &self,
         _: &EndpointIdentity,
         _: &str,
-        _: IpAddr,
+        source: IpAddr,
     ) -> Result<Option<EndpointTransitionResponse>> {
         self.queries.fetch_add(1, Ordering::SeqCst);
+        self.sources.lock().unwrap().push(source);
         Ok(self.response.lock().unwrap().clone())
+    }
+    fn endpoint_addresses(&self, host: &str, _: &[SocketAddr]) -> Vec<IpAddr> {
+        if host == CDN_HOST {
+            return vec![CDN_ADDRESS.parse().unwrap()];
+        }
+        host.parse().ok().into_iter().collect()
+    }
+}
+
+const CDN_HOST: &str = "cdn.example.org";
+const CDN_ADDRESS: &str = "192.0.2.80";
+
+/// HTTPS through a CDN first, then Direct UDP to the VPS.
+fn cdn_fixture() -> TunnelConnectRequest {
+    let (mut base, _) = fixture(true);
+    let descriptor = &mut base.endpoint_identity.as_mut().unwrap().descriptor;
+    descriptor.tls_like.as_mut().unwrap().https = Some(sirinvpn_protocol::HttpsTransport {
+        server_name: CDN_HOST.into(),
+        path: "/connect".into(),
+        cdn: true,
+    });
+    let selections = [TransportKind::TlsLike, TransportKind::DirectUdp].map(|kind| {
+        let mut selection = sirinvpn_transport::TransportEngine
+            .select_descriptor(descriptor, kind)
+            .unwrap();
+        selection.mtu = 1280;
+        selection
+    });
+    base.reconnect_candidates = policy_transport_candidates(&selections);
+    let mut request = request_for_reconnect_candidate(&base, &base.reconnect_candidates[0]);
+    request.reconnect_candidates = base.reconnect_candidates.clone();
+    request
+}
+
+#[test]
+fn https_through_a_cdn_reaches_only_its_resolved_address_and_discovery_follows_it() {
+    let request = cdn_fixture();
+    validate_request(&request).unwrap();
+    let cdn: IpAddr = CDN_ADDRESS.parse().unwrap();
+    for invalid in ["127.0.0.1", "0.0.0.0", "ff02::1"] {
+        let mut tampered = request.clone();
+        tampered.cdn_address = Some(invalid.parse().unwrap());
+        assert!(validate_request(&tampered).is_err(), "{invalid}");
+    }
+    // A CDN address needs a signed CDN name, and CDN mode needs signed endpoint state.
+    let (mut plain, _) = fixture(true);
+    plain.cdn_address = Some(cdn);
+    assert!(validate_request(&plain).is_err());
+    let mut unsigned = request.clone();
+    unsigned.reconnect_candidates.clear();
+    unsigned.endpoint_identity = None;
+    unsigned.schema_version = 9;
+    unsigned.https.as_mut().unwrap().cdn = false;
+    validate_request(&unsigned).unwrap();
+    unsigned.https.as_mut().unwrap().cdn = true;
+    assert!(validate_request(&unsigned).is_err());
+
+    let directory = tempfile::tempdir().unwrap();
+    let runner = EndpointRunner {
+        policy: runner(),
+        ..Default::default()
+    };
+    let helper = LinuxNetworkHelper::new(runner.clone(), directory.path().into());
+    // The helper resolves the signed name itself and replaces any app-supplied address.
+    let mut sent = request.clone();
+    sent.cdn_address = Some("192.0.2.66".parse().unwrap());
+    helper.connect(&sent).unwrap();
+    let mut desired = helper.read_persistent().unwrap();
+    assert_eq!(desired.request.cdn_address, Some(cdn));
+    let vps = desired.endpoint;
+    assert_ne!(vps, cdn);
+    let carrier = fs::read_to_string(helper.carrier_config_path(TransportKind::TlsLike)).unwrap();
+    assert!(carrier.contains(&format!("\"server_address\":\"{cdn}:443\"")));
+
+    // Only marked carrier sockets may reach the CDN, and only on the HTTPS port.
+    let guard = runner.policy.guard.lock().unwrap().clone().unwrap();
+    let cdn_rules = guard
+        .iter()
+        .map(|object| object.to_string())
+        .filter(|rule| rule.contains(&format!("\"{cdn}\"")))
+        .collect::<Vec<_>>();
+    assert_eq!(cdn_rules.len(), 1, "{cdn_rules:?}");
+    for expected in ["\"mark\"", "51820", "\"tcp\"", "\"dport\"", "443"] {
+        assert!(cdn_rules[0].contains(expected), "{}", cdn_rules[0]);
+    }
+    assert!(guard.iter().any(|object| {
+        let rule = object.to_string();
+        rule.contains(&format!("\"{vps}\"")) && rule.contains("51820") && rule.contains("\"udp\"")
+    }));
+    let mut unresolved = desired.request.clone();
+    unresolved.cdn_address = None;
+    assert!(
+        !serde_json::to_string(&guard_objects(&unresolved, vps))
+            .unwrap()
+            .contains(CDN_ADDRESS)
+    );
+    assert!(unresolved.outer_address(vps).is_none());
+
+    let mut state = helper.read_state().unwrap();
+    for (transport, source) in [
+        (TransportKind::TlsLike, cdn),
+        (TransportKind::DirectUdp, vps),
+    ] {
+        state.transport = transport;
+        state.endpoint_monitor = Some(crate::endpoints::EndpointMonitor::default());
+        helper
+            .inspect_endpoint_checkpoint(&mut desired, &mut state, true)
+            .unwrap();
+        assert_eq!(runner.sources.lock().unwrap().last(), Some(&source));
     }
 }
 

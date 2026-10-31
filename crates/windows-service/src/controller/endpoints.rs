@@ -27,11 +27,11 @@ impl Controller {
         &mut self,
         head: EndpointTransitionResponse,
     ) -> Result<(), ServiceError> {
-        let Some(request) = self.endpoint_replacement(head)? else {
+        let Some(mut request) = self.endpoint_replacement(head)? else {
             return Ok(());
         };
         let resolved = self
-            .endpoint_addresses(&request)
+            .endpoint_addresses(&mut request)
             .await
             .map_err(network_error)?;
         if resolved.is_empty() {
@@ -48,13 +48,13 @@ impl Controller {
         &mut self,
         head: EndpointTransitionResponse,
     ) -> io::Result<()> {
-        let request = match self.endpoint_replacement(head) {
+        let mut request = match self.endpoint_replacement(head) {
             Ok(Some(request)) => request,
             Ok(None) => return Ok(()),
             Err(ServiceError::NetworkOperation) => return Err(io::ErrorKind::Other.into()),
             Err(_) => return Ok(()),
         };
-        let resolved = self.endpoint_addresses(&request).await?;
+        let resolved = self.endpoint_addresses(&mut request).await?;
         if resolved.is_empty() {
             return Ok(());
         }
@@ -90,9 +90,10 @@ impl Controller {
 
     async fn endpoint_addresses(
         &mut self,
-        request: &TunnelConnectRequest,
+        request: &mut TunnelConnectRequest,
     ) -> io::Result<Vec<ResolvedEndpoint>> {
-        let mut resolved = self.resolve(request).await?;
+        let (mut resolved, cdn_address) = self.resolve(request).await?;
+        request.cdn_address = cdn_address;
         let saved = self.saved.as_ref().expect("saved session");
         let known = request
             .endpoint_identity
@@ -165,7 +166,7 @@ impl Controller {
         let mut source = request.clone();
         source.endpoint_host = previous.endpoint.host.clone();
         source.endpoint_identity = None;
-        let addresses = self.resolve(&source).await.map_err(network_error)?;
+        let (addresses, _) = self.resolve(&source).await.map_err(network_error)?;
         for address in addresses {
             let Some(config) = control_config(previous, &request.private_key, address.address)?
             else {
@@ -237,13 +238,19 @@ impl Controller {
             self.endpoints.checked = Some(now);
             let private = Zeroizing::new(saved.request.private_key.clone());
             let publish = saved.request.endpoint_publication_enabled;
+            // Discovery follows the current transport, so a session through a CDN never
+            // probes a VPS address that may be blocked or watched.
+            let through_cdn = self
+                .active
+                .as_ref()
+                .is_some_and(|active| active.request.https.as_ref().is_some_and(|https| https.cdn));
             let addresses = self
                 .active
                 .as_ref()
                 .map(|active| active.endpoint.ip())
                 .into_iter()
                 .chain(saved.endpoints.iter().map(|endpoint| endpoint.address))
-                .take(2)
+                .take(if through_cdn { 1 } else { 2 })
                 .collect::<Vec<_>>();
             for address in addresses {
                 let Some(config) = control_config(&known.descriptor, &private, address)
@@ -357,14 +364,11 @@ fn control_config(
     private: &str,
     address: std::net::IpAddr,
 ) -> Result<Option<EndpointDiscoveryConfig>, ServiceError> {
-    let Some(tls) = &descriptor.tls_like else {
+    let (Some(tls), Some(port)) = (&descriptor.tls_like, descriptor.discovery_port()) else {
         return Ok(None);
     };
     Ok(Some(EndpointDiscoveryConfig {
-        server_address: SocketAddr::new(
-            address,
-            descriptor.endpoint_discovery_port.unwrap_or(tls.port),
-        ),
+        server_address: SocketAddr::new(address, port),
         server_name: tls.https.as_ref().map(|https| https.server_name.clone()),
         client_private_key: Zeroizing::new(
             decode_key(private).map_err(|_| ServiceError::InvalidRequest)?,

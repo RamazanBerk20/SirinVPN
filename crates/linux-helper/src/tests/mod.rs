@@ -138,6 +138,7 @@ pub(crate) fn request() -> TunnelConnectRequest {
         endpoint_checkpoint: None,
         endpoint_publication_enabled: false,
         endpoint_dns_servers: Vec::new(),
+        cdn_address: None,
         mtu_policy: None,
         policy: None,
         schema_version: 1,
