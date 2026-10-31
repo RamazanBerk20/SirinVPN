@@ -16,4 +16,4 @@ shutil.copytree(out,dest,dirs_exist_ok=True)
 PY
 python3 scripts/prepare-android.py
 cd apps/desktop/src-tauri/gen/android
-./gradlew :app:assembleUniversalDebugAndroidTest -x rustBuildUniversalDebug --max-workers=2
+./gradlew :app:assembleUniversalDebugAndroidTest -x rustBuildUniversalDebug --max-workers=4

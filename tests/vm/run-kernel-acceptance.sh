@@ -5,6 +5,6 @@ set -eu
 project_root=$(CDPATH='' cd -- "$(dirname -- "$0")/../.." && pwd)
 cd "$project_root"
 exec systemd-run --user --scope --quiet \
-  -p MemoryHigh=3G -p MemoryMax=4G -p MemorySwapMax=0 \
-  -p CPUQuota=150% -p TasksMax=256 \
+  -p MemoryMax=8G -p MemorySwapMax=0 \
+  -p CPUQuota=400% -p TasksMax=512 \
   nice -n 10 python3 tests/vm/kernel_acceptance.py "$@"

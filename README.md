@@ -145,7 +145,7 @@ For development, install the Linux native dependencies listed in
 
 ```sh
 pnpm --dir apps/desktop install --frozen-lockfile
-CARGO_BUILD_JOBS=2 cargo build --workspace --locked
+CARGO_BUILD_JOBS=4 cargo build --workspace --locked
 pnpm --dir apps/desktop tauri dev
 ```
 

@@ -6,7 +6,7 @@ export ANDROID_HOME="${ANDROID_HOME:-$HOME/Android/Sdk}"
 export NDK_HOME="${NDK_HOME:-$ANDROID_HOME/ndk/30.0.16248370}"
 export RANLIB="$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ranlib"
 export RANLIB_aarch64_linux_android="$RANLIB" RANLIB_x86_64_linux_android="$RANLIB"
-export CARGO_BUILD_JOBS="${CARGO_BUILD_JOBS:-2}"
+export CARGO_BUILD_JOBS="${CARGO_BUILD_JOBS:-4}"
 cd "$ROOT"
 if [ ! -f apps/desktop/src-tauri/gen/android/app/build.gradle.kts ]; then
   pnpm --dir apps/desktop tauri android init --ci --skip-targets-install
@@ -26,4 +26,4 @@ if [ "$PROFILE" = debug ]; then set -- --debug --target "$@"; else set -- --targ
 pnpm --dir apps/desktop tauri android build --ci "$@" --apk --config src-tauri/tauri.android.conf.json
 apps/desktop/src-tauri/gen/android/gradlew -p apps/desktop/src-tauri/gen/android \
   -I "$ROOT/scripts/android-artifact-inputs.gradle" :app:sirinResolvedRuntimeInputs \
-  --offline --no-daemon --max-workers=2
+  --offline --no-daemon --max-workers=4

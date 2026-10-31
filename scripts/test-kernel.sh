@@ -11,13 +11,13 @@ if [ ! -r /dev/kvm ] || [ ! -w /dev/kvm ]; then
   exit 1
 fi
 mkdir -p "$output/input"
-docker build --memory 4g --memory-swap 4g --cpu-period 100000 --cpu-quota 150000 -f packaging/Dockerfile.linux -t sirinvpn-remediation-builder .
-docker build --memory 4g --memory-swap 4g --cpu-period 100000 --cpu-quota 150000 -f tests/vm/Dockerfile.kernel -t sirinvpn-kernel-runtime:acceptance .
+docker build --memory 8g --memory-swap 8g --cpu-period 100000 --cpu-quota 400000 -f packaging/Dockerfile.linux -t sirinvpn-remediation-builder .
+docker build --memory 8g --memory-swap 8g --cpu-period 100000 --cpu-quota 400000 -f tests/vm/Dockerfile.kernel -t sirinvpn-kernel-runtime:acceptance .
 docker save -o "$output/input/runtime.tar" sirinvpn-kernel-runtime:acceptance
-docker run --rm --cpus 1.5 --memory 4g --memory-swap 4g --pids-limit 256 \
+docker run --rm --cpus 4 --memory 8g --memory-swap 8g --pids-limit 512 \
   --user "$(id -u):$(id -g)" \
   --volume "$project_root:/workspace" --workdir /workspace \
-  --env CARGO_HOME=/workspace/.cache/kernel-cargo --env CARGO_BUILD_JOBS=2 \
+  --env CARGO_HOME=/workspace/.cache/kernel-cargo --env CARGO_BUILD_JOBS=4 \
   --env CARGO_TARGET_DIR=/workspace/target/kernel-acceptance \
   sirinvpn-remediation-builder sh -ec '
     cargo build --locked -p sirinvpn-linux-helper -p sirinvpn-server --bins

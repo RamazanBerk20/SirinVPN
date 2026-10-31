@@ -37,7 +37,7 @@ the keys agree.
 
 `run-installer-release-guards.sh` runs the installer release-staging guard in an
 ordinary container with no network, added capabilities or privileged mode. It
-caps compilation at 4 GiB and 1.5 CPU cores, then runs the root ownership checks
+caps compilation at 8 GiB and four CPU cores, then runs the root ownership checks
 at 1 GiB and one core. The test proves that changed artifact bytes or VPS
 receipt/signing-policy state cannot execute a candidate, and that replacing the
 SSH user's source after verification cannot replace root's private staged copy.

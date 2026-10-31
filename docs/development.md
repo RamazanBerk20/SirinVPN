@@ -67,17 +67,17 @@ only; it does not qualify the MSVC installer or Windows runtime.
 
 ## Resource limits
 
-Run one native/package build at a time. Build scripts default to two Cargo jobs
-and two Rust test threads; Vitest runs one file/worker at a time. Docker build
-containers cap CPU at 1.5 cores, RAM at 4 GiB with no additional swap, and processes
-at 256. They require no privileged mode, host networking or network capabilities.
+Run one native/package build at a time. Build scripts default to four Cargo jobs
+and four Rust test threads; Vitest runs four workers. Docker build
+containers cap CPU at four cores, RAM at 8 GiB with no additional swap, and processes
+at 512. They require no privileged mode, host networking or network capabilities.
 On this Linux development host, place host builds in a user scope as well:
 
 ```sh
-CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=2 \
+CARGO_BUILD_JOBS=4 RUST_TEST_THREADS=4 \
   systemd-run --user --scope --quiet \
-  -p MemoryHigh=3G -p MemoryMax=4G -p MemorySwapMax=0 \
-  -p CPUQuota=150% -p TasksMax=256 nice -n 10 ./scripts/test.sh
+  -p MemoryMax=8G -p MemorySwapMax=0 \
+  -p CPUQuota=400% -p TasksMax=512 nice -n 10 ./scripts/test.sh
 ```
 
 Container packaging can reuse a verified local image with

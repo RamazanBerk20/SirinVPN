@@ -8,8 +8,8 @@ and resource limits below. Run it after compilation with a fresh output path:
 
 ```sh
 systemd-run --user --scope --quiet \
-  -p MemoryHigh=3G -p MemoryMax=4G -p MemorySwapMax=0 \
-  -p CPUQuota=150% -p TasksMax=256 \
+  -p MemoryMax=8G -p MemorySwapMax=0 \
+  -p CPUQuota=400% -p TasksMax=512 \
   python3 tests/vm/startup_authorization.py \
     --base .cache/debian-13-genericcloud-amd64.qcow2 \
     --package target/release/bundle/deb/SirinVPN_0.1.0_amd64.deb \
@@ -56,7 +56,7 @@ runs the installer library's isolated root staging regression in the VPS guest.
 The executable must be built for a glibc version supported by that guest.
 
 Both guests, their control process and the local test endpoints share a limit
-of 4 GiB RAM, no swap and 150% CPU. Each guest has one virtual CPU. Run compilation
+of 8 GiB RAM, no swap and 400% CPU. Each guest has one virtual CPU. Run compilation
 and this lab sequentially. The launcher refuses to run as host root or without
 the resource limits. Host networking uses ordinary loopback sockets and QEMU
 user networking; there are no host tunnel devices, bridges, firewall changes or

@@ -5,11 +5,11 @@ set -eu
 project_root=$(CDPATH='' cd -- "$(dirname -- "$0")/../.." && pwd)
 docker image inspect sirinvpn-policy-test >/dev/null
 mkdir -p "$project_root/.cache/policy-container-target" "$project_root/.cache/check-logs"
-docker run --rm --network none --memory=4g --memory-swap=4g --cpus=1.5 --pids-limit=256 \
+docker run --rm --network none --memory=8g --memory-swap=8g --cpus=4 --pids-limit=512 \
   --user "$(id -u):$(id -g)" --volume "$project_root:/workspace" --workdir /workspace \
   --volume "$HOME/.cargo:/cargo" --env CARGO_HOME=/cargo \
   --env CARGO_TARGET_DIR=/workspace/.cache/policy-container-target \
-  --env CARGO_BUILD_JOBS=2 --env RUST_TEST_THREADS=2 \
+  --env CARGO_BUILD_JOBS=4 --env RUST_TEST_THREADS=4 \
   sirinvpn-policy-test cargo +1.97.1 test --offline --locked -p sirinvpn-installer \
   --lib --no-run --message-format=json \
   > "$project_root/.cache/check-logs/installer-release-guard-artifacts.json"

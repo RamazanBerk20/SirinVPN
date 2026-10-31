@@ -34,7 +34,7 @@ def main() -> int:
         parser.error("Pass --toolchain with a verified LLVM-MinGW installation")
     environment = os.environ.copy()
     environment["PATH"] = str(binaries) + os.pathsep + environment.get("PATH", "")
-    environment.setdefault("CARGO_BUILD_JOBS", "2")
+    environment.setdefault("CARGO_BUILD_JOBS", "4")
     environment["RUSTFLAGS"] = (environment.get("RUSTFLAGS", "") + " -C target-feature=+crt-static").strip()
     target = "x86_64-pc-windows-gnullvm"
     for name, binary in {

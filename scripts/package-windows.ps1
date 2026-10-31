@@ -77,7 +77,7 @@ if ((Get-FileHash -Algorithm SHA256 (Join-Path $SirinWindows "wireguard.dll")).H
 $SirinPreviousJobs = $env:CARGO_BUILD_JOBS
 $SirinPreviousRustFlags = $env:RUSTFLAGS
 $env:RUSTFLAGS = "$SirinPreviousRustFlags -C target-feature=+crt-static".Trim()
-if (-not $SirinPreviousJobs) { $env:CARGO_BUILD_JOBS = "2" }
+if (-not $SirinPreviousJobs) { $env:CARGO_BUILD_JOBS = "4" }
 Push-Location $SirinRoot
 try {
     Invoke-SirinCommand "rustup" @("target", "add", $SirinTarget)

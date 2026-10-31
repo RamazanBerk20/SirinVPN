@@ -12,7 +12,7 @@ import time
 import traceback
 import uuid
 
-from lab import Lab, ROOT, digest, free_port
+from lab import CPU_PERCENT, Lab, MEMORY_LIMIT, ROOT, digest, free_port
 
 
 FIXTURE = "/opt/sirin-acceptance.py"
@@ -47,8 +47,8 @@ class Acceptance:
         self.report = {
             "scope": "Packaged Linux CLI, Polkit helper and real WireGuard VPS in two disposable VMs",
             "host_root": False, "host_privileged_networking": False,
-            "limits": {"memory_bytes": 4 * 1024**3, "swap_bytes": 0,
-                       "cpu_percent": 150, "server_memory_mib": 1024,
+            "limits": {"memory_bytes": MEMORY_LIMIT, "swap_bytes": 0,
+                       "cpu_percent": CPU_PERCENT, "server_memory_mib": 1024,
                        "client_memory_mib": 1536},
             "package_sha256": digest(args.package), "base_image_sha256": digest(args.base),
             "vps_base_image_sha256": digest(args.vps_base or args.base),

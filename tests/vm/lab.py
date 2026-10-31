@@ -23,10 +23,11 @@ from guest_agent import GuestAgent
 
 
 ROOT = Path(__file__).resolve().parents[2]
-MEMORY_LIMIT = 4 * 1024**3
+MEMORY_LIMIT = 8 * 1024**3
+CPU_PERCENT = 400
 
 
-def require_host_limits(memory_limit: int = MEMORY_LIMIT) -> None:
+def require_host_limits() -> None:
     if os.geteuid() == 0:
         raise RuntimeError("Launch the VM lab as an ordinary host user")
     group = next(
@@ -39,9 +40,9 @@ def require_host_limits(memory_limit: int = MEMORY_LIMIT) -> None:
     memory = (directory / "memory.max").read_text().strip()
     swap = (directory / "memory.swap.max").read_text().strip()
     quota, period = (directory / "cpu.max").read_text().split()
-    if (memory == "max" or int(memory) > memory_limit or swap != "0"
-            or quota == "max" or int(quota) * 100 > int(period) * 150):
-        raise RuntimeError(f"Use the lab launcher: RAM <= {memory_limit // 1024**3} GiB, no swap, CPU <= 150%")
+    if (memory == "max" or int(memory) > MEMORY_LIMIT or swap != "0"
+            or quota == "max" or int(quota) * 100 > int(period) * CPU_PERCENT):
+        raise RuntimeError(f"Use the lab launcher: RAM <= {MEMORY_LIMIT // 1024**3} GiB, no swap, CPU <= {CPU_PERCENT}%")
 
 
 def digest(path: Path) -> str:

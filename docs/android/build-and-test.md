@@ -9,7 +9,7 @@ an existing device. Prefer the fresh-AVD harness:
 ```sh
 systemd-run --user --scope --quiet \
   -p MemoryMax=8G -p MemorySwapMax=0 \
-  -p CPUQuota=150% -p TasksMax=256 \
+  -p CPUQuota=400% -p TasksMax=512 \
   python3 scripts/test-android-emulator.py --api 29 \
     --output .cache/android-remediation-new \
     --apk apps/desktop/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk \
@@ -91,11 +91,11 @@ not installed at `.cache/android-tools/go/bin/go`.
 Build the two bundled VPS binaries before preparing the Android project:
 
 ```sh
-docker build --memory 4g --memory-swap 4g --cpu-period 100000 --cpu-quota 150000 \
+docker build --memory 8g --memory-swap 8g --cpu-period 100000 --cpu-quota 400000 \
   -f packaging/Dockerfile.server-payloads -t sirinvpn-server-payload-builder .
-docker run --rm --cpus=1.5 --memory=4g --memory-swap=4g --pids-limit=256 --user "$(id -u):$(id -g)" \
+docker run --rm --cpus=4 --memory=8g --memory-swap=8g --pids-limit=512 --user "$(id -u):$(id -g)" \
   -v "$PWD:/workspace" -w /workspace \
-  -e CARGO_HOME=/workspace/.cache/server-payload-cargo -e CARGO_BUILD_JOBS=2 \
+  -e CARGO_HOME=/workspace/.cache/server-payload-cargo -e CARGO_BUILD_JOBS=4 \
   -e CARGO_TARGET_DIR=/workspace/target/server-payloads \
   sirinvpn-server-payload-builder \
   cargo build --locked --release -p sirinvpn-server \
@@ -162,8 +162,8 @@ removes the VM and temporary credentials after its bounded lifetime.
 
 ```sh
 systemd-run --user --scope --quiet \
-  -p MemoryHigh=3G -p MemoryMax=4G -p MemorySwapMax=0 \
-  -p CPUQuota=150% -p TasksMax=256 \
+  -p MemoryMax=8G -p MemorySwapMax=0 \
+  -p CPUQuota=400% -p TasksMax=512 \
   python3 tests/android/vps_lab.py \
     --output .cache/android-vps-new --duration 5400
 
@@ -288,15 +288,15 @@ python3 scripts/android-parity.py --check
 pnpm --dir apps/desktop test
 pnpm --dir apps/desktop build
 cargo fmt --all -- --check
-CARGO_BUILD_JOBS=2 cargo clippy --workspace --all-targets -- -D warnings
-CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=2 cargo test --workspace
+CARGO_BUILD_JOBS=4 cargo clippy --workspace --all-targets -- -D warnings
+CARGO_BUILD_JOBS=4 RUST_TEST_THREADS=4 cargo test --workspace
 python3 scripts/check-maintainability.py
 python3 -m unittest discover -s tests/unit
 sh scripts/check-privacy.sh
 
 cd apps/desktop/src-tauri/gen/android
 ANDROID_HOME="$HOME/Android/Sdk" JAVA_HOME=/usr/lib/jvm/java-17-openjdk \
-  ./gradlew :app:lintUniversalDebug -x rustBuildUniversalDebug --max-workers=2
+  ./gradlew :app:lintUniversalDebug -x rustBuildUniversalDebug --max-workers=4
 ```
 
 See `progress.md` for observed results and failures. In particular, presentation

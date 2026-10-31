@@ -22,8 +22,7 @@ ROOT = Path(__file__).resolve().parents[1]
 def main():
     sys.path.insert(0, str(ROOT / "tests/vm"))
     from lab import require_host_limits
-    # API 36 peaked at the VM lab's 4 GiB cap with sustained reclaim.
-    require_host_limits(8 * 1024**3)
+    require_host_limits()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--apk", type=Path, required=True)

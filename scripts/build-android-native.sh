@@ -4,8 +4,8 @@ ROOT=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 ANDROID_HOME=${ANDROID_HOME:-$HOME/Android/Sdk}
 NDK_HOME=${NDK_HOME:-$ANDROID_HOME/ndk/30.0.16248370}
 GO_BIN=${GO_BIN:-$ROOT/.cache/android-tools/go/bin/go}
-export CARGO_BUILD_JOBS="${CARGO_BUILD_JOBS:-2}"
-export GOMAXPROCS="${GOMAXPROCS:-2}"
+export CARGO_BUILD_JOBS="${CARGO_BUILD_JOBS:-4}"
+export GOMAXPROCS="${GOMAXPROCS:-4}"
 TOOLCHAIN="$NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin"
 case "${1:-x86_64}" in
   x86_64) TARGET=x86_64-linux-android; ABI=x86_64; GOARCH=amd64 ;;

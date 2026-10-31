@@ -11,8 +11,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 120
     env:
-      CARGO_BUILD_JOBS: 2
-      GOMAXPROCS: 2
+      CARGO_BUILD_JOBS: 4
+      GOMAXPROCS: 4
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -46,23 +46,23 @@ jobs:
       - run: pnpm --dir apps/desktop install --frozen-lockfile
       - name: Build current VPS payloads
         run: |
-          docker build --memory 4g --memory-swap 4g --cpu-period 100000 --cpu-quota 150000 -f packaging/Dockerfile.server-payloads -t sirinvpn-server-payload-builder .
-          docker run --rm --cpus 1.5 --memory 4g --memory-swap 4g --pids-limit 256 --user "$(id -u):$(id -g)" --volume "$PWD:/workspace" --workdir /workspace --env CARGO_HOME=/workspace/.cache/payload-cargo --env CARGO_TARGET_DIR=/workspace/target/server-payloads --env CARGO_BUILD_JOBS=2 sirinvpn-server-payload-builder cargo build --locked --release -p sirinvpn-server --target x86_64-unknown-linux-gnu --target aarch64-unknown-linux-gnu
+          docker build --memory 8g --memory-swap 8g --cpu-period 100000 --cpu-quota 400000 -f packaging/Dockerfile.server-payloads -t sirinvpn-server-payload-builder .
+          docker run --rm --cpus 4 --memory 8g --memory-swap 8g --pids-limit 512 --user "$(id -u):$(id -g)" --volume "$PWD:/workspace" --workdir /workspace --env CARGO_HOME=/workspace/.cache/payload-cargo --env CARGO_TARGET_DIR=/workspace/target/server-payloads --env CARGO_BUILD_JOBS=4 sirinvpn-server-payload-builder cargo build --locked --release -p sirinvpn-server --target x86_64-unknown-linux-gnu --target aarch64-unknown-linux-gnu
       - name: Native Go regression checks
         run: |
-          python3 scripts/record-evidence.py --frozen-source --suite go-native --output target/remediation-evidence --timeout 600 -- systemd-run --user --scope --quiet -p MemoryHigh=3G -p MemoryMax=4G -p MemorySwapMax=0 -p CPUQuota=150% -p TasksMax=256 env "CGO_CFLAGS=-I$JAVA_HOME/include -I$JAVA_HOME/include/linux" "$GO_BIN" -C apps/desktop/android/wireguard test -mod=readonly -count=1 -v -p=2 ./...
+          python3 scripts/record-evidence.py --frozen-source --suite go-native --output target/remediation-evidence --timeout 600 -- systemd-run --user --scope --quiet -p MemoryMax=8G -p MemorySwapMax=0 -p CPUQuota=400% -p TasksMax=512 env "CGO_CFLAGS=-I$JAVA_HOME/include -I$JAVA_HOME/include/linux" "$GO_BIN" -C apps/desktop/android/wireguard test -mod=readonly -count=1 -v -p=4 ./...
       - name: Build development APKs
         run: |
-          python3 scripts/record-evidence.py --frozen-source --suite android-build --output target/remediation-evidence --timeout 2400 --artifact apps/desktop/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk --artifact apps/desktop/src-tauri/gen/android/app/build/outputs/apk/androidTest/universal/debug/app-universal-debug-androidTest.apk --signing-category development -- systemd-run --user --scope --quiet -p MemoryMax=8G -p MemorySwapMax=0 -p CPUQuota=150% -p TasksMax=256 sh -ec '
+          python3 scripts/record-evidence.py --frozen-source --suite android-build --output target/remediation-evidence --timeout 2400 --artifact apps/desktop/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk --artifact apps/desktop/src-tauri/gen/android/app/build/outputs/apk/androidTest/universal/debug/app-universal-debug-androidTest.apk --signing-category development -- systemd-run --user --scope --quiet -p MemoryMax=8G -p MemorySwapMax=0 -p CPUQuota=400% -p TasksMax=512 sh -ec '
             sh scripts/build-android.sh all debug
             sh scripts/build-android-catalog.sh
             python3 scripts/check-android-package.py apps/desktop/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk > target/remediation-evidence/android-package.json
-            apps/desktop/src-tauri/gen/android/gradlew -p apps/desktop/src-tauri/gen/android :app:testUniversalDebugUnitTest :app:lintUniversalDebug -x rustBuildUniversalDebug --no-daemon --max-workers=2
+            apps/desktop/src-tauri/gen/android/gradlew -p apps/desktop/src-tauri/gen/android :app:testUniversalDebugUnitTest :app:lintUniversalDebug -x rustBuildUniversalDebug --no-daemon --max-workers=4
           '
       - name: Fresh AVD native checks
         run: |
           for api in 29 36; do
-            python3 scripts/record-evidence.py --frozen-source --suite "android-emulator-$api" --output target/remediation-evidence --timeout 1400 --tested-artifact apps/desktop/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk --tested-artifact apps/desktop/src-tauri/gen/android/app/build/outputs/apk/androidTest/universal/debug/app-universal-debug-androidTest.apk --signing-category development -- systemd-run --user --scope --quiet -p MemoryMax=8G -p MemorySwapMax=0 -p CPUQuota=150% -p TasksMax=256 python3 scripts/test-android-emulator.py --api "$api" --output ".cache/android-emulator-$api" --apk apps/desktop/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk --tests apps/desktop/src-tauri/gen/android/app/build/outputs/apk/androidTest/universal/debug/app-universal-debug-androidTest.apk
+            python3 scripts/record-evidence.py --frozen-source --suite "android-emulator-$api" --output target/remediation-evidence --timeout 1400 --tested-artifact apps/desktop/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk --tested-artifact apps/desktop/src-tauri/gen/android/app/build/outputs/apk/androidTest/universal/debug/app-universal-debug-androidTest.apk --signing-category development -- systemd-run --user --scope --quiet -p MemoryMax=8G -p MemorySwapMax=0 -p CPUQuota=400% -p TasksMax=512 python3 scripts/test-android-emulator.py --api "$api" --output ".cache/android-emulator-$api" --apk apps/desktop/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk --tests apps/desktop/src-tauri/gen/android/app/build/outputs/apk/androidTest/universal/debug/app-universal-debug-androidTest.apk
           done
       - name: Preserve allowlisted summaries
         if: always()

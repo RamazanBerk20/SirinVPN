@@ -31,7 +31,7 @@ restore_generated_ownership() {
 }
 
 if [ "${SIRINVPN_REUSE_BUILD_IMAGE:-0}" != 1 ]; then
-  docker build --memory 4g --memory-swap 4g --cpu-period 100000 --cpu-quota 150000 \
+  docker build --memory 8g --memory-swap 8g --cpu-period 100000 --cpu-quota 400000 \
     -f "$PROJECT_ROOT/packaging/Dockerfile.linux" -t "$BUILD_IMAGE" "$PROJECT_ROOT"
 fi
 set --
@@ -45,12 +45,12 @@ if [ -n "${SIRINVPN_TAURI_CACHE:-}" ]; then
 fi
 trap restore_generated_ownership 0
 docker run --rm \
-  --cpus 1.5 --memory 4g --memory-swap 4g --pids-limit 256 \
+  --cpus 4 --memory 8g --memory-swap 8g --pids-limit 512 \
   --volume "$PROJECT_ROOT:/workspace" \
   --workdir /workspace \
   --env NO_STRIP=1 \
   --env "RUSTUP_TOOLCHAIN=$(sed -n 's/^channel = "\(.*\)"/\1/p' "$PROJECT_ROOT/rust-toolchain.toml")" \
-  --env CARGO_BUILD_JOBS=2 --env RUST_TEST_THREADS=2 \
+  --env CARGO_BUILD_JOBS=4 --env RUST_TEST_THREADS=4 \
   --env "SIRINVPN_DEPENDENCIES_READY=${SIRINVPN_DEPENDENCIES_READY:-0}" \
   "$@" \
   "$BUILD_IMAGE" \

@@ -11,7 +11,7 @@ import subprocess
 import tarfile
 import time
 
-from lab import Lab, ROOT, digest
+from lab import CPU_PERCENT, Lab, MEMORY_LIMIT, ROOT, digest
 
 
 EXPECTED = {"sirinvpn_linux_helper", "sirinvpn_installer", "sirinvpn_server"}
@@ -123,7 +123,7 @@ def run(arguments) -> int:
     report = {
         "scope": "Debian 13 guest kernel; each check in a fresh network-none guest container",
         "host_privileged_networking": False, "host_root": False,
-        "limits": {"host_memory_bytes": 4 * 1024**3, "host_cpu_percent": 150,
+        "limits": {"host_memory_bytes": MEMORY_LIMIT, "host_cpu_percent": CPU_PERCENT,
                    "guest_memory_mib": 2048, "swap_bytes": 0, "test_threads": 1},
         "base_image_sha256": digest(arguments.base),
         "runtime_image_archive_sha256": digest(arguments.image),

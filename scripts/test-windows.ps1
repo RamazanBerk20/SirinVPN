@@ -6,8 +6,8 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 if ($env:OS -ne "Windows_NT") { throw "Native Windows is required; cross compilation does not qualify." }
-$env:CARGO_BUILD_JOBS = "2"
-$env:RUST_TEST_THREADS = "2"
+$env:CARGO_BUILD_JOBS = "4"
+$env:RUST_TEST_THREADS = "4"
 function Invoke-SirinCheck([string]$Program, [string[]]$Arguments) {
     # A pipeline also waits for the GUI-subsystem service executable, so its
     # exit code cannot be confused with that of the previous native command.

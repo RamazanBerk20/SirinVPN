@@ -53,9 +53,7 @@ if 'activateDependencyLocking()' not in text:
     gradle.write_text(text)
 properties = project / 'gradle.properties'
 settings = properties.read_text().rstrip() + '\n'
-if 'org.gradle.workers.max=' not in settings:
-    settings += 'org.gradle.workers.max=2\n'
-for key, value in [('org.gradle.daemon', 'false'), ('kotlin.compiler.execution.strategy', 'in-process')]:
+for key, value in [('org.gradle.workers.max', '4'), ('org.gradle.daemon', 'false'), ('kotlin.compiler.execution.strategy', 'in-process')]:
     settings = re.sub(rf'(?m)^{re.escape(key)}=.*\n?', '', settings)
     settings += f'{key}={value}\n'
 properties.write_text(settings)

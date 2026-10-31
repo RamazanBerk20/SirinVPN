@@ -3,16 +3,16 @@
 set -eu
 root=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 cd "$root"
-docker build --memory 4g --memory-swap 4g --cpu-period 100000 --cpu-quota 150000 \
+docker build --memory 8g --memory-swap 8g --cpu-period 100000 --cpu-quota 400000 \
   -f packaging/Dockerfile.linux -t sirinvpn-linux-builder .
-docker build --memory 4g --memory-swap 4g --cpu-period 100000 --cpu-quota 150000 \
+docker build --memory 8g --memory-swap 8g --cpu-period 100000 --cpu-quota 400000 \
   -t sirinvpn-keyring-fixture - <<'DOCKERFILE'
 FROM sirinvpn-linux-builder
 RUN apt-get update && apt-get install -y --no-install-recommends dbus gnome-keyring && rm -rf /var/lib/apt/lists/*
 DOCKERFILE
-docker run --rm --cpus 1.5 --memory 4g --memory-swap 4g --pids-limit 256 \
+docker run --rm --cpus 4 --memory 8g --memory-swap 8g --pids-limit 512 \
   --user "$(id -u):$(id -g)" --volume "$root:/workspace" --workdir /workspace \
-  --env CARGO_HOME=/workspace/.cache/keyring-cargo --env CARGO_BUILD_JOBS=2 \
+  --env CARGO_HOME=/workspace/.cache/keyring-cargo --env CARGO_BUILD_JOBS=4 \
   --env CARGO_TARGET_DIR=/workspace/.cache/policy-container-target \
   sirinvpn-keyring-fixture cargo test --locked -p sirinvpn-core --lib --no-run --message-format=json \
   > .cache/keyring-artifacts.json

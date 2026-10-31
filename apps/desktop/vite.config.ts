@@ -13,7 +13,6 @@ export default defineConfig({
   envPrefix: ["VITE_", "TAURI_"],
   test: {
     environment: "jsdom",
-    maxWorkers: 1,
-    fileParallelism: false,
+    maxWorkers: 4,
   },
 });
