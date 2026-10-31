@@ -365,11 +365,7 @@ fn control_config(
             address,
             descriptor.endpoint_discovery_port.unwrap_or(tls.port),
         ),
-        server_name: tls
-            .https
-            .as_ref()
-            .map_or("www.example.com", |https| &https.server_name)
-            .to_owned(),
+        server_name: tls.https.as_ref().map(|https| https.server_name.clone()),
         client_private_key: Zeroizing::new(
             decode_key(private).map_err(|_| ServiceError::InvalidRequest)?,
         ),

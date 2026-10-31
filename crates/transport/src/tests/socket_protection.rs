@@ -71,7 +71,7 @@ async fn refused_carrier_socket_protection_sends_no_udp_tcp_or_tls_traffic() {
     );
     let discovery = || EndpointDiscoveryConfig {
         server_address: tcp.local_addr().unwrap(),
-        server_name: "vpn.example.com".into(),
+        server_name: Some("vpn.example.com".into()),
         client_private_key: zeroize::Zeroizing::new([7u8; 32]),
         server_public_key: [9u8; 32],
         socket_mark: None,

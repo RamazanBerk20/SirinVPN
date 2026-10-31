@@ -6,6 +6,8 @@ use std::sync::atomic::{AtomicBool, Ordering};
 
 use tokio::sync::oneshot;
 
+const TLS_LIKE_SERVER_NAME: &str = "www.example.com";
+
 fn keypair() -> snow::Keypair {
     let parameters: NoiseParams = NOISE_PATTERN.parse().unwrap();
     Builder::new(parameters).generate_keypair().unwrap()

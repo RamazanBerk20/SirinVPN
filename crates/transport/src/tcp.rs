@@ -55,7 +55,6 @@ use tls::tls_client_configuration;
 const NOISE_PATTERN: &str = "Noise_IK_25519_ChaChaPoly_SHA256";
 const TCP_NOISE_PROLOGUE: &[u8] = b"SirinVPN authenticated TCP fallback v1";
 const TLS_LIKE_NOISE_PROLOGUE: &[u8] = b"SirinVPN authenticated TLS-like transport v1";
-const TLS_LIKE_SERVER_NAME: &str = "www.example.com";
 const TLS_HANDSHAKE_RECORD: u8 = 0x16;
 const HANDSHAKE_MIN_LENGTH: usize = 144;
 const HANDSHAKE_MAX_LENGTH: usize = 512;
@@ -68,6 +67,27 @@ const CONNECT_TIMEOUT: Duration = Duration::from_secs(5);
 const CONNECTION_IDLE_TIMEOUT: Duration = Duration::from_secs(180);
 const MAX_SERVER_CONNECTIONS: usize = 1_024;
 const MAX_CONNECTIONS_PER_CLIENT: usize = 4;
+
+/// Without an HTTPS name, connect like any client that reaches a bare address: no SNI,
+/// and the address as the HTTP host. A fixed decoy name would be one rule to block.
+fn tls_destination(
+    name: Option<&str>,
+    address: SocketAddr,
+) -> Result<(ServerName<'static>, String), RelayError> {
+    match name {
+        Some(name) => Ok((
+            ServerName::try_from(name.to_owned()).map_err(|_| RelayError::InvalidConfiguration)?,
+            name.to_owned(),
+        )),
+        None => Ok((
+            ServerName::IpAddress(address.ip().into()),
+            match address.ip() {
+                std::net::IpAddr::V6(ip) => format!("[{ip}]"),
+                ip => ip.to_string(),
+            },
+        )),
+    }
+}
 
 type TlsLikeClientMaterial = (Zeroizing<[u8; 32]>, [u8; 32], [u8; 32]);
 

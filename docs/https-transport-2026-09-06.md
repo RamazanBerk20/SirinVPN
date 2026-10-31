@@ -23,9 +23,11 @@ through the guarded update flow. `--disable-https` restores legacy TLS framing.
 The HTTPS exchange uses a standard HTTP/1.1 WebSocket upgrade and masked client
 frames. A Noise IK message in the Authorization header authenticates the device
 before the server sends 101. The Noise prologue separates this exchange from raw
-TCP and legacy TLS. Unknown or replayed identities receive the same 404 response
-as an unknown path. Ordinary GET/HEAD requests to `/` receive a small static web
-page. The server does not proxy requests to an external website or resolver.
+TCP and legacy TLS. Ordinary requests, unknown paths and unknown or replayed
+identities all receive nginx's stock 404 page, and a malformed request its stock
+400 page, with `Server: nginx` and a current `Date`. A probe sees an ordinary web
+server rather than a page only SirinVPN serves. The server does not proxy
+requests to an external website or resolver.
 
 Headers are limited to 8 KiB and 32 fields, with a three-second read deadline.
 WebSocket frames/messages, write buffers and stream buffers are bounded. Existing

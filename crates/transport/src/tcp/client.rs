@@ -193,14 +193,13 @@ where
     if config.https.as_ref().is_some_and(|https| !https.is_valid()) {
         return Err(RelayError::InvalidConfiguration);
     }
-    let server_name = ServerName::try_from(
+    let (server_name, _) = tls_destination(
         config
             .https
             .as_ref()
-            .map_or(TLS_LIKE_SERVER_NAME, |https| https.server_name.as_str())
-            .to_owned(),
-    )
-    .map_err(|_| RelayError::InvalidConfiguration)?;
+            .map(|https| https.server_name.as_str()),
+        config.server_address,
+    )?;
     let tls_stream = timeout(
         HANDSHAKE_TIMEOUT,
         connector.connect(server_name, stream_result?),

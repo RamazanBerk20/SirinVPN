@@ -10,7 +10,8 @@ const MAX_RESPONSE: usize = MAX_CHECKPOINT + 128;
 
 pub struct EndpointDiscoveryConfig {
     pub server_address: SocketAddr,
-    pub server_name: String,
+    /// The HTTPS name; `None` connects by address without a TLS name.
+    pub server_name: Option<String>,
     pub client_private_key: Zeroizing<[u8; 32]>,
     pub server_public_key: [u8; 32],
     pub socket_mark: Option<u32>,
@@ -36,8 +37,7 @@ where
         let stream =
             connect_marked_protected(config.server_address, config.socket_mark, protect).await?;
         let connector = TlsConnector::from(Arc::new(tls::noise_discovery_tls_configuration()?));
-        let name = ServerName::try_from(config.server_name.clone())
-            .map_err(|_| RelayError::InvalidConfiguration)?;
+        let (name, host) = tls_destination(config.server_name.as_deref(), config.server_address)?;
         let stream = connector
             .connect(name, stream)
             .await
@@ -52,7 +52,7 @@ where
         let length = handshake.write_message(&random_bytes(96), &mut message)?;
         let request = format!(
             "GET / HTTP/1.1\r\nHost: {}\r\nAuthorization: Bearer {}\r\nConnection: close\r\n\r\n",
-            config.server_name,
+            host,
             URL_SAFE_NO_PAD.encode(&message[..length])
         );
         stream.write_all(request.as_bytes()).await?;

@@ -96,11 +96,7 @@ pub async fn discover_endpoint_checkpoint_at(
             address,
             known.descriptor.endpoint_discovery_port.unwrap_or(tls.port),
         ),
-        server_name: tls
-            .https
-            .as_ref()
-            .map_or("www.example.com", |https| &https.server_name)
-            .to_owned(),
+        server_name: tls.https.as_ref().map(|https| https.server_name.clone()),
         client_private_key: Zeroizing::new(
             decode_key(client_wireguard_private_key)
                 .map_err(|_| EndpointTransitionError::InvalidCode)?,
@@ -162,11 +158,7 @@ pub async fn offer_endpoint_checkpoint_at(
             source,
             previous.endpoint_discovery_port.unwrap_or(tls.port),
         ),
-        server_name: tls
-            .https
-            .as_ref()
-            .map_or("www.example.com", |https| https.server_name.as_str())
-            .to_owned(),
+        server_name: tls.https.as_ref().map(|https| https.server_name.clone()),
         client_private_key: Zeroizing::new(
             decode_key(client_wireguard_private_key)
                 .map_err(|_| EndpointTransitionError::InvalidCode)?,
@@ -253,8 +245,7 @@ pub async fn discover_endpoint_checkpoint(
         .tls_like
         .as_ref()
         .and_then(|tls| tls.https.as_ref())
-        .map_or("www.example.com", |https| https.server_name.as_str())
-        .to_owned();
+        .map(|https| https.server_name.clone());
     let discovery = async {
         let mut attempts = tokio::task::JoinSet::new();
         for host in std::iter::once(&known.descriptor.endpoint.host)

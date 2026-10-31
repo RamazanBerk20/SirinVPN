@@ -187,9 +187,12 @@ physical carrier sockets through their platform boundaries.
 
 Pinned TLS supports legacy framing and [HTTPS WebSocket
 transport](https-transport-2026-09-06.md). HTTPS authenticates Noise before the 101
-upgrade, masks client frames and serves bounded static cover responses to ordinary
-web requests. A generated or explicitly imported matching certificate is pinned;
-renewal cannot silently change that pin. Browser-identical fingerprints and
+upgrade, masks client frames and answers ordinary web requests with nginx's stock
+404/400 pages. A generated or explicitly imported matching certificate is pinned;
+renewal cannot silently change that pin. Without an HTTPS name, clients connect by
+address and send no TLS name (SNI), so there is no fixed name to match. The
+generated certificate keeps its original name, because every existing pin depends
+on it; TLS 1.3 hides it from passive observers, but an active probe can read it. Browser-identical fingerprints and
 universal censorship resistance are not claimed. [Signed endpoint
 checkpoints](endpoints-and-outer-ipv6-2026-09-06.md) bind current ports, alternate
 addresses and public identities; catch-up and background discovery preserve the

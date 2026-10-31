@@ -134,6 +134,7 @@ const MAX_BACKUP_STATE_FILE_BYTES: u64 = 64 * 1024;
 const MAX_BACKUP_AUTHORIZATION_BYTES: u64 = 1024 * 1024;
 pub const MAX_SERVER_BACKUP_SNAPSHOT_BYTES: usize = 2 * 1024 * 1024;
 const TLS_LIKE_CERTIFICATE_KEY_CONTEXT: &[u8] = b"SirinVPN TLS-like certificate key v1";
+// Clients no longer send it; it stays in the derived certificate because every pin depends on it.
 const TLS_LIKE_SERVER_NAME: &str = "www.example.com";
 const OPERATIONAL_CONFIGURATION_SCHEMA_VERSION: u16 = 1;
 const MAX_OPERATIONAL_CONFIGURATION_BYTES: u64 = 4 * 1024;

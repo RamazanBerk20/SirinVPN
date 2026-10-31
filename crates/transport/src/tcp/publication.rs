@@ -28,12 +28,12 @@ where
     timeout(Duration::from_secs(6), async {
         let stream = connect_marked_protected(config.server_address, config.socket_mark, protect).await?;
         let connector = TlsConnector::from(Arc::new(tls::noise_discovery_tls_configuration()?));
-        let name = ServerName::try_from(config.server_name.clone()).map_err(|_| RelayError::InvalidConfiguration)?;
+        let (name, host) = tls_destination(config.server_name.as_deref(), config.server_address)?;
         let mut stream = connector.connect(name, stream).await.map_err(|_| RelayError::HandshakeFailed)?;
         let mut handshake = initiator_handshake(&config.client_private_key, &config.server_public_key, PROLOGUE)?;
         let mut message = vec![0_u8; MAX_MESSAGE];
         let length = handshake.write_message(checkpoint, &mut message)?;
-        let header = format!("POST / HTTP/1.1\r\nHost: {}\r\nContent-Type: application/octet-stream\r\nContent-Length: {length}\r\nConnection: close\r\n\r\n", config.server_name);
+        let header = format!("POST / HTTP/1.1\r\nHost: {}\r\nContent-Type: application/octet-stream\r\nContent-Length: {length}\r\nConnection: close\r\n\r\n", host);
         stream.write_all(header.as_bytes()).await?;
         stream.write_all(&message[..length]).await?;
         stream.flush().await?;

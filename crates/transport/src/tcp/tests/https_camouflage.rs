@@ -73,7 +73,7 @@ async fn https_serves_cover_authenticates_before_upgrade_and_rejects_replay_and_
     ));
     tokio::time::sleep(Duration::from_millis(20)).await;
     for (path, status) in [
-        ("/", "200 OK"),
+        ("/", "404 Not Found"),
         ("/connect", "404 Not Found"),
         ("/anything", "404 Not Found"),
     ] {
@@ -87,9 +87,14 @@ async fn https_serves_cover_authenticates_before_upgrade_and_rejects_replay_and_
         let mut response = Vec::new();
         stream.read_to_end(&mut response).await.unwrap();
         let response = String::from_utf8(response).unwrap();
-        assert!(response.starts_with(&format!("HTTP/1.1 {status}\r\n")));
+        assert!(response.starts_with(&format!("HTTP/1.1 {status}\r\nServer: nginx\r\n")));
         assert!(!response.contains("SirinVPN") && !response.contains("101 Switching"));
     }
+    let mut stream = tls_stream(address, &fingerprint).await;
+    stream.write_all(b"GET / HTTP/2.0\r\n\r\n").await.unwrap();
+    let mut response = Vec::new();
+    stream.read_to_end(&mut response).await.unwrap();
+    assert!(response.starts_with(b"HTTP/1.1 400 Bad Request\r\nServer: nginx\r\n"));
     let unknown = authenticated_request(port, &stranger, &server);
     let error = tokio_tungstenite::client_async(unknown, tls_stream(address, &fingerprint).await)
         .await
@@ -252,4 +257,43 @@ async fn https_crosses_an_edge_that_rejects_raw_tcp_and_requires_the_configured_
     client_task.abort();
     edge_task.abort();
     server_task.abort();
+}
+
+#[tokio::test]
+async fn tls_like_client_without_https_sends_no_server_name() {
+    let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let server_address = listener.local_addr().unwrap();
+    let inspector = tokio::spawn(async move {
+        let (mut input, _) = listener.accept().await.unwrap();
+        let mut hello = vec![0_u8; 5];
+        input.read_exact(&mut hello).await.unwrap();
+        hello.resize(5 + usize::from(u16::from_be_bytes([hello[3], hello[4]])), 0);
+        input.read_exact(&mut hello[5..]).await.unwrap();
+        let mut acceptor = rustls::server::Acceptor::default();
+        acceptor
+            .read_tls(&mut std::io::Cursor::new(&hello))
+            .unwrap();
+        let accepted = acceptor.accept().unwrap().unwrap();
+        accepted.client_hello().server_name().map(str::to_owned)
+    });
+    let server = keypair();
+    let client = keypair();
+    let local = UdpSocket::bind("127.0.0.1:0").await.unwrap();
+    let local_address = local.local_addr().unwrap();
+    drop(local);
+    let result = run_tls_like_client_relay(
+        TlsLikeClientRelayConfig {
+            local_listen: local_address,
+            server_address,
+            socket_mark: None,
+            client_private_key: STANDARD.encode(client.private),
+            server_public_key: STANDARD.encode(server.public),
+            https: None,
+            server_certificate_sha256: STANDARD.encode([7_u8; 32]),
+        },
+        || panic!("an inspected handshake must not become ready"),
+    )
+    .await;
+    assert!(result.is_err());
+    assert_eq!(inspector.await.unwrap(), None);
 }

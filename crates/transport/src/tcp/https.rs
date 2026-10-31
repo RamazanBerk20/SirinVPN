@@ -14,7 +14,6 @@ use tokio_tungstenite::{
 
 const PROLOGUE: &[u8] = b"SirinVPN HTTPS WebSocket transport v1";
 const MAX_HTTP_HEADER: usize = 8_192;
-const COVER: &str = "<!doctype html><html lang=\"en\"><meta charset=\"utf-8\"><title>Welcome</title><h1>Welcome</h1><p>The service is online.</p></html>\n";
 
 fn websocket_configuration() -> WebSocketConfig {
     WebSocketConfig::default()
@@ -116,10 +115,9 @@ where
     let mut headers = [httparse::EMPTY_HEADER; 32];
     let mut request = httparse::Request::new(&mut headers);
     if !matches!(request.parse(&header), Ok(httparse::Status::Complete(_))) {
-        return cover_response(&mut stream, 404, false).await;
+        return cover_response(&mut stream, 400, false).await;
     }
     let head_only = request.method == Some("HEAD");
-    let root = matches!(request.method, Some("GET" | "HEAD")) && request.path == Some("/");
     if request.method == Some("GET")
         && request.path == Some("/")
         && super::discovery::serve(
@@ -149,10 +147,10 @@ where
         return Ok(());
     }
     if discovery_only {
-        return cover_response(&mut stream, if root { 200 } else { 404 }, head_only).await;
+        return cover_response(&mut stream, 404, head_only).await;
     }
     let Some(https) = https else {
-        return cover_response(&mut stream, if root { 200 } else { 404 }, head_only).await;
+        return cover_response(&mut stream, 404, head_only).await;
     };
     let authority = one_header(request.headers, "host");
     let host_valid = authority.is_some_and(|host| {
@@ -190,7 +188,7 @@ where
         None
     };
     let Some((noise, client_static, response)) = authenticated else {
-        return cover_response(&mut stream, if root { 200 } else { 404 }, head_only).await;
+        return cover_response(&mut stream, 404, head_only).await;
     };
     let Some(_client_permit) = client_connections.acquire(client_static) else {
         return cover_response(&mut stream, 404, head_only).await;
@@ -242,20 +240,26 @@ pub(super) async fn read_header<S: AsyncRead + Unpin>(
     Err(RelayError::HandshakeFailed)
 }
 
+/// Unauthenticated requests get nginx's stock error page, so a probe sees an ordinary web
+/// server rather than a page only SirinVPN serves.
 async fn cover_response<S: AsyncWrite + Unpin>(
     stream: &mut S,
     code: u16,
     head_only: bool,
 ) -> Result<(), RelayError> {
-    let (reason, body) = if code == 200 {
-        ("OK", COVER)
+    let reason = if code == 400 {
+        "Bad Request"
     } else {
-        ("Not Found", "Not found.\n")
+        "Not Found"
     };
+    let body = format!(
+        "<html>\r\n<head><title>{code} {reason}</title></head>\r\n<body>\r\n<center><h1>{code} {reason}</h1></center>\r\n<hr><center>nginx</center>\r\n</body>\r\n</html>\r\n"
+    );
     let response = format!(
-        "HTTP/1.1 {code} {reason}\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: {}\r\nCache-Control: no-store\r\nX-Content-Type-Options: nosniff\r\nConnection: close\r\n\r\n{}",
+        "HTTP/1.1 {code} {reason}\r\nServer: nginx\r\nDate: {}\r\nContent-Type: text/html\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
+        http_date(std::time::SystemTime::now()),
         body.len(),
-        if head_only { "" } else { body }
+        if head_only { "" } else { &body }
     );
     timeout(HANDSHAKE_TIMEOUT, async {
         stream.write_all(response.as_bytes()).await?;
@@ -264,6 +268,37 @@ async fn cover_response<S: AsyncWrite + Unpin>(
     .await
     .map_err(|_| RelayError::HandshakeFailed)??;
     Ok(())
+}
+
+/// IMF-fixdate, as every nginx response carries.
+fn http_date(now: std::time::SystemTime) -> String {
+    const DAYS: [&str; 7] = ["Thu", "Fri", "Sat", "Sun", "Mon", "Tue", "Wed"];
+    const MONTHS: [&str; 12] = [
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+    ];
+    let seconds = now
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |elapsed| elapsed.as_secs());
+    let (days, time) = (seconds / 86_400, seconds % 86_400);
+    // Days to a proleptic Gregorian date (Howard Hinnant's civil_from_days).
+    let shifted = days + 719_468;
+    let era = shifted / 146_097;
+    let day_of_era = shifted % 146_097;
+    let year_of_era =
+        (day_of_era - day_of_era / 1_460 + day_of_era / 36_524 - day_of_era / 146_096) / 365;
+    let day_of_year = day_of_era - (365 * year_of_era + year_of_era / 4 - year_of_era / 100);
+    let month_index = (5 * day_of_year + 2) / 153;
+    let day = day_of_year - (153 * month_index + 2) / 5 + 1;
+    let month = (month_index + 2) % 12;
+    let year = era * 400 + year_of_era + u64::from(month < 2);
+    format!(
+        "{}, {day:02} {} {year} {:02}:{:02}:{:02} GMT",
+        DAYS[(days % 7) as usize],
+        MONTHS[month as usize],
+        time / 3_600,
+        time / 60 % 60,
+        time % 60
+    )
 }
 
 /// Each WebSocket message contains one existing authenticated, padded record.
@@ -338,5 +373,26 @@ impl<S: AsyncWrite + Unpin> AsyncWrite for PrefixedStream<S> {
     }
     fn poll_shutdown(self: Pin<&mut Self>, context: &mut Context<'_>) -> Poll<io::Result<()>> {
         Pin::new(&mut self.get_mut().stream).poll_shutdown(context)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::http_date;
+    use std::time::{Duration, UNIX_EPOCH};
+
+    #[test]
+    fn http_date_matches_imf_fixdate_across_leap_rules() {
+        for (seconds, expected) in [
+            (0, "Thu, 01 Jan 1970 00:00:00 GMT"),
+            (951_782_400, "Tue, 29 Feb 2000 00:00:00 GMT"),
+            (1_793_460_342, "Sat, 31 Oct 2026 15:25:42 GMT"),
+            (4_107_542_399, "Sun, 28 Feb 2100 23:59:59 GMT"),
+        ] {
+            assert_eq!(
+                http_date(UNIX_EPOCH + Duration::from_secs(seconds)),
+                expected
+            );
+        }
     }
 }

@@ -7,7 +7,7 @@ fn configuration(
 ) -> EndpointDiscoveryConfig {
     EndpointDiscoveryConfig {
         server_address: address,
-        server_name: TLS_LIKE_SERVER_NAME.into(),
+        server_name: None,
         client_private_key: Zeroizing::new(client.private.as_slice().try_into().unwrap()),
         server_public_key: server.public.as_slice().try_into().unwrap(),
         socket_mark: None,
@@ -126,7 +126,7 @@ async fn discovery_replays_get_only_cover_and_the_old_listener_never_relays_vpn_
         let mut response = Vec::new();
         stream.read_to_end(&mut response).await.unwrap();
         assert_eq!(
-            String::from_utf8_lossy(&response).contains("<title>Welcome</title>"),
+            String::from_utf8_lossy(&response).contains("<hr><center>nginx</center>"),
             replay
         );
     }
