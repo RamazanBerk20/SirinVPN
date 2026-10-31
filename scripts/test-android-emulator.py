@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Run native tests in a fresh, owned AVD; never attach to an existing device.
 
-Run under the documented 4 GiB systemd resource scope. Requires installed SDK
+Run under the documented 8 GiB systemd resource scope. Requires installed SDK
 tools and google_apis/x86_64 image for --api, plus current debug/test APKs.
 """
 import argparse
@@ -22,7 +22,8 @@ ROOT = Path(__file__).resolve().parents[1]
 def main():
     sys.path.insert(0, str(ROOT / "tests/vm"))
     from lab import require_host_limits
-    require_host_limits()
+    # API 36 peaked at the VM lab's 4 GiB cap with sustained reclaim.
+    require_host_limits(8 * 1024**3)
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--apk", type=Path, required=True)

@@ -8,7 +8,7 @@ an existing device. Prefer the fresh-AVD harness:
 
 ```sh
 systemd-run --user --scope --quiet \
-  -p MemoryHigh=3G -p MemoryMax=4G -p MemorySwapMax=0 \
+  -p MemoryMax=8G -p MemorySwapMax=0 \
   -p CPUQuota=150% -p TasksMax=256 \
   python3 scripts/test-android-emulator.py --api 29 \
     --output .cache/android-remediation-new \
@@ -23,9 +23,10 @@ physical devices, OEM battery policy or production signing.
 The harness grants VPN consent only inside its fresh AVD to exercise the
 existing native reconnect/package-replacement tests. It does not qualify the OS
 consent dialog.
-For the API 36 image, use `MemoryHigh=3800M`: the interrupted-upgrade fixture
-showed sustained reclaim and service startup timeouts at lower soft limits.
-Keep `MemoryMax=4G`, no swap, and the CPU/process limits. The harness records
+Use the same scope for `--api 36`. Under the earlier 4 GiB cap that image
+peaked at the limit with sustained reclaim, and lower soft limits caused
+service startup timeouts, so the scope has no `MemoryHigh`. Keep no swap and
+the CPU/process limits. The harness records
 the actual limits, peak memory and memory events in its result. It waits for
 post-boot broadcasts and verifies connection to the synthetic `AndroidWifi`
 network before the native network tests. Each upgrade invocation keeps its own log.

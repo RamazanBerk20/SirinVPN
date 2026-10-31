@@ -26,7 +26,7 @@ ROOT = Path(__file__).resolve().parents[2]
 MEMORY_LIMIT = 4 * 1024**3
 
 
-def require_host_limits() -> None:
+def require_host_limits(memory_limit: int = MEMORY_LIMIT) -> None:
     if os.geteuid() == 0:
         raise RuntimeError("Launch the VM lab as an ordinary host user")
     group = next(
@@ -39,9 +39,9 @@ def require_host_limits() -> None:
     memory = (directory / "memory.max").read_text().strip()
     swap = (directory / "memory.swap.max").read_text().strip()
     quota, period = (directory / "cpu.max").read_text().split()
-    if (memory == "max" or int(memory) > MEMORY_LIMIT or swap != "0"
+    if (memory == "max" or int(memory) > memory_limit or swap != "0"
             or quota == "max" or int(quota) * 100 > int(period) * 150):
-        raise RuntimeError("Use the lab launcher: RAM <= 4 GiB, no swap, CPU <= 150%")
+        raise RuntimeError(f"Use the lab launcher: RAM <= {memory_limit // 1024**3} GiB, no swap, CPU <= 150%")
 
 
 def digest(path: Path) -> str:
