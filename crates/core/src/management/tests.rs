@@ -196,3 +196,64 @@ async fn pinned_tls_accepts_only_the_enrolled_certificate_and_never_follows_redi
     ));
     task.await.unwrap();
 }
+
+/// A network that answers a leak-test address cannot fake the VPS: TLS checks the pinned
+/// certificate by its DNS name while the connection goes to the resolved address.
+#[tokio::test]
+async fn leak_test_requests_verify_the_pin_by_name_at_the_resolved_address() {
+    let key = KeyPair::generate_for(&PKCS_ED25519).unwrap();
+    let cert = CertificateParams::new(vec![sirinvpn_protocol::MANAGEMENT_SERVER_NAME.into()])
+        .unwrap()
+        .self_signed(&key)
+        .unwrap();
+    let owner = LocalIdentity::generate("Leak test").unwrap();
+    let profile: ServerProfile = serde_json::from_value(serde_json::json!({
+        "schema_version": 1, "id": "123e4567-e89b-42d3-a456-426614174000", "name": "Test",
+        "endpoint": {"host": "127.0.0.1", "wireguard_port": 51820},
+        "client_tunnel_address": "10.77.0.2", "server_tunnel_address": "10.77.0.1",
+        "server_wireguard_public_key": owner.public.wireguard_public_key,
+        "pinned_server_certificate_pem": cert.pem(),
+        "client_management_certificate_pem": owner.public.management_certificate_pem,
+        "identity_reference": "test", "role": "owner"
+    }))
+    .unwrap();
+    let mut client =
+        ManagementClient::for_leak_test(&profile, &owner.secret, "127.0.0.1".parse().unwrap())
+            .unwrap();
+    let body = serde_json::to_string(&ApiEnvelope::new(LeakTestObservation {
+        source_address: "10.77.0.2".parse().unwrap(),
+    }))
+    .unwrap();
+    let response: &'static [u8] = format!(
+        "HTTP/1.1 200 OK\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
+        body.len()
+    )
+    .leak()
+    .as_bytes();
+    let (url, task) = tls_server(cert, key, response).await;
+    let address = by_name(&url);
+    client.base_url = format!("https://{address}");
+    assert_eq!(
+        client.leak_test_observation().await.unwrap().source_address,
+        "10.77.0.2".parse::<IpAddr>().unwrap()
+    );
+    task.await.unwrap();
+    let (impostor, key) = {
+        let key = KeyPair::generate_for(&PKCS_ED25519).unwrap();
+        let cert = CertificateParams::new(vec![sirinvpn_protocol::MANAGEMENT_SERVER_NAME.into()])
+            .unwrap()
+            .self_signed(&key)
+            .unwrap();
+        (cert, key)
+    };
+    let (url, task) = tls_server(impostor, key, response).await;
+    let address = by_name(&url);
+    client.base_url = format!("https://{address}");
+    assert!(client.leak_test_observation().await.is_err());
+    task.await.unwrap();
+}
+
+fn by_name(url: &str) -> String {
+    let port = url.rsplit(':').next().unwrap();
+    format!("{}:{port}", sirinvpn_protocol::MANAGEMENT_SERVER_NAME)
+}

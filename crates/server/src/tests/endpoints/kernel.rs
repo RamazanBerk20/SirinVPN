@@ -43,6 +43,7 @@ async fn kernel_published_source_blocks_data_but_retains_control_across_restart(
     let state = AppState {
         recovery: Default::default(),
         measurement_ready: false,
+        leak_test_ready: false,
         configuration,
         operational_configuration: Some(OperationalConfiguration {
             schema_version: 1,

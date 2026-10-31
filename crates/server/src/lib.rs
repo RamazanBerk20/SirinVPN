@@ -33,6 +33,7 @@ mod access;
 mod authorization_transaction;
 mod wireguard_device;
 use access::*;
+mod leak_test;
 mod measurement;
 mod metrics;
 mod service_metrics;

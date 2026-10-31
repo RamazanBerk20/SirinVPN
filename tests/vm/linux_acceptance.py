@@ -455,6 +455,16 @@ class Acceptance:
                 "disabled_zone_removed": True,
                 "physical_leak_counters": self.counter()}
 
+    def leak_test(self):
+        checks = {check["code"]: check for check in self.cli("diagnose", self.server_id)["checks"]}
+        levels = {code: checks.get(code, {}).get("level") for code in ("leak_ipv4", "leak_ipv6", "leak_dns")}
+        # The fixture tunnels IPv4 only and blocks physical IPv6, which the VPS cannot observe.
+        assert levels == {"leak_ipv4": "pass", "leak_ipv6": "not_applicable", "leak_dns": "pass"}, \
+            [(code, check["level"], check["message"]) for code, check in checks.items()]
+        # The test requests themselves never reach the physical network.
+        assert self.counter() == {"dns": 0, "ipv6": 0}, self.counter()
+        return {"leak_test": levels, "physical_leak_counters": self.counter()}
+
     def clean_disconnect(self):
         local = self.cli("disconnect")
         assert local["state"] == "disconnected"
@@ -654,6 +664,7 @@ class Acceptance:
                             self.step("Closing the real desktop GUI preserves the active tunnel", self.gui_close)
                             self.step("Reach public HTTPS through the tunnel", self.public_internet)
                             self.step("Resolver failure retains the tunnel and prevents DNS fallback", self.dns_failure)
+                            self.step("On-demand leak test passes over the tunnel", self.leak_test)
                             self.step("Owner turns VPS DNS blocking on and off through the CLI", self.dns_blocking)
                         if transport == "tls":
                             self.step("Recover from abrupt transport-process termination", self.relay_crash)

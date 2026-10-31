@@ -258,7 +258,7 @@ export type ServerStatusEvent =
 export interface DiagnosticCheck {
   code: string;
   label: string;
-  level: "pass" | "warning" | "fail";
+  level: "pass" | "warning" | "fail" | "not_applicable";
   message: string;
 }
 

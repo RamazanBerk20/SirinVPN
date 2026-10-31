@@ -19,6 +19,7 @@ fn legacy_configuration_defaults_new_capability_flags_off() {
     assert!(!configuration.peer_isolation_enabled);
     assert!(!configuration.port_forwarding_enabled);
     assert!(!configuration.member_lifecycle_enabled);
+    assert!(!configuration.leak_test_enabled);
     assert_eq!(configuration.obfuscated_udp, None);
     assert_eq!(configuration.tcp_fallback, None);
     assert_eq!(configuration.dns_upstream, DnsUpstream::Recursive);
@@ -29,6 +30,7 @@ fn legacy_configuration_defaults_new_capability_flags_off() {
     assert!(serialized.get("peer_isolation_enabled").is_none());
     assert!(serialized.get("port_forwarding_enabled").is_none());
     assert!(serialized.get("member_lifecycle_enabled").is_none());
+    assert!(serialized.get("leak_test_enabled").is_none());
 
     let member: MemberSummary = serde_json::from_value(serde_json::json!({
         "id": MemberId::new(), "name": "Legacy member", "role": "member", "devices": []

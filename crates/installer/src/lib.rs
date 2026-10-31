@@ -70,7 +70,7 @@ const MAX_SERVER_BACKUP_SNAPSHOT_SIZE: usize = 2 * 1024 * 1024;
 const MAX_SERVER_BACKUP_STDERR_SIZE: usize = 64 * 1024;
 const SSH_OPERATION_TIMEOUT_MS: u32 = 30_000;
 const INSTALL_OPERATION_TIMEOUT_MS: u32 = 10 * 60 * 1_000;
-const MANAGED_SERVER_PATHS: &str = "usr/local/lib/sirinvpn/sirinvpn-server etc/sirinvpn etc/unbound/unbound.conf.d/sirinvpn.conf etc/systemd/system/unbound.service.d/sirinvpn.conf etc/sysctl.d/90-sirinvpn.conf etc/systemd/system/sirinvpn-network.service etc/systemd/system/sirinvpn-firewall.service etc/systemd/system/sirinvpn-doh.service etc/systemd/system/sirinvpn-server.service";
+const MANAGED_SERVER_PATHS: &str = "usr/local/lib/sirinvpn/sirinvpn-server etc/sirinvpn etc/unbound/unbound.conf.d/sirinvpn.conf etc/unbound/unbound.conf.d/sirinvpn-leak-test.conf etc/systemd/system/unbound.service.d/sirinvpn.conf etc/sysctl.d/90-sirinvpn.conf etc/systemd/system/sirinvpn-network.service etc/systemd/system/sirinvpn-firewall.service etc/systemd/system/sirinvpn-doh.service etc/systemd/system/sirinvpn-server.service";
 
 #[derive(Clone)]
 pub enum SshAuthentication {

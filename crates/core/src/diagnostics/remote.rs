@@ -32,10 +32,14 @@ pub(crate) fn sanitize(mut incoming: DiagnosticReport) -> DiagnosticReport {
 }
 
 fn sanitize_check(value: &DiagnosticCheck) -> Option<DiagnosticCheck> {
+    // Only local leak checks are not applicable; a VPS report claiming it is malformed.
+    if value.level == DiagnosticLevel::NotApplicable {
+        return None;
+    }
     if let Some(label) = dns_label(&value.code) {
         let message = match value.level {
             DiagnosticLevel::Pass => dns_success(&value.message).unwrap_or_else(|| "The resolver returned a valid DNS response.".into()),
-            DiagnosticLevel::Warning => "A current DNS response check is unavailable. Try again after other diagnostics finish.".into(),
+            DiagnosticLevel::Warning | DiagnosticLevel::NotApplicable => "A current DNS response check is unavailable. Try again after other diagnostics finish.".into(),
             DiagnosticLevel::Fail => if DNS_ERRORS.contains(&value.message.as_str()) { value.message.clone() }
                 else { "The resolver did not return a usable DNS response. Check its route, port, upstream configuration, TLS identity and clock.".into() },
         };
@@ -144,7 +148,7 @@ fn sanitize_check(value: &DiagnosticCheck) -> Option<DiagnosticCheck> {
         match value.level {
             DiagnosticLevel::Pass => success,
             DiagnosticLevel::Fail => failure,
-            DiagnosticLevel::Warning => {
+            DiagnosticLevel::Warning | DiagnosticLevel::NotApplicable => {
                 "This current state could not be read. Check server tools and service permissions, then rerun diagnostics."
             }
         },
@@ -275,6 +279,8 @@ mod tests {
             check("local_tunnel", secret, DiagnosticLevel::Pass, secret),
             check("interface", secret, DiagnosticLevel::Pass, secret),
             check("dns_blocklist", secret, DiagnosticLevel::Fail, secret),
+            check("dns", secret, DiagnosticLevel::NotApplicable, secret),
+            check("leak_dns", secret, DiagnosticLevel::Pass, secret),
         ]));
         let text = serde_json::to_string(&report).unwrap();
         for value in secret.split_whitespace() {
@@ -289,6 +295,13 @@ mod tests {
             1
         );
         assert!(!report.checks.iter().any(|c| c.code == "local_tunnel"));
+        // The VPS can neither fake a local leak result nor mark its own check not applicable.
+        assert!(
+            !report
+                .checks
+                .iter()
+                .any(|c| c.code == "leak_dns" || c.code == "dns")
+        );
         let blocklist = report
             .checks
             .iter()

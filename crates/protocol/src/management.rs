@@ -8,6 +8,8 @@ pub enum DiagnosticLevel {
     Pass,
     Warning,
     Fail,
+    /// Produced only by local leak checks; VPS reports never use it.
+    NotApplicable,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
@@ -75,6 +77,16 @@ pub struct CurrentConfiguration {
     /// Managers can add devices that join only through a standard WireGuard configuration.
     #[serde(default, skip_serializing_if = "is_false")]
     pub wireguard_devices_enabled: bool,
+    /// The VPS redirects the leak-test addresses and answers the leak-test DNS zone.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub leak_test_enabled: bool,
+}
+
+/// The source address of the one request that asked; the VPS keeps nothing.
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct LeakTestObservation {
+    pub source_address: IpAddr,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]

@@ -6,12 +6,16 @@ use sirinvpn_protocol::{
     DevicePeerCommunicationUpdateRequest, EndpointTransitionCreateRequest,
     EndpointTransitionResponse, EnrollmentRequest, EnrollmentResult, ErrorCode,
     InvitationCreateRequest, InvitationCreateResponse, InvitationId, KeyRotationCommitResponse,
-    KeyRotationId, KeyRotationPrepareRequest, KeyRotationPrepareResponse,
-    MemberAccessUpdateRequest, MemberDevicesRevokeRequest, MemberId, MemberSuspensionUpdateRequest,
-    MembershipSnapshot, OwnershipTransferRequest, PortForwardCreateRequest, PortForwardProtocol,
-    RenameDeviceRequest, ServerProfile, ServerStatus,
+    KeyRotationId, KeyRotationPrepareRequest, KeyRotationPrepareResponse, LeakTestObservation,
+    MANAGEMENT_SERVER_NAME, MemberAccessUpdateRequest, MemberDevicesRevokeRequest, MemberId,
+    MemberSuspensionUpdateRequest, MembershipSnapshot, OwnershipTransferRequest,
+    PortForwardCreateRequest, PortForwardProtocol, RenameDeviceRequest, ServerProfile,
+    ServerStatus,
 };
-use std::time::Duration;
+use std::{
+    net::{IpAddr, SocketAddr},
+    time::Duration,
+};
 use thiserror::Error;
 use zeroize::Zeroizing;
 
@@ -153,14 +157,30 @@ impl ManagementClient {
         secret: &SecretIdentity,
         timeout: Option<Duration>,
     ) -> Result<Self, ManagementError> {
-        Self::with_options(profile, secret, timeout, false)
+        Self::with_options(profile, secret, timeout, false, None)
     }
 
     pub(crate) fn for_diagnostics(
         profile: &ServerProfile,
         secret: &SecretIdentity,
     ) -> Result<Self, ManagementError> {
-        Self::with_options(profile, secret, Some(Duration::from_secs(8)), true)
+        Self::with_options(profile, secret, Some(Duration::from_secs(8)), true, None)
+    }
+
+    /// Reaches the VPS through a leak-test address with the same pinned mTLS. No tunnel source
+    /// is bound: the operating system's route decides where the request goes.
+    pub(crate) fn for_leak_test(
+        profile: &ServerProfile,
+        secret: &SecretIdentity,
+        destination: IpAddr,
+    ) -> Result<Self, ManagementError> {
+        Self::with_options(
+            profile,
+            secret,
+            Some(Duration::from_secs(6)),
+            false,
+            Some(destination),
+        )
     }
 
     fn with_options(
@@ -168,6 +188,7 @@ impl ManagementClient {
         secret: &SecretIdentity,
         timeout: Option<Duration>,
         bind_tunnel: bool,
+        leak_destination: Option<IpAddr>,
     ) -> Result<Self, ManagementError> {
         // Without a process default reqwest uses ring, which offers only classical key
         // exchange. aws-lc-rs prefers hybrid X25519MLKEM768, which the VPS also accepts,
@@ -208,13 +229,28 @@ impl ManagementClient {
             Some(timeout) => builder.timeout(timeout),
             None => builder,
         };
+        // The certificate also names the VPS by DNS name, so TLS still verifies the pin while
+        // the connection goes to the leak-test address.
+        let (builder, base_url) = match leak_destination {
+            Some(destination) => (
+                builder.resolve(MANAGEMENT_SERVER_NAME, SocketAddr::new(destination, 8443)),
+                format!("https://{}:8443", sirinvpn_protocol::MANAGEMENT_SERVER_NAME),
+            ),
+            None => (
+                builder,
+                format!("https://{}:8443", profile.server_tunnel_address),
+            ),
+        };
         let client = builder
             .build()
             .map_err(|_| ManagementError::InvalidClientIdentity)?;
-        Ok(Self {
-            client,
-            base_url: format!("https://{}:8443", profile.server_tunnel_address),
-        })
+        Ok(Self { client, base_url })
+    }
+
+    pub(crate) async fn leak_test_observation(
+        &self,
+    ) -> Result<LeakTestObservation, ManagementError> {
+        self.get("/v1/leak-test").await
     }
 
     pub async fn measurement_lease(

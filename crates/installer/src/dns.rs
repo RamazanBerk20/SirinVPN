@@ -44,6 +44,15 @@ pub(super) fn server_dns_init_arguments(
     arguments
 }
 
+/// The VPS resolver answers every leak-test name with its tunnel address; no public resolver
+/// answers this private-use zone, so a matching answer shows system DNS reached this VPS.
+pub(super) fn leak_test_zone() -> String {
+    format!(
+        "server:\n  local-zone: \"{zone}.\" redirect\n  local-data: \"{zone}. 0 IN A {SERVER_TUNNEL_ADDRESS}\"",
+        zone = sirinvpn_protocol::LEAK_TEST_DNS_ZONE
+    )
+}
+
 pub(super) fn unbound_dns_configuration(
     dns_upstream: &DnsUpstream,
     private_dns_records: &[PrivateDnsRecord],

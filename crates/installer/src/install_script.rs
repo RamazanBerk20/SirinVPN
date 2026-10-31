@@ -642,6 +642,11 @@ UNBOUND
 # Unbound rereads its configuration without root when the DNS blocklist reloads it.
 chown root:unbound /etc/unbound/unbound.conf.d/sirinvpn.conf
 chmod 0640 /etc/unbound/unbound.conf.d/sirinvpn.conf
+# Readable by the server daemon, which offers the leak test only while the zone exists.
+cat >/etc/unbound/unbound.conf.d/sirinvpn-leak-test.conf <<'UNBOUND'
+{leak_test_zone}
+UNBOUND
+chmod 0644 /etc/unbound/unbound.conf.d/sirinvpn-leak-test.conf
 printf '%s\n' 'SIRINVPN_INSTALL_STEP=dns_validation'
 unbound-checkconf /etc/unbound/unbound.conf >/dev/null
 printf '%s\n' 'SIRINVPN_INSTALL_STEP=service_configuration'
@@ -770,6 +775,7 @@ systemctl restart sirinvpn-dns-blocklist.path sirinvpn-dns-blocklist.timer
         ipv6_unbound = ipv6_unbound,
         unbound_tls_configuration = unbound_tls_configuration,
         unbound_forward_zone = unbound_forward_zone,
+        leak_test_zone = leak_test_zone(),
         ipv6_sysctl = ipv6_sysctl,
         ipv6_accept_ra_backup = ipv6_accept_ra_backup,
         ipv6_accept_ra_restore = ipv6_accept_ra_restore,

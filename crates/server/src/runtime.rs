@@ -17,10 +17,29 @@ pub async fn serve(paths: &ServerPaths) -> Result<()> {
     let transport_peers = AuthorizedPeers::default();
     let authorization =
         load_runtime_authorization(paths)?.map(|document| Arc::new(RwLock::new(document)));
+    // The IPv6 leak-test redirect needs a private IPv6 target; it serves the same management API.
+    let server_ipv6 = match (&authorization, configuration.server_tunnel_address) {
+        (Some(document), IpAddr::V4(server)) if configuration.ipv6_tunnel_enabled => {
+            sirinvpn_protocol::ipv6_tunnel_address(document.read().await.server_id, server)
+        }
+        _ => None,
+    };
+    let ipv6_listener = match server_ipv6 {
+        Some(address) => TcpListener::bind((address, configuration.management_port))
+            .await
+            .ok(),
+        None => None,
+    };
+    let leak_test_ready = authorization.is_some()
+        && server_ipv6.is_some() == ipv6_listener.is_some()
+        && leak_test::install(&configuration, server_ipv6)
+            .await
+            .is_ok();
     let transport_activity = ActiveTransportRegistry::default();
     let state = AppState {
         recovery: Default::default(),
         measurement_ready,
+        leak_test_ready,
         configuration: configuration.clone(),
         operational_configuration,
         paths: paths.clone(),
@@ -113,7 +132,16 @@ pub async fn serve(paths: &ServerPaths) -> Result<()> {
         }
         Ok::<(), anyhow::Error>(())
     };
-    let management = serve_management(listener, state, router);
+    let management = async move {
+        match ipv6_listener {
+            Some(ipv6_listener) => tokio::try_join!(
+                serve_management(listener, state.clone(), router.clone()),
+                serve_management(ipv6_listener, state, router),
+            )
+            .map(|_| ()),
+            None => serve_management(listener, state, router).await,
+        }
+    };
     if configuration.obfuscated_udp.is_none()
         && configuration.tcp_fallback.is_none()
         && configuration.tls_like.is_none()
@@ -349,7 +377,11 @@ pub(super) async fn serve_management(
             let caller = CallerIdentity {
                 certificate_fingerprint: hex::encode(Sha256::digest(peer_certificate.as_ref())),
             };
-            let service = TowerToHyperService::new(router.layer(Extension(caller)));
+            let service = TowerToHyperService::new(
+                router
+                    .layer(Extension(caller))
+                    .layer(Extension(leak_test::PeerAddress(source.ip()))),
+            );
             let io = TokioIo::new(tls_stream);
             let mut connection = ConnectionBuilder::new(TokioExecutor::new());
             connection

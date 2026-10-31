@@ -362,6 +362,7 @@ pub fn validate_private_dns_record(record: &PrivateDnsRecord) -> Result<(), Vali
         })
         || name == "localhost"
         || name.ends_with(".localhost")
+        || name == crate::LEAK_TEST_DNS_ZONE
     {
         return Err(ValidationError::InvalidPrivateDnsName);
     }

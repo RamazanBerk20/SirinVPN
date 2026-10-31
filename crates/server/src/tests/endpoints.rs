@@ -154,6 +154,7 @@ async fn publishing_the_active_targets_own_checkpoint_never_freezes_its_authorit
     let state = AppState {
         recovery: Default::default(),
         measurement_ready: false,
+        leak_test_ready: false,
         configuration: load_configuration(&paths).unwrap(),
         operational_configuration: None,
         authorization: Some(Arc::new(RwLock::new(

@@ -73,6 +73,12 @@ fn script_has_scoped_firewall_ownership_and_docker_interop() {
     assert!(snapshot < blocklist_stop && blocklist_stop < initialize);
     assert!(unbound_mode < unbound_check);
     assert!(script.contains("chown root:unbound /etc/unbound/unbound.conf.d/sirinvpn.conf"));
+    // Only this VPS answers the leak-test zone, and the zone is checked with the rest.
+    let leak_zone = script
+        .find("  local-zone: \"resolver-check.internal.\" redirect\n  local-data: \"resolver-check.internal. 0 IN A 10.77.0.1\"\nUNBOUND\nchmod 0644 /etc/unbound/unbound.conf.d/sirinvpn-leak-test.conf")
+        .unwrap();
+    assert!(leak_zone < unbound_check);
+    assert!(MANAGED_SERVER_PATHS.contains("etc/unbound/unbound.conf.d/sirinvpn-leak-test.conf"));
     assert!(
         script[initialize..]
             .find("restart sirinvpn-server")
@@ -230,6 +236,11 @@ fn script_has_scoped_firewall_ownership_and_docker_interop() {
     assert!(verification.contains("! nft list table ip6 sirinvpn_nat6"));
     assert!(verification.contains("10.77.0.1:53"));
     assert!(verification.contains("[ ! -e /etc/systemd/system/sirinvpn-doh.service ]"));
+    assert!(
+        verification.contains(
+            "[ \"$(cat /etc/unbound/unbound.conf.d/sirinvpn-leak-test.conf)\" = 'server:"
+        )
+    );
     assert!(
         std::process::Command::new("/bin/sh")
             .arg("-n")

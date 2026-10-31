@@ -22,6 +22,7 @@ async fn stream_delivers_repeated_authorized_samples_and_closes_on_revocation() 
     let state = AppState {
         recovery: Default::default(),
         measurement_ready: false,
+        leak_test_ready: false,
         configuration: load_configuration(&paths).unwrap(),
         operational_configuration: None,
         paths,

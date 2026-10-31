@@ -26,6 +26,7 @@ impl DnsSplitZone {
             || name.parse::<IpAddr>().is_ok()
             || name.ends_with(".localhost")
             || name.ends_with(".local")
+            || name == crate::LEAK_TEST_DNS_ZONE
         {
             return Err(ValidationError::InvalidSplitDns);
         }
@@ -150,6 +151,7 @@ mod tests {
             "office.home=10.77.0.1",
             "office.home=10.77.0.254",
             "home.local=10.20.0.53",
+            "resolver-check.internal=10.20.0.53",
             "home.example=10.0.0.1#tls.example,10.0.0.2",
             "bad\nname.home=10.0.0.1",
         ] {

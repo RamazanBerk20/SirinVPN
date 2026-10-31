@@ -54,3 +54,19 @@ it("puts issues and unavailable checks before collapsed passes and preserves evi
   expect(copied.indexOf("Public reachability")).toBeLessThan(copied.indexOf("Traffic protection"));
   expect(copied).toContain(t("maintenance.diagnostics.report.evidence", { evidence: t("maintenance.diagnostics.evidence.service") }));
 });
+
+it("shows leak test results as tested and not applicable families as not checked", () => {
+  const report = { api_version: "v1", checks: [
+    { code: "leak_ipv4", label: "IPv4 leak test", level: "pass" as const, message: "A request to an internet IPv4 address went through the VPN." },
+    { code: "leak_ipv6", label: "IPv6 leak test", level: "not_applicable" as const, message: "This VPN doesn't carry IPv6, and this device has no IPv6 internet route." },
+    { code: "leak_dns", label: "DNS leak test", level: "fail" as const, message: "A one-off name wasn't answered by your VPS resolver." },
+  ] };
+  const { container } = render(<DiagnosticResults report={report} />);
+  const row = (label: string) => Array.from(container.querySelectorAll(".diagnostic-row")).find((item) => item.querySelector("strong")?.textContent === label)!;
+  expect(row("DNS leak test").className).toContain("attention");
+  expect(row("DNS leak test").querySelector(".diagnostic-evidence")?.textContent).toBe(t("maintenance.diagnostics.evidence.observed"));
+  expect(row("IPv6 leak test").className).toContain("unavailable");
+  expect(row("IPv6 leak test").querySelector(".diagnostic-evidence")?.textContent).toBe(t("maintenance.diagnostics.evidence.notApplicable"));
+  expect(row("IPv4 leak test").closest("details")).not.toBeNull();
+  expect(row("IPv4 leak test").querySelector(".diagnostic-evidence")?.textContent).toBe(t("maintenance.diagnostics.evidence.observed"));
+});

@@ -48,10 +48,11 @@ pub use management::{
     DiagnosticReport, EndpointTransitionClaims, EndpointTransitionCreateRequest,
     EndpointTransitionResponse, EnrollmentNames, EnrollmentRequest, EnrollmentResult,
     InvitationClaims, InvitationCreateRequest, InvitationCreateResponse, KeyRotationCommitResponse,
-    KeyRotationPrepareRequest, KeyRotationPrepareResponse, MemberAccessUpdateRequest,
-    MemberDevicesRevokeRequest, MemberSummary, MemberSuspensionUpdateRequest, MembershipSnapshot,
-    OwnershipTransferRequest, PortForward, PortForwardCreateRequest, PortForwardProtocol,
-    RenameDeviceRequest, WireGuardDeviceCreateRequest,
+    KeyRotationPrepareRequest, KeyRotationPrepareResponse, LeakTestObservation,
+    MemberAccessUpdateRequest, MemberDevicesRevokeRequest, MemberSummary,
+    MemberSuspensionUpdateRequest, MembershipSnapshot, OwnershipTransferRequest, PortForward,
+    PortForwardCreateRequest, PortForwardProtocol, RenameDeviceRequest,
+    WireGuardDeviceCreateRequest,
 };
 
 use serde::{Deserialize, Serialize};
@@ -78,6 +79,15 @@ pub const SERVER_TUNNEL_ADDRESS: &str = "10.77.0.1";
 pub const FIRST_CLIENT_TUNNEL_ADDRESS: &str = "10.77.0.2";
 pub const TUNNEL_CIDR: &str = "10.77.0.0/24";
 pub const INTERFACE_NAME: &str = "sirinvpn0";
+/// Documentation-range leak-test addresses (RFC 5737, RFC 3849). The public internet drops them;
+/// the VPS redirects them to its private management listeners only when they arrive through the
+/// tunnel.
+pub const LEAK_TEST_IPV4: Ipv4Addr = Ipv4Addr::new(192, 0, 2, 77);
+pub const LEAK_TEST_IPV6: Ipv6Addr = Ipv6Addr::new(0x2001, 0xdb8, 0, 0, 0, 0, 0, 0x77);
+/// The VPS resolver answers every name in this private-use zone with its tunnel address.
+pub const LEAK_TEST_DNS_ZONE: &str = "resolver-check.internal";
+/// DNS name in the management certificate, so a leak-test address can carry the pinned TLS check.
+pub const MANAGEMENT_SERVER_NAME: &str = "sirinvpn.local";
 
 pub fn ipv6_tunnel_prefix(server_id: ServerId) -> Ipv6Addr {
     let identifier = server_id.0.as_bytes();

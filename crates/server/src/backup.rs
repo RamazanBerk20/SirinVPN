@@ -355,6 +355,7 @@ pub(super) fn write_json(path: &Path, value: &impl Serialize) -> Result<()> {
 pub(super) struct AppState {
     pub(super) recovery: Arc<Mutex<authorization_transaction::RecoveryState>>,
     pub(super) measurement_ready: bool,
+    pub(super) leak_test_ready: bool,
     pub(super) configuration: ServerConfiguration,
     pub(super) operational_configuration: Option<OperationalConfiguration>,
     pub(super) paths: ServerPaths,

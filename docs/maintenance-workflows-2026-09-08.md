@@ -53,7 +53,8 @@ Needs attention, Review and unavailable results appear before collapsed passed
 checks. Fixed evidence labels distinguish Configuration inspected, Service
 reported, Observed test result and Not checked. Unrecognized report codes receive
 a conservative label. Reading an armed service state does not claim a complete
-traffic-leak test. Reports remain in memory until the dialog closes; only an
+traffic-leak test; only the separate IPv4, IPv6 and DNS leak checks test traffic
+paths, and Not applicable results appear with the unavailable ones. Reports remain in memory until the dialog closes; only an
 explicit action copies sanitized text to the clipboard.
 
 Home details now show latency only from a valid received private-tunnel ICMP

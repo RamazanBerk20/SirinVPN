@@ -7,6 +7,7 @@ use sirinvpn_protocol::{
 use std::error::Error;
 
 mod dns;
+mod leak;
 mod remote;
 pub use dns::{PrivateDnsOutcome, private_dns_check, probe_private_dns};
 pub(crate) use remote::sanitize;
@@ -76,12 +77,16 @@ pub async fn diagnose(
     };
     checks.push(check("local_identity", "Saved management identities", DiagnosticLevel::Pass,
         "The saved server pin and device certificate/key can be loaded. Their current server authorization is checked over the VPN."));
-    if !current.is_some_and(CurrentConnection::can_probe) {
+    let Some(current) = current.filter(|current| current.can_probe()) else {
         checks.push(check("management", "VPS authentication and connectivity", DiagnosticLevel::Warning,
-            "Connect this device to the selected server to check authenticated management, current server DNS and VPS networking. Local checks are available while disconnected."));
+            "Connect this device to the selected server to check authenticated management, current server DNS, VPS networking and traffic leaks. Local checks are available while disconnected."));
         return report(checks);
-    }
-    match client.diagnostics().await {
+    };
+    let (remote, leaks) = tokio::join!(
+        client.diagnostics(),
+        leak::checks(profile, identity, current, &client)
+    );
+    match remote {
         Ok(remote) => {
             checks.push(check("management", "VPS authentication and connectivity", DiagnosticLevel::Pass,
                 "The private management service accepted the pinned TLS connection and this device's current authorization."));
@@ -89,6 +94,7 @@ pub async fn diagnose(
         }
         Err(error) => checks.push(management_failure(&error)),
     }
+    checks.extend(leaks);
     report(checks)
 }
 

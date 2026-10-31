@@ -73,6 +73,8 @@ EXPECTED_ENDPOINT_DISCOVERY_PORT={expected_endpoint_discovery_port}
 /usr/local/lib/sirinvpn/sirinvpn-server --state-directory /etc/sirinvpn validate-state
 unbound-checkconf /etc/unbound/unbound.conf >/dev/null
 {dns_verification}
+[ "$(stat -c '%a:%U:%G' /etc/unbound/unbound.conf.d/sirinvpn-leak-test.conf)" = "644:root:root" ]
+[ "$(cat /etc/unbound/unbound.conf.d/sirinvpn-leak-test.conf)" = {expected_leak_test_zone} ]
 [ "$(sha256sum /usr/local/lib/sirinvpn/sirinvpn-server | cut -d' ' -f1)" = "$EXPECTED_BINARY_SHA256" ]
 [ "$(sha256sum /etc/sirinvpn/management.crt | cut -d' ' -f1)" = "$EXPECTED_CERTIFICATE_SHA256" ]
 [ "$(stat -c '%a:%U:%G' /usr/local/lib/sirinvpn/sirinvpn-server)" = "755:root:root" ]
@@ -141,6 +143,7 @@ done
         doh_runtime_conditions = doh_runtime_conditions,
         ipv6_verification = ipv6_verification,
         expected_operational_configuration = expected_operational_configuration,
+        expected_leak_test_zone = shell_quote(&leak_test_zone()),
         verification_external_interface = discovery.default_interface,
     )
 }

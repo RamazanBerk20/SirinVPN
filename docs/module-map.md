@@ -48,7 +48,7 @@ overlay after project generation.
 | Component | Internal ownership |
 | --- | --- |
 | Installer | `ssh`: pinned sessions and bounded output; `validation`: input/artifact/state checks; `transaction`: staging/rollback; `install_script`, `dns`, `verification`, `uninstall`: generated installation and verification steps |
-| Server | `api`/`access`: routes and caller checks; `membership`, `enrollment`, `endpoint_transition`, `forwarding_api`: operations; `initialization`, `configuration`, `backup`: persistent state; `runtime`: TLS/listeners; `network_policy`: kernel changes; `metrics`: current samples; `diagnostics`: bounded service/network/DNS/resource checks |
+| Server | `api`/`access`: routes and caller checks; `membership`, `enrollment`, `endpoint_transition`, `forwarding_api`: operations; `initialization`, `configuration`, `backup`: persistent state; `runtime`: TLS/listeners; `network_policy`: kernel changes; `metrics`: current samples; `diagnostics`: bounded service/network/DNS/resource checks; `leak_test`: tunnel-only leak-test redirect and source echo |
 | Linux helper | `lifecycle`/`tunnel`: connection changes; `routing`: policy generation; `ownership`/`cleanup`: owned resources; `persistence`/`reconnect`: guard and recovery; `system`: command execution and integration |
 | Tauri adapter | Platform-specific profile/enrollment/tunnel modules; shared provisioning, backup, endpoint, management, diagnostics and release adapters |
 | Windows platform/service | Authenticated named pipes, DPAPI/ACL storage, WireGuardNT, IP Helper, WFP, current quality, recovery and signed updates |

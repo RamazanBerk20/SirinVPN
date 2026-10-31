@@ -68,6 +68,7 @@ fn fixture() -> (tempfile::TempDir, AppState) {
     let state = AppState {
         recovery: Default::default(),
         measurement_ready: false,
+        leak_test_ready: false,
         configuration: load_configuration(&paths).unwrap(),
         operational_configuration: Some(OperationalConfiguration {
             schema_version: 1,

@@ -226,6 +226,9 @@ pub(crate) fn reserved_names(configuration: &ServerConfiguration) -> BTreeSet<St
                 .iter()
                 .map(|zone| zone.suffix.clone()),
         )
+        .chain(std::iter::once(
+            sirinvpn_protocol::LEAK_TEST_DNS_ZONE.to_owned(),
+        ))
         .collect()
 }
 

@@ -131,6 +131,11 @@ fn private_dns_records_are_strict_canonical_and_bounded() {
     assert_eq!(ipv6.address, "fd00::10".parse::<IpAddr>().unwrap());
     assert!("single-label=10.0.0.1".parse::<PrivateDnsRecord>().is_err());
     assert!(
+        "resolver-check.internal=10.0.0.1"
+            .parse::<PrivateDnsRecord>()
+            .is_err()
+    );
+    assert!(
         "bad_name.home=10.0.0.1"
             .parse::<PrivateDnsRecord>()
             .is_err()

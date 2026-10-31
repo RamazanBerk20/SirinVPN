@@ -92,6 +92,7 @@ pub(super) fn management_router(state: AppState) -> Router {
             get(super::status_stream::status_stream_handler),
         )
         .route("/v1/diagnostics", get(diagnostics_handler))
+        .route("/v1/leak-test", get(super::leak_test::observe_handler))
         .route("/v1/configuration", get(configuration_handler))
         .route(
             "/v1/endpoint-transition",
@@ -280,5 +281,6 @@ pub(super) async fn configuration_handler(
         recovery_keys_enabled: state.authorization.is_some(),
         dns_blocklist_management_enabled: super::dns_blocklist::management_available(&state),
         wireguard_devices_enabled: state.authorization.is_some(),
+        leak_test_enabled: state.leak_test_ready && Path::new(super::leak_test::ZONE_FILE).exists(),
     })))
 }

@@ -25,8 +25,8 @@ inside the disposable guest.
 `run-linux-acceptance.sh` runs the packaged CLI and helper against a fresh VPS
 in two Debian 13 QEMU guests. It checks provisioning, pinned SSH, guest Polkit,
 actual WireGuard traffic, all four transports, native DNS, DNS failure, turning
-DNS blocking on and off (the VPS downloads OISD Small), IPv6
-blocking, all four kill-switch/reconnect combinations, helper-supervisor restart,
+DNS blocking on and off (the VPS downloads OISD Small), the on-demand leak
+test, IPv6 blocking, all four kill-switch/reconnect combinations, helper-supervisor restart,
 process termination, automatic fallback, restart protection and removal. It also
 opens the packaged desktop in guest-only Xvfb, closes its real window and verifies
 that the tunnel remains connected. This covers window-close behavior, not the

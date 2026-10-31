@@ -102,7 +102,7 @@
     "serverDns": "Server DNS",
     "serverDnsRunning": "Running",
     "serverDnsDown": "Not responding",
-    "diagnosticsSummary": "Checks this device and, while connected, DNS and the server.",
+    "diagnosticsSummary": "Checks this device and, while connected, DNS, traffic leaks and the server.",
     "runDiagnostics": "Run diagnostics"
   },
   "diagnostics": {
@@ -137,6 +137,7 @@
       "service": "Reported by service",
       "observed": "Tested",
       "notChecked": "Not checked",
+      "notApplicable": "Not applicable",
       "reported": "Reported"
     },
     "report": {

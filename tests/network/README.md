@@ -8,6 +8,11 @@ Set `SIRINVPN_FAULT_ONE_WAY=1` to block only outgoing carrier packets. The test
 also reports 20 repeat connection timings; systemd and resolved are simulated,
 so these measurements exclude desktop startup and OS authorization prompts.
 
+`sh tests/network/run-leak-test.sh` checks the leak-test redirect over a real
+WireGuard link: from a full-tunnel member namespace, pinned requests to the IPv4
+and IPv6 leak-test addresses must reach the in-process management server and
+report the member's tunnel addresses.
+
 Run `tests/network/run-policy-kernel.sh` from a Linux development host with
 Docker, Python 3, and the workspace Cargo dependencies already fetched
 (`cargo fetch --locked`). The script builds the Debian test image when needed.

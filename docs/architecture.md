@@ -247,6 +247,47 @@ swaps the zone file atomically and runs `unbound-control reload` after
 checking the configuration as the `unbound` user. Any failure keeps the last
 good file and is reported in diagnostics. No query or refresh history exists.
 
+## Leak test
+
+Run diagnostics also runs an on-demand leak test while connected. It uses only
+the user's own VPS and reports pass, fail or not applicable for IPv4, IPv6 and
+DNS. The VPS keeps no per-check state: nothing is stored, counted or logged, so
+there is nothing to bound or expire.
+
+- **IPv4 and IPv6.** The client sends one pinned mTLS request to
+  `GET /v1/leak-test` at a documentation address, `192.0.2.77:8443` or
+  `[2001:db8::77]:8443`, without binding its tunnel address, so the operating
+  system's own route decides the path. The daemon adds `leak_test_prerouting`
+  and `leak_test_input` chains to its runtime `sirinvpn_measurement` table:
+  traffic arriving on `sirinvpn0` for those addresses is redirected to the
+  private management listener (`10.77.0.1:8443`, or a second listener on the
+  server's private IPv6 address when the IPv6 tunnel is on). Sent anywhere else,
+  the public internet drops documentation addresses and the VPS never sees the
+  request. TLS checks the pinned certificate by its `sirinvpn.local` name, so a
+  network that answers those addresses cannot fake a pass. The handler returns
+  only the TCP source address of that same request; the client passes the family
+  when it equals the device's tunnel address. If the request does not arrive, a
+  UDP socket connected to the same address (which sends nothing) shows whether
+  the system routes that family outside the VPN, and the failure says so without
+  printing the local address.
+- **IPv6 without an IPv6 tunnel.** The VPS cannot observe IPv6. The family is not
+  applicable when the device has no IPv6 route or the kill switch reports IPv6
+  blocked, and fails when an IPv6 route exists outside the VPN without that block.
+- **DNS.** The client resolves `<random>.resolver-check.internal` through the
+  system resolver. The installer's `sirinvpn-leak-test.conf` Unbound include
+  answers every name in that private-use zone with `10.77.0.1`; no public
+  resolver answers it, so only an answer from the VPS resolver passes. Private
+  records, split zones and blocklists cannot claim that zone. The check proves the
+  system's answer came from the VPS; it cannot see an extra copy the operating
+  system also sends to another resolver, which the kill switch blocks.
+
+Selected subnets and applications leave other traffic outside the VPN by design,
+so those families are not applicable instead of sending a test request to the
+normal network. `/v1/configuration` advertises `leak_test_enabled` only when the
+redirect rules applied and the Unbound include exists; an older or partly updated
+VPS reports every family as not applicable until repair. Android does not run the
+leak test yet: its diagnostics command returns only the VPS report.
+
 ## Management plane
 
 The management client uses only the enrolled server certificate as its trust
