@@ -223,16 +223,28 @@ pub(super) fn helper_protocol_is_current(path: &Path) -> bool {
     if !path.is_file() {
         return false;
     }
-    Command::new(path)
-        .arg("version")
-        .stdin(Stdio::null())
-        .stderr(Stdio::null())
-        .output()
-        .is_ok_and(|output| {
-            output.status.success()
-                && String::from_utf8_lossy(&output.stdout).trim()
-                    == HELPER_PROTOCOL_VERSION.to_string()
-        })
+    let mut busy_retries = 5;
+    let output = loop {
+        match Command::new(path)
+            .arg("version")
+            .stdin(Stdio::null())
+            .stderr(Stdio::null())
+            .output()
+        {
+            // A just-written file is busy until another thread's forked child drops its write handle.
+            Err(error)
+                if error.kind() == std::io::ErrorKind::ExecutableFileBusy && busy_retries > 0 =>
+            {
+                busy_retries -= 1;
+                std::thread::sleep(std::time::Duration::from_millis(20));
+            }
+            output => break output,
+        }
+    };
+    output.is_ok_and(|output| {
+        output.status.success()
+            && String::from_utf8_lossy(&output.stdout).trim() == HELPER_PROTOCOL_VERSION.to_string()
+    })
 }
 
 pub(super) fn install_helper(source: &Path) -> Result<()> {
