@@ -424,11 +424,12 @@ class Acceptance:
         """The Owner toggles VPS-wide blocking through the CLI and private management API."""
         initial = self.cli("server", "dns-blocking", "status", self.server_id)
         assert not initial["policy"]["enabled"] and not initial["status"]["active"], initial
-        oisd = next(preset["url"] for preset in initial["presets"] if preset["name"] == "OISD Small")
+        name = self.args.dns_blocklist
+        source = next(preset["url"] for preset in initial["presets"] if preset["name"] == name)
         self.cli("server", "dns-blocking", "enable", self.server_id,
-                 "--list", "oisd-small", "--allow", "keep.googlesyndication.com")
+                 "--list", name.lower().replace(" ", "-"), "--allow", "keep.googlesyndication.com")
         enabled = self.blocklist_settled(True)
-        assert enabled["policy"] == {"enabled": True, "sources": [oisd],
+        assert enabled["policy"] == {"enabled": True, "sources": [source],
                                      "allowlist": ["keep.googlesyndication.com"]}, enabled["policy"]
         count = enabled["status"]["domain_count"]
         zones = self.local_zones()
@@ -446,7 +447,7 @@ class Acceptance:
                 [(code, check["level"]) for code, check in checks.items()]
         self.cli("server", "dns-blocking", "disable", self.server_id)
         disabled = self.blocklist_settled(False)
-        assert disabled["policy"]["sources"] == [oisd] and not disabled["policy"]["enabled"]
+        assert disabled["policy"]["sources"] == [source] and not disabled["policy"]["enabled"]
         assert not any(zone.endswith(" always_nxdomain") for zone in self.local_zones())
         self.server.run(["test", "!", "-e", BLOCKLIST_ZONE])
         assert self.rcodes("probe.test") == [0]
@@ -713,6 +714,9 @@ def main():
     parser.add_argument("--vps-dns-over-tls", metavar="IP#NAME",
                         help="Provision the VPS with this DNS-over-TLS upstream instead of recursion, "
                              "for host networks that intercept outbound DNS")
+    parser.add_argument("--dns-blocklist", default="OISD Small", metavar="PRESET",
+                        help="Built-in list for the DNS-blocking step, for host networks that block the default "
+                             "(it must list googlesyndication.com)")
     parser.add_argument("--package", type=Path, required=True)
     parser.add_argument("--upgrade-from", type=Path,
                         help="Install/provision this older unbound development package before interrupted candidate upgrade")

@@ -50,6 +50,9 @@ A host network that intercepts outbound DNS breaks the VPS's default recursive
 resolver, and with it the public HTTPS check. Add
 `--vps-dns-over-tls 9.9.9.9#dns.quad9.net` to provision a DNS-over-TLS upstream
 instead.
+A host network that blocks the default OISD Small list makes the DNS-blocking
+step fail with a `download` error; add `--dns-blocklist 'HaGeZi Multi Light'` to
+use another built-in list that also blocks `googlesyndication.com`.
 
 Use a new output directory for each run. An optional `--installer-tests PATH`
 runs the installer library's isolated root staging regression in the VPS guest.
