@@ -430,3 +430,121 @@ pub(super) async fn rotate_keys(
         "Rotated this device's WireGuard and management keys. The old local identity was removed.",
     )
 }
+
+#[derive(Serialize)]
+struct WireGuardDeviceOutput<'a> {
+    device_id: DeviceId,
+    member_id: MemberId,
+    client_tunnel_address: IpAddr,
+    path: &'a Path,
+}
+
+pub(super) async fn add_wireguard_device(
+    paths: &ClientPaths,
+    arguments: WireGuardDeviceArguments,
+    json: bool,
+) -> Result<()> {
+    // Checked first so a taken path cannot leave a device whose key was never saved.
+    if arguments.output.symlink_metadata().is_ok() {
+        bail!("{} already exists", arguments.output.display());
+    }
+    let (profile, secret) = connected_identity(paths, &arguments.server)?;
+    let client = ManagementClient::new(&profile, &secret)?;
+    if !client.configuration().await?.wireguard_devices_enabled {
+        bail!("update the VPS before adding WireGuard-only devices");
+    }
+    let status = client.status().await?;
+    let mut policy = arguments
+        .policy_file
+        .as_deref()
+        .map(read_member_policy)
+        .transpose()?
+        .unwrap_or_default();
+    let (member_name, target) = if let Some(member_id) = arguments.member_id {
+        let member_id = member_id
+            .parse::<MemberId>()
+            .context("member identifier is invalid")?;
+        let member = client
+            .membership()
+            .await?
+            .members
+            .into_iter()
+            .find(|member| member.id == member_id)
+            .context("member was not found")?;
+        (member.name, Some(member.id))
+    } else {
+        if status.caller_role == Some(ServerRole::Member)
+            && !status.caller_administrator
+            && arguments.policy_file.is_none()
+        {
+            // A delegated member may grant at most its own policy, as with invitations.
+            policy = client
+                .membership()
+                .await?
+                .members
+                .first()
+                .context("this member's policy is unavailable")?
+                .policy
+                .clone();
+            policy.invite_members = false;
+        }
+        (
+            arguments.member_name.context("member name is required")?,
+            None,
+        )
+    };
+    let draft = WireGuardDeviceDraft::new(
+        &profile,
+        &member_name,
+        &arguments.device_name,
+        target,
+        policy,
+    )?;
+    let device = client.create_wireguard_device(draft.request()).await?;
+    let config = draft.finish(device)?;
+    config.save(&arguments.output).with_context(|| {
+        format!(
+            "device {} was added but its configuration could not be saved; revoke it and try again",
+            config.device().id
+        )
+    })?;
+    if arguments.qr {
+        let qr = qrcode::QrCode::with_error_correction_level(config.expose(), qrcode::EcLevel::L)?
+            .render::<qrcode::render::unicode::Dense1x2>()
+            .build();
+        // Fixed black-on-white keeps the code scannable on dark terminal themes.
+        let qr: String = qr
+            .lines()
+            .map(|line| format!("\x1b[30;47m{line}\x1b[0m\n"))
+            .collect();
+        if json {
+            eprint!("{qr}");
+        } else {
+            print!("{qr}");
+        }
+    }
+    let device = config.device();
+    let output = WireGuardDeviceOutput {
+        device_id: device.id,
+        member_id: device.member_id,
+        client_tunnel_address: device.client_tunnel_address,
+        path: &arguments.output,
+    };
+    if json {
+        println!("{}", serde_json::to_string_pretty(&output)?);
+    } else {
+        println!(
+            "Added {} at {} with Direct UDP access only.",
+            device.name, device.client_tunnel_address
+        );
+        println!(
+            "{} holds its only private key; import it into the WireGuard app, then delete it.",
+            arguments.output.display()
+        );
+        println!(
+            "Revoke it with: sirinvpn server revoke-device {} {}",
+            arguments.server, device.id
+        );
+    }
+    Ok(())
+}

@@ -28,7 +28,7 @@ impl AuthorizationDocument {
         let mut certificates: Vec<_> = self
             .devices
             .iter()
-            .filter(|device| self.access_for_device(device).is_some())
+            .filter(|device| !device.wireguard_only() && self.access_for_device(device).is_some())
             .map(|device| device.management_certificate_pem.clone())
             .collect();
         certificates.extend(
@@ -190,6 +190,7 @@ impl AuthorizationDocument {
                         identity_fingerprint: device.certificate_fingerprint.clone(),
                         peer_communication_enabled: device.peer_communication_enabled,
                         recent_handshake: None,
+                        wireguard_only: device.wireguard_only(),
                     })
                     .collect();
                 devices.sort_by(|left, right| left.name.cmp(&right.name));

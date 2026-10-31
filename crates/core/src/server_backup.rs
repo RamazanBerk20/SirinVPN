@@ -303,7 +303,8 @@ fn validate_snapshot(
         Some(encoded) => {
             let authorization: BackupAuthorizationState =
                 serde_json::from_str(encoded).map_err(|_| ServerBackupError::InvalidSnapshot)?;
-            if !matches!(authorization.schema_version, 1..=6)
+            // The `server_authorization` reader range in release/state-compatibility.json.
+            if !matches!(authorization.schema_version, 1..=7)
                 || authorization.server_id != snapshot.server_id
             {
                 return Err(ServerBackupError::InvalidSnapshot);
@@ -596,6 +597,24 @@ mod tests {
             read_encrypted_server_backup(&destination, "wrong password"),
             Err(ServerBackupError::AuthenticationFailed)
         ));
+
+        // Schema 7 holds WireGuard-only devices; schema 8 is not readable yet.
+        for (schema, accepted) in [(7, true), (8, false)] {
+            let mut value: serde_json::Value = serde_json::from_slice(&snapshot).unwrap();
+            value["authorization_json"] = json!(
+                serde_json::to_string(&json!({"schema_version": schema, "server_id": server_id}))
+                    .unwrap()
+            );
+            let path = directory
+                .path()
+                .join(format!("authorization-{schema}.sirinvpn-server-backup"));
+            write_encrypted_server_backup(&path, &serde_json::to_vec(&value).unwrap(), password)
+                .unwrap();
+            assert_eq!(
+                read_encrypted_server_backup(&path, password).is_ok(),
+                accepted
+            );
+        }
 
         let future = json!({
             "schema_version": SERVER_BACKUP_SNAPSHOT_SCHEMA_VERSION + 2,

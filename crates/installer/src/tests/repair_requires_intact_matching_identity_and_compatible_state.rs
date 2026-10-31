@@ -204,7 +204,7 @@ fn repair_requires_intact_matching_identity_and_compatible_state() {
         RepairIdentityCheck::Match
     );
     let mut future_authorization = authorization.clone();
-    future_authorization["schema_version"] = serde_json::json!(6);
+    future_authorization["schema_version"] = serde_json::json!(8);
     assert_eq!(
         repair_identity_check(
             &configuration.to_string(),

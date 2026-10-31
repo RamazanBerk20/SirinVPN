@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { t } from "../../i18n";
 
 /** Avoid uneven QR cells when a dense invitation is scaled to fit the window. */
-export function InvitationQr({ source, enlarged = false, kind = "invitation" }: { source: string; enlarged?: boolean; kind?: "invitation" | "recovery" }) {
+export function InvitationQr({ source, enlarged = false, kind = "invitation" }: { source: string; enlarged?: boolean; kind?: "invitation" | "recovery" | "wireguard" }) {
   const frame = useRef<HTMLDivElement>(null);
   const [modules, setModules] = useState(0);
   const [size, setSize] = useState<number>();
@@ -57,7 +57,7 @@ export function InvitationQr({ source, enlarged = false, kind = "invitation" }: 
           }
           setModules(count);
         }}
-        alt={t(kind === "recovery"
+        alt={t(kind === "wireguard" ? "devices.share.altWireguard" : kind === "recovery"
           ? enlarged ? "devices.share.altRecoveryEnlarged" : "devices.share.altRecovery"
           : enlarged ? "devices.share.altInvitationEnlarged" : "devices.share.altInvitation")}
       />

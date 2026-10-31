@@ -5,6 +5,8 @@ import { DeviceList } from "./DeviceList";
 import { ActiveInvitations } from "./ActiveInvitations";
 import { InvitationDialog } from "./InvitationDialog";
 import { MemberPolicyDialog } from "./MemberPolicyDialog";
+import { WireGuardDeviceDialog } from "./WireGuardDeviceDialog";
+import { isAndroid } from "../../platform";
 import { useState, type ReactNode } from "react";
 import type { MemberSummary } from "../../types";
 import { formatDateTime, t } from "../../i18n";
@@ -16,6 +18,7 @@ export function AccessPanel(
 ) {
   const { profile, connected, accessLevel, onNetwork } = props;
   const [policyTarget, setPolicyTarget] = useState<MemberSummary | null>(null);
+  const [wireguardTarget, setWireguardTarget] = useState<MemberSummary | "new" | null>(null);
   const {
     snapshot,
     verified,
@@ -28,6 +31,7 @@ export function AccessPanel(
     accessBusy,
     peerBusy,
     scopedInvitationsAvailable,
+    wireguardDevicesAvailable,
     recipientNamesAvailable,
     memberLifecycleAvailable,
     memberBusy,
@@ -52,6 +56,8 @@ export function AccessPanel(
   const deviceCount = snapshot?.members.reduce((count, member) => count + member.devices.length, 0) ?? 0;
   const issuer = snapshot?.members.find((member) => member.devices.some((device) => device.id === profile.device_id))
     ?? (accessLevel === "member" ? snapshot?.members[0] : undefined);
+  // The Android runtime has no command for exporting WireGuard configurations yet.
+  const wireguardAvailable = wireguardDevicesAvailable && !isAndroid;
   return (
     <section className="access-section">
       <div className="section-heading">
@@ -74,6 +80,13 @@ export function AccessPanel(
           >
             <Plus size={16} weight="bold" /> {t("devices.panel.invite")}
           </button>
+          {wireguardAvailable && <button
+            className="secondary-button"
+            disabled={!verified || (accessLevel === "member" && !issuer?.policy?.invite_members)}
+            onClick={() => setWireguardTarget("new")}
+          >
+            <Plus size={16} weight="bold" /> {t("devices.panel.addWireguard")}
+          </button>}
         </div>
       </div>
       {!connected ? (
@@ -150,6 +163,7 @@ export function AccessPanel(
                 onPeer={updatePeerCommunication}
                 onNetwork={onNetwork}
                 onPolicy={scopedInvitationsAvailable ? setPolicyTarget : undefined}
+                onWireGuard={wireguardAvailable ? setWireguardTarget : undefined}
               />
               <ActiveInvitations
                 snapshot={snapshot}
@@ -175,6 +189,14 @@ export function AccessPanel(
         onOpenChange={changeInvitationOpen}
         onCreated={refreshAfterChange}
       />
+      {wireguardTarget && <WireGuardDeviceDialog
+        key={`${profile.id}:${wireguardTarget === "new" ? "new" : wireguardTarget.id}`}
+        serverId={profile.id}
+        target={wireguardTarget === "new" ? null : wireguardTarget}
+        delegatedPolicy={accessLevel === "member" ? issuer?.policy : undefined}
+        onClose={() => setWireguardTarget(null)}
+        onCreated={refreshAfterChange}
+      />}
       {policyTarget && <MemberPolicyDialog key={policyTarget.id} serverId={profile.id} member={policyTarget} onClose={() => setPolicyTarget(null)} onSaved={refreshAfterChange} />}
     </section>
   );

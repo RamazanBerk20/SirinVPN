@@ -3,7 +3,9 @@ use super::*;
 
 impl AuthorizationDocument {
     pub(crate) fn required_schema_version(&self) -> u16 {
-        if self
+        if self.devices.iter().any(DeviceRecord::wireguard_only) {
+            WIREGUARD_ONLY_AUTHORIZATION_SCHEMA_VERSION
+        } else if self
             .devices
             .iter()
             .any(|device| device.preshared_key.is_some())

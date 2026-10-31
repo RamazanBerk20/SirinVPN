@@ -324,11 +324,11 @@
       "state": "server_authorization",
       "reads": {
         "minimum": 1,
-        "maximum": 6
+        "maximum": 7
       },
       "writes": {
         "minimum": 1,
-        "maximum": 6
+        "maximum": 7
       }
     },
     {

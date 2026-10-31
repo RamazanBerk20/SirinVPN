@@ -275,6 +275,24 @@ export const api = {
         recipient_names: recipientNames,
       },
     }),
+  createWireGuardDevice: (
+    serverId: string,
+    memberName: string,
+    deviceName: string,
+    targetMemberId: string | null,
+    memberPolicy: import("./types").MemberPolicy | undefined,
+    path: string | null,
+  ) =>
+    invoke<import("./types").WireGuardDeviceResult>("create_wireguard_device", {
+      input: {
+        server_id: serverId,
+        member_name: memberName,
+        device_name: deviceName,
+        target_member_id: targetMemberId,
+        member_policy: memberPolicy,
+        path,
+      },
+    }),
   cancelInvitation: (serverId: string, invitationId: string) =>
     invoke<void>("cancel_invitation", { serverId, invitationId }),
   updateMemberPolicy: (serverId: string, memberId: string, policy: import("./types").MemberPolicy) =>

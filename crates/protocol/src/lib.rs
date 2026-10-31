@@ -51,7 +51,7 @@ pub use management::{
     KeyRotationPrepareRequest, KeyRotationPrepareResponse, MemberAccessUpdateRequest,
     MemberDevicesRevokeRequest, MemberSummary, MemberSuspensionUpdateRequest, MembershipSnapshot,
     OwnershipTransferRequest, PortForward, PortForwardCreateRequest, PortForwardProtocol,
-    RenameDeviceRequest,
+    RenameDeviceRequest, WireGuardDeviceCreateRequest,
 };
 
 use serde::{Deserialize, Serialize};

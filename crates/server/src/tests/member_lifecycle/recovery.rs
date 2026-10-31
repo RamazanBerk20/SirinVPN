@@ -2,7 +2,11 @@ use super::*;
 use sirinvpn_core::{DecodedRecoveryKey, RecoveryKeyDraft};
 use sirinvpn_protocol::{RecoveryKeyResponse, RecoveryPolicy, ServerProfile};
 
-fn profile(state: &AppState, document: &AuthorizationDocument, index: usize) -> ServerProfile {
+pub(super) fn profile(
+    state: &AppState,
+    document: &AuthorizationDocument,
+    index: usize,
+) -> ServerProfile {
     let device = &document.devices[index];
     let member = document
         .members

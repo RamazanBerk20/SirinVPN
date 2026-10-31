@@ -103,7 +103,9 @@ servers or a VPN subscription.
 4. **Add other devices.** On a device that is already set up, open **Devices** and
    select **Invite member**, or **Add device** in a member's menu. On the new
    device, choose **Invitation** (**Use an invitation** on Android) and scan the QR
-   code or enter the code.
+   code or enter the code. For an iPhone, iPad, Mac or router with the official
+   WireGuard app, select **Add WireGuard device** instead and scan its QR code in
+   that app ([details](docs/wireguard-devices.md)).
 
 ### Finding your way around
 

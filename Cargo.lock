@@ -4494,6 +4494,7 @@ dependencies = [
  "anyhow",
  "clap",
  "nix",
+ "qrcode",
  "rpassword",
  "serde",
  "serde_json",

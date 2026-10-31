@@ -407,6 +407,8 @@ export interface DeviceSummary {
   identity_fingerprint?: string;
   peer_communication_enabled?: boolean;
   recent_handshake?: boolean;
+  /** Joins with a standard WireGuard configuration: Direct UDP only, no management. */
+  wireguard_only?: boolean;
 }
 
 export interface MemberSummary {
@@ -459,6 +461,7 @@ export interface CurrentConfiguration {
   recipient_names_enabled?: boolean;
   recovery_keys_enabled?: boolean;
   dns_blocklist_management_enabled?: boolean;
+  wireguard_devices_enabled?: boolean;
 }
 
 export interface DnsBlocklistPolicy {
@@ -497,6 +500,11 @@ export interface MembershipSnapshot {
   members: MemberSummary[];
   active_invitations: ActiveInvitationSummary[];
   port_forwards?: PortForward[];
+}
+
+export interface WireGuardDeviceResult {
+  device_id: string;
+  qr_svg: string;
 }
 
 export interface InvitationResult {

@@ -31,6 +31,7 @@ mod enrollment;
 use enrollment::*;
 mod access;
 mod authorization_transaction;
+mod wireguard_device;
 use access::*;
 mod measurement;
 mod metrics;

@@ -70,6 +70,8 @@ pub use server_backup::{
     validate_server_backup_password, write_encrypted_server_backup,
 };
 pub use store::{ProfileStore, ProfileStoreError};
+mod wireguard_device;
+pub use wireguard_device::{WireGuardDeviceConfig, WireGuardDeviceDraft, WireGuardDeviceError};
 
 #[derive(Clone, Debug)]
 pub struct ClientPaths {

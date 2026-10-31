@@ -66,8 +66,13 @@ pub(super) struct ExistingAuthorizationMember {
 pub(super) struct ExistingAuthorizationDevice {
     pub(super) member_id: MemberId,
     pub(super) wireguard_public_key: String,
+    /// Absent for a WireGuard-only device, which can never match the Owner identity.
+    #[serde(default)]
     pub(super) management_certificate_pem: String,
 }
+
+/// Matches the server's `server_authorization` reader range in release/state-compatibility.json.
+const MAXIMUM_AUTHORIZATION_SCHEMA: u16 = 7;
 
 pub(super) fn existing_owner_matches(
     session: &Session,
@@ -269,7 +274,7 @@ pub(super) fn repair_identity_check(
     let Ok(document) = serde_json::from_str::<ExistingAuthorizationIdentity>(authorization) else {
         return RepairIdentityCheck::Mismatch;
     };
-    if !matches!(document.schema_version, 1..=5) {
+    if !matches!(document.schema_version, 1..=MAXIMUM_AUTHORIZATION_SCHEMA) {
         return RepairIdentityCheck::Incompatible;
     }
     if authorization_owner_matches(
@@ -341,7 +346,7 @@ pub(super) fn authorization_owner_matches(
         return false;
     };
     if existing.server_id != expected_server_id
-        || !matches!(existing.schema_version, 1..=5)
+        || !matches!(existing.schema_version, 1..=MAXIMUM_AUTHORIZATION_SCHEMA)
         || (existing.schema_version == 1 && existing.members.iter().any(|member| member.suspended))
         || (existing.schema_version < 3
             && existing

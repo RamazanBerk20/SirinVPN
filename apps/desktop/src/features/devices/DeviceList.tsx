@@ -32,6 +32,7 @@ type Props = MemberLifecycleProps & {
   peerBusy: string | null;
   onNetwork?: () => void;
   onPolicy?: (member: MemberSummary) => void;
+  onWireGuard?: (member: MemberSummary) => void;
   onInvite: (member: MemberSummary) => void;
   onAccess: (member: MemberSummary) => Promise<void>;
   onTransfer: (member: MemberSummary) => Promise<void>;
@@ -39,6 +40,9 @@ type Props = MemberLifecycleProps & {
   onRevoke: (deviceId: string, name: string) => Promise<void>;
   onPeer: (deviceId: string, name: string, enabled: boolean) => Promise<void>;
 };
+
+/** Only these devices can manage the server, so only they keep or receive ownership. */
+const managedDevices = (member: MemberSummary) => member.devices.filter((device) => !device.wireguard_only);
 
 // Older profiles have no platform metadata. Use recognizable display names;
 // an ambiguous name keeps the generic device icon rather than inventing an OS.
@@ -65,7 +69,7 @@ function MemberControls({
     if (props.accessLevel === "owner" && member.role === "member") actions.push(
       { label: t(member.administrator ? "devices.menu.removeAdmin" : "devices.menu.makeAdmin"), group: t("devices.menu.group.member"), disabled: props.accessBusy === member.id || hasInvitation || props.memberBusy != null,
         reason: hasInvitation ? t("devices.menu.cancelInvitationFirst") : undefined, run: () => void props.onAccess(member) },
-      { label: t("devices.menu.transfer"), group: t("devices.menu.group.ownership"), danger: true, disabled: props.accessBusy === member.id || props.memberBusy != null || member.suspended || hasInvitation || member.devices.length === 0,
+      { label: t("devices.menu.transfer"), group: t("devices.menu.group.ownership"), danger: true, disabled: props.accessBusy === member.id || props.memberBusy != null || member.suspended || hasInvitation || managedDevices(member).length === 0,
         reason: hasInvitation ? t("devices.menu.cancelInvitationFirst") : undefined, run: () => void props.onTransfer(member) },
     );
     if (canManageMember(props.accessLevel, member) || props.accessLevel === "member" && member.policy?.add_own_devices)
@@ -123,7 +127,7 @@ function MemberControls({
                 props.memberBusy != null ||
                 member.suspended ||
                 hasInvitation ||
-                member.devices.length === 0
+                managedDevices(member).length === 0
               }
               title={
                 hasInvitation
@@ -179,7 +183,7 @@ function DeviceRow({
         : t("devices.row.activityDetail.unknown");
   const manageable = canManageMember(props.accessLevel, member);
   const lastOwnerDevice =
-    member.role === "owner" && member.devices.length === 1;
+    member.role === "owner" && !device.wireguard_only && managedDevices(member).length === 1;
   const hasInvitation = props.snapshot.active_invitations.some(
     (i) => i.target_member_id === member.id,
   );
@@ -199,6 +203,13 @@ function DeviceRow({
             : undefined,
           run: () => props.onInvite(member),
         },
+        ...(props.onWireGuard ? [{
+          label: t("devices.menu.addWireguardFor", { name: member.name }),
+          group: t("devices.menu.group.member"),
+          disabled: member.suspended || props.memberBusy != null,
+          reason: member.suspended ? t("devices.menu.reactivateFirst") : undefined,
+          run: () => props.onWireGuard?.(member),
+        }] : []),
         ...(props.onPolicy && member.role !== "owner" ? [{ label: t("devices.menu.accessPolicy"), group: t("devices.menu.group.member"), run: () => props.onPolicy?.(member) }] : []),
         ...memberLifecycleActions(member, props),
         {
@@ -247,7 +258,8 @@ function DeviceRow({
           props.accessBusy === member.id ||
           hasInvitation ||
           member.suspended ||
-          props.memberBusy != null,
+          props.memberBusy != null ||
+          managedDevices(member).length === 0,
         reason: member.suspended
           ? t("devices.menu.reactivateFirst")
           : hasInvitation
@@ -337,6 +349,12 @@ function DeviceRow({
                   : t("devices.row.network.isolated")}
             </dd>
           </div>
+          {device.wireguard_only && (
+            <div>
+              <dt>{t("devices.row.facts.connection")}</dt>
+              <dd>{t("devices.row.wireguardOnly")}</dd>
+            </div>
+          )}
           {device.identity_fingerprint && (
             <div>
               <dt>{t("devices.row.facts.fingerprint")}</dt>
@@ -363,7 +381,7 @@ function DeviceRow({
             </button>
             {props.snapshot.members.some(
               (m) =>
-                m.role === "member" && !m.suspended && m.devices.length > 0,
+                m.role === "member" && !m.suspended && managedDevices(m).length > 0,
             ) && (
               <details>
                 <summary>
@@ -375,7 +393,7 @@ function DeviceRow({
                     (m) =>
                       m.role === "member" &&
                       !m.suspended &&
-                      m.devices.length > 0,
+                      managedDevices(m).length > 0,
                   )
                   .map((target) => (
                     <button
