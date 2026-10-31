@@ -72,6 +72,8 @@ pub(super) enum ServerCommand {
     RotateKeys(RotateKeysArguments),
     Uninstall(UninstallServerArguments),
     Invite(InviteArguments),
+    /// Add a device that joins through a standard WireGuard app or router, Direct UDP only.
+    AddWireguardDevice(WireGuardDeviceArguments),
     Members(ServerSelector),
     CancelInvitation(InvitationSelector),
     RenameDevice(RenameDeviceArguments),
@@ -215,6 +217,30 @@ pub(super) struct InviteArguments {
     /// JSON member policy; additional-device invitations inherit existing policy.
     #[arg(long, conflicts_with = "member_id")]
     pub(super) policy_file: Option<PathBuf>,
+}
+
+#[derive(Args)]
+pub(super) struct WireGuardDeviceArguments {
+    pub(super) server: String,
+    #[arg(
+        long,
+        required_unless_present = "member_id",
+        conflicts_with = "member_id"
+    )]
+    pub(super) member_name: Option<String>,
+    #[arg(long, conflicts_with = "member_name")]
+    pub(super) member_id: Option<String>,
+    #[arg(long)]
+    pub(super) device_name: String,
+    /// JSON member policy for a new member; additional devices inherit existing policy.
+    #[arg(long, conflicts_with = "member_id")]
+    pub(super) policy_file: Option<PathBuf>,
+    /// New file for the configuration. It holds the device's only private key.
+    #[arg(long)]
+    pub(super) output: PathBuf,
+    /// Also print the configuration as a QR code for the WireGuard mobile apps.
+    #[arg(long)]
+    pub(super) qr: bool,
 }
 
 #[derive(Args)]

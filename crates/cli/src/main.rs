@@ -29,9 +29,9 @@ use serde::Serialize;
 use sirinvpn_core::{
     ClientPaths, DecodedInvitation, EndpointTransitionCode, InvitationDraft, InvitationTarget,
     ManagementClient, ManagementError, NetworkContext, ProfileStore, RotationConnectionPolicy,
-    SecretIdentity, SecretStore, apply_endpoint_transition, create_endpoint_transition,
-    has_pending_key_rotation, preshared_key_rotation_recommended, publish_endpoint_transition,
-    rotate_current_device_keys_with_policy,
+    SecretIdentity, SecretStore, WireGuardDeviceDraft, apply_endpoint_transition,
+    create_endpoint_transition, has_pending_key_rotation, preshared_key_rotation_recommended,
+    publish_endpoint_transition, rotate_current_device_keys_with_policy,
 };
 use sirinvpn_installer::{
     InstallRequest, Provisioner, RepairRequest, ServerBackupRequest, ServerRestoreRequest,
@@ -109,6 +109,9 @@ async fn run() -> Result<()> {
             ServerCommand::Uninstall(arguments) => uninstall_server(&paths, arguments, cli.json),
             ServerCommand::Invite(arguments) => {
                 create_invitation(&paths, arguments, cli.json).await
+            }
+            ServerCommand::AddWireguardDevice(arguments) => {
+                add_wireguard_device(&paths, arguments, cli.json).await
             }
             ServerCommand::Members(selector) => {
                 show_membership(&paths, &selector.server, cli.json).await

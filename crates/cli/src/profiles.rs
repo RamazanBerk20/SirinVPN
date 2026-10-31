@@ -50,7 +50,7 @@ pub(super) fn print_membership(snapshot: &MembershipSnapshot, json: bool) -> Res
         );
         for device in &member.devices {
             println!(
-                "  {}  {}  {}  {}  identity {}",
+                "  {}  {}  {}  {}  {}",
                 device.id,
                 device.client_tunnel_address,
                 device.name,
@@ -59,10 +59,12 @@ pub(super) fn print_membership(snapshot: &MembershipSnapshot, json: bool) -> Res
                 } else {
                     "internet only"
                 },
-                if device.identity_fingerprint.is_empty() {
-                    "unavailable"
+                if device.wireguard_only {
+                    "WireGuard configuration only".to_owned()
+                } else if device.identity_fingerprint.is_empty() {
+                    "identity unavailable".to_owned()
                 } else {
-                    &device.identity_fingerprint
+                    format!("identity {}", device.identity_fingerprint)
                 }
             );
         }

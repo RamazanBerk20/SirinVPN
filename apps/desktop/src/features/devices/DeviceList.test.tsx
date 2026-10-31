@@ -274,3 +274,25 @@ it("restores expanded details in the same update that dismisses the menu", async
     screen.getByRole("button", { name: "Actions for My desktop" }),
   );
 });
+
+it("never counts a WireGuard-only phone as a device that can keep or receive ownership", () => {
+  const owner = snapshot.members[0];
+  const phone = { id: "owner-phone", member_id: "owner", name: "Owner iPhone", client_tunnel_address: "10.77.0.9", wireguard_only: true };
+  const family = snapshot.members[1];
+  const router = { id: "router", member_id: "member", name: "Router", client_tunnel_address: "10.77.0.10", wireguard_only: true };
+  const props = setup({
+    onWireGuard: vi.fn(),
+    snapshot: { ...snapshot, members: [{ ...owner, devices: [...owner.devices, phone] }, { ...family, devices: [router] }] },
+  });
+  menu("My desktop");
+  expect((screen.getByRole("menuitem", { name: t("devices.menu.revoke", { name: "My desktop" }) }) as HTMLButtonElement).disabled).toBe(true);
+  fireEvent.click(screen.getByRole("menuitem", { name: t("devices.menu.addWireguardFor", { name: "Owner" }) }));
+  expect(props.onWireGuard).toHaveBeenCalledWith(expect.objectContaining({ id: "owner" }));
+  menu("Owner iPhone");
+  expect((screen.getByRole("menuitem", { name: t("devices.menu.revoke", { name: "Owner iPhone" }) }) as HTMLButtonElement).disabled).toBe(false);
+  fireEvent.keyDown(screen.getByRole("menu"), { key: "Escape" });
+  menu("Router");
+  expect((screen.getByRole("menuitem", { name: t("devices.menu.transfer") }) as HTMLButtonElement).disabled).toBe(true);
+  fireEvent.keyDown(screen.getByRole("menu"), { key: "Escape" });
+  expect(screen.getAllByText(t("devices.row.wireguardOnly"))).toHaveLength(2);
+});

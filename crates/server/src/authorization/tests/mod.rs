@@ -54,3 +54,4 @@ mod member_policy;
 mod owner_state_is_valid_and_uses_the_legacy_address;
 mod ownership_transfer_is_atomic_and_keeps_a_single_owner;
 mod preshared_keys;
+mod wireguard_only_devices;

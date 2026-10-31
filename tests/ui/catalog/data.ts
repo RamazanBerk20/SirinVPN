@@ -41,7 +41,7 @@ export const diagnostics={api_version:"v1",checks:[check("local_backend","Local 
 export function initialState(options:any={}) {
   const state:any={platform:"desktop",connected:options.connected!==false,profiles:[clone(profile)],preferences:clone(connectionPreferences),
     appPreferences:{preferences:{start_on_login:false,launch_minimized:false,close_to_tray:false,notifications:false,animations:false},startup_available:true,tray_available:true,notification_permission:"prompt"},
-    local:clone(local),remote:clone(remote),members:clone(members),configuration:{port_forwarding_enabled:true,member_lifecycle_enabled:true,member_policies_enabled:true,reusable_invitations_enabled:true,recipient_names_enabled:true,recovery_keys_enabled:true},
+    local:clone(local),remote:clone(remote),members:clone(members),configuration:{port_forwarding_enabled:true,member_lifecycle_enabled:true,member_policies_enabled:true,reusable_invitations_enabled:true,recipient_names_enabled:true,recovery_keys_enabled:true,wireguard_devices_enabled:true},
     wifi:{policy:{enabled:false,server_id:id},trusted_networks:[],current_network:"untrusted_wifi",can_trust_current:true,current_network_token:"screenshot-network",network_names:{"screenshot-network":"Home hotspot"},automation_status:"disabled"},
     sshInspection:{host:"vpn.example.com",port:22,fingerprint,status:"unknown",previous_fingerprint:null},savedLogin:null,diagnostics:clone(diagnostics),invitationPreview:clone(invitationPreview),
     releaseCandidate:clone(releaseCandidate),releaseConfigured:false,releaseVersion:"1.0.1",releaseSource:"",releaseAutomatic:false,releasePending:false,releaseMatches:true,

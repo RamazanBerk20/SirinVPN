@@ -41,6 +41,8 @@ use connection::*;
 mod local_status_stream;
 mod management;
 use management::*;
+mod wireguard_device;
+use wireguard_device::*;
 mod member_lifecycle;
 use member_lifecycle::*;
 mod recovery;
@@ -223,6 +225,7 @@ fn run_inner() -> tauri::Result<()> {
             run_diagnostics,
             membership,
             create_invitation,
+            create_wireguard_device,
             cancel_invitation,
             rename_device,
             revoke_device,

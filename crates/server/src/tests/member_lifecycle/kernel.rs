@@ -45,7 +45,7 @@ impl authorization_transaction::Effects for FaultHost<'_> {
     }
 }
 
-async fn inspect(program: &str, args: &[&str]) -> String {
+pub(super) async fn inspect(program: &str, args: &[&str]) -> String {
     let output = Command::new(program).args(args).output().await.unwrap();
     assert!(output.status.success(), "{program} inspection failed");
     String::from_utf8(output.stdout).unwrap()
@@ -135,7 +135,7 @@ async fn assert_runtime(state: &AppState, document: &AuthorizationDocument) {
     );
 }
 
-async fn probe(index: usize, ipv6: bool, available: bool) {
+pub(super) async fn probe(index: usize, ipv6: bool, available: bool) {
     let output = Command::new("python3")
         .args([
             "tests/network/member_lifecycle.py",

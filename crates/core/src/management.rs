@@ -347,6 +347,20 @@ impl ManagementClient {
         self.decode(response).await
     }
 
+    pub async fn create_wireguard_device(
+        &self,
+        request: &sirinvpn_protocol::WireGuardDeviceCreateRequest,
+    ) -> Result<sirinvpn_protocol::DeviceSummary, ManagementError> {
+        let response = self
+            .client
+            .post(format!("{}/v1/wireguard-devices", self.base_url))
+            .json(request)
+            .send()
+            .await
+            .map_err(|_| ManagementError::ConnectionFailed)?;
+        self.decode(response).await
+    }
+
     pub async fn revoke_device(
         &self,
         device_id: DeviceId,

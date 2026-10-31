@@ -79,6 +79,7 @@ export function useAccessController({
   const [accessBusy, setAccessBusy] = useState<string | null>(null);
   const [peerBusy, setPeerBusy] = useState<string | null>(null);
   const [scopedInvitationsAvailable, setScopedInvitationsAvailable] = useState(false);
+  const [wireguardDevicesAvailable, setWireguardDevicesAvailable] = useState(false);
   const [invitationNaming, setInvitationNaming] = useState<{
     serverId: string;
     available: boolean;
@@ -122,6 +123,7 @@ export function useAccessController({
       setPortForwardingAvailable(null);
       setMemberLifecycleAvailable(null);
       setScopedInvitationsAvailable(false);
+      setWireguardDevicesAvailable(false);
       setInvitationNaming(null);
       return;
     }
@@ -131,6 +133,7 @@ export function useAccessController({
     const capabilities = api.serverConfiguration(profile.id).then(configuration => {
       if (generation !== request.current) return;
       setScopedInvitationsAvailable(Boolean(configuration.reusable_invitations_enabled));
+      setWireguardDevicesAvailable(Boolean(configuration.wireguard_devices_enabled));
       setInvitationNaming({ serverId: profile.id, available: Boolean(configuration.recipient_names_enabled) });
       setPortForwardingAvailable(Boolean(configuration.port_forwarding_enabled));
       setMemberLifecycleAvailable(Boolean(configuration.member_lifecycle_enabled));
@@ -138,7 +141,7 @@ export function useAccessController({
     }, reason => {
       if (generation !== request.current) return;
       setMemberLifecycleAvailable(null); setPortForwardingAvailable(null);
-      setScopedInvitationsAvailable(false); setInvitationNaming(null);
+      setScopedInvitationsAvailable(false); setWireguardDevicesAvailable(false); setInvitationNaming(null);
       setConfigurationFailure({ key: cacheKey, message: errorMessage(reason, t("devices.error.features")) });
     });
     const membership = readMembership(cacheKey, () => api.membership(profile.id)).then(nextSnapshot => {
@@ -369,7 +372,8 @@ export function useAccessController({
   };
 
   const transferOwnership = async (member: MemberSummary) => {
-    const destination = member.devices[0];
+    // A WireGuard-only device cannot manage the server, so it can never become the Owner's.
+    const destination = member.devices.find((device) => !device.wireguard_only);
     if (!destination) return;
     const fingerprint = destination.identity_fingerprint
       ? destination.identity_fingerprint
@@ -416,6 +420,7 @@ export function useAccessController({
     accessBusy,
     peerBusy,
     scopedInvitationsAvailable,
+    wireguardDevicesAvailable,
     recipientNamesAvailable,
     memberLifecycleAvailable,
     memberBusy,

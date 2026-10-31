@@ -133,9 +133,17 @@ pub(super) async fn commit_authorization(
 pub(super) fn decoded_transport_peers(
     authorization: &AuthorizationDocument,
 ) -> Result<Vec<[u8; 32]>> {
+    // WireGuard-only devices reach Direct UDP alone; the relays never authenticate them.
+    let direct_only: HashSet<_> = authorization
+        .devices
+        .iter()
+        .filter(|device| device.wireguard_only())
+        .map(|device| device.wireguard_public_key.as_str())
+        .collect();
     authorization
         .desired_peers(unix_time())
         .into_iter()
+        .filter(|peer| !direct_only.contains(peer.public_key.as_str()))
         .map(|peer| {
             decode_key(&peer.public_key)
                 .map_err(|_| anyhow!("authorization contains an invalid transport peer"))

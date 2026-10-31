@@ -72,6 +72,9 @@ pub struct CurrentConfiguration {
     pub recovery_keys_enabled: bool,
     #[serde(default, skip_serializing_if = "is_false")]
     pub dns_blocklist_management_enabled: bool,
+    /// Managers can add devices that join only through a standard WireGuard configuration.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub wireguard_devices_enabled: bool,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
@@ -139,6 +142,22 @@ pub struct InvitationCreateRequest {
     pub token_hash: String,
     pub bootstrap_wireguard_public_key: String,
     pub bootstrap_management_certificate_pem: String,
+}
+
+/// The issuing device generated the key pair; only the public key and preshared key leave it.
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct WireGuardDeviceCreateRequest {
+    pub server_id: ServerId,
+    pub endpoint: ServerEndpoint,
+    pub member_name: String,
+    pub device_name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub target_member_id: Option<MemberId>,
+    #[serde(default, skip_serializing_if = "MemberPolicy::is_default")]
+    pub member_policy: MemberPolicy,
+    pub wireguard_public_key: String,
+    pub preshared_key: String,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
@@ -265,6 +284,9 @@ pub struct DeviceSummary {
     /// Current kernel handshake recency, never persisted in authorization state.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub recent_handshake: Option<bool>,
+    /// Joins through a standard WireGuard configuration: Direct UDP only, no management access.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub wireguard_only: bool,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]

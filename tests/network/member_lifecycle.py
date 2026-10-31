@@ -48,6 +48,22 @@ add rule ip sirinvpn_nat prerouting jump port_forward_prerouting
         run("ip", "-n", namespace, "address", "add", device["ipv4"] + "/24", "dev", "client0")
         run("ip", "-n", namespace, "-6", "address", "add", device["ipv6"] + "/64", "dev", "client0", "nodad")
         run("ip", "-n", namespace, "link", "set", "client0", "up")
+elif sys.argv[1] == "conf":
+    # Apply an exported configuration with stock wireguard-tools, as a WireGuard app would.
+    config = Path(sys.argv[2])
+    namespace = "member" + sys.argv[3]
+    fields = dict(line.split(" = ", 1) for line in config.read_text().splitlines() if " = " in line)
+    run("ip", "netns", "add", namespace)
+    run("ip", "link", "add", "client0", "type", "wireguard")
+    run("wg", "setconf", "client0", "/dev/stdin", data=run("wg-quick", "strip", str(config)))
+    run("ip", "link", "set", "client0", "netns", namespace)
+    run("ip", "-n", namespace, "link", "set", "lo", "up")
+    for address in fields["Address"].split(", "):
+        run("ip", "-n", namespace, "address", "add", address, "dev", "client0",
+            *(["nodad"] if ":" in address else []))
+    run("ip", "-n", namespace, "link", "set", "client0", "up")
+    for allowed in fields["AllowedIPs"].split(", "):
+        run("ip", "-n", namespace, "route", "add", allowed, "dev", "client0")
 else:
     destination = Path("/tmp/lifecycle-v6").read_text() if sys.argv[3] == "6" else "10.77.0.1"
     expected = sys.argv[4] == "open"

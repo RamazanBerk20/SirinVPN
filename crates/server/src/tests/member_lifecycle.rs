@@ -2,6 +2,7 @@ use super::*;
 mod dns_blocklist;
 mod policy_enrollment;
 mod recovery;
+mod wireguard_devices;
 
 fn fixture() -> (tempfile::TempDir, AppState) {
     let directory = tempfile::tempdir().unwrap();

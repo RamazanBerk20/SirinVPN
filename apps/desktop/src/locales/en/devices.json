@@ -21,7 +21,8 @@
       "devices_other": "<strong>{{count}}</strong> devices",
       "invitations_one": "<strong>{{count}}</strong> invitation",
       "invitations_other": "<strong>{{count}}</strong> invitations"
-    }
+    },
+    "addWireguard": "Add WireGuard device"
   },
   "row": {
     "subtitle": "<address>{{address}}</address> · {{role}}",
@@ -35,7 +36,8 @@
       "address": "VPN address",
       "activity": "Activity",
       "network": "Network access",
-      "fingerprint": "Identity fingerprint"
+      "fingerprint": "Identity fingerprint",
+      "connection": "Connects with"
     },
     "activityDetail": {
       "suspended": "Member is suspended",
@@ -55,7 +57,8 @@
     "transferTo": "Transfer to {{name}}",
     "noDevices": "No devices",
     "suspendedNoDevices": "Suspended · No devices",
-    "noMatches": "No devices match your search."
+    "noMatches": "No devices match your search.",
+    "wireguardOnly": "WireGuard app or router, Direct UDP only"
   },
   "menu": {
     "deviceActions": "Actions for {{name}}",
@@ -81,7 +84,8 @@
     "reactivate": "Reactivate member",
     "revokeAll": "Revoke all devices",
     "reactivateFirst": "Reactivate this member first.",
-    "cancelInvitationFirst": "Cancel this member’s invitation first."
+    "cancelInvitationFirst": "Cancel this member’s invitation first.",
+    "addWireguardFor": "Add WireGuard device for {{name}}"
   },
   "invitations": {
     "empty": "No active invitations",
@@ -141,7 +145,8 @@
     "altInvitation": "Invitation QR code",
     "altInvitationEnlarged": "Enlarged invitation QR code",
     "altRecovery": "Recovery key QR code",
-    "altRecoveryEnlarged": "Enlarged recovery key QR code"
+    "altRecoveryEnlarged": "Enlarged recovery key QR code",
+    "altWireguard": "WireGuard configuration QR code"
   },
   "policy": {
     "title": "Access policy for {{name}}",
@@ -297,5 +302,26 @@
     "transfer": "Couldn’t transfer ownership. Try again.",
     "revokeAll": "Couldn’t revoke the member’s devices. Refresh to see their current state.",
     "suspension": "Couldn’t change the member’s access. Refresh to see their current state."
+  },
+  "wireguard": {
+    "title": "Add WireGuard device",
+    "titleForMember": "Add WireGuard device for {{name}}",
+    "titleReady": "Scan with the WireGuard app",
+    "description": "For iPhone, iPad, Mac or a router running the official WireGuard app. It connects over Direct UDP only and cannot manage this server or use the other transports.",
+    "descriptionReady": "Scan this in the WireGuard app, or import the saved file. It is shown only once.",
+    "memberName": "Member name",
+    "deviceName": "Device name",
+    "file": "Configuration file",
+    "fileHint": "Optional. Save a .conf file for a router or for importing later.",
+    "chooseFile": "Choose file",
+    "noFile": "No file; QR code only",
+    "fileType": "WireGuard configuration",
+    "pickerFailed": "The file picker could not open.",
+    "create": "Create configuration",
+    "creating": "Creating…",
+    "failed": "The WireGuard device could not be added.",
+    "secretWarning": "This QR code and file contain the device’s private key. Anyone who has them can use this VPN. Delete the file after importing it.",
+    "saved": "Saved to {{path}}",
+    "revokeHint": "Revoke the device from this list if the QR code or file is lost or shared."
   }
 }

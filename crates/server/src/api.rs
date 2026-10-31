@@ -105,6 +105,10 @@ pub(super) fn management_router(state: AppState) -> Router {
             delete(cancel_invitation_handler),
         )
         .route("/v1/enrollment", post(enrollment_handler))
+        .route(
+            "/v1/wireguard-devices",
+            post(super::wireguard_device::create_wireguard_device_handler),
+        )
         .route("/v1/membership", get(membership_handler))
         .route(
             "/v1/recovery",
@@ -275,5 +279,6 @@ pub(super) async fn configuration_handler(
         recipient_names_enabled: state.authorization.is_some(),
         recovery_keys_enabled: state.authorization.is_some(),
         dns_blocklist_management_enabled: super::dns_blocklist::management_available(&state),
+        wireguard_devices_enabled: state.authorization.is_some(),
     })))
 }

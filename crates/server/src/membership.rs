@@ -383,11 +383,13 @@ pub(super) async fn revoke_device_handler(
     if !can_manage_member(caller, target_member.role, target_member.administrator) {
         return Err(ApiError::forbidden());
     }
+    // A WireGuard-only device cannot manage the server, so it never counts as an Owner device.
     if target_member.role == ServerRole::Owner
+        && !target.wireguard_only()
         && current
             .devices
             .iter()
-            .filter(|device| device.member_id == target.member_id)
+            .filter(|device| device.member_id == target.member_id && !device.wireguard_only())
             .count()
             <= 1
     {

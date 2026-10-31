@@ -94,6 +94,13 @@ export class CatalogBridge {
       case 'previewInvitation':return D.clone(s.invitationPreview);
       case 'joinServer':s.profiles=[{...D.clone(D.profile),role:'member'}];return D.clone(s.profiles[0]);
       case 'createInvitation':return{invitation_id:'example-invitation',expires_at_unix:Math.floor(Date.now()/1000)+(args[3]??3600),code:'sirin1.'+'SCREENSHOT-EXAMPLE-'.repeat(80),qr_svg:exampleQr};
+      case 'createWireGuardDevice':{
+        const id='example-wireguard-'+s.members.members.reduce((n:number,m:any)=>n+m.devices.length,0);
+        const device={id,member_id:args[3]??'example-wireguard-member',name:args[2],client_tunnel_address:'10.77.0.40',wireguard_only:true};
+        const target=s.members.members.find((m:any)=>m.id===args[3]);
+        if(target)target.devices.push(device);else s.members.members.push({id:device.member_id,name:args[1],role:'member',devices:[device]});
+        return{device_id:id,qr_svg:exampleQr};
+      }
       case 'cancelInvitation':s.members.active_invitations=[];return;
       case 'renameDevice':for(const m of s.members.members)for(const d of m.devices)if(d.id===args[1])d.name=args[2];return D.clone(s.members);
       case 'revokeDevice':for(const m of s.members.members)m.devices=m.devices.filter((d:any)=>d.id!==args[1]);return D.clone(s.members);

@@ -66,6 +66,22 @@ does not qualify that migration. Do not remove the old app before validating
 the backup/recovery path. Once a deletion has been recorded, an older binary
 that ignores its marker is an unsupported rollback target on every platform.
 
+## WireGuard-only device migration
+
+A device record without a management certificate is new in `server_authorization`.
+A schema-6 reader would fail on it at load, so the writer moves to schema 7
+whenever such a device exists and back down when the last one is removed:
+
+| State | Before | Now | Shape |
+| --- | --- | --- | --- |
+| `server_authorization` | reads 1–6, writes 1–6 | reads 1–7, writes 1–7 | explicit schema 7 whenever a device has no `management_certificate_pem` |
+
+Server authorization without such devices is read and written unchanged, and
+existing devices serialize exactly as before, so the endpoint authorization
+fingerprint of an unchanged document is stable. As with the preshared key
+migration, a signed VPS transition to or from a release that cannot read
+schema 7 is refused in both directions.
+
 ## WireGuard preshared key migration
 
 The per-device preshared key changes four declared state families. Each
