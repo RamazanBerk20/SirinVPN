@@ -257,7 +257,7 @@ async fn activate(
         "server_id": profile.id, "addresses": addresses, "routes": routes, "dns": profile.server_tunnel_address,
         "wireguard": *wireguard, "mtu": mtu, "applications": prefs.android_applications,"endpoint":endpoint.to_string(),"peer":public,
         "transport": selection.kind, "routing_mode": prefs.routing.mode, "allow_lan": prefs.routing.allow_lan,
-        "ipv6_blocked": !profile.ipv6_tunnel_enabled && prefs.routing.mode != sirinvpn_tunnel_model::TunnelRoutingMode::SelectedRoutes, "ipv6_tunneled": profile.ipv6_tunnel_enabled,
+        "ipv6_blocked": crate::routes::ipv6_blocked(profile.ipv6_tunnel_enabled, prefs), "ipv6_tunneled": profile.ipv6_tunnel_enabled,
         "automatic_reconnect": prefs.policy.automatic_reconnect,
         "mtu_automatic":prefs.manual_mtu.is_none(),
         "automatic_transport": prefs.transport == sirinvpn_protocol::TransportPreference::Automatic

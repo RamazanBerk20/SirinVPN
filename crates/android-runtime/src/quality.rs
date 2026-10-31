@@ -1,6 +1,6 @@
 //! Bounded, isolated measurements using the existing server lease protocol.
 use crate::{
-    commands::{preferences, profile},
+    commands::{active_preferences, profile},
     jni_bridge::Runtime,
     tunnel::carrier,
 };
@@ -66,8 +66,7 @@ pub async fn measure(runtime: &Runtime, generation: i64) -> Result<Value> {
     let outcome=async {
         let IpAddr::V4(address)=p.client_tunnel_address else {anyhow::bail!("Invalid measurement address")};
         ensure!(lease.public_key==probe.public.wireguard_public_key && lease.client_address==Ipv4Addr::new(10,77,1,address.octets()[3]) && lease.expires_at_unix>now()+10 && lease.expires_at_unix<=now()+125,"Invalid measurement lease");
-        let preferences=runtime.platform.connection_preferences(&p.id.to_string())?.map(serde_json::from_value).transpose()?
-            .unwrap_or(preferences(runtime).get(p.id).map_err(anyhow::Error::msg)?);
+        let preferences=active_preferences(runtime,&p)?;
         let active:TransportKind=serde_json::from_value(original["transport"].clone())?;
         let plan=TransportEngine.automatic_plan(&p,preferences.network_profile,None)?;
         let private=zeroize::Zeroizing::new(hex::encode(STANDARD.decode(&probe.secret.wireguard_private_key)?));

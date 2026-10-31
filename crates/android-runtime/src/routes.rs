@@ -1,7 +1,7 @@
 use ipnet::IpNet;
+use sirinvpn_core::diagnostics::{CurrentConnection, Protection};
 #[cfg(target_os = "android")]
 use sirinvpn_protocol::ServerProfile;
-#[cfg(target_os = "android")]
 use sirinvpn_tunnel_model::{ConnectionPreferences, TunnelRoutingMode};
 
 /// Subtract private LAN ranges, retaining exact routes to the private VPS DNS.
@@ -44,6 +44,35 @@ pub fn routes(
         routes.push(format!("{}/128", ipv6(profile.id, profile.server_tunnel_address)?).parse()?);
     }
     Ok(IpNet::aggregate(&routes))
+}
+
+/// Without the IPv6 tunnel, `routes` still sends ::/0 into the TUN unless only selected
+/// subnets use it, and the TUN has no IPv6 address to carry it.
+pub fn ipv6_blocked(ipv6_tunnel_enabled: bool, prefs: &ConnectionPreferences) -> bool {
+    !ipv6_tunnel_enabled && prefs.routing.mode != TunnelRoutingMode::SelectedRoutes
+}
+
+/// The routing an active tunnel was built with, as the shared leak test reads it. The caller
+/// has already required that tunnel to be active, and the test reads no other field.
+pub fn leak_connection(
+    ipv6_tunnel_enabled: bool,
+    prefs: &ConnectionPreferences,
+) -> CurrentConnection {
+    CurrentConnection {
+        state: sirinvpn_protocol::ConnectionState::Connected,
+        selected_server: true,
+        another_server: false,
+        recovering: false,
+        waiting_for_user: false,
+        protection: Protection::Unknown,
+        transport: None,
+        split_routes: prefs.routing.mode == TunnelRoutingMode::SelectedRoutes,
+        split_applications: prefs.routing.mode == TunnelRoutingMode::SelectedApplications,
+        ipv6_tunneled: ipv6_tunnel_enabled,
+        ipv6_blocked: ipv6_blocked(ipv6_tunnel_enabled, prefs),
+        mtu: None,
+        quality: None,
+    }
 }
 
 fn subtract(route: IpNet, excluded: IpNet) -> Vec<IpNet> {
@@ -93,5 +122,28 @@ mod tests {
             subtract("::/0".parse().unwrap(), "10.0.0.0/8".parse().unwrap()),
             vec!["::/0".parse::<IpNet>().unwrap()]
         );
+    }
+
+    #[test]
+    fn leak_test_reads_the_routing_the_tunnel_was_built_with() {
+        let prefs = |mode| {
+            let mut prefs = ConnectionPreferences::default();
+            prefs.routing.mode = mode;
+            prefs
+        };
+        let full = prefs(TunnelRoutingMode::FullTunnel);
+        let current = leak_connection(false, &full);
+        assert!(current.can_probe());
+        assert!(!current.split_routes && !current.split_applications);
+        assert!(!current.ipv6_tunneled && current.ipv6_blocked);
+        let current = leak_connection(true, &full);
+        assert!(current.ipv6_tunneled && !current.ipv6_blocked);
+        let routes = leak_connection(false, &prefs(TunnelRoutingMode::SelectedRoutes));
+        assert!(routes.split_routes && !routes.split_applications);
+        // Selected subnets leave IPv6 outside the TUN unless they include it.
+        assert!(!routes.ipv6_blocked);
+        let applications = leak_connection(false, &prefs(TunnelRoutingMode::SelectedApplications));
+        assert!(applications.split_applications && !applications.split_routes);
+        assert!(applications.ipv6_blocked);
     }
 }

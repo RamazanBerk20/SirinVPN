@@ -40,13 +40,13 @@ are discarded. Android identity maintenance serializes against the request.
 
 ## Leak test (31 October 2026)
 
-While connected, desktop and CLI diagnostics add `leak_ipv4`, `leak_ipv6` and
+While connected, desktop, CLI and Android diagnostics add `leak_ipv4`, `leak_ipv6` and
 `leak_dns` checks with a pass, fail or `not_applicable` level. The test uses only
 the user's VPS: a pinned mTLS request to a documentation address that the VPS
 redirects only from the tunnel, and a system lookup of a one-off name in a zone
 only the VPS resolver answers. The VPS echoes the request's source address and
 keeps nothing. A VPS report cannot add these codes or the `not_applicable` level;
-the sanitizer drops both. Android diagnostics do not include the leak test yet.
+the sanitizer drops both. Android appends the checks to its VPS report.
 See [architecture](architecture.md#leak-test) for the exact mechanism and limits.
 
 Evidence: unit and handler tests; a real `serve_management` reached over TLS by
@@ -56,7 +56,9 @@ reported); and Unbound 1.26.2 (Debian 13) and 1.19.2 (Ubuntu 24.04) answering
 random leak-test names with `10.77.0.1` through `getaddrinfo` with DNSSEC on.
 The two-VM lab step was added but not completed: on 31 October the VPS could not
 download the blocklist and the client guest's package mirror ran at about
-72 KB/s, so neither run reached it.
+72 KB/s, so neither run reached it. Android: unit tests map the active tunnel's
+routing and IPv6 state; the leak test has not yet run on an emulator against the
+isolated VPS.
 
 ## VPS observations
 

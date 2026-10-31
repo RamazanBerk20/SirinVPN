@@ -17,7 +17,7 @@ const IPV4: (&str, &str, &str) = ("leak_ipv4", "IPv4 leak test", "IPv4");
 const IPV6: (&str, &str, &str) = ("leak_ipv6", "IPv6 leak test", "IPv6");
 const DNS: (&str, &str) = ("leak_dns", "DNS leak test");
 
-pub(super) async fn checks(
+pub async fn checks(
     profile: &ServerProfile,
     identity: &SecretIdentity,
     current: &CurrentConnection,

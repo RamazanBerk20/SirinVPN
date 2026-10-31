@@ -38,6 +38,13 @@ pub fn preferences(runtime: &Runtime) -> ConnectionPreferenceStore {
             .join("connection-preferences"),
     )
 }
+/// The preferences the active or pending tunnel was requested with, else the saved ones.
+pub fn active_preferences(runtime: &Runtime, p: &ServerProfile) -> Result<ConnectionPreferences> {
+    match runtime.platform.connection_preferences(&p.id.to_string())? {
+        Some(value) => Ok(serde_json::from_value(value)?),
+        None => preferences(runtime).get(p.id).map_err(anyhow::Error::msg),
+    }
+}
 pub fn confirmed(input: &Value) -> Result<()> {
     ensure!(
         input["confirmed"] == true,
@@ -296,12 +303,7 @@ pub async fn dispatch(
     if matches!(command, "apply_endpoint_update" | "publish_endpoint_update") {
         let connect = |p: ServerProfile, s: sirinvpn_core::SecretIdentity| async move {
             let result = async {
-                let prefs = runtime
-                    .platform
-                    .connection_preferences(&p.id.to_string())?
-                    .map(serde_json::from_value)
-                    .transpose()?
-                    .unwrap_or(preferences(runtime).get(p.id).map_err(anyhow::Error::msg)?);
+                let prefs = active_preferences(runtime, &p)?;
                 runtime
                     .platform
                     .prepare_connection(&p.id.to_string(), &prefs, generation)?;
@@ -364,7 +366,19 @@ pub async fn dispatch(
             ))
         }
         "membership" => encode(client.membership().await?),
-        "run_diagnostics" => encode(client.diagnostics().await?),
+        "run_diagnostics" => {
+            let current = crate::routes::leak_connection(
+                p.ipv6_tunnel_enabled,
+                &active_preferences(runtime, &p)?,
+            );
+            let (report, leaks) = tokio::join!(
+                client.diagnostics(),
+                sirinvpn_core::diagnostics::leak_checks(&p, &secret, &current, &client)
+            );
+            let mut report = report?;
+            report.checks.extend(leaks);
+            encode(report)
+        }
         "dns_blocklist_settings" => encode(client.dns_blocklist().await?),
         "update_dns_blocklist" => encode(
             client

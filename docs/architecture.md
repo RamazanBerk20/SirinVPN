@@ -285,8 +285,13 @@ Selected subnets and applications leave other traffic outside the VPN by design,
 so those families are not applicable instead of sending a test request to the
 normal network. `/v1/configuration` advertises `leak_test_enabled` only when the
 redirect rules applied and the Unbound include exists; an older or partly updated
-VPS reports every family as not applicable until repair. Android does not run the
-leak test yet: its diagnostics command returns only the VPS report.
+VPS reports every family as not applicable until repair. Android appends the same
+checks to its VPS report. It reads the routing mode from the preferences the active
+tunnel was requested with, and IPv6 state from the profile, as the tunnel itself
+does. The test runs in the `:vpn` process, which is inside its own VPN: the app
+never excludes itself, and selected-application routing adds it. Its sockets
+without `protect()` therefore follow the VPN routes, and its system lookups use the
+VPN's DNS server, as the app-UID DNS and routing emulator tests show.
 
 ## Management plane
 

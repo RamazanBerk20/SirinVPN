@@ -10,6 +10,8 @@ mod dns;
 mod leak;
 mod remote;
 pub use dns::{PrivateDnsOutcome, private_dns_check, probe_private_dns};
+/// For a platform that runs only the remote checks itself (Android).
+pub use leak::checks as leak_checks;
 pub(crate) use remote::sanitize;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
