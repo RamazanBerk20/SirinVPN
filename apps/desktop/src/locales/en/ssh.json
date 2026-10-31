@@ -92,6 +92,7 @@
     "httpsInfo": "The server keeps its own copy of your certificate. After renewing it, import it here so devices get the new pin. Some networks may still block HTTPS mode.",
     "httpsInfoLabel": "About HTTPS certificates",
     "cdn": "Reach HTTPS through a CDN",
+    "cdnPortNote": "Cloudflare proxies HTTPS only on ports 443, 2053, 2083, 2087 and 2096. Check that your CDN proxies this TCP and TLS port.",
     "cdnNote": "For when this VPS address is blocked. In your CDN, proxy the hostname to this VPS with WebSockets on and full, not strict, TLS. The CDN sees device addresses, timing and traffic volume, never what goes through the tunnel.",
     "certificate": "Certificate chain path (optional)",
     "certificatePlaceholder": "/etc/letsencrypt/live/vpn.example.org/fullchain.pem",

@@ -44,6 +44,7 @@
         "preRemoveScript": "../../../packaging/debian/prerm.sh",
         "postRemoveScript": "../../../packaging/debian/postrm.sh",
         "depends": [
+          "ca-certificates",
           "iproute2",
           "iputils-ping",
           "libayatana-appindicator3-1",

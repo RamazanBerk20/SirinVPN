@@ -16,11 +16,13 @@ pub trait CommandRunner {
     fn tunnel_probe(&self, _: Ipv4Addr, _: Ipv4Addr) -> bool {
         false
     }
+    /// `through_cdn` marks `address` as the CDN's for the signed HTTPS name.
     fn endpoint_checkpoint(
         &self,
         _: &sirinvpn_protocol::EndpointIdentity,
         _: &str,
         _: IpAddr,
+        _through_cdn: bool,
     ) -> Result<Option<sirinvpn_protocol::EndpointTransitionResponse>> {
         Ok(None)
     }
@@ -120,6 +122,7 @@ impl CommandRunner for SystemRunner {
         known: &sirinvpn_protocol::EndpointIdentity,
         private_key: &str,
         address: IpAddr,
+        through_cdn: bool,
     ) -> Result<Option<sirinvpn_protocol::EndpointTransitionResponse>> {
         Ok(tokio::runtime::Builder::new_current_thread()
             .enable_all()
@@ -128,6 +131,7 @@ impl CommandRunner for SystemRunner {
                 known,
                 private_key,
                 address,
+                through_cdn,
                 Some(51_820),
             ))?)
     }

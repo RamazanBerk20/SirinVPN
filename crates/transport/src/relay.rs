@@ -415,8 +415,20 @@ fn probe_source(address: IpAddr) -> IpAddr {
 
 impl ProbeLimiter {
     pub(crate) fn allow(&mut self, address: IpAddr) -> bool {
-        let address = probe_source(address);
-        if self.peers.len() >= PROBE_SOURCES && !self.peers.contains_key(&address) {
+        self.allow_source(Some(probe_source(address)))
+    }
+
+    /// Behind a CDN every source is a shared CDN edge that anyone can make connect,
+    /// so a per-source budget would let one client lock out everyone at that edge.
+    pub(crate) fn allow_global(&mut self) -> bool {
+        self.allow_source(None)
+    }
+
+    fn allow_source(&mut self, address: Option<IpAddr>) -> bool {
+        if let Some(address) = address
+            && self.peers.len() >= PROBE_SOURCES
+            && !self.peers.contains_key(&address)
+        {
             self.peers
                 .retain(|_, window| window.started.elapsed() < Duration::from_secs(60));
             // A full table must not lock every new source out: replace the oldest window and
@@ -442,18 +454,20 @@ impl ProbeLimiter {
         if global.attempts >= PROBE_ATTEMPTS_PER_SECOND {
             return false;
         }
-        let window = self.peers.entry(address).or_insert(ProbeWindow {
-            started: Instant::now(),
-            attempts: 0,
-        });
-        if window.started.elapsed() >= Duration::from_secs(10) {
-            window.started = Instant::now();
-            window.attempts = 0;
+        if let Some(address) = address {
+            let window = self.peers.entry(address).or_insert(ProbeWindow {
+                started: Instant::now(),
+                attempts: 0,
+            });
+            if window.started.elapsed() >= Duration::from_secs(10) {
+                window.started = Instant::now();
+                window.attempts = 0;
+            }
+            if window.attempts >= PROBE_ATTEMPTS_PER_SOURCE {
+                return false;
+            }
+            window.attempts += 1;
         }
-        if window.attempts >= PROBE_ATTEMPTS_PER_SOURCE {
-            return false;
-        }
-        window.attempts += 1;
         global.attempts += 1;
         true
     }

@@ -51,7 +51,11 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
         if prepared.endpoint_identity.is_some() {
             prepared.endpoint_dns_servers = self.endpoint_dns_servers();
         }
-        prepared.cdn_address = None;
+        // Only the helper's own lookup for the same signed name, never the app's value.
+        prepared.cdn_address = previous
+            .as_ref()
+            .filter(|saved| saved.request.cdn_host() == prepared.cdn_host())
+            .and_then(|saved| saved.request.cdn_address);
         self.refresh_cdn_address(&mut prepared);
         let resolved_endpoints =
             self.resolve_endpoint_set(&prepared, previous.as_ref().map(|saved| saved.endpoint));

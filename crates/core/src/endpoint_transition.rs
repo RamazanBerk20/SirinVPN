@@ -558,14 +558,17 @@ pub(crate) fn validate_descriptor(
     if !sirinvpn_protocol::valid_alternate_endpoint_hosts(
         &descriptor.endpoint.host,
         &descriptor.alternate_endpoint_hosts,
-    ) || descriptor.endpoint_discovery_port.is_some_and(|port| {
-        port == 0 || port == descriptor.endpoint.wireguard_port || descriptor.tls_like.is_none()
-    }) || !crate::invitation::valid_transport_endpoints(
-        descriptor.endpoint.wireguard_port,
-        descriptor.obfuscated_udp.as_ref(),
-        descriptor.tcp_fallback.as_ref(),
-        descriptor.tls_like.as_ref(),
-    ) {
+    ) || !descriptor.cdn_host_is_separate()
+        || descriptor.endpoint_discovery_port.is_some_and(|port| {
+            port == 0 || port == descriptor.endpoint.wireguard_port || descriptor.tls_like.is_none()
+        })
+        || !crate::invitation::valid_transport_endpoints(
+            descriptor.endpoint.wireguard_port,
+            descriptor.obfuscated_udp.as_ref(),
+            descriptor.tcp_fallback.as_ref(),
+            descriptor.tls_like.as_ref(),
+        )
+    {
         return Err(EndpointTransitionError::InvalidCode);
     }
     Ok(())

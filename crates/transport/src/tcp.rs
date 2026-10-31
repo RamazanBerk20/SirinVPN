@@ -441,6 +441,10 @@ async fn run_tcp_server_relay_inner(
     };
     let replay_cache = Arc::new(Mutex::new(HandshakeReplayCache::default()));
     let probe_limiter = Arc::new(Mutex::new(ProbeLimiter::default()));
+    let behind_cdn = tls_acceptor
+        .as_ref()
+        .and_then(|mode| mode.https.as_ref())
+        .is_some_and(|https| https.cdn);
     let global_connections = Arc::new(Semaphore::new(MAX_SERVER_CONNECTIONS));
     let client_connections = ClientConnectionRegistry::default();
     let mut activity_cleanup = tokio::time::interval(Duration::from_secs(30));
@@ -462,13 +466,17 @@ async fn run_tcp_server_relay_inner(
                 continue;
             }
         };
-        if !probe_limiter
+        let mut limiter = probe_limiter
             .lock()
-            .unwrap_or_else(|poisoned| poisoned.into_inner())
-            .allow(source.ip())
-        {
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        if !(if behind_cdn {
+            limiter.allow_global()
+        } else {
+            limiter.allow(source.ip())
+        }) {
             continue;
         }
+        drop(limiter);
         let Ok(global_permit) = global_connections.clone().try_acquire_owned() else {
             continue;
         };

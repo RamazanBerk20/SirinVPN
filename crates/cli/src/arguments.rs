@@ -768,6 +768,9 @@ impl TransportArguments {
             setup.tcp_tls_port = port;
         }
         if let Some(name) = &self.https_server_name {
+            if self.https_cdn.is_none() && setup.https.as_ref().is_some_and(|https| https.cdn) {
+                eprintln!("Note: --https-server-name without --https-cdn true turns CDN mode off.");
+            }
             setup.https = Some(sirinvpn_protocol::HttpsTransport {
                 server_name: name.clone(),
                 path: self.https_path.clone().unwrap_or_else(|| "/connect".into()),
@@ -790,6 +793,15 @@ impl TransportArguments {
         setup.disable_https = self.disable_https;
         if self.disable_https {
             setup.https = None;
+        }
+        // Cloudflare proxies HTTPS only on these ports; other CDNs may differ, so warn only.
+        if setup.https.as_ref().is_some_and(|https| https.cdn)
+            && ![443, 2053, 2083, 2087, 2096].contains(&setup.tcp_tls_port)
+        {
+            eprintln!(
+                "Note: Cloudflare proxies HTTPS only on ports 443, 2053, 2083, 2087 and 2096. Check that your CDN proxies TCP/TLS port {}.",
+                setup.tcp_tls_port
+            );
         }
         setup.validate()?;
         Ok(Some(setup))

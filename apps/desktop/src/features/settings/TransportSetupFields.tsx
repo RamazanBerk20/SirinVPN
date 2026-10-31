@@ -4,6 +4,9 @@ import type { ServerProfile, TransportSetup } from "../../types";
 import { useInfoHint } from "../../components/InfoHint";
 import { t } from "../../i18n";
 
+/** Cloudflare proxies HTTPS only on these ports; other CDNs may differ, so this only warns. */
+const CDN_HTTPS_PORTS = [443, 2053, 2083, 2087, 2096];
+
 export interface TransportDraft {
   publicHost: string;
   alternateHosts: string;
@@ -42,6 +45,8 @@ export function transportDraftIsValid(draft: TransportDraft): boolean {
   if (!draft.https) return true;
   const hostname = draft.hostname.trim();
   if (!validateHost(hostname) || !hostname.includes(".") || hostname.includes(":") || /^(\d{1,3}\.){3}\d{1,3}$/.test(hostname)) return false;
+  // A proxied CDN name cannot also be an address devices reach directly.
+  if (draft.cdn && [draft.publicHost.trim().toLowerCase(), ...alternatives].includes(hostname.toLowerCase())) return false;
   if (!/^\/[a-zA-Z0-9/_.-]{1,127}$/.test(draft.path) || draft.path.includes("..") || draft.path.includes("//")) return false;
   if (Boolean(draft.certificate) !== Boolean(draft.privateKey)) return false;
   return [draft.certificate, draft.privateKey].every((path) => !path || (path.startsWith("/") && path.length <= 4096 && !/[\x00-\x1f\x7f]/.test(path)));
@@ -87,6 +92,7 @@ export function TransportSetupFields({ value, onChange, existing = false }: {
       {httpsPanel}
       <label className="checkbox-row"><input type="checkbox" checked={value.cdn} onChange={(event) => update("cdn", event.target.checked)} />{t("ssh.transport.cdn")}</label>
       {value.cdn && <p className="settings-note">{t("ssh.transport.cdnNote")}</p>}
+      {value.cdn && !CDN_HTTPS_PORTS.includes(Number(value.tcpTls)) && <p className="settings-note">{t("ssh.transport.cdnPortNote")}</p>}
       <Field label={t("ssh.transport.certificate")}><input placeholder={t("ssh.transport.certificatePlaceholder")} value={value.certificate} onChange={(event) => update("certificate", event.target.value)} autoCapitalize="none" spellCheck={false} /></Field>
       <Field label={t("ssh.transport.privateKey")}><input placeholder={t("ssh.transport.privateKeyPlaceholder")} value={value.privateKey} onChange={(event) => update("privateKey", event.target.value)} autoCapitalize="none" spellCheck={false} /></Field>
     </>}

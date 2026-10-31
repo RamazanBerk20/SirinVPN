@@ -68,10 +68,11 @@ pub(super) fn validate_configuration(configuration: &ServerConfiguration) -> Res
             .as_ref()
             .is_some_and(|pem| pem.is_empty() || pem.len() > 65_536)
         || (configuration.schema_version == 9) != generated_certificate
+        || (configuration.schema_version == 10) != https.is_some_and(|https| https.cdn)
     {
-        bail!("TLS certificate metadata requires configuration schema 7 or 9");
+        bail!("TLS certificate metadata requires configuration schema 7, 9 or 10");
     }
-    if matches!(configuration.schema_version, 8 | 9) != configuration.public_endpoint.is_some()
+    if matches!(configuration.schema_version, 8..=10) != configuration.public_endpoint.is_some()
         || (configuration.public_endpoint.is_none()
             && !configuration.alternate_endpoint_hosts.is_empty())
     {

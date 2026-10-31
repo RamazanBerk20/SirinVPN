@@ -203,7 +203,8 @@ are not claimed. Opt-in [CDN mode](https-transport-2026-09-06.md#cdn-mode) sends
 only the HTTPS transport through a CDN under the Owner's domain when the VPS
 address is blocked: the device resolves the signed hostname outside the tunnel,
 verifies the CDN's WebPKI certificate instead of the origin pin, and still
-authenticates the server with Noise IK. [Signed endpoint
+authenticates the server with Noise IK. Such a server uses configuration schema
+10, which older servers cannot read. [Signed endpoint
 checkpoints](endpoints-and-outer-ipv6-2026-09-06.md) bind current ports, alternate
 addresses and public identities; catch-up and background discovery preserve the
 pinned server identity and current protection/routing intent.

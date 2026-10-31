@@ -95,7 +95,8 @@ impl TransportEngine {
         if !sirinvpn_protocol::valid_alternate_endpoint_hosts(
             &descriptor.endpoint.host,
             &descriptor.alternate_endpoint_hosts,
-        ) {
+        ) || !descriptor.cdn_host_is_separate()
+        {
             return Err(TransportError::InvalidEndpoint);
         }
         if let Some(udp) = &descriptor.obfuscated_udp {

@@ -186,13 +186,18 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
             monitor.checked_at = now;
             // Discovery follows the current transport, so a session through a CDN never
             // probes a VPS address that may be blocked or watched.
-            let source = current_request
-                .outer_address(desired.endpoint)
-                .unwrap_or(desired.endpoint);
-            if let Ok(Some(head)) =
-                self.runner
-                    .endpoint_checkpoint(&known, &desired.request.private_key, source)
-            {
+            let cdn = current_request
+                .https
+                .as_ref()
+                .is_some_and(|https| https.cdn)
+                .then_some(current_request.cdn_address)
+                .flatten();
+            if let Ok(Some(head)) = self.runner.endpoint_checkpoint(
+                &known,
+                &desired.request.private_key,
+                cdn.unwrap_or(desired.endpoint),
+                cdn.is_some(),
+            ) {
                 let newer = sirinvpn_core::verify_endpoint_checkpoint(&known, &head).is_ok();
                 let current = sirinvpn_core::current_checkpoint_matches(&known, &head);
                 if newer || current {
@@ -298,6 +303,9 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
         } else {
             None
         };
+        if replacement.request.cdn_host() != current.cdn_host() {
+            replacement.request.cdn_address = None;
+        }
         self.refresh_cdn_address(&mut replacement.request);
         if validate_request(&replacement.request).is_err() {
             return Ok(None);

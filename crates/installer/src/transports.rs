@@ -89,6 +89,18 @@ impl TransportSetup {
                 "HTTPS needs a valid DNS hostname and a path such as /connect.",
             ));
         }
+        if self.https.as_ref().is_some_and(|https| {
+            https.cdn
+                && self
+                    .public_host
+                    .iter()
+                    .chain(&self.alternate_endpoint_hosts)
+                    .any(|host| host.eq_ignore_ascii_case(&https.server_name))
+        }) {
+            return Err(invalid(
+                "With CDN mode on, the HTTPS hostname must differ from the public and alternate addresses that devices reach directly.",
+            ));
+        }
         if self.https_certificate_path.is_some() != self.https_private_key_path.is_some()
             || (self.https_certificate_path.is_some() && self.https.is_none())
         {

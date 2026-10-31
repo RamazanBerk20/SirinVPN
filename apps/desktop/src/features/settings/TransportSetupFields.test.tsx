@@ -18,6 +18,8 @@ it("validates collisions, reserved ports, and matching certificate paths before 
   expect(transportDraftIsValid({ ...https, path: "/../private" })).toBe(false);
   expect(transportSetupFromDraft(https)).toMatchObject({ https: { server_name: "vpn.example.org", path: "/connect", cdn: false }, https_certificate_path: "/etc/cert.pem" });
   expect(transportSetupFromDraft({ ...https, cdn: true }).https).toEqual({ server_name: "vpn.example.org", path: "/connect", cdn: true });
+  expect(transportDraftIsValid({ ...https, cdn: true, publicHost: "VPN.example.org" })).toBe(false);
+  expect(transportDraftIsValid({ ...https, cdn: false, publicHost: "vpn.example.org" })).toBe(true);
 });
 
 it("shows HTTPS fields only when enabled and accepts custom ports", () => {
@@ -34,6 +36,10 @@ it("shows HTTPS fields only when enabled and accepts custom ports", () => {
   expect(screen.queryByText(t("ssh.transport.cdnNote"))).toBeNull();
   fireEvent.click(screen.getByRole("checkbox", { name: t("ssh.transport.cdn") }));
   expect(screen.getByText(t("ssh.transport.cdnNote"))).toBeTruthy();
+  fireEvent.change(screen.getByRole("textbox", { name: t("ssh.transport.tcpTlsPort") }), { target: { value: "443" } });
+  expect(screen.queryByText(t("ssh.transport.cdnPortNote"))).toBeNull();
+  fireEvent.change(screen.getByRole("textbox", { name: t("ssh.transport.tcpTlsPort") }), { target: { value: "4443" } });
+  expect(screen.getByText(t("ssh.transport.cdnPortNote"))).toBeTruthy();
   expect(screen.queryByRole("status")).toBeNull();
 });
 

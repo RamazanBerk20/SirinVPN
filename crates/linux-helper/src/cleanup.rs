@@ -163,6 +163,10 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
             .server_transport_public_key
             .as_deref()
             .ok_or_else(|| anyhow!("transport public key is unavailable"))?;
+        // HTTPS through a CDN goes to the CDN's address on every path, live handoff included.
+        let endpoint = request
+            .outer_address(endpoint)
+            .ok_or_else(|| anyhow!("the CDN address for HTTPS did not resolve"))?;
         let server_address = SocketAddr::new(endpoint, request.endpoint_port);
         let config = match request.transport {
             TransportKind::ObfuscatedUdp => ClientTransportConfig::LegacyObfuscatedUdp(

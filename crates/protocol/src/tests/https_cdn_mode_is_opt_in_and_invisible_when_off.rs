@@ -30,10 +30,10 @@ fn https_cdn_mode_is_opt_in_and_invisible_when_off() {
             https: Some(cdn.clone()),
         }),
     };
-    // A CDN proxies only the HTTPS port, never the retained direct discovery port.
+    // A CDN proxies only the HTTPS port; the VPS keeps its retained discovery port.
     assert_eq!(descriptor.cdn_host(), Some("vpn.example.org"));
-    assert_eq!(descriptor.discovery_port(), Some(443));
+    assert_eq!(descriptor.discovery_port(true), Some(443));
+    assert_eq!(descriptor.discovery_port(false), Some(4_443));
     descriptor.tls_like.as_mut().unwrap().https = Some(HttpsTransport { cdn: false, ..cdn });
     assert_eq!(descriptor.cdn_host(), None);
-    assert_eq!(descriptor.discovery_port(), Some(4_443));
 }

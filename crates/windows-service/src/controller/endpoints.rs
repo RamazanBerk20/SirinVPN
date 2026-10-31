@@ -93,8 +93,11 @@ impl Controller {
         request: &mut TunnelConnectRequest,
     ) -> io::Result<Vec<ResolvedEndpoint>> {
         let (mut resolved, cdn_address) = self.resolve(request).await?;
-        request.cdn_address = cdn_address;
         let saved = self.saved.as_ref().expect("saved session");
+        request.cdn_address = cdn_address.or(saved
+            .request
+            .cdn_address
+            .filter(|_| saved.request.cdn_host() == request.cdn_host()));
         let known = request
             .endpoint_identity
             .as_ref()
@@ -168,7 +171,9 @@ impl Controller {
         source.endpoint_identity = None;
         let (addresses, _) = self.resolve(&source).await.map_err(network_error)?;
         for address in addresses {
-            let Some(config) = control_config(previous, &request.private_key, address.address)?
+            // The previous VPS's own address: a CDN name follows the current origin.
+            let Some(config) =
+                control_config(previous, &request.private_key, address.address, false)?
             else {
                 continue;
             };
@@ -253,8 +258,9 @@ impl Controller {
                 .take(if through_cdn { 1 } else { 2 })
                 .collect::<Vec<_>>();
             for address in addresses {
-                let Some(config) = control_config(&known.descriptor, &private, address)
-                    .map_err(|_| io::ErrorKind::InvalidData)?
+                let Some(config) =
+                    control_config(&known.descriptor, &private, address, through_cdn)
+                        .map_err(|_| io::ErrorKind::InvalidData)?
                 else {
                     break;
                 };
@@ -363,8 +369,10 @@ fn control_config(
     descriptor: &EndpointDescriptor,
     private: &str,
     address: std::net::IpAddr,
+    through_cdn: bool,
 ) -> Result<Option<EndpointDiscoveryConfig>, ServiceError> {
-    let (Some(tls), Some(port)) = (&descriptor.tls_like, descriptor.discovery_port()) else {
+    let (Some(tls), Some(port)) = (&descriptor.tls_like, descriptor.discovery_port(through_cdn))
+    else {
         return Ok(None);
     };
     Ok(Some(EndpointDiscoveryConfig {
@@ -376,5 +384,6 @@ fn control_config(
         server_public_key: decode_key(&tls.server_public_key)
             .map_err(|_| ServiceError::InvalidRequest)?,
         socket_mark: None,
+        through_cdn,
     }))
 }

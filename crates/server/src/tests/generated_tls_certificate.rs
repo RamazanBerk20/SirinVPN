@@ -155,3 +155,72 @@ fn schema_nine_requires_a_generated_certificate_without_https() {
     missing.https_certificate_pem = None;
     assert!(validate_configuration(&missing).is_err());
 }
+
+#[test]
+fn https_through_a_cdn_is_schema_ten_and_keeps_the_origin_certificate() {
+    let directory = tempfile::tempdir().unwrap();
+    let paths = ServerPaths::under(directory.path().join("state"));
+    let owner = LocalIdentity::generate("Owner").unwrap();
+    let server_id = ServerId::new();
+    let mut capabilities = ServerCapabilities {
+        tcp_fallback_port: Some(443),
+        tls_like_port: Some(443),
+        public_host: Some("8.8.8.8".into()),
+        https: Some(sirinvpn_protocol::HttpsTransport {
+            server_name: "vpn.example.org".into(),
+            path: "/connect".into(),
+            cdn: false,
+        }),
+        ..Default::default()
+    };
+    let initialize = |capabilities: &ServerCapabilities| {
+        initialize_with_transport_capabilities(
+            &paths,
+            "CDN VPS",
+            &owner.public.management_certificate_pem,
+            server_id,
+            &owner.public.wireguard_public_key,
+            51_820,
+            capabilities.clone(),
+        )
+    };
+    initialize(&capabilities).unwrap();
+    let direct = load_configuration(&paths).unwrap();
+    assert_eq!(direct.schema_version, 8);
+
+    // CDN mode changes only how devices connect: the origin keeps its certificate and pin.
+    capabilities.https.as_mut().unwrap().cdn = true;
+    initialize(&capabilities).unwrap();
+    let proxied = load_configuration(&paths).unwrap();
+    assert_eq!(proxied.schema_version, 10);
+    assert_eq!(certificate_pin(&proxied), certificate_pin(&direct));
+    validate_state(&paths).unwrap();
+    // Older servers read at most schema 9; a CDN configuration must not pass as one.
+    let mut older = proxied.clone();
+    older.schema_version = 8;
+    assert!(validate_configuration(&older).is_err());
+    let mut unmarked = direct.clone();
+    unmarked.schema_version = 10;
+    assert!(validate_configuration(&unmarked).is_err());
+
+    let snapshot =
+        export_backup_state(&paths, server_id, &owner.public.management_certificate_pem).unwrap();
+    let envelope = directory.path().join("vps.sirbak");
+    write_encrypted_server_backup(&envelope, &snapshot, "correct horse battery staple").unwrap();
+    let backup = read_encrypted_server_backup(&envelope, "correct horse battery staple").unwrap();
+    assert_eq!(backup.metadata().tls_like, proxied.tls_like);
+
+    // A proxied name cannot also be a direct endpoint.
+    let before = fs::read(&paths.configuration).unwrap();
+    capabilities.public_host = Some("vpn.example.org".into());
+    assert!(initialize(&capabilities).is_err());
+    assert_eq!(fs::read(&paths.configuration).unwrap(), before);
+
+    // Turning CDN mode off returns to schema 8 with the same pin.
+    capabilities.public_host = Some("8.8.8.8".into());
+    capabilities.https.as_mut().unwrap().cdn = false;
+    initialize(&capabilities).unwrap();
+    let back = load_configuration(&paths).unwrap();
+    assert_eq!(back.schema_version, 8);
+    assert_eq!(certificate_pin(&back), certificate_pin(&direct));
+}

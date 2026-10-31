@@ -15,6 +15,9 @@ pub struct EndpointDiscoveryConfig {
     pub client_private_key: Zeroizing<[u8; 32]>,
     pub server_public_key: [u8; 32],
     pub socket_mark: Option<u32>,
+    /// The address is a CDN's: verify its WebPKI certificate for `server_name`, so a
+    /// network that answers the name never sees a SirinVPN request.
+    pub through_cdn: bool,
 }
 
 /// Returns only Noise-authenticated bytes. The caller must verify the enclosed
@@ -36,7 +39,7 @@ where
     timeout(Duration::from_secs(5), async {
         let stream =
             connect_marked_protected(config.server_address, config.socket_mark, protect).await?;
-        let connector = TlsConnector::from(Arc::new(tls::noise_discovery_tls_configuration()?));
+        let connector = TlsConnector::from(Arc::new(tls::control_tls_configuration(&config)?));
         let (name, host) = tls_destination(config.server_name.as_deref(), config.server_address)?;
         let stream = connector
             .connect(name, stream)

@@ -70,7 +70,7 @@ def inspect(debian: Path, appimage: Path) -> dict:
     dependencies = re.search(r"^Depends: (.+)$", control, re.MULTILINE)
     if dependencies is None:
         raise ValueError("Debian runtime dependencies are missing")
-    for dependency in ["iproute2", "iputils-ping", "libayatana-appindicator3-1", "nftables",
+    for dependency in ["ca-certificates", "iproute2", "iputils-ping", "libayatana-appindicator3-1", "nftables",
                        "pkexec", "polkitd", "systemd-resolved", "wireguard-tools"]:
         if not re.search(rf"(?:^|, )\b{re.escape(dependency)}\b", dependencies[1]):
             raise ValueError(f"Missing Debian dependency: {dependency}")

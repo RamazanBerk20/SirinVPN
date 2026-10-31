@@ -581,3 +581,87 @@ async fn cdn_mode_rejects_the_origin_pin_another_name_and_a_wrong_server_key() {
     other.task.abort();
     server_task.abort();
 }
+
+async fn cover_answered(address: SocketAddr, fingerprint: &str) -> bool {
+    let connector = TlsConnector::from(Arc::new(
+        tls_client_configuration(decode_fingerprint(fingerprint).unwrap()).unwrap(),
+    ));
+    let Ok(Ok(stream)) = timeout(Duration::from_secs(1), TcpStream::connect(address)).await else {
+        return false;
+    };
+    let name = ServerName::try_from(TLS_LIKE_SERVER_NAME.to_owned()).unwrap();
+    let Ok(Ok(mut stream)) = timeout(Duration::from_secs(1), connector.connect(name, stream)).await
+    else {
+        return false;
+    };
+    let request = format!("GET / HTTP/1.1\r\nHost: {TLS_LIKE_SERVER_NAME}\r\n\r\n");
+    let mut response = Vec::new();
+    stream.write_all(request.as_bytes()).await.is_ok()
+        && matches!(
+            timeout(Duration::from_secs(1), stream.read_to_end(&mut response)).await,
+            Ok(Ok(_))
+        )
+        && response.starts_with(b"HTTP/1.1 404 Not Found\r\n")
+}
+
+#[tokio::test]
+async fn behind_a_cdn_one_edge_address_cannot_exhaust_a_per_source_budget() {
+    for (cdn, answered) in [(false, 12), (true, 16)] {
+        let server = keypair();
+        let backend = UdpSocket::bind("127.0.0.1:0").await.unwrap();
+        let port = unused_tcp_port().await;
+        let (acceptor, fingerprint) = tls_acceptor();
+        let task = tokio::spawn(run_tcp_server_relay_with_https(
+            TcpServerRelayConfig {
+                listen: SocketAddr::new("0.0.0.0".parse().unwrap(), port),
+                wireguard_backend: backend.local_addr().unwrap(),
+                server_private_key: Zeroizing::new(server.private.as_slice().try_into().unwrap()),
+            },
+            acceptor,
+            HttpsTransport { cdn, ..cdn_https() },
+            AuthorizedPeers::default(),
+            ActiveTransportRegistry::default(),
+        ));
+        tokio::time::sleep(Duration::from_millis(20)).await;
+        let address = SocketAddr::new("127.0.0.1".parse().unwrap(), port);
+        let mut count = 0;
+        for _ in 0..16 {
+            count += usize::from(cover_answered(address, &fingerprint).await);
+        }
+        // Every client of a CDN edge shares its address; the global budget still applies.
+        assert_eq!(count, answered, "cdn={cdn}");
+        task.abort();
+    }
+}
+
+#[tokio::test]
+async fn discovery_through_a_cdn_requires_its_webpki_certificate() {
+    let server = keypair();
+    let client = keypair();
+    let (origin_port, _, _, server_task) = https_origin(&client, &server).await;
+    let origin = SocketAddr::new("127.0.0.1".parse().unwrap(), origin_port);
+    let edge = cdn_edge(origin_port, TLS_LIKE_SERVER_NAME).await;
+    for (address, through_cdn, accepted) in [
+        // The origin's own certificate is fine for discovery at the VPS address,
+        (origin, false, true),
+        // but an address claiming to be the CDN must prove it with WebPKI.
+        (origin, true, false),
+        (edge.address, true, true),
+    ] {
+        let config = EndpointDiscoveryConfig {
+            server_address: address,
+            server_name: Some(TLS_LIKE_SERVER_NAME.into()),
+            client_private_key: Zeroizing::new(client.private.as_slice().try_into().unwrap()),
+            server_public_key: server.public.as_slice().try_into().unwrap(),
+            socket_mark: None,
+            through_cdn,
+        };
+        assert_eq!(
+            fetch_endpoint_checkpoint(config).await.is_ok(),
+            accepted,
+            "{address} through_cdn={through_cdn}"
+        );
+    }
+    edge.task.abort();
+    server_task.abort();
+}

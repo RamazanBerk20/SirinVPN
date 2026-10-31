@@ -52,27 +52,23 @@ fn https_names_ports_and_imported_certificates_survive_backup_without_rotating_s
     configuration.schema_version = 1;
     assert!(validate_configuration(&configuration).is_err());
 
-    // CDN mode changes only how devices connect: the origin keeps its certificate and pin.
+    // CDN mode needs signed endpoint state, so a server without a public endpoint refuses it.
+    let before = fs::read(&paths.configuration).unwrap();
     let mut cdn = capabilities.clone();
     cdn.https.as_mut().unwrap().cdn = true;
-    let proxied = initialize_with_transport_capabilities(
-        &paths,
-        "HTTPS VPS",
-        &owner.public.management_certificate_pem,
-        server_id,
-        &owner.public.wireguard_public_key,
-        51_825,
-        cdn,
-    )
-    .unwrap();
-    let proxied = proxied.tls_like.unwrap();
-    assert!(proxied.https.unwrap().cdn);
-    assert_eq!(
-        proxied.certificate_sha256,
-        generated.tls_like.as_ref().unwrap().certificate_sha256
+    assert!(
+        initialize_with_transport_capabilities(
+            &paths,
+            "HTTPS VPS",
+            &owner.public.management_certificate_pem,
+            server_id,
+            &owner.public.wireguard_public_key,
+            51_825,
+            cdn,
+        )
+        .is_err()
     );
-    assert_eq!(load_configuration(&paths).unwrap().schema_version, 7);
-    validate_state(&paths).unwrap();
+    assert_eq!(fs::read(&paths.configuration).unwrap(), before);
 
     let certificate_key = KeyPair::generate_for(&PKCS_ED25519).unwrap();
     let certificate = CertificateParams::new(vec![https.server_name.clone()])

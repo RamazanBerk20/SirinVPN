@@ -70,15 +70,23 @@ set per server: setup and repair have a "Reach HTTPS through a CDN" option, and
 the CLI takes `--https-cdn true` or `--https-cdn false` beside
 `--https-server-name`. The flag travels in the signed endpoint descriptor
 (`"cdn": true` inside the HTTPS settings). It is omitted when off, so existing
-profiles, checkpoints and server configurations keep their exact bytes.
+profiles and checkpoints keep their exact bytes. A server with CDN mode on uses
+configuration schema 10. It needs a public endpoint, and the HTTPS hostname must
+differ from the public and alternate addresses, which devices reach directly:
+otherwise every transport, and publication to an old server, would reach the CDN.
+Repair, the CLI and the app reject such a name. The CLI and the app also warn about
+a TCP/TLS port that Cloudflare does not proxy, and the CLI warns when
+`--https-server-name` without `--https-cdn true` turns CDN mode off.
 
 With CDN mode on, only the HTTPS transport changes, and only on devices:
 
 - The device resolves the HTTPS hostname with the network's normal DNS, outside
   the tunnel, and connects to that address. On Linux and Windows the privileged
   helper or service does this through the same scoped DNS exceptions it uses for
-  endpoint names and keeps one address, IPv4 first. Android resolves the name on
-  the underlying network. Direct UDP, Obfuscated UDP and raw TCP still go to the
+  endpoint names and keeps one address, IPv4 first; an app-supplied address is
+  discarded, and a failed lookup keeps the last address only while the signed
+  name is unchanged. Android, which has no separate privileged service, resolves
+  the name in its VPN service on the underlying network. Direct UDP, Obfuscated UDP and raw TCP still go to the
   VPS address, so Automatic falls through to the CDN when that address is blocked.
 - TLS is verified against the operating system's WebPKI roots and the hostname
   (rustls-native-certs; Android's Conscrypt or system CA directory) instead of the
@@ -91,18 +99,32 @@ With CDN mode on, only the HTTPS transport changes, and only on devices:
 - The kill switch admits only the carrier to that one CDN address on the HTTPS
   port: on Linux a rule for marked carrier sockets, on Windows a permit for the
   service's SYSTEM carrier to that address and port, on Android the carrier's
-  protected socket. Nothing else gains a path to the CDN.
+  protected socket. Nothing else gains a path to the CDN. Every Linux path that
+  starts a carrier, live transport handoff included, sends HTTPS through a CDN to
+  that address, and while a session runs through the CDN the guard keeps no
+  discovery exception for the VPS. Windows adds no host route for a CDN address,
+  because it is shared anycast and a route would take every other site on it out
+  of the tunnel; the carrier connects before tunnel routes exist and its socket
+  stays on the physical interface through `IP_UNICAST_IF`.
 - Background endpoint discovery follows the current transport: while the session
   runs through the CDN, the checkpoint request goes to the CDN address on the
   HTTPS port, so the device never probes a VPS address that may be blocked or
   watched. Discovery during invitation and recovery also tries the hostname.
-  Discovery needs no TLS change: Noise IK already authenticates its response.
-  Owner publication to a previous VPS stays on that VPS's own address: a CDN
-  hostname follows the current origin, so it would reach the new server, not the
-  one being retired.
+  Discovery to the CDN verifies its WebPKI certificate, like the transport, so a
+  network that answers the name with a fake server never receives a SirinVPN
+  request. Discovery at the VPS still accepts its replaceable certificate (Noise IK
+  authenticates the response) and still uses the retained discovery port for
+  devices that know only an older one. Owner publication to a previous VPS stays
+  on that VPS's own address: a CDN hostname follows the current origin, so it
+  would reach the new server, not the one being retired.
 
-The VPS keeps serving its generated or imported certificate and needs no other
-change; the request headers a CDN adds are ignored and never stored. A quiet
+The VPS keeps serving its generated or imported certificate. The request headers a
+CDN adds are ignored and never stored. Behind a CDN every connection comes from a
+shared edge address that anyone can make connect, so the listener skips its
+per-source probe budget (12 connections per 10 seconds), which would otherwise let
+one client lock everyone out of that edge. The global budget of 1,024 new
+connections per second, 1,024 concurrent connections, four connections per device
+and the three-second handshake deadline still apply. A quiet
 tunnel survives CDN idle timeouts (Cloudflare closes WebSockets after about 100
 seconds without data) because every client already sets a 25-second WireGuard
 persistent keepalive (Linux `wg set … persistent-keepalive 25`, Windows peer
@@ -140,16 +162,24 @@ and no challenge pages.
   duration, traffic volume, the hostname and path, and the upgrade request
   including the opaque Noise token. It never sees tunnel contents. See
   [PRIVACY.md](../PRIVACY.md).
-- The per-source probe budget (12 connections per 10 seconds) applies to CDN edge
-  addresses, which can carry several devices. That is ample for a personal
-  server.
+- Without the per-source budget, a flood that reaches the VPS address directly is
+  bounded only by the global limits above.
 - The origin still answers anyone who reaches its address directly with the same
   nginx-style cover; restricting it to CDN address ranges is not done.
+- Trust roots come from the operating system. A Debian package depends on
+  `ca-certificates`. On Windows, rustls-native-certs reads the machine's root store
+  as present; Windows adds some roots only on demand when its own APIs first need
+  them, so a fresh installation may lack the CDN's root and CDN mode then fails
+  closed until that root is installed (any HTTPS visit in a browser that uses the
+  Windows store usually adds it). Bundling roots is not done.
+- Not run on a real Windows client: the Windows changes have passed only the CI
+  build and its tests.
 - One CDN address is kept per lookup. A network that reaches the CDN only over the
   other IP family fails HTTPS until the next lookup returns a usable address.
-- Older clients and servers cannot read a descriptor or configuration with CDN mode
-  on (`HttpsTransport` rejects unknown fields). Update devices first, and turn CDN
-  mode off before rolling the VPS back to an older release.
+- Older clients cannot read a descriptor with CDN mode on (`HttpsTransport` rejects
+  unknown fields), so update devices first. Server configuration schema 10 is
+  outside older servers' declared read range, so the signed VPS updater refuses to
+  roll back to one until CDN mode is turned off.
 - Linux helper protocol 19 adds the CDN address to the helper-owned part of the
   request. Apps leave it empty and the helper replaces it with its own lookup.
 
@@ -162,8 +192,11 @@ no tunnel packet. CDN mode refuses the pinned origin certificate, a WebPKI
 certificate for another name and a valid edge with the wrong server Noise key.
 Helper tests cover the CDN-address validation, the guard rule that admits only the
 CDN address on the HTTPS port, the helper's own lookup replacing an app-supplied
-address, the relay configuration and discovery following the transport. Real
-Cloudflare has not been tested yet.
+address, the relay configuration, a live handoff to the CDN transport and
+discovery following the transport. Transport tests show that one edge address is
+not limited per source, and that discovery to a CDN address refuses the origin's
+own certificate. Server tests cover schema 10, backup and a proxied name reused as
+a direct endpoint. Real Cloudflare has not been tested yet.
 
 The implementation uses the [WebSocket protocol](https://www.rfc-editor.org/rfc/rfc6455.html)
 through tokio-tungstenite, and [rustls certificate/key validation](https://docs.rs/rustls/latest/rustls/struct.ConfigBuilder.html#method.with_single_cert).

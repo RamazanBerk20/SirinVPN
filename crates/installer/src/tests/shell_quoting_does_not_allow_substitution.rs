@@ -25,6 +25,10 @@ fn https_init_arguments_pass_cdn_mode_only_when_on() {
             .init_arguments()
             .contains(" --https-path '/connect' --https-cdn")
     );
+    setup.validate().unwrap();
+    // A proxied name cannot also be an address devices reach directly.
+    setup.alternate_endpoint_hosts = vec!["VPN.example.org".into()];
+    assert!(setup.validate().is_err());
 }
 
 #[test]

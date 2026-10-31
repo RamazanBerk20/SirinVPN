@@ -11,9 +11,12 @@ struct EndpointRunner {
     policy: PolicyRunner,
     response: Arc<Mutex<Option<EndpointTransitionResponse>>>,
     queries: Arc<AtomicUsize>,
-    sources: Arc<Mutex<Vec<IpAddr>>>,
+    sources: Arc<Mutex<Vec<(IpAddr, bool)>>>,
 }
 impl CommandRunner for EndpointRunner {
+    fn tunnel_probe(&self, client: Ipv4Addr, dns: Ipv4Addr) -> bool {
+        self.policy.tunnel_probe(client, dns)
+    }
     fn run(&self, p: &str, a: &[&str], input: Option<&[u8]>) -> Result<()> {
         self.policy.run(p, a, input)
     }
@@ -25,9 +28,10 @@ impl CommandRunner for EndpointRunner {
         _: &EndpointIdentity,
         _: &str,
         source: IpAddr,
+        through_cdn: bool,
     ) -> Result<Option<EndpointTransitionResponse>> {
         self.queries.fetch_add(1, Ordering::SeqCst);
-        self.sources.lock().unwrap().push(source);
+        self.sources.lock().unwrap().push((source, through_cdn));
         Ok(self.response.lock().unwrap().clone())
     }
     fn endpoint_addresses(&self, host: &str, _: &[SocketAddr]) -> Vec<IpAddr> {
@@ -41,8 +45,8 @@ impl CommandRunner for EndpointRunner {
 const CDN_HOST: &str = "cdn.example.org";
 const CDN_ADDRESS: &str = "192.0.2.80";
 
-/// HTTPS through a CDN first, then Direct UDP to the VPS.
-fn cdn_fixture() -> TunnelConnectRequest {
+/// HTTPS through a CDN and Direct UDP to the VPS, `first` active.
+fn cdn_fixture(first: TransportKind) -> TunnelConnectRequest {
     let (mut base, _) = fixture(true);
     let descriptor = &mut base.endpoint_identity.as_mut().unwrap().descriptor;
     descriptor.tls_like.as_mut().unwrap().https = Some(sirinvpn_protocol::HttpsTransport {
@@ -50,7 +54,11 @@ fn cdn_fixture() -> TunnelConnectRequest {
         path: "/connect".into(),
         cdn: true,
     });
-    let selections = [TransportKind::TlsLike, TransportKind::DirectUdp].map(|kind| {
+    let mut kinds = [TransportKind::TlsLike, TransportKind::DirectUdp];
+    if first == TransportKind::DirectUdp {
+        kinds.reverse();
+    }
+    let selections = kinds.map(|kind| {
         let mut selection = sirinvpn_transport::TransportEngine
             .select_descriptor(descriptor, kind)
             .unwrap();
@@ -65,7 +73,7 @@ fn cdn_fixture() -> TunnelConnectRequest {
 
 #[test]
 fn https_through_a_cdn_reaches_only_its_resolved_address_and_discovery_follows_it() {
-    let request = cdn_fixture();
+    let request = cdn_fixture(TransportKind::TlsLike);
     validate_request(&request).unwrap();
     let cdn: IpAddr = CDN_ADDRESS.parse().unwrap();
     for invalid in ["127.0.0.1", "0.0.0.0", "ff02::1"] {
@@ -129,8 +137,8 @@ fn https_through_a_cdn_reaches_only_its_resolved_address_and_discovery_follows_i
 
     let mut state = helper.read_state().unwrap();
     for (transport, source) in [
-        (TransportKind::TlsLike, cdn),
-        (TransportKind::DirectUdp, vps),
+        (TransportKind::TlsLike, (cdn, true)),
+        (TransportKind::DirectUdp, (vps, false)),
     ] {
         state.transport = transport;
         state.endpoint_monitor = Some(crate::endpoints::EndpointMonitor::default());
@@ -397,4 +405,42 @@ fn manually_updating_a_paused_endpoint_keeps_it_paused_with_its_existing_protect
             assert!(helper.guard_is_absent().unwrap());
         }
     }
+}
+
+#[test]
+fn live_handoff_to_https_through_a_cdn_targets_the_cdn_address() {
+    let directory = tempfile::tempdir().unwrap();
+    let runner = EndpointRunner {
+        policy: runner(),
+        ..Default::default()
+    };
+    let helper = LinuxNetworkHelper::new(runner.clone(), directory.path().into());
+    let request = cdn_fixture(TransportKind::DirectUdp);
+    helper.connect(&request).unwrap();
+    let desired = helper.read_persistent().unwrap();
+    let mut state = helper.read_state().unwrap();
+    let next = next_persistent_request(&desired, request.transport);
+    assert!(next.https.as_ref().unwrap().cdn);
+    runner
+        .policy
+        .base
+        .latest_handshake_unix
+        .store(now_unix(), Ordering::SeqCst);
+    assert_eq!(
+        helper
+            .change_quality_transport(&desired, &next, &mut state)
+            .unwrap(),
+        ReconcileOutcome::Healthy
+    );
+    let carrier = fs::read_to_string(helper.carrier_config_path(TransportKind::TlsLike)).unwrap();
+    assert!(carrier.contains(&format!("\"server_address\":\"{CDN_ADDRESS}:443\"")));
+    assert!(!carrier.contains(&format!("\"{}:443\"", desired.endpoint)));
+    // While the session runs through the CDN, the VPS has no exception on the HTTPS port.
+    let vps = format!("\"{}\"", desired.endpoint);
+    assert!(
+        !guard_objects(&next, desired.endpoint).iter().any(|object| {
+            let rule = object.to_string();
+            rule.contains(&vps) && rule.contains("443")
+        })
+    );
 }

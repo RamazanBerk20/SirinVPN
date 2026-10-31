@@ -32,7 +32,8 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
         let mut request = change.request.clone();
         request.cdn_address = request
             .cdn_host()
-            .and_then(|host| resolve_endpoint(host, request.endpoint_port).ok());
+            .and_then(|host| resolve_endpoint(host, request.endpoint_port).ok())
+            .filter(|address| !address.is_loopback());
         self.replace_session(change.expected_server_id, &request, endpoint)
     }
 

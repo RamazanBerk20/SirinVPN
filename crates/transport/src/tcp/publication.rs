@@ -27,7 +27,7 @@ where
     }
     timeout(Duration::from_secs(6), async {
         let stream = connect_marked_protected(config.server_address, config.socket_mark, protect).await?;
-        let connector = TlsConnector::from(Arc::new(tls::noise_discovery_tls_configuration()?));
+        let connector = TlsConnector::from(Arc::new(tls::control_tls_configuration(&config)?));
         let (name, host) = tls_destination(config.server_name.as_deref(), config.server_address)?;
         let mut stream = connector.connect(name, stream).await.map_err(|_| RelayError::HandshakeFailed)?;
         let mut handshake = initiator_handshake(&config.client_private_key, &config.server_public_key, PROLOGUE)?;

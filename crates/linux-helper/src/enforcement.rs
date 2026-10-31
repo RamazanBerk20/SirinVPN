@@ -110,7 +110,12 @@ fn guard_objects_with_controls(
         );
     }
     if let Some(identity) = &request.endpoint_identity {
-        if let Some(port) = identity.descriptor.discovery_port() {
+        // While the session runs through a CDN, discovery goes there too (carrier rule).
+        if let Some(port) = identity
+            .descriptor
+            .discovery_port(false)
+            .filter(|_| !request.https.as_ref().is_some_and(|https| https.cdn))
+        {
             rule(
                 vec![
                     eq(meta("mark"), json!(51820)),

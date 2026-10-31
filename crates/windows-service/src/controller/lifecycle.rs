@@ -26,7 +26,12 @@ impl Controller {
             return Err(ServiceError::SessionChanged);
         }
         let (mut endpoints, cdn_address) = self.resolve(&request).await.map_err(network_error)?;
-        request.cdn_address = cdn_address;
+        // A failed lookup keeps the service's own last address for the same signed name.
+        request.cdn_address = cdn_address.or(self
+            .saved
+            .as_ref()
+            .filter(|saved| saved.request.cdn_host() == request.cdn_host())
+            .and_then(|saved| saved.request.cdn_address));
         if endpoints.is_empty()
             && !switching
             && let Some(saved) = &self.saved

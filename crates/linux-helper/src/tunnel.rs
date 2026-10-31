@@ -9,9 +9,6 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
         endpoint: IpAddr,
         persistent_protection: bool,
     ) -> Result<()> {
-        let endpoint = request
-            .outer_address(endpoint)
-            .ok_or_else(|| anyhow!("the CDN address for HTTPS did not resolve"))?;
         let wireguard_endpoint = match request.transport {
             TransportKind::DirectUdp => {
                 self.stop_transport();
@@ -131,7 +128,8 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
             && request.client_ipv6_address.is_none()
             && request.routing.mode == TunnelRoutingMode::FullTunnel
         {
-            let firewall = transient_ipv6_firewall(request.routing.allow_lan, request, endpoint);
+            let outer = request.outer_address(endpoint).unwrap_or(endpoint);
+            let firewall = transient_ipv6_firewall(request.routing.allow_lan, request, outer);
             self.runner
                 .run("nft", &["-f", "-"], Some(firewall.as_bytes()))?;
         }

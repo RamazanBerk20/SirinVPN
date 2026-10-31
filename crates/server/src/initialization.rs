@@ -557,19 +557,22 @@ pub(super) fn ensure_transport_identity(
     })
 }
 
-/// Schema 8 marks a public endpoint; 9 adds a generated certificate stored without HTTPS.
+/// Schema 8 marks a public endpoint; 9 adds a generated certificate stored without HTTPS;
+/// 10 marks HTTPS through a CDN, which older servers cannot read.
 fn configuration_schema_version(configuration: &ServerConfiguration) -> u16 {
     let https = configuration
         .tls_like
         .as_ref()
-        .is_some_and(|endpoint| endpoint.https.is_some());
+        .and_then(|endpoint| endpoint.https.as_ref());
     if configuration.public_endpoint.is_some() {
-        if configuration.https_certificate_pem.is_some() && !https {
+        if https.is_some_and(|https| https.cdn) {
+            10
+        } else if configuration.https_certificate_pem.is_some() && https.is_none() {
             9
         } else {
             8
         }
-    } else if https {
+    } else if https.is_some() {
         7
     } else {
         server_dns_configuration_schema_version(

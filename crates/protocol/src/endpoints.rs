@@ -36,11 +36,21 @@ impl EndpointDescriptor {
         https.cdn.then_some(https.server_name.as_str())
     }
 
-    /// A CDN proxies only the HTTPS port, which also serves discovery; the retained
-    /// discovery port is for devices that still know only an older direct port.
-    pub fn discovery_port(&self) -> Option<u16> {
+    /// A proxied CDN name cannot also be a direct endpoint: every transport, and
+    /// publication to an old server, would then reach the CDN instead of the VPS.
+    pub fn cdn_host_is_separate(&self) -> bool {
+        self.cdn_host().is_none_or(|cdn| {
+            std::iter::once(&self.endpoint.host)
+                .chain(&self.alternate_endpoint_hosts)
+                .all(|host| !host.eq_ignore_ascii_case(cdn))
+        })
+    }
+
+    /// A CDN proxies only the HTTPS port, which also serves discovery. At the VPS the
+    /// retained discovery port still serves devices that know only an older port.
+    pub fn discovery_port(&self, through_cdn: bool) -> Option<u16> {
         let tls = self.tls_like.as_ref()?;
-        Some(if self.cdn_host().is_some() {
+        Some(if through_cdn {
             tls.port
         } else {
             self.endpoint_discovery_port.unwrap_or(tls.port)

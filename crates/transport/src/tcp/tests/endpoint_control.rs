@@ -11,6 +11,7 @@ fn configuration(
         client_private_key: Zeroizing::new(client.private.as_slice().try_into().unwrap()),
         server_public_key: server.public.as_slice().try_into().unwrap(),
         socket_mark: None,
+        through_cdn: false,
     }
 }
 

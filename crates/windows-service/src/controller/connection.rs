@@ -223,6 +223,7 @@ impl Controller {
         };
         request.endpoint_host = endpoint.host.clone();
         // HTTPS through a CDN goes to the CDN's address; the firewall admits only that.
+        let through_cdn = request.https.as_ref().is_some_and(|https| https.cdn);
         let address = request
             .outer_address(endpoint.address)
             .ok_or(io::ErrorKind::AddrNotAvailable)?;
@@ -230,7 +231,12 @@ impl Controller {
         let underlay = network::underlay(endpoint.ip(), None)?;
         self.close_guard()?;
         self.cleanup_routes()?;
-        self.add_route(network::endpoint_route(underlay, endpoint.ip()))?;
+        // A CDN address is shared anycast: a host route would take every other site on it
+        // out of the tunnel. The carrier connects before tunnel routes exist and its
+        // socket stays on the underlay through IP_UNICAST_IF (`protect_socket`).
+        if !through_cdn {
+            self.add_route(network::endpoint_route(underlay, endpoint.ip()))?;
+        }
         let adapter = Adapter::create()?;
         // The closed tunnel allowance admits only the carrier to its enrolled
         // endpoint. Adapter routing and DNS are installed before opening inner I/O.

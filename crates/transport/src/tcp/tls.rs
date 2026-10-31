@@ -75,6 +75,18 @@ pub(super) fn noise_discovery_tls_configuration() -> Result<ClientConfig, RelayE
     configuration(None)
 }
 
+/// Discovery and publication accept the VPS's replaceable certificate, but a CDN's
+/// certificate must be WebPKI-valid, like the HTTPS transport through it.
+pub(super) fn control_tls_configuration(
+    config: &super::EndpointDiscoveryConfig,
+) -> Result<ClientConfig, RelayError> {
+    if config.through_cdn {
+        cdn_tls_configuration()
+    } else {
+        noise_discovery_tls_configuration()
+    }
+}
+
 fn configuration(certificate_sha256: Option<[u8; 32]>) -> Result<ClientConfig, RelayError> {
     let provider = Arc::new(rustls::crypto::aws_lc_rs::default_provider());
     let verifier = Arc::new(PinnedCertificateVerifier {

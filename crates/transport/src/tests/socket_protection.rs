@@ -75,6 +75,7 @@ async fn refused_carrier_socket_protection_sends_no_udp_tcp_or_tls_traffic() {
         client_private_key: zeroize::Zeroizing::new([7u8; 32]),
         server_public_key: [9u8; 32],
         socket_mark: None,
+        through_cdn: false,
     };
     assert!(
         fetch_endpoint_checkpoint_with_socket_protector(discovery(), refused)

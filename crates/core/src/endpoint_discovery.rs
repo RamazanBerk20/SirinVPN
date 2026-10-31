@@ -85,12 +85,13 @@ pub async fn discover_endpoint_checkpoint_at(
     known: &EndpointIdentity,
     client_wireguard_private_key: &str,
     address: std::net::IpAddr,
+    through_cdn: bool,
     socket_mark: Option<u32>,
 ) -> Result<Option<EndpointTransitionResponse>, EndpointTransitionError> {
     validate_endpoint_identity(known)?;
     let (Some(tls), Some(port)) = (
         known.descriptor.tls_like.as_ref(),
-        known.descriptor.discovery_port(),
+        known.descriptor.discovery_port(through_cdn),
     ) else {
         return Ok(None);
     };
@@ -104,6 +105,7 @@ pub async fn discover_endpoint_checkpoint_at(
         server_public_key: decode_key(&tls.server_public_key)
             .map_err(|_| EndpointTransitionError::InvalidCode)?,
         socket_mark,
+        through_cdn,
     };
     let bytes = match fetch_endpoint_checkpoint(config).await {
         Ok(Some(bytes)) => bytes,
@@ -166,6 +168,8 @@ pub async fn offer_endpoint_checkpoint_at(
         server_public_key: decode_key(&tls.server_public_key)
             .map_err(|_| EndpointTransitionError::InvalidCode)?,
         socket_mark,
+        // The previous VPS's own address: a CDN name follows the current origin.
+        through_cdn: false,
     };
     let encoded = serde_json::to_vec(response).map_err(|_| EndpointTransitionError::InvalidCode)?;
     Ok(
@@ -233,13 +237,15 @@ pub async fn discover_endpoint_checkpoint(
         decode_key(client_wireguard_private_key)
             .map_err(|_| EndpointTransitionError::InvalidCode)?,
     );
-    let Some(port) = known
-        .descriptor
-        .discovery_port()
-        .or_else(|| known.descriptor.tcp_fallback.as_ref().map(|tcp| tcp.port))
-    else {
-        return Ok(None);
+    let port = |through_cdn| {
+        known
+            .descriptor
+            .discovery_port(through_cdn)
+            .or_else(|| known.descriptor.tcp_fallback.as_ref().map(|tcp| tcp.port))
     };
+    if port(false).is_none() {
+        return Ok(None);
+    }
     let server_name = known
         .descriptor
         .tls_like
@@ -248,7 +254,7 @@ pub async fn discover_endpoint_checkpoint(
         .map(|https| https.server_name.clone());
     let discovery = async {
         let mut attempts = tokio::task::JoinSet::new();
-        for host in std::iter::once(known.descriptor.endpoint.host.as_str())
+        for (host, through_cdn) in std::iter::once(known.descriptor.endpoint.host.as_str())
             .chain(
                 known
                     .descriptor
@@ -256,9 +262,11 @@ pub async fn discover_endpoint_checkpoint(
                     .iter()
                     .map(String::as_str),
             )
-            .chain(known.descriptor.cdn_host())
+            .map(|host| (host, false))
+            .chain(known.descriptor.cdn_host().map(|host| (host, true)))
         {
             let host = host.to_owned();
+            let port = port(through_cdn).expect("checked port");
             let server_name = server_name.clone();
             let private = private.clone();
             let known = known.clone();
@@ -273,6 +281,7 @@ pub async fn discover_endpoint_checkpoint(
                         client_private_key: private.clone(),
                         server_public_key,
                         socket_mark,
+                        through_cdn,
                     };
                     connections.spawn(fetch_endpoint_checkpoint(config));
                 }

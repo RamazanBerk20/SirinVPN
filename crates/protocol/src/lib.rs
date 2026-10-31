@@ -529,7 +529,7 @@ pub fn validate_server_dns_configuration(
             | (4, DnsUpstream::DnsOverHttps { .. }, true)
             | (5, DnsUpstream::DnsOverHttps { .. }, false)
             | (6, DnsUpstream::Split { .. }, _)
-            | (7..=9, _, _)
+            | (7..=10, _, _)
     );
     if !valid_pair {
         return Err(ValidationError::InvalidDnsConfigurationSchema);
