@@ -59,4 +59,8 @@ for key, value in [('org.gradle.daemon', 'false'), ('kotlin.compiler.execution.s
     settings = re.sub(rf'(?m)^{re.escape(key)}=.*\n?', '', settings)
     settings += f'{key}={value}\n'
 properties.write_text(settings)
+# The Plugin Portal's Maven Central relay sometimes answers 404; Gradle then tries the next repository.
+build_src_settings = project / 'buildSrc/settings.gradle.kts'
+if not build_src_settings.exists():
+    build_src_settings.write_text('pluginManagement {\n    repositories {\n        gradlePluginPortal()\n        mavenCentral()\n    }\n}\n')
 print('Android shell prepared from tracked sources')

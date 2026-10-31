@@ -175,6 +175,9 @@ def main():
         return 0
     except Exception as error:
         report["failure"] = type(error).__name__
+        if isinstance(error, subprocess.CalledProcessError):
+            # The traceback names the device command; its captured output says why it failed.
+            sys.stderr.buffer.write(error.stdout + error.stderr)
         raise
     finally:
         if child is not None:

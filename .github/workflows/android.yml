@@ -78,6 +78,8 @@ jobs:
             target/remediation-evidence/android-package.json
             target/remediation-evidence/android-emulator-29.json
             target/remediation-evidence/android-emulator-36.json
+            target/remediation-evidence/android-emulator-29.log
+            target/remediation-evidence/android-emulator-36.log
             apps/desktop/src-tauri/gen/android/app/build/test-results/testUniversalDebugUnitTest/*.xml
             .cache/android-emulator-29/results.json
             .cache/android-emulator-36/results.json
