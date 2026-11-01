@@ -108,6 +108,23 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
             self.apply_policy_routes(request, "-6")?;
         }
         self.apply_lan_exceptions(request)?;
+        for (route, table) in subnet_route_rules(request) {
+            self.runner.run(
+                "ip",
+                &[
+                    "-4",
+                    "rule",
+                    "add",
+                    "to",
+                    route,
+                    "table",
+                    table,
+                    "priority",
+                    SUBNET_RULE_PRIORITY,
+                ],
+                None,
+            )?;
+        }
         self.runner
             .kick_tunnel(request.client_address, request.dns_address);
         if request.routing.mode == TunnelRoutingMode::SelectedApplications {
@@ -121,7 +138,7 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
             &["-q", "-w", "net.ipv4.conf.all.src_valid_mark=1"],
             None,
         );
-        let firewall = client_firewall(request.client_address, request.client_ipv6_address);
+        let firewall = client_firewall(request);
         self.runner
             .run("nft", &["-f", "-"], Some(firewall.as_bytes()))?;
         if !persistent_protection

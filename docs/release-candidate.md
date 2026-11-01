@@ -66,6 +66,22 @@ does not qualify that migration. Do not remove the old app before validating
 the backup/recovery path. Once a deletion has been recorded, an older binary
 that ignores its marker is an unsupported rollback target on every platform.
 
+## Subnet route migration
+
+Owner-assigned subnet routes are new on a `server_authorization` device record.
+A schema-7 reader would ignore them and keep forwarding stale policy, so the
+writer moves to schema 8 whenever a device has routes and back down when the
+last route is removed:
+
+| State | Before | Now | Shape |
+| --- | --- | --- | --- |
+| `server_authorization` | reads 1–7, writes 1–7 | reads 1–8, writes 1–8 | explicit schema 8 whenever a device has `subnet_routes` |
+
+Devices without routes serialize exactly as before. A signed VPS transition to
+a release that cannot read schema 8 is refused; remove every route before such
+a rollback. The client profile caches the routes in an optional field older
+readers drop, and the next status read refills it.
+
 ## WireGuard-only device migration
 
 A device record without a management certificate is new in `server_authorization`.

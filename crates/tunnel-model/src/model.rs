@@ -1,6 +1,6 @@
 use super::*;
 
-pub const HELPER_PROTOCOL_VERSION: u16 = 19;
+pub const HELPER_PROTOCOL_VERSION: u16 = 20;
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -62,6 +62,25 @@ pub struct ReconnectCandidate {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub https: Option<sirinvpn_protocol::HttpsTransport>,
     pub mtu: u16,
+}
+
+/// The cached VPS routes a request carries. Selected applications take none, and only
+/// Linux forwards an announced LAN; other platforms consume routes.
+pub fn request_subnet_routes(
+    routes: &sirinvpn_protocol::DeviceSubnetRoutes,
+    routing: &TunnelRoutingPolicy,
+) -> sirinvpn_protocol::DeviceSubnetRoutes {
+    if routing.mode == TunnelRoutingMode::SelectedApplications {
+        return Default::default();
+    }
+    sirinvpn_protocol::DeviceSubnetRoutes {
+        announced: if cfg!(target_os = "linux") {
+            routes.announced.clone()
+        } else {
+            Vec::new()
+        },
+        reachable: routes.reachable.clone(),
+    }
 }
 
 pub fn automatic_reconnect_candidates(
@@ -156,6 +175,13 @@ pub struct TunnelConnectRequest {
         skip_serializing_if = "TunnelRoutingPolicy::is_legacy_default"
     )]
     pub routing: TunnelRoutingPolicy,
+    /// Announced ranges this device forwards from the tunnel; reachable ones always use it.
+    /// Optional at every schema; earlier helpers reject it through `deny_unknown_fields`.
+    #[serde(
+        default,
+        skip_serializing_if = "sirinvpn_protocol::DeviceSubnetRoutes::is_empty"
+    )]
+    pub subnet_routes: sirinvpn_protocol::DeviceSubnetRoutes,
 }
 
 impl std::fmt::Debug for TunnelConnectRequest {
@@ -187,6 +213,7 @@ impl std::fmt::Debug for TunnelConnectRequest {
             .field("persistent_protection", &self.persistent_protection)
             .field("policy", &self.policy)
             .field("routing", &self.routing)
+            .field("subnet_routes", &self.subnet_routes)
             .finish()
     }
 }

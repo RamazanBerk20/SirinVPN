@@ -40,33 +40,135 @@ pub(super) async fn sync_wireguard_peers(
         arguments.extend(["peer".to_owned(), public_key, "remove".to_owned()]);
     }
     for peer in &desired {
-        let IpAddr::V4(address) = peer.address else {
-            bail!("only IPv4 SirinVPN peer addresses are supported");
-        };
-        let allowed_ips = if address.octets()[..3] == [10, 77, 1] {
-            format!("{address}/32")
-        } else {
-            peer_allowed_ips(
-                authorization.server_id,
-                address,
-                configuration.ipv6_tunnel_enabled,
-            )?
-        };
         arguments.extend([
             "peer".to_owned(),
             peer.public_key.clone(),
             "allowed-ips".to_owned(),
-            allowed_ips,
+            desired_allowed_ips(
+                peer,
+                authorization.server_id,
+                configuration.ipv6_tunnel_enabled,
+            )?,
         ]);
     }
-    if arguments.len() == 2 {
-        return Ok(());
+    if arguments.len() > 2 {
+        let arguments: Vec<&str> = arguments.iter().map(String::as_str).collect();
+        diagnostics::output("wg", &arguments)
+            .await
+            .context("could not update WireGuard peers within its bounds")?;
     }
-    let arguments: Vec<&str> = arguments.iter().map(String::as_str).collect();
-    diagnostics::output("wg", &arguments)
-        .await
-        .context("could not update WireGuard peers within its bounds")?;
+    sync_subnet_kernel_routes(&configuration.interface_name, &desired).await?;
     sync_preshared_keys(&configuration.interface_name, &desired).await
+}
+
+/// A router peer also carries its live LAN ranges, so WireGuard sends them to it.
+pub(super) fn desired_allowed_ips(
+    peer: &DesiredPeer,
+    server_id: ServerId,
+    ipv6_enabled: bool,
+) -> Result<String> {
+    let IpAddr::V4(address) = peer.address else {
+        bail!("only IPv4 SirinVPN peer addresses are supported");
+    };
+    let mut allowed_ips = if address.octets()[..3] == [10, 77, 1] {
+        format!("{address}/32")
+    } else {
+        peer_allowed_ips(server_id, address, ipv6_enabled)?
+    };
+    for route in &peer.subnet_routes {
+        allowed_ips.push(',');
+        allowed_ips.push_str(route);
+    }
+    Ok(allowed_ips)
+}
+
+/// AllowedIPs pick the router peer; these routes send the LAN ranges into the tunnel at all.
+/// `proto static` marks them as ours; `add` never takes over a route on another interface.
+async fn sync_subnet_kernel_routes(interface: &str, desired: &[DesiredPeer]) -> Result<()> {
+    let output = diagnostics::output(
+        "ip",
+        &["-4", "route", "show", "dev", interface, "proto", "static"],
+    )
+    .await
+    .context("could not inspect subnet routes within its bounds")?;
+    let (stale, missing) = subnet_kernel_route_changes(&output, desired);
+    for route in &stale {
+        diagnostics::output(
+            "ip",
+            &[
+                "-4", "route", "delete", route, "dev", interface, "proto", "static",
+            ],
+        )
+        .await
+        .context("could not remove a subnet route within its bounds")?;
+    }
+    for route in &missing {
+        // A range that later collides with a VPS route stays inactive instead of failing
+        // every commit and recovery, which would leave it impossible to remove.
+        let _ = diagnostics::output(
+            "ip",
+            &[
+                "-4", "route", "add", route, "dev", interface, "proto", "static",
+            ],
+        )
+        .await;
+    }
+    Ok(())
+}
+
+/// Stale and missing routes, given `ip -4 route show dev <if> proto static`.
+pub(super) fn subnet_kernel_route_changes(
+    current: &str,
+    desired: &[DesiredPeer],
+) -> (Vec<String>, Vec<String>) {
+    let current: BTreeSet<String> = current
+        .lines()
+        .filter_map(|line| line.split_whitespace().next())
+        .map(|route| {
+            if route.contains('/') {
+                route.to_owned()
+            } else {
+                format!("{route}/32")
+            }
+        })
+        .collect();
+    let desired: BTreeSet<String> = desired
+        .iter()
+        .flat_map(|peer| peer.subnet_routes.iter().cloned())
+        .collect();
+    (
+        current.difference(&desired).cloned().collect(),
+        desired.difference(&current).cloned().collect(),
+    )
+}
+
+/// A LAN range the VPS already routes elsewhere would be taken over or would hide the LAN.
+pub(super) async fn vps_route_conflict(
+    interface: &str,
+    routes: &[String],
+) -> Result<Option<String>> {
+    if routes.is_empty() {
+        return Ok(None);
+    }
+    let output = diagnostics::output("ip", &["-4", "-j", "route", "show", "table", "main"])
+        .await
+        .context("could not inspect VPS routes within its bounds")?;
+    vps_route_overlap(&output, interface, routes)
+}
+
+pub(super) fn vps_route_overlap(
+    output: &str,
+    interface: &str,
+    routes: &[String],
+) -> Result<Option<String>> {
+    let entries: Vec<serde_json::Value> =
+        serde_json::from_str(output).context("VPS routes are unreadable")?;
+    Ok(entries
+        .iter()
+        .filter(|entry| entry["dev"].as_str() != Some(interface))
+        .filter_map(|entry| entry["dst"].as_str())
+        .find_map(|destination| sirinvpn_protocol::overlapping_subnet_route(destination, routes))
+        .map(str::to_owned))
 }
 
 /// Keys travel on stdin, never in arguments visible to other local processes.
@@ -318,11 +420,14 @@ pub(super) fn port_forward_nft_batch(
     operational: Option<&OperationalConfiguration>,
     authorization: &AuthorizationDocument,
 ) -> Result<Option<String>> {
+    let subnet_routes = subnet_route_nft_rules(configuration, authorization);
     let Some(operational) = operational else {
-        if authorization.port_forwards.is_empty() {
-            return Ok(None);
+        if !authorization.port_forwards.is_empty() {
+            bail!("port forwarding requires repaired server operational configuration");
         }
-        bail!("port forwarding requires repaired server operational configuration");
+        return Ok(Some(format!(
+            "flush chain inet sirinvpn_filter port_forward\n{subnet_routes}"
+        )));
     };
     let mut forwards = authorization.port_forwards.clone();
     forwards.sort_by_key(|forward| (forward.protocol, forward.public_port));
@@ -368,7 +473,37 @@ pub(super) fn port_forward_nft_batch(
             forward.public_port,
         ));
     }
+    batch.push_str(&subnet_routes);
     Ok(Some(batch))
+}
+
+/// `port_forward` is the runtime chain every installed forward chain jumps to before peer
+/// isolation drops tunnel-to-tunnel traffic, so routes work without a firewall rewrite.
+/// Peers that may reach each other reach the routers' LANs; LAN hosts only answer.
+pub(super) fn subnet_route_nft_rules(
+    configuration: &ServerConfiguration,
+    authorization: &AuthorizationDocument,
+) -> String {
+    let mut routes: Vec<_> = authorization
+        .devices
+        .iter()
+        .flat_map(|device| authorization.live_subnet_routes(device))
+        .map(String::as_str)
+        .collect();
+    if routes.is_empty() {
+        return String::new();
+    }
+    routes.sort_unstable();
+    let routes = routes.join(", ");
+    format!(
+        concat!(
+            "add rule inet sirinvpn_filter port_forward iifname \"{interface}\" oifname \"{interface}\" ip saddr @peer_communication4 ip daddr {{ {routes} }} accept\n",
+            "add rule inet sirinvpn_filter port_forward iifname \"{interface}\" oifname \"{interface}\" ip saddr {{ {routes} }} ip daddr @peer_communication4 ct state established,related accept\n",
+            "add rule inet sirinvpn_filter port_forward iifname \"{interface}\" ip saddr {{ {routes} }} drop\n",
+        ),
+        interface = configuration.interface_name,
+        routes = routes
+    )
 }
 
 pub(super) async fn sync_port_forwards(
@@ -446,6 +581,7 @@ mod tests {
             public_key: name.to_owned(),
             address: IpAddr::V4(Ipv4Addr::new(10, 77, 0, 2)),
             preshared_key: key.map(str::to_owned),
+            subnet_routes: Vec::new(),
         };
         let desired = [
             peer("same", Some("kept")),
@@ -466,5 +602,60 @@ mod tests {
             ]
         );
         assert!(preshared_key_updates("same\tkept\n", &desired[..1]).is_empty());
+    }
+
+    #[test]
+    fn router_peers_carry_their_routes_and_the_kernel_routes_follow_them() {
+        let server_id = ServerId::new();
+        let router = DesiredPeer {
+            public_key: "router".into(),
+            address: IpAddr::V4(Ipv4Addr::new(10, 77, 0, 2)),
+            preshared_key: None,
+            subnet_routes: vec!["192.168.1.0/24".into(), "192.168.7.7/32".into()],
+        };
+        assert_eq!(
+            desired_allowed_ips(&router, server_id, false).unwrap(),
+            "10.77.0.2/32,192.168.1.0/24,192.168.7.7/32"
+        );
+        let ipv6 = ipv6_tunnel_address(server_id, Ipv4Addr::new(10, 77, 0, 2)).unwrap();
+        assert_eq!(
+            desired_allowed_ips(&router, server_id, true).unwrap(),
+            format!("10.77.0.2/32,{ipv6}/128,192.168.1.0/24,192.168.7.7/32")
+        );
+        // `ip route show` prints host routes without /32.
+        let current = "192.168.7.7 scope link\n10.20.0.0/16 scope link\n";
+        assert_eq!(
+            subnet_kernel_route_changes(current, std::slice::from_ref(&router)),
+            (
+                vec!["10.20.0.0/16".to_owned()],
+                vec!["192.168.1.0/24".to_owned()]
+            )
+        );
+        assert_eq!(
+            subnet_kernel_route_changes("", &[]),
+            (Vec::new(), Vec::new())
+        );
+    }
+
+    #[test]
+    fn existing_vps_routes_on_other_interfaces_conflict() {
+        let output = r#"[{"dst":"default","gateway":"203.0.113.1","dev":"eth0"},
+            {"dst":"203.0.113.0/24","dev":"eth0"},{"dst":"10.77.0.0/24","dev":"sirinvpn0"},
+            {"dst":"192.168.5.0/24","dev":"sirinvpn0"},{"dst":"172.17.0.0/16","dev":"docker0"},
+            {"type":"blackhole","dst":"10.9.9.9"}]"#;
+        let routes = |list: &[&str]| {
+            list.iter()
+                .map(|route| route.to_string())
+                .collect::<Vec<_>>()
+        };
+        let conflict =
+            |list: &[&str]| vps_route_overlap(output, "sirinvpn0", &routes(list)).unwrap();
+        assert_eq!(conflict(&["192.168.1.0/24", "192.168.5.0/24"]), None);
+        assert_eq!(
+            conflict(&["172.17.3.0/24"]).as_deref(),
+            Some("172.17.3.0/24")
+        );
+        assert_eq!(conflict(&["10.9.0.0/16"]).as_deref(), Some("10.9.0.0/16"));
+        assert!(vps_route_overlap("not json", "sirinvpn0", &routes(&["10.9.0.0/16"])).is_err());
     }
 }

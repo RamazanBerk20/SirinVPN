@@ -32,6 +32,7 @@ fn profile(host: &str, ipv6_tunnel_enabled: bool) -> ServerProfile {
         obfuscated_udp: None,
         tcp_fallback: None,
         tls_like: None,
+        subnet_routes: Default::default(),
     }
 }
 
@@ -45,6 +46,7 @@ fn summary(draft: &WireGuardDeviceDraft, host: u8) -> DeviceSummary {
         peer_communication_enabled: false,
         recent_handshake: None,
         wireguard_only: true,
+        subnet_routes: Vec::new(),
     }
 }
 

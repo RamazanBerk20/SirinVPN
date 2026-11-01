@@ -222,6 +222,30 @@ pub(super) async fn update_device_peer_communication(
 }
 
 #[tauri::command]
+pub(super) async fn update_device_subnet_routes(
+    app: tauri::AppHandle,
+    input: DeviceSubnetRoutesInput,
+) -> Result<MembershipSnapshot, String> {
+    let device_id = input
+        .device_id
+        .parse::<DeviceId>()
+        .map_err(|_| "The device ID is invalid.".to_owned())?;
+    let client = crate::management_session::connected(&app, &input.server_id).await?;
+    if !client
+        .configuration()
+        .await
+        .map_err(safe_error)?
+        .subnet_routes_enabled
+    {
+        return Err("Update this server to share local networks.".to_owned());
+    }
+    client
+        .update_device_subnet_routes(device_id, input.routes)
+        .await
+        .map_err(safe_error)
+}
+
+#[tauri::command]
 pub(super) async fn dns_blocklist_settings(
     app: tauri::AppHandle,
     server_id: String,

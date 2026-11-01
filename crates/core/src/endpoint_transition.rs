@@ -687,6 +687,7 @@ mod tests {
             obfuscated_udp: None,
             tcp_fallback: None,
             tls_like: None,
+            subnet_routes: Default::default(),
         };
         (
             profile,

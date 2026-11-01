@@ -409,6 +409,8 @@ export interface DeviceSummary {
   recent_handshake?: boolean;
   /** Joins with a standard WireGuard configuration: Direct UDP only, no management. */
   wireguard_only?: boolean;
+  /** Private IPv4 networks this Owner device forwards for devices with mutual access. */
+  subnet_routes?: string[];
 }
 
 export interface MemberSummary {
@@ -462,6 +464,7 @@ export interface CurrentConfiguration {
   recovery_keys_enabled?: boolean;
   dns_blocklist_management_enabled?: boolean;
   wireguard_devices_enabled?: boolean;
+  subnet_routes_enabled?: boolean;
 }
 
 export interface DnsBlocklistPolicy {

@@ -158,6 +158,10 @@ A device that cannot run SirinVPN, such as an iPhone, a Mac or a router with the
 
 The device gets Direct UDP access only. With no certificate it is absent from the mTLS trust store and can never call the management API, and the UDP/TCP/TLS relays leave its key out of their authorized peer set. Everything else is the existing lifecycle: rename, peer permission, port forwards, suspension, schedules, device limits, revocation and member removal, and Owner recovery removes it together with the other Owner devices. It cannot rotate keys or follow a signed endpoint update, so a lost file or a new endpoint means revoking it and adding it again. It never counts as an Owner device: the last managed Owner device cannot be revoked beside it, and ownership cannot move to it. A record without a certificate must carry a preshared key and moves the document to authorization schema 7, which earlier readers reject; the installer's repair, uninstall, backup and update preflights read schemas 1–7 and never match such a record as the Owner. See [WireGuard-only devices](wireguard-devices.md).
 
+## Subnet routes
+
+The Owner can assign up to 16 canonical private IPv4 ranges, across the server, to the Owner's own devices (`PUT /v1/devices/{id}/subnet-routes`). They live on the device record and move the authorization document to schema 8. A range is live while its device is active and allows mutual access; the VPS then adds it to that peer's AllowedIPs and as a `proto static` kernel route on `sirinvpn0`, and admits it in the runtime `port_forward` chain only from the `peer_communication4` set, with LAN-sourced traffic limited to answers. Each device reads its own live ranges and the ranges it may reach from `/v1/status` and caches them in its profile. On Linux, a router forwards and masquerades the ranges it shares and keeps them on its own network; every platform tunnels the ranges it reaches ahead of Allow local network. Windows and Android only consume. See [Subnet routes](subnet-routes.md).
+
 ## Data plane and protection
 
 The VPS uses `sirinvpn0` and `10.77.0.1/24`; the first Owner uses

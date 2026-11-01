@@ -28,6 +28,25 @@ pub fn normalize_included_routes(
 }
 
 pub fn validate_routing(request: &TunnelConnectRequest) -> Result<(), HelperError> {
+    let subnet_routes = &request.subnet_routes;
+    if !subnet_routes.is_empty() {
+        if request.policy.is_none()
+            || request.routing.mode == TunnelRoutingMode::SelectedApplications
+        {
+            return Err(HelperError::InvalidConfiguration(
+                "subnet routes need an independent policy and full or selected-route routing"
+                    .into(),
+            ));
+        }
+        sirinvpn_protocol::validate_subnet_routes(
+            subnet_routes
+                .announced
+                .iter()
+                .chain(&subnet_routes.reachable)
+                .map(String::as_str),
+        )
+        .map_err(HelperError::InvalidConfiguration)?;
+    }
     if request.routing.is_legacy_default() {
         if request.schema_version == 6 {
             return Err(HelperError::InvalidConfiguration(

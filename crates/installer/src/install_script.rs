@@ -545,6 +545,9 @@ remove_docker_forwarding() {{
   while iptables -w 5 -C DOCKER-USER -i {external_interface} -o sirinvpn0 -d 10.77.0.0/24 -m mark --mark 0x5356504e/0xffffffff -m comment --comment sirinvpn-forward-ports -j ACCEPT >/dev/null 2>&1; do
     iptables -w 5 -D DOCKER-USER -i {external_interface} -o sirinvpn0 -d 10.77.0.0/24 -m mark --mark 0x5356504e/0xffffffff -m comment --comment sirinvpn-forward-ports -j ACCEPT || return 1
   done
+  while iptables -w 5 -C DOCKER-USER -i sirinvpn0 -o sirinvpn0 -m comment --comment sirinvpn-forward-routes -j ACCEPT >/dev/null 2>&1; do
+    iptables -w 5 -D DOCKER-USER -i sirinvpn0 -o sirinvpn0 -m comment --comment sirinvpn-forward-routes -j ACCEPT || return 1
+  done
 }}
 
 remove_docker6_forwarding() {{
@@ -570,6 +573,9 @@ add_docker_forwarding() {{
     iptables -w 5 -I DOCKER-USER 1 -i sirinvpn0 -o sirinvpn0 -s 10.77.0.0/24 -d 10.77.0.0/24 -m comment --comment sirinvpn-forward-peers -j ACCEPT
   iptables -w 5 -C DOCKER-USER -i {external_interface} -o sirinvpn0 -d 10.77.0.0/24 -m mark --mark 0x5356504e/0xffffffff -m comment --comment sirinvpn-forward-ports -j ACCEPT >/dev/null 2>&1 ||
     iptables -w 5 -I DOCKER-USER 1 -i {external_interface} -o sirinvpn0 -d 10.77.0.0/24 -m mark --mark 0x5356504e/0xffffffff -m comment --comment sirinvpn-forward-ports -j ACCEPT
+  # Subnet routes leave the tunnel range; sirinvpn_filter has already dropped what it does not permit.
+  iptables -w 5 -C DOCKER-USER -i sirinvpn0 -o sirinvpn0 -m comment --comment sirinvpn-forward-routes -j ACCEPT >/dev/null 2>&1 ||
+    iptables -w 5 -I DOCKER-USER 1 -i sirinvpn0 -o sirinvpn0 -m comment --comment sirinvpn-forward-routes -j ACCEPT
 }}
 
 add_docker6_forwarding() {{

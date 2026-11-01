@@ -31,6 +31,7 @@ fn profile(obfuscated_udp: Option<ObfuscatedUdpEndpoint>) -> ServerProfile {
         obfuscated_udp,
         tcp_fallback: None,
         tls_like: None,
+        subnet_routes: Default::default(),
     }
 }
 

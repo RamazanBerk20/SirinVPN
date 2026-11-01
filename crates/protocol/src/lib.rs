@@ -18,6 +18,7 @@ pub use endpoints::{
     valid_alternate_endpoint_hosts,
 };
 mod split_dns;
+mod subnet_routes;
 use dns::*;
 pub use dns::{
     DnsOverHttpsEndpoint, DnsOverTlsEndpoint, DnsUpstream, PrivateDnsRecord,
@@ -26,6 +27,10 @@ pub use dns::{
     validate_private_dns_record, validate_private_dns_records, validate_server_name,
 };
 pub use split_dns::{DnsSplitZone, SplitDnsUpstream, validate_split_dns};
+pub use subnet_routes::{
+    DeviceSubnetRoutes, MAX_SUBNET_ROUTES, overlapping_subnet_route, parse_subnet_route,
+    validate_subnet_routes,
+};
 mod management;
 mod member_policy;
 mod mtu;
@@ -44,15 +49,15 @@ pub use recovery::{
 
 pub use management::{
     ActiveInvitationSummary, ApiEnvelope, ApiErrorBody, CurrentConfiguration,
-    DevicePeerCommunicationUpdateRequest, DeviceSummary, DiagnosticCheck, DiagnosticLevel,
-    DiagnosticReport, EndpointTransitionClaims, EndpointTransitionCreateRequest,
-    EndpointTransitionResponse, EnrollmentNames, EnrollmentRequest, EnrollmentResult,
-    InvitationClaims, InvitationCreateRequest, InvitationCreateResponse, KeyRotationCommitResponse,
-    KeyRotationPrepareRequest, KeyRotationPrepareResponse, LeakTestObservation,
-    MemberAccessUpdateRequest, MemberDevicesRevokeRequest, MemberSummary,
-    MemberSuspensionUpdateRequest, MembershipSnapshot, OwnershipTransferRequest, PortForward,
-    PortForwardCreateRequest, PortForwardProtocol, RenameDeviceRequest,
-    WireGuardDeviceCreateRequest,
+    DevicePeerCommunicationUpdateRequest, DeviceSubnetRoutesUpdateRequest, DeviceSummary,
+    DiagnosticCheck, DiagnosticLevel, DiagnosticReport, EndpointTransitionClaims,
+    EndpointTransitionCreateRequest, EndpointTransitionResponse, EnrollmentNames,
+    EnrollmentRequest, EnrollmentResult, InvitationClaims, InvitationCreateRequest,
+    InvitationCreateResponse, KeyRotationCommitResponse, KeyRotationPrepareRequest,
+    KeyRotationPrepareResponse, LeakTestObservation, MemberAccessUpdateRequest,
+    MemberDevicesRevokeRequest, MemberSummary, MemberSuspensionUpdateRequest, MembershipSnapshot,
+    OwnershipTransferRequest, PortForward, PortForwardCreateRequest, PortForwardProtocol,
+    RenameDeviceRequest, WireGuardDeviceCreateRequest,
 };
 
 use serde::{Deserialize, Serialize};
@@ -318,6 +323,9 @@ pub struct ServerProfile {
     pub tcp_fallback: Option<TcpFallbackEndpoint>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub tls_like: Option<TlsLikeEndpoint>,
+    /// Cached from status; older readers drop it and the next status refills it.
+    #[serde(default, skip_serializing_if = "DeviceSubnetRoutes::is_empty")]
+    pub subnet_routes: DeviceSubnetRoutes,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
@@ -428,6 +436,8 @@ pub struct ServerStatus {
     pub caller_device_id: Option<DeviceId>,
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub caller_identity_fingerprint: String,
+    #[serde(default, skip_serializing_if = "DeviceSubnetRoutes::is_empty")]
+    pub caller_subnet_routes: DeviceSubnetRoutes,
 }
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]

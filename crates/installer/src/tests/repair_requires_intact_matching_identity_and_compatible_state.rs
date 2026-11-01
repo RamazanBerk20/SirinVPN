@@ -35,6 +35,7 @@ fn repair_requires_intact_matching_identity_and_compatible_state() {
         obfuscated_udp: None,
         tcp_fallback: None,
         tls_like: None,
+        subnet_routes: Default::default(),
     };
     let request = RepairRequest {
         transport: None,
@@ -204,7 +205,7 @@ fn repair_requires_intact_matching_identity_and_compatible_state() {
         RepairIdentityCheck::Match
     );
     let mut future_authorization = authorization.clone();
-    future_authorization["schema_version"] = serde_json::json!(8);
+    future_authorization["schema_version"] = serde_json::json!(9);
     assert_eq!(
         repair_identity_check(
             &configuration.to_string(),
@@ -458,6 +459,7 @@ fn server_backup_request_is_owner_bound_and_keeps_secrets_out_of_remote_argument
         obfuscated_udp: None,
         tcp_fallback: None,
         tls_like: None,
+        subnet_routes: Default::default(),
     };
     let mut request = ServerBackupRequest {
         profile,

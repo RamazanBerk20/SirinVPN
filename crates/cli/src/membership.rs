@@ -175,6 +175,34 @@ pub(super) async fn set_peer_communication(
     print_membership(&snapshot, json)
 }
 
+pub(super) async fn set_subnet_routes(
+    paths: &ClientPaths,
+    arguments: SubnetRoutesArguments,
+    json: bool,
+) -> Result<()> {
+    let device_id = arguments
+        .device_id
+        .parse::<DeviceId>()
+        .context("device identifier is invalid")?;
+    sirinvpn_protocol::validate_subnet_routes(arguments.routes.iter().map(String::as_str))
+        .map_err(anyhow::Error::msg)?;
+    let (profile, secret) = connected_identity(paths, &arguments.server)?;
+    let client = ManagementClient::new(&profile, &secret)?;
+    if !client.configuration().await?.subnet_routes_enabled {
+        bail!("the server must be upgraded before assigning subnet routes");
+    }
+    let snapshot = client
+        .update_device_subnet_routes(device_id, arguments.routes)
+        .await?;
+    print_membership(&snapshot, json)?;
+    if !json {
+        println!(
+            "The router forwards them while it and the reaching devices have peer communication; each applies the change when it next connects."
+        );
+    }
+    Ok(())
+}
+
 pub(super) async fn add_port_forward(
     paths: &ClientPaths,
     arguments: AddPortForwardArguments,

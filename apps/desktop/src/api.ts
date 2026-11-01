@@ -311,6 +311,10 @@ export const api = {
     invoke<MembershipSnapshot>("update_device_peer_communication", {
       input: { server_id: serverId, device_id: deviceId, enabled },
     }),
+  updateDeviceSubnetRoutes: (serverId: string, deviceId: string, routes: string[]) =>
+    invoke<MembershipSnapshot>("update_device_subnet_routes", {
+      input: { server_id: serverId, device_id: deviceId, routes },
+    }),
   createPortForward: (
     serverId: string,
     protocol: PortForwardProtocol,

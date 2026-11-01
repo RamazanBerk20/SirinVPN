@@ -16,6 +16,7 @@ fn second_device(document: &mut AuthorizationDocument, member_id: MemberId) -> D
         .unwrap(),
         peer_communication_enabled: true,
         preshared_key: None,
+        subnet_routes: Vec::new(),
     });
     device_id
 }

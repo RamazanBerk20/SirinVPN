@@ -39,7 +39,9 @@ impl RouteRecord {
 pub(crate) fn validate(request: &TunnelConnectRequest) -> Result<(), crate::ServiceError> {
     validate_request(request).map_err(|_| crate::ServiceError::InvalidRequest)?;
     let address = request.client_address.octets();
+    // Windows only consumes subnet routes; forwarding a LAN is Linux-only.
     if request.policy.is_none()
+        || !request.subnet_routes.announced.is_empty()
         || address[..3] != [10, 77, 0]
         || !(2..=254).contains(&address[3])
         || request.dns_address.octets() != [10, 77, 0, 1]
@@ -68,6 +70,7 @@ pub(crate) fn allowed_ips(request: &TunnelConnectRequest) -> Vec<IpNet> {
             .routing
             .included_routes
             .iter()
+            .chain(&request.subnet_routes.reachable)
             .filter_map(|route| route.parse().ok())
             .collect();
         routes.insert(host(request.dns_address.into()));
@@ -97,8 +100,15 @@ pub(crate) fn tunnel_routes(request: &TunnelConnectRequest) -> Vec<IpNet> {
                 .collect();
         }
     }
-    // Private management and DNS never fall through a LAN exception.
+    // Private management, DNS and other devices' LANs never fall through a LAN exception.
     routes.insert(host(request.dns_address.into()));
+    routes.extend(
+        request
+            .subnet_routes
+            .reachable
+            .iter()
+            .filter_map(|route| route.parse::<IpNet>().ok()),
+    );
     routes.into_iter().collect()
 }
 

@@ -149,6 +149,7 @@ fn targeted_device_enrollment_receipt_resolves_to_existing_member() {
         certificate_fingerprint: permanent_fingerprint,
         peer_communication_enabled: false,
         preshared_key: None,
+        subnet_routes: Vec::new(),
     });
     let result = EnrollmentResult {
         names: None,

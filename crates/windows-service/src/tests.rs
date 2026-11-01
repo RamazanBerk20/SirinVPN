@@ -234,3 +234,32 @@ fn full_tunnel_lan_routes_keep_private_dns_inside_the_adapter() {
     assert!(!routed("172.16.0.1"));
     assert!(!routed("169.254.22.23"));
 }
+
+#[test]
+fn reachable_subnet_routes_stay_in_the_tunnel_above_lan_access() {
+    let mut request = request();
+    request.routing = TunnelRoutingPolicy::full_tunnel(true);
+    request.subnet_routes.reachable = vec!["192.168.1.0/24".into()];
+    assert!(crate::network_plan::validate(&request).is_ok());
+    let routes = tunnel_routes(&request);
+    let routed = |address: &str| {
+        routes
+            .iter()
+            .any(|route| route.contains(&address.parse::<IpAddr>().unwrap()))
+    };
+    assert!(routed("192.168.1.20"));
+    assert!(!routed("192.168.2.20"));
+    let plan = FirewallPlan::for_tunnel(&request, &[], Some(500));
+    assert!(allowed(&plan, web("192.168.1.20", 500), false));
+    assert!(!allowed(&plan, web("192.168.1.20", 12), false));
+    assert!(!allowed(&plan, web("192.168.1.20", 12), true));
+    assert!(allowed(&plan, web("192.168.2.20", 12), false));
+
+    request.routing =
+        TunnelRoutingPolicy::selected_routes(["198.51.100.0/24".to_owned()], false).unwrap();
+    let allowed_ips = crate::network_plan::allowed_ips(&request);
+    assert!(allowed_ips.contains(&"192.168.1.0/24".parse().unwrap()));
+    // Windows consumes routes; it never forwards a LAN.
+    request.subnet_routes.announced = vec!["192.168.9.0/24".into()];
+    assert!(crate::network_plan::validate(&request).is_err());
+}

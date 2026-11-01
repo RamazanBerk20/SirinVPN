@@ -48,6 +48,13 @@ pub(super) struct DevicePeerCommunicationInput {
 }
 
 #[derive(Deserialize)]
+pub(super) struct DeviceSubnetRoutesInput {
+    pub(super) server_id: String,
+    pub(super) device_id: String,
+    pub(super) routes: Vec<String>,
+}
+
+#[derive(Deserialize)]
 pub(super) struct PortForwardCreateInput {
     pub(super) server_id: String,
     pub(super) protocol: PortForwardProtocol,

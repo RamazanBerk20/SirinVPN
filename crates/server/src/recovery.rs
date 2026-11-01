@@ -331,6 +331,7 @@ pub(super) async fn enroll_handler(
         certificate_fingerprint: fingerprint,
         peer_communication_enabled: false,
         preshared_key: None,
+        subnet_routes: Vec::new(),
     });
     let result = EnrollmentResult {
         names: None,

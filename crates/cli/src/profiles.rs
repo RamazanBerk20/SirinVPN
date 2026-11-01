@@ -67,6 +67,9 @@ pub(super) fn print_membership(snapshot: &MembershipSnapshot, json: bool) -> Res
                     format!("identity {}", device.identity_fingerprint)
                 }
             );
+            if !device.subnet_routes.is_empty() {
+                println!("    forwards {}", device.subnet_routes.join(", "));
+            }
         }
     }
     if snapshot.active_invitations.is_empty() {

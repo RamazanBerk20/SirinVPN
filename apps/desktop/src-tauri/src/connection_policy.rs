@@ -294,6 +294,10 @@ pub(super) fn tunnel_request(
         mtu: transport.mtu,
         persistent_protection: false,
         routing: routing.clone(),
+        subnet_routes: sirinvpn_tunnel_model::request_subnet_routes(
+            &profile.subnet_routes,
+            routing,
+        ),
     })
 }
 

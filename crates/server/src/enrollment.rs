@@ -296,6 +296,7 @@ pub(super) async fn enrollment_handler(
         certificate_fingerprint: device_fingerprint,
         peer_communication_enabled: false,
         preshared_key: request.device_preshared_key.clone(),
+        subnet_routes: Vec::new(),
     });
     next.enrollment_receipts.push(EnrollmentReceipt {
         invitation_id: invitation.claims.invitation_id,

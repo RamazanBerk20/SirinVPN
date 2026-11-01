@@ -47,6 +47,7 @@ fn request(transport: TransportKind, policy: MtuPolicy, mtu: u16) -> TunnelConne
         policy: Some(ConnectionPolicy::default()),
         routing: TunnelRoutingPolicy::default(),
         preshared_key: None,
+        subnet_routes: Default::default(),
     }
 }
 

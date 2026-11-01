@@ -80,6 +80,9 @@ pub struct CurrentConfiguration {
     /// The VPS redirects the leak-test addresses and answers the leak-test DNS zone.
     #[serde(default, skip_serializing_if = "is_false")]
     pub leak_test_enabled: bool,
+    /// The Owner can assign LAN ranges that one of their devices forwards.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub subnet_routes_enabled: bool,
 }
 
 /// The source address of the one request that asked; the VPS keeps nothing.
@@ -299,6 +302,9 @@ pub struct DeviceSummary {
     /// Joins through a standard WireGuard configuration: Direct UDP only, no management access.
     #[serde(default, skip_serializing_if = "is_false")]
     pub wireguard_only: bool,
+    /// Owner-assigned LAN ranges this device forwards for peers that may reach it.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub subnet_routes: Vec<String>,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
@@ -394,6 +400,13 @@ pub struct RenameDeviceRequest {
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub struct DevicePeerCommunicationUpdateRequest {
     pub enabled: bool,
+}
+
+/// Replaces the device's whole route list; an empty list removes every route.
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct DeviceSubnetRoutesUpdateRequest {
+    pub routes: Vec<String>,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]

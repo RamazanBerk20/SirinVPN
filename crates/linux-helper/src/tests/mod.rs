@@ -159,6 +159,7 @@ pub(crate) fn request() -> TunnelConnectRequest {
         persistent_protection: false,
         routing: TunnelRoutingPolicy::default(),
         preshared_key: None,
+        subnet_routes: Default::default(),
     }
 }
 
@@ -261,14 +262,17 @@ mod endpoint_kernel;
 mod kernel_policy;
 mod policy_tests;
 mod session_kernel;
+mod subnet_routes;
 
 mod automatic_kernel;
 
 #[test]
 fn client_firewall_drops_tunnel_address_packets_from_other_interfaces() {
-    let client = Ipv4Addr::new(10, 77, 0, 5);
+    let mut request = request();
+    request.client_address = Ipv4Addr::new(10, 77, 0, 5);
+    request.client_ipv6_address = Some("fd77::5".parse().unwrap());
     assert_eq!(
-        client_firewall(client, Some("fd77::5".parse().unwrap())),
+        client_firewall(&request),
         r#"table inet sirinvpn_client {
   chain preraw {
     type filter hook prerouting priority raw; policy accept;
@@ -288,7 +292,8 @@ fn client_firewall_drops_tunnel_address_packets_from_other_interfaces() {
 }
 "#
     );
-    let ipv4_only = client_firewall(client, None);
+    request.client_ipv6_address = None;
+    let ipv4_only = client_firewall(&request);
     assert!(ipv4_only.contains(
         "    iifname != \"sirinvpn0\" ip daddr 10.77.0.5 fib saddr type != local drop\n  }\n"
     ));

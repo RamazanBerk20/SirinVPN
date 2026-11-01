@@ -345,10 +345,9 @@ pub async fn dispatch(
     match command {
         "server_status" => {
             let status = client.status().await?;
-            if let Some(role) = status.caller_role {
+            if status.caller_role.is_some() {
                 let mut updated = p.clone();
-                updated.role = role;
-                updated.administrator = status.caller_administrator;
+                updated.adopt_caller_status(&status);
                 if let Some(device) = status.caller_device_id {
                     client.refresh_membership_ids(&mut updated, device).await?;
                 }

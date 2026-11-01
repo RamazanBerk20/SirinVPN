@@ -138,6 +138,12 @@ fn script_has_scoped_firewall_ownership_and_docker_interop() {
     assert!(script.contains("--comment sirinvpn-forward-in"));
     assert!(script.contains("--comment sirinvpn-forward-peers"));
     assert!(script.contains("--comment sirinvpn-forward-ports"));
+    assert!(script.contains(
+        "-D DOCKER-USER -i sirinvpn0 -o sirinvpn0 -m comment --comment sirinvpn-forward-routes"
+    ));
+    assert!(script.contains(
+        "-I DOCKER-USER 1 -i sirinvpn0 -o sirinvpn0 -m comment --comment sirinvpn-forward-routes"
+    ));
     assert!(script.contains("--comment sirinvpn-forward6-peers"));
     assert!(script.contains("After=sirinvpn-network.service docker.service"));
     assert!(!script.contains("iptables -P FORWARD"));

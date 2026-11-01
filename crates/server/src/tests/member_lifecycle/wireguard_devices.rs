@@ -85,6 +85,7 @@ async fn wireguard_device_authority_and_input_are_checked_before_mutation() {
         certificate_fingerprint: String::new(),
         peer_communication_enabled: false,
         preshared_key: Some(STANDARD.encode([24_u8; 32])),
+        subnet_routes: Vec::new(),
     });
     document.schema_version = document.required_schema_version();
     drop(document);

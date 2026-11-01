@@ -67,6 +67,9 @@ use std::{
 use zeroize::Zeroizing;
 
 const ROUTING_TABLE: &str = "51820";
+/// Announced ranges stay on the local network and reachable ones go to the tunnel,
+/// ahead of the Allow-local-network rules.
+const SUBNET_RULE_PRIORITY: &str = "9989";
 const DNS_RULE_PRIORITY: &str = "9990";
 const LAN_RULE_PRIORITY_START: u16 = 9_991;
 const RULE_TUNNEL_PRIORITY: &str = "10000";
@@ -349,14 +352,26 @@ fn ipv6_blocked_for_state(state: &RuntimeState, ipv6_tunneled: bool) -> bool {
 // on another interface from a non-local source are dropped before conntrack.
 // Replies to marked carrier sockets regain the mark before reverse-path
 // filtering (with src_valid_mark). TCP carriers are restored only for their mark.
-fn client_firewall(client_address: Ipv4Addr, client_ipv6_address: Option<Ipv6Addr>) -> String {
-    let ipv6_rule = client_ipv6_address
+fn client_firewall(request: &TunnelConnectRequest) -> String {
+    let client_address = request.client_address;
+    let ipv6_rule = request
+        .client_ipv6_address
         .map(|address| {
             format!(
                 "    iifname != \"{INTERFACE_NAME}\" ip6 daddr {address} fib saddr type != local drop\n"
             )
         })
         .unwrap_or_default();
+    // A LAN host answers the router itself; it needs no route back to the tunnel.
+    let announced = &request.subnet_routes.announced;
+    let subnet_nat = if announced.is_empty() {
+        String::new()
+    } else {
+        format!(
+            "  chain subnet_nat {{\n    type nat hook postrouting priority srcnat; policy accept;\n    iifname \"{INTERFACE_NAME}\" ip daddr {{ {} }} masquerade\n  }}\n",
+            announced.join(", ")
+        )
+    };
     format!(
         r#"table inet sirinvpn_client {{
   chain preraw {{
@@ -373,7 +388,7 @@ fn client_firewall(client_address: Ipv4Addr, client_ipv6_address: Option<Ipv6Add
     meta l4proto udp ct mark set meta mark
     meta l4proto tcp meta mark 0xca6c ct mark set meta mark
   }}
-}}
+{subnet_nat}}}
 "#
     )
 }

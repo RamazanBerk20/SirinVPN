@@ -135,6 +135,10 @@ pub(super) fn management_router(state: AppState) -> Router {
             "/v1/devices/{device_id}/peer-communication",
             patch(update_device_peer_communication_handler),
         )
+        .route(
+            "/v1/devices/{device_id}/subnet-routes",
+            axum::routing::put(update_device_subnet_routes_handler),
+        )
         .route("/v1/port-forwards", post(create_port_forward_handler))
         .route(
             "/v1/port-forwards/{protocol}/{public_port}",
@@ -223,6 +227,19 @@ pub(super) async fn caller_status(
         status.transport = transport;
     }
     status.caller_identity_fingerprint = caller_identity.certificate_fingerprint.clone();
+    if let Some(authorization) = &state.authorization {
+        let current = authorization.read().await;
+        if let Some(device) = current
+            .devices
+            .iter()
+            .find(|device| Some(device.id) == caller.device_id)
+        {
+            status.caller_subnet_routes = DeviceSubnetRoutes {
+                announced: current.live_subnet_routes(device).to_vec(),
+                reachable: current.reachable_subnet_routes(device),
+            };
+        }
+    }
     status.authorization_recovery = state.authorization.as_ref().map(|_| {
         state
             .recovery
@@ -282,5 +299,6 @@ pub(super) async fn configuration_handler(
         dns_blocklist_management_enabled: super::dns_blocklist::management_available(&state),
         wireguard_devices_enabled: state.authorization.is_some(),
         leak_test_enabled: state.leak_test_ready && Path::new(super::leak_test::ZONE_FILE).exists(),
+        subnet_routes_enabled: state.authorization.is_some(),
     })))
 }

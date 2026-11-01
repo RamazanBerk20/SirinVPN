@@ -80,6 +80,19 @@ pub(super) async fn connect(
         "Connection is still pending. The helper will follow the configured recovery policy. Use `sirinvpn status` to check it."
     };
     print_value(&status, json, message)?;
+    // Routes reach a device only through the tunnel, so a change is first seen here.
+    if status.state == ConnectionState::Connected
+        && let Ok(client) = ManagementClient::new(&profile, &secret)
+        && let Ok(server) = client.status().await
+    {
+        let mut refreshed = profile.clone();
+        if refreshed.adopt_caller_status(&server) {
+            let _ = paths.profile_store().upsert(refreshed.clone());
+            if !json && refreshed.subnet_routes != profile.subnet_routes {
+                println!("This device's subnet routes changed. Connect again to apply them.");
+            }
+        }
+    }
     if !json
         && status.state == ConnectionState::Connected
         && let Some(hint) = preshared_key_hint(&profile, &secret).await

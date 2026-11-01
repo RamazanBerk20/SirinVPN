@@ -1,7 +1,7 @@
 //! Real interfaces/routing/nftables; only absent container services are doubled.
 use super::*;
 
-struct SessionRunner;
+pub(super) struct SessionRunner;
 impl CommandRunner for SessionRunner {
     fn run(&self, program: &str, args: &[&str], input: Option<&[u8]>) -> Result<()> {
         if matches!(program, "systemctl" | "resolvectl") {

@@ -43,6 +43,19 @@ pub async fn dispatch(
                     .await?,
             )
         }
+        "update_device_subnet_routes" => {
+            ensure!(
+                client.configuration().await?.subnet_routes_enabled,
+                "Server needs an update"
+            );
+            let routes: Vec<String> =
+                serde_json::from_value(input["routes"].clone()).context("Invalid subnet routes")?;
+            encode(
+                client
+                    .update_device_subnet_routes(text(input, "device_id")?.parse()?, routes)
+                    .await?,
+            )
+        }
         "create_port_forward" => {
             confirmed(input)?;
             ensure!(

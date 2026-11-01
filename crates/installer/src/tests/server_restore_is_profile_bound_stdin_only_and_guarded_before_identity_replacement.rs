@@ -127,6 +127,7 @@ fn server_restore_is_profile_bound_stdin_only_and_guarded_before_identity_replac
         obfuscated_udp: None,
         tcp_fallback: None,
         tls_like: None,
+        subnet_routes: Default::default(),
     };
     let mut restore = ServerRestoreRequest {
         profile: profile.clone(),

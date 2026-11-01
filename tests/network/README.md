@@ -40,6 +40,18 @@ that the VPS applies device preshared keys: synthetic clients with the matching
 key, a missing key, a different key and no key at all must handshake only where
 the keys agree.
 
+Pass `kernel_subnet_routes_reach_a_router_lan_only_from_peer_enabled_devices`
+for subnet routes on the VPS: a real WireGuard VPS with the installer's forward
+chain, a router namespace with a LAN host, two peers and an internet host. The
+production handlers assign, refuse, disable and revoke routes while the probes
+check that only the peer-enabled device reaches the LAN and that the LAN host
+cannot reach peers or the internet.
+
+`run-policy-kernel.sh kernel_subnet_router_forwards_its_lan_and_keeps_reaching_it`
+runs the production Linux helper as a full-tunnel subnet router: it must reach
+its own LAN under the kill switch, forward and masquerade a peer's traffic to
+it, and remove its rules and NAT on disconnect.
+
 `run-installer-release-guards.sh` runs the installer release-staging guard in an
 ordinary container with no network, added capabilities or privileged mode. It
 caps compilation at 8 GiB and four CPU cores, then runs the root ownership checks

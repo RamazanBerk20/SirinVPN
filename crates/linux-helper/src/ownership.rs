@@ -228,6 +228,12 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
     }
 
     pub(super) fn routing_exception_rules_exist(&self, request: &TunnelConnectRequest) -> bool {
+        if !subnet_route_rules(request)
+            .into_iter()
+            .all(|(route, table)| self.rule_matches("-4", SUBNET_RULE_PRIORITY, route, table))
+        {
+            return false;
+        }
         if !request.routing.allow_lan
             && request.routing.mode != TunnelRoutingMode::SelectedApplications
         {
@@ -277,6 +283,7 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
     pub(super) fn any_routing_exception_rule_exists(&self) -> bool {
         ["-4", "-6"].into_iter().any(|family| {
             self.rule_priority_exists(family, DNS_RULE_PRIORITY)
+                || self.rule_priority_exists(family, SUBNET_RULE_PRIORITY)
                 || self.rule_priority_exists(family, "10002")
                 || (0..=IPV4_LAN_ROUTES.len()).any(|index| {
                     let priority = (LAN_RULE_PRIORITY_START + index as u16).to_string();

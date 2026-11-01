@@ -80,6 +80,7 @@ export function useAccessController({
   const [peerBusy, setPeerBusy] = useState<string | null>(null);
   const [scopedInvitationsAvailable, setScopedInvitationsAvailable] = useState(false);
   const [wireguardDevicesAvailable, setWireguardDevicesAvailable] = useState(false);
+  const [subnetRoutesAvailable, setSubnetRoutesAvailable] = useState(false);
   const [invitationNaming, setInvitationNaming] = useState<{
     serverId: string;
     available: boolean;
@@ -124,6 +125,7 @@ export function useAccessController({
       setMemberLifecycleAvailable(null);
       setScopedInvitationsAvailable(false);
       setWireguardDevicesAvailable(false);
+      setSubnetRoutesAvailable(false);
       setInvitationNaming(null);
       return;
     }
@@ -134,6 +136,7 @@ export function useAccessController({
       if (generation !== request.current) return;
       setScopedInvitationsAvailable(Boolean(configuration.reusable_invitations_enabled));
       setWireguardDevicesAvailable(Boolean(configuration.wireguard_devices_enabled));
+      setSubnetRoutesAvailable(Boolean(configuration.subnet_routes_enabled));
       setInvitationNaming({ serverId: profile.id, available: Boolean(configuration.recipient_names_enabled) });
       setPortForwardingAvailable(Boolean(configuration.port_forwarding_enabled));
       setMemberLifecycleAvailable(Boolean(configuration.member_lifecycle_enabled));
@@ -141,7 +144,7 @@ export function useAccessController({
     }, reason => {
       if (generation !== request.current) return;
       setMemberLifecycleAvailable(null); setPortForwardingAvailable(null);
-      setScopedInvitationsAvailable(false); setWireguardDevicesAvailable(false); setInvitationNaming(null);
+      setScopedInvitationsAvailable(false); setWireguardDevicesAvailable(false); setSubnetRoutesAvailable(false); setInvitationNaming(null);
       setConfigurationFailure({ key: cacheKey, message: errorMessage(reason, t("devices.error.features")) });
     });
     const membership = readMembership(cacheKey, () => api.membership(profile.id)).then(nextSnapshot => {
@@ -421,6 +424,7 @@ export function useAccessController({
     peerBusy,
     scopedInvitationsAvailable,
     wireguardDevicesAvailable,
+    subnetRoutesAvailable,
     recipientNamesAvailable,
     memberLifecycleAvailable,
     memberBusy,

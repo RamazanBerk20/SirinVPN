@@ -427,6 +427,7 @@ fn administrator_state_and_additional_devices_are_legacy_reader_compatible() {
         .unwrap(),
         peer_communication_enabled: false,
         preshared_key: None,
+        subnet_routes: Vec::new(),
     });
     let owner = state.devices[0].clone();
     let replacement = LocalIdentity::generate("Pending owner replacement").unwrap();

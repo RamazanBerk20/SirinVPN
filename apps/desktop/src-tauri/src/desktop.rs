@@ -230,6 +230,7 @@ fn run_inner() -> tauri::Result<()> {
             rename_device,
             revoke_device,
             update_device_peer_communication,
+            update_device_subnet_routes,
             dns_blocklist_settings,
             update_dns_blocklist,
             create_port_forward,

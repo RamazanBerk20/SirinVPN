@@ -369,6 +369,10 @@ pub(super) fn build_tunnel_request(
         mtu: transport.mtu,
         persistent_protection: false,
         routing: routing.clone(),
+        subnet_routes: sirinvpn_tunnel_model::request_subnet_routes(
+            &profile.subnet_routes,
+            routing,
+        ),
     };
     Ok(request)
 }
@@ -398,17 +402,7 @@ pub(super) async fn status(paths: &ClientPaths, json: bool) -> Result<()> {
         match ManagementClient::new(&profile, secret) {
             Ok(client) => match client.status().await {
                 Ok(status) => {
-                    if let Some(role) = status.caller_role
-                        && (profile.role != role
-                            || profile.administrator != status.caller_administrator
-                            || (status.caller_device_id.is_some()
-                                && profile.device_id != status.caller_device_id))
-                    {
-                        profile.role = role;
-                        profile.administrator = status.caller_administrator;
-                        if status.caller_device_id.is_some() {
-                            profile.device_id = status.caller_device_id;
-                        }
+                    if profile.adopt_caller_status(&status) {
                         let _ = paths.profile_store().upsert(profile);
                     }
                     Some(status)

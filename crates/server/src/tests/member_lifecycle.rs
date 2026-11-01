@@ -2,6 +2,7 @@ use super::*;
 mod dns_blocklist;
 mod policy_enrollment;
 mod recovery;
+mod subnet_routes;
 mod wireguard_devices;
 
 fn fixture() -> (tempfile::TempDir, AppState) {
@@ -53,6 +54,7 @@ fn fixture() -> (tempfile::TempDir, AppState) {
                 management_certificate_pem: identity.public.management_certificate_pem,
                 peer_communication_enabled: true,
                 preshared_key: None,
+                subnet_routes: Vec::new(),
             });
         }
     }

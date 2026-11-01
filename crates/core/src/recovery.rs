@@ -218,6 +218,7 @@ impl DecodedRecoveryKey {
             obfuscated_udp: c.obfuscated_udp.clone(),
             tcp_fallback: c.tcp_fallback.clone(),
             tls_like: c.tls_like.clone(),
+            subnet_routes: Default::default(),
         }
     }
     pub fn request(&self, public: &PublicIdentity, device_name: String) -> RecoveryRedeemRequest {

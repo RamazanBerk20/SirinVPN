@@ -17,6 +17,27 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
         let _ = self
             .runner
             .run("nft", &["delete", "table", "ip6", "sirinvpn_client6"], None);
+        // Every rule at this priority is ours, so cleanup needs no saved request.
+        let subnet_rules = self
+            .runner
+            .output(
+                "ip",
+                &["-4", "rule", "show", "priority", SUBNET_RULE_PRIORITY],
+            )
+            .map(|output| {
+                output
+                    .split(|byte| *byte == b'\n')
+                    .filter(|line| !line.is_empty())
+                    .count()
+            })
+            .unwrap_or(0);
+        for _ in 0..subnet_rules {
+            let _ = self.runner.run(
+                "ip",
+                &["-4", "rule", "delete", "priority", SUBNET_RULE_PRIORITY],
+                None,
+            );
+        }
         if cleanup_state.as_ref().is_some_and(|state| {
             state.routing.allow_lan && state.routing.mode != TunnelRoutingMode::SelectedApplications
         }) {

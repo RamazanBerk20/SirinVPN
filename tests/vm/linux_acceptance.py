@@ -459,6 +459,49 @@ class Acceptance:
                 "disabled_zone_removed": True,
                 "physical_leak_counters": self.counter()}
 
+    def subnet_routes(self):
+        """The Owner shares a LAN behind this client: the VPS routes into it, the client keeps it."""
+        lan = ["ip", "netns", "exec", "sirin-lan"]
+        for command in (["ip", "netns", "add", "sirin-lan"],
+                        ["ip", "link", "add", "sirinlan0", "type", "veth", "peer", "name", "eth0",
+                         "netns", "sirin-lan"],
+                        ["ip", "address", "add", "192.168.77.1/24", "dev", "sirinlan0"],
+                        ["ip", "link", "set", "sirinlan0", "up"],
+                        [*lan, "ip", "address", "add", "192.168.77.10/24", "dev", "eth0"],
+                        [*lan, "ip", "link", "set", "eth0", "up"],
+                        # The one host setting a Linux router needs; SirinVPN never changes it.
+                        ["sysctl", "-qw", "net.ipv4.ip_forward=1"]):
+            self.client.run(command)
+        owner = next(member for member in self.cli("server", "members", self.server_id)["members"]
+                     if member["role"] == "owner")
+        device = owner["devices"][0]["id"]
+        self.cli("server", "set-peer-communication", self.server_id, device, "--mode", "peers")
+        snapshot = self.cli("server", "set-subnet-routes", self.server_id, device,
+                            "--route", "192.168.77.0/24")
+        assert [d.get("subnet_routes") for m in snapshot["members"] for d in m["devices"]
+                if d["id"] == device] == [["192.168.77.0/24"]]
+        vps_routes = ["ip", "-4", "route", "show", "dev", "sirinvpn0", "proto", "static"]
+        assert self.server.run(vps_routes).stdout.split()[:1] == [b"192.168.77.0/24"]
+        assert b"192.168.77.0/24" in self.server.run(["wg", "show", "sirinvpn0", "allowed-ips"]).stdout
+        # The device learns its routes from status and applies them when it next connects.
+        assert self.cli("status")["server"]["caller_subnet_routes"]["announced"] == ["192.168.77.0/24"]
+        self.cli("disconnect")
+        self.cli("connect", self.server_id, "--transport", "direct", "--kill-switch", "--automatic-reconnect")
+        local = self.wait_connected("direct_udp")
+        assert local["kill_switch_state"] == "armed", local["kill_switch_state"]
+        ping = ["ping", "-c", "1", "-W", "3", "192.168.77.10"]
+        self.client.run(ping)  # the router keeps its own LAN under the kill switch
+        self.server.run(ping)  # the VPS reaches the LAN through the router's forwarding and NAT
+        assert self.request() == "vps"
+        self.cli("server", "set-subnet-routes", self.server_id, device)
+        assert not self.server.run(vps_routes).stdout.strip()
+        assert self.server.run(ping, check=False).returncode != 0
+        self.cli("server", "set-peer-communication", self.server_id, device, "--mode", "internet-only")
+        self.client.run(["ip", "netns", "delete", "sirin-lan"])
+        self.client.run(["sysctl", "-qw", "net.ipv4.ip_forward=0"])
+        return {"vps_route": True, "router_lan_reachable": True, "vps_reaches_lan": True,
+                "removed": True, "physical_leak_counters": self.counter()}
+
     def leak_test(self):
         checks = {check["code"]: check for check in self.cli("diagnose", self.server_id)["checks"]}
         levels = {code: checks.get(code, {}).get("level") for code in ("leak_ipv4", "leak_ipv6", "leak_dns")}
@@ -500,6 +543,7 @@ class Acceptance:
             routes = json.loads(self.client.run(["ip", family, "-j", "route", "show", "table", "all"]).stdout)
             assert not any(row.get("table") in [51820, "51820"]
                            or row.get("dev") == "sirinvpn0" for row in routes), routes
+        assert not self.client.run(["ip", "-4", "rule", "show", "priority", "9989"]).stdout.strip()
         self.client.run(["test", "!", "-e", "/var/lib/sirinvpn/desired-connection.json"])
 
     def relay_crash(self):
@@ -681,6 +725,7 @@ class Acceptance:
                             self.step("Resolver failure retains the tunnel and prevents DNS fallback", self.dns_failure)
                             self.step("On-demand leak test passes over the tunnel", self.leak_test)
                             self.step("Owner turns VPS DNS blocking on and off through the CLI", self.dns_blocking)
+                            self.step("Owner shares a LAN behind this device through the CLI", self.subnet_routes)
                         if transport == "tls":
                             self.step("Recover from abrupt transport-process termination", self.relay_crash)
                         self.step(f"{transport}: explicit disconnect restores networking", self.clean_disconnect)

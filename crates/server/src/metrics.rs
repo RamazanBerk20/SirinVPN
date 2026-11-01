@@ -153,6 +153,7 @@ pub(super) async fn collect_status_with_peer_count(
         caller_administrator: false,
         caller_device_id: None,
         caller_identity_fingerprint: String::new(),
+        caller_subnet_routes: Default::default(),
     }
 }
 

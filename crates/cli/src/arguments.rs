@@ -79,6 +79,8 @@ pub(super) enum ServerCommand {
     RenameDevice(RenameDeviceArguments),
     RevokeDevice(DeviceSelector),
     SetPeerCommunication(PeerCommunicationArguments),
+    /// Replace the LAN ranges one of the Owner's devices forwards for peers that may reach it.
+    SetSubnetRoutes(SubnetRoutesArguments),
     AddPortForward(AddPortForwardArguments),
     RemovePortForward(RemovePortForwardArguments),
     SetMemberAccess(MemberAccessArguments),
@@ -284,6 +286,15 @@ pub(super) struct PeerCommunicationArguments {
     pub(super) device_id: String,
     #[arg(long, value_enum)]
     pub(super) mode: PeerCommunicationMode,
+}
+
+#[derive(Args)]
+pub(super) struct SubnetRoutesArguments {
+    pub(super) server: String,
+    pub(super) device_id: String,
+    /// A private IPv4 CIDR such as 192.168.1.0/24; repeat it, or omit it to remove all routes.
+    #[arg(long = "route")]
+    pub(super) routes: Vec<String>,
 }
 
 #[derive(Args)]

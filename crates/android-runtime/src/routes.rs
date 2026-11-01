@@ -40,6 +40,11 @@ pub fn routes(
         }
     }
     routes.push(format!("{}/32", profile.server_tunnel_address).parse()?);
+    // Other devices' LANs stay in the tunnel even where the local network is allowed.
+    for route in &profile.subnet_routes.reachable {
+        sirinvpn_protocol::parse_subnet_route(route).map_err(anyhow::Error::msg)?;
+        routes.push(route.parse()?);
+    }
     if profile.ipv6_tunnel_enabled {
         routes.push(format!("{}/128", ipv6(profile.id, profile.server_tunnel_address)?).parse()?);
     }

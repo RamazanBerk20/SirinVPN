@@ -498,6 +498,7 @@ impl DecodedInvitation {
             obfuscated_udp: claims.obfuscated_udp.clone(),
             tcp_fallback: claims.tcp_fallback.clone(),
             tls_like: claims.tls_like.clone(),
+            subnet_routes: Default::default(),
         };
         if let Some(current) = &self.endpoint_override {
             profile.set_endpoint_descriptor(&current.descriptor);
@@ -579,6 +580,7 @@ impl DecodedInvitation {
             obfuscated_udp: result.obfuscated_udp.clone(),
             tcp_fallback: result.tcp_fallback.clone(),
             tls_like: result.tls_like.clone(),
+            subnet_routes: Default::default(),
         };
         if let Some(current) = &self.endpoint_override {
             profile.set_endpoint_descriptor(&current.descriptor);

@@ -64,6 +64,7 @@ fn profile(identity: &LocalIdentity, server_id: ServerId) -> ServerProfile {
         obfuscated_udp: None,
         tcp_fallback: None,
         tls_like: None,
+        subnet_routes: Default::default(),
     }
 }
 

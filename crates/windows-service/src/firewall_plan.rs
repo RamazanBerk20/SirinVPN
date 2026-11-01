@@ -212,6 +212,16 @@ impl FirewallPlan {
                     plan.add(layer, 40, true, vec![Remote(network)]);
                 }
             }
+            // Another device's LAN is reachable only through the tunnel, above LAN permits.
+            for route in request
+                .subnet_routes
+                .reachable
+                .iter()
+                .filter_map(|route| route.parse::<IpNet>().ok())
+                .filter(|route| route.addr().is_ipv6() == layer.ipv6())
+            {
+                plan.add(layer, 45, false, vec![Remote(route)]);
+            }
             let full = request.routing.mode == TunnelRoutingMode::FullTunnel;
             if full
                 || layer.ipv6()

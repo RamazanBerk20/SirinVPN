@@ -6,9 +6,10 @@ import { ActiveInvitations } from "./ActiveInvitations";
 import { InvitationDialog } from "./InvitationDialog";
 import { MemberPolicyDialog } from "./MemberPolicyDialog";
 import { WireGuardDeviceDialog } from "./WireGuardDeviceDialog";
+import { SubnetRoutesDialog } from "./SubnetRoutesDialog";
 import { isAndroid } from "../../platform";
 import { useState, type ReactNode } from "react";
-import type { MemberSummary } from "../../types";
+import type { DeviceSummary, MemberSummary } from "../../types";
 import { formatDateTime, t } from "../../i18n";
 import { Rich } from "../../i18n/Rich";
 
@@ -19,6 +20,7 @@ export function AccessPanel(
   const { profile, connected, accessLevel, onNetwork } = props;
   const [policyTarget, setPolicyTarget] = useState<MemberSummary | null>(null);
   const [wireguardTarget, setWireguardTarget] = useState<MemberSummary | "new" | null>(null);
+  const [routesTarget, setRoutesTarget] = useState<DeviceSummary | null>(null);
   const {
     snapshot,
     verified,
@@ -32,6 +34,7 @@ export function AccessPanel(
     peerBusy,
     scopedInvitationsAvailable,
     wireguardDevicesAvailable,
+    subnetRoutesAvailable,
     recipientNamesAvailable,
     memberLifecycleAvailable,
     memberBusy,
@@ -164,6 +167,7 @@ export function AccessPanel(
                 onNetwork={onNetwork}
                 onPolicy={scopedInvitationsAvailable ? setPolicyTarget : undefined}
                 onWireGuard={wireguardAvailable ? setWireguardTarget : undefined}
+                onSubnetRoutes={subnetRoutesAvailable ? setRoutesTarget : undefined}
               />
               <ActiveInvitations
                 snapshot={snapshot}
@@ -197,6 +201,7 @@ export function AccessPanel(
         onClose={() => setWireguardTarget(null)}
         onCreated={refreshAfterChange}
       />}
+      {routesTarget && <SubnetRoutesDialog key={routesTarget.id} serverId={profile.id} device={routesTarget} onClose={() => setRoutesTarget(null)} onSaved={refreshAfterChange} />}
       {policyTarget && <MemberPolicyDialog key={policyTarget.id} serverId={profile.id} member={policyTarget} onClose={() => setPolicyTarget(null)} onSaved={refreshAfterChange} />}
     </section>
   );

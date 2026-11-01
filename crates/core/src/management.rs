@@ -428,6 +428,25 @@ impl ManagementClient {
         self.decode(response).await
     }
 
+    /// Replaces the LAN ranges an Owner device forwards; an empty list removes them.
+    pub async fn update_device_subnet_routes(
+        &self,
+        device_id: DeviceId,
+        routes: Vec<String>,
+    ) -> Result<MembershipSnapshot, ManagementError> {
+        let response = self
+            .client
+            .put(format!(
+                "{}/v1/devices/{device_id}/subnet-routes",
+                self.base_url
+            ))
+            .json(&sirinvpn_protocol::DeviceSubnetRoutesUpdateRequest { routes })
+            .send()
+            .await
+            .map_err(|_| ManagementError::ConnectionFailed)?;
+        self.decode(response).await
+    }
+
     pub async fn create_port_forward(
         &self,
         request: &PortForwardCreateRequest,

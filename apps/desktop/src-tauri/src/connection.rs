@@ -248,21 +248,13 @@ pub(super) fn reconcile_status_authority(
     profile: &mut ServerProfile,
     status: &ServerStatus,
 ) {
-    if let Some(role) = status.caller_role
-        && (profile.role != role
-            || profile.administrator != status.caller_administrator
-            || (status.caller_device_id.is_some() && profile.device_id != status.caller_device_id))
-    {
+    if profile.clone().adopt_caller_status(status) {
         // A stream can outlive a local rename or preference change.
         let Ok(latest) = find_profile(paths, &profile.id.to_string()) else {
             return;
         };
         *profile = latest;
-        profile.role = role;
-        profile.administrator = status.caller_administrator;
-        if status.caller_device_id.is_some() {
-            profile.device_id = status.caller_device_id;
-        }
+        profile.adopt_caller_status(status);
         let _ = paths.profile_store().upsert(profile.clone());
     }
 }

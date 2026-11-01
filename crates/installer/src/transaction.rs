@@ -510,6 +510,7 @@ pub(super) fn install_staged(
             obfuscated_udp: bootstrap.obfuscated_udp,
             tcp_fallback: bootstrap.tcp_fallback,
             tls_like: bootstrap.tls_like,
+            subnet_routes: Default::default(),
         },
         discovery: discovery.clone(),
         events: events.clone(),

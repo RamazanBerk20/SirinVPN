@@ -127,9 +127,14 @@ pub(super) fn wireguard_allowed_ips(request: &TunnelConnectRequest) -> String {
         .routing
         .included_routes
         .iter()
+        .chain(&request.subnet_routes.reachable)
         .cloned()
         .collect::<BTreeSet<_>>();
     routes.insert(format!("{}/32", request.dns_address));
+    // Forwarded traffic arrives from other tunnel addresses and its answers return to them.
+    if !request.subnet_routes.announced.is_empty() {
+        routes.insert(sirinvpn_protocol::TUNNEL_CIDR.to_owned());
+    }
     routes.into_iter().collect::<Vec<_>>().join(",")
 }
 
@@ -143,8 +148,28 @@ pub(super) fn route_table_destinations(
         .collect::<BTreeSet<_>>();
     if !ipv6 && request.routing.mode == TunnelRoutingMode::SelectedRoutes {
         routes.insert(format!("{}/32", request.dns_address));
+        routes.extend(request.subnet_routes.reachable.iter().cloned());
+        if !request.subnet_routes.announced.is_empty() {
+            routes.insert(sirinvpn_protocol::TUNNEL_CIDR.to_owned());
+        }
     }
     routes.into_iter().collect()
+}
+
+/// `ip rule` destinations and tables for the Owner-assigned subnet routes.
+pub(super) fn subnet_route_rules(request: &TunnelConnectRequest) -> Vec<(&str, &str)> {
+    let routes = &request.subnet_routes;
+    routes
+        .announced
+        .iter()
+        .map(|route| (route.as_str(), "main"))
+        .chain(
+            routes
+                .reachable
+                .iter()
+                .map(|route| (route.as_str(), ROUTING_TABLE)),
+        )
+        .collect()
 }
 
 pub(super) fn transient_ipv6_firewall(

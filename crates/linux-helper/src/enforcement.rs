@@ -190,8 +190,11 @@ fn guard_objects_with_controls(
         ],
         "accept",
     );
+    let subnet_routes = &request.subnet_routes;
     if request.routing.mode != TunnelRoutingMode::SelectedApplications
-        && (request.routing.mode == TunnelRoutingMode::SelectedRoutes || request.routing.allow_lan)
+        && (request.routing.mode == TunnelRoutingMode::SelectedRoutes
+            || request.routing.allow_lan
+            || !subnet_routes.announced.is_empty())
     {
         rule(
             vec![eq(
@@ -205,6 +208,13 @@ fn guard_objects_with_controls(
                 rule(vec![eq(payload(protocol, "dport"), json!(port))], "drop");
             }
         }
+    }
+    // Another device's LAN never leaves locally; an announced LAN is this device's own.
+    for route in &subnet_routes.reachable {
+        rule(vec![eq(payload("ip", "daddr"), prefix(route))], "drop");
+    }
+    for route in &subnet_routes.announced {
+        rule(vec![eq(payload("ip", "daddr"), prefix(route))], "accept");
     }
     if request.routing.allow_lan && request.routing.mode != TunnelRoutingMode::SelectedApplications
     {
@@ -239,6 +249,19 @@ fn guard_objects_with_controls(
                 ],
                 "accept",
             );
+        }
+        // The VPS sends only peers allowed to reach this router; it forwards them to its LAN.
+        for route in &subnet_routes.announced {
+            forward(
+                vec![
+                    eq(meta("iifname"), json!(INTERFACE_NAME)),
+                    eq(payload("ip", "daddr"), prefix(route)),
+                ],
+                "accept",
+            );
+        }
+        for route in &subnet_routes.reachable {
+            forward(vec![eq(payload("ip", "daddr"), prefix(route))], "drop");
         }
         if request.routing.allow_lan {
             forward(

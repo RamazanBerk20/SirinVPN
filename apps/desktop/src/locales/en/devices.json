@@ -37,7 +37,8 @@
       "activity": "Activity",
       "network": "Network access",
       "fingerprint": "Identity fingerprint",
-      "connection": "Connects with"
+      "connection": "Connects with",
+      "localNetworks": "Shares local networks"
     },
     "activityDetail": {
       "suspended": "Member is suspended",
@@ -85,7 +86,8 @@
     "revokeAll": "Revoke all devices",
     "reactivateFirst": "Reactivate this member first.",
     "cancelInvitationFirst": "Cancel this member’s invitation first.",
-    "addWireguardFor": "Add WireGuard device for {{name}}"
+    "addWireguardFor": "Add WireGuard device for {{name}}",
+    "localNetworks": "Local networks"
   },
   "invitations": {
     "empty": "No active invitations",
@@ -147,6 +149,16 @@
     "altRecovery": "Recovery key QR code",
     "altRecoveryEnlarged": "Enlarged recovery key QR code",
     "altWireguard": "WireGuard configuration QR code"
+  },
+  "localNetworks": {
+    "title": "Local networks on {{name}}",
+    "description": "Devices with mutual access reach these private networks through your VPS while {{name}} allows mutual access too. Their hosts can answer but can’t start connections into SirinVPN.",
+    "label": "Networks",
+    "hint": "One private IPv4 network per line, such as 192.168.1.0/24. Leave empty to stop sharing.",
+    "linux": "{{name}} must run SirinVPN on Linux with IPv4 forwarding on: sudo sysctl -w net.ipv4.ip_forward=1. A WireGuard-only router forwards with its own settings.",
+    "apply": "Each device applies a change when it next connects.",
+    "save": "Save networks",
+    "saveFailed": "Couldn’t save the local networks. Try again."
   },
   "policy": {
     "title": "Access policy for {{name}}",

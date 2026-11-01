@@ -110,6 +110,12 @@ impl AuthorizationDocument {
         peers
             .into_iter()
             .map(|(public_key, (address, preshared_key))| DesiredPeer {
+                subnet_routes: self
+                    .devices
+                    .iter()
+                    .find(|device| device.wireguard_public_key == public_key)
+                    .map(|device| self.live_subnet_routes(device).to_vec())
+                    .unwrap_or_default(),
                 public_key,
                 address,
                 preshared_key,
@@ -191,6 +197,7 @@ impl AuthorizationDocument {
                         peer_communication_enabled: device.peer_communication_enabled,
                         recent_handshake: None,
                         wireguard_only: device.wireguard_only(),
+                        subnet_routes: device.subnet_routes.clone(),
                     })
                     .collect();
                 devices.sort_by(|left, right| left.name.cmp(&right.name));

@@ -13,6 +13,7 @@ fn add_wireguard_device(state: &mut AuthorizationDocument, member_id: MemberId) 
         certificate_fingerprint: String::new(),
         peer_communication_enabled: false,
         preshared_key: Some(STANDARD.encode([8_u8; 32])),
+        subnet_routes: Vec::new(),
     });
     state.schema_version = state.required_schema_version();
     id

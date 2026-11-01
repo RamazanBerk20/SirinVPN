@@ -49,6 +49,60 @@ pub(super) async fn update_device_peer_communication_handler(
     Ok(Json(ApiEnvelope::new(snapshot)))
 }
 
+pub(super) async fn update_device_subnet_routes_handler(
+    State(state): State<AppState>,
+    Extension(caller): Extension<CallerIdentity>,
+    AxumPath(device_id): AxumPath<String>,
+    Json(request): Json<DeviceSubnetRoutesUpdateRequest>,
+) -> Result<Json<ApiEnvelope<MembershipSnapshot>>, ApiError> {
+    let device_id = device_id
+        .parse::<DeviceId>()
+        .map_err(|_| ApiError::invalid("device identifier is invalid"))?;
+    let mut routes = request.routes;
+    validate_subnet_routes(routes.iter().map(String::as_str)).map_err(ApiError::invalid)?;
+    routes.sort();
+    let authorization = require_authorization(&state)?;
+    let mut current = authorization.write().await;
+    let caller = authorize_current(&current, &caller, false)?;
+    if !caller.is_owner() {
+        return Err(ApiError::forbidden());
+    }
+    ensure_active_endpoint_authority(&current)?;
+    let target = current
+        .devices
+        .iter()
+        .find(|device| device.id == device_id)
+        .ok_or_else(|| {
+            ApiError::new(
+                StatusCode::NOT_FOUND,
+                ErrorCode::InvalidInput,
+                "device was not found",
+            )
+        })?;
+    if current.role_for_device(target) != Some(ServerRole::Owner) {
+        return Err(ApiError::invalid(
+            "only the owner's own devices can forward local networks",
+        ));
+    }
+    if target.subnet_routes == routes {
+        return Ok(Json(ApiEnvelope::new(filtered_snapshot(&current, caller))));
+    }
+    let mut next = current.clone();
+    next.set_device_subnet_routes(device_id, routes.clone())
+        .map_err(|error| ApiError::invalid(error.to_string()))?;
+    if let Some(conflict) = vps_route_conflict(&state.configuration.interface_name, &routes)
+        .await
+        .map_err(|_| ApiError::internal())?
+    {
+        return Err(ApiError::conflict(format!(
+            "the VPS already routes {conflict} through another network interface"
+        )));
+    }
+    let snapshot = filtered_snapshot(&next, caller);
+    commit_authorization(&state, &mut current, next).await?;
+    Ok(Json(ApiEnvelope::new(snapshot)))
+}
+
 pub(super) async fn create_port_forward_handler(
     State(state): State<AppState>,
     Extension(caller): Extension<CallerIdentity>,

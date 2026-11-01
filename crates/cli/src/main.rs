@@ -128,6 +128,9 @@ async fn run() -> Result<()> {
             ServerCommand::SetPeerCommunication(arguments) => {
                 set_peer_communication(&paths, arguments, cli.json).await
             }
+            ServerCommand::SetSubnetRoutes(arguments) => {
+                set_subnet_routes(&paths, arguments, cli.json).await
+            }
             ServerCommand::AddPortForward(arguments) => {
                 add_port_forward(&paths, arguments, cli.json).await
             }

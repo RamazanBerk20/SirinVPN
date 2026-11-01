@@ -33,6 +33,8 @@ type Props = MemberLifecycleProps & {
   onNetwork?: () => void;
   onPolicy?: (member: MemberSummary) => void;
   onWireGuard?: (member: MemberSummary) => void;
+  /** Only the Owner shares local networks, and only from their own devices. */
+  onSubnetRoutes?: (device: DeviceSummary) => void;
   onInvite: (member: MemberSummary) => void;
   onAccess: (member: MemberSummary) => Promise<void>;
   onTransfer: (member: MemberSummary) => Promise<void>;
@@ -275,6 +277,8 @@ function DeviceRow({
     disabled: props.peerBusy === device.id,
     run: () => void props.onPeer(device.id, device.name, Boolean(device.peer_communication_enabled)),
   });
+  if (props.onSubnetRoutes && props.accessLevel === "owner" && member.role === "owner")
+    actions.push({ label: t("devices.menu.localNetworks"), group: t("devices.menu.group.device"), run: () => props.onSubnetRoutes?.(device) });
   if (props.onNetwork && (manageable || (props.accessLevel === "member" && member.policy?.manage_own_port_forwards)))
     actions.push({ label: t("devices.menu.portForwarding"), group: t("devices.menu.group.device"), run: props.onNetwork });
   return (
@@ -349,6 +353,12 @@ function DeviceRow({
                   : t("devices.row.network.isolated")}
             </dd>
           </div>
+          {Boolean(device.subnet_routes?.length) && (
+            <div>
+              <dt>{t("devices.row.facts.localNetworks")}</dt>
+              <dd className="mono">{device.subnet_routes?.join(", ")}</dd>
+            </div>
+          )}
           {device.wireguard_only && (
             <div>
               <dt>{t("devices.row.facts.connection")}</dt>

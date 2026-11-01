@@ -326,10 +326,12 @@ fn port_forward_policy_is_exact_revocable_and_reserves_control_ports() {
         external_interface: "eth0".to_owned(),
         ssh_port: 22,
     };
-    assert!(
+    // Without operational state the runtime chain is still flushed for subnet routes.
+    assert_eq!(
         port_forward_nft_batch(&configuration, None, &authorization)
             .unwrap()
-            .is_none()
+            .as_deref(),
+        Some("flush chain inet sirinvpn_filter port_forward\n")
     );
     let empty = port_forward_nft_batch(&configuration, Some(&operational), &authorization)
         .unwrap()
