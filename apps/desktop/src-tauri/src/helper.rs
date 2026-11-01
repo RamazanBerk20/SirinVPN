@@ -247,7 +247,26 @@ pub(super) fn helper_protocol_is_current(path: &Path) -> bool {
     })
 }
 
+/// Root can't read an AppImage's FUSE mount, so pkexec would fail before asking.
+/// The helper is copied to a private directory outside the mount first.
+fn stage_outside_appimage(source: &Path, appdir: Option<&Path>) -> Result<Option<tempfile::TempDir>> {
+    if !appdir.is_some_and(|appdir| source.starts_with(appdir)) {
+        return Ok(None);
+    }
+    // Hardened systems often mount /tmp noexec; the session's runtime directory stays executable.
+    let parent = env::var_os("XDG_RUNTIME_DIR")
+        .map(PathBuf::from)
+        .filter(|directory| directory.is_dir())
+        .unwrap_or_else(env::temp_dir);
+    let directory = tempfile::Builder::new().prefix("sirinvpn-helper.").tempdir_in(parent)?;
+    fs::copy(source, directory.path().join("sirinvpn-helper"))?;
+    Ok(Some(directory))
+}
+
 pub(super) fn install_helper(source: &Path) -> Result<()> {
+    let staged = stage_outside_appimage(source, env::var_os("APPDIR").as_deref().map(Path::new))?;
+    let staged_helper = staged.as_ref().map(|directory| directory.path().join("sirinvpn-helper"));
+    let source = staged_helper.as_deref().unwrap_or(source);
     let mut command = if nix::unistd::Uid::effective().is_root() {
         Command::new(source)
     } else {
@@ -384,6 +403,24 @@ mod artifact_tests {
         assert!(install_verified_helper(&installed, &packaged, |_| bail!("cancelled")).is_err());
         assert!(install_verified_helper(&installed, &packaged, |_| Ok(())).is_err());
         assert!(!helper_protocol_is_current(&installed));
+    }
+
+    #[test]
+    fn an_appimage_helper_is_staged_outside_the_mount_for_pkexec() {
+        let appdir = tempfile::tempdir().unwrap();
+        let packaged = appdir.path().join("usr/lib/sirinvpn/sirinvpn-helper");
+        fs::create_dir_all(packaged.parent().unwrap()).unwrap();
+        component(&packaged, HELPER_PROTOCOL_VERSION);
+        let staged = stage_outside_appimage(&packaged, Some(appdir.path()))
+            .unwrap()
+            .unwrap();
+        let copy = staged.path().join("sirinvpn-helper");
+        assert!(!copy.starts_with(appdir.path()));
+        assert!(helper_artifact_matches(&copy, &packaged));
+        assert!(helper_protocol_is_current(&copy));
+        assert!(stage_outside_appimage(&packaged, None).unwrap().is_none());
+        let elsewhere = tempfile::tempdir().unwrap();
+        assert!(stage_outside_appimage(&packaged, Some(elsewhere.path())).unwrap().is_none());
     }
 
     #[test]
