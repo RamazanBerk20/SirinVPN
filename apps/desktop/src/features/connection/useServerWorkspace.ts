@@ -54,6 +54,7 @@ export function useServerWorkspace({
     setDiagnostics(null); setDiagnosticsOpenState(false);
     return () => { diagnosticGeneration.current += 1; };
   }, [profile.id]);
+  const [troubleshootOpen, setTroubleshootOpen] = useState(false);
   const [backupOpen, setBackupOpen] = useState(false);
   const [vpsBackupOpen, setVpsBackupOpen] = useState(false);
   const [vpsRestoreOpen, setVpsRestoreOpen] = useState(false);
@@ -258,6 +259,8 @@ export function useServerWorkspace({
     diagnostics,
     diagnosticsOpen,
     setDiagnosticsOpen,
+    troubleshootOpen,
+    setTroubleshootOpen,
     backupOpen,
     setBackupOpen,
     vpsBackupOpen,

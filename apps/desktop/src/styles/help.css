@@ -1,0 +1,27 @@
+/* Above pages and navigation, below dialogs; pages keep room for it, so it never covers content. */
+.demo-banner {
+  position: fixed;
+  z-index: 45;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  padding: 6px 6px 6px 16px;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  background: var(--surface-2);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 35%);
+  font-size: var(--text-secondary);
+}
+.demo-banner > button { flex-shrink: 0; min-height: 32px; margin: 0; padding: 4px 14px; border-radius: 999px; }
+html:has(.demo-banner) .workspace { padding-bottom: 96px; }
+html.android .demo-banner { bottom: calc(92px + env(safe-area-inset-bottom)); }
+html.android:has(.demo-banner) .workspace { padding-bottom: 184px; }
+.onboarding-demo { display: grid; justify-items: start; gap: 12px; margin-top: 28px; }
+.onboarding-demo > p { margin: 0; color: var(--muted); }
+.troubleshoot-step { display: grid; gap: 12px; }
+.troubleshoot-step .settings-action-row { margin-top: 14px; padding: 0; border: 0; }

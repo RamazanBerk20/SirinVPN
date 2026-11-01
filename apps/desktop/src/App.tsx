@@ -27,6 +27,7 @@ import {
 } from "@phosphor-icons/react";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { api } from "./api";
+import { setDemo } from "./platform";
 import { t } from "./i18n";
 import { type ClientPlatform, type ServerProfile } from "./types";
 import { Brand, PrivacyPromises } from "./components/Brand";
@@ -248,6 +249,10 @@ function AppContent() {
               {t(clientPlatform === "android" ? "app.onboarding.androidIntro" : "app.onboarding.desktopIntro")}
             </p>
             {clientPlatform !== "android" && <PrivacyPromises />}
+            <div className="onboarding-demo">
+              <p>{t("help.demo.enterHint")}</p>
+              <button className="secondary-button" type="button" onClick={() => setDemo(true)}>{t("help.demo.enter")}</button>
+            </div>
           </section>
           <section
             className="onboarding-form-wrap"

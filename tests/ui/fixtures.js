@@ -1,4 +1,4 @@
-// Only injected by the visual test runner. Never imported by the production app.
+// Injected by the visual test runner. The in-app demo (apps/desktop/src/demo.ts) also loads it for its sample data.
 window.__sirinCommands = [];
 window.__sirinCommandArguments = [];
 let connectionPreferences = JSON.parse(localStorage.getItem("sirin-fixture-connection-preferences") || "{}");
@@ -30,7 +30,7 @@ const membership = {api_version:"v1",members:[{id:member,name:"You",role:"owner"
 const statusSubscriptions = new Map();
 const nativeCallbacks = new Map();
 let nextCallback = 1;
-window.__TAURI_INTERNALS__ = {
+const internals = {
   transformCallback: (callback) => { const id = nextCallback++; nativeCallbacks.set(id, callback); return id; },
   unregisterCallback: (id) => nativeCallbacks.delete(id),
   invoke: async (command, args) => {
@@ -125,3 +125,6 @@ window.__TAURI_INTERNALS__ = {
     }
   }
 };
+// Tauri's own bridge is read-only, so the demo takes only the handler and routes app commands to it.
+if (window.__sirinDemo) window.__sirinDemo.invoke = internals.invoke;
+else window.__TAURI_INTERNALS__ = internals;

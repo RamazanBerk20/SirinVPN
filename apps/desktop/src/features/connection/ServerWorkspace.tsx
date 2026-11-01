@@ -14,6 +14,7 @@ const RoutingSettings = lazy(() => import("./RoutingSettings").then(m => ({ defa
 const SystemHealth = lazy(() => import("./SystemHealth").then(m => ({ default: m.SystemHealth })));
 const MaintenanceTools = lazy(() => import("./MaintenanceTools").then(m => ({ default: m.MaintenanceTools })));
 const WorkspaceDialogs = lazy(() => import("./WorkspaceDialogs").then(m => ({ default: m.WorkspaceDialogs })));
+const Troubleshooter = lazy(() => import("./Troubleshooter").then(m => ({ default: m.Troubleshooter })));
 import { CopyValue } from "../../components/CopyValue";
 import type { Page } from "../../components/Navigation";
 const AccessPanel = lazy(() => import("../devices/AccessPanel").then(m => ({ default: m.AccessPanel })));
@@ -242,6 +243,7 @@ export function ServerWorkspace(
         onUpdated={async () => { model.clearConnectionError(); await model.onRefresh(); }}
       />}
       <WorkspaceDialogs onReviewAccess={() => props.onNavigate("devices")} model={model} onReturnHome={() => props.onNavigate("home")} />
+      <Troubleshooter model={model} onOpenSettings={props.onOpenSettings} onRestoreDevice={props.onRestoreDevice} />
       </Suspense>
     </div>
   );

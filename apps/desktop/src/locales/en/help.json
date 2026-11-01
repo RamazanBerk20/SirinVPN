@@ -1,0 +1,78 @@
+{
+  "demo": {
+    "enter": "Explore the demo",
+    "enterHint": "Look around with sample data first. Nothing connects, and nothing is saved.",
+    "banner": "Demo · Sample data only. Nothing connects, and nothing is saved.",
+    "exit": "Exit demo"
+  },
+  "troubleshoot": {
+    "open": "Can’t connect? Find out why",
+    "title": "Can’t connect?",
+    "description": "Go through the usual causes in order. Each step says what to check and, where the app can fix it, offers the fix.",
+    "checking": "Checking this device and the connection…",
+    "progress": "Step {{current}} of {{total}}",
+    "next": "Next",
+    "settingsSummary": "Can’t connect? Go through the usual causes one at a time, with a fix where the app has one.",
+    "settingsAction": "Troubleshoot",
+    "connectionSettings": "Open connection settings",
+    "status": {
+      "problem": "Likely cause",
+      "check": "Worth checking",
+      "ok": "Looks fine"
+    },
+    "step": {
+      "network": "Local network",
+      "dns": "Name lookup (DNS)",
+      "reachability": "Reaching your VPS",
+      "transport": "Blocked connection method",
+      "clock": "Date and time",
+      "enrollment": "Device keys and enrollment",
+      "membership": "Membership",
+      "service": "VPN service on the VPS"
+    },
+    "network": {
+      "offline": "This device has no network connection. Turn on Wi-Fi or mobile data, then try again.",
+      "check": "Open a website with the VPN off. If a sign-in page appears, as on hotel, airport or café Wi-Fi, sign in there first. If nothing loads, try another network.",
+      "ok": "This device’s network reaches your VPS."
+    },
+    "dns": {
+      "vps": "Your VPS’s private DNS isn’t answering, so websites won’t open through the VPN. The Owner can restore it with Repair VPS configuration.",
+      "check": "This device looks up your server’s name before it connects. If this network can’t, try another network, or ask the Owner whether the name still points to the VPS.",
+      "address": "Your server is reached by its IP address, so connecting needs no name lookup.",
+      "ok": "Your VPS’s private DNS is answering."
+    },
+    "reachability": {
+      "check": "Make sure the VPS is running in your provider’s console and its public address hasn’t changed. If the address changed, update it here.",
+      "ok": "Your VPS answered this device."
+    },
+    "transport": {
+      "fixed": "This server is set to one connection method, and networks often block single methods. Choose Automatic so the app can fall back to the others.",
+      "owner": "Automatic already tries every method this server offers. If this network blocks VPNs, turn on HTTPS on port 443 with Repair VPS configuration, and CDN mode if your VPS address itself is blocked.",
+      "member": "Automatic already tries every method this server offers. If this network blocks them all, try another network, or ask the Owner to turn on HTTPS or CDN mode.",
+      "automatic": "Automatic already tries every method this server offers, including HTTPS through a CDN. If this network still blocks them, try another network.",
+      "ok": "The current connection method gets through this network."
+    },
+    "clock": {
+      "problem": "Your VPS rejected the secure connection, which usually means this device’s clock is wrong. Turn on automatic date and time in the system settings, then try again.",
+      "check": "Check that this device’s date, time and time zone are set automatically. A wrong clock makes your VPS’s certificate look invalid.",
+      "ok": "Your VPS accepted the secure connection, so this device’s clock is fine."
+    },
+    "enrollment": {
+      "rotation": "A key change for this device didn’t finish. Finish it before connecting.",
+      "problem": "This device’s saved keys can’t be used. Restore a device backup, or ask the Owner for a new invitation.",
+      "check": "If this device was removed, or its keys were replaced or restored on another device, it can’t connect. Restore a device backup, or ask the Owner for a new invitation.",
+      "ok": "Your VPS accepted this device’s keys."
+    },
+    "membership": {
+      "owner": "You’re the Owner, so your access can’t expire or be suspended.",
+      "problem": "Your VPS refused this device’s access. Your membership may have expired, been suspended, or be outside its allowed hours. Ask the Owner to check it.",
+      "check": "If your membership expired, was suspended or has allowed hours, the VPS stops accepting this device. Ask the Owner to check your access.",
+      "ok": "Your VPS accepted this device’s current access."
+    },
+    "service": {
+      "problem": "The VPN service on your VPS isn’t running correctly. The Owner can restore it with Repair VPS configuration, which keeps devices and settings.",
+      "check": "If the VPS restarted or was updated, its VPN service may have stopped. The Owner can restore it with Repair VPS configuration, which keeps devices and settings.",
+      "ok": "The VPN service on your VPS is running."
+    }
+  }
+}

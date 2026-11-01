@@ -76,6 +76,12 @@ export function SystemHealth({
           {t("maintenance.health.runDiagnostics")}
         </button>
       </div>
+      <div className="settings-action-row">
+        <p>{t("help.troubleshoot.settingsSummary")}</p>
+        <button className="secondary-button" onClick={() => model.setTroubleshootOpen(true)}>
+          {t("help.troubleshoot.settingsAction")}
+        </button>
+      </div>
     </section>
   );
 }

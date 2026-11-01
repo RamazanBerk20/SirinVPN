@@ -1,7 +1,7 @@
 import type { SavedSshLogin, SshLoginInput, WifiPolicySnapshot } from "./types";
 import type { VpsReleaseInput, VpsBaselineAccess, VpsBaselineCandidate } from "./features/settings/vpsRelease";
 import { Channel } from "@tauri-apps/api/core";
-import { invoke, isAndroid, watchAndroidStatus, watchAndroidServerStatus } from "./platform";
+import { invoke, isAndroid, isDemo, watchAndroidStatus, watchAndroidServerStatus } from "./platform";
 import type { ConnectionPreferences } from "./features/connection/connectionPreferences";
 import type {
   AppPreferences,
@@ -44,7 +44,8 @@ import type {
 
 export const api = {
   watchLocalStatus: (onEvent: (event: import("./types").LocalStatusEvent) => void): (() => void) => {
-    if (isAndroid) return watchAndroidStatus(onEvent);
+    // The native Android watch is off in the demo, which uses the routed subscription.
+    if (isAndroid && !isDemo) return watchAndroidStatus(onEvent);
     const subscriptionId = crypto.randomUUID();
     let active = true;
     let timer: ReturnType<typeof setTimeout> | undefined;
