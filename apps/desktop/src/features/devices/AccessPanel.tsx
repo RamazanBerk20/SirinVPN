@@ -7,6 +7,8 @@ import { InvitationDialog } from "./InvitationDialog";
 import { MemberPolicyDialog } from "./MemberPolicyDialog";
 import { WireGuardDeviceDialog } from "./WireGuardDeviceDialog";
 import { SubnetRoutesDialog } from "./SubnetRoutesDialog";
+import { DevicePairsDialog } from "./DevicePairsDialog";
+import { canManagePeerCommunication } from "../../access";
 import { isAndroid } from "../../platform";
 import { useState, type ReactNode } from "react";
 import type { DeviceSummary, MemberSummary } from "../../types";
@@ -21,6 +23,7 @@ export function AccessPanel(
   const [policyTarget, setPolicyTarget] = useState<MemberSummary | null>(null);
   const [wireguardTarget, setWireguardTarget] = useState<MemberSummary | "new" | null>(null);
   const [routesTarget, setRoutesTarget] = useState<DeviceSummary | null>(null);
+  const [pairsTarget, setPairsTarget] = useState<DeviceSummary | null>(null);
   const {
     snapshot,
     verified,
@@ -35,6 +38,7 @@ export function AccessPanel(
     scopedInvitationsAvailable,
     wireguardDevicesAvailable,
     subnetRoutesAvailable,
+    devicePairsAvailable,
     recipientNamesAvailable,
     memberLifecycleAvailable,
     memberBusy,
@@ -168,6 +172,7 @@ export function AccessPanel(
                 onPolicy={scopedInvitationsAvailable ? setPolicyTarget : undefined}
                 onWireGuard={wireguardAvailable ? setWireguardTarget : undefined}
                 onSubnetRoutes={subnetRoutesAvailable ? setRoutesTarget : undefined}
+                onPairs={devicePairsAvailable ? setPairsTarget : undefined}
               />
               <ActiveInvitations
                 snapshot={snapshot}
@@ -202,6 +207,9 @@ export function AccessPanel(
         onCreated={refreshAfterChange}
       />}
       {routesTarget && <SubnetRoutesDialog key={routesTarget.id} serverId={profile.id} device={routesTarget} onClose={() => setRoutesTarget(null)} onSaved={refreshAfterChange} />}
+      {pairsTarget && snapshot && <DevicePairsDialog key={pairsTarget.id} serverId={profile.id} device={pairsTarget} snapshot={snapshot}
+        candidates={snapshot.members.filter((member) => canManagePeerCommunication(accessLevel, member)).flatMap((member) => member.devices).filter((device) => device.id !== pairsTarget.id)}
+        onClose={() => setPairsTarget(null)} onSaved={refreshAfterChange} />}
       {policyTarget && <MemberPolicyDialog key={policyTarget.id} serverId={profile.id} member={policyTarget} onClose={() => setPolicyTarget(null)} onSaved={refreshAfterChange} />}
     </section>
   );

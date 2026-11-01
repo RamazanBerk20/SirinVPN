@@ -72,7 +72,7 @@ pub(super) struct ExistingAuthorizationDevice {
 }
 
 /// Matches the server's `server_authorization` reader range in release/state-compatibility.json.
-const MAXIMUM_AUTHORIZATION_SCHEMA: u16 = 8;
+const MAXIMUM_AUTHORIZATION_SCHEMA: u16 = 9;
 
 pub(super) fn existing_owner_matches(
     session: &Session,

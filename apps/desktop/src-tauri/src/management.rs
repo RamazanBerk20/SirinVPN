@@ -273,6 +273,52 @@ pub(super) async fn update_device_subnet_routes(
 }
 
 #[tauri::command]
+pub(super) async fn set_device_pair(
+    app: tauri::AppHandle,
+    input: DevicePairInput,
+) -> Result<MembershipSnapshot, String> {
+    let pair = DevicePair {
+        device_id: input
+            .device_id
+            .parse()
+            .map_err(|_| "The device ID is invalid.".to_owned())?,
+        peer_device_id: input
+            .peer_device_id
+            .parse()
+            .map_err(|_| "The device ID is invalid.".to_owned())?,
+        one_way: input.one_way,
+    };
+    let client = crate::management_session::connected(&app, &input.server_id).await?;
+    if !client
+        .configuration()
+        .await
+        .map_err(safe_error)?
+        .device_pairs_enabled
+    {
+        return Err("Update this server to pair devices.".to_owned());
+    }
+    client.set_device_pair(&pair).await.map_err(safe_error)
+}
+
+#[tauri::command]
+pub(super) async fn remove_device_pair(
+    app: tauri::AppHandle,
+    input: DevicePairInput,
+) -> Result<MembershipSnapshot, String> {
+    let parse = |value: &str| {
+        value
+            .parse::<DeviceId>()
+            .map_err(|_| "The device ID is invalid.".to_owned())
+    };
+    let (device_id, peer_device_id) = (parse(&input.device_id)?, parse(&input.peer_device_id)?);
+    crate::management_session::connected(&app, &input.server_id)
+        .await?
+        .remove_device_pair(device_id, peer_device_id)
+        .await
+        .map_err(safe_error)
+}
+
+#[tauri::command]
 pub(super) async fn dns_blocklist_settings(
     app: tauri::AppHandle,
     server_id: String,

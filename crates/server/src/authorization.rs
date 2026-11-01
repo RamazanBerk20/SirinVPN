@@ -15,11 +15,11 @@ use rustls::{
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use sirinvpn_protocol::{
-    ActiveInvitationSummary, DEFAULT_MANAGEMENT_PORT, DeviceId, DeviceSummary,
+    ActiveInvitationSummary, DEFAULT_MANAGEMENT_PORT, DeviceId, DevicePair, DeviceSummary,
     EndpointTransitionClaims, EndpointTransitionResponse, EnrollmentResult, InvitationClaims,
     InvitationId, KeyRotationCommitResponse, KeyRotationId, KeyRotationPrepareRequest,
-    KeyRotationPrepareResponse, MAX_PORT_FORWARDS, MIN_PORT_FORWARD_PUBLIC_PORT, MemberId,
-    MemberPolicy, MemberSummary, MembershipSnapshot, PortForward, PortForwardProtocol,
+    KeyRotationPrepareResponse, MAX_DEVICE_PAIRS, MAX_PORT_FORWARDS, MIN_PORT_FORWARD_PUBLIC_PORT,
+    MemberId, MemberPolicy, MemberSummary, MembershipSnapshot, PortForward, PortForwardProtocol,
     SERVER_TUNNEL_ADDRESS, ServerId, ServerRole, validate_host, validate_subnet_routes,
 };
 #[cfg(test)]
@@ -54,6 +54,8 @@ pub(crate) const PRESHARED_KEY_AUTHORIZATION_SCHEMA_VERSION: u16 = 6;
 pub(crate) const WIREGUARD_ONLY_AUTHORIZATION_SCHEMA_VERSION: u16 = 7;
 /// Readers before schema 8 would drop the routes and keep forwarding stale LAN policy.
 pub(crate) const SUBNET_ROUTE_AUTHORIZATION_SCHEMA_VERSION: u16 = 8;
+/// Readers before schema 9 would drop the pairs and isolate devices the Owner paired.
+pub(crate) const DEVICE_PAIR_AUTHORIZATION_SCHEMA_VERSION: u16 = 9;
 pub(crate) const ENROLLMENT_HANDOFF_SECONDS: u64 = 60;
 pub(crate) const KEY_ROTATION_LIFETIME_SECONDS: u64 = 10 * 60;
 const FIRST_MEMBER_ADDRESS: u8 = 3;
@@ -86,6 +88,8 @@ pub(crate) struct AuthorizationDocument {
     pub endpoint_observed_address: Option<IpAddr>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub port_forwards: Vec<PortForward>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub device_pairs: Vec<DevicePair>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub recovery_key: Option<sirinvpn_protocol::RecoveryKeyResponse>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -254,6 +258,7 @@ impl AuthorizationDocument {
             endpoint_transition_source: false,
             endpoint_observed_address: None,
             port_forwards: Vec::new(),
+            device_pairs: Vec::new(),
             recovery_key: None,
             recovery_receipt: None,
             recovery_policy: Default::default(),
@@ -357,6 +362,21 @@ impl AuthorizationDocument {
             }
             if !public_ports.insert((forward.protocol, forward.public_port)) {
                 bail!("authorization state contains a duplicate public port forward");
+            }
+        }
+
+        if self.device_pairs.len() > MAX_DEVICE_PAIRS {
+            bail!("authorization state contains too many device pairs");
+        }
+        for (index, pair) in self.device_pairs.iter().enumerate() {
+            if pair.device_id == pair.peer_device_id
+                || !device_ids.contains(&pair.device_id)
+                || !device_ids.contains(&pair.peer_device_id)
+                || self.device_pairs[..index]
+                    .iter()
+                    .any(|earlier| earlier.joins(pair.device_id, pair.peer_device_id))
+            {
+                bail!("authorization state contains an invalid device pair");
             }
         }
 
@@ -599,32 +619,70 @@ impl AuthorizationDocument {
         self.validate()
     }
 
+    /// Adds the pair, or replaces the one joining the same two devices.
+    pub(crate) fn set_device_pair(&mut self, pair: DevicePair) -> Result<()> {
+        self.device_pairs
+            .retain(|existing| !existing.joins(pair.device_id, pair.peer_device_id));
+        self.device_pairs.push(pair);
+        self.schema_version = self.required_schema_version();
+        self.validate()
+    }
+
+    pub(crate) fn remove_device_pair(
+        &mut self,
+        device_id: DeviceId,
+        peer_device_id: DeviceId,
+    ) -> Result<()> {
+        self.device_pairs
+            .retain(|pair| !pair.joins(device_id, peer_device_id));
+        self.schema_version = self.required_schema_version();
+        self.validate()
+    }
+
     /// The device is active and in the peer-communication set the VPS enforces.
-    fn reaches_peers(&self, device: &DeviceRecord) -> bool {
+    pub(crate) fn reaches_peers(&self, device: &DeviceRecord) -> bool {
         !self.endpoint_transition_source
             && device.peer_communication_enabled
             && self.access_for_device(device).is_some()
     }
 
-    /// Routes the VPS forwards now: only a device that may reach peers announces them.
+    /// Both devices are active and a pair lets `source` start connections to `destination`.
+    pub(crate) fn pair_permits(&self, source: &DeviceRecord, destination: &DeviceRecord) -> bool {
+        !self.endpoint_transition_source
+            && self
+                .device_pairs
+                .iter()
+                .any(|pair| pair.permits(source.id, destination.id))
+            && self.access_for_device(source).is_some()
+            && self.access_for_device(destination).is_some()
+    }
+
+    /// Routes the VPS forwards now: only a device that some peer may reach announces them.
     pub(crate) fn live_subnet_routes<'a>(&self, device: &'a DeviceRecord) -> &'a [String] {
-        if self.reaches_peers(device) {
+        if self.reaches_peers(device)
+            || self
+                .devices
+                .iter()
+                .any(|other| self.pair_permits(other, device))
+        {
             &device.subnet_routes
         } else {
             &[]
         }
     }
 
-    /// Live routes of other devices that this device may reach.
+    /// Routes of other devices that this device may reach: through the mutual-access
+    /// switch when both have it on, or through a pair that lets it start connections.
     pub(crate) fn reachable_subnet_routes(&self, device: &DeviceRecord) -> Vec<String> {
-        if !self.reaches_peers(device) {
-            return Vec::new();
-        }
+        let peers = self.reaches_peers(device);
         let mut routes: Vec<_> = self
             .devices
             .iter()
-            .filter(|other| other.id != device.id)
-            .flat_map(|other| self.live_subnet_routes(other).iter().cloned())
+            .filter(|other| {
+                other.id != device.id
+                    && ((peers && self.reaches_peers(other)) || self.pair_permits(device, other))
+            })
+            .flat_map(|other| other.subnet_routes.iter().cloned())
             .collect();
         routes.sort();
         routes
@@ -907,6 +965,8 @@ impl AuthorizationDocument {
             .retain(|rotation| rotation.device_id != device_id);
         self.port_forwards
             .retain(|forward| forward.device_id != device_id);
+        self.device_pairs
+            .retain(|pair| pair.device_id != device_id && pair.peer_device_id != device_id);
         if !self
             .devices
             .iter()

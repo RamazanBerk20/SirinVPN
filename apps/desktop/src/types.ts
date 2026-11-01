@@ -482,6 +482,7 @@ export interface CurrentConfiguration {
   dns_blocklist_management_enabled?: boolean;
   wireguard_devices_enabled?: boolean;
   subnet_routes_enabled?: boolean;
+  device_pairs_enabled?: boolean;
 }
 
 export interface DnsBlocklistPolicy {
@@ -516,10 +517,18 @@ export interface RecoveryPreview {
   existing_profile: boolean;
 }
 
+/** `device_id` may always start connections; with `one_way` its peer only answers. */
+export interface DevicePair {
+  device_id: string;
+  peer_device_id: string;
+  one_way?: boolean;
+}
+
 export interface MembershipSnapshot {
   members: MemberSummary[];
   active_invitations: ActiveInvitationSummary[];
   port_forwards?: PortForward[];
+  device_pairs?: DevicePair[];
 }
 
 export interface WireGuardDeviceResult {

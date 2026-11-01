@@ -162,6 +162,10 @@ The device gets Direct UDP access only. With no certificate it is absent from th
 
 The Owner can assign up to 16 canonical private IPv4 ranges of at most a `/20`, across the server, to the Owner's own devices (`PUT /v1/devices/{id}/subnet-routes`). They live on the device record and move the authorization document to schema 8. A range is live while its device is active and allows mutual access; the VPS then adds it to that peer's AllowedIPs and as a `proto static` kernel route on `sirinvpn0`, and admits it in the runtime `port_forward` chain only from the `peer_communication4` set. A tunnel-source guard in the server's `inet sirinvpn_handoff` table, which survives server stop and firewall reloads, limits any `sirinvpn0` source outside `10.77.0.0/23` to answers back into the tunnel. A range whose kernel route collides with another VPS route stays inactive, is retried every 10 seconds and is listed as inactive in membership snapshots. Each device reads its own live ranges and the ranges it may reach from `/v1/status` and caches them in its profile. On Linux, a router forwards and masquerades the ranges it shares and keeps them on its own network; every platform tunnels the ranges it reaches ahead of Allow local network (on Linux, the helper's own marked sockets keep the physical link for them). Windows and Android only consume. See [Subnet routes](subnet-routes.md).
 
+## Device pairs
+
+Pairs let two devices reach each other beyond the mutual-access switch, both ways or one way where the second only answers (`PUT /v1/device-pairs`, `DELETE /v1/device-pairs/{a}/{b}`). They live in `device_pairs` of the authorization document and move it to schema 9. Creating or removing one needs the switch authority over both devices. The VPS admits paired flows, and one-way answers only as established/related, in the runtime `port_forward` chain; a pair that lets a device start connections to a router also admits that device to the router's ranges. See [Device pairs](device-pairs.md).
+
 ## Data plane and protection
 
 The VPS uses `sirinvpn0` and `10.77.0.1/24`; the first Owner uses
@@ -255,7 +259,7 @@ Windows uses native WFP for the analogous scope. Platform acceptance must verify
 
 The VPS owns separate filter/NAT tables and exact comment-tagged Docker
 continuation rules. Peer communication requires both current endpoint addresses
-in authorization-derived allow sets. Public IPv4 forwards require a current exact
+in authorization-derived allow sets, or a current device pair between them. Public IPv4 forwards require a current exact
 mapping and matching admission before established replies; stale mappings cannot
 inherit admission. Stop clears dynamic admission. Temporary enrollment peers can
 reach only their private enrollment endpoint. No host-wide firewall flush occurs.

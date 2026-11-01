@@ -1,7 +1,7 @@
 use super::*;
 use sirinvpn_protocol::MAX_SUBNET_ROUTES;
 
-fn add_owner_device(state: &mut AuthorizationDocument) -> DeviceId {
+pub(super) fn add_owner_device(state: &mut AuthorizationDocument) -> DeviceId {
     let identity = LocalIdentity::generate("Home").unwrap();
     let id = DeviceId::new();
     let address = state.allocate_member_address().unwrap();
@@ -23,7 +23,7 @@ fn add_owner_device(state: &mut AuthorizationDocument) -> DeviceId {
     id
 }
 
-fn device(state: &AuthorizationDocument, id: DeviceId) -> &DeviceRecord {
+pub(super) fn device(state: &AuthorizationDocument, id: DeviceId) -> &DeviceRecord {
     state.devices.iter().find(|device| device.id == id).unwrap()
 }
 

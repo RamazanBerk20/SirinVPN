@@ -9,7 +9,8 @@ import { useId, useState } from "react";
 import { isAndroid } from "../../platform";
 import { ActionMenu, type MenuAction } from "../../components/ActionMenu";
 import { CopyValue } from "../../components/CopyValue";
-import { canManageMember, memberAccessLabel, memberAccessLevel } from "../../access";
+import { canManageMember, canManagePeerCommunication, memberAccessLabel, memberAccessLevel } from "../../access";
+import { pairSummaries } from "./DevicePairsDialog";
 import { t } from "../../i18n";
 import { Rich } from "../../i18n/Rich";
 import {
@@ -35,6 +36,7 @@ type Props = MemberLifecycleProps & {
   onWireGuard?: (member: MemberSummary) => void;
   /** Only the Owner shares local networks, and only from their own devices. */
   onSubnetRoutes?: (device: DeviceSummary) => void;
+  onPairs?: (device: DeviceSummary) => void;
   onInvite: (member: MemberSummary) => void;
   onAccess: (member: MemberSummary) => Promise<void>;
   onTransfer: (member: MemberSummary) => Promise<void>;
@@ -279,6 +281,9 @@ function DeviceRow({
   });
   if (props.onSubnetRoutes && props.accessLevel === "owner" && member.role === "owner")
     actions.push({ label: t("devices.menu.localNetworks"), group: t("devices.menu.group.device"), run: () => props.onSubnetRoutes?.(device) });
+  if (props.onPairs && canManagePeerCommunication(props.accessLevel, member))
+    actions.push({ label: t("devices.menu.pairs"), group: t("devices.menu.group.device"), disabled: props.memberBusy != null, run: () => props.onPairs?.(device) });
+  const pairs = pairSummaries(props.snapshot, device.id);
   if (props.onNetwork && (manageable || (props.accessLevel === "member" && member.policy?.manage_own_port_forwards)))
     actions.push({ label: t("devices.menu.portForwarding"), group: t("devices.menu.group.device"), run: props.onNetwork });
   return (
@@ -350,9 +355,17 @@ function DeviceRow({
                 ? t("devices.row.network.suspended")
                 : device.peer_communication_enabled
                   ? t("devices.row.network.mutual")
-                  : t("devices.row.network.isolated")}
+                  : pairs.length > 0
+                    ? t("devices.row.network.paired")
+                    : t("devices.row.network.isolated")}
             </dd>
           </div>
+          {pairs.length > 0 && (
+            <div>
+              <dt>{t("devices.row.facts.pairs")}</dt>
+              <dd>{pairs.map((pair) => pair.text).join("; ")}</dd>
+            </div>
+          )}
           {Boolean(device.subnet_routes?.length) && (
             <div>
               <dt>{t("devices.row.facts.localNetworks")}</dt>

@@ -107,6 +107,18 @@ pub(super) fn print_membership(snapshot: &MembershipSnapshot, json: bool) -> Res
             );
         }
     }
+    if !snapshot.device_pairs.is_empty() {
+        println!("Device pairs:");
+        for pair in &snapshot.device_pairs {
+            println!(
+                "  {} {} {}{}",
+                pair.device_id,
+                if pair.one_way { "->" } else { "<->" },
+                pair.peer_device_id,
+                if pair.one_way { "  (answers only)" } else { "" }
+            );
+        }
+    }
     Ok(())
 }
 

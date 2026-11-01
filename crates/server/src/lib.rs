@@ -94,13 +94,13 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use sirinvpn_protocol::{
     API_VERSION, ApiEnvelope, ApiErrorBody, ConnectionState, CurrentConfiguration,
-    DEFAULT_MANAGEMENT_PORT, DEFAULT_WIREGUARD_PORT, DeviceId,
+    DEFAULT_MANAGEMENT_PORT, DEFAULT_WIREGUARD_PORT, DeviceId, DevicePair,
     DevicePeerCommunicationUpdateRequest, DeviceSubnetRoutes, DeviceSubnetRoutesUpdateRequest,
     DiagnosticReport, DnsUpstream, EndpointTransitionClaims, EndpointTransitionCreateRequest,
     EndpointTransitionResponse, EnrollmentRequest, EnrollmentResult, ErrorCode, INTERFACE_NAME,
     InvitationClaims, InvitationCreateRequest, InvitationCreateResponse, InvitationId,
     KeyRotationCommitResponse, KeyRotationId, KeyRotationPrepareRequest,
-    KeyRotationPrepareResponse, MAX_PORT_FORWARDS, MIN_PORT_FORWARD_PUBLIC_PORT,
+    KeyRotationPrepareResponse, MAX_DEVICE_PAIRS, MAX_PORT_FORWARDS, MIN_PORT_FORWARD_PUBLIC_PORT,
     MemberAccessUpdateRequest, MemberDevicesRevokeRequest, MemberId, MemberSuspensionUpdateRequest,
     MembershipSnapshot, ObfuscatedUdpEndpoint, OwnershipTransferRequest, PortForward,
     PortForwardCreateRequest, PortForwardProtocol, PrivateDnsRecord, RenameDeviceRequest,

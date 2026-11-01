@@ -83,6 +83,9 @@ pub struct CurrentConfiguration {
     /// The Owner can assign LAN ranges that one of their devices forwards.
     #[serde(default, skip_serializing_if = "is_false")]
     pub subnet_routes_enabled: bool,
+    /// Devices can be allowed to reach each other pair by pair.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub device_pairs_enabled: bool,
 }
 
 /// The source address of the one request that asked; the VPS keeps nothing.
@@ -394,12 +397,40 @@ pub struct PortForward {
     pub device_port: u16,
 }
 
+/// Lets two devices reach each other whatever their mutual-access switches say.
+/// It is also the `PUT /v1/device-pairs` body, which replaces any pair of the same devices.
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct DevicePair {
+    /// The device that may always start connections.
+    pub device_id: DeviceId,
+    pub peer_device_id: DeviceId,
+    /// The peer only answers connections the device started.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub one_way: bool,
+}
+
+impl DevicePair {
+    /// Whether `source` may start connections to `destination`.
+    pub fn permits(&self, source: DeviceId, destination: DeviceId) -> bool {
+        (self.device_id == source && self.peer_device_id == destination)
+            || (!self.one_way && self.device_id == destination && self.peer_device_id == source)
+    }
+
+    pub fn joins(&self, device: DeviceId, peer: DeviceId) -> bool {
+        (self.device_id, self.peer_device_id) == (device, peer)
+            || (self.device_id, self.peer_device_id) == (peer, device)
+    }
+}
+
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub struct MembershipSnapshot {
     pub members: Vec<MemberSummary>,
     pub active_invitations: Vec<ActiveInvitationSummary>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub port_forwards: Vec<PortForward>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub device_pairs: Vec<DevicePair>,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]

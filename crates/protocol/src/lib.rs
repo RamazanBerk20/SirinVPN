@@ -48,7 +48,7 @@ pub use recovery::{
 };
 
 pub use management::{
-    ActiveInvitationSummary, ApiEnvelope, ApiErrorBody, CurrentConfiguration,
+    ActiveInvitationSummary, ApiEnvelope, ApiErrorBody, CurrentConfiguration, DevicePair,
     DevicePeerCommunicationUpdateRequest, DeviceSubnetRoutesUpdateRequest, DeviceSummary,
     DiagnosticCheck, DiagnosticLevel, DiagnosticReport, EndpointTransitionClaims,
     EndpointTransitionCreateRequest, EndpointTransitionResponse, EnrollmentNames,
@@ -81,6 +81,7 @@ pub const MAX_DNS_OVER_TLS_ENDPOINTS: usize = 2;
 pub const MAX_DNS_OVER_HTTPS_ENDPOINTS: usize = 2;
 pub const MAX_PRIVATE_DNS_RECORDS: usize = 64;
 pub const MAX_PORT_FORWARDS: usize = 32;
+pub const MAX_DEVICE_PAIRS: usize = 256;
 pub const MIN_PORT_FORWARD_PUBLIC_PORT: u16 = 1_024;
 pub const SERVER_TUNNEL_ADDRESS: &str = "10.77.0.1";
 pub const FIRST_CLIENT_TUNNEL_ADDRESS: &str = "10.77.0.2";

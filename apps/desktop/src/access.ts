@@ -62,6 +62,14 @@ export function canManagePortForwards(
   return canManageMember(caller, member) || (caller === "member" && Boolean(member.policy?.manage_own_port_forwards));
 }
 
+/** Mirrors the VPS rule for the mutual-access switch, which a pair needs on both devices. */
+export function canManagePeerCommunication(
+  caller: AccessLevel,
+  member: Pick<MemberSummary, "role" | "administrator" | "policy">,
+): boolean {
+  return canManageMember(caller, member) || (caller === "member" && Boolean(member.policy?.manage_own_peer_communication));
+}
+
 export function canCancelInvitation(
   caller: AccessLevel,
   invitation: ActiveInvitationSummary,

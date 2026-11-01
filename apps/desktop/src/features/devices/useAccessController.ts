@@ -81,6 +81,7 @@ export function useAccessController({
   const [scopedInvitationsAvailable, setScopedInvitationsAvailable] = useState(false);
   const [wireguardDevicesAvailable, setWireguardDevicesAvailable] = useState(false);
   const [subnetRoutesAvailable, setSubnetRoutesAvailable] = useState(false);
+  const [devicePairsAvailable, setDevicePairsAvailable] = useState(false);
   const [invitationNaming, setInvitationNaming] = useState<{
     serverId: string;
     available: boolean;
@@ -126,6 +127,7 @@ export function useAccessController({
       setScopedInvitationsAvailable(false);
       setWireguardDevicesAvailable(false);
       setSubnetRoutesAvailable(false);
+      setDevicePairsAvailable(false);
       setInvitationNaming(null);
       return;
     }
@@ -137,6 +139,7 @@ export function useAccessController({
       setScopedInvitationsAvailable(Boolean(configuration.reusable_invitations_enabled));
       setWireguardDevicesAvailable(Boolean(configuration.wireguard_devices_enabled));
       setSubnetRoutesAvailable(Boolean(configuration.subnet_routes_enabled));
+      setDevicePairsAvailable(Boolean(configuration.device_pairs_enabled));
       setInvitationNaming({ serverId: profile.id, available: Boolean(configuration.recipient_names_enabled) });
       setPortForwardingAvailable(Boolean(configuration.port_forwarding_enabled));
       setMemberLifecycleAvailable(Boolean(configuration.member_lifecycle_enabled));
@@ -144,7 +147,7 @@ export function useAccessController({
     }, reason => {
       if (generation !== request.current) return;
       setMemberLifecycleAvailable(null); setPortForwardingAvailable(null);
-      setScopedInvitationsAvailable(false); setWireguardDevicesAvailable(false); setSubnetRoutesAvailable(false); setInvitationNaming(null);
+      setScopedInvitationsAvailable(false); setWireguardDevicesAvailable(false); setSubnetRoutesAvailable(false); setDevicePairsAvailable(false); setInvitationNaming(null);
       setConfigurationFailure({ key: cacheKey, message: errorMessage(reason, t("devices.error.features")) });
     });
     const membership = readMembership(cacheKey, () => api.membership(profile.id)).then(nextSnapshot => {
@@ -425,6 +428,7 @@ export function useAccessController({
     scopedInvitationsAvailable,
     wireguardDevicesAvailable,
     subnetRoutesAvailable,
+    devicePairsAvailable,
     recipientNamesAvailable,
     memberLifecycleAvailable,
     memberBusy,

@@ -313,6 +313,14 @@ export const api = {
     invoke<MembershipSnapshot>("update_device_peer_communication", {
       input: { server_id: serverId, device_id: deviceId, enabled },
     }),
+  setDevicePair: (serverId: string, deviceId: string, peerDeviceId: string, oneWay: boolean) =>
+    invoke<MembershipSnapshot>("set_device_pair", {
+      input: { server_id: serverId, device_id: deviceId, peer_device_id: peerDeviceId, one_way: oneWay },
+    }),
+  removeDevicePair: (serverId: string, deviceId: string, peerDeviceId: string) =>
+    invoke<MembershipSnapshot>("remove_device_pair", {
+      input: { server_id: serverId, device_id: deviceId, peer_device_id: peerDeviceId },
+    }),
   updateDeviceSubnetRoutes: (serverId: string, deviceId: string, routes: string[]) =>
     invoke<MembershipSnapshot>("update_device_subnet_routes", {
       input: { server_id: serverId, device_id: deviceId, routes },

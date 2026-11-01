@@ -66,6 +66,22 @@ does not qualify that migration. Do not remove the old app before validating
 the backup/recovery path. Once a deletion has been recorded, an older binary
 that ignores its marker is an unsupported rollback target on every platform.
 
+## Device pair migration
+
+Device pairs are new in `server_authorization`. A schema-8 reader would ignore
+them and isolate devices the Owner paired, so the writer moves to schema 9
+whenever a pair exists and back down when the last pair is removed:
+
+| State | Before | Now | Shape |
+| --- | --- | --- | --- |
+| `server_authorization` | reads 1–8, writes 1–8 | reads 1–9, writes 1–9 | explicit schema 9 whenever `device_pairs` is not empty |
+
+Documents without pairs serialize exactly as before. A signed VPS transition to
+a release that cannot read schema 9 is refused; remove every pair before such a
+rollback. Older clients ignore the snapshot's optional `device_pairs` and keep
+using the mutual-access switch; newer clients hide pairs unless the VPS
+advertises `device_pairs_enabled`.
+
 ## Subnet route migration
 
 Owner-assigned subnet routes are new on a `server_authorization` device record.

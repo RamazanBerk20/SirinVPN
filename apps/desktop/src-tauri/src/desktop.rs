@@ -87,8 +87,8 @@ use sirinvpn_protocol::{
     ServerStatus, ipv6_tunnel_address, validate_dns_upstream, validate_private_dns_records,
 };
 use sirinvpn_protocol::{
-    CurrentConfiguration, DeviceId, DiagnosticReport, InvitationId, MemberId, MembershipSnapshot,
-    PortForwardCreateRequest,
+    CurrentConfiguration, DeviceId, DevicePair, DiagnosticReport, InvitationId, MemberId,
+    MembershipSnapshot, PortForwardCreateRequest,
 };
 use sirinvpn_protocol::{DnsUpstream, ServerRole, TransportKind, TransportPreference};
 use sirinvpn_transport::{AutomaticAttempt, establish_automatic};
@@ -232,6 +232,8 @@ fn run_inner() -> tauri::Result<()> {
             revoke_device,
             update_device_peer_communication,
             update_device_subnet_routes,
+            set_device_pair,
+            remove_device_pair,
             dns_blocklist_settings,
             update_dns_blocklist,
             create_port_forward,

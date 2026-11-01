@@ -248,6 +248,7 @@ impl AuthorizationDocument {
             members,
             active_invitations,
             port_forwards,
+            device_pairs: self.device_pairs.clone(),
         }
     }
 }

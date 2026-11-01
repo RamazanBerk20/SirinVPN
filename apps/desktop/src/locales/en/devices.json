@@ -39,7 +39,8 @@
       "fingerprint": "Identity fingerprint",
       "connection": "Connects with",
       "localNetworks": "Shares local networks",
-      "inactiveLocalNetworks": "Inactive: the VPS routes these through another network"
+      "inactiveLocalNetworks": "Inactive: the VPS routes these through another network",
+      "pairs": "Pairs"
     },
     "activityDetail": {
       "suspended": "Member is suspended",
@@ -50,7 +51,8 @@
     "network": {
       "suspended": "Blocked until the member is reactivated",
       "mutual": "Can reach devices that also allow mutual access",
-      "isolated": "Internet only, isolated from other devices"
+      "isolated": "Internet only, isolated from other devices",
+      "paired": "Internet and paired devices only"
     },
     "fingerprintLabel": "{{name}} fingerprint",
     "lastOwnerDevice": "The last Owner device can’t be revoked.",
@@ -88,7 +90,8 @@
     "reactivateFirst": "Reactivate this member first.",
     "cancelInvitationFirst": "Cancel this member’s invitation first.",
     "addWireguardFor": "Add WireGuard device for {{name}}",
-    "localNetworks": "Local networks"
+    "localNetworks": "Local networks",
+    "pairs": "Device pairs"
   },
   "invitations": {
     "empty": "No active invitations",
@@ -153,13 +156,33 @@
   },
   "localNetworks": {
     "title": "Local networks on {{name}}",
-    "description": "Devices with mutual access reach these private networks through your VPS while {{name}} allows mutual access too. Their hosts can answer but can’t start connections into SirinVPN.",
+    "description": "Devices with mutual access reach these private networks through your VPS while {{name}} allows mutual access too, and so does a device paired to start connections to {{name}}. Their hosts can answer but can’t start connections into SirinVPN.",
     "label": "Networks",
     "hint": "One private IPv4 network per line, /20 or smaller, such as 192.168.1.0/24. Leave empty to stop sharing.",
     "linux": "{{name}} must run SirinVPN on Linux with IPv4 forwarding on: sudo sysctl -w net.ipv4.ip_forward=1. A WireGuard-only router forwards with its own settings.",
     "apply": "Each device applies a change when it next connects.",
     "save": "Save networks",
     "saveFailed": "Couldn’t save the local networks. Try again."
+  },
+  "pairs": {
+    "title": "Pairs for {{name}}",
+    "description": "A pair lets two devices reach each other even when mutual access is off. Mutual access still reaches every device that has it on too.",
+    "none": "No pairs yet.",
+    "bothWays": "{{name}}, both ways",
+    "starts": "Starts connections to {{name}}",
+    "answers": "Only answers {{name}}",
+    "otherDevice": "another member’s device",
+    "peer": "Device",
+    "direction": "Direction",
+    "option": {
+      "both": "Both ways",
+      "starts": "{{name}} starts, the other only answers",
+      "answers": "The other starts, {{name}} only answers"
+    },
+    "localNetworks": "Starting connections to a device that shares local networks also reaches them.",
+    "save": "Add pair",
+    "remove": "Remove",
+    "saveFailed": "Couldn’t change the pair. Try again."
   },
   "policy": {
     "title": "Access policy for {{name}}",
