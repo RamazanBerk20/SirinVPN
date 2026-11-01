@@ -38,6 +38,27 @@ fn address(device: &DeviceRecord) -> String {
     device.client_tunnel_address.to_string()
 }
 
+/// Like `reach`, but every probe reuses one ICMP identifier and so one conntrack flow.
+async fn reach_in_flow(source: &str, destination: &str, open: bool) {
+    let state = if open { "open" } else { "blocked" };
+    let status = Command::new("python3")
+        .args([
+            "tests/network/subnet_routes.py",
+            "probe",
+            source,
+            destination,
+            state,
+        ])
+        .args(["-e", "4242"])
+        .status()
+        .await
+        .unwrap();
+    assert!(
+        status.success(),
+        "the {source} -> {destination} flow should be open: {open}"
+    );
+}
+
 #[tokio::test]
 async fn pair_rules_admit_paired_flows_and_only_answers_one_way() {
     let (_directory, state) = fixture();
@@ -68,7 +89,7 @@ async fn pair_rules_admit_paired_flows_and_only_answers_one_way() {
         device_pair_nft_rules(&configuration, &document).unwrap(),
         format!(
             "{rule} ip saddr . ip daddr {{ {f} . {x}, {x} . {f}, {a} . {o} }} accept\n\
-             {rule} ip saddr . ip daddr {{ {o} . {a} }} ct state established,related accept\n"
+             {rule} ip saddr . ip daddr {{ {o} . {a} }} ct direction reply ct state established,related accept\n"
         )
     );
     configuration.ipv6_tunnel_enabled = true;
@@ -81,7 +102,7 @@ async fn pair_rules_admit_paired_flows_and_only_answers_one_way() {
     let rules = device_pair_nft_rules(&configuration, &document).unwrap();
     assert_eq!(rules.lines().count(), 4);
     assert!(rules.contains(&format!(
-        "{rule} ip6 saddr . ip6 daddr {{ {} . {} }} ct state established,related accept\n",
+        "{rule} ip6 saddr . ip6 daddr {{ {} . {} }} ct direction reply ct state established,related accept\n",
         ipv6(&owner),
         ipv6(&admin)
     )));
@@ -107,7 +128,7 @@ async fn pair_rules_admit_paired_flows_and_only_answers_one_way() {
         routes,
         format!(
             "{rule} ip saddr {{ {a} }} ip daddr {{ 192.168.1.0/24 }} accept\n\
-             {rule} ip saddr {{ 192.168.1.0/24 }} ip daddr {{ {a} }} ct state established,related accept\n"
+             {rule} ip saddr {{ 192.168.1.0/24 }} ip daddr {{ {a} }} ct direction reply ct state established,related accept\n"
         )
     );
     // Pairs and routes share the runtime chain and its flush.
@@ -178,6 +199,17 @@ async fn pairs_need_peer_communication_authority_over_both_devices() {
         .0
         .payload;
     assert_eq!(snapshot.device_pairs, before.device_pairs);
+    for (caller, pairs) in [
+        (family, &before.device_pairs[..1]),
+        (owner, &before.device_pairs[..]),
+    ] {
+        let snapshot = membership_handler(State(state.clone()), Extension(identity(caller)))
+            .await
+            .unwrap()
+            .0
+            .payload;
+        assert_eq!(snapshot.device_pairs, pairs, "{}", caller.name);
+    }
     assert_eq!(*state.authorization.as_ref().unwrap().read().await, before);
     assert_eq!(
         load_authorization(&state.paths.authorization).unwrap(),
@@ -332,12 +364,20 @@ async fn kernel_device_pairs_admit_paired_devices_and_one_way_answers() {
     reach("member2", &address(&other), false).await;
     println!("both ways: the paired devices reach each other; an unpaired device reaches neither");
 
-    // The Owner lets the Admin start connections to Family; Family only answers.
+    // The Owner lets the Admin start connections to Family; Family only answers, even in a
+    // flow it started while the pair went both ways.
+    assert!(
+        put(&state, &owner, pair(&admin, &family, false))
+            .await
+            .is_ok()
+    );
+    reach_in_flow("member2", &address(&admin), true).await;
     assert!(
         put(&state, &owner, pair(&admin, &family, true))
             .await
             .is_ok()
     );
+    reach_in_flow("member2", &address(&admin), false).await;
     reach("member1", &address(&family), true).await;
     reach("member2", &address(&admin), false).await;
     println!("one way: the starting device is answered; the answering device cannot start");

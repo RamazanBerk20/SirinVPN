@@ -16,27 +16,7 @@ pub(super) async fn membership_handler(
             .iter()
             .map(|device| (device.id, device.wireguard_public_key.clone()))
             .collect::<HashMap<_, _>>();
-        let mut snapshot = current.snapshot(unix_time());
-        if !access.can_manage() {
-            let member_id = current
-                .device_for_fingerprint(&caller.certificate_fingerprint)
-                .ok_or_else(ApiError::forbidden)?
-                .member_id;
-            snapshot.members.retain(|member| member.id == member_id);
-            snapshot.active_invitations.retain(|summary| {
-                current.invitations.iter().any(|invitation| {
-                    invitation.claims.invitation_id == summary.id
-                        && invitation.issued_by == Some(member_id)
-                })
-            });
-            snapshot.port_forwards.retain(|forward| {
-                current
-                    .devices
-                    .iter()
-                    .any(|device| device.id == forward.device_id && device.member_id == member_id)
-            });
-        }
-        (snapshot, keys)
+        (filtered_snapshot(&current, access), keys)
     };
     if let Some(activity) =
         super::service_metrics::recent_peer_activity(&state.configuration.interface_name).await

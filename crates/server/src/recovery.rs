@@ -316,6 +316,9 @@ pub(super) async fn enroll_handler(
         .retain(|rotation| !old_devices.contains(&rotation.device_id));
     next.port_forwards
         .retain(|forward| !old_devices.contains(&forward.device_id));
+    next.device_pairs.retain(|pair| {
+        !old_devices.contains(&pair.device_id) && !old_devices.contains(&pair.peer_device_id)
+    });
     let address = previous_address
         .map(Ok)
         .unwrap_or_else(|| next.allocate_member_address())
