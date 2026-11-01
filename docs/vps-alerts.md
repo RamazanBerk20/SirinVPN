@@ -225,6 +225,14 @@ trusts a throwaway CA:
 - The later uninstall step verified that the alert units and state directory
   are gone.
 
-Not verified: a real ntfy server or webhook service, Ubuntu 24.04, the
+After the review fixes (state written before sending, attempts counted,
+fingerprint of the alert address only, a unit that sees only `server.json` and
+the authorization document under `/etc/sirinvpn`, transfer clears alerts), the
+same lab passed 31/31 again with package `14dbf629…` and the same alert
+evidence. One earlier attempt with that package stopped at the client-side DNS
+attribution detector control, before any alert step; the rerun passed it.
+
+Not verified: that the keys are unreadable inside the unit (only the unit text
+is tested), a real ntfy server or webhook service, Ubuntu 24.04, the
 five-minute timer cadence itself (the lab starts the service directly), a real
 restart loop or full disk, and the Settings card against a real server.
