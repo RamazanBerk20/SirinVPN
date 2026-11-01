@@ -148,6 +148,33 @@ impl ManagementClient {
             .map_err(|_| ManagementError::ConnectionFailed)?;
         self.decode(response).await
     }
+    pub async fn alerts(&self) -> Result<sirinvpn_protocol::AlertSettings, ManagementError> {
+        self.get("/v1/alerts").await
+    }
+    pub async fn update_alerts(
+        &self,
+        policy: &sirinvpn_protocol::AlertPolicy,
+    ) -> Result<sirinvpn_protocol::AlertSettings, ManagementError> {
+        let response = self
+            .client
+            .put(format!("{}/v1/alerts", self.base_url))
+            .json(policy)
+            .send()
+            .await
+            .map_err(|_| ManagementError::ConnectionFailed)?;
+        self.decode(response).await
+    }
+    pub async fn send_test_alert(
+        &self,
+    ) -> Result<sirinvpn_protocol::AlertTestResult, ManagementError> {
+        let response = self
+            .client
+            .post(format!("{}/v1/alerts/test", self.base_url))
+            .send()
+            .await
+            .map_err(|_| ManagementError::ConnectionFailed)?;
+        self.decode(response).await
+    }
     pub fn new(profile: &ServerProfile, secret: &SecretIdentity) -> Result<Self, ManagementError> {
         Self::with_timeout(profile, secret, Some(Duration::from_secs(8)))
     }

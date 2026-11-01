@@ -31,6 +31,43 @@ for name in sys.argv[1:]:
                   ("10.77.0.1", 53))
     print(client.recv(4096)[3] & 0x0F)
 """
+ALERT_STATE = "/var/lib/sirinvpn-alerts/state.json"
+ALERT_LOG = "/root/alert-requests.jsonl"
+# A throwaway CA in the VPS trust store signs a loopback receiver certificate.
+ALERT_CERTIFICATES = r"""set -eu
+cd /root
+openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:P-256 -nodes -days 1 \
+  -subj /CN=sirin-alert-lab -addext basicConstraints=critical,CA:TRUE \
+  -keyout alert-ca.key -out /usr/local/share/ca-certificates/sirin-alert-lab.crt
+openssl req -newkey ec -pkeyopt ec_paramgen_curve:P-256 -nodes -subj /CN=127.0.0.1 \
+  -keyout alert-receiver.key -out alert-receiver.csr
+printf 'subjectAltName=IP:127.0.0.1\n' >alert-receiver.ext
+openssl x509 -req -in alert-receiver.csr -CA /usr/local/share/ca-certificates/sirin-alert-lab.crt \
+  -CAkey alert-ca.key -CAcreateserial -days 1 -extfile alert-receiver.ext -out alert-receiver.pem
+update-ca-certificates >/dev/null
+"""
+# Records each request to the receiver as one JSON line and answers 200.
+ALERT_RECEIVER = r"""
+import http.server, json, ssl, sys
+class Receiver(http.server.BaseHTTPRequestHandler):
+    def record(self):
+        body = self.rfile.read(int(self.headers.get("Content-Length") or 0)).decode()
+        row = {"method": self.command, "path": self.path, "body": body,
+               "headers": {key.lower(): value for key, value in self.headers.items()}}
+        with open(sys.argv[1], "a") as log:
+            log.write(json.dumps(row) + "\n")
+        self.send_response(200)
+        self.send_header("Content-Length", "0")
+        self.end_headers()
+    do_GET = do_POST = record
+    def log_message(self, *arguments):
+        pass
+server = http.server.HTTPServer(("127.0.0.1", 18443), Receiver)
+context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+context.load_cert_chain("/root/alert-receiver.pem", "/root/alert-receiver.key")
+server.socket = context.wrap_socket(server.socket, server_side=True)
+server.serve_forever()
+"""
 USER_PREFIX = ["runuser", "-u", "sirin", "--", "env",
                "SSH_AUTH_SOCK=/home/sirin/acceptance-agent.sock",
                "DBUS_SESSION_BUS_ADDRESS=unix:path=/home/sirin/acceptance-bus"]
@@ -459,6 +496,67 @@ class Acceptance:
                 "disabled_zone_removed": True,
                 "physical_leak_counters": self.counter()}
 
+    def alert_requests(self, method=None):
+        text = self.server.run(["sh", "-c", f"cat {ALERT_LOG} 2>/dev/null || true"]).stdout.decode()
+        rows = [json.loads(line) for line in text.splitlines()]
+        return [row for row in rows if method in (None, row["method"])]
+
+    def alert_check(self, shift=0):
+        """Runs the timer task once; `shift` first moves the stored times back instead of waiting."""
+        if shift:
+            state = json.loads(self.server.run(["cat", ALERT_STATE]).stdout)
+            state["first_seen"] = {key: value - shift for key, value in state["first_seen"].items()}
+            state["sent"] = [value - shift for value in state["sent"]]
+            # Rewritten in place, so the file keeps its owner and mode.
+            self.server.run(["sh", "-c", f"cat >{ALERT_STATE}"], data=json.dumps(state).encode())
+        self.server.run(["systemctl", "start", "sirinvpn-alerts.service"], timeout=120)
+
+    def vps_alerts(self):
+        """The Owner sets VPS alerts; the sandboxed timer task reports a problem and its recovery."""
+        self.server.run(["sh", "-c", ALERT_CERTIFICATES])
+        self.server.run(["systemd-run", "--unit=sirin-alert-receiver", "python3", "-c",
+                         ALERT_RECEIVER, ALERT_LOG])
+        initial = self.cli("server", "alerts", "status", self.server_id)
+        assert initial["policy"] == {"format": "ntfy"}, initial
+        base = "https://127.0.0.1:18443"
+        self.cli("server", "alerts", "set", self.server_id, "--webhook", f"{base}/hook",
+                 "--heartbeat", f"{base}/ping", "--allow-private")
+        assert self.cli("server", "alerts", "test", self.server_id) == \
+            {"failure": None, "http_status": None}
+        test = self.alert_requests("POST")[-1]
+        assert test["method"] == "POST" and test["path"] == "/hook", test
+        assert json.loads(test["body"])["event"] == "test", test
+        assert test["headers"]["user-agent"] == "SirinVPN-alerts/1", test
+        self.server.run(["systemctl", "disable", "--now", "apt-daily-upgrade.timer"])
+        try:
+            self.alert_check()
+            assert self.alert_requests("GET"), "no heartbeat"
+            assert len(self.alert_requests("POST")) == 1, "a problem was sent before confirmation"
+            self.alert_check(shift=600)
+            problem = self.alert_requests("POST")[-1]
+        finally:
+            self.server.run(["systemctl", "enable", "--now", "apt-daily-upgrade.timer"])
+        problem_body = json.loads(problem["body"])
+        assert problem["path"] == "/hook" and problem_body["event"] == "alert", problem
+        assert "security_updates_off" in problem_body["problems"], problem_body
+        self.alert_check(shift=1200)
+        resolved = [json.loads(row["body"]) for row in self.alert_requests("POST")]
+        assert "security_updates_off" in resolved[-1]["resolved"], resolved[-1]
+        settings = self.cli("server", "alerts", "status", self.server_id)
+        status = settings["status"]
+        assert status["alert_failure"] is None and status["heartbeat_failure"] is None, status
+        assert status["alert_sent_at_unix"] and status["heartbeat_sent_at_unix"], status
+        owner = self.server.run(["stat", "-c", "%U %a", ALERT_STATE]).stdout.decode().split()
+        assert owner == ["sirinvpn", "600"], owner
+        self.cli("server", "alerts", "off", self.server_id)
+        self.alert_check()
+        self.server.run(["test", "!", "-e", ALERT_STATE])
+        self.server.run(["systemctl", "stop", "sirin-alert-receiver"])
+        return {"test_alert": "delivered", "problems": problem_body["problems"],
+                "problem_text": problem_body["message"], "resolved": resolved[-1]["resolved"],
+                "requests": [f"{row['method']} {row['path']}" for row in self.alert_requests()],
+                "state_file": "sirinvpn 0600, removed when off"}
+
     def subnet_routes(self):
         """The Owner shares a LAN behind this client: the VPS routes into it, the client keeps it."""
         lan = ["ip", "netns", "exec", "sirin-lan"]
@@ -726,6 +824,8 @@ class Acceptance:
                             self.step("On-demand leak test passes over the tunnel", self.leak_test)
                             self.step("Owner turns VPS DNS blocking on and off through the CLI", self.dns_blocking)
                             self.step("Owner shares a LAN behind this device through the CLI", self.subnet_routes)
+                            self.step("Owner sets VPS alerts; the timer task reports and clears a problem",
+                                      self.vps_alerts)
                         if transport == "tls":
                             self.step("Recover from abrupt transport-process termination", self.relay_crash)
                         self.step(f"{transport}: explicit disconnect restores networking", self.clean_disconnect)

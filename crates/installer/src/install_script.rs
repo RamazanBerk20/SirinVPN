@@ -292,13 +292,13 @@ fi
 
 printf '%s\n' 'SIRINVPN_INSTALL_STEP=snapshot'
 BACKUP_DIR=/var/lib/sirinvpn-maintenance/sirinvpn-install-{nonce}.backup.preparing
-MANAGED_PATHS="{managed_paths} {update_managed_paths} {dns_blocklist_managed_paths}"
+MANAGED_PATHS="{managed_paths} {update_managed_paths} {dns_blocklist_managed_paths} {alerts_managed_paths}"
 install -d -m 0700 "$BACKUP_DIR"
 : >"$BACKUP_DIR/existing"
 for path in $MANAGED_PATHS; do
   [ -e "/$path" ] && printf '%s\n' "$path" >>"$BACKUP_DIR/existing"
 done
-for unit in sirinvpn-network sirinvpn-firewall sirinvpn-doh unbound sirinvpn-server sirinvpn-security-update.timer sirinvpn-dns-blocklist.path sirinvpn-dns-blocklist.timer; do
+for unit in sirinvpn-network sirinvpn-firewall sirinvpn-doh unbound sirinvpn-server sirinvpn-security-update.timer sirinvpn-dns-blocklist.path sirinvpn-dns-blocklist.timer sirinvpn-alerts.timer; do
   systemctl is-active --quiet "$unit" && : >"$BACKUP_DIR/active.$unit" || true
   systemctl is-enabled --quiet "$unit" && : >"$BACKUP_DIR/enabled.$unit" || true
 done
@@ -312,7 +312,7 @@ fi
 ROLLBACK_SCRIPT=/var/lib/sirinvpn-maintenance/sirinvpn-rollback-{nonce}.sh
 cat >"$ROLLBACK_SCRIPT.preparing" <<'ROLLBACK'
 {rollback_begin}
-MANAGED_PATHS="{managed_paths} {update_managed_paths} {dns_blocklist_managed_paths}"
+MANAGED_PATHS="{managed_paths} {update_managed_paths} {dns_blocklist_managed_paths} {alerts_managed_paths}"
 if [ -f "$BACKUP_DIR/backup-ready" ]; then
 if [ "$BEFORE_START" -eq 0 ]; then
   for unit in sirinvpn-server sirinvpn-doh sirinvpn-firewall sirinvpn-network; do
@@ -395,6 +395,8 @@ if [ "$SIRINVPN_USER_CREATED" -eq 1 ] || [ "{manage_existing_user}" -eq 1 ]; the
   chmod 0600 /etc/sirinvpn/installer-managed-user
 fi
 {dns_blocklist_stop}
+# A check during the transaction would report its planned restarts as problems.
+systemctl stop sirinvpn-alerts.timer sirinvpn-alerts.service >/dev/null 2>&1 || true
 # A running server keeps authorization state in memory and would overwrite what init
 # writes below. The snapshot recorded whether it was active; rollback restarts it.
 if systemctl cat sirinvpn-server.service >/dev/null 2>&1; then
@@ -404,6 +406,7 @@ printf '%s\n' 'SIRINVPN_INSTALL_STEP=server_files'
 install -o root -g root -m 0755 {binary} /usr/local/lib/sirinvpn/sirinvpn-server
 {update_setup}
 {dns_blocklist_setup}
+{alerts_setup}
 install -o root -g sirinvpn -m 0640 {owner} /etc/sirinvpn/owner.crt
 {restore_state}
 
@@ -750,7 +753,7 @@ UNIT
 
 printf '%s\n' 'SIRINVPN_INSTALL_STEP=service_registration'
 systemctl daemon-reload
-systemctl enable sirinvpn-network sirinvpn-firewall unbound sirinvpn-server sirinvpn-dns-blocklist.path sirinvpn-dns-blocklist.timer >/dev/null
+systemctl enable sirinvpn-network sirinvpn-firewall unbound sirinvpn-server sirinvpn-dns-blocklist.path sirinvpn-dns-blocklist.timer sirinvpn-alerts.timer >/dev/null
 printf '%s\n' 'SIRINVPN_INSTALL_STEP=restart_network'
 systemctl restart sirinvpn-network
 printf '%s\n' 'SIRINVPN_INSTALL_STEP=restart_firewall'
@@ -761,7 +764,7 @@ printf '%s\n' 'SIRINVPN_INSTALL_STEP=restart_dns'
 systemctl restart unbound
 printf '%s\n' 'SIRINVPN_INSTALL_STEP=restart_server'
 systemctl restart sirinvpn-server
-systemctl restart sirinvpn-dns-blocklist.path sirinvpn-dns-blocklist.timer
+systemctl restart sirinvpn-dns-blocklist.path sirinvpn-dns-blocklist.timer sirinvpn-alerts.timer
 "#,
         nonce = nonce,
         binary = binary,
@@ -806,6 +809,8 @@ systemctl restart sirinvpn-dns-blocklist.path sirinvpn-dns-blocklist.timer
         dns_blocklist_managed_paths = super::dns_blocklist::DNS_BLOCKLIST_MANAGED_PATHS,
         dns_blocklist_stop = super::dns_blocklist::DNS_BLOCKLIST_STOP,
         dns_blocklist_setup = super::dns_blocklist::DNS_BLOCKLIST_SETUP,
+        alerts_managed_paths = super::alerts::ALERTS_MANAGED_PATHS,
+        alerts_setup = super::alerts::ALERTS_SETUP,
         maintenance_begin = super::updates::MAINTENANCE_BEGIN,
         update_setup = super::updates::UPDATE_SETUP,
         artifact_preflight =

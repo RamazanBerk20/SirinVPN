@@ -17,6 +17,7 @@ mod verification;
 use verification::*;
 mod uninstall;
 use uninstall::*;
+mod alerts;
 mod dns;
 mod dns_blocklist;
 use dns::*;

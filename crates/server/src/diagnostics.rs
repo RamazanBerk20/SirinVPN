@@ -5,6 +5,7 @@ use std::{fs, path::Path, process::Stdio, time::Duration};
 use tokio::{io::AsyncReadExt, process::Command, sync::Mutex};
 
 mod network;
+pub(crate) use network::ports;
 
 static RUNNING: Mutex<()> = Mutex::const_new(());
 const OUTPUT_LIMIT: u64 = 128 * 1024;
@@ -108,7 +109,7 @@ fn report(checks: Vec<DiagnosticCheck>) -> DiagnosticReport {
     }
 }
 
-fn flag(path: &str) -> Option<bool> {
+pub(crate) fn flag(path: &str) -> Option<bool> {
     match fs::read_to_string(path).ok()?.trim() {
         "0" => Some(false),
         "1" => Some(true),
@@ -242,9 +243,9 @@ fn usage(code: &str, label: &str, counters: Option<(u64, u64)>, threshold: u64) 
     )
 }
 
-/// Distribution security updates are the Owner's to manage; this only reports whether they run
-/// and whether an installed update still waits for a reboot.
-async fn operating_system_updates() -> Vec<DiagnosticCheck> {
+/// Whether automatic distribution security updates run, and whether an installed update
+/// still waits for a reboot (`None` when that cannot be read). Updates are the Owner's to manage.
+pub(crate) async fn update_state() -> (bool, Option<bool>) {
     let (setting, timer) = tokio::join!(
         output(
             "apt-config",
@@ -272,6 +273,18 @@ async fn operating_system_updates() -> Vec<DiagnosticCheck> {
             .parse::<i64>()
             .ok()
     });
+    (
+        automatic,
+        reboot_required(
+            Path::new("/run/reboot-required").exists(),
+            boot,
+            kernels.ok().as_deref(),
+        ),
+    )
+}
+
+async fn operating_system_updates() -> Vec<DiagnosticCheck> {
+    let (automatic, reboot) = update_state().await;
     vec![
         if automatic {
             check(
@@ -288,11 +301,7 @@ async fn operating_system_updates() -> Vec<DiagnosticCheck> {
                 "Automatic security updates are off or could not be confirmed.",
             )
         },
-        match reboot_required(
-            Path::new("/run/reboot-required").exists(),
-            boot,
-            kernels.ok().as_deref(),
-        ) {
+        match reboot {
             Some(false) => check(
                 "os_reboot_required",
                 "VPS restart",

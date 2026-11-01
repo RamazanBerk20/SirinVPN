@@ -43,6 +43,20 @@ pub(crate) async fn diagnose(configuration: &ServerConfiguration) -> Vec<Diagnos
     diagnose_with_local_port(configuration, 53).await
 }
 
+/// The alert task's resolver check: the local resolver answers a root query. Upstreams are
+/// not probed one by one.
+pub(crate) async fn local_resolver_answers() -> bool {
+    let query = ns_query(".");
+    timeout(LIMIT, async {
+        let mut stream = TcpStream::connect((Ipv4Addr::LOCALHOST, 53))
+            .await
+            .map_err(|_| "")?;
+        validate_reply(&query, &exchange(&mut stream, &query).await?)
+    })
+    .await
+    .is_ok_and(|result| result.is_ok())
+}
+
 async fn diagnose_with_local_port(
     configuration: &ServerConfiguration,
     port: u16,

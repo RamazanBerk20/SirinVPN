@@ -267,6 +267,15 @@ swaps the zone file atomically and runs `unbound-control reload` after
 checking the configuration as the `unbound` user. Any failure keeps the last
 good file and is reported in diagnostics. No query or refresh history exists.
 
+Opt-in [VPS alerts](vps-alerts.md) are stored in the authorization document
+through the Owner-only `/v1/alerts`. A sandboxed timer task,
+`sirinvpn-server alerts check`, runs every five minutes as `sirinvpn` without
+capabilities, separate from the daemon. It reads unit states and restart
+counters, the interface, forwarding, listeners, the local resolver, disk use
+and update state, then sends fixed-text notices and an optional heartbeat to
+checked, pinned HTTPS addresses. Its only state is the current problems and
+the last day's send times.
+
 ## Leak test
 
 Run diagnostics also runs an on-demand leak test while connected. It uses only

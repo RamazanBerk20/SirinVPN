@@ -207,7 +207,7 @@ fn nat_state(value: &Value, family: &str, table: &str, subnet: &str) -> Option<b
     Some(hook(rows, family, table, "postrouting", "nat") && masquerade)
 }
 
-fn ports(config: &ServerConfiguration) -> Option<bool> {
+pub(crate) fn ports(config: &ServerConfiguration) -> Option<bool> {
     let tcp = listeners("tcp", "0A")?;
     let udp = listeners("udp", "07")?;
     let private =

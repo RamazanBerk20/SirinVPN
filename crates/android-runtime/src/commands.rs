@@ -384,6 +384,13 @@ pub async fn dispatch(
                 .update_dns_blocklist(&serde_json::from_value(args["policy"].clone())?)
                 .await?,
         ),
+        "alert_settings" => encode(client.alerts().await?),
+        "update_alerts" => encode(
+            client
+                .update_alerts(&serde_json::from_value(args["policy"].clone())?)
+                .await?,
+        ),
+        "send_test_alert" => encode(client.send_test_alert().await?),
         "recovery_settings" => encode(client.recovery_settings().await?),
         "update_recovery_policy" => encode(
             client

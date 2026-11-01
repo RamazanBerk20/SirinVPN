@@ -164,6 +164,11 @@ pub(super) fn management_router(state: AppState) -> Router {
             "/v1/dns-blocklist",
             get(super::dns_blocklist::settings_handler).put(super::dns_blocklist::update_handler),
         )
+        .route(
+            "/v1/alerts",
+            get(super::alerts::settings_handler).put(super::alerts::update_handler),
+        )
+        .route("/v1/alerts/test", post(super::alerts::test_handler))
         .route("/v1/ownership", patch(transfer_ownership_handler))
         .route("/v1/key-rotations", post(prepare_key_rotation_handler))
         .route(
@@ -300,5 +305,6 @@ pub(super) async fn configuration_handler(
         wireguard_devices_enabled: state.authorization.is_some(),
         leak_test_enabled: state.leak_test_ready && Path::new(super::leak_test::ZONE_FILE).exists(),
         subnet_routes_enabled: state.authorization.is_some(),
+        alerts_enabled: super::alerts::management_available(&state),
     })))
 }

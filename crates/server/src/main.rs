@@ -115,6 +115,10 @@ enum Command {
         #[command(subcommand)]
         command: sirinvpn_server::dns_blocklist::DnsBlocklistCommand,
     },
+    Alerts {
+        #[command(subcommand)]
+        command: sirinvpn_server::alerts::AlertsCommand,
+    },
     DohProxy,
     Serve,
 }
@@ -255,6 +259,7 @@ async fn run() -> anyhow::Result<()> {
         Command::DnsBlocklist { command } => {
             sirinvpn_server::dns_blocklist::run(command, &paths).await?
         }
+        Command::Alerts { command } => sirinvpn_server::alerts::run(command, &paths).await?,
         Command::DohProxy => serve_doh_proxy(&paths).await?,
         Command::Serve => serve(&paths).await?,
     }

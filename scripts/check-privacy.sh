@@ -103,13 +103,25 @@ if printf '%s\n' \
   exit 1
 fi
 
+# VPS alerts go only to addresses the Owner enters. The URL-validation and delivery tests
+# use reserved names, loopback, private and fixed example IP literals.
+ALERT_FIXTURES='(protocol/src/alerts[.]rs|server/src/(alerts/tests|tests/member_lifecycle/alerts)[.]rs|features/settings/VpsAlertSettings[.]test[.]tsx):[0-9]+:.*"https?://(user:pass@)?((([a-z]+[.])+example|([a-z]+[.])?localhost|ntfy|[0-9.]+|[0-9a-f:]+|\[[0-9a-f:.]+\]|\[[a-z.]+\])[:/]|/)'
+if printf '%s\n' \
+  'protocol/src/alerts.rs:1:            "https://ntfy.sh/topic",' \
+  'server/src/alerts/tests.rs:1:        send("https://hooks.attacker.test/a", true, None)' \
+  'server/src/runtime.rs:1:        alert_url: Some("https://ntfy.example/topic".into()),' \
+  | rg -q "$ALERT_FIXTURES"; then
+  echo "privacy check failed: alert URL exception accepted another host" >&2
+  exit 1
+fi
+
 URL_MATCHES=$(rg -n -g '!THIRD-PARTY-NOTICES' 'https?://' \
   "$PROJECT_ROOT/crates" \
   "$DESKTOP_DIR/src" \
   "$DESKTOP_DIR/src-tauri/src" || true)
 # These URL-validation fixtures use a reserved .example domain. Production
 # release destinations still come only from explicit user input.
-UNEXPECTED_URLS=$(printf '%s\n' "$URL_MATCHES" | rg -v "$NON_NETWORK_URLS" | rg -v "$DNS_BLOCKLISTS" | rg -v "$DNS_BLOCKLIST_FIXTURES" | rg -v 'windows-service/src/wireguard.rs:[0-9]+://! ABI source: https://git[.]zx2c4[.]com/wireguard-nt/tree/api/wireguard[.]h$' | rg -v '(features/settings/VpsUpdateDialog.test.tsx|installer/src/release_update/tests.rs|server/src/release_update/policy/tests.rs):[0-9]+:.*https?://(user:pass@)?releases[.]example/' | rg -v 'src/format.ts:[0-9]+:      const address = new URL\(`http://\[\$\{host\}\]`\).hostname;$' | rg -v \
+UNEXPECTED_URLS=$(printf '%s\n' "$URL_MATCHES" | rg -v "$NON_NETWORK_URLS" | rg -v "$DNS_BLOCKLISTS" | rg -v "$DNS_BLOCKLIST_FIXTURES" | rg -v "$ALERT_FIXTURES" | rg -v 'windows-service/src/wireguard.rs:[0-9]+://! ABI source: https://git[.]zx2c4[.]com/wireguard-nt/tree/api/wireguard[.]h$' | rg -v '(features/settings/VpsUpdateDialog.test.tsx|installer/src/release_update/tests.rs|server/src/release_update/policy/tests.rs):[0-9]+:.*https?://(user:pass@)?releases[.]example/' | rg -v 'src/format.ts:[0-9]+:      const address = new URL\(`http://\[\$\{host\}\]`\).hostname;$' | rg -v \
   'management.rs:.*https://\{\}:8443|installer/src/lib.rs:.*https://\{SERVER_TUNNEL_ADDRESS\}|freedesktop.org/standards/PolicyKit|src/assets/mountains.svg:1:<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 660" fill="none">$|core/src/management/tests.rs:[0-9]+:.*format!\("https://\{address\}"\)|core/src/management/status_stream/tests.rs:[0-9]+:.*format!\("https://\{\}", listener.local_addr\(\).unwrap\(\)\)' || true)
 if [ -n "$UNEXPECTED_URLS" ]; then
   printf '%s\n' "$UNEXPECTED_URLS" >&2

@@ -268,6 +268,40 @@ pub(super) async fn update_dns_blocklist(
 }
 
 #[tauri::command]
+pub(super) async fn alert_settings(
+    app: tauri::AppHandle,
+    server_id: String,
+) -> Result<sirinvpn_protocol::AlertSettings, String> {
+    let session = crate::management_session::connected_read(&app, &server_id).await?;
+    session.read(session.alerts()).await
+}
+
+#[tauri::command]
+pub(super) async fn update_alerts(
+    app: tauri::AppHandle,
+    server_id: String,
+    policy: sirinvpn_protocol::AlertPolicy,
+) -> Result<sirinvpn_protocol::AlertSettings, String> {
+    crate::management_session::connected(&app, &server_id)
+        .await?
+        .update_alerts(&policy)
+        .await
+        .map_err(safe_error)
+}
+
+#[tauri::command]
+pub(super) async fn send_test_alert(
+    app: tauri::AppHandle,
+    server_id: String,
+) -> Result<sirinvpn_protocol::AlertTestResult, String> {
+    crate::management_session::connected(&app, &server_id)
+        .await?
+        .send_test_alert()
+        .await
+        .map_err(safe_error)
+}
+
+#[tauri::command]
 pub(super) async fn create_port_forward(
     app: tauri::AppHandle,
     input: PortForwardCreateInput,

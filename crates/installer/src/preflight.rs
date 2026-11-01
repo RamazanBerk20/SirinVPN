@@ -1,6 +1,6 @@
 //! Current VPS networking facts, collected only over the pinned SSH connection.
 use super::*;
-use sirinvpn_protocol::PortForwardProtocol;
+use sirinvpn_protocol::{PortForwardProtocol, public_ip_address as public_address};
 mod inspection;
 use inspection::*;
 
@@ -135,27 +135,6 @@ fn required_ports(transport: &TransportSetup, discovery_port: Option<u16>) -> Ve
         });
     }
     ports
-}
-
-fn public_address(address: IpAddr) -> bool {
-    match address {
-        IpAddr::V4(address) => {
-            let [a, b, c, _] = address.octets();
-            !address.is_private()
-                && !address.is_loopback()
-                && !address.is_link_local()
-                && a != 0
-                && a < 224
-                && !(a == 100 && (64..=127).contains(&b))
-                && !(a == 192 && b == 0 && (c == 0 || c == 2))
-                && !(a == 198 && (b == 18 || b == 19 || (b == 51 && c == 100)))
-                && !(a == 203 && b == 0 && c == 113)
-        }
-        IpAddr::V6(address) => {
-            let s = address.segments();
-            s[0] & 0xe000 == 0x2000 && !(s[0] == 0x2001 && s[1] == 0xdb8)
-        }
-    }
 }
 
 fn valid_interface(value: &str) -> bool {

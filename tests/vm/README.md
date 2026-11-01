@@ -27,7 +27,9 @@ in two Debian 13 QEMU guests. It checks provisioning, pinned SSH, guest Polkit,
 actual WireGuard traffic, all four transports, native DNS, DNS failure, turning
 DNS blocking on and off (the VPS downloads OISD Small), sharing a LAN behind the
 client as a subnet route (the VPS reaches it, the client keeps it under the
-kill switch), the on-demand leak test, IPv6 blocking, all four kill-switch/reconnect combinations, helper-supervisor restart,
+kill switch), VPS alerts (a test alert, then a problem and its recovery found by
+the real timer task and delivered to a loopback HTTPS receiver on the VPS that
+trusts a throwaway CA), the on-demand leak test, IPv6 blocking, all four kill-switch/reconnect combinations, helper-supervisor restart,
 process termination, automatic fallback, restart protection and removal. It also
 opens the packaged desktop in guest-only Xvfb, closes its real window and verifies
 that the tunnel remains connected. This covers window-close behavior, not the

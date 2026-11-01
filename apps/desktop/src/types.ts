@@ -467,6 +467,7 @@ export interface CurrentConfiguration {
   dns_blocklist_management_enabled?: boolean;
   wireguard_devices_enabled?: boolean;
   subnet_routes_enabled?: boolean;
+  alerts_enabled?: boolean;
 }
 
 export interface DnsBlocklistPolicy {
@@ -487,6 +488,31 @@ export interface DnsBlocklistSettings {
   };
   pending: boolean;
   presets: { name: string; url: string }[];
+}
+
+export interface AlertPolicy {
+  alert_url?: string;
+  format: "ntfy" | "webhook";
+  heartbeat_url?: string;
+  allow_private_addresses?: boolean;
+}
+
+export type AlertFailure = "address" | "connection" | "rejected";
+
+export interface AlertSettings {
+  policy: AlertPolicy;
+  status: {
+    checked_at_unix: number | null;
+    alert_sent_at_unix: number | null;
+    alert_failure: AlertFailure | null;
+    heartbeat_sent_at_unix: number | null;
+    heartbeat_failure: AlertFailure | null;
+  };
+}
+
+export interface AlertTestResult {
+  failure: AlertFailure | null;
+  http_status: number | null;
 }
 
 export interface RecoverySettings {

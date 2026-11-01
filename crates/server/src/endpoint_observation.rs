@@ -3,27 +3,7 @@
 use super::*;
 
 /// Conservative automatic selection; unusual allocations remain configurable.
-pub(crate) fn automatic_address(address: IpAddr) -> bool {
-    match address {
-        IpAddr::V4(address) => {
-            let [a, b, c, _] = address.octets();
-            a != 0
-                && a != 10
-                && a != 127
-                && a < 224
-                && !(a == 100 && (64..=127).contains(&b))
-                && !(a == 169 && b == 254)
-                && !(a == 172 && (16..=31).contains(&b))
-                && !(a == 192 && (b == 168 || (b == 0 && (c == 0 || c == 2))))
-                && !(a == 198 && (b == 18 || b == 19 || (b == 51 && c == 100)))
-                && !(a == 203 && b == 0 && c == 113)
-        }
-        IpAddr::V6(address) => {
-            let segments = address.segments();
-            segments[0] & 0xe000 == 0x2000 && !(segments[0] == 0x2001 && segments[1] == 0x0db8)
-        }
-    }
-}
+pub(crate) use sirinvpn_protocol::public_ip_address as automatic_address;
 
 fn assigned_addresses(bytes: &[u8]) -> Result<Vec<IpAddr>> {
     anyhow::ensure!(
