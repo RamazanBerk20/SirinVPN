@@ -89,6 +89,9 @@
   border-bottom: 0;
   padding-bottom: 0;
 }
+.preference-row .theme-choice {
+  flex: 0 0 min(240px, 55%);
+}
 .wifi-settings > .preference-row + .field {
   margin-top: 12px;
 }

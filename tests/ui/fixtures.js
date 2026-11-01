@@ -4,7 +4,7 @@ window.__sirinCommandArguments = [];
 let connectionPreferences = JSON.parse(localStorage.getItem("sirin-fixture-connection-preferences") || "{}");
 const defaultConnectionPreferences = { transport:"automatic", network_profile:"automatic", policy:{kill_switch:false,automatic_reconnect:false,connect_on_startup:false}, routing:{mode:"full_tunnel", included_routes:[], allow_lan:false} };
 let preferences = JSON.parse(localStorage.getItem("sirin-fixture-preferences") || "null") || {
-  start_on_login: false, launch_minimized: false, close_to_tray: false, notifications: false, animations: true
+  start_on_login: false, launch_minimized: false, close_to_tray: false, notifications: false, animations: true, theme: "dark"
 };
 const preferencesSnapshot = () => ({ preferences, startup_available: true,
   tray_available: true, notification_permission: "granted" });

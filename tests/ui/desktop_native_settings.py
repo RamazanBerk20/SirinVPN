@@ -64,13 +64,13 @@ with tempfile.TemporaryDirectory(prefix="desktop-native-", dir=OUTPUT) as direct
         assert initial["tray_available"] and initial["startup_available"], initial
         assert visible()
         original = initial["preferences"]
-        assert original == dict(start_on_login=False, launch_minimized=False, close_to_tray=False, notifications=False, animations=True)
+        assert original == dict(start_on_login=False, launch_minimized=False, close_to_tray=False, notifications=False, animations=True, theme="system")
         assert not (config / "autostart").exists()
         assert "Turn on notifications first" in inspector.invoke("test_notification", error=True)
         results.append("Safe defaults and disabled-notification guard")
         print("PASS defaults", flush=True)
 
-        selected = {**original, "start_on_login": True, "close_to_tray": True, "launch_minimized": True, "notifications": True, "animations": False}
+        selected = {**original, "start_on_login": True, "close_to_tray": True, "launch_minimized": True, "notifications": True, "animations": False, "theme": "light"}
         assert save(selected)["preferences"] == selected
         entry = config / "autostart/org.sirinvpn.client.desktop"
         assert entry.exists() and '" --autostart' in entry.read_text() and "%%f" in entry.read_text()

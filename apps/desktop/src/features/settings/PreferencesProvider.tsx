@@ -3,6 +3,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type ReactNode,
@@ -12,6 +13,7 @@ import { isAndroid } from "../../platform";
 import { errorMessage } from "../../lib/errors";
 import { t } from "../../i18n";
 import type { AppPreferences, PreferencesSnapshot } from "./preferences";
+import { followTheme } from "./theme";
 
 function usePreferencesController() {
   const [snapshot, setSnapshot] = useState<PreferencesSnapshot | null>(null);
@@ -58,8 +60,10 @@ function usePreferencesController() {
       delete document.documentElement.dataset.motion;
     };
   }, [snapshot?.preferences.animations]);
+  // Before the first paint, so a light system never flashes the dark palette.
+  useLayoutEffect(() => followTheme(snapshot?.preferences.theme), [snapshot?.preferences.theme]);
 
-  const change = async (key: keyof AppPreferences, value: boolean) => {
+  const change = async <K extends keyof AppPreferences>(key: K, value: AppPreferences[K]) => {
     if (!snapshot || inFlight.current) return;
     ++generation.current;
     setLoading(false);

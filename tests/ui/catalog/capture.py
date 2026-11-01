@@ -10,6 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from webkit_inspector import Inspector
 ROOT = Path(__file__).resolve().parents[3]
 OUT = Path(os.environ.get('SIRINVPN_CATALOG_OUTPUT', ROOT / 'target/screenshot-catalog-2026-09-20'))
+THEME = 'dark'
 
 class Engine:
     def __init__(self, platform, browser=False):
@@ -80,7 +81,7 @@ def run(engine, cases, resume=False, dry=False):
         result={**case,'platform':engine.platform,'success':False,'files':[],'data_source':'fictional API fixtures; unchanged production UI components','renderer':'Chromium preflight' if engine.browser else 'Native Tauri WebKitGTK'}
         try:
             if engine.browser: engine.page.wait_for_function('window.__catalog?.ready',timeout=10000)
-            engine.call('mount',{**case.get('state',{}),'platform':engine.platform})
+            engine.call('mount',{**case.get('state',{}),'platform':engine.platform,'theme':THEME})
             snapshot=engine.call('actions',case.get('actions',[]))
             required=set(case.get('required_calls',[])) | set(case.get('state',{}).get('errors',{})) | set(case.get('state',{}).get('holds',[]))
             for action in case.get('actions',[]):
@@ -130,8 +131,10 @@ def main():
     parser.add_argument('--resume',action='store_true')
     parser.add_argument('--filter',default='')
     parser.add_argument('--output',type=Path,default=OUT)
+    parser.add_argument('--theme',choices=['dark','light','system'],default=THEME)
     args=parser.parse_args()
     globals()["OUT"]=args.output.resolve()
+    globals()["THEME"]=args.theme
     cases=[c for c in scenarios(args.platform) if re.search(args.filter,c['family']+'/'+c['id'])]
     if not cases: parser.error('No scenarios matched the filter')
     engine=Engine(args.platform,args.browser)
