@@ -5,6 +5,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { api } from "../../api";
@@ -65,6 +66,30 @@ it("reviews DNS scope on a trusted host and preserves transport at the command b
   fireEvent.click(screen.getByRole("button", { name: t("vps.repair.action.apply") }));
   await screen.findByText(t("vps.repair.titleDoneDns"));
   expect(api.repairServer).toHaveBeenCalledWith(expect.objectContaining({ transport: null, dns_upstream: { mode: "recursive" }, private_dns_records: null, host_key_sha256: fingerprint }));
+  expect(vi.mocked(api.repairServer).mock.calls[0][0]).not.toHaveProperty("nat64_prefix");
+});
+
+it("keeps the VPS's NAT64 choice unless the Owner sets or turns it off", async () => {
+  const repairWith = async (choose: (group: HTMLElement) => void) => {
+    vi.mocked(api.repairServer).mockClear();
+    render(<RepairServerDialog profile={profile} open onOpenChange={vi.fn()} disconnected onCompleted={vi.fn().mockResolvedValue(undefined)} />);
+    const agent = await screen.findByRole("button", { name: t("ssh.auth.agent") });
+    await waitFor(() => expect(agent.matches(":disabled")).toBe(false));
+    fireEvent.click(agent);
+    choose(screen.getByRole("group", { name: t("dns.nat64.legend") }));
+    fireEvent.click(screen.getByRole("button", { name: t("vps.repair.action.repair") }));
+    await screen.findByText(t("vps.repair.titleDone"));
+    const input = vi.mocked(api.repairServer).mock.calls[0][0];
+    cleanup();
+    return input;
+  };
+  expect(await repairWith(() => undefined)).not.toHaveProperty("nat64_prefix");
+  expect(await repairWith((group) => fireEvent.click(within(group).getByRole("button", { name: t("dns.nat64.mode.clear") }))))
+    .toHaveProperty("nat64_prefix", null);
+  expect(await repairWith((group) => {
+    fireEvent.click(within(group).getByRole("button", { name: t("dns.nat64.mode.replace") }));
+    fireEvent.change(within(group).getByRole("textbox"), { target: { value: "64:ff9b::/96" } });
+  })).toHaveProperty("nat64_prefix", "64:ff9b::/96");
 });
 
 async function setup() {

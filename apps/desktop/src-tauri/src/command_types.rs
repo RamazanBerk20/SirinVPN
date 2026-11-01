@@ -31,8 +31,17 @@ pub(super) struct RepairInput {
     pub(super) dns_upstream: Option<DnsUpstream>,
     #[serde(default)]
     pub(super) private_dns_records: Option<Vec<PrivateDnsRecord>>,
+    /// Omitted keeps the VPS's NAT64 choice; `null` turns NAT64 off.
+    #[serde(default, deserialize_with = "present")]
+    pub(super) nat64_prefix: Option<Option<String>>,
     #[serde(default)]
     pub(super) transport: Option<sirinvpn_installer::TransportSetup>,
+}
+
+fn present<'de, D: serde::Deserializer<'de>>(
+    deserializer: D,
+) -> Result<Option<Option<String>>, D::Error> {
+    Option::deserialize(deserializer).map(Some)
 }
 
 impl Drop for ProvisionInput {
@@ -245,6 +254,8 @@ pub(super) struct ProvisionInput {
     pub(super) dns_upstream: DnsUpstream,
     #[serde(default)]
     pub(super) private_dns_records: Vec<PrivateDnsRecord>,
+    #[serde(default)]
+    pub(super) nat64_prefix: Option<String>,
     #[serde(default)]
     pub(super) transport: sirinvpn_installer::TransportSetup,
 }

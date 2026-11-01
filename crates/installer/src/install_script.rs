@@ -643,6 +643,7 @@ server:
   access-control: 127.0.0.0/8 allow
   access-control: 10.77.0.0/24 allow
 {ipv6_unbound}
+{unbound_dns64}
 {unbound_tls_configuration}
   verbosity: 0
   use-syslog: no
@@ -789,6 +790,7 @@ systemctl restart sirinvpn-dns-blocklist.path sirinvpn-dns-blocklist.timer
         ipv6_forward_rules = ipv6_forward_rules,
         ipv6_nat_table = ipv6_nat_table,
         ipv6_unbound = ipv6_unbound,
+        unbound_dns64 = unbound_dns64_configuration(request.nat64_prefix),
         unbound_tls_configuration = unbound_tls_configuration,
         unbound_forward_zone = unbound_forward_zone,
         leak_test_zone = leak_test_zone(),

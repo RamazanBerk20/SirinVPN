@@ -80,7 +80,7 @@ use sirinvpn_installer::{
 };
 use sirinvpn_installer::{
     RepairRequest, ServerBackupOutcome, ServerBackupRequest, ServerRestoreOutcome,
-    ServerRestoreRequest, new_identity_for_server,
+    ServerRestoreRequest, new_identity_for_server, parse_nat64_prefix,
 };
 use sirinvpn_protocol::{
     ConnectionState, NetworkProfile, PrivateDnsRecord, ServerEndpoint, ServerId, ServerProfile,

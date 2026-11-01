@@ -12,6 +12,7 @@ use transaction::*;
 mod ssh;
 use ssh::*;
 mod validation;
+pub use validation::parse_nat64_prefix;
 use validation::*;
 mod verification;
 use verification::*;
@@ -57,7 +58,7 @@ use ssh2::Session;
 use std::{
     fs,
     io::{Read, Write},
-    net::{IpAddr, Ipv4Addr, TcpStream, ToSocketAddrs},
+    net::{IpAddr, Ipv4Addr, Ipv6Addr, TcpStream, ToSocketAddrs},
     path::{Path, PathBuf},
     time::Duration,
 };
@@ -165,6 +166,8 @@ pub struct InstallRequest {
     pub transport: TransportSetup,
     pub dns_upstream: DnsUpstream,
     pub private_dns_records: Vec<PrivateDnsRecord>,
+    /// Members reach IPv4-only websites through this NAT64 /96 when the VPS has no IPv4.
+    pub nat64_prefix: Option<Ipv6Addr>,
     pub replace_existing_installation: bool,
 }
 
@@ -183,6 +186,8 @@ pub struct RepairRequest {
     pub identity: PublicIdentity,
     pub dns_upstream: Option<DnsUpstream>,
     pub private_dns_records: Option<Vec<PrivateDnsRecord>>,
+    /// `None` keeps the VPS's current NAT64 prefix; `Some(None)` turns NAT64 off.
+    pub nat64_prefix: Option<Option<Ipv6Addr>>,
     pub transport: Option<TransportSetup>,
 }
 
@@ -401,7 +406,8 @@ impl Provisioner {
             "Checking operating system, architecture, SSH, and network compatibility.",
         ));
         check_compatibility(&discovery)?;
-        ensure_dns_upstream_compatible(&request.dns_upstream, discovery.ipv6_available)?;
+        ensure_dns_upstream_compatible(&request.dns_upstream, &discovery)?;
+        ensure_nat64_compatible(request.nat64_prefix, &discovery)?;
         if discovery.sirinvpn_installed
             && !request.replace_existing_installation
             && !existing_owner_matches(&session, &request)?
@@ -469,9 +475,14 @@ impl Provisioner {
             .private_dns_records
             .clone()
             .unwrap_or(existing.private_dns_records);
-        ensure_dns_upstream_compatible(&dns_upstream, discovery.ipv6_available)?;
+        ensure_dns_upstream_compatible(&dns_upstream, &discovery)?;
         validate_private_dns_records(&private_dns_records)
             .map_err(|error| InstallerError::InvalidInput(error.to_string()))?;
+        let nat64_prefix = match request.nat64_prefix {
+            Some(choice) => choice,
+            None => installed_nat64_prefix(&session, &request.target)?,
+        };
+        ensure_nat64_compatible(nat64_prefix, &discovery)?;
 
         let install_request = InstallRequest {
             server_id: request.profile.id,
@@ -486,6 +497,7 @@ impl Provisioner {
                 .unwrap_or_else(|| TransportSetup::from_profile(&request.profile)),
             dns_upstream,
             private_dns_records,
+            nat64_prefix,
             replace_existing_installation: false,
         };
         let outcome = stage_and_install(
@@ -616,7 +628,7 @@ impl Provisioner {
             backup.metadata().ipv6_tunnel_enabled,
             discovery.ipv6_available,
         )?;
-        ensure_dns_upstream_compatible(&backup.metadata().dns_upstream, discovery.ipv6_available)?;
+        ensure_dns_upstream_compatible(&backup.metadata().dns_upstream, &discovery)?;
         let target_occupied = restore_target_has_sirinvpn_state(&session, &request.target)?;
         if target_occupied && !request.replace_existing_installation {
             return Err(InstallerError::RestoreTargetOccupied);
@@ -635,6 +647,8 @@ impl Provisioner {
             },
             dns_upstream: backup.metadata().dns_upstream.clone(),
             private_dns_records: backup.metadata().private_dns_records.clone(),
+            // The backup holds no NAT64 choice; Repair turns it on again on a VPS without IPv4.
+            nat64_prefix: None,
             replace_existing_installation: request.replace_existing_installation,
         };
         let outcome = stage_and_install(
@@ -650,7 +664,9 @@ impl Provisioner {
                     .endpoint_discovery_port
                     .or_else(|| backup.metadata().tls_like.as_ref().map(|tls| tls.port)),
                 owner_client_tunnel_address: request.profile.client_tunnel_address,
-                ipv6_tunnel_enabled: backup.metadata().ipv6_tunnel_enabled,
+                // As Repair does: without IPv4, the tunnel's IPv6 is the only way out.
+                ipv6_tunnel_enabled: backup.metadata().ipv6_tunnel_enabled
+                    || !discovery.ipv4_available,
             },
         )?;
         let mut profile = restored_local_profile(&request.profile, &outcome.profile);
@@ -737,6 +753,7 @@ pub fn default_install_request(
         transport: TransportSetup::default(),
         dns_upstream: DnsUpstream::Recursive,
         private_dns_records: Vec::new(),
+        nat64_prefix: None,
         replace_existing_installation: false,
     }
 }

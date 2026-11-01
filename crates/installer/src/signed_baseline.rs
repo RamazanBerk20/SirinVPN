@@ -247,6 +247,7 @@ impl Provisioner {
             identity: request.identity.clone(),
             dns_upstream: None,
             private_dns_records: None,
+            nat64_prefix: None,
             transport: None,
         })?;
         let session = verified_session(&request)?;

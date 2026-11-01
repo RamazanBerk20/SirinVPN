@@ -132,21 +132,26 @@ pub(super) fn parse_discovery(output: &str) -> anyhow::Result<ServerDiscovery> {
                 .chars()
                 .all(|character| character.is_ascii_alphanumeric() || "_.:-".contains(character))
     };
-    let default_interface = value("default_interface")?.to_owned();
-    if default_interface.is_empty() && !boolean("ipv4_available")? {
-        bail!("the VPS has no IPv4 default route for Internet forwarding");
-    }
-    if !valid_interface(&default_interface) {
-        bail!("default network interface is invalid");
-    }
     let ipv6_default_interface = match value("ipv6_default_interface")? {
         "" => None,
         interface if valid_interface(interface) => Some(interface.to_owned()),
         _ => bail!("IPv6 default network interface is invalid"),
     };
+    let ipv4_available = boolean("ipv4_available")?;
     let ipv6_available = boolean("ipv6_available")?;
     if ipv6_available && ipv6_default_interface.is_none() {
         bail!("IPv6 availability requires a default network interface");
+    }
+    // Without IPv4 the IPv6 uplink is the external interface: the IPv4 rules on it stay inert.
+    let default_interface = match value("default_interface")? {
+        "" if !ipv4_available && ipv6_available => {
+            ipv6_default_interface.clone().unwrap_or_default()
+        }
+        "" => bail!("the VPS has no IPv4 or global IPv6 default route for Internet forwarding"),
+        interface => interface.to_owned(),
+    };
+    if !valid_interface(&default_interface) {
+        bail!("default network interface is invalid");
     }
     Ok(ServerDiscovery {
         os_id: value("os_id")?.to_owned(),
@@ -160,7 +165,7 @@ pub(super) fn parse_discovery(output: &str) -> anyhow::Result<ServerDiscovery> {
         ssh_local_address: value("ssh_local_address")
             .ok()
             .and_then(|address| address.parse().ok()),
-        ipv4_available: boolean("ipv4_available")?,
+        ipv4_available,
         ipv6_available,
         nftables_available: boolean("nftables_available")?,
         wireguard_available: boolean("wireguard_available")?,
@@ -183,9 +188,22 @@ pub(super) fn check_compatibility(discovery: &ServerDiscovery) -> Result<(), Ins
             "P0 supports amd64 and arm64 servers only".to_owned(),
         ));
     }
-    if !discovery.ipv4_available {
+    Ok(())
+}
+
+/// NAT64 exists only to reach IPv4 from a VPS that has none; with native IPv4 it would just
+/// detour members' traffic through someone else's gateway.
+pub(super) fn ensure_nat64_compatible(
+    nat64_prefix: Option<Ipv6Addr>,
+    discovery: &ServerDiscovery,
+) -> Result<(), InstallerError> {
+    let Some(prefix) = nat64_prefix else {
+        return Ok(());
+    };
+    validate_nat64_prefix(prefix)?;
+    if discovery.ipv4_available {
         return Err(InstallerError::Incompatible(
-            "an IPv4 default route is required for P0".to_owned(),
+            "the VPS has IPv4, so it reaches IPv4 websites directly; turn NAT64 off".to_owned(),
         ));
     }
     Ok(())
@@ -219,27 +237,51 @@ pub(super) fn ensure_restore_ipv6_compatible(
 
 pub(super) fn ensure_dns_upstream_compatible(
     dns_upstream: &DnsUpstream,
-    ipv6_available: bool,
+    discovery: &ServerDiscovery,
 ) -> Result<(), InstallerError> {
-    let requires_ipv6 = match dns_upstream {
+    let (requires_ipv6, secure_ipv4) = match dns_upstream {
         DnsUpstream::Split { default, zones } => {
-            ensure_dns_upstream_compatible(default, ipv6_available)?;
-            zones
-                .iter()
-                .flat_map(|zone| zone.addresses())
-                .any(|address| address.is_ipv6())
+            ensure_dns_upstream_compatible(default, discovery)?;
+            // Private zone servers may sit behind a subnet route, so only public
+            // DNS-over-TLS servers need the VPS's own IPv4 route.
+            let secure_ipv4 = zones.iter().any(|zone| {
+                matches!(&zone.upstream, sirinvpn_protocol::SplitDnsUpstream::DnsOverTls { endpoints }
+                    if endpoints.iter().any(|endpoint| endpoint.address.is_ipv4()))
+            });
+            (
+                zones
+                    .iter()
+                    .flat_map(|zone| zone.addresses())
+                    .any(|address| address.is_ipv6()),
+                secure_ipv4,
+            )
         }
-        DnsUpstream::Recursive => false,
-        DnsUpstream::DnsOverTls { endpoints } => {
-            endpoints.iter().any(|endpoint| endpoint.address.is_ipv6())
+        DnsUpstream::Recursive => {
+            if !discovery.ipv4_available {
+                return Err(InstallerError::Incompatible(
+                    "a VPS without IPv4 cannot resolve names recursively because many nameservers have only IPv4 addresses; choose DNS-over-TLS or DNS-over-HTTPS with IPv6 resolver addresses".to_owned(),
+                ));
+            }
+            (false, false)
         }
-        DnsUpstream::DnsOverHttps { endpoints } => {
-            endpoints.iter().any(|endpoint| endpoint.address.is_ipv6())
-        }
+        DnsUpstream::DnsOverTls { endpoints } => (
+            endpoints.iter().any(|endpoint| endpoint.address.is_ipv6()),
+            endpoints.iter().any(|endpoint| endpoint.address.is_ipv4()),
+        ),
+        DnsUpstream::DnsOverHttps { endpoints } => (
+            endpoints.iter().any(|endpoint| endpoint.address.is_ipv6()),
+            endpoints.iter().any(|endpoint| endpoint.address.is_ipv4()),
+        ),
     };
-    if !ipv6_available && requires_ipv6 {
+    if !discovery.ipv6_available && requires_ipv6 {
         return Err(InstallerError::Incompatible(
             "an IPv6 secure-DNS endpoint requires a usable IPv6 route on the VPS".to_owned(),
+        ));
+    }
+    if !discovery.ipv4_available && secure_ipv4 {
+        return Err(InstallerError::Incompatible(
+            "the VPS has no IPv4 route, so its secure-DNS endpoints must use IPv6 addresses"
+                .to_owned(),
         ));
     }
     Ok(())

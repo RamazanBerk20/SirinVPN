@@ -267,6 +267,10 @@ pub async fn dispatch(
                 )?,
                 dns_upstream: serde_json::from_value(input["dns_upstream"].clone())?,
                 private_dns_records: serde_json::from_value(input["private_dns_records"].clone())?,
+                nat64_prefix: input["nat64_prefix"]
+                    .as_str()
+                    .map(sirinvpn_installer::parse_nat64_prefix)
+                    .transpose()?,
                 replace_existing_installation: input["replace_existing_installation"]
                     .as_bool()
                     .unwrap_or(false),
@@ -334,6 +338,17 @@ pub async fn dispatch(
                     .get("private_dns_records")
                     .filter(|v| !v.is_null())
                     .map(|v| serde_json::from_value(v.clone()))
+                    .transpose()?,
+                // Omitted keeps the VPS's NAT64 choice; `null` turns NAT64 off.
+                nat64_prefix: input
+                    .get("nat64_prefix")
+                    .map(|v| {
+                        serde_json::from_value::<Option<String>>(v.clone())?
+                            .as_deref()
+                            .map(sirinvpn_installer::parse_nat64_prefix)
+                            .transpose()
+                            .map_err(anyhow::Error::from)
+                    })
                     .transpose()?,
                 transport: input
                     .get("transport")

@@ -25,12 +25,15 @@ import { t } from "../../i18n";
 import {
   type DnsPolicyChoice,
   type PrivateDnsRecordChoice,
+  type Nat64Choice,
   type DnsEndpointDraft,
   newDnsEndpointDrafts,
   dnsDraftIsValid,
   dnsUpstreamFromDraft,
   PrivateDnsRecordFields,
   DnsPolicyFields,
+  Nat64Fields,
+  nat64PrefixIsValid,
 } from "../dns/DnsFields";
 
 export function RepairServerDialog({
@@ -65,6 +68,8 @@ export function RepairServerDialog({
     useState<PrivateDnsRecordChoice>("preserve");
   const [privateDnsRecords, setPrivateDnsRecords] = useState("");
   const [splitDns, setSplitDns] = useState("");
+  const [nat64Choice, setNat64Choice] = useState<Nat64Choice>("preserve");
+  const [nat64Prefix, setNat64Prefix] = useState("");
   const [transport, setTransport] = useState(() => newTransportDraft(profile));
   const [result, setResult] = useState<RepairResult | null>(null);
   const [busy, setBusy] = useState(false);
@@ -89,6 +94,8 @@ export function RepairServerDialog({
       setPrivateDnsChoice("preserve");
       setPrivateDnsRecords("");
       setSplitDns("");
+      setNat64Choice("preserve");
+      setNat64Prefix("");
       setTransport(newTransportDraft(profile));
       setResult(null);
       setError(null);
@@ -108,7 +115,8 @@ export function RepairServerDialog({
     dnsDraftIsValid(dnsChoice, dnsEndpoints) &&
     (dnsChoice === "preserve" || splitDnsDraftIsValid(splitDns)) &&
     (privateDnsChoice !== "replace" ||
-      privateDnsDraftIsValid(privateDnsRecords, false));
+      privateDnsDraftIsValid(privateDnsRecords, false)) &&
+    (nat64Choice !== "replace" || nat64PrefixIsValid(nat64Prefix));
 
   const updateDnsEndpoint = (
     index: number,
@@ -170,6 +178,9 @@ export function RepairServerDialog({
             : privateDnsChoice === "clear"
               ? []
               : privateDnsRecordsFromDraft(privateDnsRecords),
+        ...(intent !== "dns" && nat64Choice !== "preserve" && {
+          nat64_prefix: nat64Choice === "replace" ? nat64Prefix.trim() : null,
+        }),
       });
       clearSecrets();
       await onCompleted();
@@ -245,6 +256,7 @@ export function RepairServerDialog({
                   onValueChange={setPrivateDnsRecords}
                 />
                 {dnsChoice !== "preserve" && <SplitDnsFields value={splitDns} onChange={setSplitDns} />}
+                {intent !== "dns" && <Nat64Fields choice={nat64Choice} value={nat64Prefix} allowPreserve onChoiceChange={setNat64Choice} onValueChange={setNat64Prefix} />}
                 {intent !== "dns" && <p className="settings-note">{t("vps.repair.note")}</p>}
                 {error ? <InlineError message={error} /> : null}
               </fieldset>

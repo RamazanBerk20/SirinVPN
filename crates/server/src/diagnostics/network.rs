@@ -7,10 +7,11 @@ use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 pub(super) async fn inspect(config: &ServerConfiguration) -> Vec<DiagnosticCheck> {
     let port_args = ["show", &config.interface_name, "listen-port"];
     let key_args = ["show", &config.interface_name, "public-key"];
-    let (port, key, routes, filter, nat4, nat6) = tokio::join!(
+    let (port, key, routes, routes6, filter, nat4, nat6) = tokio::join!(
         output("wg", &port_args),
         output("wg", &key_args),
         output("ip", &["-j", "-4", "route", "show", "table", "main"]),
+        output("ip", &["-j", "-6", "route", "show", "default"]),
         output("nft", &["-j", "list", "table", "inet", "sirinvpn_filter"]),
         output("nft", &["-j", "list", "table", "ip", "sirinvpn_nat"]),
         async {
@@ -28,8 +29,13 @@ pub(super) async fn inspect(config: &ServerConfiguration) -> Vec<DiagnosticCheck
         .map(|(port, key)| {
             port == config.wireguard_port && key.trim() == config.wireguard_public_key
         });
-    let routes = json(routes)
-        .and_then(|value| route_state(&value, &config.interface_name, &config.tunnel_cidr));
+    // A VPS without IPv4 leaves only through its IPv6 default route.
+    let routes = json(routes).and_then(|mut value| {
+        if let (Some(rows), Some(Value::Array(ipv6))) = (value.as_array_mut(), json(routes6)) {
+            rows.extend(ipv6);
+        }
+        route_state(&value, &config.interface_name, &config.tunnel_cidr)
+    });
     let filter = json(filter).and_then(|value| filter_state(&value, &config.interface_name));
     let nat4 =
         json(nat4).and_then(|value| nat_state(&value, "ip", "sirinvpn_nat", &config.tunnel_cidr));
@@ -52,7 +58,7 @@ pub(super) async fn inspect(config: &ServerConfiguration) -> Vec<DiagnosticCheck
             "server_routes",
             "VPS routes",
             routes,
-            "The main routing table has an external default route and the configured tunnel subnet route.",
+            "The main routing table has an external IPv4 or IPv6 default route and the configured tunnel subnet route.",
             "The external default route or tunnel subnet route is missing. Check VPS networking and use server repair for the tunnel route.",
         ),
         condition(

@@ -78,7 +78,7 @@ fn sanitize_check(value: &DiagnosticCheck) -> Option<DiagnosticCheck> {
         ),
         "server_routes" => (
             "VPS routes",
-            "The main routing table has an external default route and the configured tunnel subnet route.",
+            "The main routing table has an external IPv4 or IPv6 default route and the configured tunnel subnet route.",
             "The external default route or tunnel subnet route is missing. Check VPS networking and use server repair for the tunnel route.",
         ),
         "server_firewall" => (

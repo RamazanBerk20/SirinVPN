@@ -87,6 +87,64 @@ fn public_nat_and_private_addresses_have_distinct_actionable_reports() {
 }
 
 #[test]
+fn an_ipv6_only_vps_is_installable_and_names_the_ipv4_trade_off() {
+    let assigned = serde_json::json!([{"ifname":"enp1s0","addr_info":[{"local":"2a01:4f8:c0c:1::4","prefixlen":64},{"local":"fe80::1","prefixlen":64}]}]);
+    let raw = output(
+        assigned,
+        serde_json::json!([]),
+        serde_json::json!([]),
+        "",
+        "",
+    );
+    let ipv6_only = ServerDiscovery {
+        default_interface: "enp1s0".into(),
+        ipv6_default_interface: Some("enp1s0".into()),
+        ipv4_available: false,
+        ipv6_available: true,
+        ..discovery()
+    };
+    let report = analyze(
+        &ipv6_only,
+        "2a01:4f8:c0c:1::4",
+        vec!["2a01:4f8:c0c:1::4".parse().unwrap()],
+        required_ports(&TransportSetup::default(), None),
+        &raw,
+    )
+    .unwrap();
+    assert_eq!(report.exposure, AddressExposure::PublicInterface);
+    assert!(report.can_install());
+    let notice = report
+        .issues
+        .iter()
+        .find(|issue| issue.code == "ipv6_only")
+        .unwrap();
+    assert!(!notice.blocking);
+    for trade_off in [
+        "networks with IPv6",
+        "CDN",
+        "NAT64 prefix",
+        "operator sees",
+        "IPv6 resolver",
+    ] {
+        assert!(notice.message.contains(trade_off), "{trade_off}");
+    }
+    let dual_stack = analyze(
+        &discovery(),
+        "8.8.8.8",
+        vec!["8.8.8.8".parse().unwrap()],
+        Vec::new(),
+        &raw,
+    )
+    .unwrap();
+    assert!(
+        dual_stack
+            .issues
+            .iter()
+            .all(|issue| issue.code != "ipv6_only")
+    );
+}
+
+#[test]
 fn occupied_ports_are_protocol_specific_and_preserve_managed_listeners() {
     let raw = output(
         serde_json::json!([]),

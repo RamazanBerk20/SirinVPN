@@ -31,6 +31,8 @@ import {
   dnsUpstreamFromDraft,
   PrivateDnsRecordFields,
   DnsPolicyFields,
+  Nat64Fields,
+  nat64PrefixIsValid,
 } from "../dns/DnsFields";
 
 export function SetupFlow({
@@ -59,6 +61,9 @@ export function SetupFlow({
   const [result, setResult] = useState<ProvisionResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [preflight, setPreflight] = useState<NetworkPreflight | null>(null);
+  const [nat64Prefix, setNat64Prefix] = useState("");
+  const ipv6Only = preflight?.issues.some((issue) => issue.code === "ipv6_only") ?? false;
+  const nat64 = ipv6Only ? nat64Prefix.trim() : "";
   // The backend saves the profile once provisioning succeeds. Until "Open
   // server" hands it to the app, report it on unmount so it is never lost.
   const unopened = useRef<ProvisionResult | null>(null);
@@ -151,6 +156,7 @@ export function SetupFlow({
             ? dnsUpstreamFromDraft(dnsChoice, dnsEndpoints)
             : { mode: "recursive" }, splitDns),
         private_dns_records: privateDnsRecordsFromDraft(privateDnsRecords),
+        nat64_prefix: nat64 || null,
       });
       login.clearSecrets();
       if (!mounted.current) {
@@ -239,12 +245,13 @@ export function SetupFlow({
           </div>
         ) : null}
         {preflight && <ServerNetworkPreflight report={preflight} />}
+        {ipv6Only && <Nat64Fields choice="replace" value={nat64Prefix} allowPreserve={false} onChoiceChange={() => undefined} onValueChange={setNat64Prefix} />}
         {error && <InlineError message={error} />}
         <div className="fingerprint-actions">
           <button className={preflight ? "secondary-button" : "primary-button"} disabled={busy} onClick={() => void inspectNetwork()}>
             {busy ? t("onboarding.setup.fingerprint.checking") : preflight ? t("onboarding.setup.fingerprint.checkAgain") : t("onboarding.setup.fingerprint.matches")}
           </button>
-          {preflight && <button className="primary-button" disabled={busy || preflight.issues.some((issue) => issue.blocking)} onClick={() => void provision()}>
+          {preflight && <button className="primary-button" disabled={busy || preflight.issues.some((issue) => issue.blocking) || (nat64 !== "" && !nat64PrefixIsValid(nat64))} onClick={() => void provision()}>
             {replaceExistingInstallation ? t("onboarding.setup.fingerprint.replace") : t("onboarding.setup.fingerprint.install")}
           </button>}
         </div>

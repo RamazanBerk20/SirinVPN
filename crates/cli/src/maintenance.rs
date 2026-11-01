@@ -125,6 +125,11 @@ pub(super) fn repair_server(
         identity,
         dns_upstream: arguments.dns.requested(),
         private_dns_records: arguments.private_dns.requested(),
+        nat64_prefix: if arguments.no_nat64 {
+            Some(None)
+        } else {
+            arguments.nat64_prefix.map(Some)
+        },
     })?;
     if profile.endpoint != outcome.endpoint
         || profile.endpoint_generation != outcome.endpoint_generation

@@ -1,5 +1,6 @@
 use super::*;
 use sirinvpn_protocol::DEFAULT_TLS_LIKE_PORT;
+mod ipv6_only;
 mod split_dns;
 
 mod maintenance_recovery;
@@ -27,6 +28,25 @@ fn install_script(
             preserves_signed_release: false,
         },
     )
+}
+
+/// A Debian 13 VPS on eth0 with the given address families.
+fn stack(ipv4_available: bool, ipv6_available: bool) -> ServerDiscovery {
+    ServerDiscovery {
+        os_id: "debian".into(),
+        os_version: "13".into(),
+        architecture: "x86_64".into(),
+        default_interface: "eth0".into(),
+        ipv6_default_interface: ipv6_available.then(|| "eth0".into()),
+        ssh_server_port: 22,
+        ssh_local_address: None,
+        ipv4_available,
+        ipv6_available,
+        nftables_available: true,
+        wireguard_available: true,
+        unbound_installed: false,
+        sirinvpn_installed: false,
+    }
 }
 
 fn script_transaction(

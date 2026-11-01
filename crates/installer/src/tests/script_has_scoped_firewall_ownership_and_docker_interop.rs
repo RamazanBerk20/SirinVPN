@@ -23,6 +23,7 @@ fn script_has_scoped_firewall_ownership_and_docker_interop() {
         },
         dns_upstream: DnsUpstream::Recursive,
         private_dns_records: Vec::new(),
+        nat64_prefix: None,
         replace_existing_installation: false,
     };
     let discovery = ServerDiscovery {

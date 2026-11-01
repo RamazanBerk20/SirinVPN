@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { api } from "../../api";
 import type { NetworkPreflight, ProvisionResult } from "../../types";
@@ -42,6 +42,21 @@ it("has one fingerprint confirmation and reviews the network before offering ins
   const install = await screen.findByRole("button", { name: t("onboarding.setup.fingerprint.install") });
   expect((install as HTMLButtonElement).disabled).toBe(false);
   expect(api.provisionServer).not.toHaveBeenCalled();
+  expect(screen.queryByRole("group", { name: t("dns.nat64.legend") })).toBeNull();
+});
+
+it("offers NAT64 for a VPS without IPv4 and sends only a well-formed prefix", async () => {
+  vi.mocked(api.inspectServerNetwork).mockResolvedValue({ ...report, issues: [{ code: "ipv6_only", blocking: false, message: "This VPS has no IPv4." }] });
+  vi.mocked(api.provisionServer).mockResolvedValue(provisioned);
+  fireEvent.click(await verifyHost());
+  const install = await screen.findByRole("button", { name: t("onboarding.setup.fingerprint.install") }) as HTMLButtonElement;
+  const prefix = within(screen.getByRole("group", { name: t("dns.nat64.legend") })).getByRole("textbox");
+  expect(install.disabled).toBe(false);
+  fireEvent.change(prefix, { target: { value: "nat64.example" } });
+  expect(install.disabled).toBe(true);
+  fireEvent.change(prefix, { target: { value: " 2a00:1098:2b::/96 " } });
+  fireEvent.click(install);
+  await waitFor(() => expect(api.provisionServer).toHaveBeenCalledWith(expect.objectContaining({ nat64_prefix: "2a00:1098:2b::/96" })));
 });
 
 it("prevents installation when the inspected network has a blocking conflict", async () => {

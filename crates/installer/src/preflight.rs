@@ -256,6 +256,9 @@ fn analyze(
         AddressExposure::PrivateEndpoint => report.issue(false, "private_endpoint", "The VPN address is private or local. It will work only from networks that can route to it. Set a public VPN address for access from the Internet.".into()),
         AddressExposure::PublicInterface => {}
     }
+    if !discovery.ipv4_available {
+        report.issue(false, "ipv6_only", "This VPS has no IPv4. Devices can connect only from networks with IPv6, or through a CDN in HTTPS CDN mode. Members reach IPv6 websites; IPv4-only websites fail unless you set a NAT64 prefix, and then that NAT64 gateway's operator sees which IPv4 addresses members visit. The VPS's DNS must use DNS-over-TLS or DNS-over-HTTPS with IPv6 resolver addresses.".into());
+    }
     check_listeners(
         discovery,
         &mut report,

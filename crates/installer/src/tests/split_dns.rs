@@ -24,7 +24,7 @@ fn split_dns_policy_is_preserved_in_init_and_verified_without_global_fallback() 
     assert!(!forwarding.contains("forward-first: yes"));
     assert!(server_dns_init_arguments(&policy, &[]).contains("--dns-policy-json"));
     assert!(unbound_dns_verification(&policy, &[]).contains("split DNS configuration differs"));
-    assert!(ensure_dns_upstream_compatible(&policy, false).is_ok());
+    assert!(ensure_dns_upstream_compatible(&policy, &stack(true, false)).is_ok());
 }
 
 #[test]
