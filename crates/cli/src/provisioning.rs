@@ -250,6 +250,8 @@ pub(super) async fn create_hetzner_server(
                     transport: arguments.transport.requested(None)?.unwrap_or_default(),
                     dns_upstream: arguments.dns.requested().unwrap_or_default(),
                     private_dns_records: arguments.private_dns_record,
+                    // Hetzner servers come with IPv4, so NAT64 never applies.
+                    nat64_prefix: None,
                     replace_existing_installation: false,
                 },
                 &identity.secret,
