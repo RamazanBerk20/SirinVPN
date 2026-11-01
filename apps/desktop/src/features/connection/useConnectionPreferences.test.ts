@@ -140,6 +140,11 @@ describe("saved connection preferences", () => {
         "a",
       ),
     ).toEqual([]);
+    // Android owns blocking and startup, and reconnect applies at once: no "next connection" difference.
+    const android = { ...local, kill_switch_enabled: false, auto_reconnect_enabled: false, connect_on_startup: false, application_routing_backend: "android_packages" as const };
+    const policy = { kill_switch: true, automatic_reconnect: true, connect_on_startup: true };
+    expect(preferenceDifferences({ ...defaults, policy }, android, "a")).toEqual([]);
+    expect(preferenceDifferences({ ...defaults, policy }, { ...android, application_routing_backend: "linux_namespace" as const }, "a")).toHaveLength(3);
   });
 });
 

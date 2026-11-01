@@ -27,7 +27,8 @@
     "policy": {
       "kill_switch": {
         "label": "Kill switch",
-        "summary": "Blocks internet if the VPN drops, until you disconnect"
+        "summary": "Blocks internet if the VPN drops, until you disconnect",
+          "nextConnection": "Saved, but not active yet: it turns on when you reconnect. Until then, traffic isn’t blocked if the VPN drops."
       },
       "automatic_reconnect": {
         "label": "Automatic reconnect",

@@ -32,6 +32,9 @@ def adapt(case):
             actions[index] = {'text': MODES[action['text']], 'exact': False, 'or': dict(action)}
         if action.get('text') == 'Add server' and index == 0:
             actions.insert(0, {'text': 'Servers'})
+        # The VPN address copy button lives in the collapsed Device details on Home.
+        if action.get('text') == 'Copy VPN address' and not (index and actions[index - 1].get('details')):
+            actions.insert(index, {'details': 'open'})
         if action.get('text') == 'Access policy' and index and actions[index - 1].get('text') == 'Family':
             actions.insert(index, {'text': 'Member actions for Family', 'android': True})
     # Provisioning steps that start on the desktop's default form first pick "Set up my VPS" where a choice list shows.

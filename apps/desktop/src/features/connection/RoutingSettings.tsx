@@ -1,5 +1,4 @@
 import { PreferencesPending } from "./PreferenceSaveBar";
-import { Check } from "@phosphor-icons/react";
 import type { ServerWorkspaceModel } from "./useServerWorkspace";
 import { ApplicationLauncher } from "./ApplicationLauncher";
 import { invoke, isAndroid } from "../../platform";
@@ -75,7 +74,7 @@ export function RoutingSettings({ model }: { model: ServerWorkspaceModel }) {
                 <strong>{label}</strong>
                 <small>{hint}</small>
               </span>
-              {routingMode === value && <Check size={18} aria-hidden="true" />}
+              
             </label>
           ))}
         </div>

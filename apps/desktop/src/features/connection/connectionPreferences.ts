@@ -67,7 +67,9 @@ export function preferenceDifferences(
     saved.transport !== local.transport
   )
     differences.push(t("connection.differences.method", { method: formatTransport(local.transport) }));
-  for (const [key, actual] of [
+  // On Android the system owns blocking and startup, and automatic reconnect applies at once: none waits for a reconnect.
+  const android = local.application_routing_backend === "android_packages";
+  for (const [key, actual] of android ? [] : [
     ["kill_switch", local.kill_switch_enabled],
     ["automatic_reconnect", local.auto_reconnect_enabled],
     ["connect_on_startup", local.connect_on_startup],

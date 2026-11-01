@@ -86,7 +86,7 @@ export function DnsBlocklistSettings({ profile, connected, canManage }: { profil
         <Field label={t("dns.blocklist.allowlist")} hint={t("dns.blocklist.allowlistHint")} error={allowInvalid ? t("dns.blocklist.allowlistInvalid") : undefined}>
           <textarea rows={3} spellCheck={false} value={allow} onChange={(event) => setAllow(event.target.value)} />
         </Field>
-        {statusText && <p>{statusText}</p>}
+        {statusText && <p className={status?.failure ? "warning-note" : undefined} role="status">{statusText}</p>}
       </div>
       <div className="settings-action-row">
         <button className="secondary-button" onClick={() => void refresh()} disabled={busy}>{t("dns.blocklist.refresh")}</button>
