@@ -1,4 +1,4 @@
-import type { SavedSshLogin, SshLoginInput, WifiPolicySnapshot } from "./types";
+import type { CreatedHetznerServer, HetznerAddresses, HetznerCatalog, HetznerServer, SavedSshLogin, SshLoginInput, WifiPolicySnapshot } from "./types";
 import type { VpsReleaseInput, VpsBaselineAccess, VpsBaselineCandidate } from "./features/settings/vpsRelease";
 import { Channel } from "@tauri-apps/api/core";
 import { invoke, isAndroid, watchAndroidStatus, watchAndroidServerStatus } from "./platform";
@@ -126,6 +126,15 @@ export const api = {
   forgetSshLogin: (host: string) => invoke<void>("forget_ssh_login", { host }),
   provisionServer: (input: ProvisionInput) =>
     invoke<ProvisionResult>("provision_server", { input }),
+  hetznerCatalog: (apiToken: string) =>
+    invoke<HetznerCatalog>("hetzner_catalog", { apiToken }),
+  createHetznerServer: (apiToken: string, request: { location: string; server_type: string; accepted_monthly_price: string }) =>
+    invoke<CreatedHetznerServer>("create_hetzner_server", { apiToken, request }),
+  waitHetznerServer: (apiToken: string, server: HetznerServer) =>
+    invoke<HetznerAddresses>("wait_hetzner_server", { apiToken, server }),
+  cancelHetznerWait: () => invoke<void>("cancel_hetzner_wait"),
+  deleteHetznerServer: (apiToken: string, server: HetznerServer) =>
+    invoke<void>("delete_hetzner_server", { apiToken, server }),
   removeServer: (serverId: string) =>
     invoke<void>("remove_server", { serverId }),
   exportServerBackup: (

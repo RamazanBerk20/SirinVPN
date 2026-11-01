@@ -39,7 +39,10 @@ Screenshots use fictional profiles and example data.
 
 - **Set up your own server.** Provision a Debian 13 or Ubuntu 24.04 LTS VPS over SSH, verify its host
   fingerprint, review its network before installation, and manage SirinVPN-owned
-  services and firewall rules.
+  services and firewall rules. Or let SirinVPN
+  [create one on Hetzner Cloud](docs/hetzner-vps-creation.md): paste an API token,
+  pick a location and plan, confirm the price, and the server's SSH key is pinned
+  before it boots.
 - **Choose a connection method.** Direct UDP (standard WireGuard), Obfuscated UDP,
   TLS fallback with a pinned certificate, and TCP fallback. Pick one yourself or let
   SirinVPN choose for your network conditions, with configurable endpoints and
@@ -96,7 +99,10 @@ servers or a VPN subscription.
    Android), enter the server address and an SSH login, and select **Verify server**.
    Compare the fingerprint with your hosting provider's web console or another
    trusted channel before you select **Fingerprint matches**. After the network
-   check, select **Install SirinVPN**.
+   check, select **Install SirinVPN**. With a Hetzner Cloud account you can choose
+   **New Hetzner VPS** (**Create a Hetzner server** on Android) instead: paste an API
+   token, confirm the plan and price, and SirinVPN creates the server and fills in
+   its address, login and pinned key ([details](docs/hetzner-vps-creation.md)).
 3. **Connect** from Home, accepting the operating system's VPN or administrator
    prompt when needed. Run desktop clients as your ordinary user; the native
    service handles privileged networking.
@@ -239,6 +245,7 @@ codes, keys, passwords, backups, or private VPS details.
 - [Desktop feature map](docs/overhaul-feature-map.md)
 - [Interface text and localization](docs/ui-text.md) — writing guide and how to add a language
 - [Windows integration](docs/windows-integration-2026-09-07.md)
+- [Hetzner VPS creation](docs/hetzner-vps-creation.md) — one-click servers with a pre-pinned SSH host key
 - [Signed update design](docs/releases.md) — implementation documentation; no published releases yet
 
 ## License

@@ -10,7 +10,7 @@ use std::sync::Arc;
 /// signature verification and the SSH installer's upload.
 pub struct SignedServerBundle {
     artifact: Arc<[u8]>,
-    architecture: String,
+    pub(crate) architecture: String,
     manifest: Vec<u8>,
     signature: Vec<u8>,
     trust_policy: Vec<u8>,

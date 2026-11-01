@@ -1,7 +1,10 @@
 use super::*;
 use sha2::{Digest, Sha256};
-use sirinvpn_installer::*;
+use sirinvpn_installer::{hetzner::*, *};
+use std::sync::atomic::{AtomicBool, Ordering};
 use zeroize::Zeroizing;
+
+static HETZNER_WAIT_CANCEL: AtomicBool = AtomicBool::new(false);
 
 pub fn accepts(command: &str) -> bool {
     matches!(
@@ -20,6 +23,11 @@ pub fn accepts(command: &str) -> bool {
             | "export_vps_backup"
             | "restore_vps_backup"
             | "uninstall_server"
+            | "hetzner_catalog"
+            | "create_hetzner_server"
+            | "wait_hetzner_server"
+            | "cancel_hetzner_wait"
+            | "delete_hetzner_server"
     )
 }
 fn reference(host: &str, kind: &str) -> String {
@@ -285,6 +293,76 @@ pub async fn dispatch(
             return Ok(
                 json!({"network_preflight":outcome.network_preflight,"profile":outcome.profile,"events":outcome.events,"dns_upstream":outcome.dns_upstream,"private_dns_records":outcome.private_dns_records}),
             );
+        }
+        "hetzner_catalog" => {
+            return encode(
+                HetznerClient::new(text(input, "apiToken")?)?
+                    .catalog(payload(runtime).supports("aarch64"))
+                    .await?,
+            );
+        }
+        "create_hetzner_server" => {
+            let client = HetznerClient::new(text(input, "apiToken")?)?;
+            let request: HetznerServerRequest = serde_json::from_value(input["request"].clone())?;
+            let prepared = PreparedServer::generate();
+            // Saved first, so the key outlives an interrupted creation.
+            let key = reference(&prepared.name, "hetzner");
+            runtime.platform.put_blob(
+                &key,
+                &Zeroizing::new(prepared.login_private_key().as_bytes().to_vec()),
+            )?;
+            let created = client
+                .create_server(&prepared, &request, payload(runtime).supports("aarch64"))
+                .await;
+            if matches!(&created, Err(error) if !matches!(error, HetznerError::Uncertain(_))) {
+                runtime.platform.delete_blob(&key)?;
+            }
+            return Ok(json!({"server": created?, "private_key_path": null}));
+        }
+        "wait_hetzner_server" => {
+            let client = HetznerClient::new(text(input, "apiToken")?)?;
+            let server: HetznerServer = serde_json::from_value(input["server"].clone())?;
+            HETZNER_WAIT_CANCEL.store(false, Ordering::SeqCst);
+            let addresses = client
+                .wait_until_ready(&server, &HETZNER_WAIT_CANCEL)
+                .await?;
+            let key = reference(&server.name, "hetzner");
+            let pem = Zeroizing::new(String::from_utf8(
+                runtime
+                    .platform
+                    .blob(&key)?
+                    .context("The new server’s SSH key is missing")?
+                    .to_vec(),
+            )?);
+            // Saved like an imported key: the install and later repairs use this login.
+            let host = addresses.ipv4.to_string();
+            let login = Zeroizing::new(serde_json::to_vec(&json!({
+                "host": host, "ssh_port": 22, "username": "root", "authentication": "private_key",
+                "private_key_pem": pem.as_str(), "host_key_sha256": server.host_key_sha256,
+            }))?);
+            runtime
+                .platform
+                .put_blob(&reference(&host, "ssh"), &login)?;
+            runtime.platform.put_blob(
+                &trust_reference(&host, 22),
+                server.host_key_sha256.as_bytes(),
+            )?;
+            runtime.platform.delete_blob(&key)?;
+            return encode(addresses);
+        }
+        "cancel_hetzner_wait" => {
+            HETZNER_WAIT_CANCEL.store(true, Ordering::SeqCst);
+            return Ok(Value::Null);
+        }
+        "delete_hetzner_server" => {
+            let server: HetznerServer = serde_json::from_value(input["server"].clone())?;
+            HetznerClient::new(text(input, "apiToken")?)?
+                .delete_server(server.id)
+                .await?;
+            runtime
+                .platform
+                .delete_blob(&reference(&server.name, "hetzner"))?;
+            return Ok(Value::Null);
         }
         _ => {}
     }

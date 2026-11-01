@@ -133,3 +133,17 @@ modeled effect. These three cases verify real guest filesystem durability with
 modeled network effects, separately from the 17 packet/kernel cases. Use
 `--power-loss-only` to repeat just those boundaries; `--filter TEXT` selects only
 matching kernel tests. Guest overlays and keys are removed after handled failures.
+
+`hetzner-cloud-init.sh` checks the user data that
+[Hetzner VPS creation](../../docs/hetzner-vps-creation.md) sends, on a real cloud
+image instead of Hetzner. It builds the `hetzner_cloud_init` installer example,
+boots one Debian 13 guest from the NoCloud seed with guest networking restricted,
+logs in as root through the installer's pinned SSH path with the generated key,
+checks that another pin is rejected, that `ssh-keyscan` sees only the pre-seeded
+ed25519 host key, and that password login is refused:
+
+```sh
+SIRINVPN_DEBIAN13_IMAGE="$PWD/.cache/debian-13-genericcloud-amd64.qcow2" \
+  systemd-run --user --scope --quiet -p MemoryMax=8G -p MemorySwapMax=0 \
+  -p CPUQuota=400% -p TasksMax=512 sh tests/vm/hetzner-cloud-init.sh
+```

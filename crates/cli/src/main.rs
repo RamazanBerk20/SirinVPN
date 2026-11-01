@@ -88,6 +88,9 @@ async fn run() -> Result<()> {
                 dns_blocking::run(&paths, command, cli.json).await
             }
             ServerCommand::Add(arguments) => add_server(&paths, arguments, cli.json),
+            ServerCommand::CreateHetzner(arguments) => {
+                create_hetzner_server(&paths, arguments, cli.json).await
+            }
             ServerCommand::BackupVps(arguments) => backup_vps(&paths, arguments, cli.json),
             ServerCommand::RestoreVps(arguments) => restore_vps(&paths, arguments, cli.json),
             ServerCommand::CreateEndpointUpdate(selector) => {

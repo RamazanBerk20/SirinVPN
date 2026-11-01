@@ -4584,11 +4584,15 @@ version = "0.1.1"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
+ "ed25519-dalek",
  "hex",
+ "rand 0.8.7",
+ "reqwest 0.12.28",
  "serde",
  "serde_json",
  "sha2",
  "sirinvpn-core",
+ "sirinvpn-platform",
  "sirinvpn-protocol",
  "sirinvpn-release",
  "sirinvpn-release-fetch",
@@ -4596,6 +4600,7 @@ dependencies = [
  "subtle",
  "tempfile",
  "thiserror 2.0.20",
+ "tokio",
  "uuid",
  "zeroize",
 ]

@@ -259,6 +259,8 @@ Disposable overlays default to the repository's ignored `.cache` directory so a 
 
 For installer diagnosis, `SIRINVPN_TEST_CLI_BINARY` can select a debug CLI. Remote command output is bounded, and remote stderr is withheld from errors in both debug and release builds because it may echo credentials.
 
+`tests/vm/hetzner-cloud-init.sh` takes the same image variable and checks the cloud-init user data of [Hetzner VPS creation](hetzner-vps-creation.md): the guest boots with no Internet access, the installer's pinned SSH login works as root with the generated key, another pin is rejected, sshd offers and loads only the pre-seeded ed25519 host key, and password login is off. It needs QEMU, `xorriso`, OpenSSH and Cargo.
+
 ### Full-package release interruption gate
 
 `tests/vm/debian13-release-update.sh` accepts two normal, full x86_64 SirinVPN `.deb` builds with increasing canonical SemVer values. It creates an ephemeral test signing key, signs and plans those exact package bytes, installs and binds release A in a fresh Debian 13 overlay, then disables guest internet access for every update and recovery phase. The default path builds a separate Debian-compatible coordinator with the non-default `test-release-fault-injection` feature; neither input package contains an enabled crash hook.
