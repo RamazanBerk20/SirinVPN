@@ -184,8 +184,8 @@ async fn transfers_run_through_the_management_server() {
 }
 
 /// The real client from the full-tunnel `member0` namespace, over real WireGuard, to the real
-/// management server: both directions move data, latency is sampled under load, and an
-/// immediate second run is refused by the cooldown.
+/// management server: both directions run their full eight seconds through a 100 Mbit/s
+/// bottleneck, latency rises under load, and an immediate second run is refused by the cooldown.
 #[tokio::test]
 #[ignore = "requires disposable networking; use tests/network/run-speed-test.sh"]
 async fn kernel_speed_test_measures_the_tunnel_to_the_vps() {
@@ -193,6 +193,22 @@ async fn kernel_speed_test_measures_the_tunnel_to_the_vps() {
     let owner = LocalIdentity::generate("Speed test owner").unwrap();
     let mut state = state(directory.path(), &owner);
     crate::leak_test::tests::tunnel_member0(directory.path(), &mut state, &owner).await;
+    // Below 1 GiB per eight seconds, so neither direction ends early at the byte limit.
+    let tbf = |interface| {
+        [
+            "qdisc", "add", "dev", interface, "root", "tbf", "rate", "100mbit", "burst", "64kb",
+            "latency", "50ms",
+        ]
+    };
+    let mut download = Command::new("tc");
+    download.args(tbf("sirinvpn0"));
+    let mut upload = Command::new("ip");
+    upload
+        .args(["netns", "exec", "member0", "tc"])
+        .args(tbf("client0"));
+    for mut command in [download, upload] {
+        assert!(command.status().await.unwrap().success());
+    }
     let listener = TcpListener::bind((Ipv4Addr::new(10, 77, 0, 1), 8443))
         .await
         .unwrap();
@@ -232,11 +248,16 @@ async fn kernel_speed_test_measures_the_tunnel_to_the_vps() {
         .unwrap();
     let result = first.unwrap_or_else(|error| panic!("{error}"));
     println!("speed test over the kernel tunnel: {result:?}");
-    assert!(result.download_bits_per_second > 10_000_000, "{result:?}");
-    assert!(result.upload_bits_per_second > 10_000_000, "{result:?}");
-    assert!(result.idle_latency_micros.is_some());
-    assert!(result.download_latency_micros.is_some());
-    assert!(result.upload_latency_micros.is_some());
+    for rate in [
+        result.download_bits_per_second,
+        result.upload_bits_per_second,
+    ] {
+        assert!((50_000_000..=105_000_000).contains(&rate), "{result:?}");
+    }
+    let idle = result.idle_latency_micros.unwrap();
+    // The bottleneck queue fills under load.
+    assert!(result.download_latency_micros.unwrap() > idle, "{result:?}");
+    assert!(result.upload_latency_micros.unwrap() > idle, "{result:?}");
     let refused = second.unwrap_err().to_string();
     assert!(
         refused.starts_with("The speed test didn't start: wait "),

@@ -232,7 +232,11 @@ impl ManagementClient {
             // or EOF on the next poll, while still reusing them for active work.
             .pool_idle_timeout(Duration::from_secs(5))
             .connect_timeout(Duration::from_secs(5))
-            .read_timeout(Duration::from_secs(8))
+            // reqwest times the wait for response headers with this too, and a speed-test
+            // upload sends for eight seconds before its response can start.
+            .read_timeout(timeout.map_or(Duration::from_secs(8), |timeout| {
+                timeout.max(Duration::from_secs(8))
+            }))
             .user_agent("SirinVPN local management");
         let builder = if bind_tunnel {
             builder.local_address(profile.client_tunnel_address)
