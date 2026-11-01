@@ -97,7 +97,11 @@ latency 0.95 ms idle, 11.0 ms during download and 10.7 ms during upload, and an
 immediate second run was refused by the cooldown. The first two-VM lab run found
 that the client's 8-second read timeout, which reqwest also applies to the wait for
 response headers, ended every full-length upload; the shaped kernel test fails the
-same way without the fix. The desktop component has UI tests; Android shares that UI and the
+same way without the fix. With the fix, the full two-VM lab passed (31 steps, Debian
+13 client and VPS, package at 82e494a). In its new step the packaged CLI measured
+1.63 Gbit/s down and 1.04 Gbit/s up, with latency 0.2 ms idle, 6.4 ms during
+download and 6.1 ms during upload. The repeat was refused, the physical network saw
+no DNS or IPv6, and the VPS journal didn't mention the test. The desktop component has UI tests; Android shares that UI and the
 runtime command passes Android-target clippy but has not run on an emulator.
 
 ## VPS observations
