@@ -164,4 +164,13 @@ parameters toward a common browser profile.
   name), descriptor rejection of a shared UDP port, padding bounds, server
   configuration schema 11, installer firewall and verification output, the Linux
   guard rule and the Windows permit protocol.
-- The two-VM lab's per-transport loop includes QUIC.
+- The two-VM lab (Debian 13 client and VPS, DNS over TLS to Quad9, HaGeZi Multi
+  Light) passed all 32 checks on 1 November 2026 with package `6ca7f524…`
+  (`.cache/linux-acceptance-quic-2026-11-01b`):
+  - A fresh install wrote configuration schema 11 with QUIC on, moved Obfuscated
+    UDP to 51821 and listened on UDP 443.
+  - The per-transport loop connected over QUIC with the kill switch armed, exited
+    at the VPS, resolved through the VPS and counted no DNS or IPv6 leaks, then
+    disconnected cleanly.
+  - With Direct, Obfuscated and QUIC UDP blocked (14 packets dropped), Automatic
+    cleaned up each failed candidate and connected over TLS.
