@@ -1,5 +1,0 @@
-.connection-mark {
-  width: 88px;
-  height: 88px;
-  filter: drop-shadow(0 0 14px color-mix(in srgb, var(--accent) 45%, transparent));
-}

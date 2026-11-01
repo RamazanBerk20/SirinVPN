@@ -1,3 +1,4 @@
+import { PreferencesPending } from "./PreferenceSaveBar";
 import { Check } from "@phosphor-icons/react";
 import type { ServerWorkspaceModel } from "./useServerWorkspace";
 import { ApplicationLauncher } from "./ApplicationLauncher";
@@ -31,6 +32,7 @@ export function RoutingSettings({ model }: { model: ServerWorkspaceModel }) {
       : androidApps.mode === "exclude"
         ? t("connection.routing.android.exclude", { count: androidApps.packages.length })
         : t("connection.routing.android.include", { count: androidApps.packages.length });
+  if (!model.preferences.ready) return <PreferencesPending preferences={model.preferences} />;
   return (
     <section className="settings-card routing-settings">
       <h2>{t("connection.routing.title")}</h2>
@@ -103,6 +105,9 @@ export function RoutingSettings({ model }: { model: ServerWorkspaceModel }) {
             disabled={disabled}
           />
           <small>{t("connection.routing.routes.hint", { max: formatNumber(MAX_INCLUDED_ROUTES) })}</small>
+          {model.preferences.badRoutes.length > 0 && <small className="field-error" role="alert">
+            {model.preferences.badRoutes[0] === "" ? t("connection.routing.routes.empty") : t("connection.routing.routes.invalid", { routes: model.preferences.badRoutes.join(", ") })}
+          </small>}
         </label>
       )}
       <label className="preference-row">

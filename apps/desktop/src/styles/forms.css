@@ -2,7 +2,6 @@
   display: grid;
   gap: 7px;
   color: color-mix(in srgb, var(--line-strong) 20%, var(--text));
-  font-size: 12px;
   font-weight: 650;
 }
 
@@ -13,8 +12,6 @@
   height: 43px;
   padding: 0 13px;
   border: 1px solid var(--line-strong);
-  border-radius: 7px;
-  background: var(--bg);
   color: var(--text);
   font-size: 13px;
   font-weight: 500;
@@ -29,7 +26,6 @@
 
 .field textarea {
   height: auto;
-  min-height: 118px;
   padding: 12px 13px;
   resize: vertical;
   line-height: 1.5;
@@ -52,12 +48,6 @@
 .field textarea::placeholder {
   color: color-mix(in srgb, var(--line) 65%, var(--text));
   opacity: 1;
-}
-
-.field small {
-  color: var(--quiet);
-  font-size: 10px;
-  font-weight: 520;
 }
 
 .auth-method {
@@ -143,13 +133,13 @@ input[type="checkbox"]:not([role="switch"]):disabled {
 }
 
 .replacement-option strong {
-  font-size: 11px;
+  font-size: 0.75rem;
   line-height: 1.35;
 }
 
 .replacement-option small {
   color: var(--quiet);
-  font-size: 10px;
+  font-size: 0.75rem;
   font-weight: 520;
   line-height: 1.45;
 }
@@ -171,16 +161,8 @@ input[type="checkbox"]:not([role="switch"]):disabled {
   background: transparent;
   color: var(--muted);
   cursor: pointer;
-  font-size: 11px;
+  font-size: 0.75rem;
   font-weight: 650;
-}
-
-.segmented-control button[aria-pressed="true"] {
-  background: color-mix(in srgb, var(--accent) 10%, var(--surface-3));
-  color: var(--text);
-  box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--accent) 36%, transparent),
-    0 0 16px color-mix(in srgb, var(--accent) 10%, transparent);
 }
 
 .dns-policy {
@@ -204,7 +186,7 @@ input[type="checkbox"]:not([role="switch"]):disabled {
 .dns-policy-note {
   margin: 0;
   color: var(--quiet);
-  font-size: 10px;
+  font-size: 0.75rem;
   line-height: 1.5;
 }
 
@@ -224,7 +206,7 @@ input[type="checkbox"]:not([role="switch"]):disabled {
 
 .dns-endpoint > strong {
   color: color-mix(in srgb, var(--line-strong) 45%, var(--text));
-  font-size: 10px;
+  font-size: 0.75rem;
   font-weight: 680;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -255,11 +237,68 @@ input[type="checkbox"]:not([role="switch"]):disabled {
 
 .add-server-flow {
   display: grid;
+  gap: 12px;
+}
+.add-server-back {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
 }
 
-.add-mode {
-  grid-template-columns: repeat(3, 1fr);
-  margin-bottom: 8px;
+/* Described choice rows (ways to add a server, the Android server picker); mobile-native.css sets Android metrics. */
+.mobile-choice-list {
+  display: grid;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.mobile-list-row {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 64px;
+  padding: 12px 16px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+}
+.mobile-list-row:last-child {
+  border-bottom: 0;
+}
+button.mobile-list-row:hover {
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface-2));
+}
+.mobile-list-row > span:not(.mobile-row-icon) {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.mobile-list-row strong {
+  font-size: 15px;
+  font-weight: 600;
+}
+.mobile-list-row small {
+  font-size: 13px;
+  color: var(--muted);
+}
+.mobile-list-row > svg {
+  color: var(--muted);
+}
+.mobile-row-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--accent) 16%, var(--surface));
+  color: var(--cyan);
 }
 
 .join-form,
@@ -280,7 +319,7 @@ input[type="checkbox"]:not([role="switch"]):disabled {
 
 .secret-code-input {
   overflow-wrap: anywhere;
-  font-size: 10px !important;
+  font-size: 0.75rem !important;
 }
 
 .primary-button,
@@ -301,17 +340,11 @@ input[type="checkbox"]:not([role="switch"]):disabled {
 }
 
 .primary-button {
-  min-height: 45px;
-  padding: 0 18px;
-  border: 1px solid color-mix(in srgb, var(--cyan) 25%, var(--accent));
-  background: color-mix(in srgb, var(--accent) 80%, var(--surface-3));
   color: var(--accent-ink);
-  font-size: 13px;
 }
 
 .primary-button:hover:not(:disabled) {
   border-color: var(--cyan);
-  background: color-mix(in srgb, var(--cyan) 15%, var(--accent));
   box-shadow: 0 0 24px color-mix(in srgb, color-mix(in srgb, var(--cyan) 50%, var(--accent)) 18%, transparent);
 }
 
@@ -327,7 +360,7 @@ input[type="checkbox"]:not([role="switch"]):disabled {
   gap: 7px;
   margin: -3px 0 0;
   color: var(--quiet);
-  font-size: 10px;
+  font-size: 0.75rem;
 }
 
 .inline-error {
@@ -347,4 +380,8 @@ input[type="checkbox"]:not([role="switch"]):disabled {
   flex: 0 0 auto;
   margin-top: 1px;
   color: var(--danger);
+}
+/* Fingerprints and key paths are long unbroken tokens: wrap them instead of widening the page. */
+.setup-form p {
+  overflow-wrap: anywhere;
 }

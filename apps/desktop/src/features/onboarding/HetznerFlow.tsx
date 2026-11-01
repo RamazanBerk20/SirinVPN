@@ -133,7 +133,7 @@ export function HetznerFlow({ onComplete, compact = false }: {
     <SecretInput type="password" value={token} disabled={busy} autoComplete="off" spellCheck={false}
       aria-label={t("onboarding.hetzner.token")} onChange={event => { tokenEntered.current = Date.now(); setToken(event.target.value); }} />
   </Field>;
-  const deleteButton = <button type="button" className="secondary-button" disabled={busy || !token} onClick={() => void remove()}>
+  const deleteButton = <button type="button" className="secondary-button danger-text" disabled={busy || !token} onClick={() => void remove()}>
     {busy ? t("onboarding.hetzner.deleting") : t("onboarding.hetzner.delete")}
   </button>;
 
@@ -150,7 +150,7 @@ export function HetznerFlow({ onComplete, compact = false }: {
   </div>;
 
   if ((phase === "failed" || phase === "kept") && created && server) return <div className="setup-form">
-    <h2>{t("onboarding.hetzner.failedTitle", { name: server.name })}</h2>
+    <h2>{t(phase === "kept" ? "onboarding.hetzner.keptTitle" : "onboarding.hetzner.failedTitle", { name: server.name })}</h2>
     {error && <InlineError message={error} />}
     <p>{phase === "kept" ? t("onboarding.hetzner.kept", { name: server.name, fingerprint: server.host_key_sha256 }) : t("onboarding.hetzner.failedSummary")}</p>
     {created.private_key_path && <p className="settings-note">{t("onboarding.hetzner.keyPath", { path: created.private_key_path })}</p>}

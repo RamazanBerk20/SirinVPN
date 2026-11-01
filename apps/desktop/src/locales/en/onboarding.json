@@ -24,13 +24,6 @@
       "summary": "Rent a new VPS that sets itself up"
     }
   },
-  "mode": {
-    "provision": "My VPS",
-    "hetzner": "New Hetzner VPS",
-    "join": "Invitation",
-    "backup": "Backup",
-    "recovery": "Recovery key"
-  },
   "backup": {
     "title": "Restore this device",
     "summary": "Adds a server back to this device. The server itself isn’t contacted.",
@@ -183,7 +176,8 @@
     "failedSummary": "The server exists in your Hetzner account and is billed until it’s deleted. Delete it, wait again, or keep it to set it up later.",
     "waitAgain": "Wait again",
     "keep": "Keep server",
-    "kept": "{{name}} stays in your Hetzner account. Its SSH host key is {{fingerprint}}.",
+    "keptTitle": "{{name}} stays in your Hetzner account",
+    "kept": "Its SSH host key is {{fingerprint}}. To set it up later, choose Set up my VPS and enter its address.",
     "leaveWarning": "A Hetzner server was created and is billed until it’s deleted. Leave anyway?",
     "error": {
       "catalog": "Couldn’t load Hetzner prices.",

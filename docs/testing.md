@@ -145,6 +145,29 @@ timeout: `tcp_connection` 15 minutes (0.65 million inputs), `relay_datagram`
 authenticated raw and TLS-like sessions, the WebSocket upgrade, invitation
 validation up to its signature check, and complete backup-profile validation.
 
+## UI state catalog
+
+`tests/ui/catalog/full_capture.py` mounts every catalog scenario (`scenarios.py` plus
+`coverage_states.py`) with fictional API fixtures in headless Chromium, once per form
+factor (desktop window 1280×860, Android phone layout 412×915) and theme (dark, light).
+Each state gets a screenshot of every scroll position, an in-page audit (`audit.js`:
+touch targets, contrast, clipped or offscreen content, accessible names), a keyboard
+focus pass for the first state of each family, and its visible text. `summary.json`
+ends with the English messages no state showed, which is how a missing state is found.
+
+```sh
+cd apps/desktop && node_modules/.bin/vite --config ../../tests/ui/catalog/vite.config.ts --port 1440 &
+PLAYWRIGHT_BROWSERS_PATH=<repo>/.cache/remediation-browsers <repo>/.cache/remediation-python/bin/python \
+  tests/ui/catalog/full_capture.py --output <repo>/.cache/ui-capture-YYYY-MM-DD/after
+python3 tests/ui/catalog/review_sheets.py <run> <sheets> [--before <older run>]
+```
+
+To capture another checkout's UI with this harness (for a before/after pair), serve it with
+`tests/ui/catalog/serve_ui.sh <checkout> <port>` and set `SIRINVPN_UI_ROOT` to that checkout.
+A full run is about 2,300 states and 6,000 WebP images (~250 MB); keep runs under one dated
+`.cache/` directory and delete them once the result is recorded. The findings and numbers of
+the first full run are in [UI review 2026-11-01](ui-review-2026-11-01.md).
+
 ## Android verification
 
 The current port has isolated emulator, instrumentation and presentation checks.

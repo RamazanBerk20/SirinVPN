@@ -102,11 +102,11 @@ it.each([
   expect(Boolean(screen.queryByText(t("common.noun.thisDevice")))).toBe(currentDeviceId === "desktop");
 });
 
-it("shows the VPN address and role as one subtitle", () => {
+it("shows the owning member, role and VPN address as one subtitle", () => {
   setup({ query: "10.77.0.3" });
   const subtitle = screen.getByRole("button", { name: /^Android phone/ }).querySelector("small")!;
   expect(subtitle.textContent).toBe(
-    t("devices.row.subtitle", { address: "10.77.0.3", role: t("common.role.member") }).replace(/<\/?address>/g, ""),
+    t("devices.row.subtitle", { member: "Family", address: "10.77.0.3", role: t("common.role.member") }).replace(/<\/?address>/g, ""),
   );
   expect(subtitle.querySelector(".mono")?.textContent).toBe("10.77.0.3");
 });

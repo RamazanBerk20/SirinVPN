@@ -1,3 +1,4 @@
+import { PreferencesPending } from "./PreferenceSaveBar";
 import { invoke, isAndroid } from "../../platform";
 import { Check, CaretDown } from "@phosphor-icons/react";
 import type { ServerWorkspaceModel } from "./useServerWorkspace";
@@ -48,6 +49,7 @@ export function ConnectionOptions({ model }: { model: ServerWorkspaceModel }) {
   const choose = (value: TransportPreference) => {
     setSelectedTransport(value);
   };
+  if (!model.preferences.ready) return <PreferencesPending preferences={model.preferences} />;
   return (
     <div className="settings-sections connection-preferences">
       <section className="settings-card">

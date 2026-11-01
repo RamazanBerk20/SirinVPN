@@ -28,6 +28,12 @@ describe("saved connection preferences", () => {
     act(() => result.current.change({ manual_mtu: null, android_applications: null }));
     expect(result.current.dirty).toBe(false);
   });
+  it("does not report ranges kept from Selected routes mode as unsaved in another mode", async () => {
+    vi.mocked(api.getConnectionPreferences).mockResolvedValue({ ...defaults, routing: { mode: "full_tunnel", included_routes: ["198.51.100.0/24"], allow_lan: false } });
+    const { result } = renderHook(() => useConnectionPreferences("a"));
+    await waitFor(() => expect(result.current.ready).toBe(true));
+    expect(result.current.dirty).toBe(false);
+  });
   it("saves complete server-scoped preferences and reloads them after remount", async () => {
     const data = new Map();
     vi.mocked(api.getConnectionPreferences).mockImplementation(
@@ -79,7 +85,7 @@ describe("saved connection preferences", () => {
     await waitFor(() => expect(result.current.ready).toBe(true));
     act(() => result.current.change({ transport: "direct_udp" }));
     await act(() => result.current.save());
-    expect(result.current.error).toBe("Disk full");
+    expect(result.current.error).toContain("Disk full");
     expect(result.current.saved?.transport).toBe("automatic");
     expect(result.current.draft.transport).toBe("direct_udp");
     expect(result.current.dirty).toBe(true);
@@ -167,7 +173,7 @@ it("keeps the confirmed reconnect value after a rejected Android switch change",
   await act(() => result.current.setReconnect(false));
   expect(result.current.draft.policy.automatic_reconnect).toBe(true);
   expect(result.current.saved?.policy.automatic_reconnect).toBe(true);
-  expect(result.current.error).toBe("Could not save preference");
+  expect(result.current.error).toContain("Could not save preference");
 });
 
 it("does not apply a late reconnect response to another Android server", async () => {

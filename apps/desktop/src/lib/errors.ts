@@ -1,13 +1,14 @@
 import { formatDateTime, getLocale, sourceLocale } from "../i18n";
 
 /**
- * Backend and server errors arrive as English diagnostic text. English shows that specific
- * text; other languages show the caller's localized summary of what failed.
+ * Backend and server errors arrive as English diagnostic text without saying which action failed.
+ * English shows the caller's summary of what failed followed by that cause; other languages show
+ * the localized summary alone.
  */
 export function errorMessage(reason: unknown, fallback: string): string {
-  const detail = typeof reason === "string" ? reason : reason instanceof Error ? reason.message : "";
-  if (!detail.trim() || getLocale() !== sourceLocale) return fallback;
-  return detail;
+  const detail = (typeof reason === "string" ? reason : reason instanceof Error ? reason.message : "").trim();
+  if (!detail || getLocale() !== sourceLocale) return fallback;
+  return detail.includes(fallback.trim()) ? detail : `${fallback.trim()} ${detail}`;
 }
 
 export function formatExpiry(unixSeconds: number): string {

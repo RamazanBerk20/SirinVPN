@@ -20,17 +20,10 @@
   position: relative;
   z-index: 1;
   align-self: center;
-  width: min(100%, 680px);
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: clamp(32px, 7vw, 58px) clamp(22px, 7vw, 54px);
-  border: 1px solid color-mix(in srgb, var(--line-strong) 65%, var(--surface-3));
   border-radius: 18px;
-  background: linear-gradient(155deg, color-mix(in srgb, var(--surface-3) 98%, transparent), color-mix(in srgb, var(--surface) 98%, transparent));
-  box-shadow:
-    0 32px 100px color-mix(in srgb, var(--shadow) 48%, transparent),
-    0 0 54px color-mix(in srgb, var(--accent) 9%, transparent);
   text-align: center;
 }
 
@@ -49,7 +42,4 @@
 .initialization-summary {
   max-width: 540px;
   margin: 22px 0 0;
-  color: var(--muted);
-  font-size: 14px;
-  line-height: 1.72;
 }

@@ -314,7 +314,7 @@ function DeviceRow({
             <small>
               <Rich
                 id="devices.row.subtitle"
-                params={{ address: device.client_tunnel_address, role: memberAccessLabel(member) }}
+                params={{ member: member.name, address: device.client_tunnel_address, role: memberAccessLabel(member) }}
                 tags={{ address: (content) => <span className="mono">{content}</span> }}
               />
             </small>

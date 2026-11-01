@@ -32,4 +32,15 @@
 }
 .info-panel[hidden] { display: none; }
 /* Destructive menu items read as destructive before hover, which touch screens never have. */
-[role="menuitem"].danger-text, .mobile-sheet-action.danger-text { color: var(--danger); }
+[role="menuitem"].danger-text, .mobile-sheet-action.danger-text, .secondary-button.danger-text { color: var(--danger); }
+/* Unstyled disclosure rows are controls too: at least 24px tall here and 46px on Android.
+   :where() keeps this below every styled summary (device rows, metrics, access disclosures). */
+:where(details) > :where(summary) {
+  padding-block: 4px;
+}
+:where(.android) :where(details) > :where(summary) {
+  padding-block: 12px;
+}
+.danger-icon {
+  color: var(--danger);
+}

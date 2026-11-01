@@ -105,7 +105,7 @@ it("keeps access failures visible through polling retries until membership is ve
   const failure = "the private management connection failed";
   vi.mocked(api.membership).mockRejectedValue(new Error(failure));
   await act(async () => { await vi.advanceTimersByTimeAsync(10_000); });
-  expect(result.current.loadError).toBe(failure);
+  expect(result.current.loadError).toContain(failure);
   expect(result.current.verified).toBe(false);
   expect(result.current.snapshot?.members[0].devices[0].recent_handshake).toBeUndefined();
 
@@ -113,11 +113,11 @@ it("keeps access failures visible through polling retries until membership is ve
   vi.mocked(api.membership).mockImplementationOnce(() => new Promise((_, reject) => { fail = reject; }));
   await act(async () => { await vi.advanceTimersByTimeAsync(10_000); });
   expect(result.current.loading).toBe(true);
-  expect(result.current.loadError).toBe(failure);
+  expect(result.current.loadError).toContain(failure);
   expect(result.current.verified).toBe(false);
   await act(async () => fail(new Error(failure)));
   expect(result.current.loading).toBe(false);
-  expect(result.current.loadError).toBe(failure);
+  expect(result.current.loadError).toContain(failure);
 
   vi.mocked(api.membership).mockResolvedValue(snapshot);
   await act(async () => { await vi.advanceTimersByTimeAsync(10_000); });
@@ -131,7 +131,7 @@ it("keeps a configuration failure until configuration succeeds, independently of
   vi.mocked(api.membership).mockResolvedValue({ members: [], active_invitations: [] });
   vi.mocked(api.serverConfiguration).mockRejectedValue(new Error("Configuration unavailable"));
   const { result } = renderHook(useAccessController, { initialProps: confirmationProps() });
-  await waitFor(() => expect(result.current.loadError).toBe("Configuration unavailable"));
+  await waitFor(() => expect(result.current.loadError).toContain("Configuration unavailable"));
   expect(result.current.verified).toBe(true);
   expect(result.current.recipientNamesAvailable).toBeNull();
 
@@ -140,7 +140,7 @@ it("keeps a configuration failure until configuration succeeds, independently of
   let pending!: Promise<void>;
   await act(async () => { pending = result.current.refresh(); });
   expect(result.current.loading).toBe(false);
-  expect(result.current.loadError).toBe("Configuration unavailable");
+  expect(result.current.loadError).toContain("Configuration unavailable");
   await act(async () => { finish({ recipient_names_enabled: true }); await pending; });
   expect(result.current.loadError).toBeNull();
   expect(result.current.recipientNamesAvailable).toBe(true);
@@ -151,9 +151,9 @@ it("does not let a late configuration success hide a failed membership read", as
   let finish!: (configuration: CurrentConfiguration) => void;
   vi.mocked(api.serverConfiguration).mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }));
   const { result } = renderHook(useAccessController, { initialProps: confirmationProps() });
-  await waitFor(() => expect(result.current.loadError).toBe("Access unavailable"));
+  await waitFor(() => expect(result.current.loadError).toContain("Access unavailable"));
   await act(async () => finish({ recipient_names_enabled: true }));
-  expect(result.current.loadError).toBe("Access unavailable");
+  expect(result.current.loadError).toContain("Access unavailable");
   expect(result.current.verified).toBe(false);
   expect(result.current.loading).toBe(false);
 });
@@ -222,7 +222,7 @@ it("treats missing naming support as an older server only after a successful con
   vi.mocked(api.serverConfiguration).mockRejectedValueOnce(new Error("Unavailable"));
   await act(async () => { await result.current.refresh(); });
   expect(result.current.recipientNamesAvailable).toBeNull();
-  expect(result.current.loadError).toBe("Unavailable");
+  expect(result.current.loadError).toContain("Unavailable");
   vi.mocked(api.serverConfiguration).mockResolvedValue({ recipient_names_enabled: true });
   await act(async () => { await result.current.refresh(); });
   expect(result.current.recipientNamesAvailable).toBe(true);

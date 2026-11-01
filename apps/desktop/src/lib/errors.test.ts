@@ -4,8 +4,9 @@ import { errorMessage } from "./errors";
 
 afterEach(() => setLocale(sourceLocale));
 
-it("shows specific backend text in English and the localized summary otherwise", () => {
-  expect(errorMessage(new Error("Port 22 refused the connection."), "Couldn’t connect.")).toBe("Port 22 refused the connection.");
+it("names the failed action, then the backend cause in English, and the localized summary otherwise", () => {
+  expect(errorMessage(new Error("Port 22 refused the connection."), "Couldn’t connect.")).toBe("Couldn’t connect. Port 22 refused the connection.");
+  expect(errorMessage(new Error("Couldn’t connect. Port 22 refused."), "Couldn’t connect.")).toBe("Couldn’t connect. Port 22 refused.");
   expect(errorMessage("", "Couldn’t connect.")).toBe("Couldn’t connect.");
   expect(errorMessage(undefined, "Couldn’t connect.")).toBe("Couldn’t connect.");
   setLocale(pseudoLocale);

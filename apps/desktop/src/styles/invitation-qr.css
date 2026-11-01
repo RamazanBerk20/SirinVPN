@@ -46,7 +46,6 @@
   display: grid;
   justify-items: center;
   width: min(100%, max(314px, calc(100dvh - 380px)), 520px);
-  background: white;
 }
 
 .invitation-qr-frame img {
@@ -91,10 +90,6 @@ html[data-window-chrome="custom"] .dialog-content.invitation-qr-dialog {
   justify-items: center;
   padding: 12px 16px;
   scrollbar-gutter: auto;
-}
-
-.invitation-qr-enlarged {
-  width: min(100%, calc(100dvh - 144px));
 }
 
 @media (max-width: 680px) {

@@ -106,7 +106,7 @@ it("retains the previous preference when a native save fails", async () => {
   );
   setup();
   const input = await toggle(t("settings.general.startup.startOnLogin.label"));
-  expect(await screen.findByText("Startup registration failed")).toBeTruthy();
+  expect(await screen.findByText("Startup registration failed", { exact: false })).toBeTruthy();
   expect(input.checked).toBe(false);
 });
 
@@ -131,7 +131,7 @@ it("requests permission before enabling notifications and never saves a denial",
   mocks.requestNotificationPermission.mockResolvedValue("denied");
   setup();
   const input = await toggle(t("settings.general.notifications.connection.label"));
-  expect(await screen.findByText(t("settings.preferences.notificationsBlocked"))).toBeTruthy();
+  expect(await screen.findByText(t("settings.preferences.notificationsBlocked"), { exact: false })).toBeTruthy();
   expect(mocks.setAppPreferences).not.toHaveBeenCalled();
   expect(input.checked).toBe(false);
 });
@@ -197,7 +197,7 @@ it("keeps settings disabled when the native store cannot be read", async () => {
     new Error("Settings could not be read"),
   );
   setup();
-  expect(await screen.findByText("Settings could not be read")).toBeTruthy();
+  expect(await screen.findByText("Settings could not be read", { exact: false })).toBeTruthy();
   expect(
     (
       screen.getByRole("switch", {

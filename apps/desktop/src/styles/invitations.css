@@ -16,7 +16,6 @@
 
 .port-forward-notice {
   display: flex;
-  align-items: flex-start;
   gap: 9px;
   margin-top: 13px;
   padding: 10px 12px;
@@ -33,8 +32,6 @@
 
 .port-forward-notice p {
   margin: 0;
-  font-size: 9px;
-  line-height: 1.55;
 }
 
 .port-forward-list {
@@ -46,7 +43,6 @@
   margin: 0;
   padding: 18px 2px 2px;
   color: var(--quiet);
-  font-size: 10px;
 }
 
 .port-forward-row {
@@ -97,7 +93,7 @@
   align-items: center;
   gap: 5px;
   color: var(--text);
-  font-size: 10px;
+  font-size: 0.75rem;
 }
 
 .port-forward-route svg {
@@ -108,7 +104,7 @@
 .port-forward-managed {
   overflow: hidden;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 0.75rem;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -156,7 +152,7 @@
   border-radius: 7px;
   background: var(--bg);
   color: color-mix(in srgb, var(--line-strong) 15%, var(--text));
-  font-size: 9px;
+  font-size: 0.75rem;
   line-height: 1.55;
   overflow-wrap: anywhere;
 }
@@ -194,13 +190,11 @@
 
 .invite-target small {
   color: var(--quiet);
-  font-size: 9px;
+  font-size: 0.75rem;
 }
 
 .invitation-share-grid {
   display: grid;
-  grid-template-columns: 236px minmax(0, 1fr);
-  gap: 14px;
 }
 
 .qr-share,
@@ -228,7 +222,7 @@
 
 .qr-share small {
   color: var(--quiet);
-  font-size: 8px;
+  font-size: 0.75rem;
   line-height: 1.45;
 }
 
@@ -240,7 +234,7 @@
 
 .code-share > span {
   color: var(--quiet);
-  font-size: 8px;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -258,7 +252,7 @@
   justify-content: space-between;
   gap: 14px;
   color: var(--quiet);
-  font-size: 9px;
+  font-size: 0.75rem;
 }
 
 .endpoint-update-dialog {
@@ -280,7 +274,7 @@
 .endpoint-update-intro p {
   margin: 0;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 0.75rem;
   line-height: 1.6;
 }
 
@@ -309,7 +303,7 @@
 
 .endpoint-update-intro small {
   color: var(--quiet);
-  font-size: 9px;
+  font-size: 0.75rem;
 }
 
 .endpoint-transition-summary {
@@ -327,7 +321,7 @@
 .endpoint-transition-summary code {
   overflow: hidden;
   color: color-mix(in srgb, var(--muted) 50%, var(--text));
-  font-size: 9px;
+  font-size: 0.75rem;
   text-overflow: ellipsis;
 }
 
@@ -337,7 +331,7 @@
 
 .endpoint-transition-summary > span {
   color: var(--quiet);
-  font-size: 8px;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.07em;
   text-transform: uppercase;

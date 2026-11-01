@@ -13,12 +13,14 @@ const catalog:any=new CatalogBridge();
 const root=createRoot(document.getElementById('root')!);
 let generation=0;
 const normalize=(value:string)=>(value??'').replace(/\s+/g,' ').trim();
-const visible=(el:Element)=>el.getClientRects().length>0&&getComputedStyle(el).visibility!=='hidden';
+// Content of a closed <details> keeps boxes in Chromium but is not rendered.
+const visible=(el:Element)=>el.getClientRects().length>0&&getComputedStyle(el).visibility!=='hidden'&&!(el.closest('details:not([open])')&&!el.closest('details:not([open]) > summary'));
 const delay=(ms=120)=>new Promise(resolve=>setTimeout(resolve,ms));
 catalog.assertVisible=assertVisible;
 catalog.settled=settled;
 catalog.mount=async(options:any={})=>{
-  root.render(null);await delay(20);clearMembershipCache();
+  // A desktop mount leaves the custom title-bar marker behind if a second mount races its cleanup.
+  root.render(null);await delay(20);clearMembershipCache();delete document.documentElement.dataset.windowChrome;
   catalog.ready=false;catalog.state=initialState(options);catalog.prompts=[];
   localStorage.clear();history.replaceState(null,'','#home');
   document.documentElement.style.fontSize='';
@@ -49,9 +51,12 @@ catalog.act=async(action:any)=>{
   if(action.details){for(const el of document.querySelectorAll('details'))(el as HTMLDetailsElement).open=action.details==='open';await delay();return;}
   if(action.js){(0,eval)(action.js);await delay(action.wait??120);return;}
   if(action.wait){await delay(action.wait);return;}
+  if(action.android!==undefined&&action.android!==document.documentElement.classList.contains('android'))return;
   let el:any;
-  for(let attempt=0;attempt<30;attempt++){
-    try{el=catalog.find(action);break;}catch(error){if(attempt===29)throw error;await delay(100);}
+  // `or` names the same control where layouts label it differently; an `optional` step is skipped where it doesn't exist.
+  const attempts=action.optional?5:30;
+  for(let attempt=0;attempt<attempts;attempt++){
+    try{el=catalog.find(action);break;}catch(error){if(action.or)try{el=catalog.find(action.or);break;}catch{}if(attempt===attempts-1){if(action.optional)return;throw error;}await delay(100);}
   }
   for(let attempt=0;el.matches(':disabled')&&!action.allowDisabled&&attempt<10;attempt++){await delay(100);el=catalog.find(action);}
   if((el.matches(':disabled')||el.getAttribute("aria-disabled")==="true")&&!action.allowDisabled)throw Error('Control disabled '+JSON.stringify(action));

@@ -81,6 +81,19 @@ export function RecoveryKeys({ profile, connected, owner }: { profile: Pick<Serv
     setExportedPath(path);
     setPassword(""); setRepeat(""); setNotice(t("settings.recovery.key.saved"));
   });
+  // The one-time key sits under the button that created it; it stays on screen if the connection drops.
+  const keyPanel = created && <div className="invite-form">
+        <p className="warning-note">{t("settings.recovery.key.warning")}</p>
+        {!isAndroid && <Field label={t("settings.recovery.key.label")}><textarea rows={4} readOnly value={created.key} className="secret-code-output mono" /></Field>}
+        <button className="secondary-button" disabled={busy} onClick={() => void action(async (current) => { await copyText(created.key); if (current()) setNotice(t("settings.recovery.key.copied")); })}><Copy size={17} />{t("settings.recovery.key.copy")}</button>
+        <details><summary>{t("settings.recovery.key.qr")}</summary><SecretQr source={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(created.qr_svg)}`} kind="recovery" code={created.key} /></details>
+        <Field label={t("settings.recovery.key.password")} hint={t("settings.recovery.key.passwordHint")}><SecretInput type="password" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} /></Field>
+        <Field label={t("settings.recovery.key.repeat")} error={repeat && repeat !== password ? t("common.error.passwordsDiffer") : undefined}><SecretInput type="password" autoComplete="new-password" value={repeat} onChange={(event) => setRepeat(event.target.value)} /></Field>
+        <button className="secondary-button" disabled={busy || !accepted || [...password].length < 12 || password !== repeat} onClick={() => void exportPackage()}><DownloadSimple size={17} />{t("settings.recovery.key.save")}</button>
+        <ConfirmationRow checked={retained} onChange={setRetained}>{t("settings.recovery.key.retained")}</ConfirmationRow>
+        <ShareEncryptedFile uri={exportedPath} />
+        <button className="primary-button" disabled={!retained || busy} onClick={() => { clearMaterial(); setNotice(t("settings.recovery.key.finished")); }}>{t("settings.recovery.key.finish")}</button>
+      </div>;
   return <section ref={scope} className="settings-card" aria-label={t("settings.recovery.title")}>
     <h2>{t("settings.recovery.title")}</h2>
     <p>{t("settings.recovery.summary")}{info}</p>
@@ -88,6 +101,7 @@ export function RecoveryKeys({ profile, connected, owner }: { profile: Pick<Serv
     {!connected ? <p>{t("common.error.needsConnection")}</p> : supported === false ? <p>{t("settings.recovery.unsupported")}</p> : settings ? <>
       <p>{settings.key ? t("settings.recovery.registered") : t("settings.recovery.none")}</p>
       {settings.enrollment_finishing && <p>{t("settings.recovery.finishing")}</p>}
+      {!settings.can_issue_key && <p className="settings-note">{t("settings.recovery.cannotIssue")}</p>}
       {settings.can_issue_key && <>
         <label className="preference-checkbox"><input type="checkbox" checked={accepted} onChange={(event) => setAccepted(event.target.checked)} />
           <span>{t("settings.recovery.accept")}</span>
@@ -103,6 +117,7 @@ export function RecoveryKeys({ profile, connected, owner }: { profile: Pick<Serv
         const next = await api.revokeRecoveryKey(profile.id, settings.key!.recovery_id);
         if (current()) { setSettings(next); clearMaterial(); }
       })}>{t("settings.recovery.revoke")}</button>}
+      {keyPanel}
       {owner && <details className="access-disclosure"><summary>{t("settings.recovery.admins.title")}</summary>
         <p>{t("settings.recovery.admins.summary")}</p>
         {admins.length ? admins.map((admin) => <label className="preference-checkbox" key={admin.id}>
@@ -129,18 +144,7 @@ export function RecoveryKeys({ profile, connected, owner }: { profile: Pick<Serv
         })}>{t("settings.recovery.admins.save")}</button>
       </details>}
     </> : <p>{t("common.state.loading")}</p>}
-      {created && <div className="invite-form">
-        <p className="warning-note">{t("settings.recovery.key.warning")}</p>
-        {!isAndroid && <Field label={t("settings.recovery.key.label")}><textarea rows={4} readOnly value={created.key} className="secret-code-output mono" /></Field>}
-        <button className="secondary-button" disabled={busy} onClick={() => void action(async (current) => { await copyText(created.key); if (current()) setNotice(t("settings.recovery.key.copied")); })}><Copy size={17} />{t("settings.recovery.key.copy")}</button>
-        <details><summary>{t("settings.recovery.key.qr")}</summary><SecretQr source={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(created.qr_svg)}`} kind="recovery" code={created.key} /></details>
-        <Field label={t("settings.recovery.key.password")} hint={t("settings.recovery.key.passwordHint")}><SecretInput type="password" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} /></Field>
-        <Field label={t("settings.recovery.key.repeat")}><SecretInput type="password" autoComplete="new-password" value={repeat} onChange={(event) => setRepeat(event.target.value)} /></Field>
-        <button className="secondary-button" disabled={busy || !accepted || [...password].length < 12 || password !== repeat} onClick={() => void exportPackage()}><DownloadSimple size={17} />{t("settings.recovery.key.save")}</button>
-        <ConfirmationRow checked={retained} onChange={setRetained}>{t("settings.recovery.key.retained")}</ConfirmationRow>
-        <ShareEncryptedFile uri={exportedPath} />
-        <button className="primary-button" disabled={!retained || busy} onClick={() => { clearMaterial(); setNotice(t("settings.recovery.key.finished")); }}>{t("settings.recovery.key.finish")}</button>
-      </div>}
+    {!(connected && supported !== false && settings) && keyPanel}
     {notice && <p role="status">{notice}</p>}{error && <InlineError message={error} />}
   </section>;
 }

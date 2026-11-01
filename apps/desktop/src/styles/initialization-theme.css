@@ -1,8 +1,5 @@
 .initialization-shell {
   padding-bottom: calc(100px + env(safe-area-inset-bottom));
-  gap: 14px;
-  background:
-    radial-gradient(ellipse at 50% 15%, color-mix(in srgb, color-mix(in srgb, var(--accent) 60%, var(--bg)) 18%, transparent), transparent 45%), var(--bg);
 }
 .initialization-brand {
   display: flex;
@@ -21,7 +18,7 @@
   font-size: 23px;
 }
 .initialization-brand .brand small {
-  font-size: 11px;
+  font-size: 0.75rem;
 }
 .initialization-card {
   border: 0;
@@ -30,10 +27,7 @@
   padding: 10px 0;
   width: min(100%, 680px);
 }
-.initialization-card > h1 {
-  font-size: 26px;
-  line-height: 1.2;
-}
+
 .initialization-summary {
   font-size: 12px;
   line-height: 1.7;

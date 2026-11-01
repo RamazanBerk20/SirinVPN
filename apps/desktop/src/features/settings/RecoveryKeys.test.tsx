@@ -37,7 +37,7 @@ it("does not mark cancelled or failed file saving as retained recovery material"
   vi.mocked(save).mockResolvedValueOnce("fixture.sirrec");
   vi.mocked(api.exportRecoveryPackage).mockRejectedValueOnce(new Error("Storage permission denied"));
   fireEvent.click(screen.getByRole("button", { name: t("settings.recovery.key.save") }));
-  expect(await screen.findByText("Storage permission denied")).toBeTruthy();
+  expect(await screen.findByText("Storage permission denied", { exact: false })).toBeTruthy();
   expect(screen.queryByText(t("settings.recovery.key.saved"))).toBeNull();
 });
 it("guards abandonment and clears the displayed secret only after explicit completion", async () => {

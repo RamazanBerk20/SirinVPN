@@ -1,19 +1,11 @@
 .onboarding-shell {
   position: relative;
   min-height: 100dvh;
-  display: grid;
-  grid-template-columns: minmax(0, 0.92fr) minmax(450px, 0.72fr);
   grid-template-rows: auto 1fr;
   gap: 28px 8vw;
-  padding: 38px clamp(30px, 6vw, 96px) 52px;
-  background:
-    radial-gradient(circle at 18% 58%, color-mix(in srgb, var(--accent) 17%, transparent), transparent 33%),
-    radial-gradient(circle at 72% 18%, color-mix(in srgb, color-mix(in srgb, var(--violet) 55%, var(--accent)) 8%, transparent), transparent 28%),
-    var(--bg);
 }
 
 .onboarding-shell::before {
-  content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
@@ -57,26 +49,20 @@
 .onboarding-copy {
   position: relative;
   z-index: 1;
-  align-self: start;
   max-width: 680px;
   padding-bottom: 4vh;
 }
 
 .section-label {
   margin: 0 0 18px;
-  color: var(--cyan);
   font-family: var(--font-ui);
-  font-size: 11px;
   font-weight: 650;
-  letter-spacing: 0.13em;
   text-transform: uppercase;
 }
 
 .onboarding-copy h1 {
   max-width: 690px;
   margin: 0;
-  font-size: clamp(44px, 5.3vw, 76px);
-  line-height: 0.99;
   letter-spacing: -0.065em;
 }
 
@@ -84,8 +70,6 @@
   max-width: 590px;
   margin: 28px 0 0;
   color: var(--muted);
-  font-size: 17px;
-  line-height: 1.72;
 }
 
 .privacy-promises {
@@ -114,13 +98,6 @@
   width: 100%;
   max-width: 570px;
   justify-self: end;
-  padding: 24px;
-  border: 1px solid color-mix(in srgb, var(--line-strong) 45%, var(--surface-3));
-  border-radius: var(--radius);
-  background: linear-gradient(145deg, color-mix(in srgb, var(--surface-2) 98%, transparent), color-mix(in srgb, var(--surface) 98%, transparent));
-  box-shadow:
-    0 28px 90px color-mix(in srgb, var(--shadow) 48%, transparent),
-    0 0 45px color-mix(in srgb, var(--accent) 7%, transparent);
 }
 
 .onboarding-form-wrap .setup-form {
@@ -142,8 +119,6 @@
   width: 39px;
   height: 39px;
   flex: 0 0 auto;
-  display: grid;
-  place-items: center;
   border: 1px solid color-mix(in srgb, var(--accent) 42%, transparent);
   border-radius: 8px;
   background: color-mix(in srgb, color-mix(in srgb, var(--line) 45%, var(--accent)) 25%, transparent);
@@ -203,10 +178,6 @@
 .field-grid {
   display: grid;
   gap: 14px;
-}
-
-.field-grid.two-column {
-  grid-template-columns: minmax(0, 1fr) 112px;
 }
 
 .field-grid.key-fields {

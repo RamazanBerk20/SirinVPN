@@ -5,7 +5,7 @@
 
 .route-list-field small {
   color: var(--quiet);
-  font-size: 9px;
+  font-size: 0.75rem;
   line-height: 1.45;
 }
 
@@ -14,7 +14,7 @@
   gap: 6px;
   margin-top: 10px;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 0.75rem;
 }
 
 .route-list-field textarea {
@@ -28,7 +28,7 @@
   background: var(--surface);
   color: color-mix(in srgb, var(--quiet) 25%, var(--text));
   font-family: var(--font-ui);
-  font-size: 10px;
+  font-size: 0.75rem;
   line-height: 1.55;
 }
 

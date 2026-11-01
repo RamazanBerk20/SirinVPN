@@ -8,10 +8,6 @@
   justify-items: center;
   gap: 2px;
 }
-.connection-center .connection-mark {
-  width: 32px;
-  height: 32px;
-}
 .connection-center .power-control {
   width: 7rem;
   height: 7rem;
@@ -45,8 +41,6 @@
   margin: 4px auto;
   max-width: 65ch;
   color: var(--muted);
-  font-size: 0.875rem;
-  line-height: 1.6;
 }
 .connection-facts {
   display: flex;
@@ -79,13 +73,9 @@
   margin-bottom: 8px;
   flex-wrap: wrap;
 }
-.section-heading h2 {
-  font-size: 1.0625rem;
-}
+
 .section-meta {
   color: var(--muted);
-  font-size: 0.8125rem;
-  line-height: 1.5;
 }
 
 .metrics-stream-state {
@@ -190,9 +180,6 @@
 }
 .metric .metric-detail {
   color: var(--muted);
-  font-size: 0.8125rem;
-  line-height: 1.6;
-  letter-spacing: 0;
 }
 .metric meter {
   width: 100%;

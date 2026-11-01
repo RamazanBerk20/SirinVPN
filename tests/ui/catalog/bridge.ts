@@ -160,6 +160,19 @@ export class CatalogBridge {
         return{release:{installed:s.releaseConfigured?{active_release_version:s.releaseVersion,active_release_sequence:'1',highest_accepted_release_sequence:'1',channel:'stable',active_artifact:{sha256:'a'.repeat(64),target:D.release.artifact_target}}:null,rollback_version:s.releaseConfigured?'1.0.0':null,recovery_pending:s.releasePending},security_updates:{schema_version:1,enabled:s.releaseAutomatic,source:s.releaseSource||null,channel:'stable'},automatic_outcome:s.releaseAutomatic?'no_new_security_release':'disabled',installed_binary_matches:s.releaseMatches};
       }
       case 'launchVpnApplication':return{process_id:4242,completed:false};
+      case 'alertSettings':return D.clone(s.alerts);
+      case 'updateAlerts':s.alerts.policy=args[1];s.alerts.status.checked_at_unix=1_900_000_000;return D.clone(s.alerts);
+      case 'sendTestAlert':return s.alertTest??{failure:null,http_status:200};
+      case 'dnsBlocklistSettings':return D.clone(s.blocklist);
+      case 'updateDnsBlocklist':s.blocklist.policy=args[1];s.blocklist.status={active:args[1].enabled,domain_count:args[1].enabled?184_312:0,updated_at_unix:args[1].enabled?1_900_000_000:null,failure:null};return D.clone(s.blocklist);
+      case 'speedTest':return D.clone(s.speed);
+      case 'setDevicePair':s.members.device_pairs=[...(s.members.device_pairs??[]).filter((p:any)=>!(p.device_id===args[1]&&p.peer_device_id===args[2])),{device_id:args[1],peer_device_id:args[2],one_way:args[3]}];return D.clone(s.members);
+      case 'removeDevicePair':s.members.device_pairs=(s.members.device_pairs??[]).filter((p:any)=>!(p.device_id===args[1]&&p.peer_device_id===args[2]));return D.clone(s.members);
+      case 'updateDeviceSubnetRoutes':for(const m of s.members.members)for(const d of m.devices)if(d.id===args[1])d.subnet_routes=args[2];return D.clone(s.members);
+      case 'hetznerCatalog':return D.clone(s.hetzner);
+      case 'createHetznerServer':return{server:{id:4242,name:'sirinvpn-fsn1',host_key_sha256:D.fingerprint},private_key_path:'/home/demo/.local/share/sirinvpn/hetzner-4242'};
+      case 'waitHetznerServer':return{ipv4:'192.0.2.40',ipv6:'2001:db8::40',host_key_sha256:D.fingerprint};
+      case 'cancelHetznerWait':case 'deleteHetznerServer':return;
       default:s.unknown.push(name);throw new Error('Screenshot fixture has no response for '+name);
     }
   }

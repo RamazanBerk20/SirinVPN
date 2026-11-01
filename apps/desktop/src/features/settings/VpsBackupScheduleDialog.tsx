@@ -222,7 +222,7 @@ function ScheduleForm({
               autoComplete="new-password"
             />
           </Field>
-          <Field label={t("vps.backup.repeatPassword")}>
+          <Field label={t("vps.backup.repeatPassword")} error={repeat && repeat !== password ? t("common.error.passwordsDiffer") : undefined}>
             <SecretInput
               type="password"
               value={repeat}

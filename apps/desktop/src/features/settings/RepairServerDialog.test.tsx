@@ -159,7 +159,7 @@ it("does not perform the VPS action if the key changes during confirmation or ca
   await setup();
   fireEvent.click(await screen.findByRole("checkbox", { name: new RegExp(t("ssh.verify.confirm")) }));
   fireEvent.click(screen.getByRole("button", { name: t("vps.repair.action.repair") }));
-  await screen.findByText("The SSH key changed during verification.");
+  await screen.findByText("The SSH key changed during verification.", { exact: false });
   expect(api.repairServer).not.toHaveBeenCalled();
 });
 
@@ -174,7 +174,7 @@ it("reuses trust after an authentication failure instead of asking for the finge
   await setup();
   fireEvent.click(await screen.findByRole("checkbox", { name: new RegExp(t("ssh.verify.confirm")) }));
   fireEvent.click(screen.getByRole("button", { name: t("vps.repair.action.repair") }));
-  await screen.findByText("SSH authentication failed.");
+  await screen.findByText("SSH authentication failed.", { exact: false });
   fireEvent.click(screen.getByRole("button", { name: t("vps.repair.action.repair") }));
   await screen.findByText(t("vps.repair.titleDone"));
   expect(api.trustSshHost).toHaveBeenCalledTimes(1);

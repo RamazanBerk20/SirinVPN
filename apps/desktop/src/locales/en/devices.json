@@ -25,7 +25,7 @@
     "addWireguard": "Add WireGuard device"
   },
   "row": {
-    "subtitle": "<address>{{address}}</address> · {{role}}",
+    "subtitle": "{{member}} · {{role}} · <address>{{address}}</address>",
     "activity": {
       "suspended": "Suspended",
       "recent": "Recently active",
@@ -97,7 +97,8 @@
     "empty": "No active invitations",
     "title": "Active invitations",
     "newMember": "New member invitation",
-    "row": "{{role}} · Expires {{date}}"
+    "row": "{{role}} · Expires {{date}}",
+    "cancel": "Cancel invitation"
   },
   "invite": {
     "title": "Invite member",
@@ -112,9 +113,11 @@
     "expires": "Expires {{date}}",
     "copyCode": "Copy code",
     "copyFailed": "Couldn’t copy the code. Select it and copy it manually.",
+    "copyFailedAndroid": "Couldn’t copy the code. Use View or share invitation to send it instead.",
     "secretWarning": "Anyone with this code can join until it’s used, cancelled or expired. Share it privately.",
     "role": "Access level",
     "roleHint": "Admins can invite and manage Members.",
+    "roleHintMember": "Members connect their own devices. They can’t invite or manage others unless you allow it below.",
     "checking": "Checking the server…",
     "checkAgain": "Check again",
     "recipientNames": "The recipient names the device when joining.",
@@ -127,6 +130,7 @@
     "days_other": "{{count}} days",
     "uses": "Number of uses",
     "usesHint": "Each use adds one device with its own keys. Device limits still apply.",
+    "usesInvalid": "Enter a whole number from 1 to 100.",
     "permissions": "Permissions and schedule",
     "creating": "Creating…",
     "createForMember": "Create device code",
@@ -159,6 +163,7 @@
     "description": "Devices with mutual access reach these private networks through your VPS while {{name}} allows mutual access too, and so does a device paired to start connections to {{name}}. Their hosts can answer but can’t start connections into SirinVPN.",
     "label": "Networks",
     "hint": "One private IPv4 network per line, /20 or smaller, such as 192.168.1.0/24. Leave empty to stop sharing.",
+    "invalid": "Not a private IPv4 network of /20 or smaller: {{networks}}",
     "linux": "{{name}} must run SirinVPN on Linux with IPv4 forwarding on: sudo sysctl -w net.ipv4.ip_forward=1. A WireGuard-only router forwards with its own settings.",
     "apply": "Each device applies a change when it next connects.",
     "save": "Save networks",

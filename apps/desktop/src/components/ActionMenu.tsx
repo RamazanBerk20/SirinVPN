@@ -180,23 +180,27 @@ export function ActionMenu({
             }
           }}
         >
-          {actions.map((action) => (
-            <button
-              role="menuitem"
-              key={action.label}
-              className={action.danger ? "danger-text" : ""}
-              disabled={action.disabled}
-              aria-label={action.label}
-              onClick={() => {
-                if (action.disabled) return;
-                close();
-                action.run();
-              }}
-            >
-              <span>{action.group && <small className="menu-action-scope">{action.group}</small>}{action.label}</span>
-              {action.reason && <small>{action.reason}</small>}
-            </button>
-          ))}
+          {/* One heading per group, as on Android, instead of a scope caption on every item. */}
+          {sheetGroups(actions).map(([group, items]) => <div role="group" aria-label={group || undefined} key={group}>
+            {group && <p className="menu-group-label" aria-hidden="true">{group}</p>}
+            {items.map((action) => (
+              <button
+                role="menuitem"
+                key={action.label}
+                className={action.danger ? "danger-text" : ""}
+                disabled={action.disabled}
+                aria-label={action.label}
+                onClick={() => {
+                  if (action.disabled) return;
+                  close();
+                  action.run();
+                }}
+              >
+                <span>{action.label}</span>
+                {action.reason && <small>{action.reason}</small>}
+              </button>
+            ))}
+          </div>)}
         </div>
       )}
     </div>

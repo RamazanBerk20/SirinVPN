@@ -1,26 +1,155 @@
+/* App shell: the sidebar (brand, primary navigation, saved servers, privacy note) beside the workspace.
+ * Every sidebar rule lives here. window.css fits the shell under the custom title bar; Android hides the sidebar. */
 .app-shell {
   min-height: 100dvh;
   display: grid;
-  grid-template-columns: 220px minmax(0, 1fr);
-  background:
-    radial-gradient(circle at 53% 18%, color-mix(in srgb, color-mix(in srgb, var(--accent) 55%, var(--surface-3)) 10%, transparent), transparent 34%),
-    var(--bg);
+  grid-template-columns: minmax(14rem, 18vw) minmax(0, 1fr);
+  background: var(--bg);
 }
-
 .sidebar {
   position: sticky;
   top: 0;
   height: 100dvh;
   display: flex;
   flex-direction: column;
-  border-right: 1px solid var(--surface-3);
-  background: linear-gradient(180deg, var(--bg) 0%, var(--bg) 72%);
+  gap: 14px;
+  padding: 24px 14px 16px;
+  overflow-y: auto;
+  border-right: 1px solid color-mix(in srgb, var(--muted) 15%, var(--surface-3));
+  background: var(--surface);
+}
+.primary-navigation {
+  flex-shrink: 0;
+  display: grid;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.primary-navigation button,
+.server-row {
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  text-align: left;
+}
+.primary-navigation button {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 48px;
+  padding: 12px 15px;
+  color: color-mix(in srgb, var(--muted) 70%, var(--text));
+}
+.primary-navigation button > svg {
+  flex-shrink: 0;
+}
+.primary-navigation button > span {
+  min-width: 0;
+}
+.primary-navigation strong {
+  color: var(--text);
+  font-size: var(--text-body);
+  font-weight: var(--weight-medium);
+}
+.primary-navigation button:hover,
+.server-row:hover {
+  background: color-mix(in srgb, var(--surface-3) 55%, var(--surface-2));
+}
+/* The current page and the selected server share one marker: a filled row with a cyan leading edge. */
+.primary-navigation button[aria-current],
+.server-row.selected {
+  border-color: color-mix(in srgb, var(--line-strong) 20%, var(--accent));
+  background: var(--surface-3);
+  box-shadow: inset 3px 0 0 -1px var(--cyan);
+  color: var(--text);
+}
+.primary-navigation button[aria-current] > svg {
+  color: var(--cyan);
 }
 
-.sidebar > .brand {
-  min-height: 102px;
-  padding: 18px 18px 16px;
-  border-bottom: 1px solid var(--surface-3);
+.sidebar-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 6px 0 12px;
+  color: var(--quiet);
+  font-size: 0.8125rem;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.sidebar-heading .icon-button {
+  width: 32px;
+  height: 32px;
+}
+.server-list {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  padding: 0 2px;
+  overflow-y: auto;
+}
+.server-row {
+  min-width: 0;
+  min-height: 56px;
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  color: var(--muted);
+  cursor: pointer;
+}
+.server-row > span:nth-child(2) {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+/* Long names take two lines, then end with an ellipsis; the full name is the row's title. */
+.server-row strong {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+.server-row small {
+  color: var(--quiet);
+  font-size: 0.8125rem;
+}
+.server-glyph {
+  display: grid;
+  place-items: center;
+  color: color-mix(in srgb, var(--muted) 75%, var(--surface));
+}
+.server-glyph.online,
+.server-glyph.online + span small {
+  color: var(--success);
+}
+.sidebar-foot {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+  padding: 12px 12px 0;
+  color: var(--quiet);
+  font-size: 0.8125rem;
+}
+.sidebar-foot svg {
+  flex-shrink: 0;
+  color: var(--accent);
+}
+@media (max-width: 760px) {
+  .app-shell {
+    display: block;
+  }
+  .sidebar {
+    display: none;
+  }
 }
 
 .brand.compact .brand-mark {
@@ -34,25 +163,32 @@
 
 .brand.compact small {
   color: color-mix(in srgb, var(--quiet) 65%, var(--surface-3));
-  font-size: 8px;
+  font-size: 0.75rem;
   white-space: nowrap;
 }
-
-.sidebar-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 25px 14px 10px 18px;
-  color: var(--quiet);
-  font-size: 10px;
-  font-weight: 750;
-  letter-spacing: 0.11em;
-  text-transform: uppercase;
+/* The sidebar brand, after the shared compact brand sizes it overrides. */
+.sidebar > .brand {
+  flex-shrink: 0;
+  min-height: 72px;
+  padding: 0 6px 16px;
+  border-bottom: 1px solid var(--surface-3);
+}
+.sidebar .brand-mark {
+  width: 45px;
+  height: 45px;
+}
+.sidebar .brand > div {
+  min-width: 0;
+}
+.sidebar .brand strong {
+  font-size: 23px;
+  overflow-wrap: anywhere;
+}
+.sidebar .brand small {
+  display: none;
 }
 
 .icon-button {
-  width: 34px;
-  height: 34px;
   display: inline-grid;
   place-items: center;
   flex: 0 0 auto;
@@ -74,121 +210,9 @@
   color: var(--danger);
 }
 
-.sidebar-heading .icon-button {
-  width: 29px;
-  height: 29px;
-}
-
-.server-list {
-  align-content: start;
-  flex: 1;
-  display: grid;
-  gap: 5px;
-  overflow-y: auto;
-  padding: 4px 10px;
-}
-
-.server-row {
-  position: relative;
-  width: 100%;
-  min-width: 0;
-  display: grid;
-  grid-template-columns: 34px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 8px;
-  border: 1px solid transparent;
-  border-radius: 7px;
-  background: transparent;
-  color: var(--muted);
-  cursor: pointer;
-  text-align: left;
-}
-
-.server-row:hover {
-  background: var(--surface-2);
-}
-
-.server-row.selected {
-  border-color: color-mix(in srgb, var(--line) 75%, var(--accent));
-  background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 15%, var(--surface-3)), color-mix(in srgb, var(--surface-3) 70%, var(--bg)) 76%);
-  color: var(--text);
-  box-shadow:
-    inset 2px 0 0 color-mix(in srgb, var(--cyan) 25%, var(--accent)),
-    0 0 22px color-mix(in srgb, var(--accent) 10%, transparent);
-}
-
-.server-row.selected::after {
-  content: "";
-  position: absolute;
-  top: 8px;
-  right: -1px;
-  bottom: 8px;
-  width: 2px;
-  border-radius: 2px;
-  background: var(--success);
-  box-shadow: 0 0 10px var(--success);
-}
-
-.server-row > span:nth-child(2) {
-  min-width: 0;
-  display: grid;
-  gap: 3px;
-}
-
-.server-row strong,
-.server-row small {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.server-row strong {
-  font-size: 12px;
-}
-
-.server-row small {
-  color: var(--quiet);
-  font-size: 10px;
-}
-
-.server-glyph {
-  width: 34px;
-  height: 34px;
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  background: color-mix(in srgb, var(--surface-3) 70%, var(--bg));
-  color: color-mix(in srgb, var(--muted) 75%, var(--surface));
-}
-
-.server-glyph.online {
-  border-color: color-mix(in srgb, var(--success) 35%, transparent);
-  background: color-mix(in srgb, var(--success) 10%, transparent);
-  color: var(--success);
-}
-
-.sidebar-foot {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: auto;
-  padding: 18px 20px;
-  border-top: 1px solid var(--surface-3);
-  color: var(--quiet);
-  font-size: 9px;
-}
-
-.sidebar-foot svg {
-  color: var(--accent);
-}
-
 .workspace {
   position: relative;
   min-width: 0;
-  padding: clamp(27px, 3.4vw, 48px);
-  overflow: hidden;
 }
 
 .workspace::before {
@@ -213,43 +237,13 @@
   margin: 0 auto;
 }
 
-.workspace-header {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
-  align-items: center;
-  gap: 22px;
-  margin-bottom: 26px;
-}
-
 .workspace-header .section-label {
   margin-bottom: 8px;
 }
 
-.workspace-header h1 {
-  margin: 0;
-  font-size: clamp(30px, 3.4vw, 42px);
-  line-height: 1;
-  letter-spacing: -0.055em;
-}
-
-.endpoint {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  margin-top: 13px;
-  color: var(--muted);
-  font-family: var(--font-ui);
-  font-size: 11px;
-}
-
 .secondary-button {
-  min-height: 36px;
-  padding: 0 13px;
   border: 1px solid var(--line);
-  border-radius: 7px;
-  background: var(--surface-2);
   color: color-mix(in srgb, var(--line) 20%, var(--text));
-  font-size: 11px;
 }
 
 .secondary-button:hover {

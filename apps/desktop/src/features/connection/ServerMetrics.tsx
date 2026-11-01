@@ -46,6 +46,8 @@ export function serverMetrics(status: ServerStatus): { id: string; label: string
   const activity = status.recently_active_peer_count;
   return [
     { id: "cpu", label: t("home.server.cpu"), value: status.cpu_usage_basis_points === undefined ? t("format.unavailable") : formatCpuUsage(status.cpu_usage_basis_points),
+      // A detail line like memory and storage have keeps the three usage bars aligned.
+      detail: t(status.cpu_usage_basis_points === undefined ? "home.server.noMeasurement" : "home.server.cpuDetail"),
       percent: status.cpu_usage_basis_points === undefined ? undefined : status.cpu_usage_basis_points / 100, measured: status.cpu_usage_basis_points !== undefined, icon: <Cpu /> },
     { id: "memory", label: t("home.server.memory"), ...resource(status.memory_used_bytes, status.memory_total_bytes), icon: <HardDrives /> },
     { id: "storage", label: t("home.server.storage"), ...resource(status.disk_used_bytes, status.disk_total_bytes), icon: <HardDrives /> },
@@ -69,27 +71,18 @@ export function ServerMetrics({
     <section className="server-metrics" aria-label={t("home.server.title")}>
       <div className="section-heading">
         <h2>{t("home.server.title")}</h2>
-        <span
+        {state !== "unavailable" && <span
           className={`section-meta metrics-stream-state${state === "live" ? " is-live" : ""}`}
           role="status"
         >
           {t(`home.server.freshness.${state}`)}
-        </span>
+        </span>}
       </div>
       {!status ? (
         <div className="metrics-unavailable">
           <p>
             {t(!model.localKnown ? "common.state.checking" : connected ? "home.server.unavailable" : "home.server.connectToSee")}
           </p>
-          {model.localKnown && !connected && (
-            <button
-              className="secondary-button"
-              disabled={model.busy || model.anotherConnected || model.active}
-              onClick={() => void model.toggle()}
-            >
-              {t("home.action.connect")}
-            </button>
-          )}
         </div>
       ) : (
         <>

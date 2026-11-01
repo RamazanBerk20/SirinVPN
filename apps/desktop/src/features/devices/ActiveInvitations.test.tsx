@@ -26,7 +26,7 @@ it("shows only role and expiry, and keeps cancellation available", () => {
   expect(container.querySelector("small")?.textContent).toBe(row("admin"));
   expect(container.textContent).not.toMatch(/Recipient chooses|Phone|joins remaining/);
   fireEvent.click(screen.getByText(t("devices.invitations.title")));
-  fireEvent.click(screen.getByRole("button", { name: t("common.action.cancel") }));
+  fireEvent.click(screen.getByRole("button", { name: t("devices.invitations.cancel") }));
   expect(onCancel).toHaveBeenCalledWith("invite");
 });
 
@@ -42,5 +42,5 @@ it.each(["owner", "admin", "member"] as const)(
 it("preserves the Admin cancellation restriction for privileged invitations", () => {
   render(<ActiveInvitations snapshot={snapshot} accessLevel="admin" onCancel={vi.fn()} />);
   fireEvent.click(screen.getByText(t("devices.invitations.title")));
-  expect(screen.queryByRole("button", { name: t("common.action.cancel") })).toBeNull();
+  expect(screen.queryByRole("button", { name: t("devices.invitations.cancel") })).toBeNull();
 });

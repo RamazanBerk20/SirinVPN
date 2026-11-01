@@ -47,32 +47,6 @@
 }
 
 @media (max-width: 760px) {
-  .app-shell {
-    grid-template-columns: 1fr;
-  }
-
-  .sidebar {
-    position: static;
-    width: 100%;
-    height: auto;
-  }
-
-  .sidebar > .brand {
-    height: 68px;
-  }
-
-  .server-list {
-    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-    padding-bottom: 12px;
-  }
-
-  .sidebar-foot {
-    display: none;
-  }
-
-  .workspace {
-    padding: 28px 18px 40px;
-  }
 
   .workspace::before {
     inset: 0;
@@ -80,7 +54,6 @@
 
   .workspace-header {
     grid-template-columns: minmax(0, 1fr) auto;
-    align-items: flex-start;
   }
 
   

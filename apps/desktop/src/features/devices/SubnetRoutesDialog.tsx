@@ -4,10 +4,11 @@ import { api } from "../../api";
 import { DialogContent } from "../../components/DialogContent";
 import { InlineError } from "../../components/ui";
 import { errorMessage } from "../../lib/errors";
+import { invalidLocalNetworks } from "../../lib/cidr";
 import type { DeviceSummary } from "../../types";
 import { t } from "../../i18n";
 
-/** The VPS validates the ranges; this only splits the list the Owner typed. */
+/** Splits the list the Owner typed; the VPS validates the ranges again. */
 export const parseRoutes = (text: string) => text.split(/[\s,]+/).filter(Boolean);
 
 export function SubnetRoutesDialog({ serverId, device, onClose, onSaved }: {
@@ -15,6 +16,7 @@ export function SubnetRoutesDialog({ serverId, device, onClose, onSaved }: {
 }) {
   const [draft, setDraft] = useState(() => (device.subnet_routes ?? []).join("\n"));
   const [busy, setBusy] = useState(false), [error, setError] = useState<string | null>(null);
+  const invalid = invalidLocalNetworks(parseRoutes(draft));
   const save = async () => {
     setBusy(true); setError(null);
     try {
@@ -33,11 +35,12 @@ export function SubnetRoutesDialog({ serverId, device, onClose, onSaved }: {
           <span>{t("devices.localNetworks.label")}</span>
           <textarea value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="192.168.1.0/24" rows={3} disabled={busy} />
           <small>{t("devices.localNetworks.hint")}</small>
+          {invalid.length > 0 && <small className="field-error" role="alert">{t("devices.localNetworks.invalid", { networks: invalid.join(", ") })}</small>}
         </label>
         <p className="settings-note">{t("devices.localNetworks.linux", { name: device.name })}</p>
         <p className="settings-note">{t("devices.localNetworks.apply")}</p>
         {error && <InlineError message={error} />}
-        <button className="primary-button" type="submit" disabled={busy}>{busy ? t("common.state.saving") : t("devices.localNetworks.save")}</button>
+        <button className="primary-button" type="submit" disabled={busy || invalid.length > 0}>{busy ? t("common.state.saving") : t("devices.localNetworks.save")}</button>
       </form>
     </DialogContent></Dialog.Portal>
   </Dialog.Root>;

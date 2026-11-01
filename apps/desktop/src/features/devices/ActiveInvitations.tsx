@@ -54,7 +54,7 @@ export function ActiveInvitations({
                   className="text-button danger-text"
                   onClick={() => void onCancel(invitation.id)}
                 >
-                  {t("common.action.cancel")}
+                  {t("devices.invitations.cancel")}
                 </button>
               )}
             </div>

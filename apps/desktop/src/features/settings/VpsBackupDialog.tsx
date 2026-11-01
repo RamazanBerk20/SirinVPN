@@ -237,7 +237,7 @@ export function VpsBackupDialog({
                       autoComplete="new-password"
                     />
                   </Field>
-                  <Field label={t("vps.backup.repeatPassword")}>
+                  <Field label={t("vps.backup.repeatPassword")} error={backupPasswordConfirmation && backupPasswordConfirmation !== backupPassword ? t("common.error.passwordsDiffer") : undefined}>
                     <SecretInput
                       type="password"
                       value={backupPasswordConfirmation}

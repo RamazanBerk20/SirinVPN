@@ -163,7 +163,7 @@ export function ExportBackupDialog({
                     autoComplete="new-password"
                   />
                 </Field>
-                <Field label={t("settings.backup.password.repeat")}>
+                <Field label={t("settings.backup.password.repeat")} error={passwordConfirmation && passwordConfirmation !== password ? t("common.error.passwordsDiffer") : undefined}>
                   <SecretInput
                     type="password"
                     value={passwordConfirmation}
