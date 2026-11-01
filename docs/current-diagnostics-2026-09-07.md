@@ -90,11 +90,14 @@ logs nothing. See [architecture](architecture.md#speed-test) for the limits.
 Evidence: limiter, handler and cap tests (paused time); the real `serve_management`
 carrying a 2 MiB chunked upload past the router's 64 KiB body limit and a streamed
 download over pinned TLS; client rate, median, body and message tests; and
-`tests/network/run-speed-test.sh`, where the real client in a full-tunnel namespace
-measured 1.33 Gbit/s down and 1.67 Gbit/s up over kernel WireGuard (both stopped
-at 1 GiB before eight seconds), with latency 0.9 ms idle, 1.7 ms during download
-and 4.2 ms during upload, and an immediate second run was refused by the
-cooldown. The desktop component has UI tests; Android shares that UI and the
+`tests/network/run-speed-test.sh`. There the real client in a full-tunnel
+namespace runs over kernel WireGuard shaped to 100 Mbit/s each way, so both
+directions take the full eight seconds. It measured 96.2 Mbit/s down and up, with
+latency 0.95 ms idle, 11.0 ms during download and 10.7 ms during upload, and an
+immediate second run was refused by the cooldown. The first two-VM lab run found
+that the client's 8-second read timeout, which reqwest also applies to the wait for
+response headers, ended every full-length upload; the shaped kernel test fails the
+same way without the fix. The desktop component has UI tests; Android shares that UI and the
 runtime command passes Android-target clippy but has not run on an emulator.
 
 ## VPS observations
