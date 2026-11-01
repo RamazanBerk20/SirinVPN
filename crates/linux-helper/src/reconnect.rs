@@ -18,8 +18,8 @@ pub(super) fn persistent_request_for_rollback(
             TransportKind::DirectUdp => 2,
             TransportKind::ObfuscatedUdp => 3,
             TransportKind::TcpFallback => 4,
-            TransportKind::TlsLike => {
-                unreachable!("persistent TLS-like requests are rejected during validation")
+            TransportKind::TlsLike | TransportKind::Quic => {
+                unreachable!("persistent TLS-like and QUIC requests are rejected during validation")
             }
         };
         compatible.routing = TunnelRoutingPolicy::default();
@@ -54,8 +54,8 @@ pub(super) fn persistent_request_for_rollback(
             extended_routing,
         ),
         TransportKind::DirectUdp => unreachable!(),
-        TransportKind::TlsLike => {
-            unreachable!("persistent TLS-like requests are rejected during validation")
+        TransportKind::TlsLike | TransportKind::Quic => {
+            unreachable!("persistent TLS-like and QUIC requests are rejected during validation")
         }
     }
 }

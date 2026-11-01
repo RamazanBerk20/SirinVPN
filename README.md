@@ -41,7 +41,8 @@ Screenshots use fictional profiles and example data.
   fingerprint, review its network before installation, and manage SirinVPN-owned
   services and firewall rules.
 - **Choose a connection method.** Direct UDP (standard WireGuard), Obfuscated UDP,
-  TLS fallback with a pinned certificate, and TCP fallback. Pick one yourself or let
+  QUIC that looks like HTTP/3 on UDP 443, TLS fallback with a pinned certificate, and
+  TCP fallback. Pick one yourself or let
   SirinVPN choose for your network conditions, with configurable endpoints and
   bounded automatic fallback.
 - **Manage people and devices.** Owner, Admin, and Member roles; signed invitations

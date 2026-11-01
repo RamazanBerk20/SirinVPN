@@ -20,7 +20,8 @@
         "direct_udp": "Standard WireGuard",
         "obfuscated_udp": "Disguised UDP for networks that block WireGuard",
         "tls_like": "Uses TLS 1.3, like web traffic",
-        "tcp_fallback": "Last resort when UDP is blocked"
+        "tcp_fallback": "Last resort when UDP is blocked",
+        "quic": "Looks like HTTP/3 web traffic on UDP"
       }
     },
     "policy": {
@@ -131,7 +132,7 @@
     },
     "manual": {
       "label": "Manual MTU",
-      "hint": "{{min}}–{{max}} bytes. Obfuscated UDP uses at most {{obfuscatedMax}}.",
+      "hint": "{{min}}–{{max}} bytes. Obfuscated UDP uses at most {{obfuscatedMax}} and QUIC at most {{quicMax}}.",
       "invalid": "Enter a whole number from {{min}} to {{max}}.",
       "invalidIpv6": "With IPv6 on, enter a whole number from {{min}} to {{max}}."
     },

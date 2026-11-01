@@ -12,6 +12,7 @@ fn signed_long_code_round_trip_preserves_only_bootstrap_secret() {
         server_public_key: STANDARD.encode([12_u8; 32]),
         certificate_sha256: STANDARD.encode([13_u8; 32]),
         https: None,
+        quic: false,
     });
     let draft = InvitationDraft::new(&profile, "Alice", "Laptop", 600).unwrap();
     let response = signed_response(&profile, draft.request(), &server_key);

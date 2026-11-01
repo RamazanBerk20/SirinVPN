@@ -441,6 +441,10 @@ pub(super) fn validate_port_forward(
                     .obfuscated_udp
                     .as_ref()
                     .is_some_and(|endpoint| endpoint.port == forward.public_port)
+                || configuration
+                    .tls_like
+                    .as_ref()
+                    .is_some_and(|endpoint| endpoint.quic && endpoint.port == forward.public_port)
         }
     };
     if reserved {

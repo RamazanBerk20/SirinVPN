@@ -207,6 +207,33 @@ pub async fn serve(paths: &ServerPaths) -> Result<()> {
         )
         .await
     };
+    let quic = configuration
+        .tls_like
+        .as_ref()
+        .filter(|endpoint| endpoint.quic)
+        .map(|endpoint| {
+            transport_tls_configuration(paths, &configuration, &encoded_private_key)
+                .map(|tls| (endpoint.port, tls))
+        })
+        .transpose()?;
+    let quic_peers = transport_peers.clone();
+    let quic_activity = transport_activity.clone();
+    let quic_relay = async move {
+        let Some((port, tls)) = quic else {
+            return std::future::pending::<Result<(), sirinvpn_transport::RelayError>>().await;
+        };
+        run_quic_server_relay(
+            TcpServerRelayConfig {
+                listen: SocketAddr::new(listen_address, port),
+                wireguard_backend: backend,
+                server_private_key: Zeroizing::new(private_key),
+            },
+            tls,
+            quic_peers,
+            quic_activity,
+        )
+        .await
+    };
     let obfuscated = configuration.obfuscated_udp;
     let udp_peers = transport_peers.clone();
     let udp_activity = transport_activity.clone();
@@ -266,6 +293,7 @@ pub async fn serve(paths: &ServerPaths) -> Result<()> {
         result = management => result,
         result = udp_relay => result.map_err(anyhow::Error::from),
         result = tcp_relay => result.map_err(anyhow::Error::from),
+        result = quic_relay => result.map_err(anyhow::Error::from),
         result = discovery_relay => result.map_err(anyhow::Error::from),
         result = publication => result,
     }

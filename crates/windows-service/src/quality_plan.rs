@@ -60,7 +60,7 @@ impl QualityMonitor {
             self.checked.push(transport);
         }
         self.status.sample = sample;
-        self.status.candidates_checked = self.checked.len().min(4) as u8;
+        self.status.candidates_checked = self.checked.len().min(5) as u8;
         if let Some(sample) = sample
             && sample.valid()
             && self
@@ -99,7 +99,7 @@ impl QualityMonitor {
         if !self.checked.contains(&transport) {
             self.checked.push(transport);
         }
-        self.status.candidates_checked = self.checked.len().min(4) as u8;
+        self.status.candidates_checked = self.checked.len().min(5) as u8;
         self.status.sample = None;
         self.status.selection = QualitySelection::Comparing;
         Some(previous)

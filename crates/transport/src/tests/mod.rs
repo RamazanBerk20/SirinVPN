@@ -114,6 +114,7 @@ fn tls_like_selection_pins_the_certificate_and_precedes_raw_tcp() {
         server_public_key: STANDARD.encode([9_u8; 32]),
         certificate_sha256: STANDARD.encode([10_u8; 32]),
         https: None,
+        quic: false,
     });
 
     let selections = TransportEngine
@@ -494,4 +495,76 @@ fn manual_mtu_is_limited_to_each_transport_ceiling() {
     ] {
         assert_eq!(manual_mtu_for(kind, 1_420), 1_420);
     }
+}
+
+#[test]
+fn quic_reuses_the_tls_identity_and_leads_restricted_networks() {
+    let mut profile = profile(Some(ObfuscatedUdpEndpoint {
+        port: 51_821,
+        server_public_key: STANDARD.encode([9_u8; 32]),
+    }));
+    profile.tcp_fallback = Some(TcpFallbackEndpoint {
+        port: 443,
+        server_public_key: STANDARD.encode([9_u8; 32]),
+    });
+    profile.tls_like = Some(TlsLikeEndpoint {
+        port: 443,
+        server_public_key: STANDARD.encode([9_u8; 32]),
+        certificate_sha256: STANDARD.encode([10_u8; 32]),
+        https: Some(sirinvpn_protocol::HttpsTransport {
+            server_name: "vpn.example.org".into(),
+            path: "/connect".into(),
+            cdn: true,
+        }),
+        quic: true,
+    });
+    let kinds = |profile: &ServerProfile, network_profile| {
+        TransportEngine
+            .automatic_plan(profile, network_profile, None)
+            .unwrap()
+            .into_iter()
+            .map(|selection| selection.kind)
+            .collect::<Vec<_>>()
+    };
+    use TransportKind::*;
+    assert_eq!(
+        kinds(&profile, NetworkProfile::Normal),
+        [DirectUdp, ObfuscatedUdp, Quic, TlsLike, TcpFallback]
+    );
+    assert_eq!(
+        kinds(&profile, NetworkProfile::Restricted),
+        [Quic, ObfuscatedUdp, TlsLike, TcpFallback, DirectUdp]
+    );
+    assert_eq!(
+        kinds(&profile, NetworkProfile::Extreme),
+        [TlsLike, Quic, TcpFallback, ObfuscatedUdp, DirectUdp]
+    );
+
+    let quic = TransportEngine.select(&profile, Quic).unwrap();
+    assert_eq!(quic.network_endpoint.wireguard_port, 443);
+    assert_eq!(
+        quic.wireguard_endpoint.wireguard_port,
+        QUIC_CLIENT_RELAY_PORT
+    );
+    assert_eq!(quic.mtu, QUIC_MTU);
+    assert_eq!(
+        quic.server_certificate_sha256,
+        Some(STANDARD.encode([10_u8; 32]))
+    );
+    // A CDN name never reaches the origin, where QUIC goes.
+    assert_eq!(quic.https, None);
+    assert_eq!(manual_mtu_for(Quic, 1_420), QUIC_MAX_MTU);
+
+    let descriptor = profile.endpoint_descriptor();
+    TransportEngine.validate_descriptor(&descriptor).unwrap();
+    let mut shared = descriptor.clone();
+    shared.obfuscated_udp.as_mut().unwrap().port = 443;
+    assert!(TransportEngine.validate_descriptor(&shared).is_err());
+
+    profile.tls_like.as_mut().unwrap().quic = false;
+    assert!(matches!(
+        TransportEngine.select(&profile, Quic),
+        Err(TransportError::Unavailable)
+    ));
+    assert!(!kinds(&profile, NetworkProfile::Restricted).contains(&Quic));
 }

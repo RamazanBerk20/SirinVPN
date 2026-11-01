@@ -28,6 +28,7 @@ fn https_cdn_mode_is_opt_in_and_invisible_when_off() {
             server_public_key: String::new(),
             certificate_sha256: String::new(),
             https: Some(cdn.clone()),
+            quic: false,
         }),
     };
     // A CDN proxies only the HTTPS port; the VPS keeps its retained discovery port.

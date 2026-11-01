@@ -425,6 +425,7 @@ pub(super) enum ConnectTransport {
     Obfuscated,
     Tls,
     Tcp,
+    Quic,
 }
 
 impl From<ConnectTransport> for TransportPreference {
@@ -435,6 +436,7 @@ impl From<ConnectTransport> for TransportPreference {
             ConnectTransport::Obfuscated => Self::ObfuscatedUdp,
             ConnectTransport::Tls => Self::TlsLike,
             ConnectTransport::Tcp => Self::TcpFallback,
+            ConnectTransport::Quic => Self::Quic,
         }
     }
 }
@@ -713,7 +715,8 @@ pub(super) struct TransportArguments {
     pub(super) wireguard_port: Option<u16>,
     #[arg(long)]
     pub(super) obfuscated_udp_port: Option<u16>,
-    /// TCP and TLS share an authenticated listener.
+    /// TCP and TLS share an authenticated listener; QUIC uses the same port number over UDP
+    /// unless Obfuscated UDP is on it.
     #[arg(long)]
     pub(super) tcp_tls_port: Option<u16>,
     #[arg(long, conflicts_with = "disable_https")]
@@ -811,6 +814,12 @@ impl TransportArguments {
         {
             eprintln!(
                 "Note: Cloudflare proxies HTTPS only on ports 443, 2053, 2083, 2087 and 2096. Check that your CDN proxies TCP/TLS port {}.",
+                setup.tcp_tls_port
+            );
+        }
+        if !setup.quic() {
+            eprintln!(
+                "Note: QUIC stays off while Obfuscated UDP uses TCP/TLS port {}. Choose another --obfuscated-udp-port to turn it on.",
                 setup.tcp_tls_port
             );
         }

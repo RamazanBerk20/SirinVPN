@@ -12,7 +12,7 @@ Linux desktop UI / CLI
   |-- local network policy (one salted current success)
   |-- Linux Secret Service or 0600 fallback (private identities)
   |-- SSH provisioner -------------------------------> VPS SSH daemon
-  |-- transport engine -> Direct UDP / Obfuscated UDP / TLS fallback / TCP fallback
+  |-- transport engine -> Direct UDP / Obfuscated UDP / QUIC / TLS fallback / TCP fallback
   |     `-- stdin + polkit -> privileged network helper
   |                     |-- WireGuard interface
   |                     |-- authenticated loopback UDP/TCP relay (when selected)
@@ -35,7 +35,7 @@ Internet traffic <============== WireGuard =============|-- Unbound DNS
 | `sirinvpn-protocol` | Versioned local/API data types and validation | None |
 | `sirinvpn-release` | Offline signed-manifest creation/verification, artifact authentication, rollback-safe state planning, and Linux installed-release receipt ownership | None for release creation/verification; root for fixed system receipt state |
 | `sirinvpn-release-fetch` | Explicit bounded HTTPS retrieval into a verified private no-clobber candidate bundle | Unprivileged user; never installs or writes system release state |
-| `sirinvpn-transport` | Select Direct/Obfuscated/TLS/TCP endpoints and implement the authenticated client/server relays | Client relay receives only `CAP_NET_ADMIN` for its marked outer socket; server relays run in the existing daemon |
+| `sirinvpn-transport` | Select Direct/Obfuscated/QUIC/TLS/TCP endpoints and implement the authenticated client/server relays | Client relay receives only `CAP_NET_ADMIN` for its marked outer socket; server relays run in the existing daemon |
 | `sirinvpn-core` | Per-server identities, profile storage, bounded local network policy, secrets, pinned mTLS client | User |
 | `sirinvpn-installer` | Host-key-pinned SSH discovery and transactional VPS setup | Remote root through SSH/sudo |
 | `sirinvpn-server` | Private status, diagnostics, configuration, invitations, and current authorization | Dedicated `sirinvpn` user with `CAP_NET_ADMIN` for peer updates and `CAP_NET_BIND_SERVICE` for UDP+TCP/443; mutable access is confined to `/etc/sirinvpn/authorization` |
@@ -213,6 +213,15 @@ checkpoints](endpoints-and-outer-ipv6-2026-09-06.md) bind current ports, alterna
 addresses and public identities; catch-up and background discovery preserve the
 pinned server identity and current protection/routing intent.
 
+[QUIC](quic-transport.md) runs on UDP at the TCP/TLS port number and looks like
+HTTP/3: QUIC version 1 with TLS 1.3, the same certificate pin and `h3`. A Noise IK
+exchange on the first stream authorizes the device and authenticates the server
+key; WireGuard packets then travel as QUIC datagrams. Probes meet an HTTP/3 server
+that answers 404. It never goes through a CDN, and its ClientHello is readable by
+any observer and is quinn's, not a browser's. New servers move Obfuscated UDP to
+UDP 51821 to free UDP 443; Repair offers the same move. A server with QUIC uses
+configuration schema 11.
+
 Transport preference is local policy. Manual selection remains pinned; Automatic
 tries only advertised candidates and stops on uncertain teardown. Initial
 readiness requires authenticated management through the tunnel. The optional
@@ -226,7 +235,8 @@ and [MTU](mtu-handling-2026-09-06.md).
 Kill switch, automatic reconnect and connect on startup are independent Linux
 policies. A root-private desired record contains only current intent, native
 WireGuard/transport material, endpoint descriptors, routing and MTU settings.
-All four transports can be retained. The boot guard precedes networking; the
+All five transports can be retained, except that the legacy persistent bundle
+takes no TLS or QUIC transport. The boot guard precedes networking; the
 supervisor honors pause/reconnect/startup choices, observes current physical
 routes, requires a fresh handshake after underlay change, and uses bounded
 backoff. An unavailable route holds the configured guard without rebuild churn.

@@ -95,7 +95,7 @@ fn guard_objects_with_controls(
     for (kind, port, destination) in carriers {
         let protocol = match kind {
             TransportKind::TcpFallback | TransportKind::TlsLike => "tcp",
-            _ => "udp",
+            TransportKind::DirectUdp | TransportKind::ObfuscatedUdp | TransportKind::Quic => "udp",
         };
         rule(
             vec![

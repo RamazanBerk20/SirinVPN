@@ -41,6 +41,7 @@ export function ConnectionOptions({ model }: { model: ServerWorkspaceModel }) {
   }[] = [
     { value: "direct_udp" },
     { value: "obfuscated_udp", unavailable: !profile.obfuscated_udp },
+    { value: "quic", unavailable: !profile.tls_like?.quic },
     { value: "tls_like", unavailable: !profile.tls_like },
     { value: "tcp_fallback", unavailable: !profile.tcp_fallback },
   ];

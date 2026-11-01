@@ -645,3 +645,62 @@ fn quality_transition_keeps_the_interface_and_routes_and_verifies_the_guard() {
             })
     );
 }
+
+#[test]
+fn quic_needs_an_independent_policy_and_stays_out_of_the_legacy_bundle() {
+    let quic = |schema_version| {
+        let mut request = request();
+        request.schema_version = schema_version;
+        request.transport = TransportKind::Quic;
+        request.endpoint_port = 443;
+        request.mtu = 1_280;
+        request.server_transport_public_key = Some(STANDARD.encode([9_u8; 32]));
+        request.server_certificate_sha256 = Some(STANDARD.encode([10_u8; 32]));
+        request
+    };
+    assert!(validate_request(&quic(5)).is_err());
+    let mut independent_quic = quic(7);
+    independent_quic.policy = independent(true, false, false).policy;
+    validate_request(&independent_quic).unwrap();
+    let mut missing_pin = independent_quic.clone();
+    missing_pin.server_certificate_sha256 = None;
+    assert!(validate_request(&missing_pin).is_err());
+
+    let mut quic_selection = selection(
+        TransportKind::Quic,
+        443,
+        Some(STANDARD.encode([9_u8; 32])),
+        1_280,
+    );
+    quic_selection.server_certificate_sha256 = Some(STANDARD.encode([10_u8; 32]));
+    let mut tls_selection = quic_selection.clone();
+    tls_selection.kind = TransportKind::TlsLike;
+    let selections = [
+        selection(TransportKind::DirectUdp, 51_820, None, 1_420),
+        selection(
+            TransportKind::ObfuscatedUdp,
+            51_821,
+            Some(STANDARD.encode([9_u8; 32])),
+            1_320,
+        ),
+        quic_selection,
+        tls_selection,
+        selection(
+            TransportKind::TcpFallback,
+            443,
+            Some(STANDARD.encode([9_u8; 32])),
+            1_280,
+        ),
+    ];
+    assert!(automatic_reconnect_candidates(&selections, TransportKind::Quic).is_empty());
+    assert!(
+        automatic_reconnect_candidates(&selections, TransportKind::DirectUdp)
+            .iter()
+            .all(|candidate| candidate.transport != TransportKind::Quic)
+    );
+    let mut five = independent(true, false, false);
+    five.reconnect_candidates = policy_transport_candidates(&selections);
+    assert_eq!(five.reconnect_candidates.len(), 5);
+    five.mtu = 1_420;
+    validate_request(&five).unwrap();
+}

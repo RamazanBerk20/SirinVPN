@@ -174,6 +174,7 @@ fn fixture(reconnect: bool) -> (TunnelConnectRequest, EndpointTransitionResponse
             server_public_key: STANDARD.encode([17_u8; 32]),
             certificate_sha256: STANDARD.encode([18_u8; 32]),
             https: None,
+            quic: false,
         }),
     };
     request.endpoint_identity = Some(EndpointIdentity {
@@ -443,4 +444,68 @@ fn live_handoff_to_https_through_a_cdn_targets_the_cdn_address() {
             rule.contains(&vps) && rule.contains("443")
         })
     );
+}
+
+#[test]
+fn quic_reaches_the_vps_on_udp_without_the_cdn_name() {
+    let (mut base, _) = fixture(true);
+    let descriptor = &mut base.endpoint_identity.as_mut().unwrap().descriptor;
+    let tls = descriptor.tls_like.as_mut().unwrap();
+    tls.https = Some(sirinvpn_protocol::HttpsTransport {
+        server_name: CDN_HOST.into(),
+        path: "/connect".into(),
+        cdn: true,
+    });
+    tls.quic = true;
+    let selections = [
+        TransportKind::Quic,
+        TransportKind::TlsLike,
+        TransportKind::DirectUdp,
+    ]
+    .map(|kind| {
+        let mut selection = sirinvpn_transport::TransportEngine
+            .select_descriptor(descriptor, kind)
+            .unwrap();
+        selection.mtu = 1280;
+        selection
+    });
+    base.reconnect_candidates = policy_transport_candidates(&selections);
+    let mut request = request_for_reconnect_candidate(&base, &base.reconnect_candidates[0]);
+    request.reconnect_candidates = base.reconnect_candidates.clone();
+    validate_request(&request).unwrap();
+    assert_eq!(request.https, None);
+    let mut leaked = request.clone();
+    leaked.https = base.reconnect_candidates[1].https.clone();
+    assert!(validate_request(&leaked).is_err());
+
+    let directory = tempfile::tempdir().unwrap();
+    let runner = EndpointRunner {
+        policy: runner(),
+        ..Default::default()
+    };
+    let helper = LinuxNetworkHelper::new(runner.clone(), directory.path().into());
+    helper.connect(&request).unwrap();
+    let vps = helper.read_persistent().unwrap().endpoint;
+    let carrier = fs::read_to_string(helper.carrier_config_path(TransportKind::Quic)).unwrap();
+    assert!(carrier.contains("\"transport\":\"quic\""));
+    assert!(carrier.contains(&format!("\"server_address\":\"{vps}:443\"")));
+    assert!(carrier.contains(&format!(
+        "\"local_listen\":\"127.0.0.1:{}\"",
+        sirinvpn_transport::QUIC_CLIENT_RELAY_PORT
+    )));
+    assert!(!carrier.contains(CDN_HOST));
+    // QUIC to the VPS on UDP; the TLS candidate still reaches only the CDN on TCP.
+    let guard = runner.policy.guard.lock().unwrap().clone().unwrap();
+    let rule = |address: &str, protocol: &str| {
+        guard.iter().any(|object| {
+            let rule = object.to_string();
+            rule.contains(&format!("\"{address}\""))
+                && rule.contains("51820")
+                && rule.contains(&format!("\"{protocol}\""))
+                && rule.contains("443")
+        })
+    };
+    assert!(rule(&vps.to_string(), "udp"));
+    assert!(rule(CDN_ADDRESS, "tcp"));
+    assert!(!rule(CDN_ADDRESS, "udp"));
 }

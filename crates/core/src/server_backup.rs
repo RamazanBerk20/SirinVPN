@@ -557,6 +557,7 @@ mod tests {
                 server_public_key: transport_key.clone(),
                 certificate_sha256: STANDARD.encode([8_u8; 32]),
                 https: None,
+                quic: false,
             }),
         };
         let signing_key =

@@ -229,10 +229,17 @@ class Acceptance:
                              if self.args.vps_dns_over_tls else []), timeout=600)
         self.server_id = profile["id"]
         assert not profile.get("ipv6_tunnel_enabled", False), "the fixture needs an IPv4-only profile"
-        schema = json.loads(self.server.run(["cat", "/etc/sirinvpn/server.json"]).stdout)["schema_version"]
-        # A fresh install pins its own generated TLS certificate rather than the old derived one.
-        assert self.args.upgrade_from or schema == 9, f"server configuration schema {schema}"
-        return {"profile_created": True, "server_id": self.server_id, "server_configuration_schema": schema}
+        configuration = json.loads(self.server.run(["cat", "/etc/sirinvpn/server.json"]).stdout)
+        schema = configuration["schema_version"]
+        # A fresh install pins its own generated TLS certificate and answers QUIC (schema 11)
+        # on UDP 443, with Obfuscated UDP moved to 51821.
+        quic = configuration["tls_like"].get("quic", False)
+        if not self.args.upgrade_from:
+            assert schema == 11 and quic, f"server configuration schema {schema}, QUIC {quic}"
+            assert configuration["obfuscated_udp"]["port"] == 51821, configuration["obfuscated_udp"]
+            assert ":443 " in self.server.run(["ss", "-H", "-lun", "sport = :443"]).stdout.decode()
+        return {"profile_created": True, "server_id": self.server_id,
+                "server_configuration_schema": schema, "quic": quic}
 
     def upgrade(self):
         """Qualify an unbound development upgrade, without rewriting signed receipts."""
@@ -302,7 +309,7 @@ class Acceptance:
     def connected_proof(self, transport):
         self.cli("connect", self.server_id, "--transport", transport,
                  "--kill-switch", "--automatic-reconnect")
-        expected = {"direct": "direct_udp", "obfuscated": "obfuscated_udp",
+        expected = {"direct": "direct_udp", "obfuscated": "obfuscated_udp", "quic": "quic",
                     "tls": "tls_like", "tcp": "tcp_fallback"}[transport]
         local = self.wait_connected(expected)
         assert local["kill_switch_state"] == "armed", local["kill_switch_state"]
@@ -563,8 +570,9 @@ class Acceptance:
         self.server.run(["nft", "delete", "table", "inet", "sirin_acceptance_fault"], check=False)
         if mode is None:
             return
-        protocol = "meta l4proto { tcp, udp } th dport { 443, 51820 }" if mode == "all" else \
-            "udp dport { 443, 51820 }"
+        # Direct UDP 51820, Obfuscated UDP 51821 and QUIC on UDP 443.
+        protocol = "meta l4proto { tcp, udp } th dport { 443, 51820, 51821 }" if mode == "all" else \
+            "udp dport { 443, 51820, 51821 }"
         rules = ("table inet sirin_acceptance_fault {\n chain input {\n"
                  "  type filter hook input priority -100; policy accept;\n"
                  f"  ip saddr 198.18.10.2 {protocol} counter drop\n"
@@ -716,7 +724,7 @@ class Acceptance:
                         self.report["passed"] = True
                         return 0
                     self.clean_disconnect()
-                    for transport in ["direct", "obfuscated", "tls", "tcp"]:
+                    for transport in ["direct", "obfuscated", "quic", "tls", "tcp"]:
                         self.step(f"{transport}: encrypted exit, native DNS and leak prevention",
                                   lambda transport=transport: self.connected_proof(transport))
                         if transport == "direct":

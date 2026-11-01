@@ -46,9 +46,10 @@ use serde::{Deserialize, Serialize};
 use sirinvpn_protocol::ipv6_tunnel_address;
 use sirinvpn_protocol::{ConnectionState, INTERFACE_NAME, ServerId, TransportKind, validate_host};
 use sirinvpn_transport::{
-    CLIENT_RELAY_PORT, ClientRelayConfig, TCP_CLIENT_RELAY_PORT, TLS_LIKE_CLIENT_RELAY_PORT,
-    TcpClientRelayConfig, TlsLikeClientRelayConfig, TransportSelection, client_relay_config,
-    run_client_relay, run_tcp_client_relay, run_tls_like_client_relay, tcp_client_relay_config,
+    CLIENT_RELAY_PORT, ClientRelayConfig, QUIC_CLIENT_RELAY_PORT, TCP_CLIENT_RELAY_PORT,
+    TLS_LIKE_CLIENT_RELAY_PORT, TcpClientRelayConfig, TlsLikeClientRelayConfig, TransportSelection,
+    client_relay_config, quic_client_relay_config, run_client_relay, run_quic_client_relay,
+    run_tcp_client_relay, run_tls_like_client_relay, tcp_client_relay_config,
     tls_like_client_relay_config,
 };
 use std::{
@@ -186,6 +187,7 @@ enum ClientTransportConfig {
 enum CurrentClientTransportConfig {
     TcpFallback(TcpClientRelayConfig),
     TlsLike(TlsLikeClientRelayConfig),
+    Quic(TlsLikeClientRelayConfig),
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

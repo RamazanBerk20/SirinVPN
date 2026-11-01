@@ -26,6 +26,11 @@ pub(super) fn install_script(
     } else {
         format!("    tcp dport {discovery_port} accept\n")
     };
+    let quic_firewall_rule = if request.transport.quic() {
+        format!("    udp dport {} accept\n", request.transport.tcp_tls_port)
+    } else {
+        String::new()
+    };
     let client_public_key = shell_quote(&request.identity.wireguard_public_key);
     let dns_init_arguments =
         server_dns_init_arguments(&request.dns_upstream, &request.private_dns_records);
@@ -480,7 +485,7 @@ table inet sirinvpn_filter {{
     udp dport {wireguard_port} accept
     udp dport {obfuscated_udp_port} accept
     tcp dport {tcp_fallback_port} accept
-{discovery_firewall_rule}
+{quic_firewall_rule}{discovery_firewall_rule}
   }}
   chain forward {{
     type filter hook forward priority -20; policy accept;

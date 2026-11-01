@@ -128,6 +128,12 @@ fn required_ports(transport: &TransportSetup, discovery_port: Option<u16>) -> Ve
             port: transport.tcp_tls_port,
         },
     ];
+    if transport.quic() {
+        ports.push(RequiredPort {
+            protocol: PortForwardProtocol::Udp,
+            port: transport.tcp_tls_port,
+        });
+    }
     if let Some(port) = discovery_port.filter(|port| *port != transport.tcp_tls_port) {
         ports.push(RequiredPort {
             protocol: PortForwardProtocol::Tcp,

@@ -2,8 +2,8 @@ use crate::network::{self, Underlay};
 use sirinvpn_protocol::TransportKind;
 use sirinvpn_transport::{
     ClientRelayConfig, RelayError, TcpClientRelayConfig, TlsLikeClientRelayConfig,
-    run_client_relay_with_socket_protector, run_tcp_client_relay_with_socket_protector,
-    run_tls_like_client_relay_with_socket_protector,
+    run_client_relay_with_socket_protector, run_quic_client_relay_with_socket_protector,
+    run_tcp_client_relay_with_socket_protector, run_tls_like_client_relay_with_socket_protector,
 };
 use sirinvpn_tunnel_model::TunnelConnectRequest;
 use std::{io, net::SocketAddr, time::Duration};
@@ -89,6 +89,23 @@ pub(crate) async fn start(
                 }
                 TransportKind::TlsLike => {
                     run_tls_like_client_relay_with_socket_protector(
+                        TlsLikeClientRelayConfig {
+                            local_listen: local,
+                            server_address: remote,
+                            socket_mark: None,
+                            client_private_key: private.to_string(),
+                            server_public_key: public,
+                            server_certificate_sha256: certificate
+                                .ok_or(RelayError::InvalidConfiguration)?,
+                            https,
+                        },
+                        protect,
+                        ready,
+                    )
+                    .await
+                }
+                TransportKind::Quic => {
+                    run_quic_client_relay_with_socket_protector(
                         TlsLikeClientRelayConfig {
                             local_listen: local,
                             server_address: remote,

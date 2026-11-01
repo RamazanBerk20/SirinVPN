@@ -21,7 +21,7 @@ pub(super) fn kill_switch_firewall(
                 request.endpoint_port
             )
         }
-        TransportKind::DirectUdp | TransportKind::ObfuscatedUdp => {
+        TransportKind::DirectUdp | TransportKind::ObfuscatedUdp | TransportKind::Quic => {
             format!(
                 "meta mark 0xca6c {endpoint_family} daddr {endpoint} udp dport {} accept",
                 request.endpoint_port

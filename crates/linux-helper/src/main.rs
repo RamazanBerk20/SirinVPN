@@ -176,6 +176,7 @@ fn run() -> anyhow::Result<()> {
                     "obfuscated_udp" => Ok(sirinvpn_protocol::TransportKind::ObfuscatedUdp),
                     "tcp_fallback" => Ok(sirinvpn_protocol::TransportKind::TcpFallback),
                     "tls_like" => Ok(sirinvpn_protocol::TransportKind::TlsLike),
+                    "quic" => Ok(sirinvpn_protocol::TransportKind::Quic),
                     _ => Err(anyhow::anyhow!("unknown carrier")),
                 })
                 .transpose()?;

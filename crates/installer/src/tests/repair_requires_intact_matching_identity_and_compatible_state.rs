@@ -240,7 +240,7 @@ fn repair_requires_intact_matching_identity_and_compatible_state() {
         ),
         RepairIdentityCheck::Match
     );
-    let bootstrap = BootstrapOutput {
+    let mut bootstrap = BootstrapOutput {
         endpoint_transition: None,
         wireguard_public_key: profile.server_wireguard_public_key.clone(),
         management_certificate_pem: profile.pinned_server_certificate_pem.clone(),
@@ -263,9 +263,30 @@ fn repair_requires_intact_matching_identity_and_compatible_state() {
             server_public_key: STANDARD.encode([9_u8; 32]),
             certificate_sha256: STANDARD.encode([10_u8; 32]),
             https: None,
+            quic: false,
         }),
     };
     assert!(bootstrap_matches_profile(&bootstrap, &profile));
+
+    // Repair frees the old shared UDP 443 for QUIC and keeps any other Obfuscated UDP port.
+    let mut legacy = profile.clone();
+    legacy.obfuscated_udp = Some(ObfuscatedUdpEndpoint {
+        port: 443,
+        server_public_key: STANDARD.encode([9_u8; 32]),
+    });
+    legacy.tcp_fallback = bootstrap.tcp_fallback.clone();
+    let repaired = TransportSetup::from_profile(&legacy);
+    assert_eq!(repaired.obfuscated_udp_port, DEFAULT_OBFUSCATED_UDP_PORT);
+    assert!(repaired.quic() && repaired.port_arguments().ends_with(" --quic true"));
+    legacy.obfuscated_udp.as_mut().unwrap().port = 4_443;
+    assert_eq!(
+        TransportSetup::from_profile(&legacy).obfuscated_udp_port,
+        4_443
+    );
+    assert!(!bootstrap_matches_transport(&bootstrap, &repaired));
+    bootstrap.tls_like.as_mut().unwrap().quic = true;
+    assert!(bootstrap_matches_transport(&bootstrap, &repaired));
+
     assert!(ensure_repair_ipv6_compatible(false, false).is_ok());
     assert!(ensure_repair_ipv6_compatible(false, true).is_ok());
     assert!(ensure_repair_ipv6_compatible(true, true).is_ok());

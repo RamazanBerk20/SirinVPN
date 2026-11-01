@@ -49,6 +49,24 @@ fn script_has_scoped_firewall_ownership_and_docker_interop() {
         script_transaction("10.77.0.2", false, false),
     );
     assert!(script.contains("table inet sirinvpn_filter"));
+    // New servers keep Obfuscated UDP off UDP 443, which answers QUIC.
+    assert!(script.contains("--obfuscated-udp-port 51821"));
+    assert!(script.contains("--quic true"));
+    assert!(script.contains(
+        "    udp dport 51821 accept\n    tcp dport 443 accept\n    udp dport 443 accept\n"
+    ));
+    let mut shared = request.clone();
+    shared.transport.obfuscated_udp_port = 443;
+    let shared_script = install_script(
+        &shared,
+        &discovery,
+        "/tmp/server",
+        "/tmp/owner",
+        "nonce",
+        script_transaction("10.77.0.2", false, false),
+    );
+    assert!(shared_script.contains("--quic false"));
+    assert_eq!(shared_script.matches("udp dport 443 accept").count(), 1);
     // Security updates are installed and enabled only where unattended-upgrades is missing.
     assert!(script.contains("if ! command -v unattended-upgrade >/dev/null 2>&1; then"));
     let enable = script.find("APT::Periodic::Unattended-Upgrade").unwrap();
@@ -161,7 +179,6 @@ fn script_has_scoped_firewall_ownership_and_docker_interop() {
     assert!(script.contains("--server-id"));
     assert!(script.contains("--owner-wireguard-public-key"));
     assert!(script.contains("if [ ! -e /etc/sirinvpn/authorization-required ] && [ ! -e /etc/sirinvpn/authorization/authorization.json ]; then\n      wg set sirinvpn0 peer"));
-    assert!(script.contains("--obfuscated-udp-port 443"));
     assert!(script.contains("--tcp-fallback-port 443"));
     assert!(script.contains("--tls-like-port 443"));
     assert!(script.contains("udp dport 443 accept"));
@@ -220,6 +237,7 @@ fn script_has_scoped_firewall_ownership_and_docker_interop() {
             server_public_key: STANDARD.encode([7_u8; 32]),
             certificate_sha256: STANDARD.encode([8_u8; 32]),
             https: None,
+            quic: false,
         }),
     };
     let verification = install_verification_command(
@@ -230,6 +248,7 @@ fn script_has_scoped_firewall_ownership_and_docker_interop() {
         &discovery,
     );
     assert!(verification.contains("attempt=0"));
+    assert!(!verification.contains("ss -H -lun 'sport = :443'"));
     assert!(verification.contains("[ \"$attempt\" -lt 15 ]"));
     assert!(verification.contains("validate-state"));
     assert!(verification.contains("sha256sum /usr/local/lib/sirinvpn/sirinvpn-server"));
@@ -260,6 +279,26 @@ fn script_has_scoped_firewall_ownership_and_docker_interop() {
             .unwrap()
             .success(),
         "generated install verification must be valid POSIX shell"
+    );
+
+    bootstrap.tls_like.as_mut().unwrap().quic = true;
+    let quic_verification = install_verification_command(
+        "artifact-digest",
+        &bootstrap,
+        request.server_id,
+        "10.77.0.2".parse().unwrap(),
+        &discovery,
+    );
+    assert!(quic_verification.contains("grep -Fq 'udp dport 443 accept'"));
+    assert!(quic_verification.contains("ss -H -lun 'sport = :443' | grep -q ':443'"));
+    assert!(
+        std::process::Command::new("/bin/sh")
+            .arg("-n")
+            .arg("-c")
+            .arg(&quic_verification)
+            .status()
+            .unwrap()
+            .success()
     );
 
     let mut dual_stack_discovery = discovery.clone();

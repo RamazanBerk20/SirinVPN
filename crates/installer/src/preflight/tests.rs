@@ -70,7 +70,8 @@ fn public_nat_and_private_addresses_have_distinct_actionable_reports() {
         assert_eq!(report.exposure, expected);
         assert!(report.can_install());
         assert_eq!(report.ssh_local_address, Some("10.2.0.4".parse().unwrap()));
-        assert_eq!(report.required_ports.len(), 4);
+        // Direct, Obfuscated and QUIC UDP, TCP/TLS and the separate discovery port.
+        assert_eq!(report.required_ports.len(), 5);
         assert!(
             report
                 .issues

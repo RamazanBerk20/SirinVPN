@@ -186,6 +186,23 @@ pub(super) fn sample_candidate(
                         })
                         .await?;
                     }
+                    TransportKind::Quic => {
+                        let mut config = quic_client_relay_config(
+                            server,
+                            &private,
+                            key,
+                            request
+                                .server_certificate_sha256
+                                .as_deref()
+                                .ok_or_else(|| anyhow!("missing TLS pin"))?,
+                        )?
+                        .with_https(request.https.clone())?;
+                        config.local_listen = local;
+                        run_quic_client_relay(config, || {
+                            let _ = ready.send(());
+                        })
+                        .await?;
+                    }
                     TransportKind::DirectUdp => unreachable!(),
                 }
                 Ok::<(), anyhow::Error>(())

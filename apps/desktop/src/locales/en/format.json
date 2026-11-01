@@ -17,7 +17,8 @@
     "direct_udp": "Direct UDP",
     "obfuscated_udp": "Obfuscated UDP",
     "tls_like": "TLS fallback",
-    "tcp_fallback": "TCP fallback"
+    "tcp_fallback": "TCP fallback",
+    "quic": "QUIC (HTTP/3)"
   },
   "dnsPolicy": {
     "recursive": "Recursive DNS",

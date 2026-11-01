@@ -32,18 +32,27 @@ impl Default for TransportSetup {
 
 impl TransportSetup {
     pub fn from_profile(profile: &ServerProfile) -> Self {
+        let tcp_tls_port = profile
+            .tcp_fallback
+            .as_ref()
+            .map_or(DEFAULT_TCP_FALLBACK_PORT, |endpoint| endpoint.port);
+        let obfuscated_udp_port = profile
+            .obfuscated_udp
+            .as_ref()
+            .map_or(DEFAULT_OBFUSCATED_UDP_PORT, |endpoint| endpoint.port);
         Self {
             public_host: Some(profile.endpoint.host.clone()),
             alternate_endpoint_hosts: profile.alternate_endpoint_hosts.clone(),
             wireguard_port: profile.endpoint.wireguard_port,
-            obfuscated_udp_port: profile
-                .obfuscated_udp
-                .as_ref()
-                .map_or(DEFAULT_OBFUSCATED_UDP_PORT, |endpoint| endpoint.port),
-            tcp_tls_port: profile
-                .tcp_fallback
-                .as_ref()
-                .map_or(DEFAULT_TCP_FALLBACK_PORT, |endpoint| endpoint.port),
+            // Servers installed before QUIC shared UDP 443 with Obfuscated UDP; Repair frees it.
+            obfuscated_udp_port: if obfuscated_udp_port == tcp_tls_port
+                && profile.endpoint.wireguard_port != DEFAULT_OBFUSCATED_UDP_PORT
+            {
+                DEFAULT_OBFUSCATED_UDP_PORT
+            } else {
+                obfuscated_udp_port
+            },
+            tcp_tls_port,
             https: profile
                 .tls_like
                 .as_ref()
@@ -125,10 +134,19 @@ impl TransportSetup {
         Ok(())
     }
 
+    /// QUIC answers on the TCP/TLS port number over UDP, so it needs Obfuscated UDP elsewhere.
+    pub fn quic(&self) -> bool {
+        self.obfuscated_udp_port != self.tcp_tls_port
+    }
+
     pub(super) fn port_arguments(&self) -> String {
         format!(
-            " --wireguard-port {} --obfuscated-udp-port {} --tcp-fallback-port {} --tls-like-port {}",
-            self.wireguard_port, self.obfuscated_udp_port, self.tcp_tls_port, self.tcp_tls_port
+            " --wireguard-port {} --obfuscated-udp-port {} --tcp-fallback-port {} --tls-like-port {} --quic {}",
+            self.wireguard_port,
+            self.obfuscated_udp_port,
+            self.tcp_tls_port,
+            self.tcp_tls_port,
+            self.quic()
         )
     }
     pub(super) fn init_arguments(&self) -> String {
@@ -196,6 +214,7 @@ pub(super) fn bootstrap_matches_transport(
             .is_some_and(|endpoint| endpoint.port == requested.tcp_tls_port)
         && bootstrap.tls_like.as_ref().is_some_and(|endpoint| {
             endpoint.port == requested.tcp_tls_port
+                && endpoint.quic == requested.quic()
                 && match (&requested.https, requested.disable_https) {
                     (Some(expected), _) => endpoint.https.as_ref() == Some(expected),
                     (None, true) => endpoint.https.is_none(),

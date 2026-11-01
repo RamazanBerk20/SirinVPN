@@ -37,6 +37,7 @@ describe("desktop formatting", () => {
     expect(formatTransport("obfuscated_udp")).toBe("Obfuscated UDP");
     expect(formatTransport("tls_like")).toBe("TLS fallback");
     expect(formatTransport("tcp_fallback")).toBe("TCP fallback");
+    expect(formatTransport("quic")).toBe("QUIC (HTTP/3)");
     expect(formatTransport(undefined)).toBe("Unavailable");
   });
 

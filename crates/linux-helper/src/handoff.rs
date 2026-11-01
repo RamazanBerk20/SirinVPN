@@ -9,6 +9,7 @@ fn peer_endpoint(request: &TunnelConnectRequest, endpoint: IpAddr) -> String {
         TransportKind::ObfuscatedUdp => CLIENT_RELAY_PORT,
         TransportKind::TcpFallback => TCP_CLIENT_RELAY_PORT,
         TransportKind::TlsLike => TLS_LIKE_CLIENT_RELAY_PORT,
+        TransportKind::Quic => QUIC_CLIENT_RELAY_PORT,
     };
     format!("127.0.0.1:{port}")
 }

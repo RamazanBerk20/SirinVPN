@@ -49,7 +49,12 @@ pub use discovery::{
 };
 pub use publication::{offer_endpoint_checkpoint, offer_endpoint_checkpoint_with_socket_protector};
 mod https;
+mod quic;
 mod tls;
+pub use quic::{
+    run_quic_client_relay, run_quic_client_relay_with_remote_socket_setup,
+    run_quic_client_relay_with_socket_protector, run_quic_server_relay,
+};
 use tls::tls_client_configuration;
 
 const NOISE_PATTERN: &str = "Noise_IK_25519_ChaChaPoly_SHA256";

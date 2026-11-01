@@ -376,6 +376,9 @@ pub fn run_transport_relay_for(kind: Option<TransportKind>) -> Result<()> {
         ClientTransportConfig::Current(CurrentClientTransportConfig::TlsLike(config)) => {
             runtime.block_on(run_tls_like_client_relay(config, ready))?
         }
+        ClientTransportConfig::Current(CurrentClientTransportConfig::Quic(config)) => {
+            runtime.block_on(run_quic_client_relay(config, ready))?
+        }
     }
     Ok(())
 }

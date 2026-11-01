@@ -21,12 +21,21 @@ export interface TransportDraft {
   privateKey: string;
 }
 
+/** QUIC answers on UDP at the TCP/TLS port number, so a Repair moves Obfuscated UDP off it. */
+const OBFUSCATED_UDP_PORT = 51821;
+
+function obfuscatedPort(profile?: ServerProfile): number {
+  const port = profile?.obfuscated_udp?.port ?? OBFUSCATED_UDP_PORT;
+  const shared = port === (profile?.tcp_fallback?.port ?? 443) && profile?.endpoint.wireguard_port !== OBFUSCATED_UDP_PORT;
+  return shared ? OBFUSCATED_UDP_PORT : port;
+}
+
 export function newTransportDraft(profile?: ServerProfile): TransportDraft {
   return {
     publicHost: profile?.endpoint.host ?? "",
     alternateHosts: profile?.alternate_endpoint_hosts?.join("\n") ?? "",
     wireguard: String(profile?.endpoint.wireguard_port ?? 51820),
-    obfuscated: String(profile?.obfuscated_udp?.port ?? 443),
+    obfuscated: String(obfuscatedPort(profile)),
     tcpTls: String(profile?.tcp_fallback?.port ?? 443),
     https: Boolean(profile?.tls_like?.https),
     cdn: Boolean(profile?.tls_like?.https?.cdn),
@@ -81,6 +90,7 @@ export function TransportSetupFields({ value, onChange, existing = false }: {
       <Field label={t("ssh.transport.tcpTlsPort")}><input inputMode="numeric" value={value.tcpTls} onChange={(event) => update("tcpTls", event.target.value)} /></Field>
     </div>
     <p className="settings-note">{t("ssh.transport.portsNote")}{portsHint}</p>
+    {Number(value.obfuscated) === Number(value.tcpTls) && <p className="settings-note">{t("ssh.transport.quicPortNote")}</p>}
     {portsPanel}
     <label className="checkbox-row"><input type="checkbox" checked={value.https} onChange={(event) => update("https", event.target.checked)} />{t("ssh.transport.https")}</label>
     {value.https && <>

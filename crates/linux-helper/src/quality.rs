@@ -84,7 +84,7 @@ impl QualityController {
     }
     pub(super) fn valid(&self) -> bool {
         self.status.sample.is_none_or(|sample| sample.valid())
-            && self.status.candidates_checked <= 4
+            && self.status.candidates_checked <= 5
     }
 }
 

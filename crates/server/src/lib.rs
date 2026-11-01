@@ -111,7 +111,7 @@ use sirinvpn_protocol::{
 };
 use sirinvpn_transport::{
     ActiveTransportRegistry, AuthorizedPeers, ServerRelayConfig, TcpServerRelayConfig, decode_key,
-    run_server_relay, run_tcp_server_relay, run_tcp_server_relay_with_https,
+    run_quic_server_relay, run_server_relay, run_tcp_server_relay, run_tcp_server_relay_with_https,
     run_tcp_server_relay_with_tls,
 };
 use std::{

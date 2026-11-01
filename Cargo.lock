@@ -3620,6 +3620,7 @@ version = "0.11.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a9746dbde176634f4f2f1faf2404e30a31b2bc1e9cafb5329c95d8177a18c9fc"
 dependencies = [
+ "aws-lc-rs",
  "bytes",
  "getrandom 0.4.3",
  "lru-slab",
@@ -4735,6 +4736,7 @@ dependencies = [
  "base64 0.22.1",
  "futures-util",
  "httparse",
+ "quinn",
  "rand 0.8.7",
  "rcgen",
  "rustls",

@@ -26,6 +26,10 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
                 self.start_transport(request, endpoint)?;
                 format!("127.0.0.1:{TLS_LIKE_CLIENT_RELAY_PORT}")
             }
+            TransportKind::Quic => {
+                self.start_transport(request, endpoint)?;
+                format!("127.0.0.1:{QUIC_CLIENT_RELAY_PORT}")
+            }
         };
         self.runner.run(
             "ip",
