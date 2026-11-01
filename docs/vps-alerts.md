@@ -193,3 +193,29 @@ webhook and heartbeat requests against a local HTTPS receiver. Handler tests
 prove the settings are Owner-only and validated before any change. The
 Settings card has component tests. The installer tests check the units,
 their position in the transaction and their removal.
+
+### Two-VM lab (2026-11-01)
+
+`tests/vm/run-linux-acceptance.sh`, Debian 13 client and VPS, DoT upstream
+`9.9.9.9#dns.quad9.net`, package `cc372818…`: 31/31 checks passed. The step
+"Owner sets VPS alerts; the timer task reports and clears a problem" uses the
+packaged CLI over the tunnel and a loopback HTTPS receiver on the VPS that
+trusts a throwaway CA:
+
+- `alerts set --webhook … --heartbeat … --allow-private`, then `alerts test`:
+  the receiver got the test notice with user agent `SirinVPN-alerts/1`.
+- With `apt-daily-upgrade.timer` disabled, the real sandboxed
+  `sirinvpn-alerts.service` sent only the heartbeat at its first check, then,
+  after the stored times were moved back ten minutes, a notice with exactly
+  `security_updates_off`. With the timer enabled again and times moved back
+  20 minutes, it sent the recovery. No other problem was reported, so the
+  service, interface, forwarding, listener and resolver readings work inside
+  the unit's sandbox.
+- The state file was owned by `sirinvpn` with mode 0600. After `alerts off`
+  the next check deleted it and sent nothing.
+- The later uninstall step verified that the alert units and state directory
+  are gone.
+
+Not verified: a real ntfy server or webhook service, Ubuntu 24.04, the
+five-minute timer cadence itself (the lab starts the service directly), a real
+restart loop or full disk, and the Settings card against a real server.
