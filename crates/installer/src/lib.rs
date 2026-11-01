@@ -1,5 +1,6 @@
 #![forbid(unsafe_code)]
 
+pub mod hetzner;
 mod preflight;
 mod transports;
 pub use preflight::{
@@ -140,6 +141,21 @@ impl ServerBinarySource {
                 "no packaged server artifact is available for VPS architecture {architecture}"
             ))),
         }
+    }
+
+    /// Whether a payload for this VPS architecture ("x86_64" or "aarch64") is present.
+    pub fn supports(&self, architecture: &str) -> bool {
+        if let Self::Signed(bundle) = self {
+            return bundle.architecture == architecture;
+        }
+        let mut header = [0; 20];
+        self.path_for_architecture(architecture)
+            .and_then(|path| {
+                fs::File::open(path)
+                    .and_then(|mut file| file.read_exact(&mut header))
+                    .map_err(|error| phase_error("artifact", anyhow!(error)))
+            })
+            .is_ok_and(|()| elf_architecture(&header) == Some(architecture))
     }
 }
 

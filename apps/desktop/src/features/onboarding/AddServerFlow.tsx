@@ -3,17 +3,19 @@ import { type ServerProfile } from "../../types";
 import { ImportBackupFlow } from "./ImportBackupFlow";
 import { JoinFlow } from "./JoinFlow";
 import { SetupFlow } from "./SetupFlow";
+import { HetznerFlow } from "./HetznerFlow";
 import { RecoverAccessFlow } from "./RecoverAccessFlow";
 import { isAndroid } from "../../platform";
 import * as Dialog from "@radix-ui/react-dialog";
 import { DialogContent } from "../../components/DialogContent";
-import { QrCode, Database, Key, Archive, CaretRight, ShieldCheck } from "@phosphor-icons/react";
+import { QrCode, Database, Key, Archive, CaretRight, ShieldCheck, CloudArrowUp } from "@phosphor-icons/react";
 import { confirmNavigation } from "../../lib/navigationGuard";
 import { t } from "../../i18n";
 
 const choices = [
   { id: "join", label: "onboarding.choice.join.title", hint: "onboarding.choice.join.summary", icon: QrCode },
   { id: "provision", label: "onboarding.choice.provision.title", hint: "onboarding.choice.provision.summary", icon: Database },
+  { id: "hetzner", label: "onboarding.choice.hetzner.title", hint: "onboarding.choice.hetzner.summary", icon: CloudArrowUp },
   { id: "backup", label: "onboarding.choice.backup.title", hint: "onboarding.choice.backup.summary", icon: Archive },
   { id: "recovery", label: "onboarding.choice.recovery.title", hint: "onboarding.choice.recovery.summary", icon: Key },
 ] as const;
@@ -27,12 +29,13 @@ export function AddServerFlow({
   compact?: boolean;
   initialMode?: "provision" | "join" | "backup";
 }) {
-  const [mode, setMode] = useState<"provision" | "join" | "backup" | "recovery" | null>(
+  const [mode, setMode] = useState<"provision" | "hetzner" | "join" | "backup" | "recovery" | null>(
     initialMode ?? (isAndroid ? null : "provision"),
   );
   // Switching unmounts the current flow; an installation in progress blocks it.
   const choose = (next: NonNullable<typeof mode>) => { if (next !== mode && confirmNavigation()) setMode(next); };
   const flow = mode === "provision" ? <SetupFlow onComplete={(result) => onAdded(result.profile)} compact={compact} />
+    : mode === "hetzner" ? <HetznerFlow onComplete={(result) => onAdded(result.profile)} compact={compact} />
     : mode === "join" ? <JoinFlow onComplete={onAdded} compact={compact} />
     : mode === "recovery" ? <RecoverAccessFlow onComplete={onAdded} compact={compact} />
     : mode === "backup" ? <ImportBackupFlow onComplete={onAdded} compact={compact} /> : null;
@@ -65,6 +68,7 @@ export function AddServerFlow({
         >
           {t("onboarding.mode.provision")}
         </button>
+        <button type="button" aria-pressed={mode === "hetzner"} onClick={() => choose("hetzner")}>{t("onboarding.mode.hetzner")}</button>
         <button
           type="button"
           aria-pressed={mode === "join"}

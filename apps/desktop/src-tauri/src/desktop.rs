@@ -22,6 +22,7 @@ mod wifi_automation;
 
 mod command_types;
 use command_types::*;
+mod hetzner;
 mod provisioning;
 mod server_preflight;
 mod ssh_login;
@@ -187,6 +188,11 @@ fn run_inner() -> tauri::Result<()> {
             ssh_login::save_ssh_login,
             ssh_login::forget_ssh_login,
             provision_server,
+            hetzner::hetzner_catalog,
+            hetzner::create_hetzner_server,
+            hetzner::wait_hetzner_server,
+            hetzner::cancel_hetzner_wait,
+            hetzner::delete_hetzner_server,
             server_preflight::inspect_server_network,
             vps_release::manage_vps_release,
             vps_baseline::prepare_vps_baseline,

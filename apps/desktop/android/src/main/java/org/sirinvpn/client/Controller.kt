@@ -336,8 +336,8 @@ object Controller {
         }
         val transition=command in setOf("rotate_device_keys","apply_endpoint_update","publish_endpoint_update")
         val connection = transition || command in setOf("connect_server", "connect_server_with_policy", "connect_saved", "reconnect_server", "resume_server", "join_server", "recover_owner_access")
-        val maintenance = transition || command in setOf("provision_server","repair_server","uninstall_server","export_server_backup","import_server_backup","export_vps_backup","restore_vps_backup","export_recovery_package","import_recovery_package","inspect_server_network","check_release_update","install_release_update","prepare_vps_baseline","install_vps_baseline","manage_vps_release","save_ssh_login")
-        val readOnly = command in setOf("list_servers", "get_connection_preferences", "key_rotation_pending", "preshared_key_rotation_recommended", "server_status", "server_configuration", "membership", "get_ssh_login", "recovery_settings", "dns_blocklist_settings", "available_endpoint_update", "local_component_update_status", "current_network_profile")
+        val maintenance = transition || command in setOf("provision_server","repair_server","uninstall_server","export_server_backup","import_server_backup","export_vps_backup","restore_vps_backup","export_recovery_package","import_recovery_package","inspect_server_network","check_release_update","install_release_update","prepare_vps_baseline","install_vps_baseline","manage_vps_release","save_ssh_login","create_hetzner_server","wait_hetzner_server","delete_hetzner_server")
+        val readOnly = command in setOf("list_servers", "get_connection_preferences", "key_rotation_pending", "preshared_key_rotation_recommended", "server_status", "server_configuration", "membership", "get_ssh_login", "recovery_settings", "dns_blocklist_settings", "available_endpoint_update", "local_component_update_status", "current_network_profile", "cancel_hetzner_wait")
         val setting = command in setOf("set_connection_preferences", "android_set_reconnect")
         var previousHandle=-1
         var previousPhase="unknown"

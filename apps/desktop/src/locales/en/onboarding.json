@@ -18,10 +18,15 @@
     "recovery": {
       "title": "Use a recovery key",
       "summary": "Recover access to your server"
+    },
+    "hetzner": {
+      "title": "Create a Hetzner server",
+      "summary": "Rent a new VPS that sets itself up"
     }
   },
   "mode": {
     "provision": "My VPS",
+    "hetzner": "New Hetzner VPS",
     "join": "Invitation",
     "backup": "Backup",
     "recovery": "Recovery key"
@@ -114,7 +119,10 @@
       "checkAgain": "Check network again",
       "checking": "Checking network…",
       "install": "Install SirinVPN",
-      "replace": "Replace SirinVPN"
+      "replace": "Replace SirinVPN",
+      "pinnedTitle": "Your server’s SSH key",
+      "pinned": "SirinVPN created this key on this device and put it on the server before it first started, so there’s nothing to compare.",
+      "checkNetwork": "Check network"
     },
     "confirmReplace": {
       "title": "Replace the existing installation?",
@@ -135,6 +143,52 @@
       "unreachable": "Couldn’t reach the server over SSH. Check the address and port.",
       "network": "Couldn’t check the server’s network. Try again.",
       "install": "Installation stopped safely and the server’s network is unchanged. Fix the issue and try again."
+    }
+  },
+  "hetzner": {
+    "title": "Create a server on Hetzner Cloud",
+    "summary": "SirinVPN rents a Debian 13 server in your Hetzner account and installs itself. You never type an IP address or a password.",
+    "token": "Hetzner Cloud API token",
+    "tokenHint": "Create a Read & Write token under Security → API tokens in your Hetzner Cloud project. It’s sent only to Hetzner and isn’t saved.",
+    "loadPlans": "Show prices",
+    "loading": "Loading…",
+    "location": "Location",
+    "serverType": "Server type",
+    "typeOption": "{{name}} ({{architecture}}) · {{cores}} vCPU · {{memory}} GB RAM · {{disk}} GB · {{price}} {{currency}}/month",
+    "price": "{{total}} {{currency}} per month: server {{server}} plus IPv4 address {{ipv4}}. Hetzner bills your account until you delete the server.",
+    "priceNoIpv4": "{{total}} {{currency}} per month for the server. Hetzner bills your account until you delete the server.",
+    "create": "Create server for {{total}} {{currency}}/month",
+    "confirm": {
+      "title": "Create a Hetzner server?",
+      "message": "{{type}} in {{location}} costs {{total}} {{currency}} a month until you delete it.",
+      "confirm": "Create server"
+    },
+    "creating": "Creating the server…",
+    "waiting": "Waiting for {{name}} to start…",
+    "waitingHint": "This usually takes one or two minutes.",
+    "cancel": "Stop waiting",
+    "created": "{{name}} is running at {{ipv4}}. Choose your settings, then install SirinVPN.",
+    "keyPath": "Root SSH key: {{path}}",
+    "delete": "Delete this server",
+    "deleting": "Deleting…",
+    "deleteConfirm": {
+      "title": "Delete {{name}}?",
+      "message": "The server and everything on it are removed from your Hetzner account.",
+      "confirm": "Delete server"
+    },
+    "deleted": "{{name}} was deleted from your Hetzner account.",
+    "startOver": "Start over",
+    "failedTitle": "{{name}} isn’t ready",
+    "failedSummary": "The server exists in your Hetzner account and is billed until it’s deleted. Delete it, wait again, or keep it to set it up later.",
+    "waitAgain": "Wait again",
+    "keep": "Keep server",
+    "kept": "{{name}} stays in your Hetzner account. Its SSH host key is {{fingerprint}}.",
+    "leaveWarning": "A Hetzner server was created and is billed until it’s deleted. Leave anyway?",
+    "error": {
+      "catalog": "Couldn’t load Hetzner prices.",
+      "create": "Couldn’t create the server.",
+      "wait": "The server didn’t become ready.",
+      "delete": "Couldn’t delete the server."
     }
   }
 }

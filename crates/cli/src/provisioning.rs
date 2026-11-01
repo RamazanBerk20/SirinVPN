@@ -1,6 +1,8 @@
 //! Provisioning.
 
 use super::*;
+use sirinvpn_installer::{ServerBinarySource, hetzner::*};
+use std::sync::atomic::AtomicBool;
 
 pub(super) fn inspect_host_key(arguments: HostKeyArguments) -> Result<()> {
     let target = SshTarget {
@@ -78,23 +80,32 @@ pub(super) fn add_server(
     }
     let identity = new_identity_for_server(&arguments.name)?;
     let server_id = ServerId::new();
-    let identity_reference = server_id.to_string();
     let request = InstallRequest {
         server_id,
         server_name: arguments.name,
         target,
         server_binary: resolve_server_binary(arguments.server_binary)?.into(),
         identity: identity.public.clone(),
-        identity_reference: identity_reference.clone(),
+        identity_reference: server_id.to_string(),
         transport,
         dns_upstream: arguments.dns.requested().unwrap_or_default(),
         private_dns_records: arguments.private_dns_record,
         nat64_prefix: arguments.nat64_prefix,
         replace_existing_installation: arguments.replace_existing,
     };
+    install_new_server(paths, request, &identity.secret, json)
+}
 
+/// Installs with the new Owner identity and saves the profile.
+fn install_new_server(
+    paths: &ClientPaths,
+    request: InstallRequest,
+    secret: &SecretIdentity,
+    json: bool,
+) -> Result<()> {
+    let identity_reference = request.identity_reference.clone();
     let secrets = paths.secret_store();
-    secrets.put(&identity_reference, &identity.secret)?;
+    secrets.put(&identity_reference, secret)?;
     let outcome = match Provisioner::install(request) {
         Ok(outcome) => outcome,
         Err(error) => {
@@ -119,6 +130,159 @@ pub(super) fn add_server(
         );
     }
     Ok(())
+}
+
+pub(super) async fn create_hetzner_server(
+    paths: &ClientPaths,
+    arguments: CreateHetznerArguments,
+    json: bool,
+) -> Result<()> {
+    let token = match env::var("HCLOUD_TOKEN") {
+        Ok(token) if !token.is_empty() => Zeroizing::new(token),
+        _ => prompt_nonempty_secret("Hetzner Cloud API token: ")?,
+    };
+    let client = HetznerClient::new(&token)?;
+    let server_binary = ServerBinarySource::from(resolve_server_binary(arguments.server_binary)?);
+    let arm = server_binary.supports("aarch64");
+    let catalog = client.catalog(arm).await?;
+    let location = arguments
+        .location
+        .or_else(|| {
+            catalog
+                .locations
+                .first()
+                .map(|location| location.name.clone())
+        })
+        .context("Hetzner Cloud lists no location with an available server type")?;
+    let server_type = arguments
+        .server_type
+        .or_else(|| {
+            catalog
+                .cheapest_x86(&location)
+                .map(|kind| kind.name.clone())
+        })
+        .with_context(|| format!("no x86 server type is available in {location}"))?;
+    let price = catalog
+        .price(&location, &server_type)
+        .with_context(|| format!("{server_type} is not available in {location}"))?
+        .clone();
+    if arguments.accept_monthly_price.as_deref() != Some(price.total_monthly.as_str()) {
+        if json {
+            println!("{}", serde_json::to_string_pretty(&catalog)?);
+        } else {
+            for kind in &catalog.server_types {
+                if let Some(offer) = kind.prices.iter().find(|offer| offer.location == location) {
+                    println!(
+                        "{:<8} {:<4} {:>3} vCPU {:>4} GB RAM {:>5} GB disk  {} {}/month",
+                        kind.name,
+                        kind.architecture,
+                        kind.cores,
+                        kind.memory_gb,
+                        kind.disk_gb,
+                        offer.total_monthly,
+                        catalog.currency
+                    );
+                }
+            }
+            let names = catalog
+                .locations
+                .iter()
+                .map(|l| format!("{} ({})", l.name, l.city));
+            println!("Locations: {}", names.collect::<Vec<_>>().join(", "));
+            println!(
+                "Selected: {server_type} in {location} with Debian 13 for {} {}/month (server {} + IPv4 {}), billed by Hetzner until deleted.",
+                price.total_monthly,
+                catalog.currency,
+                price.server_monthly,
+                price.ipv4_monthly.as_deref().unwrap_or("not reported")
+            );
+        }
+        bail!(
+            "Nothing was created. Re-run with --accept-monthly-price {} to create this server.",
+            price.total_monthly
+        );
+    }
+
+    let prepared = PreparedServer::generate();
+    let key_path = save_login_key(&paths.configuration_directory, &prepared)
+        .context("could not save the new server's SSH key")?;
+    let request = HetznerServerRequest {
+        location,
+        server_type,
+        accepted_monthly_price: price.total_monthly,
+    };
+    let server = match client.create_server(&prepared, &request, arm).await {
+        Ok(server) => server,
+        Err(error) => {
+            if !matches!(error, HetznerError::Uncertain(_)) {
+                let _ = forget_login_key(&paths.configuration_directory, &prepared.name);
+            }
+            return Err(error.into());
+        }
+    };
+    eprintln!(
+        "Created {} (Hetzner ID {}). Waiting for it to start with SSH host key {}; Ctrl-C stops waiting.",
+        server.name, server.id, server.host_key_sha256
+    );
+    // Ctrl-C drops the wait instead of using the cancel flag.
+    let never = AtomicBool::new(false);
+    let ready = tokio::select! {
+        ready = client.wait_until_ready(&server, &never) => ready,
+        _ = tokio::signal::ctrl_c() => Err(HetznerError::Cancelled),
+    };
+    let result = match ready {
+        Ok(addresses) => {
+            eprintln!(
+                "{} is ready at {}. Installing SirinVPN; this cannot be interrupted.",
+                server.name, addresses.ipv4
+            );
+            let identity = new_identity_for_server(&arguments.name)?;
+            let server_id = ServerId::new();
+            install_new_server(
+                paths,
+                InstallRequest {
+                    server_id,
+                    server_name: arguments.name,
+                    target: prepared.ssh_target(addresses.ipv4),
+                    server_binary,
+                    identity: identity.public.clone(),
+                    identity_reference: server_id.to_string(),
+                    transport: arguments.transport.requested(None)?.unwrap_or_default(),
+                    dns_upstream: arguments.dns.requested().unwrap_or_default(),
+                    private_dns_records: arguments.private_dns_record,
+                    replace_existing_installation: false,
+                },
+                &identity.secret,
+                json,
+            )
+        }
+        Err(error) => Err(error.into()),
+    };
+    if let Err(error) = &result {
+        eprintln!("{error}");
+        eprint!(
+            "Delete the Hetzner server {} (ID {})? Hetzner bills it until it is deleted. [y/N] ",
+            server.name, server.id
+        );
+        let mut answer = String::new();
+        std::io::stdin().read_line(&mut answer)?;
+        if answer.trim().eq_ignore_ascii_case("y") {
+            client.delete_server(server.id).await?;
+            let _ = forget_login_key(&paths.configuration_directory, &server.name);
+            bail!("The server was deleted.");
+        }
+        bail!(
+            "The server was kept. Log in with: ssh -i {} root@<its IPv4>; its SSH host key is {}.",
+            key_path.display(),
+            server.host_key_sha256
+        );
+    }
+    eprintln!(
+        "The root SSH key for {} is saved at {}.",
+        server.name,
+        key_path.display()
+    );
+    result
 }
 
 #[derive(Serialize)]

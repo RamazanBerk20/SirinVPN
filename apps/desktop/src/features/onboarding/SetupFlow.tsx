@@ -35,18 +35,30 @@ import {
   nat64PrefixIsValid,
 } from "../dns/DnsFields";
 
+export type SetupStep = "details" | "fingerprint" | "installing" | "success";
+
+/** A server SirinVPN just created: its address and SSH host key are already known. */
+export interface CreatedServer {
+  host: string;
+  host_key_sha256: string;
+  /** Desktop keeps the generated login key in a file; Android saves it as the login. */
+  private_key_path: string | null;
+}
+
 export function SetupFlow({
   onComplete,
   compact = false,
+  created,
+  onStepChange,
 }: {
   onComplete: (result: ProvisionResult) => Promise<void>;
   compact?: boolean;
+  created?: CreatedServer;
+  onStepChange?: (step: SetupStep) => void;
 }) {
-  const [step, setStep] = useState<
-    "details" | "fingerprint" | "installing" | "success"
-  >("details");
+  const [step, setStep] = useState<SetupStep>("details");
   const [name, setName] = useState(() => t("onboarding.setup.defaultName"));
-  const [host, setHost] = useState("");
+  const [host, setHost] = useState(created?.host ?? "");
   const login = useSshLogin(host);
   const [busy, setBusy] = useState(false);
   const [replaceExistingInstallation, setReplaceExistingInstallation] =
@@ -80,6 +92,18 @@ export function SetupFlow({
     };
   }, []);
   useEffect(() => step === "installing" ? registerNavigationGuard(() => false) : undefined, [step]);
+  useEffect(() => onStepChange?.(step), [step, onStepChange]);
+  // Fill in the generated key once the saved-login lookup is done, replacing any stale login.
+  const prefilled = useRef(false);
+  useEffect(() => {
+    if (!created?.private_key_path || login.loading || prefilled.current) return;
+    prefilled.current = true;
+    login.edit();
+    login.setUsername("root");
+    login.setPort("22");
+    login.setAuth("private_key");
+    login.setKeyPath(created.private_key_path);
+  }, [created, login]);
 
   const valid =
     validateHost(host) &&
@@ -106,6 +130,11 @@ export function SetupFlow({
     if (!valid || busy) return;
     setError(null);
     setPreflight(null);
+    if (created) {
+      setFingerprint(created.host_key_sha256);
+      setStep("fingerprint");
+      return;
+    }
     setBusy(true);
     try {
       setFingerprint(await api.probeHostKey(host.trim(), Number(login.port)));
@@ -226,18 +255,18 @@ export function SetupFlow({
         </button>
         <div className="fingerprint-heading">
           <Key size={28} weight="duotone" aria-hidden="true" />
-          <h2>{t("onboarding.setup.fingerprint.title")}</h2>
+          <h2>{t(created ? "onboarding.setup.fingerprint.pinnedTitle" : "onboarding.setup.fingerprint.title")}</h2>
         </div>
-        <p>{t("onboarding.setup.fingerprint.summary")}</p>
+        <p>{t(created ? "onboarding.setup.fingerprint.pinned" : "onboarding.setup.fingerprint.summary")}</p>
         <div className="fingerprint-value">
           <code>{fingerprint}</code>
           <CopyButton value={fingerprint} label={t("onboarding.setup.fingerprint.copy")} />
         </div>
-        {!preflight && <SshVerificationGuide confirmation="button" />}
-        <div className="warning-note">
+        {!preflight && !created && <SshVerificationGuide confirmation="button" />}
+        {!created && <div className="warning-note">
           <Warning size={18} weight="fill" />
           <span>{t("onboarding.setup.fingerprint.mismatch")}</span>
-        </div>
+        </div>}
         {replaceExistingInstallation ? (
           <div className="warning-note replacement-warning">
             <Warning size={18} weight="fill" />
@@ -249,7 +278,7 @@ export function SetupFlow({
         {error && <InlineError message={error} />}
         <div className="fingerprint-actions">
           <button className={preflight ? "secondary-button" : "primary-button"} disabled={busy} onClick={() => void inspectNetwork()}>
-            {busy ? t("onboarding.setup.fingerprint.checking") : preflight ? t("onboarding.setup.fingerprint.checkAgain") : t("onboarding.setup.fingerprint.matches")}
+            {busy ? t("onboarding.setup.fingerprint.checking") : preflight ? t("onboarding.setup.fingerprint.checkAgain") : created ? t("onboarding.setup.fingerprint.checkNetwork") : t("onboarding.setup.fingerprint.matches")}
           </button>
           {preflight && <button className="primary-button" disabled={busy || preflight.issues.some((issue) => issue.blocking) || (nat64 !== "" && !nat64PrefixIsValid(nat64))} onClick={() => void provision()}>
             {replaceExistingInstallation ? t("onboarding.setup.fingerprint.replace") : t("onboarding.setup.fingerprint.install")}
@@ -287,7 +316,7 @@ export function SetupFlow({
       </div>
       <Field label={t("onboarding.setup.host")}>
         <input
-          disabled={busy}
+          disabled={busy || created !== undefined}
           value={host}
           onChange={(event) => setHost(event.target.value)}
           placeholder="203.0.113.10"

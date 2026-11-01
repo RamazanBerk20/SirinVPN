@@ -12,7 +12,7 @@ object SecretInputs {
     private val entries = LinkedHashMap<String, Entry>()
     // Arguments that carry protected values. A handle anywhere else (a name, a
     // label) could be stored or echoed back, revealing its plaintext to the WebView.
-    private val secretFields = setOf("password", "backup_password", "private_key_passphrase", "sudo_password", "key", "code")
+    private val secretFields = setOf("password", "backup_password", "private_key_passphrase", "sudo_password", "key", "code", "apiToken")
     @Synchronized fun remember(value: String, qr: JSONArray? = null, field: String? = null): String {
         require(value.length in 1..131072)
         purge()

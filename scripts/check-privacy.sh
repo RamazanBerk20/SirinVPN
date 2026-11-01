@@ -103,13 +103,27 @@ if printf '%s\n' \
   exit 1
 fi
 
+# Opt-in Hetzner VPS creation talks only to this fixed API origin, and only while
+# an Owner creates or deletes a server. Its tests use a loopback mock.
+HETZNER_API='installer/src/hetzner[.]rs:[0-9]+:const API: &str = "https://api[.]hetzner[.]cloud/v1/";$'
+HETZNER_FIXTURES='installer/src/hetzner/tests[.]rs:[0-9]+:.*"(http://(\{\}|127[.]0[.]0[.]1)|https://api[.]hetzner[.]cloud)/v1/"'
+if printf '%s\n' \
+  'installer/src/hetzner.rs:1:const API: &str = "https://api.hetzner.cloud.attacker.test/v1/";' \
+  'installer/src/hetzner.rs:1:const OTHER: &str = "https://api.hetzner.cloud/v1/";' \
+  'installer/src/hetzner/tests.rs:1:    let base = Url::parse("https://lists.example/v1/").unwrap();' \
+  'core/src/lib.rs:1:const API: &str = "https://api.hetzner.cloud/v1/";' \
+  | rg -q "$HETZNER_API|$HETZNER_FIXTURES"; then
+  echo "privacy check failed: Hetzner API URL exception accepted another location" >&2
+  exit 1
+fi
+
 URL_MATCHES=$(rg -n -g '!THIRD-PARTY-NOTICES' 'https?://' \
   "$PROJECT_ROOT/crates" \
   "$DESKTOP_DIR/src" \
   "$DESKTOP_DIR/src-tauri/src" || true)
 # These URL-validation fixtures use a reserved .example domain. Production
 # release destinations still come only from explicit user input.
-UNEXPECTED_URLS=$(printf '%s\n' "$URL_MATCHES" | rg -v "$NON_NETWORK_URLS" | rg -v "$DNS_BLOCKLISTS" | rg -v "$DNS_BLOCKLIST_FIXTURES" | rg -v 'windows-service/src/wireguard.rs:[0-9]+://! ABI source: https://git[.]zx2c4[.]com/wireguard-nt/tree/api/wireguard[.]h$' | rg -v '(features/settings/VpsUpdateDialog.test.tsx|installer/src/release_update/tests.rs|server/src/release_update/policy/tests.rs):[0-9]+:.*https?://(user:pass@)?releases[.]example/' | rg -v 'src/format.ts:[0-9]+:      const address = new URL\(`http://\[\$\{host\}\]`\).hostname;$' | rg -v \
+UNEXPECTED_URLS=$(printf '%s\n' "$URL_MATCHES" | rg -v "$NON_NETWORK_URLS" | rg -v "$DNS_BLOCKLISTS" | rg -v "$DNS_BLOCKLIST_FIXTURES" | rg -v "$HETZNER_API" | rg -v "$HETZNER_FIXTURES" | rg -v 'windows-service/src/wireguard.rs:[0-9]+://! ABI source: https://git[.]zx2c4[.]com/wireguard-nt/tree/api/wireguard[.]h$' | rg -v '(features/settings/VpsUpdateDialog.test.tsx|installer/src/release_update/tests.rs|server/src/release_update/policy/tests.rs):[0-9]+:.*https?://(user:pass@)?releases[.]example/' | rg -v 'src/format.ts:[0-9]+:      const address = new URL\(`http://\[\$\{host\}\]`\).hostname;$' | rg -v \
   'management.rs:.*https://\{\}:8443|installer/src/lib.rs:.*https://\{SERVER_TUNNEL_ADDRESS\}|freedesktop.org/standards/PolicyKit|src/assets/mountains.svg:1:<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 660" fill="none">$|core/src/management/tests.rs:[0-9]+:.*format!\("https://\{address\}"\)|core/src/management/status_stream/tests.rs:[0-9]+:.*format!\("https://\{\}", listener.local_addr\(\).unwrap\(\)\)' || true)
 if [ -n "$UNEXPECTED_URLS" ]; then
   printf '%s\n' "$UNEXPECTED_URLS" >&2

@@ -61,6 +61,9 @@ pub(super) enum ServerCommand {
         command: DnsBlockingCommand,
     },
     Add(AddServerArguments),
+    /// Create a Debian 13 VPS on Hetzner Cloud and install SirinVPN on it over a pre-pinned SSH key.
+    /// Reads the API token from HCLOUD_TOKEN or a hidden prompt; the token is not stored.
+    CreateHetzner(CreateHetznerArguments),
     BackupVps(BackupVpsArguments),
     RestoreVps(RestoreVpsArguments),
     CreateEndpointUpdate(ServerSelector),
@@ -517,6 +520,29 @@ pub(super) struct AddServerArguments {
     /// On a VPS without IPv4, reach IPv4-only websites through this NAT64 gateway's /96 prefix.
     #[arg(long, value_name = "PREFIX/96", value_parser = sirinvpn_installer::parse_nat64_prefix)]
     pub(super) nat64_prefix: Option<std::net::Ipv6Addr>,
+    #[command(flatten)]
+    pub(super) transport: TransportArguments,
+}
+
+#[derive(Args)]
+pub(super) struct CreateHetznerArguments {
+    #[arg(long)]
+    pub(super) name: String,
+    /// Hetzner location, such as fsn1. Defaults to the first location Hetzner lists.
+    #[arg(long)]
+    pub(super) location: Option<String>,
+    /// Hetzner server type, such as cx23. Defaults to the cheapest x86 type in the location.
+    #[arg(long)]
+    pub(super) server_type: Option<String>,
+    /// Create the server at this monthly price, as printed by a run without this option.
+    #[arg(long, value_name = "AMOUNT")]
+    pub(super) accept_monthly_price: Option<String>,
+    #[arg(long)]
+    pub(super) server_binary: Option<PathBuf>,
+    #[command(flatten)]
+    pub(super) dns: DnsPolicyArguments,
+    #[arg(long, value_name = "DNS_NAME=IP")]
+    pub(super) private_dns_record: Vec<PrivateDnsRecord>,
     #[command(flatten)]
     pub(super) transport: TransportArguments,
 }

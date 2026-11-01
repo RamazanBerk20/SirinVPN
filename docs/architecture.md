@@ -37,7 +37,7 @@ Internet traffic <============== WireGuard =============|-- Unbound DNS
 | `sirinvpn-release-fetch` | Explicit bounded HTTPS retrieval into a verified private no-clobber candidate bundle | Unprivileged user; never installs or writes system release state |
 | `sirinvpn-transport` | Select Direct/Obfuscated/QUIC/TLS/TCP endpoints and implement the authenticated client/server relays | Client relay receives only `CAP_NET_ADMIN` for its marked outer socket; server relays run in the existing daemon |
 | `sirinvpn-core` | Per-server identities, profile storage, bounded local network policy, secrets, pinned mTLS client | User |
-| `sirinvpn-installer` | Host-key-pinned SSH discovery and transactional VPS setup | Remote root through SSH/sudo |
+| `sirinvpn-installer` | Host-key-pinned SSH discovery and transactional VPS setup; optional Hetzner Cloud server creation with a pre-seeded host key | Remote root through SSH/sudo; a Hetzner API token for creation |
 | `sirinvpn-server` | Private status, diagnostics, configuration, invitations, and current authorization | Dedicated `sirinvpn` user with `CAP_NET_ADMIN` for peer updates and `CAP_NET_BIND_SERVICE` for UDP+TCP/443; mutable access is confined to `/etc/sirinvpn/authorization` |
 | `sirinvpn-linux-helper` | Local interface, routes, DNS, and owned firewall tables | Root through polkit |
 | `sirinvpn-cli` | Headless adapter over the same core operations | User plus polkit for network changes |
@@ -112,6 +112,10 @@ and [diagnostics design](current-diagnostics-2026-09-07.md).
 11. On success the guard and backup are removed. On detected failure rollback runs immediately; if the process or connection disappears, the timer runs it.
 
 The installer does not flush, replace, or change the policy of the host's existing firewall tables and does not change the SSH daemon configuration. Docker's later `FORWARD` drop policy would otherwise override an earlier nftables accept, so when `DOCKER-USER` already exists the firewall lifecycle inserts one exact `sirinvpn-forward-*` pair for IPv4 and, when enabled, one `sirinvpn-forward6-*` pair for the SirinVPN ULA. They accept only tunnel egress to the discovered interface and established replies in reverse. Start is idempotent; stop and rollback delete only those exact comment-tagged rules. Package installation is not rolled back, but installed packages are limited to the required distribution components. When `unattended-upgrades` is missing, the installer adds it and enables the daily security run through the standard `20auto-upgrades` file and APT timers; an existing configuration, enabled or not, is left unchanged, and the VPS is never restarted automatically. An active UFW is reported by preflight and left unchanged.
+
+### Hetzner Cloud creation
+
+`sirinvpn_installer::hetzner` can create the VPS before step 1. It talks to the fixed origin `https://api.hetzner.cloud/v1` through the workspace's reqwest/rustls client (HTTPS only, no redirects, no proxy, bounded responses), lists locations, server types and `/pricing`, and creates a Debian 13 server only at the price the Owner confirmed. It generates the root login key and an ed25519 SSH host key locally, uploads the login key as a short-lived per-server Hetzner SSH key (deleted right after the create request), and passes both keys in cloud-init user data together with an sshd `HostKey` drop-in and `ssh_pwauth: false`. Because the pin is known beforehand, steps 1 and 2 use it directly: readiness means Hetzner reports `running` and port 22 presents exactly that key. The installer itself still never changes the SSH daemon configuration; only cloud-init does, at first boot. Desktop, Android and CLI then run the ordinary provisioning transaction with the generated login. Cancelling, timeouts and install failures never delete the server without the Owner's confirmation. See [Hetzner VPS creation](hetzner-vps-creation.md).
 
 ## Removal and uninstall transaction
 

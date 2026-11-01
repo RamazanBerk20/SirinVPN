@@ -582,3 +582,41 @@ export interface InvitationPreview {
   recipient_names: boolean; creates_member: boolean; member_name: string; device_name: string; access_level: "owner" | "admin" | "member";
 }
 export interface InvitationNames { member_name?: string; device_name?: string; }
+
+export interface HetznerPrice {
+  location: string;
+  server_monthly: string;
+  ipv4_monthly: string | null;
+  total_monthly: string;
+}
+
+export interface HetznerCatalog {
+  currency: string;
+  image: string;
+  locations: { name: string; description: string; city: string; country: string }[];
+  server_types: {
+    name: string;
+    description: string;
+    architecture: "x86" | "arm";
+    cores: number;
+    memory_gb: number;
+    disk_gb: number;
+    prices: HetznerPrice[];
+  }[];
+}
+
+export interface HetznerServer {
+  id: number;
+  name: string;
+  host_key_sha256: string;
+}
+
+export interface CreatedHetznerServer {
+  server: HetznerServer;
+  private_key_path: string | null;
+}
+
+export interface HetznerAddresses {
+  ipv4: string;
+  ipv6: string | null;
+}

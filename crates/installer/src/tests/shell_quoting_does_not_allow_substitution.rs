@@ -278,6 +278,23 @@ fn selects_packaged_server_artifact_after_vps_architecture_discovery() {
 }
 
 #[test]
+fn payload_support_reads_the_elf_machine_of_each_artifact() {
+    let directory = tempfile::tempdir().unwrap();
+    let mut elf = [0_u8; 64];
+    elf[..6].copy_from_slice(b"\x7fELF\x02\x01");
+    elf[18..20].copy_from_slice(&62_u16.to_le_bytes());
+    let x86_64 = directory.path().join("x86_64");
+    fs::write(&x86_64, elf).unwrap();
+    let exact = ServerBinarySource::Exact(x86_64.clone());
+    assert!(exact.supports("x86_64"));
+    assert!(!exact.supports("aarch64"));
+    let missing = directory.path().join("missing");
+    let packaged = ServerBinarySource::by_architecture(x86_64, missing);
+    assert!(packaged.supports("x86_64"));
+    assert!(!packaged.supports("aarch64"));
+}
+
+#[test]
 fn discovery_parser_rejects_an_unsafe_interface() {
     let input = "os_id=debian\nos_version=13\narchitecture=x86_64\ndefault_interface=eth0;reboot\nipv6_default_interface=\nssh_server_port=22\nipv4_available=1\nipv6_available=0\nnftables_available=1\nwireguard_available=1\nunbound_installed=1\nsirinvpn_installed=0\n";
     assert!(parse_discovery(input).is_err());
