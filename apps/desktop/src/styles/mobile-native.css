@@ -284,6 +284,22 @@ html.android {
 .android[data-font-scale=large] .detail-list > div { flex-direction: column; gap: 4px; }
 .android[data-font-scale=large] .detail-list dd { justify-items: start; text-align: left; }
 .android[data-font-scale=large] .connection-center .power-control { width: 190px; height: 190px; }
+/* Wide screens (TV, tablets, landscape) scroll the page as on a phone, not in desktop panes. */
+@media (min-width: 761px) {
+  html.android:has(.app-shell), html.android body:has(.app-shell) { height: auto; overflow: visible; }
+  html.android body:has(.app-shell) { min-height: 100dvh; overflow-x: hidden; }
+  html.android .app-shell { position: static; }
+}
+/* Rows sit in clipped lists, so their focus ring is drawn inside them. */
+.android :is(.mobile-list-row, .mobile-sheet-action, .mobile-server-open):focus-visible { outline-offset: -3px; background: var(--surface-pressed); }
+/* D-pad (Android TV): spatial navigation picks a visible fixed bar before it scrolls,
+   so the destinations lead the page instead of floating over it. */
+@media (pointer: none) {
+  .android .app-shell { display: flex; flex-direction: column; }
+  .android .bottom-navigation { position: static; order: -1; border-top: 0; border-bottom: 1px solid var(--line); }
+  .android .workspace { padding-bottom: 24px; }
+  html.android :focus-visible { outline: 3px solid var(--accent-strong); scroll-margin: 24px; }
+}
 @media (prefers-reduced-motion: reduce) {
   .android *, .android *::before, .android *::after { animation: none !important; transition: none !important; }
 }

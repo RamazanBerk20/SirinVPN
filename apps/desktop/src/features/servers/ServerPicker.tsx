@@ -8,6 +8,9 @@ import { confirmNavigation } from "../../lib/navigationGuard";
 import type { LocalTunnelStatus, ServerProfile } from "../../types";
 import { describeConnection } from "../connection/connectionState";
 
+// ServerWorkspace remounts per server, so the sheet cannot return focus to the old trigger.
+let focusNextTrigger = false;
+
 /** Android Home: the current server opens a sheet to switch servers without leaving Home. */
 export function ServerPicker({ servers, selected, local, onSelect, onAdd, onManage }: {
   servers: ServerProfile[];
@@ -22,7 +25,7 @@ export function ServerPicker({ servers, selected, local, onSelect, onAdd, onMana
   return <Dialog.Root open={open} onOpenChange={setOpen}>
     <div className="mobile-choice-list home-server">
       <Dialog.Trigger asChild>
-        <button type="button" className="mobile-list-row" aria-label={t("servers.picker.trigger", { name: selected.name })}>
+        <button type="button" className="mobile-list-row" ref={button => { if (button && focusNextTrigger) { focusNextTrigger = false; button.focus(); } }} aria-label={t("servers.picker.trigger", { name: selected.name })}>
           <span className={`mobile-row-icon ${describeConnection(local, selected.id, null).connected ? "online" : ""}`}><Database size={22} /></span>
           <span><small className="mobile-row-eyebrow">{t("servers.picker.eyebrow")}</small><strong>{selected.name}</strong></span>
           <CaretUpDown size={20} />
@@ -43,7 +46,7 @@ export function ServerPicker({ servers, selected, local, onSelect, onAdd, onMana
                 subtitle={state.status}
                 trailing={current ? <Check size={20} className="row-check" /> : null}
                 current={current}
-                onClick={() => close(() => { if (!current && confirmNavigation()) onSelect(server.id); })}
+                onClick={() => close(() => { if (!current && confirmNavigation()) { focusNextTrigger = true; onSelect(server.id); } })}
               />
             </div>;
           })}

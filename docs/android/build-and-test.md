@@ -232,6 +232,24 @@ A root-owned UI Automator dump must be removed after reboot before a shell-UID
 dump can replace it. Reboot tests wait for a changed boot ID as well as completed
 startup, avoiding a read of the previous boot's completion property.
 
+## Widget, automation and Android TV
+
+The fresh-AVD harness also runs `ExternalControlsTest`. It hosts the real widget
+(granting the app widget binding with `appwidget grantbind`), and grants and
+revokes the automation permission for the test APK, whose `AutomationRelay`
+sends broadcasts from a separate UID like an automation app. It uses a temporary
+profile pointing only to host-loopback UDP port 9 and contacts no VPS. The
+package check requires the leanback entry, its banner and no required hardware.
+
+No Android TV image is used. The D-pad check renders the fictional Android
+catalog in Chromium with spatial navigation and `pointer: none`, as WebView runs
+on a device without a touchscreen:
+
+```sh
+pnpm --dir apps/desktop exec vite build --config ../../tests/android/catalog.config.ts
+python3 tests/ui/android_tv_dpad.py
+```
+
 ## Presentation and regression
 
 The current mobile redesign check captures 20 states at three display/text

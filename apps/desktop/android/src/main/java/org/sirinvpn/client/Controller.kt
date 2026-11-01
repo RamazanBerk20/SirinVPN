@@ -27,6 +27,8 @@ object Controller {
     // Local settings must not wait behind network requests or an interrupted connection.
     private val preferenceWorker = Executors.newSingleThreadExecutor()
     private val monitor = Executors.newSingleThreadScheduledExecutor()
+    // Widget rendering reads profiles from disk; keep it off the controller lock, in order.
+    private val widgetWorker = Executors.newSingleThreadExecutor()
     // Monotonic across process recreation as well as within this process.
     private val epoch = AtomicLong(SystemClock.elapsedRealtime() * 1000)
     private var sequence = 0L
@@ -59,6 +61,7 @@ object Controller {
     private var networkHandoff = false
     private var sampling: java.util.concurrent.ScheduledFuture<*>? = null
     private var tileState = ""
+    private var widgetState = ""
     private var lastCommand = "connect_saved"
     private var lastArguments = "{}"
     private var retryEnabled = false
@@ -248,14 +251,21 @@ object Controller {
     fun unsubscribe(listener: IStatus) { listeners.unregister(listener) }
     @Synchronized fun publish() {
         sequence++
-        val value = snapshot().toString()
+        val current = snapshot()
+        val value = current.toString()
         val count = listeners.beginBroadcast()
         try { for (i in 0 until count) try { listeners.getBroadcastItem(i).changed(value) } catch (_: Exception) {} }
         finally { listeners.finishBroadcast() }
         val tile = "$phase:${preferences.getString("profile", null)}:${SirinVpnService.instance?.isAlwaysOn}"
         if (tile != tileState) { tileState = tile; TileService.requestListeningState(context, ComponentName(context, SirinTileService::class.java)) }
-        SirinVpnService.instance?.let { VpnNotifications.update(it, snapshot()) }
+        SirinVpnService.instance?.let { VpnNotifications.update(it, current) }
+        val widget = "${current.getString("phase")}:${current.getJSONObject("status").opt("server_id")}:${current.opt("quick_profile")}:${current.getBoolean("always_on")}:${current.getLong("generation")}"
+        if (widget != widgetState) {
+            widgetState = widget
+            widgetWorker.execute { try { SirinWidget.render(context, current) } catch (_: Exception) { /* A widget must never stop the VPN process. */ } }
+        }
     }
+    @Synchronized fun refreshWidget() { widgetState = ""; publish() }
 
     fun execute(command: String, arguments: String, requestId: String, expected: Long, callback: IResult,
                 retry: Boolean = false) {
@@ -434,6 +444,8 @@ object Controller {
             } catch (_: Exception) { failure(R.string.error_operation_failed) }
             synchronized(this) {
                 if (setting) settingsUpdating=false else if (!readOnly) operation = false
+                // Renames, removals and restores can change the widget's server name.
+                if (!readOnly) widgetState = ""
                 if (maintenance) {
                     operationState=JSONObject().put("command",command).put("phase",if(JSONObject(result).has("error")) "failed" else "completed")
                     preferences.edit().remove("maintenance").commit()

@@ -6,7 +6,7 @@ import { SettingsLayout, type SettingsCategory } from "./SettingsLayout";
 import { ActionMenu } from "../../components/ActionMenu";
 import { t } from "../../i18n";
 
-vi.mock("../../platform", () => ({ isAndroid: true }));
+vi.mock("../../platform", () => ({ isAndroid: true, dpadOnly: false }));
 vi.mock("./PreferencesProvider", () => ({ usePreferences: () => ({ snapshot: { preferences: { animations: false } } }) }));
 afterEach(cleanup);
 

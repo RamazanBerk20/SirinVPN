@@ -2,6 +2,8 @@ import { Channel, invoke as tauriInvoke } from "@tauri-apps/api/core";
 import type { LocalStatusEvent, ServerStatus, ServerStatusEvent } from "./types";
 
 export const isAndroid = typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent);
+/** Android TV: no pointer, only a D-pad. Pages then start focus on their first control. */
+export const dpadOnly = isAndroid && window.matchMedia?.("(pointer: none)").matches === true;
 
 export async function invoke<T>(command: string, args: Record<string, unknown> = {}): Promise<T> {
   if (!isAndroid) return tauriInvoke<T>(command, args);

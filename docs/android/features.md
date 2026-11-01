@@ -20,10 +20,17 @@ happy path does not verify an entire family. See [actual coverage](progress.md).
 | app-updates | Signed releases, APK package/version/signer checks, OS consent; rejection/cancellation exercised | Actual artifact download, replacement and reconstruction |
 | compact-window, dialogs, tooltips | SirinVPN mobile styling, four destinations, insets/IME, touch help, Back guards; narrow/landscape/200% tests | TalkBack, split-screen, complete process-death restoration |
 | native-confirmations, native-file-dialogs, native-selects | Native confirmation, SAF, package/permission controls; real protected entry/QR/share cancellation | Every confirmation/select and completed external sharing |
-| native-notifications, native-tray | Service notification and real TileService; no desktop popup layer; Activity-free controls and notification-denial traffic | Locked authentication, blocked channels, competing VPN, every stale action |
+| native-notifications, native-tray | Service notification and real TileService; no desktop popup layer; Activity-free controls and notification-denial traffic; home-screen widget and permission-protected [automation intents](automation.md) on the same control paths | Locked authentication, blocked channels, competing VPN, every stale action; launcher-hosted widget on a physical device |
 
 Executable arguments become package routing. Startup/tray settings become
 Android VPN policy and native controls. SSH-agent login becomes a selected key
 or password. AppImage/Windows installers become signed APK review and OS consent;
 silent rollback/downgrade is not offered. Equivalent outcomes are claimed only
 to the extent explicitly tested in each scenario row.
+
+Android TV has no desktop counterpart. The app has a leanback launcher entry and
+banner and requires no touchscreen. With a D-pad, the destinations lead the page
+instead of floating over it, wide screens scroll the page, Home starts on
+Connect, and sub-pages start on Back. `tests/ui/android_tv_dpad.py` checks
+connect/disconnect, server choice and connection details with arrow keys and
+Enter in Chromium with WebView's spatial navigation, not on a TV.

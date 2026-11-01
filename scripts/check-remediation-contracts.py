@@ -34,6 +34,13 @@ def main():
     assert vpn.get(android + "process") == ":vpn"
     assert vpn.get(android + "stopWithTask") == "false"
     assert vpn.get(android + "permission") == "android.permission.BIND_VPN_SERVICE"
+    # Only the launcher is open to every app; automation needs a permission the user grants.
+    for component in manifest.iter():
+        if component.get(android + "exported") == "true" and component.get(android + "name") != ".MainActivity":
+            assert component.get(android + "permission"), f"Unprotected exported {component.get(android + 'name')}"
+    levels = {p.get(android + "name"): p.get(android + "protectionLevel") for p in manifest.iter("permission")}
+    automation = next(r for r in manifest.iter("receiver") if r.get(android + "name") == ".AutomationReceiver")
+    assert levels[automation.get(android + "permission")] in {"dangerous", "signature"}
     # New/current remediation guidance must have real local targets. Historical
     # reports with explicitly local-only artifacts retain their original scope.
     schema = json.loads((ROOT / "docs/evidence-schema.json").read_text())

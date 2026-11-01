@@ -50,6 +50,9 @@ with zipfile.ZipFile(args.apk) as archive:
 subprocess.run([str(build/"zipalign"),"-c","-P","16","4",str(args.apk)],check=True,timeout=60)
 badging=subprocess.check_output([str(build/"aapt2"),"dump","badging",str(args.apk)],timeout=60).decode()
 assert "minSdkVersion:'29'" in badging and "targetSdkVersion:'36'" in badging
+# Android TV: a leanback entry with a banner, and no required hardware such as a touchscreen.
+assert "leanback-launchable-activity: name='org.sirinvpn.client.MainActivity'" in badging and "banner='res/" in badging
+assert "uses-feature-not-required: name='android.hardware.touchscreen'" in badging and "\n  uses-feature: " not in badging
 debuggable="application-debuggable" in badging
 certificates=[]
 if not args.unsigned:

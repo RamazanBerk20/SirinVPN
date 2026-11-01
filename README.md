@@ -51,8 +51,10 @@ Screenshots use fictional profiles and example data.
   with private records and split zones, and opt-in
   [ad and tracker blocking](docs/dns-blocking.md) for every device.
 - **Keep the VPN independent of the interface.** Native services own the tunnel.
-  Android includes notification controls, a Quick Settings tile, and integration
-  with Android's Always-on VPN and lockdown settings.
+  Android includes notification controls, a Quick Settings tile, a home-screen
+  widget, permission-protected [automation intents](docs/android/automation.md)
+  for apps such as Tasker, Android TV support, and integration with Android's
+  Always-on VPN and lockdown settings.
 - **See current measurements.** Download and upload rates, connection time, server
   resource use, private-tunnel quality, and MTU measurements without an activity
   timeline or stored traffic history.
@@ -68,7 +70,7 @@ Availability and verification vary by platform. The
 | Platform | Implementation / build path | Verification and limits |
 | --- | --- | --- |
 | **Linux** | Desktop, CLI, privileged helper, systemd and nftables; Debian/AppImage packaging. | Disposable kernel and exact Debian package acceptance passed. Two earlier fallback DNS observations remain unresolved; AppImage runtime and wider desktops need qualification. |
-| **Android 10+** | Separate VPN process, Keystore, QR, notifications and Quick Settings; ARM64/x86_64 APK build paths. | Debug APK, API 29/36 instrumentation and Samsung S25+ lifecycle/lockdown checks passed. Other OEMs, overnight power behavior and physical 16 KB pages remain unqualified. No home-screen widget is implemented. |
+| **Android 10+** | Separate VPN process, Keystore, QR, notifications, Quick Settings, a home-screen widget, automation intents and Android TV (leanback, D-pad); ARM64/x86_64 APK build paths. | Debug APK, API 29/36 instrumentation and Samsung S25+ lifecycle/lockdown checks passed. Other OEMs, overnight power behavior and physical 16 KB pages remain unqualified. Android TV is checked in Chromium and by package metadata, not on a TV. |
 | **Windows** | LocalSystem service, WireGuardNT, WFP and DPAPI; MSVC/NSIS tooling. | Native Windows 11 units, cross-user controls, four transports and crash/reboot checks passed; exact scope is in the remediation ledger. Broader release qualification remains open. Executable routing requires a signed, qualified driver. |
 | **VPS** | Debian 13 and Ubuntu 24.04 LTS x86_64/ARM64 server payloads with private management, DNS and relays. | Cross-architecture builds do not establish ARM64 native runtime acceptance. Ubuntu 24.04 x86_64 passed the disposable-VM install/repair/rollback gate and the two-VM client lab (four transports, DNS, kill switch, uninstall); IPv6 and ARM64 on Ubuntu are not yet verified ([record](docs/ubuntu-24-04-vps-2026-10-29.md)). |
 

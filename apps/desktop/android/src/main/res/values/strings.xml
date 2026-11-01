@@ -57,6 +57,17 @@
     <!-- Shown on Android 12 and older, which can’t add the tile from the app. -->
     <string name="tile_add_instructions">Open Quick Settings, tap Edit and add SirinVPN.</string>
 
+    <!-- Home-screen widget. Its button reuses the notification action labels. -->
+    <string name="widget_description">Connection status with a Connect and Disconnect button</string>
+    <string name="widget_no_server">Choose a Quick Settings server</string>
+    <string name="widget_action_connect">Connect</string>
+    <string name="widget_action_open">Open</string>
+
+    <!-- Permission an automation app (Tasker, Automate) asks for. Android shows the label
+         as “Allow <app> to <label>?”, so it starts lowercase. -->
+    <string name="automation_permission_label">connect and disconnect SirinVPN</string>
+    <string name="automation_permission_description">Lets the app connect or disconnect SirinVPN and choose its Quick Settings server, without opening SirinVPN.</string>
+
     <!-- QR code scanner. -->
     <string name="scanner_title">Scan QR code</string>
     <string name="scanner_back">Back</string>
