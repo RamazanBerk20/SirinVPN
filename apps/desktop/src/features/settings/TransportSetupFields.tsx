@@ -13,6 +13,7 @@ export interface TransportDraft {
   wireguard: string;
   obfuscated: string;
   tcpTls: string;
+  quic: boolean;
   https: boolean;
   cdn: boolean;
   hostname: string;
@@ -21,22 +22,18 @@ export interface TransportDraft {
   privateKey: string;
 }
 
-/** QUIC answers on UDP at the TCP/TLS port number, so a Repair moves Obfuscated UDP off it. */
+/** QUIC answers on UDP at the TCP/TLS port number, so Obfuscated UDP uses this port instead. */
 const OBFUSCATED_UDP_PORT = 51821;
-
-function obfuscatedPort(profile?: ServerProfile): number {
-  const port = profile?.obfuscated_udp?.port ?? OBFUSCATED_UDP_PORT;
-  const shared = port === (profile?.tcp_fallback?.port ?? 443) && profile?.endpoint.wireguard_port !== OBFUSCATED_UDP_PORT;
-  return shared ? OBFUSCATED_UDP_PORT : port;
-}
 
 export function newTransportDraft(profile?: ServerProfile): TransportDraft {
   return {
     publicHost: profile?.endpoint.host ?? "",
     alternateHosts: profile?.alternate_endpoint_hosts?.join("\n") ?? "",
     wireguard: String(profile?.endpoint.wireguard_port ?? 51820),
-    obfuscated: String(obfuscatedPort(profile)),
+    obfuscated: String(profile?.obfuscated_udp?.port ?? OBFUSCATED_UDP_PORT),
     tcpTls: String(profile?.tcp_fallback?.port ?? 443),
+    // An existing server keeps its setting until the Owner changes it here.
+    quic: profile ? Boolean(profile.tls_like?.quic) : true,
     https: Boolean(profile?.tls_like?.https),
     cdn: Boolean(profile?.tls_like?.https?.cdn),
     hostname: profile?.tls_like?.https?.server_name ?? "",
@@ -51,6 +48,7 @@ export function transportDraftIsValid(draft: TransportDraft): boolean {
   const ports = [draft.wireguard, draft.obfuscated, draft.tcpTls];
   if (ports.some((port) => !/^\d{1,5}$/.test(port) || Number(port) < 1 || Number(port) > 65535 || [53, 5053, 8443].includes(Number(port)))) return false;
   if (Number(draft.wireguard) === Number(draft.obfuscated) || Number(draft.wireguard) === Number(draft.tcpTls)) return false;
+  if (draft.quic && Number(draft.obfuscated) === Number(draft.tcpTls)) return false;
   if (!draft.https) return true;
   const hostname = draft.hostname.trim();
   if (!validateHost(hostname) || !hostname.includes(".") || hostname.includes(":") || /^(\d{1,3}\.){3}\d{1,3}$/.test(hostname)) return false;
@@ -70,6 +68,7 @@ export function transportSetupFromDraft(draft: TransportDraft, profile?: ServerP
     https_certificate_path: draft.https && draft.certificate ? draft.certificate : null,
     https_private_key_path: draft.https && draft.privateKey ? draft.privateKey : null,
     disable_https: Boolean(profile?.tls_like?.https) && !draft.https,
+    quic: draft.quic,
   };
 }
 
@@ -90,7 +89,13 @@ export function TransportSetupFields({ value, onChange, existing = false }: {
       <Field label={t("ssh.transport.tcpTlsPort")}><input inputMode="numeric" value={value.tcpTls} onChange={(event) => update("tcpTls", event.target.value)} /></Field>
     </div>
     <p className="settings-note">{t("ssh.transport.portsNote")}{portsHint}</p>
-    {Number(value.obfuscated) === Number(value.tcpTls) && <p className="settings-note">{t("ssh.transport.quicPortNote")}</p>}
+    <label className="checkbox-row"><input type="checkbox" checked={value.quic} onChange={(event) => onChange({
+      ...value,
+      quic: event.target.checked,
+      // Turning QUIC on frees the shared UDP port here, where the Owner sees the change.
+      obfuscated: event.target.checked && Number(value.obfuscated) === Number(value.tcpTls) ? String(OBFUSCATED_UDP_PORT) : value.obfuscated,
+    })} />{t("ssh.transport.quic")}</label>
+    {value.quic && <p className="settings-note">{t("ssh.transport.quicNote")}</p>}
     {portsPanel}
     <label className="checkbox-row"><input type="checkbox" checked={value.https} onChange={(event) => update("https", event.target.checked)} />{t("ssh.transport.https")}</label>
     {value.https && <>

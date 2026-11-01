@@ -810,10 +810,13 @@ pub(super) struct TransportArguments {
     pub(super) wireguard_port: Option<u16>,
     #[arg(long)]
     pub(super) obfuscated_udp_port: Option<u16>,
-    /// TCP and TLS share an authenticated listener; QUIC uses the same port number over UDP
-    /// unless Obfuscated UDP is on it.
+    /// TCP and TLS share an authenticated listener; QUIC uses the same port number over UDP.
     #[arg(long)]
     pub(super) tcp_tls_port: Option<u16>,
+    /// `true` answers QUIC (HTTP/3) on UDP at the TCP/TLS port number; Obfuscated UDP then
+    /// needs another port. Omitted, a repair keeps the server's current setting.
+    #[arg(long)]
+    pub(super) quic: Option<bool>,
     #[arg(long, conflicts_with = "disable_https")]
     pub(super) https_server_name: Option<String>,
     #[arg(long, conflicts_with = "disable_https")]
@@ -850,6 +853,7 @@ impl TransportArguments {
             && !self.clear_alternate_hosts
             && self.obfuscated_udp_port.is_none()
             && self.tcp_tls_port.is_none()
+            && self.quic.is_none()
             && self.https_server_name.is_none()
             && self.https_path.is_none()
             && self.https_cdn.is_none()
@@ -875,6 +879,19 @@ impl TransportArguments {
         }
         if let Some(port) = self.tcp_tls_port {
             setup.tcp_tls_port = port;
+        }
+        if let Some(quic) = self.quic {
+            setup.quic = quic;
+            if quic
+                && self.obfuscated_udp_port.is_none()
+                && setup.obfuscated_udp_port == setup.tcp_tls_port
+            {
+                setup.obfuscated_udp_port = sirinvpn_protocol::DEFAULT_OBFUSCATED_UDP_PORT;
+                eprintln!(
+                    "Note: Obfuscated UDP moves to port {} so QUIC can answer on UDP {}.",
+                    setup.obfuscated_udp_port, setup.tcp_tls_port
+                );
+            }
         }
         if let Some(name) = &self.https_server_name {
             if self.https_cdn.is_none() && setup.https.as_ref().is_some_and(|https| https.cdn) {
@@ -912,13 +929,47 @@ impl TransportArguments {
                 setup.tcp_tls_port
             );
         }
-        if !setup.quic() {
-            eprintln!(
-                "Note: QUIC stays off while Obfuscated UDP uses TCP/TLS port {}. Choose another --obfuscated-udp-port to turn it on.",
-                setup.tcp_tls_port
-            );
+        if !setup.quic {
+            eprintln!("Note: QUIC (HTTP/3) stays off. Pass --quic true to turn it on.");
         }
         setup.validate()?;
         Ok(Some(setup))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[derive(Parser)]
+    struct Command {
+        #[command(flatten)]
+        transport: TransportArguments,
+    }
+
+    fn requested(arguments: &[&str]) -> Option<sirinvpn_installer::TransportSetup> {
+        Command::parse_from(std::iter::once("sirinvpn").chain(arguments.iter().copied()))
+            .transport
+            .requested(None)
+            .unwrap()
+    }
+
+    #[test]
+    fn quic_changes_only_on_request_and_moves_a_shared_obfuscated_port() {
+        assert!(requested(&[]).is_none());
+        let off = requested(&["--quic", "false"]).unwrap();
+        assert!(!off.quic);
+        let shared = requested(&["--obfuscated-udp-port", "443", "--quic", "false"]).unwrap();
+        assert_eq!(shared.obfuscated_udp_port, 443);
+        let on = requested(&["--tcp-tls-port", "443", "--quic", "true"]).unwrap();
+        assert!(
+            on.quic && on.obfuscated_udp_port == sirinvpn_protocol::DEFAULT_OBFUSCATED_UDP_PORT
+        );
+        assert!(
+            Command::parse_from(["sirinvpn", "--obfuscated-udp-port", "443", "--quic", "true"])
+                .transport
+                .requested(None)
+                .is_err()
+        );
     }
 }

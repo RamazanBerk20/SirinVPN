@@ -269,24 +269,40 @@ fn repair_requires_intact_matching_identity_and_compatible_state() {
     };
     assert!(bootstrap_matches_profile(&bootstrap, &profile));
 
-    // Repair frees the old shared UDP 443 for QUIC and keeps any other Obfuscated UDP port.
+    // A repair or restore that changes no transport keeps the server's setup exactly,
+    // including Obfuscated UDP on the old shared UDP 443 with QUIC off.
     let mut legacy = profile.clone();
     legacy.obfuscated_udp = Some(ObfuscatedUdpEndpoint {
         port: 443,
         server_public_key: STANDARD.encode([9_u8; 32]),
     });
     legacy.tcp_fallback = bootstrap.tcp_fallback.clone();
-    let repaired = TransportSetup::from_profile(&legacy);
-    assert_eq!(repaired.obfuscated_udp_port, DEFAULT_OBFUSCATED_UDP_PORT);
-    assert!(repaired.quic() && repaired.port_arguments().ends_with(" --quic true"));
-    legacy.obfuscated_udp.as_mut().unwrap().port = 4_443;
-    assert_eq!(
-        TransportSetup::from_profile(&legacy).obfuscated_udp_port,
-        4_443
+    legacy.tls_like = bootstrap.tls_like.clone();
+    let kept = TransportSetup::from_profile(&legacy);
+    assert_eq!(kept.obfuscated_udp_port, 443);
+    assert!(!kept.quic && kept.port_arguments().ends_with(" --quic false"));
+    kept.validate().unwrap();
+    // QUIC needs the Owner to ask for it, and Obfuscated UDP off the TCP/TLS port.
+    assert!(
+        TransportSetup {
+            quic: true,
+            ..kept.clone()
+        }
+        .validate()
+        .is_err()
     );
-    assert!(!bootstrap_matches_transport(&bootstrap, &repaired));
+    let enabled = TransportSetup {
+        obfuscated_udp_port: DEFAULT_OBFUSCATED_UDP_PORT,
+        quic: true,
+        ..kept
+    };
+    enabled.validate().unwrap();
+    assert!(enabled.port_arguments().ends_with(" --quic true"));
+    legacy.tls_like.as_mut().unwrap().quic = true;
+    assert!(TransportSetup::from_profile(&legacy).quic);
+    assert!(!bootstrap_matches_transport(&bootstrap, &enabled));
     bootstrap.tls_like.as_mut().unwrap().quic = true;
-    assert!(bootstrap_matches_transport(&bootstrap, &repaired));
+    assert!(bootstrap_matches_transport(&bootstrap, &enabled));
 
     assert!(ensure_repair_ipv6_compatible(false, false).is_ok());
     assert!(ensure_repair_ipv6_compatible(false, true).is_ok());

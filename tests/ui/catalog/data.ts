@@ -18,7 +18,7 @@ export const profile = {schema_version:1,id,name:"My private VPS",favorite:true,
   tls_like:{port:443,server_public_key:"public-screenshot-example",certificate_sha256:"a".repeat(64)},
   endpoint_generation:1,alternate_endpoint_hosts:["backup.example.com"],endpoint_discovery_port:443};
 export const connectionPreferences = {transport:"automatic",network_profile:"automatic",policy:{kill_switch:false,automatic_reconnect:false,connect_on_startup:false},routing:{mode:"full_tunnel",included_routes:[],allow_lan:false},manual_mtu:null};
-export const transportSetup = {public_host:"vpn.example.com",alternate_endpoint_hosts:["backup.example.com"],wireguard_port:51820,obfuscated_udp_port:443,tcp_tls_port:443,https:null,https_certificate_path:null,https_private_key_path:null,disable_https:false};
+export const transportSetup = {public_host:"vpn.example.com",alternate_endpoint_hosts:["backup.example.com"],wireguard_port:51820,obfuscated_udp_port:51821,tcp_tls_port:443,https:null,https_certificate_path:null,https_private_key_path:null,disable_https:false,quic:true};
 export const local = {state:"connected",interface_name:"sirinvpn0",server_id:id,traffic_metrics_supported:true,mtu_detection_supported:true,endpoint_updates_supported:true,
   kill_switch_state:"off",byte_counters_available:true,included_routes:[],counter_epoch:"catalog-session",tunnel_uptime_seconds:4321,rx_packets:412890,tx_packets:86712,
   rx_bytes:234580992,tx_bytes:35082421,ipv6_blocked:true,ipv6_tunneled:false,kill_switch_enabled:false,auto_reconnect_enabled:false,transport_fallback_enabled:false,routing_mode:"full_tunnel",allow_lan:false,transport:"direct_udp",

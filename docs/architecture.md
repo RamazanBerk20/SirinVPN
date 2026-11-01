@@ -227,8 +227,9 @@ exchange on the first stream authorizes the device and authenticates the server
 key; WireGuard packets then travel as QUIC datagrams. Probes meet an HTTP/3 server
 that answers 404. It never goes through a CDN, and its ClientHello is readable by
 any observer and is quinn's, not a browser's. New servers move Obfuscated UDP to
-UDP 51821 to free UDP 443; Repair offers the same move. A server with QUIC uses
-configuration schema 11.
+UDP 51821 to free UDP 443; existing servers get QUIC only when the Owner turns it
+on in Repair, and other repairs and restores keep their transport setup exactly. A
+server with QUIC uses configuration schema 11.
 
 Transport preference is local policy. Manual selection remains pinned; Automatic
 tries only advertised candidates and stops on uncertain teardown. Initial

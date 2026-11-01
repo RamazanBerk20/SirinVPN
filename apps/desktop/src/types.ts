@@ -621,6 +621,7 @@ export interface TransportSetup {
   https_certificate_path: string | null;
   https_private_key_path: string | null;
   disable_https: boolean;
+  quic: boolean;
 }
 
 export interface InvitationPreview {

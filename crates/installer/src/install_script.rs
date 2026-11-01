@@ -26,7 +26,7 @@ pub(super) fn install_script(
     } else {
         format!("    tcp dport {discovery_port} accept\n")
     };
-    let quic_firewall_rule = if request.transport.quic() {
+    let quic_firewall_rule = if request.transport.quic {
         format!("    udp dport {} accept\n", request.transport.tcp_tls_port)
     } else {
         String::new()
