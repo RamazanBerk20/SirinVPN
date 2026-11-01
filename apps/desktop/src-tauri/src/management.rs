@@ -1,6 +1,7 @@
 //! Management.
 
 use super::*;
+use tauri::Manager;
 
 #[tauri::command]
 pub(super) async fn run_diagnostics(
