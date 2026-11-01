@@ -14,7 +14,7 @@ happy path does not verify an entire family. See [actual coverage](progress.md).
 | devices, member-actions, member-policy, invitations | Shared authorization/UI; real rename, peer permission, invitations, enrollment and Member restrictions | Full delegation, schedules, revocation and ownership transfer |
 | key-rotation, recovery-keys, device-backups | Shared transactions, Keystore, protected QR/SAF; policy-preserving rotation and encrypted round trips | Every interrupted/recovery-policy branch; camera decoding |
 | endpoint | Signed migration/publication/checkpoints; invalid inputs retain the tunnel | Positive cross-address migration end to end |
-| diagnostics, vps-backup, vps-restore, vps-repair, vps-updates, removal | Service-owned operations; backup/restore/repair and guarded uninstall exercised; shared release verification | Signed VPS update/rollback, diagnostics and interruption coverage |
+| diagnostics, vps-backup, vps-restore, vps-repair, vps-updates, removal | Service-owned operations; backup/restore/repair and guarded uninstall exercised; shared release verification; [scheduled VPS backups](../scheduled-vps-backups.md) into a SAF folder while the app is open | Signed VPS update/rollback, diagnostics and interruption coverage; scheduled backups on a device |
 | general, settings | Shared preferences; real draft/Back/font checks | Process-death draft restoration |
 | wifi | Desktop-only: the Android app omits Wi-Fi auto-connect and requests no location permission | None |
 | app-updates | Signed releases, APK package/version/signer checks, OS consent; rejection/cancellation exercised | Actual artifact download, replacement and reconstruction |

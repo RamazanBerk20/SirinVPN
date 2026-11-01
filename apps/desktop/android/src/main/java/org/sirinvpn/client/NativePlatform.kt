@@ -2,6 +2,8 @@ package org.sirinvpn.client
 
 import android.content.Context
 import android.os.ParcelFileDescriptor
+import android.provider.DocumentsContract
+import android.provider.DocumentsContract.Document
 import org.json.JSONObject
 import java.net.InetAddress
 
@@ -53,6 +55,29 @@ class NativePlatform(private val context: Context) {
         val uri = android.net.Uri.parse(value); require(uri.scheme == "content")
         context.contentResolver.openOutputStream(uri,"wt")!!.use { stream -> stream.write(bytes); stream.flush() }
         Controller.exported(value)
+    }
+    /** Regular documents directly inside an Owner-chosen tree, by display name. */
+    private fun treeChildren(value: String): List<Pair<String, android.net.Uri>> {
+        val tree = android.net.Uri.parse(value); require(tree.scheme == "content")
+        val columns = arrayOf(Document.COLUMN_DOCUMENT_ID, Document.COLUMN_DISPLAY_NAME, Document.COLUMN_MIME_TYPE)
+        val children = DocumentsContract.buildChildDocumentsUriUsingTree(tree, DocumentsContract.getTreeDocumentId(tree))
+        val result = mutableListOf<Pair<String, android.net.Uri>>()
+        context.contentResolver.query(children, columns, null, null, null)?.use { cursor ->
+            while (cursor.moveToNext()) if (cursor.getString(2) != Document.MIME_TYPE_DIR)
+                result += cursor.getString(1) to DocumentsContract.buildDocumentUriUsingTree(tree, cursor.getString(0))
+        }
+        return result
+    }
+    fun listTree(value: String): String = org.json.JSONArray(treeChildren(value).map { it.first }).toString()
+    fun writeTreeDocument(value: String, name: String, bytes: ByteArray) {
+        val tree = android.net.Uri.parse(value); require(tree.scheme == "content")
+        val parent = DocumentsContract.buildDocumentUriUsingTree(tree, DocumentsContract.getTreeDocumentId(tree))
+        val uri = DocumentsContract.createDocument(context.contentResolver, parent, "application/octet-stream", name) ?: error("Backup folder unavailable")
+        try { context.contentResolver.openOutputStream(uri, "wt")!!.use { stream -> stream.write(bytes); stream.flush() } }
+        catch (error: Exception) { DocumentsContract.deleteDocument(context.contentResolver, uri); throw error }
+    }
+    fun deleteTreeDocument(value: String, name: String) {
+        for ((_, uri) in treeChildren(value).filter { it.first == name }) DocumentsContract.deleteDocument(context.contentResolver, uri)
     }
     fun isCurrent(generation: Long): Boolean = Controller.current(generation)
     fun prepareConnection(arguments:String,generation:Long) = Controller.prepareConnection(JSONObject(arguments),generation)

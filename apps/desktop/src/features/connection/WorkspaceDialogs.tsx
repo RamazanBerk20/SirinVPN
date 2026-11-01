@@ -9,6 +9,7 @@ import { RepairServerDialog } from "../settings/RepairServerDialog";
 import { VpsUpdateDialog } from "../settings/VpsUpdateDialog";
 import { VpsBackupDialog } from "../settings/VpsBackupDialog";
 import { VpsRestoreDialog } from "../settings/VpsRestoreDialog";
+import { VpsBackupScheduleDialog } from "../settings/VpsBackupScheduleDialog";
 import { ExportBackupDialog } from "../settings/ExportBackupDialog";
 import { RemoveServerDialog } from "../settings/RemoveServerDialog";
 import { t } from "../../i18n";
@@ -34,6 +35,8 @@ export function WorkspaceDialogs({
     setVpsBackupOpen,
     vpsRestoreOpen,
     setVpsRestoreOpen,
+    vpsBackupScheduleOpen,
+    setVpsBackupScheduleOpen,
     repairOpen,
     setRepairOpen,
     rotationOpen,
@@ -79,6 +82,14 @@ export function WorkspaceDialogs({
         onOpenChange={setVpsBackupOpen}
         disconnected={localStatus.state === "disconnected"}
       />
+      {profile.role === "owner" && (
+        <VpsBackupScheduleDialog
+          profile={profile}
+          open={vpsBackupScheduleOpen}
+          onOpenChange={setVpsBackupScheduleOpen}
+          disconnected={localStatus.state === "disconnected" && !localStatus.kill_switch_enabled && !localStatus.auto_reconnect_enabled}
+        />
+      )}
       <VpsRestoreDialog
         profile={profile}
         onReviewAccess={onReviewAccess}

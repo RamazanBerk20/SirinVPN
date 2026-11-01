@@ -222,6 +222,7 @@ pub(super) fn uninstall_blocking(
             .to_owned()
     })?;
     let _ = paths.network_policy_store().forget_server(id);
+    let _ = crate::vps_backup_schedule::forget(&paths, id);
     Ok(())
 }
 

@@ -89,6 +89,7 @@ async fn run() -> Result<()> {
             }
             ServerCommand::Add(arguments) => add_server(&paths, arguments, cli.json),
             ServerCommand::BackupVps(arguments) => backup_vps(&paths, arguments, cli.json),
+            ServerCommand::BackupStatus => backup_status(&paths, cli.json),
             ServerCommand::RestoreVps(arguments) => restore_vps(&paths, arguments, cli.json),
             ServerCommand::CreateEndpointUpdate(selector) => {
                 create_endpoint_update(&paths, selector, cli.json).await

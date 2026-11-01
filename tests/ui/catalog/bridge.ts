@@ -122,6 +122,14 @@ export class CatalogBridge {
       case 'exportServerBackup':case 'exportRecoveryPackage':return;
       case 'importServerBackup':s.profiles=[D.clone(D.profile)];return D.clone(D.profile);
       case 'exportVpsBackup':return{server_id:D.id,server_name:D.profile.name,path:s.fileSave,bytes:18432,artifact_sha256:'a'.repeat(64),events:[]};
+      case 'vpsBackupSchedules':return D.clone(s.vpsBackupSchedules??[]);
+      case 'setVpsBackupSchedule':{
+        const previous=(s.vpsBackupSchedules??[])[0];
+        const schedule={last_success:null,last_failure:null,enabled_at:Math.floor(Date.now()/1000),due:true,stale:false,...previous,...args[0]};
+        delete schedule.backup_password;s.vpsBackupSchedules=[schedule];return D.clone(schedule);
+      }
+      case 'disableVpsBackupSchedule':s.vpsBackupSchedules=[];return;
+      case 'runScheduledVpsBackup':s.vpsBackupSchedules=(s.vpsBackupSchedules??[]).map((v:any)=>({...v,last_success:Math.floor(Date.now()/1000),last_failure:null,due:false,stale:false}));return D.clone(s.vpsBackupSchedules[0]);
       case 'restoreVpsBackup':return{profile:D.clone(D.profile),server_id:D.id,server_name:D.profile.name,events:[],network_preflight:D.clone(D.networkPreflight),artifact_sha256:'a'.repeat(64),dns_upstream:{mode:'recursive'},private_dns_records:[],replaced_existing_installation:false,server_identity_fingerprint:D.fingerprint};
       case 'removeServer':case 'uninstallServer':s.profiles=[];return;
       case 'updateServerPresentation':s.profiles[0].name=args[1]??s.profiles[0].name;s.profiles[0].favorite=args[2]??s.profiles[0].favorite;return;

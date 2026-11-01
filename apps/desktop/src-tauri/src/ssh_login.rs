@@ -39,16 +39,19 @@ fn account(host: &str) -> Result<String, String> {
 /// Automatic lookups never prompt. Explicit saves, removals and operations may
 /// show the wallet's bounded unlock prompt on Linux.
 fn entry(host: &str, prompt: bool) -> Result<Entry, String> {
-    let account = account(host)?;
+    credential(SERVICE, account(host)?, prompt)
+}
+
+pub(crate) fn credential(service: &'static str, account: String, prompt: bool) -> Result<Entry, String> {
     #[cfg(target_os = "linux")]
     {
-        let wallet = wallet::Wallet::new(SERVICE, account, prompt);
+        let wallet = wallet::Wallet::new(service, account, prompt);
         Ok(Entry::new_with_credential(Box::new(wallet)))
     }
     #[cfg(not(target_os = "linux"))]
     {
         let _ = prompt;
-        Entry::new(SERVICE, &account)
+        Entry::new(service, &account)
             .map_err(|_| "This device’s secure storage is unavailable.".into())
     }
 }
@@ -129,6 +132,14 @@ fn bound_target(login: SshLoginInput, port: u16, fingerprint: &str) -> Result<Ss
     if login.ssh_port != port || login.host_key_sha256 != fingerprint {
         return Err("The server’s SSH key or port changed. Choose Change login and enter the login again.".into());
     }
+    target(login)
+}
+
+/// Scheduled backups use the saved login as remembered, with its pinned host key.
+pub(crate) fn saved_login_target(host: &str, prompt: bool) -> Result<SshTarget, String> {
+    let login = read(host, prompt)?.ok_or(
+        "Scheduled backups need this VPS’s SSH login. Back up the VPS once with Remember login on.",
+    )?;
     target(login)
 }
 

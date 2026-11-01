@@ -32,6 +32,7 @@ use provisioning::*;
 mod backups;
 mod credential_storage;
 use backups::*;
+mod vps_backup_schedule;
 mod endpoints;
 use endpoints::*;
 mod connection;
@@ -197,6 +198,10 @@ fn run_inner() -> tauri::Result<()> {
             import_server_backup,
             export_vps_backup,
             restore_vps_backup,
+            vps_backup_schedule::vps_backup_schedules,
+            vps_backup_schedule::set_vps_backup_schedule,
+            vps_backup_schedule::disable_vps_backup_schedule,
+            vps_backup_schedule::run_scheduled_vps_backup,
             uninstall_server,
             repair_server,
             create_endpoint_update,

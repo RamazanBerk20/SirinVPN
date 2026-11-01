@@ -59,6 +59,8 @@ pub(super) enum ServerCommand {
     },
     Add(AddServerArguments),
     BackupVps(BackupVpsArguments),
+    /// Show the scheduled VPS backups set up in the app: last backup age and warnings.
+    BackupStatus,
     RestoreVps(RestoreVpsArguments),
     CreateEndpointUpdate(ServerSelector),
     PublishEndpointUpdate(EndpointUpdateCodeArguments),

@@ -40,6 +40,8 @@ import type {
   UninstallInput,
   VpsBackupInput,
   VpsRestoreInput,
+  VpsBackupSchedule,
+  VpsBackupScheduleInput,
 } from "./types";
 
 export const api = {
@@ -145,6 +147,14 @@ export const api = {
     invoke<ServerBackupResult>("export_vps_backup", { input }),
   restoreVpsBackup: (input: VpsRestoreInput) =>
     invoke<ServerRestoreResult>("restore_vps_backup", { input }),
+  vpsBackupSchedules: () =>
+    invoke<VpsBackupSchedule[]>("vps_backup_schedules"),
+  setVpsBackupSchedule: (input: VpsBackupScheduleInput) =>
+    invoke<VpsBackupSchedule>("set_vps_backup_schedule", { input }),
+  disableVpsBackupSchedule: (serverId: string) =>
+    invoke<void>("disable_vps_backup_schedule", { serverId }),
+  runScheduledVpsBackup: (serverId: string, interactive: boolean) =>
+    invoke<VpsBackupSchedule>("run_scheduled_vps_backup", { serverId, interactive }),
   uninstallServer: (input: UninstallInput) =>
     invoke<void>("uninstall_server", { input }),
   repairServer: (input: RepairInput) =>

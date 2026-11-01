@@ -56,7 +56,8 @@ Screenshots use fictional profiles and example data.
 - **See current measurements.** Download and upload rates, connection time, server
   resource use, private-tunnel quality, and MTU measurements without an activity
   timeline or stored traffic history.
-- **Recover and maintain access.** Encrypted device and VPS backups, recovery
+- **Recover and maintain access.** Encrypted device and VPS backups (VPS
+  backups also [on a schedule](docs/scheduled-vps-backups.md)), recovery
   keys, key rotation, server repair, and signed endpoint migration.
 
 Availability and verification vary by platform. The
