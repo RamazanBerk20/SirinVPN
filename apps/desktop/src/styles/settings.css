@@ -30,12 +30,12 @@
   text-align: left;
 }
 .settings-tabs button[aria-selected="true"] {
-  background: #102440;
-  border-color: #28507a;
+  background: var(--surface-3);
+  border-color: color-mix(in srgb, var(--cyan) 25%, var(--surface-3));
   color: var(--cyan);
 }
 .settings-tabs button:hover {
-  background: #0c1a30;
+  background: color-mix(in srgb, var(--line) 15%, var(--surface-2));
 }
 .settings-panel {
   min-width: 0;
@@ -50,7 +50,7 @@
   padding: 18px;
   border: 0;
   border-radius: 11px;
-  background: #0a1326;
+  background: var(--surface-2);
 }
 .settings-section-heading {
   display: flex;
@@ -82,7 +82,7 @@
   justify-content: space-between;
   gap: 22px;
   padding: 12px 0;
-  border-bottom: 1px solid #20304a;
+  border-bottom: 1px solid color-mix(in srgb, var(--quiet) 20%, var(--surface-2));
   cursor: pointer;
 }
 .preference-row:last-child {
@@ -118,9 +118,9 @@
   flex: 0 0 auto;
   width: 38px;
   height: 22px;
-  border: 1px solid #546988;
+  border: 1px solid color-mix(in srgb, var(--quiet) 60%, var(--surface));
   border-radius: 99px;
-  background: #1c2a40;
+  background: color-mix(in srgb, var(--quiet) 15%, var(--surface-2));
   position: relative;
   margin: 0;
   cursor: pointer;
@@ -133,18 +133,18 @@
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: #bbcae4;
+  background: color-mix(in srgb, var(--quiet) 55%, var(--text));
   transition:
     transform 160ms ease,
     background-color 160ms ease;
 }
 .preference-row input[role="switch"]:checked {
-  background: #106c84;
+  background: color-mix(in srgb, var(--cyan) 45%, var(--surface));
   border-color: var(--cyan);
 }
 .preference-row input[role="switch"]:checked::after {
   transform: translateX(16px);
-  background: #e1fcff;
+  background: var(--text);
 }
 .preference-row:has(input:disabled) {
   opacity: 0.55;
@@ -185,7 +185,7 @@
   gap: 12px;
   padding: 15px 2px;
   border: 0;
-  border-bottom: 1px solid #20304a;
+  border-bottom: 1px solid color-mix(in srgb, var(--quiet) 20%, var(--surface-2));
   background: transparent;
   text-align: left;
 }
@@ -205,7 +205,7 @@
   line-height: 1.65;
 }
 .settings-action:hover:not(:disabled) {
-  background: #10213b;
+  background: color-mix(in srgb, var(--line) 40%, var(--surface-2));
 }
 .settings-action:disabled {
   opacity: 0.55;
@@ -322,7 +322,7 @@
   border: 1px solid var(--line-strong);
   border-radius: 10px;
   background: var(--surface);
-  box-shadow: 0 -6px 20px rgb(0 0 0 / 20%);
+  box-shadow: 0 -6px 20px color-mix(in srgb, var(--shadow) 20%, transparent);
 }
 .android .connection-save-state.has-unsaved-preferences {
   bottom: 88px;
@@ -342,7 +342,7 @@
 .pending-preferences {
   margin: 4px 0 8px;
   padding: 10px 12px;
-  background: #10213a;
+  background: color-mix(in srgb, var(--line) 55%, var(--bg));
   border-radius: 6px;
   font-size: 0.875rem;
   line-height: 1.6;
@@ -356,7 +356,7 @@
   margin-block: 20px;
 }
 .maintenance-prerequisite {
-  background: #112139;
+  background: color-mix(in srgb, var(--line) 55%, var(--bg));
   padding: 14px;
   border-radius: 8px;
   margin-block: 16px;
@@ -381,18 +381,17 @@
 select {
   appearance: none;
   -webkit-appearance: none;
-  color-scheme: dark;
-  background-color: #0d1c34;
+  background-color: color-mix(in srgb, var(--line) 35%, var(--surface));
   color: var(--text);
-  border: 1px solid #426084;
+  border: 1px solid color-mix(in srgb, var(--quiet) 45%, var(--surface-3));
   border-radius: 7px;
 }
 .port-forward-form select,
 .field select {
   padding-right: 2.2em;
   background-image:
-    linear-gradient(45deg, transparent 50%, #c3d1ec 50%),
-    linear-gradient(135deg, #c3d1ec 50%, transparent 50%);
+    linear-gradient(45deg, transparent 50%, color-mix(in srgb, var(--muted) 60%, var(--text)) 50%),
+    linear-gradient(135deg, color-mix(in srgb, var(--muted) 60%, var(--text)) 50%, transparent 50%);
   background-repeat: no-repeat;
   background-position:
     calc(100% - 15px) center,
@@ -433,8 +432,8 @@ select {
   height: 18px;
 }
 .choice-row:has(:checked) {
-  border-color: #5189b4;
-  background: #10223c;
+  border-color: color-mix(in srgb, var(--line-strong) 65%, var(--cyan));
+  background: color-mix(in srgb, var(--line) 40%, var(--surface-2));
 }
 .choice-row:has(:disabled) {
   opacity: 0.6;

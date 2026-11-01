@@ -38,7 +38,7 @@
 .install-track span {
   height: 3px;
   border-radius: 2px;
-  background: #27344e;
+  background: var(--line);
 }
 
 .install-track span.active {
@@ -57,7 +57,7 @@
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background: rgb(78 211 163 / 12%);
+  background: color-mix(in srgb, color-mix(in srgb, var(--success) 90%, var(--surface-2)) 12%, transparent);
   color: var(--success);
 }
 
@@ -100,12 +100,12 @@
   padding: 13px;
   border: 1px solid var(--line);
   border-radius: 7px;
-  background: #020918;
+  background: var(--bg);
 }
 
 .fingerprint-value code {
   overflow: hidden;
-  color: #d6def0;
+  color: color-mix(in srgb, var(--quiet) 30%, var(--text));
   font-size: 11px;
   text-overflow: ellipsis;
 }
@@ -115,7 +115,7 @@
   align-items: flex-start;
   gap: 9px;
   margin: 15px 0 22px;
-  color: #d8c49a;
+  color: color-mix(in srgb, var(--warning) 60%, var(--text));
   font-size: 10px;
   line-height: 1.55;
 }
@@ -128,9 +128,9 @@
 .warning-note.replacement-warning {
   margin-top: -10px;
   padding: 10px;
-  border: 1px solid rgb(234 179 72 / 24%);
+  border: 1px solid color-mix(in srgb, var(--warning) 24%, transparent);
   border-radius: 8px;
-  background: rgb(234 179 72 / 6%);
+  background: color-mix(in srgb, var(--warning) 6%, transparent);
 }
 
 .remove-server-dialog {
@@ -156,10 +156,10 @@
   align-items: flex-start;
   gap: 10px;
   padding: 13px;
-  border: 1px solid rgb(234 179 72 / 30%);
+  border: 1px solid color-mix(in srgb, var(--warning) 30%, transparent);
   border-radius: 9px;
-  background: rgb(234 179 72 / 7%);
-  color: #dfd0ac;
+  background: color-mix(in srgb, var(--warning) 7%, transparent);
+  color: color-mix(in srgb, var(--warning) 50%, var(--text));
 }
 
 .sensitive-backup-warning svg {
@@ -174,7 +174,7 @@
 }
 
 .sensitive-backup-warning strong {
-  color: #f2dfad;
+  color: color-mix(in srgb, var(--warning) 45%, var(--text));
 }
 
 .field-grid.two-column.backup-passwords {
@@ -182,7 +182,7 @@
 }
 
 .backup-confirmation {
-  border-color: rgb(234 179 72 / 26%);
+  border-color: color-mix(in srgb, var(--warning) 26%, transparent);
 }
 
 .backup-success {
@@ -200,9 +200,9 @@
   height: 48px;
   display: grid;
   place-items: center;
-  border: 1px solid rgb(32 228 157 / 38%);
+  border: 1px solid color-mix(in srgb, var(--success) 38%, transparent);
   border-radius: 50%;
-  background: rgb(32 228 157 / 9%);
+  background: color-mix(in srgb, var(--success) 9%, transparent);
   color: var(--success);
 }
 
@@ -230,8 +230,8 @@
   padding: 9px 11px;
   border: 1px solid var(--line);
   border-radius: 7px;
-  background: #020918;
-  color: #a9bbda;
+  background: var(--bg);
+  color: var(--muted);
   font-size: 9px;
   text-overflow: ellipsis;
 }
@@ -261,15 +261,15 @@
   padding: 15px;
   border: 1px solid var(--line);
   border-radius: 9px;
-  background: #06152f;
+  background: var(--surface-2);
   color: var(--text);
   cursor: pointer;
   text-align: left;
 }
 
 .removal-choice:hover:not(:disabled) {
-  border-color: #315f9e;
-  background: #091d3e;
+  border-color: color-mix(in srgb, var(--line-strong) 90%, var(--cyan));
+  background: color-mix(in srgb, var(--surface-3) 70%, var(--surface));
 }
 
 .removal-choice:disabled {
@@ -282,10 +282,10 @@
   height: 38px;
   display: grid;
   place-items: center;
-  border: 1px solid #214a80;
+  border: 1px solid color-mix(in srgb, var(--line-strong) 75%, var(--surface-3));
   border-radius: 8px;
-  background: #0a2248;
-  color: #7ea7f2;
+  background: var(--surface-3);
+  color: color-mix(in srgb, var(--muted) 70%, var(--accent));
 }
 
 .removal-choice > div {
@@ -305,18 +305,18 @@
 }
 
 .removal-choice.destructive {
-  border-color: rgb(255 125 140 / 30%);
-  background: rgb(76 20 37 / 18%);
+  border-color: color-mix(in srgb, var(--danger) 30%, transparent);
+  background: color-mix(in srgb, color-mix(in srgb, var(--danger) 25%, var(--bg)) 18%, transparent);
 }
 
 .removal-choice.destructive:hover:not(:disabled) {
-  border-color: rgb(255 125 140 / 52%);
-  background: rgb(100 25 44 / 25%);
+  border-color: color-mix(in srgb, var(--danger) 52%, transparent);
+  background: color-mix(in srgb, color-mix(in srgb, var(--danger) 35%, var(--bg)) 25%, transparent);
 }
 
 .removal-choice.destructive > span {
-  border-color: rgb(255 125 140 / 33%);
-  background: rgb(255 125 140 / 9%);
+  border-color: color-mix(in srgb, var(--danger) 33%, transparent);
+  background: color-mix(in srgb, var(--danger) 9%, transparent);
   color: var(--danger);
 }
 
@@ -333,13 +333,13 @@
   padding: 10px 12px;
   border: 1px solid var(--line);
   border-radius: 7px;
-  background: #020918;
+  background: var(--bg);
   color: var(--accent-strong);
 }
 
 .uninstall-target code {
   overflow: hidden;
-  color: #d6def0;
+  color: color-mix(in srgb, var(--quiet) 30%, var(--text));
   font-size: 11px;
   text-overflow: ellipsis;
 }
@@ -365,15 +365,15 @@
 }
 
 .primary-button.danger-action {
-  border-color: #d54f65;
-  background: #d54f65;
+  border-color: color-mix(in srgb, var(--danger) 80%, var(--surface));
+  background: color-mix(in srgb, var(--danger) 80%, var(--surface));
   box-shadow: none;
 }
 
 .primary-button.danger-action:hover:not(:disabled) {
-  border-color: #ed667a;
-  background: #ed667a;
-  box-shadow: 0 9px 25px rgb(213 79 101 / 20%);
+  border-color: color-mix(in srgb, var(--danger) 95%, var(--surface-3));
+  background: color-mix(in srgb, var(--danger) 95%, var(--surface-3));
+  box-shadow: 0 9px 25px color-mix(in srgb, color-mix(in srgb, var(--danger) 80%, var(--surface)) 20%, transparent);
 }
 
 .uninstall-progress {
@@ -435,7 +435,7 @@
   padding: 13px;
   border: 1px solid var(--line);
   border-radius: 7px;
-  background: #071831;
+  background: var(--surface-2);
 }
 
 .diagnostic-row > span {
@@ -447,13 +447,13 @@
 }
 
 .diagnostic-row.pass > span {
-  background: rgb(78 211 163 / 10%);
+  background: color-mix(in srgb, color-mix(in srgb, var(--success) 90%, var(--surface-2)) 10%, transparent);
   color: var(--success);
 }
 
 .diagnostic-row.warning > span,
 .diagnostic-row.fail > span {
-  background: rgb(239 189 99 / 10%);
+  background: color-mix(in srgb, var(--warning) 10%, transparent);
   color: var(--warning);
 }
 

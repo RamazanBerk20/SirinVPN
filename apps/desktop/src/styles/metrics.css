@@ -19,12 +19,12 @@
   align-content: center;
   gap: 10px;
   background:
-    linear-gradient(#14284d, #0a1630) padding-box,
+    linear-gradient(var(--surface-3), var(--surface-2)) padding-box,
     var(--gradient) border-box;
-  box-shadow: 0 0 24px #423dff30;
+  box-shadow: 0 0 24px color-mix(in srgb, var(--accent) 18.8%, transparent);
 }
 .connection-center .power-control.active {
-  box-shadow: 0 0 26px #18d3ee33;
+  box-shadow: 0 0 26px color-mix(in srgb, var(--cyan) 20%, transparent);
 }
 .connection-center .power-control span {
   font-size: 0.8125rem;
@@ -121,7 +121,7 @@
   padding: 10px 14px;
   border: 0;
   border-radius: 9px;
-  background: #0a1428;
+  background: var(--surface-2);
   box-shadow: none;
 }
 .server-metrics .metric {
@@ -177,8 +177,8 @@
 .protection-off {
   border-radius: 4px;
   padding: 1px 6px;
-  background: #203049;
-  color: #eee3c9;
+  background: color-mix(in srgb, var(--quiet) 20%, var(--surface-2));
+  color: color-mix(in srgb, var(--warning) 30%, var(--text));
 }
 .device-traffic .metric small,
 .server-metrics .metric small {
@@ -200,20 +200,20 @@
   margin-top: 2px;
   border: 0;
   border-radius: 6px;
-  background: #1b3053;
+  background: var(--line);
 }
 .metric meter::-webkit-meter-bar {
   height: 5px;
-  background: #1b3053;
+  background: var(--line);
   border: 0;
   border-radius: 6px;
 }
 .metric meter::-webkit-meter-optimum-value {
-  background: #35c8df;
+  background: color-mix(in srgb, var(--cyan) 90%, var(--surface));
   border-radius: 6px;
 }
 .metric meter::-moz-meter-bar {
-  background: #35c8df;
+  background: color-mix(in srgb, var(--cyan) 90%, var(--surface));
   border-radius: 6px;
 }
 .metrics-details {
@@ -255,7 +255,7 @@
 .metrics-unavailable {
   padding: 16px;
   border-radius: 8px;
-  background: #0a1326;
+  background: var(--surface-2);
 }
 .metrics-unavailable p {
   margin: 0;

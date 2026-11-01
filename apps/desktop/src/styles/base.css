@@ -2,8 +2,8 @@
   --font-ui: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
   font-family: var(--font-ui);
-  color: #f4f7ff;
-  background: #020817;
+  color: var(--text);
+  background: var(--bg);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   --bg: #020817;
@@ -23,6 +23,7 @@
   --success: #20e49d;
   --warning: #f6b84d;
   --danger: #ff617a;
+  --shadow: #000;
   --radius: 10px;
   color-scheme: dark;
 }
@@ -82,7 +83,7 @@ code {
   gap: 18px;
   color: var(--muted);
   background:
-    radial-gradient(circle at 50% 45%, rgb(31 99 255 / 18%), transparent 27%),
+    radial-gradient(circle at 50% 45%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 27%),
     var(--bg);
 }
 
@@ -118,7 +119,7 @@ code {
   height: 54px;
   flex: 0 0 auto;
   overflow: visible;
-  filter: drop-shadow(0 0 13px rgb(45 115 255 / 34%));
+  filter: drop-shadow(0 0 13px color-mix(in srgb, var(--accent) 34%, transparent));
 }
 
 .initialization-shell {
@@ -134,7 +135,7 @@ code {
   overflow-x: hidden;
   overflow-y: auto;
   background:
-    radial-gradient(circle at 50% 35%, rgb(34 112 255 / 20%), transparent 34%),
-    radial-gradient(circle at 85% 92%, rgb(136 55 255 / 11%), transparent 28%),
+    radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--accent) 20%, transparent), transparent 34%),
+    radial-gradient(circle at 85% 92%, color-mix(in srgb, color-mix(in srgb, var(--violet) 70%, var(--accent)) 11%, transparent), transparent 28%),
     var(--bg);
 }

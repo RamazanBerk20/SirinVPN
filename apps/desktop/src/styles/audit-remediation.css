@@ -9,8 +9,8 @@
 .access-disclosure { margin-top: 24px; }
 .access-disclosure > button { display: block; margin-top: 16px; }
 .access-disclosure p { max-width: 65ch; line-height: 1.6; }
-.field [aria-invalid="true"] { border-color: #ed9696; }
-.field-error { color: #ed9696; display: block; font-size: var(--text-secondary); line-height: 1.5; }
+.field [aria-invalid="true"] { border-color: color-mix(in srgb, var(--danger) 70%, var(--text)); }
+.field-error { color: color-mix(in srgb, var(--danger) 70%, var(--text)); display: block; font-size: var(--text-secondary); line-height: 1.5; }
 .menu-action-scope { display: block; color: var(--muted); font-size: 0.75rem; }
 .action-menu-panel [aria-disabled="true"] { opacity: .7; cursor: default; }
 .action-menu-panel small { white-space: normal; }
@@ -48,8 +48,8 @@
 .server-row strong { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; line-height: 1.4; }
 
 .segmented-control.add-mode { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.port-forward-panel .field-error { color: #ed9696; }
-.port-forward-form [aria-invalid="true"] { border-color: #ed9696; }
+.port-forward-panel .field-error { color: color-mix(in srgb, var(--danger) 70%, var(--text)); }
+.port-forward-form [aria-invalid="true"] { border-color: color-mix(in srgb, var(--danger) 70%, var(--text)); }
 .release-candidate .settings-note { overflow-wrap: anywhere; }
 .dns-change-review { padding-block: 1rem; }
 .dns-change-review dt { margin-top: .75rem; font-weight: 600; }

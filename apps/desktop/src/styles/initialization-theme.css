@@ -2,7 +2,7 @@
   padding-bottom: calc(100px + env(safe-area-inset-bottom));
   gap: 14px;
   background:
-    radial-gradient(ellipse at 50% 15%, #143aa82e, transparent 45%), var(--bg);
+    radial-gradient(ellipse at 50% 15%, color-mix(in srgb, color-mix(in srgb, var(--accent) 60%, var(--bg)) 18%, transparent), transparent 45%), var(--bg);
 }
 .initialization-brand {
   display: flex;

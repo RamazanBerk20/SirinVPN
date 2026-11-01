@@ -1,7 +1,7 @@
 .field {
   display: grid;
   gap: 7px;
-  color: #cbd4e7;
+  color: color-mix(in srgb, var(--line-strong) 20%, var(--text));
   font-size: 12px;
   font-weight: 650;
 }
@@ -14,7 +14,7 @@
   padding: 0 13px;
   border: 1px solid var(--line-strong);
   border-radius: 7px;
-  background: #030b1b;
+  background: var(--bg);
   color: var(--text);
   font-size: 13px;
   font-weight: 500;
@@ -38,19 +38,19 @@
 .field input:hover,
 .field select:hover,
 .field textarea:hover {
-  border-color: #405477;
+  border-color: color-mix(in srgb, var(--quiet) 45%, var(--surface-2));
 }
 
 .field input:focus,
 .field select:focus,
 .field textarea:focus {
-  border-color: #2875d9;
-  background: #051127;
+  border-color: color-mix(in srgb, var(--cyan) 25%, var(--accent));
+  background: var(--surface);
 }
 
 .field input::placeholder,
 .field textarea::placeholder {
-  color: #667690;
+  color: color-mix(in srgb, var(--line) 65%, var(--text));
   opacity: 1;
 }
 
@@ -69,7 +69,7 @@
 
 .auth-method legend {
   margin-bottom: 8px;
-  color: #cbd4e7;
+  color: color-mix(in srgb, var(--line-strong) 20%, var(--text));
   font-size: 12px;
   font-weight: 650;
 }
@@ -83,14 +83,14 @@
   padding: 11px 12px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: rgb(4 13 31 / 72%);
-  color: #cbd4e7;
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  color: color-mix(in srgb, var(--line-strong) 20%, var(--text));
   cursor: pointer;
 }
 
 .replacement-option.selected {
-  border-color: rgb(234 179 72 / 48%);
-  background: rgb(234 179 72 / 7%);
+  border-color: color-mix(in srgb, var(--warning) 48%, transparent);
+  background: color-mix(in srgb, var(--warning) 7%, transparent);
 }
 
 .replacement-option input {
@@ -161,7 +161,7 @@ input[type="checkbox"]:not([role="switch"]):disabled {
   padding: 3px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #030b1b;
+  background: var(--bg);
 }
 
 .segmented-control button {
@@ -176,11 +176,11 @@ input[type="checkbox"]:not([role="switch"]):disabled {
 }
 
 .segmented-control button[aria-pressed="true"] {
-  background: #102859;
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface-3));
   color: var(--text);
   box-shadow:
-    inset 0 0 0 1px rgb(52 116 255 / 36%),
-    0 0 16px rgb(36 102 255 / 10%);
+    inset 0 0 0 1px color-mix(in srgb, var(--accent) 36%, transparent),
+    0 0 16px color-mix(in srgb, var(--accent) 10%, transparent);
 }
 
 .dns-policy {
@@ -219,11 +219,11 @@ input[type="checkbox"]:not([role="switch"]):disabled {
   padding: 10px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: rgb(3 11 27 / 68%);
+  background: color-mix(in srgb, var(--bg) 68%, transparent);
 }
 
 .dns-endpoint > strong {
-  color: #9cafcf;
+  color: color-mix(in srgb, var(--line-strong) 45%, var(--text));
   font-size: 10px;
   font-weight: 680;
   letter-spacing: 0.04em;
@@ -243,7 +243,7 @@ input[type="checkbox"]:not([role="switch"]):disabled {
 
 .private-dns-policy {
   padding-top: 12px;
-  border-top: 1px solid rgb(45 79 132 / 38%);
+  border-top: 1px solid color-mix(in srgb, var(--line-strong) 38%, transparent);
 }
 
 .field .private-dns-record-input {
@@ -303,16 +303,16 @@ input[type="checkbox"]:not([role="switch"]):disabled {
 .primary-button {
   min-height: 45px;
   padding: 0 18px;
-  border: 1px solid #4d7fff;
-  background: #2855db;
+  border: 1px solid color-mix(in srgb, var(--cyan) 25%, var(--accent));
+  background: color-mix(in srgb, var(--accent) 80%, var(--surface-3));
   color: var(--accent-ink);
   font-size: 13px;
 }
 
 .primary-button:hover:not(:disabled) {
   border-color: var(--cyan);
-  background: #3268f2;
-  box-shadow: 0 0 24px rgb(35 154 255 / 18%);
+  background: color-mix(in srgb, var(--cyan) 15%, var(--accent));
+  box-shadow: 0 0 24px color-mix(in srgb, color-mix(in srgb, var(--cyan) 50%, var(--accent)) 18%, transparent);
 }
 
 .primary-button:disabled {
@@ -335,10 +335,10 @@ input[type="checkbox"]:not([role="switch"]):disabled {
   align-items: flex-start;
   gap: 8px;
   padding: 11px 12px;
-  border: 1px solid rgb(255 125 140 / 27%);
+  border: 1px solid color-mix(in srgb, var(--danger) 27%, transparent);
   border-radius: 10px;
-  background: rgb(255 125 140 / 8%);
-  color: #ffc3ca;
+  background: color-mix(in srgb, var(--danger) 8%, transparent);
+  color: color-mix(in srgb, var(--danger) 35%, var(--text));
   font-size: 12px;
   line-height: 1.45;
 }

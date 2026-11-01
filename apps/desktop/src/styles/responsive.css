@@ -94,7 +94,7 @@
   .metric,
   .metric:nth-child(3n),
   .metric:nth-child(n + 4) {
-    border: 1px solid #17375f;
+    border: 1px solid var(--line);
   }
 
   .device-row {
@@ -219,7 +219,7 @@
   .metric:nth-child(3n),
   .metric:nth-child(n + 4),
   .metric:nth-child(n + 5) {
-    border: 1px solid #17375f;
+    border: 1px solid var(--line);
   }
 
   .device-row {

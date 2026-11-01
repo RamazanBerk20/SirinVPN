@@ -51,7 +51,7 @@
 .initialization-shell summary,
 .initialization-shell select,
 .initialization-shell input:not([type="checkbox"]):not([type="radio"]) { min-height: 48px; }
-.initialization-shell button:disabled { background: #111c30; box-shadow: none; color: #75829b; border-color: #243149; opacity: .65; }
+.initialization-shell button:disabled { background: color-mix(in srgb, var(--line) 45%, var(--bg)); box-shadow: none; color: color-mix(in srgb, var(--line) 60%, var(--text)); border-color: color-mix(in srgb, var(--quiet) 20%, var(--surface-2)); opacity: .65; }
 .initialization-shell input,
 .initialization-shell select,
 .initialization-shell textarea { max-width: 100%; font: inherit; scroll-margin-top: 80px; scroll-margin-bottom: 100px; }
@@ -66,8 +66,8 @@
   gap: 16px;
   padding: 18px 16px;
   margin: 0;
-  background: #091224;
-  border: 1px solid #233149;
+  background: var(--surface);
+  border: 1px solid color-mix(in srgb, var(--quiet) 20%, var(--surface-2));
   box-shadow: none;
   border-radius: 12px;
   text-align: left;

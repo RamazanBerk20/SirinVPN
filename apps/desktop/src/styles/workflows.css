@@ -125,8 +125,8 @@ html[data-window-chrome="custom"] .dialog-content.dialog-layout {
   height: 46px;
   border-radius: 50%;
   color: var(--success);
-  background: rgb(32 228 157 / 9%);
-  border: 1px solid rgb(32 228 157 / 28%);
+  background: color-mix(in srgb, var(--success) 9%, transparent);
+  border: 1px solid color-mix(in srgb, var(--success) 28%, transparent);
 }
 .repair-result h3,
 .repair-result p,
@@ -276,11 +276,11 @@ html[data-window-chrome="custom"] .dialog-content.dialog-layout {
 .diagnostic-row strong { font-size: var(--text-body); line-height: 1.45; }
 .diagnostic-row p { font-size: var(--text-secondary); margin-top: 6px; line-height: 1.55; }
 .diagnostic-evidence { display: inline-block; color: var(--muted); font-size: var(--text-secondary); margin-top: 10px; }
-.diagnostic-row.unavailable > span { color: var(--muted); background: rgb(140 158 188 / 8%); }
-.diagnostic-row.fail > span { color: var(--danger); background: rgb(245 108 108 / 9%); }
+.diagnostic-row.unavailable > span { color: var(--muted); background: color-mix(in srgb, var(--quiet) 8%, transparent); }
+.diagnostic-row.fail > span { color: var(--danger); background: color-mix(in srgb, var(--danger) 9%, transparent); }
 .diagnostic-passed > summary { cursor: pointer; padding: 14px 0; font-size: var(--text-body); }
 .diagnostic-passed > .settings-note { margin: 0 0 12px; }
-.wifi-paused { padding: 12px 14px; border-left: 2px solid var(--warning); background: rgb(239 189 99 / 5%); font-size: var(--text-secondary); line-height: 1.5; }
+.wifi-paused { padding: 12px 14px; border-left: 2px solid var(--warning); background: color-mix(in srgb, var(--warning) 5%, transparent); font-size: var(--text-secondary); line-height: 1.5; }
 .port-forward-form select { font-family: inherit; }
 .mtu-details { margin-top: 18px; }
 .recovery-target { display: grid; gap: 10px; min-width: 0; padding: 16px; border: 1px solid var(--line); border-radius: 8px; overflow-wrap: anywhere; }

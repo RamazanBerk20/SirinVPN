@@ -23,8 +23,8 @@ html[data-window-chrome="custom"]::after {
   height: var(--titlebar-height);
   display: flex;
   align-items: stretch;
-  background: #080f20;
-  border-bottom: 1px solid #24314b;
+  background: var(--surface);
+  border-bottom: 1px solid color-mix(in srgb, var(--quiet) 20%, var(--surface-2));
   user-select: none;
   pointer-events: auto;
 }
@@ -37,10 +37,10 @@ html[data-window-chrome="custom"]::after {
   padding-inline: 16px;
   font-size: 13px;
   font-weight: 550;
-  color: #c1cee5;
+  color: color-mix(in srgb, var(--quiet) 50%, var(--text));
 }
 .titlebar-error {
-  color: #ffd294;
+  color: color-mix(in srgb, var(--warning) 60%, var(--text));
   font-size: 12px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -58,13 +58,13 @@ html[data-window-chrome="custom"]::after {
   background: transparent;
   display: grid;
   place-items: center;
-  color: #d0dcf0;
+  color: color-mix(in srgb, var(--muted) 45%, var(--text));
 }
 .titlebar-controls button:hover {
-  background: #21304c;
+  background: var(--line);
 }
 .titlebar-controls .titlebar-close:hover {
-  background: #a63450;
+  background: color-mix(in srgb, var(--danger) 60%, var(--bg));
   color: white;
 }
 .titlebar-controls button:focus-visible {

@@ -3,7 +3,7 @@
   display: grid;
   grid-template-columns: 220px minmax(0, 1fr);
   background:
-    radial-gradient(circle at 53% 18%, rgb(16 73 173 / 10%), transparent 34%),
+    radial-gradient(circle at 53% 18%, color-mix(in srgb, color-mix(in srgb, var(--accent) 55%, var(--surface-3)) 10%, transparent), transparent 34%),
     var(--bg);
 }
 
@@ -13,14 +13,14 @@
   height: 100dvh;
   display: flex;
   flex-direction: column;
-  border-right: 1px solid #10294c;
-  background: linear-gradient(180deg, #030b1b 0%, #020817 72%);
+  border-right: 1px solid var(--surface-3);
+  background: linear-gradient(180deg, var(--bg) 0%, var(--bg) 72%);
 }
 
 .sidebar > .brand {
   min-height: 102px;
   padding: 18px 18px 16px;
-  border-bottom: 1px solid #10294c;
+  border-bottom: 1px solid var(--surface-3);
 }
 
 .brand.compact .brand-mark {
@@ -33,7 +33,7 @@
 }
 
 .brand.compact small {
-  color: #65799f;
+  color: color-mix(in srgb, var(--quiet) 65%, var(--surface-3));
   font-size: 8px;
   white-space: nowrap;
 }
@@ -58,19 +58,19 @@
   flex: 0 0 auto;
   border: 1px solid var(--line);
   border-radius: 7px;
-  background: #06142c;
-  color: #b8c4da;
+  background: var(--surface-2);
+  color: color-mix(in srgb, var(--line-strong) 30%, var(--text));
   cursor: pointer;
 }
 
 .icon-button:hover {
   border-color: var(--line-strong);
-  background: #0a1d3c;
+  background: color-mix(in srgb, var(--surface-3) 75%, var(--bg));
   color: var(--text);
 }
 
 .icon-button.danger:hover {
-  border-color: rgb(255 125 140 / 40%);
+  border-color: color-mix(in srgb, var(--danger) 40%, transparent);
   color: var(--danger);
 }
 
@@ -106,16 +106,16 @@
 }
 
 .server-row:hover {
-  background: #071630;
+  background: var(--surface-2);
 }
 
 .server-row.selected {
-  border-color: #174585;
-  background: linear-gradient(90deg, #0d2e68, #071a3c 76%);
+  border-color: color-mix(in srgb, var(--line) 75%, var(--accent));
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 15%, var(--surface-3)), color-mix(in srgb, var(--surface-3) 70%, var(--bg)) 76%);
   color: var(--text);
   box-shadow:
-    inset 2px 0 0 #2e75ff,
-    0 0 22px rgb(22 94 255 / 10%);
+    inset 2px 0 0 color-mix(in srgb, var(--cyan) 25%, var(--accent)),
+    0 0 22px color-mix(in srgb, var(--accent) 10%, transparent);
 }
 
 .server-row.selected::after {
@@ -157,15 +157,15 @@
   height: 34px;
   display: grid;
   place-items: center;
-  border: 1px solid #17345f;
+  border: 1px solid var(--line);
   border-radius: 6px;
-  background: #0a1b39;
-  color: #8090ad;
+  background: color-mix(in srgb, var(--surface-3) 70%, var(--bg));
+  color: color-mix(in srgb, var(--muted) 75%, var(--surface));
 }
 
 .server-glyph.online {
-  border-color: rgb(32 228 157 / 35%);
-  background: rgb(32 228 157 / 10%);
+  border-color: color-mix(in srgb, var(--success) 35%, transparent);
+  background: color-mix(in srgb, var(--success) 10%, transparent);
   color: var(--success);
 }
 
@@ -175,7 +175,7 @@
   gap: 8px;
   margin-top: auto;
   padding: 18px 20px;
-  border-top: 1px solid #10294c;
+  border-top: 1px solid var(--surface-3);
   color: var(--quiet);
   font-size: 9px;
 }
@@ -197,8 +197,8 @@
   inset: 0 0 0 220px;
   pointer-events: none;
   background-image:
-    linear-gradient(rgb(35 220 244 / 2.4%) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(35 220 244 / 2.4%) 1px, transparent 1px);
+    linear-gradient(color-mix(in srgb, var(--cyan) 2.4%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--cyan) 2.4%, transparent) 1px, transparent 1px);
   background-size: 52px 52px;
   mask-image: radial-gradient(circle at 52% 25%, black, transparent 72%);
 }
@@ -247,14 +247,14 @@
   padding: 0 13px;
   border: 1px solid var(--line);
   border-radius: 7px;
-  background: #06142c;
-  color: #c7d0e1;
+  background: var(--surface-2);
+  color: color-mix(in srgb, var(--line) 20%, var(--text));
   font-size: 11px;
 }
 
 .secondary-button:hover {
-  border-color: #2b5d9b;
-  background: #0a1d3c;
+  border-color: color-mix(in srgb, var(--line-strong) 90%, var(--cyan));
+  background: color-mix(in srgb, var(--surface-3) 75%, var(--bg));
 }
 
 .secondary-button:disabled {

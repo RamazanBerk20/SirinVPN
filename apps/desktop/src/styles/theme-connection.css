@@ -7,27 +7,27 @@
   border: 3px solid transparent;
   border-radius: 50%;
   background:
-    linear-gradient(#111535, #0a0d24) padding-box,
+    linear-gradient(color-mix(in srgb, var(--violet) 5%, var(--surface-2)), var(--surface)) padding-box,
     var(--gradient) border-box;
-  color: #efecff;
+  color: color-mix(in srgb, var(--violet) 5%, var(--text));
   box-shadow:
-    0 0 27px #443dff66,
-    inset 0 0 25px #4d27ff35;
+    0 0 27px color-mix(in srgb, var(--accent) 40%, transparent),
+    inset 0 0 25px color-mix(in srgb, var(--accent) 20.8%, transparent);
   transition:
     box-shadow 0.2s,
     transform 0.2s;
 }
 .power-control:hover:not(:disabled) {
   box-shadow:
-    0 0 38px #7b35ff8f,
-    inset 0 0 28px #343aff7a;
+    0 0 38px color-mix(in srgb, color-mix(in srgb, var(--violet) 60%, var(--accent)) 56.1%, transparent),
+    inset 0 0 28px color-mix(in srgb, var(--accent) 47.8%, transparent);
   transform: scale(1.03);
 }
 .power-control.active {
   box-shadow:
-    -10px 0 30px #00d9ff33,
-    10px 0 30px #bd29ff55,
-    inset 0 0 25px #343aff60;
+    -10px 0 30px color-mix(in srgb, var(--cyan) 20%, transparent),
+    10px 0 30px color-mix(in srgb, var(--violet) 33.3%, transparent),
+    inset 0 0 25px color-mix(in srgb, var(--accent) 37.6%, transparent);
 }
 .power-control:disabled {
   opacity: 0.6;
@@ -47,8 +47,8 @@
 
 .metric {
   min-height: 100px;
-  border: 1px solid #233f70;
-  background: linear-gradient(150deg, #09182f, #071021);
+  border: 1px solid color-mix(in srgb, var(--line-strong) 55%, var(--surface-3));
+  background: linear-gradient(150deg, var(--surface-2), var(--surface));
   border-radius: 10px;
   padding: 13px 11px;
   gap: 14px;
@@ -68,8 +68,8 @@
   color: var(--cyan);
 }
 .metric:nth-child(3n + 2) {
-  border-top-color: #6550c2;
+  border-top-color: color-mix(in srgb, var(--line-strong) 50%, var(--accent));
 }
 .metric:nth-child(3n + 2) svg {
-  color: #c478ff;
+  color: color-mix(in srgb, var(--violet) 65%, var(--text));
 }

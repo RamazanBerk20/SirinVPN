@@ -59,7 +59,7 @@
   min-height: 48px;
 }
 .primary-navigation button[aria-current] {
-  background: #122346;
+  background: var(--surface-3);
   box-shadow: inset 3px 0 0 -1px var(--cyan);
 }
 .server-list {
@@ -75,8 +75,8 @@
   font-size: 0.8125rem;
 }
 .server-row.selected {
-  border-color: #4866a0;
-  background: #122039;
+  border-color: color-mix(in srgb, var(--line-strong) 90%, var(--text));
+  background: color-mix(in srgb, var(--line) 55%, var(--bg));
 }
 .sidebar-foot {
   margin-top: auto;
@@ -142,11 +142,11 @@
   align-items: center;
   padding: 10px 16px;
   border-radius: 10px;
-  background: #0a1326;
+  background: var(--surface-2);
   border: 1px solid var(--line);
 }
 .collection-row[data-selected="true"] {
-  border-color: #4866a0;
+  border-color: color-mix(in srgb, var(--line-strong) 90%, var(--text));
 }
 .collection-row .server-card-icon {
   color: var(--muted);
@@ -193,10 +193,10 @@
   top: calc(100% + 5px);
   width: min(310px, calc(100vw - 56px));
   padding: 6px;
-  background: #111e35;
-  border: 1px solid #4b648d;
+  background: color-mix(in srgb, var(--line) 30%, var(--surface-2));
+  border: 1px solid color-mix(in srgb, var(--quiet) 50%, var(--surface-3));
   border-radius: 10px;
-  box-shadow: 0 14px 40px #0008;
+  box-shadow: 0 14px 40px color-mix(in srgb, var(--shadow) 53.3%, transparent);
 }
 .action-menu-backdrop {
   position: fixed;
@@ -218,7 +218,7 @@
 }
 .action-menu-panel button:focus,
 .action-menu-panel button:hover:not(:disabled) {
-  background: #20375a;
+  background: var(--line);
 }
 .action-menu-panel button:disabled {
   opacity: 0.65;
@@ -250,7 +250,7 @@
 .device-list > .device-row {
   overflow: visible;
   border-color: transparent;
-  background: #0a1326;
+  background: var(--surface-2);
 }
 .device-row-header {
   display: flex;
@@ -327,7 +327,7 @@
   flex-shrink: 0;
 }
 .port-forward-notice strong {
-  color: #ffe0a1;
+  color: color-mix(in srgb, var(--warning) 50%, var(--text));
 }
 .port-forward-form {
   display: grid;
@@ -348,9 +348,9 @@
   min-width: 0;
   min-height: 44px;
   padding: 10px;
-  border: 1px solid #426084;
+  border: 1px solid color-mix(in srgb, var(--quiet) 45%, var(--surface-3));
   border-radius: 7px;
-  background-color: #0d1c34;
+  background-color: color-mix(in srgb, var(--line) 35%, var(--surface));
   color: var(--text);
 }
 .port-forward-device-field {
@@ -361,7 +361,7 @@
   padding: 14px;
   margin: 2px 0 0;
   border-radius: 8px;
-  background: #10223b;
+  background: color-mix(in srgb, var(--line) 40%, var(--surface-2));
   overflow-wrap: anywhere;
 }
 .port-forward-submit {

@@ -40,6 +40,32 @@ html.android {
   --fs-subtitle: 1.25rem;
   --fs-title: 1.75rem;
 }
+html.android[data-theme="light"] {
+  --bg: #f2f5fa;
+  --surface: #ffffff;
+  --surface-pressed: #e6ecf5;
+  --sheet: #ffffff;
+  --scrim: #0b143066;
+  --line: #d6dde9;
+  --line-strong: #8796b0;
+  --text: #0b1430;
+  --text-strong: #0b1430;
+  --muted: #44536e;
+  --quiet: #55637d;
+  --tile: #e3ebf7;
+  --tile-ink: #0a6a85;
+  --accent-fill: #3347e0;
+  --accent-line: #3347e0;
+  --control: #eef2f8;
+  --control-line: #8796b0;
+  --nav: #ffffff;
+  --nav-pill: #dbe5f5;
+  --nav-ink: #0a6a85;
+  --positive: #03704e;
+  --positive-surface: #dcf3ea;
+  --attention: #b0233a;
+  --danger: #c0223f;
+}
 .android body, .android #root { min-width: 0; min-height: 100%; }
 .android body { background: var(--bg); font-size: 1rem; }
 /* Three weights only: regular text, medium labels and titles, semibold headings and values. */
@@ -104,7 +130,7 @@ html.android {
 .android .connection-center { display: flex; flex-direction: column; align-items: center; gap: 20px; }
 .android .connection-center .connection-state { order: -1; margin: 0; font-size: 1.375rem; line-height: 1.35; color: var(--text-strong); }
 .android .connection-console.is-connected .connection-state { color: var(--positive); }
-.android .connection-center .power-control { width: 154px; height: 154px; min-height: 154px; gap: 9px; padding: 30px 14px; border: 2px solid var(--accent-line); background: radial-gradient(circle at 50% 25%, #213953, var(--surface) 80%); color: var(--text-strong); box-shadow: 0 0 0 9px color-mix(in srgb, var(--accent-line) 11%, transparent); }
+.android .connection-center .power-control { width: 154px; height: 154px; min-height: 154px; gap: 9px; padding: 30px 14px; border: 2px solid var(--accent-line); background: radial-gradient(circle at 50% 25%, var(--line), var(--surface) 80%); color: var(--text-strong); box-shadow: 0 0 0 9px color-mix(in srgb, var(--accent-line) 11%, transparent); }
 .android .connection-center .power-control.active { border-color: var(--positive); background: var(--positive-surface); box-shadow: 0 0 0 9px color-mix(in srgb, var(--positive) 9%, transparent); color: var(--positive); }
 .android .connection-center .power-control > span { font-size: var(--fs-body); font-weight: 600; line-height: 1.3; }
 .android .connection-center .power-control > svg { width: 36px; height: 36px; }
@@ -162,7 +188,7 @@ html.android {
 .android .onboarding-copy > p:not(.section-label) { font-size: var(--fs-row); line-height: 1.6; margin: 0; color: var(--muted); max-width: 340px; }
 .android .onboarding-form-wrap { width: 100%; min-width: 0; padding: 0; margin: 0; border: 0; border-radius: 0; background: none; box-shadow: none; }
 .android .mobile-add-server .invitation-choice { background: color-mix(in srgb, var(--accent-line) 12%, var(--surface)); }
-.android .invitation-choice .mobile-row-icon { background: color-mix(in srgb, var(--tile-ink) 22%, var(--tile)); color: #9beeff; }
+.android .invitation-choice .mobile-row-icon { background: color-mix(in srgb, var(--tile-ink) 22%, var(--tile)); color: color-mix(in srgb, var(--cyan) 40%, var(--text)); }
 .android .mobile-privacy { display: flex; justify-content: center; gap: 8px; color: var(--muted); font-size: var(--fs-small); margin: 32px 0 0; }
 .android .native-code-input { display: grid; gap: 12px; }
 .android .native-secret-input, .android .native-secret-input > button { display: block; width: 100%; }

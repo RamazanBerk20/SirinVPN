@@ -1,7 +1,7 @@
 .port-forward-form input:focus,
 .port-forward-form select:focus {
   border-color: var(--cyan);
-  box-shadow: 0 0 0 2px rgb(35 220 244 / 10%);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--cyan) 10%, transparent);
 }
 
 .port-forward-form input:disabled,
@@ -20,15 +20,15 @@
   gap: 9px;
   margin-top: 13px;
   padding: 10px 12px;
-  border: 1px solid rgb(242 186 73 / 28%);
+  border: 1px solid color-mix(in srgb, var(--warning) 28%, transparent);
   border-radius: 7px;
-  background: rgb(242 186 73 / 5%);
-  color: #c7b98d;
+  background: color-mix(in srgb, var(--warning) 5%, transparent);
+  color: color-mix(in srgb, var(--warning) 90%, var(--surface-2));
 }
 
 .port-forward-notice svg {
   flex: 0 0 auto;
-  color: #e7b94f;
+  color: var(--warning);
 }
 
 .port-forward-notice p {
@@ -64,7 +64,7 @@
 
 .port-forward-protocol {
   padding: 4px 6px;
-  border: 1px solid rgb(35 220 244 / 28%);
+  border: 1px solid color-mix(in srgb, var(--cyan) 28%, transparent);
   border-radius: 5px;
   color: var(--cyan);
   font:
@@ -75,8 +75,8 @@
 }
 
 .port-forward-protocol.udp {
-  border-color: rgb(113 68 255 / 40%);
-  color: #b29aff;
+  border-color: color-mix(in srgb, color-mix(in srgb, var(--violet) 45%, var(--accent)) 40%, transparent);
+  color: color-mix(in srgb, var(--violet) 55%, var(--text));
 }
 
 .port-forward-route {
@@ -141,8 +141,8 @@
   resize: vertical;
   border: 1px solid var(--line-strong);
   border-radius: 7px;
-  background: #020918;
-  color: #d8e0ef;
+  background: var(--bg);
+  color: color-mix(in srgb, var(--line-strong) 15%, var(--text));
   font-size: 9px;
   line-height: 1.55;
   overflow-wrap: anywhere;
@@ -153,9 +153,9 @@
   align-items: center;
   gap: 12px;
   padding: 13px;
-  border: 1px solid #1b477a;
+  border: 1px solid color-mix(in srgb, var(--line-strong) 65%, var(--surface-3));
   border-radius: 8px;
-  background: rgb(9 32 67 / 74%);
+  background: color-mix(in srgb, var(--surface-3) 74%, transparent);
 }
 
 .invite-target > span {
@@ -164,9 +164,9 @@
   display: grid;
   place-items: center;
   flex: 0 0 auto;
-  border: 1px solid rgb(35 220 244 / 28%);
+  border: 1px solid color-mix(in srgb, var(--cyan) 28%, transparent);
   border-radius: 7px;
-  background: rgb(35 220 244 / 7%);
+  background: color-mix(in srgb, var(--cyan) 7%, transparent);
   color: var(--cyan);
 }
 
@@ -196,7 +196,7 @@
   padding: 12px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #020918;
+  background: var(--bg);
 }
 
 .qr-share {
@@ -210,7 +210,7 @@
   aspect-ratio: 1;
   display: block;
   border-radius: 4px;
-  background: #fff;
+  background: #fff; /* QR codes keep a white quiet zone in both themes. */
 }
 
 .qr-share small {
@@ -308,12 +308,12 @@
   padding: 11px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: #020918;
+  background: var(--bg);
 }
 
 .endpoint-transition-summary code {
   overflow: hidden;
-  color: #cdd8ed;
+  color: color-mix(in srgb, var(--muted) 50%, var(--text));
   font-size: 9px;
   text-overflow: ellipsis;
 }
