@@ -60,6 +60,33 @@ fn one_transfer_runs_at_a_time_and_each_device_waits_between_tests() {
     assert_eq!(limiter.started.len(), 2);
 }
 
+#[test]
+fn a_finished_download_keeps_the_slot_for_that_devices_upload() {
+    let mut limiter = Limiter::default();
+    let now = Instant::now();
+    let download = limiter.start("a", false, now).unwrap();
+    limiter.release(download, false, now + Duration::from_secs(8));
+    let during = now + Duration::from_secs(9);
+    assert_eq!(
+        limiter.start("b", false, during).unwrap_err().status,
+        StatusCode::CONFLICT
+    );
+    let upload = limiter.start("a", true, during).unwrap();
+    // A stale release of the download no longer touches the upload's slot.
+    limiter.release(download, false, during);
+    assert_eq!(
+        limiter.start("b", false, during).unwrap_err().status,
+        StatusCode::CONFLICT
+    );
+    limiter.release(upload, true, during);
+    limiter.start("b", false, during).unwrap();
+    // A device that never uploads holds the slot only for the handoff.
+    let mut limiter = Limiter::default();
+    let download = limiter.start("a", false, now).unwrap();
+    limiter.release(download, false, now);
+    limiter.start("b", false, now + HANDOFF).unwrap();
+}
+
 #[tokio::test(start_paused = true)]
 async fn only_managers_download_and_the_stream_stops_at_its_caps() {
     let (_directory, state, [owner, admin, member]) =
@@ -87,8 +114,10 @@ async fn only_managers_download_and_the_stream_stops_at_its_caps() {
         received += chunk.unwrap().len() as u64;
     }
     assert_eq!(received, SPEED_TEST_MAX_BYTES);
-    // The ended stream freed the slot for another device.
+    // The ended stream keeps the slot for the owner's upload during the handoff.
     drop(body);
+    assert_eq!(status(download(admin.clone()).await), StatusCode::CONFLICT);
+    state.speed_test.lock().unwrap().running = None;
     let mut body = download(admin)
         .await
         .unwrap()
@@ -120,13 +149,16 @@ async fn uploads_are_counted_and_cut_off_at_the_caps() {
         status(upload(admin, Body::from_stream(oversized)).await),
         StatusCode::PAYLOAD_TOO_LARGE
     );
-    // A body that never ends is cut off at the time limit (paused time advances itself).
+    // A body still arriving at the time limit is counted up to there (paused time advances
+    // itself), so a slow, bloated uplink reports a low rate instead of failing.
     state.speed_test.lock().unwrap().started.clear();
-    let stalled = futures_util::stream::pending::<Result<Bytes, Infallible>>();
-    assert_eq!(
-        status(upload(owner, Body::from_stream(stalled)).await),
-        StatusCode::PAYLOAD_TOO_LARGE
-    );
+    state.speed_test.lock().unwrap().running = None;
+    let stalled = futures_util::stream::iter([Ok::<_, Infallible>(Bytes::from_static(&ZEROS))])
+        .chain(futures_util::stream::pending());
+    let Json(envelope) = upload(owner, Body::from_stream(stalled))
+        .await
+        .unwrap_or_else(|error| panic!("{}", error.message));
+    assert_eq!(envelope.payload.received_bytes, ZEROS.len() as u64);
 }
 
 /// Both directions through the real pinned-TLS management server. The upload is far above the
