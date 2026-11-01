@@ -158,6 +158,11 @@ rollback. Remove every route first, then roll back.
   Linux helper as a full-tunnel router with the kill switch. It reaches its own
   LAN, a peer reaches that LAN through it, and disconnect removes the rules and
   NAT. Removing the forward accept makes the test fail.
-- Not verified: Windows and Android on real devices (Windows compiles in CI
-  only), a real home router, a VPS with Docker, IPv4 forwarding blocked by a
-  host firewall on the router.
+- Android clippy for `x86_64-linux-android`; Windows cross clippy
+  (`scripts/check-windows-cross.py --tests --clippy`).
+- Not verified: the two-VM lab step "Owner shares a LAN behind this device
+  through the CLI" (`tests/vm/linux_acceptance.py`), which also covers the
+  hardened VPS service unit running `ip route`. Both runs on 2026-11-01 timed
+  out installing the client guest's Debian packages, before any SirinVPN step.
+  Also not verified: Windows and Android on real devices, a real home router, a
+  VPS with Docker, a host firewall on the router.
