@@ -56,6 +56,27 @@ pub async fn dispatch(
                     .await?,
             )
         }
+        "set_device_pair" => {
+            ensure!(
+                client.configuration().await?.device_pairs_enabled,
+                "Server needs an update"
+            );
+            let pair: DevicePair = serde_json::from_value(json!({
+                "device_id": input["device_id"],
+                "peer_device_id": input["peer_device_id"],
+                "one_way": input["one_way"].as_bool().unwrap_or(false),
+            }))
+            .context("Invalid device pair")?;
+            encode(client.set_device_pair(&pair).await?)
+        }
+        "remove_device_pair" => encode(
+            client
+                .remove_device_pair(
+                    text(input, "device_id")?.parse()?,
+                    text(input, "peer_device_id")?.parse()?,
+                )
+                .await?,
+        ),
         "create_port_forward" => {
             confirmed(input)?;
             ensure!(

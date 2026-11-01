@@ -62,6 +62,19 @@
   border-bottom: 0;
 }
 
+.device-pair-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  border-bottom: 1px solid var(--line);
+}
+
+.device-pair-row:last-child {
+  border-bottom: 0;
+}
+
 .port-forward-protocol {
   padding: 4px 6px;
   border: 1px solid rgb(35 220 244 / 28%);

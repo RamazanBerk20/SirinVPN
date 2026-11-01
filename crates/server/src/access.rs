@@ -96,12 +96,19 @@ pub(super) fn filtered_snapshot(
                     && member_id.is_some()
             })
         });
-        snapshot.port_forwards.retain(|forward| {
+        let own = |device_id: DeviceId| {
             authorization
                 .devices
                 .iter()
-                .any(|device| device.id == forward.device_id && Some(device.member_id) == member_id)
-        });
+                .any(|device| device.id == device_id && Some(device.member_id) == member_id)
+        };
+        snapshot
+            .port_forwards
+            .retain(|forward| own(forward.device_id));
+        // A member learns who may reach their devices, not the rest of the server's pairs.
+        snapshot
+            .device_pairs
+            .retain(|pair| own(pair.device_id) || own(pair.peer_device_id));
     }
     snapshot
 }

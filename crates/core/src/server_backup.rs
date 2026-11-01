@@ -307,7 +307,7 @@ fn validate_snapshot(
             let authorization: BackupAuthorizationState =
                 serde_json::from_str(encoded).map_err(|_| ServerBackupError::InvalidSnapshot)?;
             // The `server_authorization` reader range in release/state-compatibility.json.
-            if !matches!(authorization.schema_version, 1..=8)
+            if !matches!(authorization.schema_version, 1..=9)
                 || authorization.server_id != snapshot.server_id
             {
                 return Err(ServerBackupError::InvalidSnapshot);
@@ -601,8 +601,8 @@ mod tests {
             Err(ServerBackupError::AuthenticationFailed)
         ));
 
-        // Schema 7 holds WireGuard-only devices, 8 subnet routes; schema 9 is not readable yet.
-        for (schema, accepted) in [(7, true), (8, true), (9, false)] {
+        // Schema 7 holds WireGuard-only devices, 8 subnet routes, 9 device pairs; 10 is not readable yet.
+        for (schema, accepted) in [(8, true), (9, true), (10, false)] {
             let mut value: serde_json::Value = serde_json::from_slice(&snapshot).unwrap();
             value["authorization_json"] = json!(
                 serde_json::to_string(&json!({"schema_version": schema, "server_id": server_id}))

@@ -139,6 +139,14 @@ pub(super) fn management_router(state: AppState) -> Router {
             "/v1/devices/{device_id}/subnet-routes",
             axum::routing::put(update_device_subnet_routes_handler),
         )
+        .route(
+            "/v1/device-pairs",
+            axum::routing::put(set_device_pair_handler),
+        )
+        .route(
+            "/v1/device-pairs/{device_id}/{peer_device_id}",
+            delete(delete_device_pair_handler),
+        )
         .route("/v1/port-forwards", post(create_port_forward_handler))
         .route(
             "/v1/port-forwards/{protocol}/{public_port}",
@@ -300,5 +308,6 @@ pub(super) async fn configuration_handler(
         wireguard_devices_enabled: state.authorization.is_some(),
         leak_test_enabled: state.leak_test_ready && Path::new(super::leak_test::ZONE_FILE).exists(),
         subnet_routes_enabled: state.authorization.is_some(),
+        device_pairs_enabled: state.authorization.is_some(),
     })))
 }

@@ -175,6 +175,50 @@ pub(super) async fn set_peer_communication(
     print_membership(&snapshot, json)
 }
 
+pub(super) async fn pair_devices(
+    paths: &ClientPaths,
+    arguments: DevicePairArguments,
+    json: bool,
+) -> Result<()> {
+    let pair = DevicePair {
+        device_id: arguments
+            .device_id
+            .parse()
+            .context("device identifier is invalid")?,
+        peer_device_id: arguments
+            .peer_device_id
+            .parse()
+            .context("peer device identifier is invalid")?,
+        one_way: arguments.one_way,
+    };
+    let (profile, secret) = connected_identity(paths, &arguments.server)?;
+    let client = ManagementClient::new(&profile, &secret)?;
+    if !client.configuration().await?.device_pairs_enabled {
+        bail!("the server must be upgraded before pairing devices");
+    }
+    print_membership(&client.set_device_pair(&pair).await?, json)
+}
+
+pub(super) async fn unpair_devices(
+    paths: &ClientPaths,
+    arguments: DeviceUnpairArguments,
+    json: bool,
+) -> Result<()> {
+    let device_id = arguments
+        .device_id
+        .parse::<DeviceId>()
+        .context("device identifier is invalid")?;
+    let peer_device_id = arguments
+        .peer_device_id
+        .parse::<DeviceId>()
+        .context("peer device identifier is invalid")?;
+    let (profile, secret) = connected_identity(paths, &arguments.server)?;
+    let snapshot = ManagementClient::new(&profile, &secret)?
+        .remove_device_pair(device_id, peer_device_id)
+        .await?;
+    print_membership(&snapshot, json)
+}
+
 pub(super) async fn set_subnet_routes(
     paths: &ClientPaths,
     arguments: SubnetRoutesArguments,

@@ -105,7 +105,7 @@ async fn subnet_route_rules_admit_only_peer_enabled_devices_and_answers() {
     assert_eq!(routes(&document).len(), 2);
 }
 
-async fn nft(arguments: &[&str]) {
+pub(super) async fn nft(arguments: &[&str]) {
     assert!(
         Command::new("nft")
             .args(arguments)
@@ -116,7 +116,7 @@ async fn nft(arguments: &[&str]) {
     );
 }
 
-async fn reach(source: &str, destination: &str, open: bool) {
+pub(super) async fn reach(source: &str, destination: &str, open: bool) {
     let status = Command::new("python3")
         .args([
             "tests/network/subnet_routes.py",

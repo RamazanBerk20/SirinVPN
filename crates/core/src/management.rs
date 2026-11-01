@@ -2,7 +2,7 @@ use crate::SecretIdentity;
 use reqwest::{Certificate, Client, Identity};
 use sirinvpn_protocol::DiagnosticReport;
 use sirinvpn_protocol::{
-    API_VERSION, ApiEnvelope, ApiErrorBody, CurrentConfiguration, DeviceId,
+    API_VERSION, ApiEnvelope, ApiErrorBody, CurrentConfiguration, DeviceId, DevicePair,
     DevicePeerCommunicationUpdateRequest, EndpointTransitionCreateRequest,
     EndpointTransitionResponse, EnrollmentRequest, EnrollmentResult, ErrorCode,
     InvitationCreateRequest, InvitationCreateResponse, InvitationId, KeyRotationCommitResponse,
@@ -422,6 +422,38 @@ impl ManagementClient {
                 self.base_url
             ))
             .json(&DevicePeerCommunicationUpdateRequest { enabled })
+            .send()
+            .await
+            .map_err(|_| ManagementError::ConnectionFailed)?;
+        self.decode(response).await
+    }
+
+    /// Adds the pair, or replaces the one joining the same two devices.
+    pub async fn set_device_pair(
+        &self,
+        pair: &DevicePair,
+    ) -> Result<MembershipSnapshot, ManagementError> {
+        let response = self
+            .client
+            .put(format!("{}/v1/device-pairs", self.base_url))
+            .json(pair)
+            .send()
+            .await
+            .map_err(|_| ManagementError::ConnectionFailed)?;
+        self.decode(response).await
+    }
+
+    pub async fn remove_device_pair(
+        &self,
+        device_id: DeviceId,
+        peer_device_id: DeviceId,
+    ) -> Result<MembershipSnapshot, ManagementError> {
+        let response = self
+            .client
+            .delete(format!(
+                "{}/v1/device-pairs/{device_id}/{peer_device_id}",
+                self.base_url
+            ))
             .send()
             .await
             .map_err(|_| ManagementError::ConnectionFailed)?;

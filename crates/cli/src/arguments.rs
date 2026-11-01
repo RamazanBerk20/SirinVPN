@@ -81,6 +81,9 @@ pub(super) enum ServerCommand {
     SetPeerCommunication(PeerCommunicationArguments),
     /// Replace the LAN ranges one of the Owner's devices forwards for peers that may reach it.
     SetSubnetRoutes(SubnetRoutesArguments),
+    /// Let two devices reach each other whatever their peer-communication mode, or replace their pair.
+    PairDevices(DevicePairArguments),
+    UnpairDevices(DeviceUnpairArguments),
     AddPortForward(AddPortForwardArguments),
     RemovePortForward(RemovePortForwardArguments),
     SetMemberAccess(MemberAccessArguments),
@@ -286,6 +289,24 @@ pub(super) struct PeerCommunicationArguments {
     pub(super) device_id: String,
     #[arg(long, value_enum)]
     pub(super) mode: PeerCommunicationMode,
+}
+
+#[derive(Args)]
+pub(super) struct DevicePairArguments {
+    pub(super) server: String,
+    /// The device that may start connections.
+    pub(super) device_id: String,
+    pub(super) peer_device_id: String,
+    /// The peer only answers connections the device started.
+    #[arg(long)]
+    pub(super) one_way: bool,
+}
+
+#[derive(Args)]
+pub(super) struct DeviceUnpairArguments {
+    pub(super) server: String,
+    pub(super) device_id: String,
+    pub(super) peer_device_id: String,
 }
 
 #[derive(Args)]

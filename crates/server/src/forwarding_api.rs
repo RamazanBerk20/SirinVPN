@@ -15,6 +15,24 @@ pub(super) async fn update_device_peer_communication_handler(
     let mut current = authorization.write().await;
     let caller = authorize_current(&current, &caller, false)?;
     ensure_active_endpoint_authority(&current)?;
+    let target = peer_communication_target(&current, caller, device_id)?;
+    if target.peer_communication_enabled == request.enabled {
+        return Ok(Json(ApiEnvelope::new(filtered_snapshot(&current, caller))));
+    }
+    let mut next = current.clone();
+    next.set_device_peer_communication(device_id, request.enabled)
+        .map_err(|_| ApiError::internal())?;
+    let snapshot = filtered_snapshot(&next, caller);
+    commit_authorization(&state, &mut current, next).await?;
+    Ok(Json(ApiEnvelope::new(snapshot)))
+}
+
+/// The Owner and Admins change the devices they manage; a member only their own, when permitted.
+fn peer_communication_target(
+    current: &AuthorizationDocument,
+    caller: CallerAuthorization,
+    device_id: DeviceId,
+) -> Result<&DeviceRecord, ApiError> {
     let target = current
         .devices
         .iter()
@@ -32,17 +50,83 @@ pub(super) async fn update_device_peer_communication_handler(
         .find(|member| member.id == target.member_id)
         .ok_or_else(ApiError::internal)?;
     if !can_manage_member(caller, target_member.role, target_member.administrator)
-        && !caller_member(&current, caller).is_some_and(|member| {
+        && !caller_member(current, caller).is_some_and(|member| {
             member.id == target_member.id && member.policy.manage_own_peer_communication
         })
     {
         return Err(ApiError::forbidden());
     }
-    if target.peer_communication_enabled == request.enabled {
+    Ok(target)
+}
+
+fn parse_device_id(value: &str) -> Result<DeviceId, ApiError> {
+    value
+        .parse::<DeviceId>()
+        .map_err(|_| ApiError::invalid("device identifier is invalid"))
+}
+
+/// A pair opens both devices, so the caller needs that authority over each of them.
+pub(super) async fn set_device_pair_handler(
+    State(state): State<AppState>,
+    Extension(caller): Extension<CallerIdentity>,
+    Json(pair): Json<DevicePair>,
+) -> Result<Json<ApiEnvelope<MembershipSnapshot>>, ApiError> {
+    if pair.device_id == pair.peer_device_id {
+        return Err(ApiError::invalid("a device cannot be paired with itself"));
+    }
+    let authorization = require_authorization(&state)?;
+    let mut current = authorization.write().await;
+    let caller = authorize_current(&current, &caller, false)?;
+    ensure_active_endpoint_authority(&current)?;
+    peer_communication_target(&current, caller, pair.device_id)?;
+    peer_communication_target(&current, caller, pair.peer_device_id)?;
+    if current.device_pairs.contains(&pair) {
         return Ok(Json(ApiEnvelope::new(filtered_snapshot(&current, caller))));
     }
+    if current.device_pairs.len() >= MAX_DEVICE_PAIRS
+        && !current
+            .device_pairs
+            .iter()
+            .any(|existing| existing.joins(pair.device_id, pair.peer_device_id))
+    {
+        return Err(ApiError::conflict("the device-pair limit has been reached"));
+    }
     let mut next = current.clone();
-    next.set_device_peer_communication(device_id, request.enabled)
+    next.set_device_pair(pair)
+        .map_err(|_| ApiError::internal())?;
+    let snapshot = filtered_snapshot(&next, caller);
+    commit_authorization(&state, &mut current, next).await?;
+    Ok(Json(ApiEnvelope::new(snapshot)))
+}
+
+pub(super) async fn delete_device_pair_handler(
+    State(state): State<AppState>,
+    Extension(caller): Extension<CallerIdentity>,
+    AxumPath((device_id, peer_device_id)): AxumPath<(String, String)>,
+) -> Result<Json<ApiEnvelope<MembershipSnapshot>>, ApiError> {
+    let (device_id, peer_device_id) = (
+        parse_device_id(&device_id)?,
+        parse_device_id(&peer_device_id)?,
+    );
+    let authorization = require_authorization(&state)?;
+    let mut current = authorization.write().await;
+    let caller = authorize_current(&current, &caller, false)?;
+    ensure_active_endpoint_authority(&current)?;
+    peer_communication_target(&current, caller, device_id)?;
+    peer_communication_target(&current, caller, peer_device_id)?;
+    if !current
+        .device_pairs
+        .iter()
+        .any(|pair| pair.joins(device_id, peer_device_id))
+    {
+        return Err(ApiError::new(
+            StatusCode::NOT_FOUND,
+            ErrorCode::InvalidInput,
+            "device pair was not found",
+        ));
+    }
+    let mut next = current.clone();
+    next.remove_device_pair(device_id, peer_device_id)
         .map_err(|_| ApiError::internal())?;
     let snapshot = filtered_snapshot(&next, caller);
     commit_authorization(&state, &mut current, next).await?;

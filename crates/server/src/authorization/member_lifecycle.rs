@@ -3,7 +3,9 @@ use super::*;
 
 impl AuthorizationDocument {
     pub(crate) fn required_schema_version(&self) -> u16 {
-        if self
+        if !self.device_pairs.is_empty() {
+            DEVICE_PAIR_AUTHORIZATION_SCHEMA_VERSION
+        } else if self
             .devices
             .iter()
             .any(|device| !device.subnet_routes.is_empty())
@@ -100,6 +102,9 @@ impl AuthorizationDocument {
             .collect();
         self.port_forwards
             .retain(|forward| !devices.contains(&forward.device_id));
+        self.device_pairs.retain(|pair| {
+            !devices.contains(&pair.device_id) && !devices.contains(&pair.peer_device_id)
+        });
         self.devices.retain(|device| device.member_id != member_id);
         self.members.retain(|member| member.id != member_id);
         self.recovery_policy

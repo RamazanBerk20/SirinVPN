@@ -454,7 +454,8 @@ pub(super) fn port_forward_nft_batch(
     operational: Option<&OperationalConfiguration>,
     authorization: &AuthorizationDocument,
 ) -> Result<Option<String>> {
-    let subnet_routes = subnet_route_nft_rules(configuration, authorization);
+    let mut subnet_routes = device_pair_nft_rules(configuration, authorization)?;
+    subnet_routes.push_str(&subnet_route_nft_rules(configuration, authorization));
     let Some(operational) = operational else {
         if !authorization.port_forwards.is_empty() {
             bail!("port forwarding requires repaired server operational configuration");
@@ -511,6 +512,69 @@ pub(super) fn port_forward_nft_batch(
     Ok(Some(batch))
 }
 
+/// Paired devices reach each other ahead of peer isolation, in the same runtime chain as
+/// the routes; the peer of a one-way pair only answers.
+pub(super) fn device_pair_nft_rules(
+    configuration: &ServerConfiguration,
+    authorization: &AuthorizationDocument,
+) -> Result<String> {
+    let device = |id| {
+        authorization
+            .devices
+            .iter()
+            .find(|device| device.id == id)
+            .context("device pair references an unavailable device")
+    };
+    // Flows that may start, and flows that may only answer.
+    let mut flows = [Vec::new(), Vec::new()];
+    for pair in &authorization.device_pairs {
+        let (source, destination) = (device(pair.device_id)?, device(pair.peer_device_id)?);
+        if !authorization.pair_permits(source, destination) {
+            continue;
+        }
+        let (IpAddr::V4(source), IpAddr::V4(destination)) = (
+            source.client_tunnel_address,
+            destination.client_tunnel_address,
+        ) else {
+            bail!("only IPv4 SirinVPN peer addresses are supported");
+        };
+        flows[0].push((source, destination));
+        flows[usize::from(pair.one_way)].push((destination, source));
+    }
+    let interface = &configuration.interface_name;
+    let ipv6 = |address| {
+        ipv6_tunnel_address(authorization.server_id, address)
+            .context("could not derive the peer IPv6 tunnel address")
+    };
+    let mut batch = String::new();
+    for (flows, state) in flows.iter().zip(["", " ct state established,related"]) {
+        if flows.is_empty() {
+            continue;
+        }
+        let elements = flows
+            .iter()
+            .map(|(source, destination)| format!("{source} . {destination}"))
+            .collect::<Vec<_>>()
+            .join(", ");
+        batch.push_str(&format!(
+            "add rule inet sirinvpn_filter port_forward iifname \"{interface}\" oifname \"{interface}\" ip saddr . ip daddr {{ {elements} }}{state} accept\n"
+        ));
+        if configuration.ipv6_tunnel_enabled {
+            let elements = flows
+                .iter()
+                .map(|(source, destination)| {
+                    Ok(format!("{} . {}", ipv6(*source)?, ipv6(*destination)?))
+                })
+                .collect::<Result<Vec<_>>>()?
+                .join(", ");
+            batch.push_str(&format!(
+                "add rule inet sirinvpn_filter port_forward iifname \"{interface}\" oifname \"{interface}\" ip6 saddr . ip6 daddr {{ {elements} }}{state} accept\n"
+            ));
+        }
+    }
+    Ok(batch)
+}
+
 /// `port_forward` is the runtime chain every installed forward chain jumps to before peer
 /// isolation drops tunnel-to-tunnel traffic, so routes work without a firewall rewrite.
 /// Peers that may reach each other reach the routers' LANs; LAN hosts only answer.
@@ -518,25 +582,55 @@ pub(super) fn subnet_route_nft_rules(
     configuration: &ServerConfiguration,
     authorization: &AuthorizationDocument,
 ) -> String {
+    let interface = &configuration.interface_name;
+    let mut batch = String::new();
     let mut routes: Vec<_> = authorization
         .devices
         .iter()
-        .flat_map(|device| authorization.live_subnet_routes(device))
+        .filter(|device| authorization.reaches_peers(device))
+        .flat_map(|device| &device.subnet_routes)
         .map(String::as_str)
         .collect();
-    if routes.is_empty() {
-        return String::new();
+    if !routes.is_empty() {
+        routes.sort_unstable();
+        let routes = routes.join(", ");
+        batch.push_str(&format!(
+            concat!(
+                "add rule inet sirinvpn_filter port_forward iifname \"{interface}\" oifname \"{interface}\" ip saddr @peer_communication4 ip daddr {{ {routes} }} accept\n",
+                "add rule inet sirinvpn_filter port_forward iifname \"{interface}\" oifname \"{interface}\" ip saddr {{ {routes} }} ip daddr @peer_communication4 ct state established,related accept\n",
+            ),
+            interface = interface,
+            routes = routes
+        ));
     }
-    routes.sort_unstable();
-    let routes = routes.join(", ");
-    format!(
-        concat!(
-            "add rule inet sirinvpn_filter port_forward iifname \"{interface}\" oifname \"{interface}\" ip saddr @peer_communication4 ip daddr {{ {routes} }} accept\n",
-            "add rule inet sirinvpn_filter port_forward iifname \"{interface}\" oifname \"{interface}\" ip saddr {{ {routes} }} ip daddr @peer_communication4 ct state established,related accept\n",
-        ),
-        interface = configuration.interface_name,
-        routes = routes
-    )
+    // A pair that lets a device start connections to the router also opens its networks.
+    for router in authorization
+        .devices
+        .iter()
+        .filter(|device| !device.subnet_routes.is_empty())
+    {
+        let sources = authorization
+            .devices
+            .iter()
+            .filter(|source| authorization.pair_permits(source, router))
+            .map(|source| source.client_tunnel_address.to_string())
+            .collect::<Vec<_>>()
+            .join(", ");
+        if sources.is_empty() {
+            continue;
+        }
+        let routes = router.subnet_routes.join(", ");
+        batch.push_str(&format!(
+            concat!(
+                "add rule inet sirinvpn_filter port_forward iifname \"{interface}\" oifname \"{interface}\" ip saddr {{ {sources} }} ip daddr {{ {routes} }} accept\n",
+                "add rule inet sirinvpn_filter port_forward iifname \"{interface}\" oifname \"{interface}\" ip saddr {{ {routes} }} ip daddr {{ {sources} }} ct state established,related accept\n",
+            ),
+            interface = interface,
+            sources = sources,
+            routes = routes
+        ));
+    }
+    batch
 }
 
 pub(super) async fn sync_port_forwards(

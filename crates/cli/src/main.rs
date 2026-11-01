@@ -38,8 +38,8 @@ use sirinvpn_installer::{
     SshAuthentication, SshTarget, UninstallRequest, new_identity_for_server,
 };
 use sirinvpn_protocol::{
-    ConnectionState, DeviceId, DiagnosticReport, DnsOverHttpsEndpoint, DnsOverTlsEndpoint,
-    DnsUpstream, InvitationId, MemberId, MembershipSnapshot, NetworkProfile,
+    ConnectionState, DeviceId, DevicePair, DiagnosticReport, DnsOverHttpsEndpoint,
+    DnsOverTlsEndpoint, DnsUpstream, InvitationId, MemberId, MembershipSnapshot, NetworkProfile,
     PortForwardCreateRequest, PortForwardProtocol, PrivateDnsRecord, ServerEndpoint, ServerId,
     ServerProfile, ServerRole, TransportKind, TransportPreference, ipv6_tunnel_address,
 };
@@ -130,6 +130,12 @@ async fn run() -> Result<()> {
             }
             ServerCommand::SetSubnetRoutes(arguments) => {
                 set_subnet_routes(&paths, arguments, cli.json).await
+            }
+            ServerCommand::PairDevices(arguments) => {
+                pair_devices(&paths, arguments, cli.json).await
+            }
+            ServerCommand::UnpairDevices(arguments) => {
+                unpair_devices(&paths, arguments, cli.json).await
             }
             ServerCommand::AddPortForward(arguments) => {
                 add_port_forward(&paths, arguments, cli.json).await

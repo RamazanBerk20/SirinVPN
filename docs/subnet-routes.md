@@ -47,8 +47,9 @@ ownership clears every route; the new Owner decides again.
 
 ## Who can reach the network
 
-The existing mutual-access permission decides, with no second permission: a
-device reaches the LAN while both it and the router allow mutual access. The
+The existing mutual-access permission decides: a device reaches the LAN while
+both it and the router allow mutual access, or while a
+[device pair](device-pairs.md) lets it start connections to the router. The
 LAN hosts can answer but never start connections into SirinVPN, to devices or
 to the VPS itself, and nothing they send leaves the VPS through any other
 interface, also while the SirinVPN server is stopped. Turning off the router's
@@ -117,7 +118,8 @@ after connecting and prints a hint when it changed.
   it to the earlier schema. `release/state-compatibility.json` reads and writes
   1–8; the installer's repair/uninstall/backup/update preflights and the
   client's VPS backup reader accept 1–8.
-- **VPS.** A live route (active device, mutual access, not a migrated source)
+- **VPS.** A live route (active device, mutual access or a pair that lets
+  another device start connections to it, not a migrated source)
   is added to the router peer's WireGuard AllowedIPs and as a kernel route
   `dev sirinvpn0 proto static`. The forward rules live in the runtime chain
   `inet sirinvpn_filter port_forward`, which every installed forward chain

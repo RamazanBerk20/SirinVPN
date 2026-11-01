@@ -48,6 +48,15 @@ pub(super) struct DevicePeerCommunicationInput {
 }
 
 #[derive(Deserialize)]
+pub(super) struct DevicePairInput {
+    pub(super) server_id: String,
+    pub(super) device_id: String,
+    pub(super) peer_device_id: String,
+    #[serde(default)]
+    pub(super) one_way: bool,
+}
+
+#[derive(Deserialize)]
 pub(super) struct DeviceSubnetRoutesInput {
     pub(super) server_id: String,
     pub(super) device_id: String,

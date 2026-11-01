@@ -49,6 +49,13 @@ cannot reach peers, the VPS or the internet, also with the runtime rules flushed
 as on server stop. A range whose kernel route collides with a VPS route must
 show as inactive and return through the runtime retry once that route is gone.
 
+Pass `kernel_device_pairs_admit_paired_devices_and_one_way_answers` for device
+pairs on the same VPS lab with every mutual-access switch off: paired devices
+reach each other, an unpaired device reaches neither, the answering device of a
+one-way pair cannot start connections, a pair with the router opens its LAN only
+to the starting device, and suspension, a flushed runtime chain, unpairing and
+revocation close the access.
+
 `run-policy-kernel.sh kernel_subnet_router_forwards_its_lan_and_keeps_reaching_it`
 runs the production Linux helper as a full-tunnel subnet router: it must reach
 its own LAN under the kill switch, forward and masquerade a peer's traffic to
