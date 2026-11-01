@@ -281,6 +281,8 @@ export interface ProvisionInput {
   replace_existing_installation: boolean;
   dns_upstream: DnsUpstream;
   private_dns_records: PrivateDnsRecord[];
+  /** A NAT64 /96 for a VPS without IPv4, e.g. `64:ff9b::/96`. */
+  nat64_prefix?: string | null;
   transport?: TransportSetup;
 }
 
@@ -300,6 +302,8 @@ export interface RepairInput extends UninstallInput {
   confirmed: boolean;
   dns_upstream: DnsUpstream | null;
   private_dns_records: PrivateDnsRecord[] | null;
+  /** Omitted keeps the VPS's NAT64 choice; `null` turns NAT64 off. */
+  nat64_prefix?: string | null;
   transport?: TransportSetup | null;
 }
 

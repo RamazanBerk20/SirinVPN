@@ -95,18 +95,18 @@ fn dns_over_tls_configuration_is_authenticated_and_has_no_plaintext_fallback() {
     let (server, forwarding) = unbound_dns_configuration(&DnsUpstream::Recursive, &[]);
     assert!(server.is_empty());
     assert!(forwarding.is_empty());
-    assert!(ensure_dns_upstream_compatible(&DnsUpstream::Recursive, false).is_ok());
+    assert!(ensure_dns_upstream_compatible(&DnsUpstream::Recursive, &stack(true, false)).is_ok());
     assert!(
         ensure_dns_upstream_compatible(
             &DnsUpstream::DnsOverTls {
                 endpoints: vec!["1.1.1.1#one.one.one.one".parse().unwrap()],
             },
-            false,
+            &stack(true, false),
         )
         .is_ok()
     );
-    assert!(ensure_dns_upstream_compatible(&dns_upstream, false).is_err());
-    assert!(ensure_dns_upstream_compatible(&dns_upstream, true).is_ok());
+    assert!(ensure_dns_upstream_compatible(&dns_upstream, &stack(true, false)).is_err());
+    assert!(ensure_dns_upstream_compatible(&dns_upstream, &stack(true, true)).is_ok());
 }
 
 #[test]
@@ -136,8 +136,8 @@ fn dns_over_https_uses_a_pinned_loopback_proxy_and_scoped_service() {
     assert!(verification.contains("do-not-query-localhost: no"));
     assert!(verification.contains(&format!("127.0.0.1@{DOH_PROXY_PORT}")));
     assert!(verification.contains("-eq 1"));
-    assert!(ensure_dns_upstream_compatible(&dns_upstream, false).is_err());
-    assert!(ensure_dns_upstream_compatible(&dns_upstream, true).is_ok());
+    assert!(ensure_dns_upstream_compatible(&dns_upstream, &stack(true, false)).is_err());
+    assert!(ensure_dns_upstream_compatible(&dns_upstream, &stack(true, true)).is_ok());
 
     let identity = new_identity_for_server("DoH Test").unwrap();
     let request = InstallRequest {
@@ -160,6 +160,7 @@ fn dns_over_https_uses_a_pinned_loopback_proxy_and_scoped_service() {
         },
         dns_upstream: dns_upstream.clone(),
         private_dns_records: Vec::new(),
+        nat64_prefix: None,
         replace_existing_installation: false,
     };
     let discovery = ServerDiscovery {

@@ -9,6 +9,14 @@ export type DnsPolicyChoice =
 
 export type PrivateDnsRecordChoice = "preserve" | "replace" | "clear";
 
+export type Nat64Choice = "preserve" | "replace" | "clear";
+
+/** An IPv6 network written with or without its `/96`; the VPS checks the rest. */
+export function nat64PrefixIsValid(value: string): boolean {
+  const address = value.trim().replace(/\/96$/, "");
+  return address.includes(":") && validateHost(address);
+}
+
 const defaultDohPath = "/dns-query";
 
 export interface DnsEndpointDraft {
@@ -135,6 +143,54 @@ export function PrivateDnsRecordFields({
             value={value}
             onChange={(event) => onValueChange(event.target.value)}
             placeholder={"nas.home=10.20.30.40\nserver.home=fd00::10"}
+            autoCapitalize="none"
+            autoComplete="off"
+            spellCheck={false}
+          />
+        </Field>
+      ) : null}
+    </fieldset>
+  );
+}
+
+export function Nat64Fields({
+  choice,
+  value,
+  allowPreserve,
+  onChoiceChange,
+  onValueChange,
+}: {
+  choice: Nat64Choice;
+  value: string;
+  allowPreserve: boolean;
+  onChoiceChange: (choice: Nat64Choice) => void;
+  onValueChange: (value: string) => void;
+}) {
+  return (
+    <fieldset className="auth-method dns-policy nat64-policy">
+      <legend>{t("dns.nat64.legend")}</legend>
+      {allowPreserve ? (
+        <div className="segmented-control dns-segmented with-preserve">
+          {(["preserve", "replace", "clear"] as const).map((mode) => (
+            <button
+              key={mode}
+              type="button"
+              aria-pressed={choice === mode}
+              onClick={() => onChoiceChange(mode)}
+            >
+              {t(`dns.nat64.mode.${mode}`)}
+            </button>
+          ))}
+        </div>
+      ) : null}
+      <p className="dns-policy-note">{t(`dns.nat64.note.${allowPreserve ? choice : "setup"}`)}</p>
+      {choice === "replace" ? (
+        <Field label={t("dns.nat64.label")} hint={t("dns.nat64.hint")}>
+          <input
+            className="mono"
+            value={value}
+            onChange={(event) => onValueChange(event.target.value)}
+            placeholder={"64:ff9b::/96"}
             autoCapitalize="none"
             autoComplete="off"
             spellCheck={false}

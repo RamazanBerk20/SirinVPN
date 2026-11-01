@@ -446,12 +446,16 @@ pub(super) fn install_staged(
         &request.target,
         &maintenance::followup(
             nonce,
-            &install_verification_command(
-                &local_digest,
-                &bootstrap,
-                request.server_id,
-                transaction.owner_client_tunnel_address,
-                discovery,
+            &format!(
+                "{}\n{}",
+                install_verification_command(
+                    &local_digest,
+                    &bootstrap,
+                    request.server_id,
+                    transaction.owner_client_tunnel_address,
+                    discovery,
+                ),
+                unbound_dns64_verification(request.nat64_prefix)
             ),
         ),
     ) {

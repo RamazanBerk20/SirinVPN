@@ -488,6 +488,9 @@ pub(super) struct AddServerArguments {
     pub(super) dns: DnsPolicyArguments,
     #[arg(long, value_name = "DNS_NAME=IP")]
     pub(super) private_dns_record: Vec<PrivateDnsRecord>,
+    /// On a VPS without IPv4, reach IPv4-only websites through this NAT64 gateway's /96 prefix.
+    #[arg(long, value_name = "PREFIX/96", value_parser = sirinvpn_installer::parse_nat64_prefix)]
+    pub(super) nat64_prefix: Option<std::net::Ipv6Addr>,
     #[command(flatten)]
     pub(super) transport: TransportArguments,
 }
@@ -584,6 +587,11 @@ pub(super) struct RepairServerArguments {
     pub(super) dns: DnsPolicyArguments,
     #[command(flatten)]
     pub(super) private_dns: PrivateDnsRecordArguments,
+    /// Without either flag the VPS keeps its current NAT64 choice.
+    #[arg(long, value_name = "PREFIX/96", value_parser = sirinvpn_installer::parse_nat64_prefix, conflicts_with = "no_nat64")]
+    pub(super) nat64_prefix: Option<std::net::Ipv6Addr>,
+    #[arg(long)]
+    pub(super) no_nat64: bool,
     #[command(flatten)]
     pub(super) transport: TransportArguments,
 }

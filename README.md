@@ -87,7 +87,8 @@ background status checks and Wi-Fi automation never display an unlock prompt.
 
 ## Getting started
 
-You need a VPS you administer, running Debian 13 or Ubuntu 24.04 LTS, with privileged SSH access and
+You need a VPS you administer, running Debian 13 or Ubuntu 24.04 LTS with IPv4 or
+[IPv6 only](docs/ipv6-only-vps.md), with privileged SSH access and
 reachable ports for the connection methods you choose. SirinVPN does not provide
 servers or a VPN subscription.
 

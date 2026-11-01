@@ -55,6 +55,14 @@ its own LAN under the kill switch, forward and masquerade a peer's traffic to
 it, send a reached range into the tunnel while its own marked sockets keep the
 uplink, and remove its rules and NAT on disconnect.
 
+`run-ipv6-only.sh` writes the installer's nftables and Unbound configuration for
+a VPS without IPv4 and a NAT64 prefix, and loads them into a VPS namespace whose
+only uplink is IPv6. A WireGuard member on an IPv6-only network reaches it over
+an IPv6 carrier; an internet namespace holds a DNS-over-TLS resolver, an IPv6
+site and a stand-in NAT64 gateway. Unbound must synthesize AAAA only for the
+IPv4-only name, member IPv6 and NAT64-prefix traffic must leave masqueraded to
+the VPS's address, and member IPv4 must fail at once instead of timing out.
+
 `run-installer-release-guards.sh` runs the installer release-staging guard in an
 ordinary container with no network, added capabilities or privileged mode. It
 caps compilation at 8 GiB and four CPU cores, then runs the root ownership checks

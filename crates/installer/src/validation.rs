@@ -398,6 +398,39 @@ pub(super) fn validate_request(request: &InstallRequest) -> Result<(), Installer
         .map_err(|error| InstallerError::InvalidInput(error.to_string()))?;
     validate_private_dns_records(&request.private_dns_records)
         .map_err(|error| InstallerError::InvalidInput(error.to_string()))?;
+    request.nat64_prefix.map_or(Ok(()), validate_nat64_prefix)
+}
+
+/// A NAT64 prefix as written by its operator, `2001:db8:64::/96`; the `/96` is optional.
+pub fn parse_nat64_prefix(text: &str) -> Result<Ipv6Addr, InstallerError> {
+    let text = text.trim();
+    let prefix = text
+        .strip_suffix("/96")
+        .unwrap_or(text)
+        .parse()
+        .map_err(|_| {
+            InstallerError::InvalidInput("Enter a NAT64 prefix such as 64:ff9b::/96.".into())
+        })?;
+    validate_nat64_prefix(prefix)?;
+    Ok(prefix)
+}
+
+/// shortcut: only /96 prefixes, which every public NAT64 service and the well-known prefix use;
+/// add the other RFC 6052 lengths when a provider needs one.
+pub(super) fn validate_nat64_prefix(prefix: Ipv6Addr) -> Result<(), InstallerError> {
+    let segments = prefix.segments();
+    if segments[6] != 0
+        || segments[7] != 0
+        || prefix.is_unspecified()
+        || prefix.is_loopback()
+        || prefix.is_multicast()
+        || prefix.is_unicast_link_local()
+        || prefix.to_ipv4_mapped().is_some()
+    {
+        return Err(InstallerError::InvalidInput(
+            "The NAT64 prefix must be a unicast IPv6 /96 network such as 64:ff9b::/96.".into(),
+        ));
+    }
     Ok(())
 }
 
@@ -419,7 +452,10 @@ pub(super) fn validate_repair_request(request: &RepairRequest) -> Result<(), Ins
         validate_private_dns_records(private_dns_records)
             .map_err(|error| InstallerError::InvalidInput(error.to_string()))?;
     }
-    Ok(())
+    request
+        .nat64_prefix
+        .flatten()
+        .map_or(Ok(()), validate_nat64_prefix)
 }
 
 pub(super) fn validate_server_backup_request(

@@ -21,6 +21,15 @@ fn route_check_rejects_wrong_interface_and_unusable_defaults() {
         );
     }
     assert_eq!(route_state(&json!({}), "sirinvpn0", "10.77.0.0/24"), None);
+    // An IPv6-only VPS: the IPv4 table has only the tunnel route, the IPv6 default is appended.
+    let ipv6_only = json!([
+        {"dst":"10.77.0.0/24", "dev":"sirinvpn0"},
+        {"dst":"default", "gateway":"fe80::1", "dev":"enp1s0", "flags":[]}
+    ]);
+    assert_eq!(
+        route_state(&ipv6_only, "sirinvpn0", "10.77.0.0/24"),
+        Some(true)
+    );
 }
 
 #[test]

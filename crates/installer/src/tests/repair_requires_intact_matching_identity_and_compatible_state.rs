@@ -52,6 +52,7 @@ fn repair_requires_intact_matching_identity_and_compatible_state() {
         identity: owner.public.clone(),
         dns_upstream: None,
         private_dns_records: None,
+        nat64_prefix: None,
     };
     assert!(validate_repair_request(&request).is_ok());
 

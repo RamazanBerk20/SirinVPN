@@ -231,6 +231,87 @@ pub(super) fn check_endpoints() {
             "real WireGuard IPv6 outer endpoint: encrypted IPv4 tunnel traffic, kill_switch={kill}, inner IPv6 disabled"
         );
     }
+
+    // An IPv6-only VPS always tunnels IPv6 too: the carrier must keep its marked route out of
+    // the physical link while every other IPv6 destination goes into the tunnel.
+    let server_ipv6 =
+        sirinvpn_protocol::ipv6_tunnel_address(request.server_id, Ipv4Addr::new(10, 77, 0, 1))
+            .unwrap();
+    request.client_ipv6_address =
+        sirinvpn_protocol::ipv6_tunnel_address(request.server_id, request.client_address);
+    request
+        .endpoint_identity
+        .as_mut()
+        .unwrap()
+        .descriptor
+        .ipv6_tunnel_enabled = true;
+    request.policy.as_mut().unwrap().kill_switch = true;
+    for arguments in [
+        vec![
+            "-n",
+            "sirin-peer",
+            "-6",
+            "address",
+            "add",
+            &format!("{server_ipv6}/64"),
+            "dev",
+            "endpoint-wg",
+            "nodad",
+        ],
+        vec![
+            "netns",
+            "exec",
+            "sirin-peer",
+            "wg",
+            "set",
+            "endpoint-wg",
+            "peer",
+            &client.public.wireguard_public_key,
+            "allowed-ips",
+            &format!("10.77.0.2/32,{}/128", request.client_ipv6_address.unwrap()),
+        ],
+    ] {
+        SystemRunner.run("ip", &arguments, None).unwrap();
+    }
+    helper.connect(&request).unwrap();
+    for _ in 0..50 {
+        helper.reconcile_persistent_once(true).unwrap();
+        if helper.status().unwrap().state == ConnectionState::Connected {
+            break;
+        }
+        thread::sleep(Duration::from_millis(100));
+    }
+    assert_eq!(helper.status().unwrap().state, ConnectionState::Connected);
+    assert!(helper.status().unwrap().ipv6_tunneled);
+    let route = |arguments: &[&str]| {
+        let routes: Vec<serde_json::Value> =
+            serde_json::from_slice(&SystemRunner.output("ip", arguments).unwrap()).unwrap();
+        routes[0]["dev"].as_str().unwrap().to_owned()
+    };
+    assert_eq!(
+        route(&["-6", "-j", "route", "get", "2001:db8::8", "mark", "51820"]),
+        "probe0"
+    );
+    assert_eq!(
+        route(&["-6", "-j", "route", "get", "2001:db8::9"]),
+        INTERFACE_NAME
+    );
+    assert!(SystemRunner.succeeds(
+        "ping",
+        &["-6", "-n", "-c", "1", "-W", "2", &server_ipv6.to_string()]
+    ));
+    assert!(
+        String::from_utf8_lossy(
+            &SystemRunner
+                .output("wg", &["show", INTERFACE_NAME, "endpoints"])
+                .unwrap()
+        )
+        .contains("[2001:db8::8]:51821")
+    );
+    helper.disconnect_session(request.server_id).unwrap();
+    println!(
+        "real WireGuard IPv6 outer endpoint with inner IPv6: marked carrier on the physical link, other IPv6 tunneled, kill_switch=true"
+    );
     SystemRunner
         .run(
             "ip",

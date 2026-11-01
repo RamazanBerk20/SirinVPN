@@ -101,7 +101,7 @@ and [diagnostics design](current-diagnostics-2026-09-07.md).
 
 1. The client connects over SSH and displays the presented host-key fingerprint.
 2. Provisioning continues only with the caller-supplied fingerprint pin.
-3. The server is checked for Debian 13 or Ubuntu 24.04 LTS, a supported architecture, the active SSH port, a safe IPv4 default interface, and an IPv4 route. IPv6 is enabled only when discovery also finds a safe IPv6 default interface with a `2000::/3` globally routable address.
+3. The server is checked for Debian 13 or Ubuntu 24.04 LTS, a supported architecture, the active SSH port, and a safe default interface with an IPv4 route or a `2000::/3` globally routable IPv6 address. IPv6 is enabled whenever discovery finds that IPv6 route. A VPS without IPv4 uses its IPv6 uplink as the external interface, needs DNS-over-TLS or DNS-over-HTTPS with IPv6 resolver addresses, and reaches IPv4-only names only through an Owner-chosen NAT64 prefix that turns on DNS64 in Unbound ([IPv6-only VPS](ipv6-only-vps.md)).
 4. A locally built server executable and the public owner certificate are uploaded to a mode 0700 temporary directory and SHA-256 verified.
 5. Only missing distribution packages are installed. Ubuntu's needrestart apt hook is suspended for that step so it cannot restart unrelated services.
 6. Any prior unfinished SirinVPN rollback is completed. Existing SirinVPN-owned files and relevant service state are copied to a root-owned mode-0700 maintenance backup that survives reboot until recovery or commit cleanup.

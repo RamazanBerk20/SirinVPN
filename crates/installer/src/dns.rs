@@ -44,6 +44,43 @@ pub(super) fn server_dns_init_arguments(
     arguments
 }
 
+/// DNS64 gives IPv4-only names an AAAA inside the NAT64 prefix, so members reach them over the
+/// tunnel's IPv6. The prefix line is also how Repair reads back the Owner's choice.
+pub(super) fn unbound_dns64_configuration(nat64_prefix: Option<Ipv6Addr>) -> String {
+    nat64_prefix.map_or_else(String::new, |prefix| {
+        format!("  module-config: \"dns64 validator iterator\"\n  dns64-prefix: {prefix}/96")
+    })
+}
+
+pub(super) fn unbound_dns64_verification(nat64_prefix: Option<Ipv6Addr>) -> String {
+    let configuration = "/etc/unbound/unbound.conf.d/sirinvpn.conf";
+    match nat64_prefix {
+        Some(prefix) => format!("grep -Fxq '  dns64-prefix: {prefix}/96' {configuration}"),
+        // Record names cannot contain a colon, so these never match a private record.
+        None => format!(
+            "if grep -Fq 'module-config:' {configuration} || grep -Fq 'dns64-prefix:' {configuration}; then exit 1; fi"
+        ),
+    }
+}
+
+pub(super) fn installed_nat64_prefix(
+    session: &Session,
+    target: &SshTarget,
+) -> Result<Option<Ipv6Addr>, InstallerError> {
+    let output = run_privileged(
+        session,
+        target,
+        "if [ -f /etc/unbound/unbound.conf.d/sirinvpn.conf ]; then sed -n 's|^  dns64-prefix: \\(.*\\)/96$|\\1|p' /etc/unbound/unbound.conf.d/sirinvpn.conf; fi",
+    )
+    .map_err(|error| phase_error("NAT64 configuration", error))?;
+    match output.trim() {
+        "" => Ok(None),
+        text => text.parse().map(Some).map_err(|_| {
+            InstallerError::Incompatible("the installed NAT64 prefix is invalid".to_owned())
+        }),
+    }
+}
+
 /// The VPS resolver answers every leak-test name with its tunnel address; no public resolver
 /// answers this private-use zone, so a matching answer shows system DNS reached this VPS.
 pub(super) fn leak_test_zone() -> String {

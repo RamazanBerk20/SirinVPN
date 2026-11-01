@@ -86,6 +86,12 @@ pub(super) fn provision_blocking(
         transport: input.transport.clone(),
         dns_upstream: input.dns_upstream.clone(),
         private_dns_records: input.private_dns_records.clone(),
+        nat64_prefix: input
+            .nat64_prefix
+            .as_deref()
+            .map(parse_nat64_prefix)
+            .transpose()
+            .map_err(|error| error.to_string())?,
         replace_existing_installation: input.replace_existing_installation,
     };
     let secrets = paths.secret_store();
@@ -288,6 +294,12 @@ pub(super) fn repair_blocking(
         identity,
         dns_upstream: input.dns_upstream.clone(),
         private_dns_records: input.private_dns_records.clone(),
+        nat64_prefix: input
+            .nat64_prefix
+            .as_ref()
+            .map(|prefix| prefix.as_deref().map(parse_nat64_prefix).transpose())
+            .transpose()
+            .map_err(|error| error.to_string())?,
     })
     .map_err(|error| error.to_string())?;
     if profile.endpoint != outcome.endpoint

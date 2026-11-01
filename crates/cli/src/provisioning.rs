@@ -89,6 +89,7 @@ pub(super) fn add_server(
         transport,
         dns_upstream: arguments.dns.requested().unwrap_or_default(),
         private_dns_records: arguments.private_dns_record,
+        nat64_prefix: arguments.nat64_prefix,
         replace_existing_installation: arguments.replace_existing,
     };
 

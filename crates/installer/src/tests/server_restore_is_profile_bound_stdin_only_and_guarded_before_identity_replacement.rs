@@ -203,6 +203,7 @@ fn server_restore_is_profile_bound_stdin_only_and_guarded_before_identity_replac
         },
         dns_upstream: DnsUpstream::Recursive,
         private_dns_records: Vec::new(),
+        nat64_prefix: None,
         replace_existing_installation: true,
     };
     let discovery = ServerDiscovery {

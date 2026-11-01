@@ -34,6 +34,22 @@
     "label": "Records",
     "hint": "One name=IP per line, up to 64"
   },
+  "nat64": {
+    "legend": "IPv4 websites through NAT64",
+    "mode": {
+      "preserve": "Keep current",
+      "replace": "Use prefix",
+      "clear": "Turn off"
+    },
+    "note": {
+      "setup": "Optional. This VPS has no IPv4, so IPv4-only websites fail unless members reach them through a NAT64 gateway. Its operator sees which IPv4 addresses they visit.",
+      "preserve": "The VPS keeps its current NAT64 setting",
+      "replace": "Only for a VPS without IPv4. The NAT64 gateway’s operator sees which IPv4 addresses members visit.",
+      "clear": "Without IPv4 on the VPS, members reach only IPv6 websites"
+    },
+    "label": "NAT64 prefix",
+    "hint": "From your VPS provider or a public NAT64 service"
+  },
   "split": {
     "label": "Split DNS zones",
     "summary": "Optional. Send a domain to its own resolver: domain=IP, one per line.",

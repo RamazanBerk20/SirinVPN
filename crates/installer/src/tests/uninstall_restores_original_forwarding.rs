@@ -245,6 +245,7 @@ fn install_records_before_applying_and_uninstall_restores_before_removing_the_re
         transport: TransportSetup::default(),
         dns_upstream: DnsUpstream::Recursive,
         private_dns_records: Vec::new(),
+        nat64_prefix: None,
         replace_existing_installation: false,
     };
     let discovery = ServerDiscovery {
