@@ -207,10 +207,12 @@ rollback. Remove every route first, then roll back.
   removes the rules and NAT. Removing the forward accept, or the marked-socket
   rule, makes the test fail.
 - Android clippy for `x86_64-linux-android`; Windows cross clippy
-  (`scripts/check-windows-cross.py --tests --clippy`).
-- Not verified: the two-VM lab step "Owner shares a LAN behind this device
-  through the CLI" (`tests/vm/linux_acceptance.py`), which also covers the
-  hardened VPS service unit running `ip route`. Both runs on 2026-11-01 timed
-  out installing the client guest's Debian packages, before any SirinVPN step.
-  Also not verified: Windows and Android on real devices, a real home router, a
-  VPS with Docker, a host firewall on the router.
+  (`scripts/check-windows-cross.py --tests --clippy`), both before the review
+  fixes; CI's Windows build passes with them.
+- Two-VM lab (`tests/vm/linux_acceptance.py`, 2026-11-01, all 30 checks pass):
+  the step "Owner shares a LAN behind this device through the CLI" runs the
+  packaged CLI against a fresh Debian 13 VPS. The hardened VPS service adds the
+  kernel route and AllowedIPs, the client reaches its LAN under the kill switch,
+  the VPS reaches the LAN host through it, and removing the route stops that.
+- Not verified: Windows and Android on real devices, a real home router, a VPS
+  with Docker, a host firewall on the router.
