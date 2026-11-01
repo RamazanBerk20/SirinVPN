@@ -57,6 +57,7 @@ fn script_has_scoped_firewall_ownership_and_docker_interop() {
     ));
     let mut shared = request.clone();
     shared.transport.obfuscated_udp_port = 443;
+    shared.transport.quic = false;
     let shared_script = install_script(
         &shared,
         &discovery,

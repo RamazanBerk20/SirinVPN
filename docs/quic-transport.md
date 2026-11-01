@@ -13,11 +13,21 @@ packet inspection: a standard QUIC version 1 connection with TLS 1.3 and the
   with the same server transport key and its own WireGuard key, under its own
   prologue (`SirinVPN QUIC transport v1`). The server forwards nothing until that
   exchange names a current authorized device, and the device trusts nothing until
-  the server proves the pinned Noise key. The existing replay cache, timestamp
-  window, per-device limit of four connections, per-source probe budget (12 per 10
-  seconds), global budget of 1,024 new connections per second, 1,024 concurrent
-  connections and three-second handshake deadline apply. Revocation closes a
-  running connection within ten seconds.
+  the server proves the pinned Noise key. Each connection gets one Noise attempt,
+  as each TCP connection does, so a probe cannot buy key exchanges by opening
+  streams. The existing replay cache, timestamp window, per-source probe budget (12
+  per 10 seconds), global budget of 1,024 new connections per second, 1,024
+  concurrent connections and three-second handshake deadline apply. Revocation
+  closes a running connection within ten seconds.
+- **Address validation and limits.** A new connection whose source address is not
+  yet proven gets a QUIC Retry first, so spoofed packets cannot take connection
+  slots or use up another address's probe budget. This costs one extra round trip.
+  Until a device authenticates, the server buffers at most 4 KiB per stream, 16 KiB
+  per connection and 128 KiB of datagrams, and accepts three unidirectional streams
+  (an HTTP/3 control stream and two QPACK streams) and eight requests at a time. A
+  device may hold four QUIC connections; a fifth replaces its oldest, so a carrier
+  that stopped without closing (a killed process, a lost network) does not lock the
+  device out until the 60-second idle timeout.
 - **Datagrams.** WireGuard packets then travel as QUIC DATAGRAM frames (RFC 9221),
   one per packet, with a two-byte length and up to 64 bytes of padding when the
   packet leaves room. Loss and reordering stay end to end, so there is no
@@ -34,8 +44,10 @@ packet inspection: a standard QUIC version 1 connection with TLS 1.3 and the
 - **Probes.** A probe that completes the QUIC handshake meets an HTTP/3 server: it
   opens a control stream with a SETTINGS frame, and every request, including a
   failed or replayed Noise exchange, gets a 404 (`HEADERS` with QPACK `:status
-  404`). The server closes the connection three seconds after the handshake unless
-  a device authenticated. A probe over budget gets no answer at all.
+  404`), after which the server stops reading the request with `H3_NO_ERROR`. Three
+  seconds after the handshake, unless a device authenticated, the server sends a
+  GOAWAY and closes the connection with `H3_NO_ERROR`. A probe over budget gets no
+  answer at all.
 - **Rust crates.** The carrier uses `quinn` 0.11 with `rustls` and the aws-lc-rs
   provider, the TLS stack the other transports already use. `quinn` was already in
   `Cargo.lock` through `reqwest`, so the lockfile gains no package; the transport
@@ -75,13 +87,17 @@ QUIC is a UDP carrier like Obfuscated UDP:
   one UDP port. The firewall gains `udp dport <TCP/TLS port> accept`, the network
   preflight checks that UDP port for other listeners, and installation checks the
   listener and the rule.
-- **Existing servers** get QUIC through Repair. Servers installed earlier have
-  Obfuscated UDP on UDP 443, so the Repair form, the CLI and the restore flow
-  propose UDP 51821 for it. The Owner sees the change before confirming. Keeping
-  Obfuscated UDP on the TCP/TLS port number keeps QUIC off; the form and the CLI say
-  so. Repair publishes a new signed endpoint checkpoint, which devices pick up through
-  catch-up or background discovery. Devices that have not caught up find QUIC on the
-  old Obfuscated UDP port and fall through to the next transport. A signed release
+- **Existing servers** get QUIC only when the Owner asks for it. A repair that
+  changes no transport (such as a DNS change), a CLI repair without transport
+  options and a restore keep the server's ports and QUIC setting exactly. In the
+  Repair transport form the Owner turns on "Answer QUIC (HTTP/3) on UDP"; for a
+  server installed earlier, whose Obfuscated UDP is on UDP 443, this moves
+  Obfuscated UDP to 51821 in the same form, before confirming. The CLI takes
+  `--quic true` and moves a shared Obfuscated UDP port the same way, with a note.
+  QUIC with Obfuscated UDP on the TCP/TLS port number is rejected. Repair publishes a
+  new signed endpoint checkpoint, which devices pick up through catch-up or
+  background discovery. Devices that have not caught up find QUIC on the old
+  Obfuscated UDP port and fall through to the next transport. A signed release
   update replaces only the binary, so it does not open a UDP port or change the
   endpoint.
 - The flag travels as `"quic": true` inside the signed TLS endpoint metadata. It is
@@ -116,8 +132,10 @@ It does not:
 - **Hide the certificate from probes.** A probe can read the server's generated
   self-signed or imported certificate, as with the TLS transport.
 - **Imitate a specific web server.** The HTTP/3 behavior is minimal: an empty
-  SETTINGS frame and a bare 404 without headers. A probe that compares it with
-  nginx, Caddy or Cloudflare can see the difference.
+  SETTINGS frame, a bare 404 without headers, and a connection that a probe cannot
+  keep open: it always ends with GOAWAY three seconds after the handshake, although
+  the transport parameters advertise a 60-second idle timeout. A probe that compares
+  it with nginx, Caddy or Cloudflare can see the difference.
 - **Resist traffic analysis.** One long-lived connection carries steady two-way
   traffic, 25-second keepalives and many near-MTU packets.
 - **Get past networks that block QUIC.** Some networks block or throttle all QUIC

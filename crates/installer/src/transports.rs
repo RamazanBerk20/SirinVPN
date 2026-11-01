@@ -12,6 +12,9 @@ pub struct TransportSetup {
     pub https_certificate_path: Option<String>,
     pub https_private_key_path: Option<String>,
     pub disable_https: bool,
+    /// QUIC on UDP at the TCP/TLS port number. It is on for new servers and changes only when
+    /// the Owner asks, because it needs Obfuscated UDP on another port.
+    pub quic: bool,
 }
 
 impl Default for TransportSetup {
@@ -26,37 +29,34 @@ impl Default for TransportSetup {
             https_certificate_path: None,
             https_private_key_path: None,
             disable_https: false,
+            quic: true,
         }
     }
 }
 
 impl TransportSetup {
+    /// The server's current setup, unchanged, for a repair or restore that changes no transport.
     pub fn from_profile(profile: &ServerProfile) -> Self {
-        let tcp_tls_port = profile
-            .tcp_fallback
-            .as_ref()
-            .map_or(DEFAULT_TCP_FALLBACK_PORT, |endpoint| endpoint.port);
-        let obfuscated_udp_port = profile
-            .obfuscated_udp
-            .as_ref()
-            .map_or(DEFAULT_OBFUSCATED_UDP_PORT, |endpoint| endpoint.port);
         Self {
             public_host: Some(profile.endpoint.host.clone()),
             alternate_endpoint_hosts: profile.alternate_endpoint_hosts.clone(),
             wireguard_port: profile.endpoint.wireguard_port,
-            // Servers installed before QUIC shared UDP 443 with Obfuscated UDP; Repair frees it.
-            obfuscated_udp_port: if obfuscated_udp_port == tcp_tls_port
-                && profile.endpoint.wireguard_port != DEFAULT_OBFUSCATED_UDP_PORT
-            {
-                DEFAULT_OBFUSCATED_UDP_PORT
-            } else {
-                obfuscated_udp_port
-            },
-            tcp_tls_port,
+            obfuscated_udp_port: profile
+                .obfuscated_udp
+                .as_ref()
+                .map_or(DEFAULT_OBFUSCATED_UDP_PORT, |endpoint| endpoint.port),
+            tcp_tls_port: profile
+                .tcp_fallback
+                .as_ref()
+                .map_or(DEFAULT_TCP_FALLBACK_PORT, |endpoint| endpoint.port),
             https: profile
                 .tls_like
                 .as_ref()
                 .and_then(|endpoint| endpoint.https.clone()),
+            quic: profile
+                .tls_like
+                .as_ref()
+                .is_some_and(|endpoint| endpoint.quic),
             ..Self::default()
         }
     }
@@ -89,6 +89,11 @@ impl TransportSetup {
         {
             return Err(invalid(
                 "Choose nonzero transport ports outside the private DNS/management ports; the direct UDP port must differ from the wrapped transports.",
+            ));
+        }
+        if self.quic && self.obfuscated_udp_port == self.tcp_tls_port {
+            return Err(invalid(
+                "QUIC answers on UDP at the TCP and TLS port number; choose another Obfuscated UDP port or turn QUIC off.",
             ));
         }
         if self.https.as_ref().is_some_and(|https| !https.is_valid())
@@ -134,11 +139,6 @@ impl TransportSetup {
         Ok(())
     }
 
-    /// QUIC answers on the TCP/TLS port number over UDP, so it needs Obfuscated UDP elsewhere.
-    pub fn quic(&self) -> bool {
-        self.obfuscated_udp_port != self.tcp_tls_port
-    }
-
     pub(super) fn port_arguments(&self) -> String {
         format!(
             " --wireguard-port {} --obfuscated-udp-port {} --tcp-fallback-port {} --tls-like-port {} --quic {}",
@@ -146,7 +146,7 @@ impl TransportSetup {
             self.obfuscated_udp_port,
             self.tcp_tls_port,
             self.tcp_tls_port,
-            self.quic()
+            self.quic
         )
     }
     pub(super) fn init_arguments(&self) -> String {
@@ -214,7 +214,7 @@ pub(super) fn bootstrap_matches_transport(
             .is_some_and(|endpoint| endpoint.port == requested.tcp_tls_port)
         && bootstrap.tls_like.as_ref().is_some_and(|endpoint| {
             endpoint.port == requested.tcp_tls_port
-                && endpoint.quic == requested.quic()
+                && endpoint.quic == requested.quic
                 && match (&requested.https, requested.disable_https) {
                     (Some(expected), _) => endpoint.https.as_ref() == Some(expected),
                     (None, true) => endpoint.https.is_none(),

@@ -395,7 +395,7 @@ pub(super) fn install_staged(
     }
     if bootstrap.tls_like.as_ref().is_none_or(|endpoint| {
         endpoint.port != request.transport.tcp_tls_port
-            || endpoint.quic != request.transport.quic()
+            || endpoint.quic != request.transport.quic
             || STANDARD
                 .decode(&endpoint.server_public_key)
                 .ok()
