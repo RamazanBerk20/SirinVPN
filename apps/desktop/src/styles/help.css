@@ -14,7 +14,7 @@
   border: 1px solid var(--accent);
   border-radius: 999px;
   background: var(--surface-2);
-  box-shadow: 0 10px 30px rgb(0 0 0 / 35%);
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--shadow) 35%, transparent);
   font-size: var(--text-secondary);
 }
 .demo-banner > button { flex-shrink: 0; min-height: 32px; margin: 0; padding: 4px 14px; border-radius: 999px; }
