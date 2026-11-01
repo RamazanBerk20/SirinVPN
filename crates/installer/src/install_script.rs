@@ -261,12 +261,22 @@ command -v unbound >/dev/null 2>&1 || set -- "$@" unbound
 test -s /usr/share/dns/root.key || set -- "$@" dns-root-data
 command -v ip >/dev/null 2>&1 || set -- "$@" iproute2
 test -s /etc/ssl/certs/ca-certificates.crt || set -- "$@" ca-certificates
+ENABLE_SECURITY_UPDATES=
+if ! command -v unattended-upgrade >/dev/null 2>&1; then
+  set -- "$@" unattended-upgrades
+  ENABLE_SECURITY_UPDATES=1
+fi
 if [ "$#" -gt 0 ]; then
   export DEBIAN_FRONTEND=noninteractive
   # Ubuntu's needrestart apt hook would otherwise restart unrelated services mid-install.
   export NEEDRESTART_SUSPEND=1
   apt-get update -qq
   apt-get install -y -qq --no-install-recommends "$@"
+fi
+# Only a VPS that lacked unattended-upgrades is switched on; an existing setup is the Owner's choice.
+if [ -n "$ENABLE_SECURITY_UPDATES" ]; then
+  printf '%s\n' 'APT::Periodic::Update-Package-Lists "1";' 'APT::Periodic::Unattended-Upgrade "1";' >/etc/apt/apt.conf.d/20auto-upgrades
+  systemctl enable --now apt-daily.timer apt-daily-upgrade.timer >/dev/null
 fi
 
 printf '%s\n' 'SIRINVPN_INSTALL_STEP=ports'

@@ -467,7 +467,18 @@ class Acceptance:
             [(code, check["level"], check["message"]) for code, check in checks.items()]
         # The test requests themselves never reach the physical network.
         assert self.counter() == {"dns": 0, "ipv6": 0}, self.counter()
-        return {"leak_test": levels, "physical_leak_counters": self.counter()}
+        # The lab disables the APT timers so they cannot take the dpkg lock mid-run, so the update check
+        # must warn; enabling the timer without starting it must turn it into a pass.
+        updates = {code: checks.get(code, {}).get("level") for code in ("os_security_updates", "os_reboot_required")}
+        assert updates["os_security_updates"] == "warning" and updates["os_reboot_required"] in ("pass", "warning"), updates
+        self.server.run(["systemctl", "enable", "apt-daily-upgrade.timer"])
+        try:
+            enabled = {check["code"]: check["level"] for check in self.cli("diagnose", self.server_id)["checks"]}
+        finally:
+            self.server.run(["systemctl", "disable", "apt-daily-upgrade.timer"])
+        assert enabled.get("os_security_updates") == "pass", enabled.get("os_security_updates")
+        updates["os_security_updates_with_timer"] = "pass"
+        return {"leak_test": levels, "os_updates": updates, "physical_leak_counters": self.counter()}
 
     def clean_disconnect(self):
         local = self.cli("disconnect")

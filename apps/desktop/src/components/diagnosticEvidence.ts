@@ -5,7 +5,7 @@ export type DiagnosticEvidence = "configuration" | "service" | "observed" | "not
 export type DiagnosticGroup = "attention" | "review" | "unavailable" | "passed";
 
 const configuration = new Set(["local_identity", "local_routes", "local_ipv6", "interface", "wireguard", "forwarding", "ipv6", "server_routes", "server_firewall", "server_nat4", "server_nat6", "server_ports", "server_mtu"]);
-const service = new Set(["local_backend", "local_tunnel", "local_protection", "local_transport", "dns", "server_process", "server_cpu", "server_memory", "server_disk"]);
+const service = new Set(["local_backend", "local_tunnel", "local_protection", "local_transport", "dns", "server_process", "server_cpu", "server_memory", "server_disk", "os_security_updates", "os_reboot_required"]);
 const unavailable = new Set(["external_reachability", "diagnostics_busy", "dns_probe_busy", "server_report_format"]);
 
 /** Only identify tests implemented by the native diagnostics. The leak_* checks are the only leak tests. */

@@ -49,6 +49,10 @@ fn script_has_scoped_firewall_ownership_and_docker_interop() {
         script_transaction("10.77.0.2", false, false),
     );
     assert!(script.contains("table inet sirinvpn_filter"));
+    // Security updates are installed and enabled only where unattended-upgrades is missing.
+    assert!(script.contains("if ! command -v unattended-upgrade >/dev/null 2>&1; then"));
+    let enable = script.find("APT::Periodic::Unattended-Upgrade").unwrap();
+    assert!(script[..enable].contains("if [ -n \"$ENABLE_SECURITY_UPDATES\" ]; then"));
     // The running server must stop before init rewrites the authorization it holds.
     let stop = script
         .find("systemctl stop sirinvpn-server.service")

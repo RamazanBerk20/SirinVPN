@@ -38,6 +38,24 @@ worker. An already-waiting native read may finish afterward, but keeps the worke
 slot and cannot start new probe work after cancellation is observed. Late results
 are discarded. Android identity maintenance serializes against the request.
 
+## VPS operating-system updates (1 November 2026)
+
+VPS diagnostics add two checks that never fail the report, because neither affects the
+tunnel itself:
+
+- `os_security_updates` passes when `unattended-upgrades` is installed,
+  `APT::Periodic::Unattended-Upgrade` is non-zero (read with `apt-config`) and
+  `apt-daily-upgrade.timer` is enabled. Otherwise it warns.
+- `os_reboot_required` warns when `/run/reboot-required` exists, or when a
+  `/boot/vmlinuz-*` file's inode change time is after the boot time in `/proc/stat`. It
+  uses the change time because dpkg keeps a package's build time as the file's mtime.
+
+The server reads these locally on request and keeps nothing. The client replaces the
+VPS text with fixed messages and turns any failure level into a warning. Debian 13 and
+Ubuntu 24.04 cloud images ship with unattended-upgrades on. The installer installs and
+enables it only on a VPS where it is missing. It leaves an existing setup, including a
+deliberately disabled one, unchanged, and it never restarts the VPS.
+
 ## Leak test (31 October 2026)
 
 While connected, desktop, CLI and Android diagnostics add `leak_ipv4`, `leak_ipv6` and

@@ -131,6 +131,40 @@ fn sanitize_check(value: &DiagnosticCheck) -> Option<DiagnosticCheck> {
                 },
             ));
         }
+        "os_security_updates" => {
+            let on = value.level == DiagnosticLevel::Pass;
+            return Some(check(
+                "os_security_updates",
+                "VPS security updates",
+                if on {
+                    DiagnosticLevel::Pass
+                } else {
+                    DiagnosticLevel::Warning
+                },
+                if on {
+                    "Automatic security updates for the VPS operating system are on."
+                } else {
+                    "Automatic security updates are off or could not be confirmed. Enable unattended-upgrades on the VPS; server repair installs and enables it when it is missing."
+                },
+            ));
+        }
+        "os_reboot_required" => {
+            let current = value.level == DiagnosticLevel::Pass;
+            return Some(check(
+                "os_reboot_required",
+                "VPS restart",
+                if current {
+                    DiagnosticLevel::Pass
+                } else {
+                    DiagnosticLevel::Warning
+                },
+                if current {
+                    "The VPS runs its newest installed kernel."
+                } else {
+                    "An installed update may wait for a VPS restart. Restart the VPS when a short VPN interruption is acceptable."
+                },
+            ));
+        }
         "diagnostics_busy" => {
             return Some(check(
                 "diagnostics_busy",
@@ -279,6 +313,8 @@ mod tests {
             check("local_tunnel", secret, DiagnosticLevel::Pass, secret),
             check("interface", secret, DiagnosticLevel::Pass, secret),
             check("dns_blocklist", secret, DiagnosticLevel::Fail, secret),
+            check("os_security_updates", secret, DiagnosticLevel::Fail, secret),
+            check("os_reboot_required", secret, DiagnosticLevel::Pass, secret),
             check("dns", secret, DiagnosticLevel::NotApplicable, secret),
             check("leak_dns", secret, DiagnosticLevel::Pass, secret),
         ]));
@@ -309,6 +345,18 @@ mod tests {
             .unwrap();
         assert_eq!(blocklist.level, DiagnosticLevel::Warning);
         assert!(blocklist.message.contains("last good list"));
+        let level = |code: &str| {
+            report
+                .checks
+                .iter()
+                .find(|c| c.code == code)
+                .unwrap()
+                .level
+                .clone()
+        };
+        // Update state never escalates to a failure: the tunnel itself is unaffected.
+        assert_eq!(level("os_security_updates"), DiagnosticLevel::Warning);
+        assert_eq!(level("os_reboot_required"), DiagnosticLevel::Pass);
         assert_eq!(
             report
                 .checks

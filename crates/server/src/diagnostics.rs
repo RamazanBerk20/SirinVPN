@@ -18,11 +18,12 @@ pub async fn collect_diagnostics(configuration: &ServerConfiguration) -> Diagnos
             "Another current-state check is running. Try again in a few seconds.",
         )]);
     };
-    let (dns_active, dns, network, resources, service) = tokio::join!(
+    let (dns_active, dns, network, resources, os, service) = tokio::join!(
         metrics::dns_services_active(configuration),
         crate::dns_diagnostics::diagnose(configuration),
         network::inspect(configuration),
         resources(),
+        operating_system_updates(),
         output(
             "systemctl",
             &[
@@ -77,6 +78,7 @@ pub async fn collect_diagnostics(configuration: &ServerConfiguration) -> Diagnos
     }
     checks.extend(network);
     checks.extend(resources);
+    checks.extend(os);
     checks.extend(dns);
     let blocklist = crate::dns_blocklist::read_status();
     if blocklist.active || blocklist.failure.is_some() {
@@ -240,6 +242,99 @@ fn usage(code: &str, label: &str, counters: Option<(u64, u64)>, threshold: u64) 
     )
 }
 
+/// Distribution security updates are the Owner's to manage; this only reports whether they run
+/// and whether an installed update still waits for a reboot.
+async fn operating_system_updates() -> Vec<DiagnosticCheck> {
+    let (setting, timer) = tokio::join!(
+        output(
+            "apt-config",
+            &["shell", "VALUE", "APT::Periodic::Unattended-Upgrade"]
+        ),
+        output("systemctl", &["is-enabled", "apt-daily-upgrade.timer"]),
+    );
+    let automatic = Path::new("/usr/bin/unattended-upgrade").exists()
+        && setting.as_deref().is_some_and(periodic_enabled)
+        && timer
+            .as_deref()
+            .is_some_and(|state| state.trim() == "enabled");
+    let kernels = fs::read_dir("/boot").map(|entries| {
+        entries
+            .flatten()
+            .filter(|entry| entry.file_name().to_string_lossy().starts_with("vmlinuz-"))
+            .filter_map(|entry| entry.metadata().ok())
+            .map(|metadata| std::os::unix::fs::MetadataExt::ctime(&metadata))
+            .collect::<Vec<_>>()
+    });
+    let boot = read_current("/proc/stat").and_then(|stat| {
+        stat.lines()
+            .find_map(|line| line.strip_prefix("btime "))?
+            .trim()
+            .parse::<i64>()
+            .ok()
+    });
+    vec![
+        if automatic {
+            check(
+                "os_security_updates",
+                "VPS security updates",
+                DiagnosticLevel::Pass,
+                "Automatic security updates are on.",
+            )
+        } else {
+            check(
+                "os_security_updates",
+                "VPS security updates",
+                DiagnosticLevel::Warning,
+                "Automatic security updates are off or could not be confirmed.",
+            )
+        },
+        match reboot_required(
+            Path::new("/run/reboot-required").exists(),
+            boot,
+            kernels.ok().as_deref(),
+        ) {
+            Some(false) => check(
+                "os_reboot_required",
+                "VPS restart",
+                DiagnosticLevel::Pass,
+                "The VPS runs its newest installed kernel.",
+            ),
+            Some(true) => check(
+                "os_reboot_required",
+                "VPS restart",
+                DiagnosticLevel::Warning,
+                "An installed update waits for a VPS restart.",
+            ),
+            None => check(
+                "os_reboot_required",
+                "VPS restart",
+                DiagnosticLevel::Warning,
+                "This current state could not be read. Check the server tools and service permissions.",
+            ),
+        },
+    ]
+}
+
+/// `apt-config shell VALUE key` prints `VALUE='1'`; the value is a period in days, 0 is off.
+fn periodic_enabled(output: &str) -> bool {
+    output
+        .trim()
+        .strip_prefix("VALUE='")
+        .and_then(|value| value.strip_suffix('\''))
+        .and_then(|value| value.parse::<u32>().ok())
+        .is_some_and(|days| days > 0)
+}
+
+/// dpkg keeps a package's build time as the file's mtime, so a kernel installed since boot
+/// shows only in its inode change time.
+fn reboot_required(flagged: bool, boot: Option<i64>, kernels: Option<&[i64]>) -> Option<bool> {
+    if flagged {
+        return Some(true);
+    }
+    let boot = boot?;
+    Some(kernels?.iter().any(|changed| *changed > boot))
+}
+
 fn read_current(path: impl AsRef<Path>) -> Option<String> {
     use std::io::Read;
     let mut bytes = Vec::new();
@@ -257,6 +352,26 @@ fn read_current(path: impl AsRef<Path>) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn update_readings_need_an_enabled_period_and_a_kernel_change_after_boot() {
+        assert!(periodic_enabled("VALUE='1'\n"));
+        assert!(periodic_enabled("VALUE='7'"));
+        assert!(!periodic_enabled("VALUE='0'"));
+        assert!(!periodic_enabled("VALUE=''"));
+        assert!(!periodic_enabled("VALUE='always'"));
+        assert_eq!(reboot_required(true, None, None), Some(true));
+        assert_eq!(
+            reboot_required(false, Some(100), Some(&[50, 90])),
+            Some(false)
+        );
+        assert_eq!(
+            reboot_required(false, Some(100), Some(&[50, 150])),
+            Some(true)
+        );
+        assert_eq!(reboot_required(false, None, Some(&[150])), None);
+        assert_eq!(reboot_required(false, Some(100), None), None);
+    }
+
     #[test]
     fn missing_readings_are_unknown_and_resource_pressure_is_not_a_tunnel_failure() {
         assert_eq!(
