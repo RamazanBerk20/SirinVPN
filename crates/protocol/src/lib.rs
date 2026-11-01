@@ -1,6 +1,11 @@
 #![forbid(unsafe_code)]
 
+mod alerts;
 mod android_routing;
+pub use alerts::{
+    AlertFailure, AlertFormat, AlertPolicy, AlertSettings, AlertStatus, AlertTestResult,
+    MAX_ALERT_URL_BYTES, public_ip_address, valid_alert_url,
+};
 mod dns;
 mod dns_blocklist;
 pub use android_routing::{

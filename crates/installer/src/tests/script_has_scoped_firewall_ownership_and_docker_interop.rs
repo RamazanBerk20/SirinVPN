@@ -110,6 +110,18 @@ fn script_has_scoped_firewall_ownership_and_docker_interop() {
             < blocklist_start
     );
     assert!(script.contains(crate::dns_blocklist::DNS_BLOCKLIST_SETUP));
+    // The alert task runs as the service account without capabilities; it pauses while the
+    // transaction restarts services and runs again with them.
+    assert!(script.contains(crate::alerts::ALERTS_SETUP));
+    assert!(script.contains(crate::alerts::ALERTS_MANAGED_PATHS));
+    let alerts = crate::alerts::ALERTS_SETUP;
+    assert!(alerts.contains("User=sirinvpn\n") && alerts.contains("CapabilityBoundingSet=\n"));
+    assert!(alerts.contains("ExecStart=/usr/local/lib/sirinvpn/sirinvpn-server alerts check"));
+    let alerts_stop = script
+        .find("systemctl stop sirinvpn-alerts.timer sirinvpn-alerts.service")
+        .unwrap();
+    assert!(snapshot < alerts_stop && alerts_stop < initialize);
+    assert!(script[initialize..].contains("sirinvpn-dns-blocklist.timer sirinvpn-alerts.timer\n"));
     assert!(script.contains(crate::dns_blocklist::DNS_BLOCKLIST_MANAGED_PATHS));
     assert!(script.contains("PathChanged=/etc/sirinvpn/authorization/authorization.json"));
     assert!(

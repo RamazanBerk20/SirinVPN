@@ -86,6 +86,9 @@ pub struct CurrentConfiguration {
     /// Devices can be allowed to reach each other pair by pair.
     #[serde(default, skip_serializing_if = "is_false")]
     pub device_pairs_enabled: bool,
+    /// The Owner can set VPS alerts; the server has the alert timer installed.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub alerts_enabled: bool,
 }
 
 /// The source address of the one request that asked; the VPS keeps nothing.

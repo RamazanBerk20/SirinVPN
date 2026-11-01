@@ -65,6 +65,8 @@ Screenshots use fictional profiles and example data.
 - **Recover and maintain access.** Encrypted device and VPS backups (VPS
   backups also [on a schedule](docs/scheduled-vps-backups.md)), recovery
   keys, key rotation, server repair, and signed endpoint migration.
+- **Hear when the VPS needs attention.** Opt-in [VPS alerts](docs/vps-alerts.md)
+  to an ntfy topic or webhook, and a heartbeat for an outside monitor.
 
 Availability and verification vary by platform. The
 [desktop feature map](docs/overhaul-feature-map.md) and

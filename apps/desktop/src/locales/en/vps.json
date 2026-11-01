@@ -328,5 +328,47 @@
       "publish": "Couldn’t publish on the old VPS. It’s unchanged, so you can try again.",
       "apply": "Couldn’t apply the update. Check your connection and try again."
     }
+  },
+  "alerts": {
+    "title": "VPS alerts",
+    "summary": "Get a notification when this VPS needs attention, and let an outside monitor notice when it goes silent. Off until you add an address. Notices carry fixed text only: no names, addresses or traffic.",
+    "unsupported": "Repair this server with the current app to use VPS alerts.",
+    "format": "Alert format",
+    "formats": {
+      "ntfy": {
+        "label": "ntfy topic",
+        "hint": "Plain text with a title, for an ntfy server you choose"
+      },
+      "webhook": {
+        "label": "Webhook",
+        "hint": "A small JSON object with a title, message and text"
+      }
+    },
+    "alertUrl": "Alert address",
+    "alertUrlHint": "Optional. The full HTTPS address of your topic or webhook. The VPS checks every five minutes and sends when a problem starts or clears.",
+    "heartbeatUrl": "Heartbeat address",
+    "heartbeatHint": "Optional. The VPS requests it every five minutes. Point it at a missed-heartbeat monitor to learn when the VPS is down or offline.",
+    "invalid": "Use a full HTTPS address without a user name.",
+    "allowPrivate": "Allow private, loopback and VPN addresses",
+    "save": "Save alerts",
+    "saved": "Saved. The VPS uses it at its next check.",
+    "test": "Send test alert",
+    "testSent": "The VPS delivered a test alert.",
+    "loadFailed": "Alert settings couldn’t be loaded.",
+    "saveFailed": "Alert settings couldn’t be saved.",
+    "testFailed": "The test alert couldn’t be sent.",
+    "status": {
+      "notChecked": "The VPS hasn’t checked yet. It checks every five minutes.",
+      "checked": "Last VPS check: {{time}}.",
+      "alertFailed": "The last alert wasn’t delivered. {{reason}} The VPS tries again at its next check.",
+      "heartbeat": "Last heartbeat: {{time}}.",
+      "heartbeatFailed": "The last heartbeat failed. {{reason}}"
+    },
+    "failure": {
+      "address": "The address didn’t resolve, or it resolved to a private address that isn’t allowed.",
+      "connection": "The VPS couldn’t reach the address over HTTPS.",
+      "rejected": "The address refused the request.",
+      "rejectedStatus": "The address answered with HTTP status {{status}}."
+    }
   }
 }

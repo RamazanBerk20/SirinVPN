@@ -75,11 +75,11 @@ sync -f /var/lib
 : >"$BACKUP_DIR/restoration-complete"
 sync -f "$BACKUP_DIR"
 systemctl daemon-reload
-for unit in sirinvpn-network sirinvpn-firewall sirinvpn-doh unbound sirinvpn-server sirinvpn-security-update.timer sirinvpn-dns-blocklist.path sirinvpn-dns-blocklist.timer; do
+for unit in sirinvpn-network sirinvpn-firewall sirinvpn-doh unbound sirinvpn-server sirinvpn-security-update.timer sirinvpn-dns-blocklist.path sirinvpn-dns-blocklist.timer sirinvpn-alerts.timer; do
   systemctl disable "$unit" >/dev/null 2>&1 || true
   [ ! -f "$BACKUP_DIR/enabled.$unit" ] || systemctl enable "$unit" >/dev/null
 done
-for unit in sirinvpn-network sirinvpn-firewall sirinvpn-doh unbound sirinvpn-server sirinvpn-security-update.timer sirinvpn-dns-blocklist.path sirinvpn-dns-blocklist.timer; do
+for unit in sirinvpn-network sirinvpn-firewall sirinvpn-doh unbound sirinvpn-server sirinvpn-security-update.timer sirinvpn-dns-blocklist.path sirinvpn-dns-blocklist.timer sirinvpn-alerts.timer; do
   if [ -f "$BACKUP_DIR/active.$unit" ]; then
     if [ "$BEFORE_START" -eq 1 ]; then
       systemctl --no-block restart "$unit"

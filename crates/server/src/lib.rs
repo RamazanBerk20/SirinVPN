@@ -51,6 +51,7 @@ pub mod release_update;
 pub use network_policy::install_network_guard;
 use network_policy::*;
 
+pub mod alerts;
 mod authorization;
 pub mod dns_blocklist;
 mod dns_diagnostics;

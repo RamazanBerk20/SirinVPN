@@ -18,6 +18,7 @@ const Troubleshooter = lazy(() => import("./Troubleshooter").then(m => ({ defaul
 import { CopyValue } from "../../components/CopyValue";
 import type { Page } from "../../components/Navigation";
 const AccessPanel = lazy(() => import("../devices/AccessPanel").then(m => ({ default: m.AccessPanel })));
+const VpsAlertSettings = lazy(() => import("../settings/VpsAlertSettings").then(m => ({ default: m.VpsAlertSettings })));
 const DnsBlocklistSettings = lazy(() => import("../dns/DnsBlocklistSettings").then(m => ({ default: m.DnsBlocklistSettings })));
 const PortForwardSettings = lazy(() => import("../devices/PortForwardSettings").then(m => ({ default: m.PortForwardSettings })));
 import { formatDnsPolicy } from "../../format";
@@ -209,6 +210,7 @@ export function ServerWorkspace(
               <SystemHealth
                 model={model}
               />
+              <VpsAlertSettings profile={profile} connected={connected} />
               <MaintenanceTools
                 model={model}
                 category="maintenance"

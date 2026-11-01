@@ -60,6 +60,11 @@ pub(super) enum ServerCommand {
         #[command(subcommand)]
         command: DnsBlockingCommand,
     },
+    /// Opt-in VPS alerts to an ntfy topic or webhook, and a heartbeat for outside monitors.
+    Alerts {
+        #[command(subcommand)]
+        command: AlertsCommand,
+    },
     Add(AddServerArguments),
     /// Create a Debian 13 VPS on Hetzner Cloud and install SirinVPN on it over a pre-pinned SSH key.
     /// Reads the API token from HCLOUD_TOKEN or a hidden prompt; the token is not stored.
@@ -123,6 +128,36 @@ pub(super) enum DnsBlockingCommand {
     Enable(DnsBlockingArguments),
     /// Turn blocking off and keep the chosen lists and allowed domains.
     Disable(ServerSelector),
+}
+
+#[derive(Subcommand)]
+pub(super) enum AlertsCommand {
+    /// Show the alert and heartbeat addresses and the latest VPS results.
+    Status(ServerSelector),
+    /// Replace the alert settings. An address left out is removed.
+    Set(AlertsArguments),
+    /// Remove both addresses. The VPS stops checking and sending.
+    Off(ServerSelector),
+    /// Send a test notice from the VPS to the saved alert address.
+    Test(ServerSelector),
+}
+
+#[derive(Args)]
+#[command(group(clap::ArgGroup::new("address").required(true).multiple(true).args(["ntfy", "webhook", "heartbeat"])))]
+pub(super) struct AlertsArguments {
+    pub(super) server: String,
+    /// An ntfy topic address that receives problem and recovery notices.
+    #[arg(long, conflicts_with = "webhook")]
+    pub(super) ntfy: Option<String>,
+    /// An HTTPS webhook that receives the same notices as JSON.
+    #[arg(long)]
+    pub(super) webhook: Option<String>,
+    /// An address the VPS requests every five minutes, for a missed-heartbeat monitor.
+    #[arg(long)]
+    pub(super) heartbeat: Option<String>,
+    /// Allow addresses that are, or resolve to, private, loopback or VPN addresses.
+    #[arg(long)]
+    pub(super) allow_private: bool,
 }
 
 #[derive(Args)]
