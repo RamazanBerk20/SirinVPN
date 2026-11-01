@@ -44,18 +44,43 @@ pub(super) fn server_dns_init_arguments(
     arguments
 }
 
+/// Non-global IPv4 (RFC 6052 3.1): a LAN name behind a subnet route or any private answer must
+/// not reach the NAT64 operator, so `respip` turns AAAA synthesized from these into NODATA
+/// (`redirect` without `response-ip-data`; Unbound has no `always_nodata` for `response-ip`).
+const NON_GLOBAL_IPV4: [(Ipv4Addr, u8); 7] = [
+    (Ipv4Addr::new(0, 0, 0, 0), 8),
+    (Ipv4Addr::new(10, 0, 0, 0), 8),
+    (Ipv4Addr::new(100, 64, 0, 0), 10),
+    (Ipv4Addr::new(127, 0, 0, 0), 8),
+    (Ipv4Addr::new(169, 254, 0, 0), 16),
+    (Ipv4Addr::new(172, 16, 0, 0), 12),
+    (Ipv4Addr::new(192, 168, 0, 0), 16),
+];
+
+const DNS64_MODULES: &str = "  module-config: \"respip dns64 validator iterator\"";
+
 /// DNS64 gives IPv4-only names an AAAA inside the NAT64 prefix, so members reach them over the
 /// tunnel's IPv6. The prefix line is also how Repair reads back the Owner's choice.
 pub(super) fn unbound_dns64_configuration(nat64_prefix: Option<Ipv6Addr>) -> String {
     nat64_prefix.map_or_else(String::new, |prefix| {
-        format!("  module-config: \"dns64 validator iterator\"\n  dns64-prefix: {prefix}/96")
+        let mut text = format!("{DNS64_MODULES}\n  dns64-prefix: {prefix}/96");
+        for (network, length) in NON_GLOBAL_IPV4 {
+            let mapped = Ipv6Addr::from(u128::from(prefix) | u128::from(u32::from(network)));
+            text.push_str(&format!(
+                "\n  response-ip: {mapped}/{} redirect",
+                96 + length
+            ));
+        }
+        text
     })
 }
 
 pub(super) fn unbound_dns64_verification(nat64_prefix: Option<Ipv6Addr>) -> String {
     let configuration = "/etc/unbound/unbound.conf.d/sirinvpn.conf";
     match nat64_prefix {
-        Some(prefix) => format!("grep -Fxq '  dns64-prefix: {prefix}/96' {configuration}"),
+        Some(prefix) => format!(
+            "grep -Fxq '{DNS64_MODULES}' {configuration} && grep -Fxq '  dns64-prefix: {prefix}/96' {configuration} || exit 1"
+        ),
         // Record names cannot contain a colon, so these never match a private record.
         None => format!(
             "if grep -Fq 'module-config:' {configuration} || grep -Fq 'dns64-prefix:' {configuration}; then exit 1; fi"

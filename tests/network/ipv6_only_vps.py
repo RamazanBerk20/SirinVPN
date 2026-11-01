@@ -48,7 +48,8 @@ def question(query):
     return ".".join(labels), kind, query[12:offset + 5]
 
 
-RECORDS = {("v4only.example.net", 1): "192.0.2.80", ("dual.example.net", 1): SITE4, ("dual.example.net", 28): SITE6}
+RECORDS = {("v4only.example.net", 1): "192.0.2.80", ("dual.example.net", 1): SITE4, ("dual.example.net", 28): SITE6,
+           ("lan.example.net", 1): "192.168.1.10"}
 
 
 def answer(query):
@@ -221,12 +222,26 @@ with tempfile.TemporaryDirectory() as directory:
             assert query(server, "v4only.example.net", 28) == [GATEWAY], server
             assert query(server, "dual.example.net", 28) == [SITE6], server
             assert query(server, "v4only.example.net", 1) == ["192.0.2.80"], server
-        print("Unbound DNS64 over DNS-over-TLS to an IPv6 resolver: synthesized only for IPv4-only names")
+            # A private IPv4 answer, forwarded or the Owner's own record, gets no AAAA (NODATA),
+            # so the NAT64 operator never sees LAN destinations.
+            for name, address in (("lan.example.net", "192.168.1.10"), ("printer.home", "10.1.2.3")):
+                assert query(server, name, 28) == [], (server, name)
+                assert query(server, name, 1) == [address], (server, name)
+        print("Unbound DNS64 over DNS-over-TLS to an IPv6 resolver: synthesized only for IPv4-only names"
+              " with global addresses")
 
         # Members leave through the VPS's IPv6 uplink, masqueraded to its address.
         assert fetch(SITE6) == VPS_UPLINK
         assert fetch(GATEWAY) == VPS_UPLINK
         print("Member IPv6 and NAT64-prefix traffic leaves the IPv6-only VPS masqueraded")
+
+        # Only replies come in from the uplink: a new connection to a member's tunnel address is
+        # dropped even when the internet has a route to it.
+        run("ip", "-n", "internet", "-6", "route", "add", data["ipv6_cidr"], "via", VPS_UPLINK)
+        assert subprocess.run(["ip", "netns", "exec", "internet", "ping", "-6", "-n", "-c", "1", "-W", "1",
+                               "-I", SITE6, data["member_ipv6"]],
+                              stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode != 0
+        print("New inbound IPv6 from the internet to a member is dropped")
 
         # IPv4 has no route out of the VPS: refused at once, not left to time out.
         started = time.monotonic()

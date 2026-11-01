@@ -470,7 +470,7 @@ impl Provisioner {
             InstallPhase::Discovering,
             "Inspecting the installed SirinVPN state and current network path.",
         ));
-        let discovery = discover(&session)?;
+        let mut discovery = discover(&session)?;
         events.push(event(
             InstallPhase::CheckingCompatibility,
             "Checking server identity, state compatibility, and repair boundaries.",
@@ -484,6 +484,11 @@ impl Provisioner {
             OwnerPreflightOperation::Repair,
         )?;
         ensure_repair_ipv6_compatible(existing.ipv6_tunnel_enabled, discovery.ipv6_available)?;
+        if !discovery.ipv4_available
+            && let Some(interface) = installed_external_interface(&session, &request.target)?
+        {
+            discovery.default_interface = interface;
+        }
         let dns_upstream = request
             .dns_upstream
             .clone()
@@ -645,7 +650,15 @@ impl Provisioner {
             backup.metadata().ipv6_tunnel_enabled,
             discovery.ipv6_available,
         )?;
-        ensure_dns_upstream_compatible(&backup.metadata().dns_upstream, &discovery)?;
+        // shortcut: restore has no DNS override; add one if restoring onto IPv6-only VPSes is common.
+        ensure_dns_upstream_compatible(&backup.metadata().dns_upstream, &discovery).map_err(
+            |error| match error {
+                InstallerError::Incompatible(reason) => InstallerError::Incompatible(format!(
+                    "{reason}. The backup's DNS settings cannot run on this VPS: restore onto a VPS whose network supports them, or change DNS on the original server and export a new backup"
+                )),
+                error => error,
+            },
+        )?;
         let target_occupied = restore_target_has_sirinvpn_state(&session, &request.target)?;
         if target_occupied && !request.replace_existing_installation {
             return Err(InstallerError::RestoreTargetOccupied);

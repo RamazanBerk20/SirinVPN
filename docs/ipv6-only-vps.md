@@ -6,9 +6,18 @@ an IPv6-only plan that saves the cost of an IPv4 address.
 ## What changes on such a VPS
 
 - **Discovery.** A VPS needs an IPv4 default route or an IPv6 default route
-  with a `2000::/3` address. Without IPv4, the IPv6 uplink becomes the external
-  interface for every rule the installer writes; the IPv4 rules on it never
-  match. IPv6 inside the tunnel is always on, because it is the only way out.
+  with a `2000::/3` address; a multipath default route counts by its first
+  next hop. Without IPv4, the IPv6 uplink becomes the external interface for
+  every rule the installer writes; the IPv4 rules on it never match. IPv6
+  inside the tunnel is always on, because it is the only way out. Repair on a
+  VPS that has lost its IPv4 route keeps the installed IPv4 uplink instead of
+  moving IPv4 forwarding to the IPv6 one.
+- **Firewall.** As for IPv4, only replies come in from the IPv6 uplink to
+  members; a new inbound IPv6 connection to a member's tunnel address is
+  dropped.
+- **Diagnostics.** The VPS routes check accepts an IPv6 default route only on
+  an uplink with no IPv4 address, so a dual-stack VPS that lost its IPv4 route
+  still reports the failure.
 - **SSH and the endpoint.** Enter the VPS's IPv6 address as it is
   (`2a01:4f8:c0c:1::4`), or a hostname with an AAAA record. SSH, the public
   endpoint, every transport and the WireGuard `.conf` export already handle IPv6
@@ -47,6 +56,11 @@ directly. SirinVPN supports NAT64 with DNS64, as an explicit Owner opt-in:
   record gets a synthesized AAAA inside the prefix, and members reach it over
   the tunnel's IPv6, out of the VPS's IPv6 uplink, to the NAT64 gateway. A real
   AAAA always wins.
+- A name whose IPv4 address is not global (RFC 1918, shared `100.64.0.0/10`,
+  link-local, loopback, `0.0.0.0/8`) gets no AAAA: Unbound's `respip` module
+  answers NODATA for any AAAA synthesized from those ranges. LAN names from a
+  private split-DNS zone or the Owner's private records therefore stay on IPv4
+  inside the tunnel, and the NAT64 operator never sees them.
 - Without a prefix, nothing goes to a NAT64 service. IPv4 inside the tunnel
   fails at once with an unreachable error, so applications move to IPv6
   instead of waiting for a timeout, and IPv4-only websites do not work.
@@ -62,6 +76,12 @@ it reads the choice back from the `dns64-prefix` line of SirinVPN's Unbound
 configuration. A VPS with IPv4 refuses a NAT64 prefix. A server backup does not
 carry the choice, so after restoring onto an IPv6-only VPS run Repair to turn
 NAT64 on again.
+
+A backup restores only onto a VPS that can run its DNS settings, and restore
+has no way to change them. A backup that uses recursive DNS, the default, or
+IPv4 secure-DNS servers is refused on an IPv6-only VPS. Change the original
+server's DNS to DNS-over-TLS or DNS-over-HTTPS with IPv6 resolver addresses
+and export a new backup, or restore onto a VPS with IPv4.
 
 ### Why not the alternatives
 
@@ -87,6 +107,11 @@ NAT64 on again.
 - Unbound's own lookups do not use NAT64 (`do-nat64` would also translate the
   loopback DNS-over-HTTPS proxy and private split-DNS servers), which is why
   recursive DNS stays refused.
+- Router advertisements: the installer turns on IPv6 forwarding, which makes
+  the kernel ignore router advertisements unless `accept_ra=2`, so it sets
+  that on the IPv6 uplink. systemd-networkd, used by the Debian 13 and Ubuntu
+  24.04 cloud images, handles router advertisements itself and keeps doing so
+  with forwarding on.
 
 ## Evidence (2026-11-01)
 
@@ -98,8 +123,19 @@ NAT64 on again.
   Unbound configuration on a VPS namespace without IPv4, a WireGuard member on
   an IPv6-only network, and an internet namespace with a DNS-over-TLS resolver,
   an IPv6 site and a stand-in NAT64 gateway. Unbound synthesizes AAAA only for
-  the IPv4-only name; member IPv6 and NAT64-prefix traffic leaves masqueraded
-  to the VPS's address; member IPv4 fails immediately.
+  the IPv4-only name with a global address, never for a private answer
+  (`192.168.1.10`) or a private record (`10.1.2.3`); member IPv6 and
+  NAT64-prefix traffic leaves masqueraded to the VPS's address; a new inbound
+  IPv6 connection to a member is dropped; member IPv4 fails immediately.
+- The same DNS64 and `respip` configuration on the distributions' own Unbound
+  (Debian 13: 1.26.2, Ubuntu 24.04: 1.19.2, and 1.17.1): global IPv4-only
+  names get a synthesized AAAA, while names with RFC 1918 and `100.64.0.0/10`
+  addresses get NODATA, both fresh and from the cache. Without the
+  `response-ip` lines, `192.168.1.10` became `64:ff9b::c0a8:10a`.
+- Router advertisements after a reboot: Debian 13 and Ubuntu 24.04 cloud
+  images in QEMU with only RA-configured IPv6 (`ipv4=off`), the installer's
+  `90-sirinvpn.conf` applied and the VM rebooted. Both came back with an
+  RA-learned default route (`proto ra`).
 - `sh tests/network/run-policy-kernel.sh kernel_endpoint_ipv6_dns`: the
   production Linux helper connects to a real WireGuard peer over an IPv6
   endpoint with the kill switch, now also with IPv6 inside the tunnel: the
