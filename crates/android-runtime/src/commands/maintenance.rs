@@ -484,10 +484,6 @@ pub async fn dispatch(
         "wait_hetzner_server" => {
             let client = HetznerClient::new(text(input, "apiToken")?)?;
             let server: HetznerServer = serde_json::from_value(input["server"].clone())?;
-            HETZNER_WAIT_CANCEL.store(false, Ordering::SeqCst);
-            let addresses = client
-                .wait_until_ready(&server, &HETZNER_WAIT_CANCEL)
-                .await?;
             let key = reference(&server.name, "hetzner");
             let pem = Zeroizing::new(String::from_utf8(
                 runtime
@@ -496,21 +492,25 @@ pub async fn dispatch(
                     .context("The new server’s SSH key is missing")?
                     .to_vec(),
             )?);
+            HETZNER_WAIT_CANCEL.store(false, Ordering::SeqCst);
+            let ready = client
+                .wait_until_ready(&server, pem.clone(), &HETZNER_WAIT_CANCEL)
+                .await?;
             // Saved like an imported key: the install and later repairs use this login.
-            let host = addresses.ipv4.to_string();
+            let host = ready.ipv4.to_string();
             let login = Zeroizing::new(serde_json::to_vec(&json!({
                 "host": host, "ssh_port": 22, "username": "root", "authentication": "private_key",
-                "private_key_pem": pem.as_str(), "host_key_sha256": server.host_key_sha256,
+                "private_key_pem": pem.as_str(), "host_key_sha256": ready.host_key_sha256,
             }))?);
             runtime
                 .platform
                 .put_blob(&reference(&host, "ssh"), &login)?;
             runtime.platform.put_blob(
                 &trust_reference(&host, 22),
-                server.host_key_sha256.as_bytes(),
+                ready.host_key_sha256.as_bytes(),
             )?;
             runtime.platform.delete_blob(&key)?;
-            return encode(addresses);
+            return encode(ready);
         }
         "cancel_hetzner_wait" => {
             HETZNER_WAIT_CANCEL.store(true, Ordering::SeqCst);

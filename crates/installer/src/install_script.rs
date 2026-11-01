@@ -497,6 +497,8 @@ table inet sirinvpn_filter {{
     oifname "sirinvpn0" ip daddr 10.77.0.224/27 drop
     iifname "sirinvpn0" ip6 saddr {bootstrap_ipv6_address}/123 drop
     oifname "sirinvpn0" ip6 daddr {bootstrap_ipv6_address}/123 drop
+    iifname "sirinvpn0" ip daddr 169.254.0.0/16 drop
+    iifname "sirinvpn0" ip6 daddr {{ fd00:ec2::254, fd20:ce::254 }} drop
     jump port_forward
     iifname {external_interface} oifname "sirinvpn0" ip daddr 10.77.0.0/24 ct mark 0x5356504e drop
     iifname "sirinvpn0" oifname "sirinvpn0" meta nfproto ipv4 ip saddr @peer_communication4 ip daddr @peer_communication4 accept

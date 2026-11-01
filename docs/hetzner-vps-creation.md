@@ -72,8 +72,19 @@ The token needs **Read & Write** permission (Hetzner Cloud Console → the proje
    5 minutes), then connects to port 22 until the server presents exactly the
    generated host key (up to 5 more minutes). Any other host key is never
    trusted: it keeps waiting and finally reports the mismatch.
-7. **Installation.** The normal setup screen opens with the address filled in,
-   the generated login selected and the host key already pinned. The Owner can
+7. **Host key replacement.** Hetzner keeps serving the user data, with the
+   generated host private key, to the server itself (its metadata service at
+   `169.254.169.254`) for as long as the server exists. So SirinVPN logs in over
+   the pinned connection and has the server generate a new ed25519 host key
+   (`ssh-keygen`, `sshd -t`, `systemctl reload ssh`). It reads the new public key
+   over that same connection, waits until port 22 presents only the new key (up
+   to 5 minutes) and pins that one. This happens before SirinVPN is installed,
+   so no Member can exist yet; cloud-init seeds host keys only once per server,
+   so a reboot keeps the new key. In addition, the VPS never forwards tunnel
+   traffic to `169.254.0.0/16` or the known IPv6 metadata addresses, on every
+   install.
+8. **Installation.** The normal setup screen opens with the address filled in,
+   the generated login selected and the new host key already pinned. The Owner can
    still choose the connection method and DNS, runs the network check and
    installs. The pin is also saved as a verified host key, so later Repair,
    Update and Uninstall need no fingerprint review.
@@ -86,8 +97,9 @@ It travels as a sensitive `Authorization` header, is wiped from memory when the
 operation ends, and never appears in errors, logs or diagnostics. It is not
 stored: everything after creation uses SSH, and deleting a half-made server
 happens in the same session. On Android a pasted token is a protected native
-value that expires after ten minutes; if a deletion fails with an expired
-input, paste the token again in the same screen.
+value that expires after ten minutes. Once that time has passed, SirinVPN asks
+for the token again before it creates, waits or deletes; the token field stays
+on every screen that needs it.
 
 ## Failures and cancelling
 
@@ -95,30 +107,37 @@ SirinVPN never deletes a server without the Owner's confirmation.
 
 | What happened | Result |
 | --- | --- |
-| API error before or during the create request | Nothing was created. The uploaded Hetzner SSH key is removed and the local login key deleted. |
-| The create request got no answer | SirinVPN looks the server up by its name. If it exists, creation continues; if the lookup fails too, the error asks the Owner to check the Hetzner Cloud Console for that name, and the local login key is kept. |
-| The Owner stops waiting, or the server does not start or present the generated host key in time | The screen offers **Delete this server**, **Wait again** and **Keep server**. The CLI asks `Delete the Hetzner server …? [y/N]`. |
+| Hetzner refuses a request (a 4xx answer) before or during the create request | Nothing was created. The uploaded Hetzner SSH key is removed and the local login key deleted. |
+| The create request got no answer, a server error (5xx) or an unreadable answer | SirinVPN looks the server up by its name. If it exists, creation continues; otherwise the error asks the Owner to check the Hetzner Cloud Console for that name, and the local login key is kept. |
+| The SSH key upload got no answer or a server error | SirinVPN looks the key up by its name and removes it if Hetzner stored it. No server is created. |
+| The Owner stops waiting, or the server does not start, present the generated host key or take the replacement key in time | The screen offers **Delete this server**, **Wait again** and **Keep server**. The CLI asks `Delete the Hetzner server …? [y/N]`. |
 | Installation fails | The setup screen shows the error and keeps **Delete this server** available until the server is installed. The CLI asks the same question. |
 | The app closes during creation | The server stays in the Hetzner project. Look for its `sirinvpn-…` name or the `managed-by=sirinvpn` label in the Hetzner Cloud Console. On desktop and CLI the login key is already saved. |
 
-Leaving the screen while a created server is neither installed nor deleted asks
-for confirmation first. Deleting through SirinVPN also removes the local login
+Leaving the screen is blocked while the create request runs and while SirinVPN
+waits or installs; afterwards, leaving while the server is neither installed nor
+deleted asks for confirmation first. Deleting through SirinVPN also removes the local login
 key.
 
 ## Verification
 
 - Library tests against a local mock of the Hetzner endpoints: prices and
-  filtering, pagination, success, an API error, a changed price, an unanswered
-  create request, start and SSH timeouts, a wrong host key, cancelling and
-  deleting. Key format tests cross-check the OpenSSH encoding with `ssh-keygen`.
+  filtering, pagination, success, an API refusal, a server error, a changed
+  price, an unanswered create request, a lost SSH key upload, start and SSH
+  timeouts, a wrong host key before and after the replacement, a failed
+  replacement, cancelling and deleting. Key format tests cross-check the
+  OpenSSH encoding with `ssh-keygen`. An installer test checks that the forward
+  chain drops metadata addresses before any accept.
 - `tests/vm/hetzner-cloud-init.sh` boots the Debian 13 generic cloud image with
   exactly the user data SirinVPN sends (guest network off). It logs in as root
   through the installer's own pinned SSH path with the generated key, checks
-  that a different pin is rejected, that `ssh-keyscan` sees only the generated
-  ed25519 key, and that password login is refused.
+  that a different pin is rejected, replaces the host key as SirinVPN does,
+  checks that the pre-seeded key is then refused and that `ssh-keyscan` sees only
+  the new ed25519 key, also after a reboot, and that password login is refused.
 - Vitest covers the screen: default plan and price, no creation without
-  confirmation, the hand-off to setup, cancelling, and deletion only after
-  confirmation.
+  confirmation, leaving blocked while creating, the hand-off to setup with the
+  replacement key pinned, cancelling, deletion only after confirmation, and an
+  expired Android token being asked for again.
 
 Not verified here: a real Hetzner account (the steps are below), the Android app
 against Hetzner (compiled and unit-tested only) and Arm servers.
@@ -140,7 +159,10 @@ minutes.
 5. Select **Verify server**, **Check network**, then **Install SirinVPN**, and
    connect. Optionally run Repair: it should not ask to verify a fingerprint.
 6. From a terminal: `ssh-keyscan <IPv4>` lists only one `ssh-ed25519` key whose
-   `ssh-keygen -lf` fingerprint equals the one SirinVPN showed;
+   `ssh-keygen -lf` fingerprint equals the one SirinVPN showed (not the one it
+   printed while waiting, on the CLI); on the server,
+   `curl -s http://169.254.169.254/hetzner/v1/userdata` still shows the
+   pre-seeded `ed25519_public` key, which `ssh-keyscan` no longer sees;
    `ssh -i <key file> root@<IPv4>` works; `ssh -o PreferredAuthentications=password root@<IPv4>`
    is refused.
 7. Test cancelling: create a second server, select **Stop waiting**, then

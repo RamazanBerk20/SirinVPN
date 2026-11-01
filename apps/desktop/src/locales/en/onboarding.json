@@ -150,6 +150,7 @@
     "summary": "SirinVPN rents a Debian 13 server in your Hetzner account and installs itself. You never type an IP address or a password.",
     "token": "Hetzner Cloud API token",
     "tokenHint": "Create a Read & Write token under Security → API tokens in your Hetzner Cloud project. It’s sent only to Hetzner and isn’t saved.",
+    "tokenExpired": "SirinVPN keeps the API token for only 10 minutes. Enter it again to continue.",
     "loadPlans": "Show prices",
     "loading": "Loading…",
     "location": "Location",

@@ -1,6 +1,7 @@
 #!/bin/sh
 # Boots a Debian 13 cloud image with the cloud-init user data that Hetzner
-# creation sends, then checks the pre-seeded host key and the root login key.
+# creation sends, then checks the pre-seeded host key, the root login key and
+# the replacement of the host key that follows, also across a reboot.
 set -eu
 
 : "${SIRINVPN_DEBIAN13_IMAGE:?Set an absolute path to a Debian 13 generic cloud qcow2 image}"
@@ -36,7 +37,7 @@ trap cleanup EXIT HUP INT TERM
 
 (cd "$PROJECT_ROOT" && cargo build --quiet -p sirinvpn-installer --example hetzner_cloud_init)
 SEED_TOOL="$PROJECT_ROOT/target/debug/examples/hetzner_cloud_init"
-PIN=$("$SEED_TOOL" prepare "$WORK_DIRECTORY")
+SEEDED=$("$SEED_TOOL" prepare "$WORK_DIRECTORY")
 printf 'instance-id: sirinvpn-hetzner-cloud-init\nlocal-hostname: sirinvpn-test\n' >"$WORK_DIRECTORY/meta-data"
 xorriso -as mkisofs -output "$WORK_DIRECTORY/seed.img" -volid cidata -joliet -rock -graft-points \
   "user-data=$WORK_DIRECTORY/user-data" "meta-data=$WORK_DIRECTORY/meta-data" >/dev/null 2>&1
@@ -52,28 +53,32 @@ qemu-system-x86_64 \
   -daemonize -pidfile "$WORK_DIRECTORY/qemu.pid"
 
 "$SEED_TOOL" verify "$WORK_DIRECTORY" "$SSH_PORT"
+PIN=$(cat "$WORK_DIRECTORY/replaced-host-key-sha256")
 
-# A just-booted guest can drop a scan while cloud-init finishes; retry briefly.
-for _ in 1 2 3 4 5; do
-  ssh-keyscan -T 10 -p "$SSH_PORT" 127.0.0.1 2>>"$WORK_DIRECTORY/keyscan.log" | sed '/^#/d' >"$WORK_DIRECTORY/keyscan"
-  [ -s "$WORK_DIRECTORY/keyscan" ] && break
-  sleep 3
-done
-if [ ! -s "$WORK_DIRECTORY/keyscan" ]; then
-  echo "ssh-keyscan saw no host key:" >&2
-  cat "$WORK_DIRECTORY/keyscan.log" >&2
-  exit 1
-fi
-OFFERED=$(awk '{print $2}' "$WORK_DIRECTORY/keyscan" | sort -u | tr '\n' ' ')
-if [ "$OFFERED" != "ssh-ed25519 " ]; then
-  echo "sshd offers host key types other than the pre-seeded one: $OFFERED" >&2
-  exit 1
-fi
-SCANNED=$(ssh-keygen -l -E sha256 -f "$WORK_DIRECTORY/keyscan" | awk '{print $2}')
-if [ "$SCANNED" != "$PIN" ]; then
-  echo "ssh-keyscan saw $SCANNED, expected $PIN" >&2
-  exit 1
-fi
+# Only the replacement key may be offered. A just-booted guest can drop a scan; retry briefly.
+check_offered_key() {
+  for _ in 1 2 3 4 5; do
+    ssh-keyscan -T 10 -p "$SSH_PORT" 127.0.0.1 2>>"$WORK_DIRECTORY/keyscan.log" | sed '/^#/d' >"$WORK_DIRECTORY/keyscan"
+    [ -s "$WORK_DIRECTORY/keyscan" ] && break
+    sleep 3
+  done
+  if [ ! -s "$WORK_DIRECTORY/keyscan" ]; then
+    echo "ssh-keyscan saw no host key:" >&2
+    cat "$WORK_DIRECTORY/keyscan.log" >&2
+    exit 1
+  fi
+  OFFERED=$(awk '{print $2}' "$WORK_DIRECTORY/keyscan" | sort -u | tr '\n' ' ')
+  if [ "$OFFERED" != "ssh-ed25519 " ]; then
+    echo "sshd offers host key types other than the pinned one: $OFFERED" >&2
+    exit 1
+  fi
+  SCANNED=$(ssh-keygen -l -E sha256 -f "$WORK_DIRECTORY/keyscan" | awk '{print $2}')
+  if [ "$SCANNED" != "$PIN" ]; then
+    echo "ssh-keyscan saw $SCANNED, expected $PIN (pre-seeded: $SEEDED)" >&2
+    exit 1
+  fi
+}
+check_offered_key
 if ssh -p "$SSH_PORT" -o BatchMode=yes -o PreferredAuthentications=password \
   -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@127.0.0.1 true \
   2>"$WORK_DIRECTORY/password.log"; then
@@ -98,4 +103,23 @@ if ! grep -qx 'passwordauthentication no' "$WORK_DIRECTORY/sshd-config"; then
   echo "sshd still allows password authentication" >&2
   exit 1
 fi
-echo "Hetzner cloud-init check passed: only $PIN is offered, root logs in with the generated key, passwords are off."
+
+# cloud-init seeds host keys once per instance: a reboot must keep the replacement.
+ssh -p "$SSH_PORT" -i "$WORK_DIRECTORY/ssh-keys/$(cat "$WORK_DIRECTORY/name")" -o BatchMode=yes \
+  -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$WORK_DIRECTORY/keyscan" \
+  root@127.0.0.1 'systemctl reboot' || true
+sleep 10
+attempt=0
+until ssh -p "$SSH_PORT" -i "$WORK_DIRECTORY/ssh-keys/$(cat "$WORK_DIRECTORY/name")" -o BatchMode=yes \
+  -o ConnectTimeout=5 -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$WORK_DIRECTORY/keyscan" \
+  root@127.0.0.1 true 2>"$WORK_DIRECTORY/reboot.log"; do
+  attempt=$((attempt + 1))
+  if [ "$attempt" -ge 60 ]; then
+    echo "after a reboot the guest did not accept the replaced host key:" >&2
+    cat "$WORK_DIRECTORY/reboot.log" >&2
+    exit 1
+  fi
+  sleep 3
+done
+check_offered_key
+echo "Hetzner cloud-init check passed: the pre-seeded $SEEDED was replaced by $PIN, which alone is offered, also after a reboot; root logs in with the generated key, passwords are off."

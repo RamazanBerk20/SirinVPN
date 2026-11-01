@@ -1,5 +1,5 @@
 import { CloudArrowUp, ShieldCheck } from "@phosphor-icons/react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "../../api";
 import { SecretInput } from "../../components/SecretInput";
 import { Field, InlineError } from "../../components/ui";
@@ -7,10 +7,13 @@ import { t } from "../../i18n";
 import { confirmAction } from "../../lib/confirmAction";
 import { errorMessage } from "../../lib/errors";
 import { registerNavigationGuard } from "../../lib/navigationGuard";
-import type { CreatedHetznerServer, HetznerAddresses, HetznerCatalog, ProvisionResult } from "../../types";
+import { isAndroid } from "../../platform";
+import type { CreatedHetznerServer, HetznerCatalog, HetznerReady, ProvisionResult } from "../../types";
 import { SetupFlow, type SetupStep } from "./SetupFlow";
 
 type Phase = "plan" | "creating" | "waiting" | "failed" | "install" | "kept" | "deleted";
+// Android forgets protected inputs 10 minutes after they are entered (SecretInputs.kt).
+const ANDROID_TOKEN_LIFETIME_MS = 590_000;
 
 /** Types offered in a location, cheapest first; the first x86 type is the default. */
 export function plansFor(catalog: HetznerCatalog, location: string) {
@@ -26,12 +29,13 @@ export function HetznerFlow({ onComplete, compact = false }: {
   compact?: boolean;
 }) {
   const [token, setToken] = useState("");
+  const tokenEntered = useRef(0);
   const [catalog, setCatalog] = useState<HetznerCatalog | null>(null);
   const [location, setLocation] = useState("");
   const [serverType, setServerType] = useState("");
   const [phase, setPhase] = useState<Phase>("plan");
   const [created, setCreated] = useState<CreatedHetznerServer | null>(null);
-  const [addresses, setAddresses] = useState<HetznerAddresses | null>(null);
+  const [ready, setReady] = useState<HetznerReady | null>(null);
   const [setupStep, setSetupStep] = useState<SetupStep>("details");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -42,14 +46,23 @@ export function HetznerFlow({ onComplete, compact = false }: {
   const locationName = catalog?.locations.find(item => item.name === location)?.city ?? location;
   const server = created?.server;
   // Until it is installed or deleted, the server bills the Owner: leaving needs a decision.
-  const unresolved = server !== undefined && !["kept", "deleted"].includes(phase) && setupStep !== "success";
+  // While the create request runs, the server may exist before its name is known.
+  const unresolved = (phase === "creating" || server !== undefined) && !["kept", "deleted"].includes(phase) && setupStep !== "success";
   useEffect(() => {
     if (!unresolved) return;
     return registerNavigationGuard(() => phase !== "creating" && phase !== "waiting" && setupStep !== "installing"
       && window.confirm(t("onboarding.hetzner.leaveWarning")));
   }, [unresolved, phase, setupStep]);
 
+  const tokenUsable = () => {
+    if (!isAndroid || Date.now() - tokenEntered.current < ANDROID_TOKEN_LIFETIME_MS) return true;
+    setToken("");
+    setError(t("onboarding.hetzner.tokenExpired"));
+    return false;
+  };
+
   const loadPlans = async () => {
+    if (!tokenUsable()) return;
     setBusy(true);
     setError("");
     try {
@@ -69,10 +82,11 @@ export function HetznerFlow({ onComplete, compact = false }: {
   };
 
   const wait = async (target: CreatedHetznerServer) => {
+    if (!tokenUsable()) { setPhase("failed"); return; }
     setPhase("waiting");
     setError("");
     try {
-      setAddresses(await api.waitHetznerServer(token, target.server));
+      setReady(await api.waitHetznerServer(token, target.server));
       setPhase("install");
     } catch (reason) {
       setError(errorMessage(reason, t("onboarding.hetzner.error.wait")));
@@ -81,7 +95,7 @@ export function HetznerFlow({ onComplete, compact = false }: {
   };
 
   const create = async () => {
-    if (!plan || !price || !catalog) return;
+    if (!plan || !price || !catalog || !tokenUsable()) return;
     if (!await confirmAction({
       title: t("onboarding.hetzner.confirm.title"),
       message: t("onboarding.hetzner.confirm.message", { type: plan.name, location: locationName, total: price.total_monthly, currency: catalog.currency }),
@@ -100,7 +114,7 @@ export function HetznerFlow({ onComplete, compact = false }: {
   };
 
   const remove = async () => {
-    if (!server || !await confirmAction({
+    if (!server || !tokenUsable() || !await confirmAction({
       title: t("onboarding.hetzner.deleteConfirm.title", { name: server.name }),
       message: t("onboarding.hetzner.deleteConfirm.message"),
       confirm: t("onboarding.hetzner.deleteConfirm.confirm"),
@@ -117,9 +131,9 @@ export function HetznerFlow({ onComplete, compact = false }: {
 
   const tokenField = <Field label={t("onboarding.hetzner.token")} hint={t("onboarding.hetzner.tokenHint")}>
     <SecretInput type="password" value={token} disabled={busy} autoComplete="off" spellCheck={false}
-      aria-label={t("onboarding.hetzner.token")} onChange={event => setToken(event.target.value)} />
+      aria-label={t("onboarding.hetzner.token")} onChange={event => { tokenEntered.current = Date.now(); setToken(event.target.value); }} />
   </Field>;
-  const deleteButton = <button type="button" className="secondary-button" disabled={busy} onClick={() => void remove()}>
+  const deleteButton = <button type="button" className="secondary-button" disabled={busy || !token} onClick={() => void remove()}>
     {busy ? t("onboarding.hetzner.deleting") : t("onboarding.hetzner.delete")}
   </button>;
 
@@ -132,7 +146,7 @@ export function HetznerFlow({ onComplete, compact = false }: {
 
   if (phase === "deleted" && server) return <div className="success-state">
     <p>{t("onboarding.hetzner.deleted", { name: server.name })}</p>
-    <button type="button" className="primary-button" onClick={() => { setCreated(null); setAddresses(null); setSetupStep("details"); setPhase("plan"); }}>{t("onboarding.hetzner.startOver")}</button>
+    <button type="button" className="primary-button" onClick={() => { setCreated(null); setReady(null); setSetupStep("details"); setPhase("plan"); }}>{t("onboarding.hetzner.startOver")}</button>
   </div>;
 
   if ((phase === "failed" || phase === "kept") && created && server) return <div className="setup-form">
@@ -143,19 +157,20 @@ export function HetznerFlow({ onComplete, compact = false }: {
     {tokenField}
     <div className="fingerprint-actions">
       {deleteButton}
-      <button type="button" className="secondary-button" disabled={busy} onClick={() => void wait(created)}>{t("onboarding.hetzner.waitAgain")}</button>
+      <button type="button" className="secondary-button" disabled={busy || !token} onClick={() => void wait(created)}>{t("onboarding.hetzner.waitAgain")}</button>
       {phase === "failed" && <button type="button" className="secondary-button" disabled={busy} onClick={() => setPhase("kept")}>{t("onboarding.hetzner.keep")}</button>}
     </div>
   </div>;
 
-  if (phase === "install" && created && server && addresses) return <div className="hetzner-install">
+  if (phase === "install" && created && server && ready) return <div className="hetzner-install">
     <SetupFlow compact={compact} onStepChange={setSetupStep}
-      created={{ host: addresses.ipv4, host_key_sha256: server.host_key_sha256, private_key_path: created.private_key_path }}
+      created={{ host: ready.ipv4, host_key_sha256: ready.host_key_sha256, private_key_path: created.private_key_path }}
       onComplete={async (result) => { setToken(""); await onComplete(result); }} />
     {(setupStep === "details" || setupStep === "fingerprint") && <div className="setup-form">
-      <p className="settings-note">{t("onboarding.hetzner.created", { name: server.name, ipv4: addresses.ipv4 })}</p>
+      <p className="settings-note">{t("onboarding.hetzner.created", { name: server.name, ipv4: ready.ipv4 })}</p>
       {created.private_key_path && <p className="settings-note">{t("onboarding.hetzner.keyPath", { path: created.private_key_path })}</p>}
       {error && <InlineError message={error} />}
+      {!token && tokenField}
       {deleteButton}
     </div>}
   </div>;

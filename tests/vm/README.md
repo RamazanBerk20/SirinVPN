@@ -141,8 +141,10 @@ matching kernel tests. Guest overlays and keys are removed after handled failure
 image instead of Hetzner. It builds the `hetzner_cloud_init` installer example,
 boots one Debian 13 guest from the NoCloud seed with guest networking restricted,
 logs in as root through the installer's pinned SSH path with the generated key,
-checks that another pin is rejected, that `ssh-keyscan` sees only the pre-seeded
-ed25519 host key, and that password login is refused:
+checks that another pin is rejected, replaces the host key as SirinVPN does after
+creation, checks that the pre-seeded key is then refused, that `ssh-keyscan` sees
+only the new ed25519 host key (also after a reboot), and that password login is
+refused:
 
 ```sh
 SIRINVPN_DEBIAN13_IMAGE="$PWD/.cache/debian-13-genericcloud-amd64.qcow2" \
