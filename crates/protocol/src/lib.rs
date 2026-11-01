@@ -57,7 +57,7 @@ pub use management::{
     KeyRotationPrepareResponse, LeakTestObservation, MemberAccessUpdateRequest,
     MemberDevicesRevokeRequest, MemberSummary, MemberSuspensionUpdateRequest, MembershipSnapshot,
     OwnershipTransferRequest, PortForward, PortForwardCreateRequest, PortForwardProtocol,
-    RenameDeviceRequest, WireGuardDeviceCreateRequest,
+    RenameDeviceRequest, SpeedTestUpload, WireGuardDeviceCreateRequest,
 };
 
 use serde::{Deserialize, Serialize};
@@ -91,6 +91,10 @@ pub const LEAK_TEST_IPV4: Ipv4Addr = Ipv4Addr::new(192, 0, 2, 77);
 pub const LEAK_TEST_IPV6: Ipv6Addr = Ipv6Addr::new(0x2001, 0xdb8, 0, 0, 0, 0, 0, 0x77);
 /// The VPS resolver answers every name in this private-use zone with its tunnel address.
 pub const LEAK_TEST_DNS_ZONE: &str = "resolver-check.internal";
+/// Each direction of the speed test runs this long or this far, whichever comes first; the VPS
+/// cuts a transfer off a little later in time.
+pub const SPEED_TEST_SECONDS: u64 = 8;
+pub const SPEED_TEST_MAX_BYTES: u64 = 1 << 30;
 /// DNS name in the management certificate, so a leak-test address can carry the pinned TLS check.
 pub const MANAGEMENT_SERVER_NAME: &str = "sirinvpn.local";
 

@@ -78,6 +78,25 @@ download the blocklist and the client guest's package mirror ran at about
 routing and IPv6 state; the leak test has not yet run on an emulator against the
 isolated VPS.
 
+## Speed test (1 November 2026)
+
+The Owner or an Admin can run `sirinvpn speed-test <server>`, or the speed test
+under the desktop and Android diagnostics results. It measures download, upload and
+latency (idle, during download, during upload) through the tunnel to the user's
+own VPS over one connection, and says it is not internet speed. Members don't see
+it, and the VPS refuses them. The result is shown once and kept nowhere; the VPS
+logs nothing. See [architecture](architecture.md#speed-test) for the limits.
+
+Evidence: limiter, handler and cap tests (paused time); the real `serve_management`
+carrying a 2 MiB chunked upload past the router's 64 KiB body limit and a streamed
+download over pinned TLS; client rate, median, body and message tests; and
+`tests/network/run-speed-test.sh`, where the real client in a full-tunnel namespace
+measured 1.33 Gbit/s down and 1.67 Gbit/s up over kernel WireGuard (both stopped
+at 1 GiB before eight seconds), with latency 0.9 ms idle, 1.7 ms during download
+and 4.2 ms during upload, and an immediate second run was refused by the
+cooldown. The desktop component has UI tests; Android shares that UI and the
+runtime command passes Android-target clippy but has not run on an emulator.
+
 ## VPS observations
 
 Only a currently authorized device can request or receive the server report.

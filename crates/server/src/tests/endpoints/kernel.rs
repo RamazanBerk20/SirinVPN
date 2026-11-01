@@ -56,6 +56,7 @@ async fn kernel_published_source_blocks_data_but_retains_control_across_restart(
         live_metrics: Arc::new(Mutex::new(LiveMetricSampler::default())),
         transport_peers: AuthorizedPeers::default(),
         transport_activity: ActiveTransportRegistry::default(),
+        speed_test: Default::default(),
     };
     sync_peer_isolation(&state.configuration, &before)
         .await

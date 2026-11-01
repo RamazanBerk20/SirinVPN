@@ -363,4 +363,5 @@ pub(super) struct AppState {
     pub(super) live_metrics: Arc<Mutex<LiveMetricSampler>>,
     pub(super) transport_peers: AuthorizedPeers,
     pub(super) transport_activity: ActiveTransportRegistry,
+    pub(super) speed_test: Arc<Mutex<super::speed_test::Limiter>>,
 }

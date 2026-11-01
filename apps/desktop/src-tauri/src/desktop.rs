@@ -223,6 +223,7 @@ fn run_inner() -> tauri::Result<()> {
             server_status_stream::unsubscribe_server_status,
             server_configuration,
             run_diagnostics,
+            run_speed_test,
             membership,
             create_invitation,
             create_wireguard_device,

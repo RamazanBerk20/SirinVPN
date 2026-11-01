@@ -76,4 +76,4 @@ pub(super) async fn install(
 }
 
 #[cfg(test)]
-mod tests;
+pub(super) mod tests;

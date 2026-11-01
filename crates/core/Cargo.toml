@@ -15,6 +15,7 @@ ed25519-dalek.workspace = true
 flate2.workspace = true
 fs2.workspace = true
 hex.workspace = true
+http-body = "1"
 rand.workspace = true
 rcgen.workspace = true
 reqwest.workspace = true

@@ -4,7 +4,7 @@ use sirinvpn_core::LocalIdentity;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio_rustls::TlsConnector;
 
-fn state(directory: &Path, owner: &LocalIdentity) -> AppState {
+pub(crate) fn state(directory: &Path, owner: &LocalIdentity) -> AppState {
     let paths = ServerPaths::under(directory);
     initialize(
         &paths,
@@ -29,10 +29,11 @@ fn state(directory: &Path, owner: &LocalIdentity) -> AppState {
         live_metrics: Arc::new(Mutex::new(LiveMetricSampler::default())),
         transport_peers: AuthorizedPeers::default(),
         transport_activity: ActiveTransportRegistry::default(),
+        speed_test: Default::default(),
     }
 }
 
-fn caller(owner: &LocalIdentity) -> CallerIdentity {
+pub(crate) fn caller(owner: &LocalIdentity) -> CallerIdentity {
     CallerIdentity {
         certificate_fingerprint: certificate_fingerprint(&owner.public.management_certificate_pem)
             .unwrap(),
@@ -123,7 +124,7 @@ const REQUEST: &[u8] =
     b"GET /v1/leak-test HTTP/1.1\r\nHost: sirinvpn.local\r\nConnection: close\r\n\r\n";
 
 /// The client side of the pinned management TLS, as the core leak-test client configures it.
-fn client_tls(state: &AppState, owner: &LocalIdentity) -> Arc<ClientConfig> {
+pub(crate) fn client_tls(state: &AppState, owner: &LocalIdentity) -> Arc<ClientConfig> {
     let mut roots = RootCertStore::empty();
     for certificate in
         CertificateDer::pem_slice_iter(&fs::read(&state.paths.tls_certificate).unwrap())
@@ -226,17 +227,18 @@ async fn observe_from_namespace(
     observed_source(&response)
 }
 
-#[tokio::test]
-#[ignore = "requires disposable networking; use tests/network/run-leak-test.sh"]
-async fn kernel_leak_addresses_reach_the_vps_only_through_the_tunnel() {
+/// A real WireGuard link from the full-tunnel `member0` namespace to this in-process server,
+/// whose owner device is 10.77.0.2. Returns the server's and the owner's private IPv6 addresses.
+pub(crate) async fn tunnel_member0(
+    directory: &Path,
+    state: &mut AppState,
+    owner: &LocalIdentity,
+) -> (Ipv6Addr, Ipv6Addr) {
     assert_eq!(
         std::env::var("SIRINVPN_POLICY_ISOLATED").as_deref(),
         Ok("1")
     );
     assert!(Path::new("/.dockerenv").exists());
-    let directory = tempfile::tempdir().unwrap();
-    let owner = LocalIdentity::generate("Leak test owner").unwrap();
-    let mut state = state(directory.path(), &owner);
     state.configuration.ipv6_tunnel_enabled = true;
     let document = state.authorization.as_ref().unwrap().read().await.clone();
     let server_v6 =
@@ -245,7 +247,7 @@ async fn kernel_leak_addresses_reach_the_vps_only_through_the_tunnel() {
     let owner_v6 =
         sirinvpn_protocol::ipv6_tunnel_address(document.server_id, Ipv4Addr::new(10, 77, 0, 2))
             .unwrap();
-    let owner_key = directory.path().join("owner-wireguard.key");
+    let owner_key = directory.join("owner-wireguard.key");
     write_private(&owner_key, owner.secret.wireguard_private_key.as_bytes()).unwrap();
     let prepare = serde_json::json!({
         "server_private_key_path": state.paths.wireguard_private_key,
@@ -279,6 +281,16 @@ async fn kernel_leak_addresses_reach_the_vps_only_through_the_tunnel() {
     sync_wireguard_peers(&state.configuration, &document)
         .await
         .unwrap();
+    (server_v6, owner_v6)
+}
+
+#[tokio::test]
+#[ignore = "requires disposable networking; use tests/network/run-leak-test.sh"]
+async fn kernel_leak_addresses_reach_the_vps_only_through_the_tunnel() {
+    let directory = tempfile::tempdir().unwrap();
+    let owner = LocalIdentity::generate("Leak test owner").unwrap();
+    let mut state = state(directory.path(), &owner);
+    let (server_v6, owner_v6) = tunnel_member0(directory.path(), &mut state, &owner).await;
     install(&state.configuration, Some(server_v6))
         .await
         .unwrap();

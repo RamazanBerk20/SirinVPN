@@ -146,6 +146,22 @@
       "evidence": "Evidence: {{evidence}}"
     }
   },
+  "speedTest": {
+    "title": "Speed test to your VPS",
+    "description": "Measures download, upload and latency through the VPN to your own VPS over one connection, so it isn’t your internet speed. It takes about 20 seconds and briefly slows the VPN for everyone. The result stays on this device.",
+    "run": "Run speed test",
+    "again": "Run again",
+    "running": "Measuring the tunnel to your VPS…",
+    "download": "Download",
+    "upload": "Upload",
+    "idleLatency": "Latency, idle",
+    "downloadLatency": "Latency during download",
+    "uploadLatency": "Latency during upload",
+    "rate": "{{value}} Mbit/s",
+    "latency": "{{value}} ms",
+    "notMeasured": "Not measured",
+    "failed": "The speed test didn’t finish. Check that this device is connected, then try again."
+  },
   "workspace": {
     "metric": {
       "needsUpdate": "Update server",

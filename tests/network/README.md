@@ -13,6 +13,10 @@ WireGuard link: from a full-tunnel member namespace, pinned requests to the IPv4
 and IPv6 leak-test addresses must reach the in-process management server and
 report the member's tunnel addresses.
 
+`sh tests/network/run-speed-test.sh` runs the real speed-test client from that
+namespace over the same link: both directions must move data, latency must be
+sampled under load, and an immediate second run must be refused by the cooldown.
+
 Run `tests/network/run-policy-kernel.sh` from a Linux development host with
 Docker, Python 3, and the workspace Cargo dependencies already fetched
 (`cargo fetch --locked`). The script builds the Debian test image when needed.

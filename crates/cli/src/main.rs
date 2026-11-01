@@ -234,5 +234,6 @@ async fn run() -> Result<()> {
         Commands::Disconnect => disconnect(cli.json),
         Commands::Status => status(&paths, cli.json).await,
         Commands::Diagnose(selector) => diagnose(&paths, &selector.server, cli.json).await,
+        Commands::SpeedTest(selector) => speed_test(&paths, &selector.server, cli.json).await,
     }
 }

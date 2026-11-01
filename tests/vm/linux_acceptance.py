@@ -523,6 +523,20 @@ class Acceptance:
         updates["os_security_updates_with_timer"] = "pass"
         return {"leak_test": levels, "os_updates": updates, "physical_leak_counters": self.counter()}
 
+    def speed_test(self):
+        result = self.cli("speed-test", self.server_id, timeout=90)
+        rates = (result["download_bits_per_second"], result["upload_bits_per_second"])
+        assert min(rates) > 0, result
+        assert None not in (result["idle_latency_micros"], result["download_latency_micros"],
+                            result["upload_latency_micros"]), result
+        assert self.counter() == {"dns": 0, "ipv6": 0}, self.counter()
+        repeat = self.cli("speed-test", self.server_id, timeout=90, check=False)
+        assert repeat.returncode and b"wait " in repeat.stderr, repeat.stderr[-400:]
+        # The VPS logs nothing about either run.
+        journal = self.server.run(["journalctl", "-u", "sirinvpn-server", "--since", "-3min", "-o", "cat"]).stdout.decode()
+        assert "speed" not in journal.lower(), journal[-400:]
+        return {"speed_test": result, "repeat_refused": True, "physical_leak_counters": self.counter()}
+
     def clean_disconnect(self):
         local = self.cli("disconnect")
         assert local["state"] == "disconnected"
@@ -724,6 +738,7 @@ class Acceptance:
                             self.step("Reach public HTTPS through the tunnel", self.public_internet)
                             self.step("Resolver failure retains the tunnel and prevents DNS fallback", self.dns_failure)
                             self.step("On-demand leak test passes over the tunnel", self.leak_test)
+                            self.step("Owner runs the tunnel-to-VPS speed test through the CLI", self.speed_test)
                             self.step("Owner turns VPS DNS blocking on and off through the CLI", self.dns_blocking)
                             self.step("Owner shares a LAN behind this device through the CLI", self.subnet_routes)
                         if transport == "tls":

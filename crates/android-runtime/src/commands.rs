@@ -378,6 +378,7 @@ pub async fn dispatch(
             report.checks.extend(leaks);
             encode(report)
         }
+        "run_speed_test" => encode(sirinvpn_core::diagnostics::speed_test(&p, &secret).await?),
         "dns_blocklist_settings" => encode(client.dns_blocklist().await?),
         "update_dns_blocklist" => encode(
             client

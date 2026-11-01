@@ -9,8 +9,8 @@ use sirinvpn_protocol::{
     KeyRotationId, KeyRotationPrepareRequest, KeyRotationPrepareResponse, LeakTestObservation,
     MANAGEMENT_SERVER_NAME, MemberAccessUpdateRequest, MemberDevicesRevokeRequest, MemberId,
     MemberSuspensionUpdateRequest, MembershipSnapshot, OwnershipTransferRequest,
-    PortForwardCreateRequest, PortForwardProtocol, RenameDeviceRequest, ServerProfile,
-    ServerStatus,
+    PortForwardCreateRequest, PortForwardProtocol, RenameDeviceRequest, SPEED_TEST_SECONDS,
+    ServerProfile, ServerStatus, SpeedTestUpload,
 };
 use std::{
     net::{IpAddr, SocketAddr},
@@ -38,6 +38,8 @@ pub enum ManagementError {
     ProtocolMismatch,
     #[error("this server does not support live status streaming")]
     StatusStreamingUnsupported,
+    #[error("this VPS does not support the speed test yet")]
+    SpeedTestUnsupported,
     #[error("the server rejected the request ({code:?}): {message}")]
     RequestRejected { code: ErrorCode, message: String },
 }
@@ -183,6 +185,18 @@ impl ManagementClient {
         )
     }
 
+    /// Transfers outlast the usual request timeout; each direction still stops on its own clock.
+    pub(crate) fn for_speed_test(
+        profile: &ServerProfile,
+        secret: &SecretIdentity,
+    ) -> Result<Self, ManagementError> {
+        Self::with_timeout(
+            profile,
+            secret,
+            Some(Duration::from_secs(SPEED_TEST_SECONDS + 12)),
+        )
+    }
+
     fn with_options(
         profile: &ServerProfile,
         secret: &SecretIdentity,
@@ -251,6 +265,48 @@ impl ManagementClient {
         &self,
     ) -> Result<LeakTestObservation, ManagementError> {
         self.get("/v1/leak-test").await
+    }
+
+    pub(crate) async fn speed_test_latency(&self) -> Result<(), ManagementError> {
+        let response = self
+            .client
+            .get(format!("{}/v1/speed-test/latency", self.base_url))
+            .send()
+            .await
+            .map_err(|_| ManagementError::ConnectionFailed)?;
+        if response.status() == reqwest::StatusCode::NOT_FOUND {
+            return Err(ManagementError::SpeedTestUnsupported);
+        }
+        self.decode(response).await
+    }
+
+    /// The caller reads the generated body itself; it is counted, never kept.
+    pub(crate) async fn speed_test_download(&self) -> Result<reqwest::Response, ManagementError> {
+        let response = self
+            .client
+            .get(format!("{}/v1/speed-test/download", self.base_url))
+            .send()
+            .await
+            .map_err(|_| ManagementError::ConnectionFailed)?;
+        if response.status().is_success() {
+            return Ok(response);
+        }
+        self.decode::<()>(response).await?;
+        Err(ManagementError::ConnectionFailed)
+    }
+
+    pub(crate) async fn speed_test_upload(
+        &self,
+        body: reqwest::Body,
+    ) -> Result<SpeedTestUpload, ManagementError> {
+        let response = self
+            .client
+            .post(format!("{}/v1/speed-test/upload", self.base_url))
+            .body(body)
+            .send()
+            .await
+            .map_err(|_| ManagementError::ConnectionFailed)?;
+        self.decode(response).await
     }
 
     pub async fn measurement_lease(
