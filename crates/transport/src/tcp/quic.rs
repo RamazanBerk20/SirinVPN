@@ -11,6 +11,7 @@ use quinn::{
         QuicClientConfig as RustlsClientCrypto, QuicServerConfig as RustlsServerCrypto,
     },
 };
+use std::collections::VecDeque;
 
 const PROLOGUE: &[u8] = b"SirinVPN QUIC transport v1";
 const ALPN: &[u8] = b"h3";
@@ -19,6 +20,17 @@ const ALPN: &[u8] = b"h3";
 const INITIAL_MTU: u16 = 1_352;
 const IDLE_TIMEOUT_MILLISECONDS: u32 = 60_000;
 const MAX_STREAMS: u32 = 8;
+/// HTTP/3 peers open a control stream and two QPACK streams.
+const MAX_UNIDIRECTIONAL_STREAMS: u32 = 3;
+/// Stream data is only the Noise exchange and probes' requests, so a peer that never
+/// authenticates can make the server buffer at most this much. DATAGRAM frames, which carry
+/// the tunnel, are not flow controlled.
+const STREAM_WINDOW: u32 = 4_096;
+const CONNECTION_WINDOW: u32 = 16_384;
+/// About a hundred full tunnel packets; the relay drains it continuously once authenticated.
+const SERVER_DATAGRAM_BUFFER: usize = 131_072;
+/// Time for a GOAWAY to leave before a connection that never authenticated is closed.
+const CLOSE_DRAIN: Duration = Duration::from_millis(500);
 const H3_NO_ERROR: u32 = 0x100;
 /// An HTTP/3 control stream (type 0) with an empty SETTINGS frame.
 const CONTROL_STREAM: &[u8] = &[0x00, 0x04, 0x00];
@@ -206,7 +218,9 @@ fn transport_configuration() -> TransportConfig {
         .initial_mtu(INITIAL_MTU)
         .max_idle_timeout(Some(VarInt::from_u32(IDLE_TIMEOUT_MILLISECONDS).into()))
         .max_concurrent_bidi_streams(VarInt::from_u32(MAX_STREAMS))
-        .max_concurrent_uni_streams(VarInt::from_u32(MAX_STREAMS));
+        .max_concurrent_uni_streams(VarInt::from_u32(MAX_UNIDIRECTIONAL_STREAMS))
+        .stream_receive_window(VarInt::from_u32(STREAM_WINDOW))
+        .receive_window(VarInt::from_u32(CONNECTION_WINDOW));
     transport
 }
 
@@ -278,7 +292,9 @@ pub async fn run_quic_server_relay(
     let crypto = RustlsServerCrypto::try_from(Arc::new(tls))
         .map_err(|_| RelayError::InvalidConfiguration)?;
     let mut server = QuicServerConfig::with_crypto(Arc::new(crypto));
-    server.transport_config(Arc::new(transport_configuration()));
+    let mut transport = transport_configuration();
+    transport.datagram_receive_buffer_size(Some(SERVER_DATAGRAM_BUFFER));
+    server.transport_config(Arc::new(transport));
     let socket = Socket::new(
         Domain::for_address(config.listen),
         Type::DGRAM,
@@ -297,7 +313,7 @@ pub async fn run_quic_server_relay(
     let replay_cache = Arc::new(Mutex::new(HandshakeReplayCache::default()));
     let mut probe_limiter = ProbeLimiter::default();
     let global_connections = Arc::new(Semaphore::new(MAX_SERVER_CONNECTIONS));
-    let client_connections = ClientConnectionRegistry::default();
+    let devices = DeviceConnections::default();
     let mut activity_cleanup = tokio::time::interval(Duration::from_secs(30));
     activity_cleanup.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
 
@@ -312,6 +328,13 @@ pub async fn run_quic_server_relay(
         let Some(incoming) = incoming else {
             return Err(RelayError::InvalidConfiguration);
         };
+        // A spoofed source must prove its address before it is charged to anyone's budget.
+        if !incoming.remote_address_validated() {
+            if let Err(error) = incoming.retry() {
+                error.into_incoming().ignore();
+            }
+            continue;
+        }
         // Over budget looks like loss, not like a server that refuses.
         if !probe_limiter.allow(incoming.remote_address().ip()) {
             incoming.ignore();
@@ -325,7 +348,7 @@ pub async fn run_quic_server_relay(
         let connection_authorized = authorized.clone();
         let connection_activity = activity.clone();
         let connection_replay = replay_cache.clone();
-        let connection_clients = client_connections.clone();
+        let connection_devices = devices.clone();
         tokio::spawn(async move {
             let _global_permit = global_permit;
             let _ = serve_connection(
@@ -334,10 +357,44 @@ pub async fn run_quic_server_relay(
                 connection_authorized,
                 connection_activity,
                 connection_replay,
-                connection_clients,
+                connection_devices,
             )
             .await;
         });
+    }
+}
+
+/// A device's newest connections win. A carrier that stopped without closing, such as a
+/// killed process or a lost network, must not hold one of its slots until the idle timeout.
+#[derive(Clone, Default)]
+struct DeviceConnections(Arc<Mutex<HashMap<[u8; 32], VecDeque<Connection>>>>);
+
+impl DeviceConnections {
+    fn admit(&self, device: [u8; 32], connection: &Connection) {
+        let mut devices = self
+            .0
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        let current = devices.entry(device).or_default();
+        current.push_back(connection.clone());
+        while current.len() > MAX_CONNECTIONS_PER_CLIENT {
+            if let Some(oldest) = current.pop_front() {
+                oldest.close(VarInt::from_u32(H3_NO_ERROR), b"");
+            }
+        }
+    }
+
+    fn release(&self, device: [u8; 32], connection: &Connection) {
+        let mut devices = self
+            .0
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        if let Some(current) = devices.get_mut(&device) {
+            current.retain(|held| held.stable_id() != connection.stable_id());
+            if current.is_empty() {
+                devices.remove(&device);
+            }
+        }
     }
 }
 
@@ -347,7 +404,7 @@ async fn serve_connection(
     authorized: AuthorizedPeers,
     activity: ActiveTransportRegistry,
     replay_cache: Arc<Mutex<HandshakeReplayCache>>,
-    client_connections: ClientConnectionRegistry,
+    devices: DeviceConnections,
 ) -> Result<(), RelayError> {
     let connection = timeout(HANDSHAKE_TIMEOUT, async {
         incoming
@@ -358,59 +415,96 @@ async fn serve_connection(
     })
     .await
     .map_err(|_| RelayError::HandshakeFailed)??;
-    let accepted = timeout(HANDSHAKE_TIMEOUT, async {
-        // Every HTTP/3 server opens its control stream first, and it must stay open.
-        let mut control = connection
-            .open_uni()
-            .await
-            .map_err(|_| RelayError::HandshakeFailed)?;
-        control
-            .write_all(CONTROL_STREAM)
-            .await
-            .map_err(|_| RelayError::HandshakeFailed)?;
-        let (client_static, response, send) =
-            authenticate(&connection, &config, &authorized, &replay_cache).await?;
-        Ok::<_, RelayError>((control, client_static, response, send))
+    let close = |connection: &Connection| connection.close(VarInt::from_u32(H3_NO_ERROR), b"");
+    // Every HTTP/3 server opens its control stream first, and it must stay open.
+    let Ok(Ok(mut control)) = timeout(HANDSHAKE_TIMEOUT, async {
+        let mut control = connection.open_uni().await?;
+        control.write_all(CONTROL_STREAM).await?;
+        Ok::<_, quinn::WriteError>(control)
     })
+    .await
+    else {
+        close(&connection);
+        return Ok(());
+    };
+    let mut next_request = 0;
+    let accepted = timeout(
+        HANDSHAKE_TIMEOUT,
+        authenticate(
+            &connection,
+            &config,
+            &authorized,
+            &replay_cache,
+            &mut next_request,
+        ),
+    )
     .await;
-    let Ok(Ok((_control, client_static, response, mut send))) = accepted else {
-        connection.close(VarInt::from_u32(H3_NO_ERROR), b"");
+    let Ok(Ok((client_static, response, mut send))) = accepted else {
+        // Like a web server ending an idle connection: GOAWAY first, then close.
+        let _ = timeout(CLOSE_DRAIN, async {
+            let _ = control.write_all(&goaway(next_request)).await;
+            connection.closed().await
+        })
+        .await;
+        close(&connection);
         return Ok(());
     };
-    let Some(_client_permit) = client_connections.acquire(client_static) else {
-        connection.close(VarInt::from_u32(H3_NO_ERROR), b"");
-        return Ok(());
-    };
-    write_frame(&mut send, &response).await?;
-    let _ = send.finish();
-    let result =
-        relay_server_datagrams(&connection, &config, &authorized, &activity, client_static).await;
-    connection.close(VarInt::from_u32(H3_NO_ERROR), b"");
+    devices.admit(client_static, &connection);
+    let result = async {
+        write_frame(&mut send, &response).await?;
+        let _ = send.finish();
+        relay_server_datagrams(&connection, &config, &authorized, &activity, client_static).await
+    }
+    .await;
+    devices.release(client_static, &connection);
+    close(&connection);
     result
 }
 
-/// Requests that are not an authorized Noise exchange get the answer a web server gives an
-/// unknown path, on the same connection, until the handshake deadline closes it.
+/// One Noise attempt per connection, as on TCP, so a connection costs a probe at most one
+/// key exchange. That attempt, when it fails, and every other request get the answer a web
+/// server gives an unknown path, until the handshake deadline.
 async fn authenticate(
     connection: &Connection,
     config: &TcpServerRelayConfig,
     authorized: &AuthorizedPeers,
     replay_cache: &Mutex<HandshakeReplayCache>,
+    next_request: &mut u64,
 ) -> Result<([u8; 32], Vec<u8>, SendStream), RelayError> {
+    let mut attempted = false;
     loop {
         let (mut send, mut recv): (SendStream, RecvStream) = connection
             .accept_bi()
             .await
             .map_err(|_| RelayError::HandshakeFailed)?;
-        if let Ok(request) = read_frame(&mut recv, HANDSHAKE_MAX_LENGTH).await
-            && let Some((_, client_static, response)) =
-                accept_handshake_message(&request, config, authorized, replay_cache, PROLOGUE)?
-        {
+        *next_request = u64::from(send.id()) + 4;
+        let accepted = if std::mem::replace(&mut attempted, true) {
+            None
+        } else if let Ok(request) = read_frame(&mut recv, HANDSHAKE_MAX_LENGTH).await {
+            accept_handshake_message(&request, config, authorized, replay_cache, PROLOGUE)?
+        } else {
+            None
+        };
+        // An answered request's remaining body may go unread (RFC 9114, section 4.1).
+        let _ = recv.stop(VarInt::from_u32(H3_NO_ERROR));
+        if let Some((_, client_static, response)) = accepted {
             return Ok((client_static, response, send));
         }
         let _ = send.write_all(NOT_FOUND).await;
         let _ = send.finish();
     }
+}
+
+/// A GOAWAY frame naming the first request stream this connection will not process.
+fn goaway(stream: u64) -> Vec<u8> {
+    let stream = match stream {
+        0..=63 => vec![stream as u8],
+        64..=16_383 => (0x4000 | stream as u16).to_be_bytes().to_vec(),
+        _ => (0x8000_0000 | stream.min(0x3fff_ffff) as u32)
+            .to_be_bytes()
+            .to_vec(),
+    };
+    [vec![0x07, stream.len() as u8], stream].concat()
 }
 
 async fn relay_server_datagrams(
@@ -450,6 +544,14 @@ async fn relay_server_datagrams(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn goaway_names_the_next_request_stream_as_a_quic_varint() {
+        assert_eq!(goaway(0), [0x07, 0x01, 0x00]);
+        assert_eq!(goaway(4), [0x07, 0x01, 0x04]);
+        assert_eq!(goaway(64), [0x07, 0x02, 0x40, 0x40]);
+        assert_eq!(goaway(16_384), [0x07, 0x04, 0x80, 0x00, 0x40, 0x00]);
+    }
 
     #[test]
     fn padding_is_bounded_by_the_length_prefix() {

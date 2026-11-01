@@ -171,11 +171,8 @@ async fn quic_relay_rejects_an_unknown_device_and_a_wrong_pin() {
     server.task.abort();
 }
 
-/// A probe that completes QUIC with any certificate sees an HTTP/3 server: a control stream
-/// with SETTINGS and a 404 for its request, and nothing reaches WireGuard.
-#[tokio::test]
-async fn quic_probe_sees_an_http3_server_that_answers_404() {
-    let server = quic_server().await;
+/// A QUIC client that accepts any certificate, as an active probe would.
+async fn probe(server: &QuicServer) -> (quinn::Endpoint, quinn::Connection) {
     let mut tls = tls::noise_discovery_tls_configuration().unwrap();
     tls.alpn_protocols = vec![b"h3".to_vec()];
     let crypto = Arc::new(RustlsClientCrypto::try_from(tls).unwrap());
@@ -188,6 +185,26 @@ async fn quic_probe_sees_an_http3_server_that_answers_404() {
     .await
     .unwrap()
     .unwrap();
+    (endpoint, connection)
+}
+
+async fn request(connection: &quinn::Connection, body: &[u8]) -> Vec<u8> {
+    let (mut send, mut recv) = connection.open_bi().await.unwrap();
+    send.write_all(body).await.unwrap();
+    send.finish().unwrap();
+    timeout(Duration::from_secs(2), recv.read_to_end(64))
+        .await
+        .unwrap()
+        .unwrap()
+}
+
+/// A probe that completes QUIC with any certificate sees an HTTP/3 server: a control stream
+/// with SETTINGS, a 404 for its request, then GOAWAY and an H3_NO_ERROR close. Nothing
+/// reaches WireGuard.
+#[tokio::test]
+async fn quic_probe_sees_an_http3_server_that_answers_404() {
+    let server = quic_server().await;
+    let (_endpoint, connection) = probe(&server).await;
     assert_eq!(
         connection
             .handshake_data()
@@ -203,16 +220,24 @@ async fn quic_probe_sees_an_http3_server_that_answers_404() {
     assert_eq!(settings, [0x00, 0x04, 0x00]);
 
     // HEADERS for a GET of / over HTTPS from QPACK static entries, then FIN.
-    let (mut send, mut recv) = connection.open_bi().await.unwrap();
-    send.write_all(&[0x01, 0x06, 0x00, 0x00, 0xd1, 0xd7, 0xc1, 0xc0])
-        .await
-        .unwrap();
-    send.finish().unwrap();
-    let response = timeout(Duration::from_secs(2), recv.read_to_end(64))
+    let response = request(
+        &connection,
+        &[0x01, 0x06, 0x00, 0x00, 0xd1, 0xd7, 0xc1, 0xc0],
+    )
+    .await;
+    assert_eq!(response, [0x01, 0x03, 0x00, 0x00, 0xdb]);
+
+    // The connection ends like an idle web server's: GOAWAY after stream 0, then close.
+    let mut goaway = [0_u8; 3];
+    timeout(Duration::from_secs(5), control.read_exact(&mut goaway))
         .await
         .unwrap()
         .unwrap();
-    assert_eq!(response, [0x01, 0x03, 0x00, 0x00, 0xdb]);
+    assert_eq!(goaway, [0x07, 0x01, 0x04]);
+    assert!(matches!(
+        timeout(Duration::from_secs(2), connection.closed()).await.unwrap(),
+        quinn::ConnectionError::ApplicationClosed(close) if close.error_code == quinn::VarInt::from_u32(0x100)
+    ));
 
     let mut buffer = [0_u8; 64];
     assert!(
@@ -220,5 +245,72 @@ async fn quic_probe_sees_an_http3_server_that_answers_404() {
             .await
             .is_err()
     );
+    server.task.abort();
+}
+
+/// Each connection gets one Noise attempt, so a probe cannot buy key exchanges with streams:
+/// a valid exchange after a failed one is answered like any other request.
+#[tokio::test]
+async fn quic_allows_one_noise_attempt_per_connection() {
+    let server = quic_server().await;
+    let (_endpoint, connection) = probe(&server).await;
+    assert_eq!(
+        request(&connection, b"junk").await,
+        [0x01, 0x03, 0x00, 0x00, 0xdb]
+    );
+    let client_private = <[u8; 32]>::try_from(server.client.private.as_slice()).unwrap();
+    let server_public = <[u8; 32]>::try_from(server.server.public.as_slice()).unwrap();
+    let mut handshake = initiator_handshake(
+        &client_private,
+        &server_public,
+        b"SirinVPN QUIC transport v1",
+    )
+    .unwrap();
+    let mut message = [0_u8; HANDSHAKE_MAX_LENGTH];
+    let length = handshake
+        .write_message(&client_handshake_payload(), &mut message)
+        .unwrap();
+    let mut frame = (length as u16).to_be_bytes().to_vec();
+    frame.extend_from_slice(&message[..length]);
+    assert_eq!(
+        request(&connection, &frame).await,
+        [0x01, 0x03, 0x00, 0x00, 0xdb]
+    );
+    server.task.abort();
+}
+
+/// A device's newest connection wins: a carrier that stopped without closing cannot keep the
+/// device out until the idle timeout.
+#[tokio::test]
+async fn a_new_quic_connection_from_a_device_replaces_its_oldest() {
+    let server = quic_server().await;
+    let mut relays = Vec::new();
+    for _ in 0..=MAX_CONNECTIONS_PER_CLIENT {
+        let ready = Arc::new(AtomicBool::new(false));
+        let ready_clone = ready.clone();
+        relays.push(tokio::spawn(run_quic_client_relay(
+            client_config(&server, &server.client.private),
+            move || ready_clone.store(true, Ordering::Release),
+        )));
+        timeout(Duration::from_secs(5), async {
+            while !ready.load(Ordering::Acquire) {
+                tokio::time::sleep(Duration::from_millis(10)).await;
+            }
+        })
+        .await
+        .unwrap();
+    }
+    // The first relay's connection was closed for the newest one; the rest keep running.
+    assert!(
+        timeout(Duration::from_secs(2), &mut relays[0])
+            .await
+            .unwrap()
+            .unwrap()
+            .is_err()
+    );
+    for relay in &relays[1..] {
+        assert!(!relay.is_finished());
+        relay.abort();
+    }
     server.task.abort();
 }
