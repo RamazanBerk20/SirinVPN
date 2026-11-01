@@ -50,6 +50,33 @@ pub(super) async fn diagnose(paths: &ClientPaths, selector: &str, json: bool) ->
     print_diagnostics(&report, json)
 }
 
+pub(super) async fn speed_test(paths: &ClientPaths, selector: &str, json: bool) -> Result<()> {
+    let profile = resolve_profile(&paths.profile_store(), selector)?;
+    let secret = paths.secret_store().get(&profile.identity_reference)?;
+    if !json {
+        eprintln!("Measuring the tunnel to this VPS for about 20 seconds...");
+    }
+    let result = sirinvpn_core::diagnostics::speed_test(&profile, &secret).await?;
+    print_value(&result, json, &speed_test_text(&result))
+}
+
+fn speed_test_text(result: &sirinvpn_core::diagnostics::SpeedTestResult) -> String {
+    let rate = |bits: u64| format!("{:.1} Mbit/s", bits as f64 / 1e6);
+    let latency = |micros: Option<u64>| {
+        micros.map_or("not measured".to_owned(), |micros| {
+            format!("{:.1} ms", micros as f64 / 1000.0)
+        })
+    };
+    format!(
+        "Tunnel to this VPS, one connection (not internet speed)\nDownload  {}\nUpload    {}\nLatency   idle {}, during download {}, during upload {}",
+        rate(result.download_bits_per_second),
+        rate(result.upload_bits_per_second),
+        latency(result.idle_latency_micros),
+        latency(result.download_latency_micros),
+        latency(result.upload_latency_micros),
+    )
+}
+
 pub(super) fn print_diagnostics(report: &DiagnosticReport, json: bool) -> Result<()> {
     if json {
         println!("{}", serde_json::to_string_pretty(report)?);

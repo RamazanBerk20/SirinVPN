@@ -165,6 +165,7 @@ async fn publishing_the_active_targets_own_checkpoint_never_freezes_its_authorit
         live_metrics: Arc::new(Mutex::new(LiveMetricSampler::default())),
         transport_peers: AuthorizedPeers::default(),
         transport_activity: ActiveTransportRegistry::default(),
+        speed_test: Default::default(),
     };
     let (result, received) = tokio::sync::oneshot::channel();
     endpoint_transition::publish_from_transport(

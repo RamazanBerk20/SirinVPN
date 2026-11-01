@@ -313,6 +313,34 @@ never excludes itself, and selected-application routing adds it. Its sockets
 without `protect()` therefore follow the VPN routes, and its system lookups use the
 VPN's DNS server, as the app-UID DNS and routing emulator tests show.
 
+## Speed test
+
+The Owner or an Admin can measure throughput through the tunnel to their own VPS
+from the CLI (`sirinvpn speed-test`), the desktop or Android diagnostics dialog.
+It is labeled as tunnel-to-VPS throughput over one TCP connection, not internet
+speed, and no third-party server is involved.
+
+- **Client.** After five idle timings of `GET /v1/speed-test/latency`, it reads
+  `GET /v1/speed-test/download` for eight seconds, then streams generated zeros to
+  `POST /v1/speed-test/upload` for eight seconds; each direction also stops at
+  1 GiB, so a faster link finishes sooner. Rates start once the transfer
+  connection is ready; the upload rate uses the byte count the VPS returns. A
+  second management connection times small requests every 250 ms during each
+  transfer, so the medians show latency under load. The result is returned to the
+  caller and kept nowhere.
+- **VPS.** All three routes sit on the private, pinned-mTLS management listener
+  and require a manager. One transfer runs at a time on the VPS; a device may
+  replace its own, because its download connection can outlive the switch to
+  upload. A stalled client holds the slot for at most 15 seconds. Each transfer
+  ends after 15 seconds or 1 GiB, and each device waits 60 seconds between
+  transfers in the same direction. Upload bytes are counted and discarded; the
+  router's 64 KiB limit covers only parsed bodies. Nothing is logged: the daemon
+  keeps the running transfer and each device's last start time in memory for one
+  cooldown, and a restart clears them.
+- **Why managers only.** A test fills the VPS link for everyone for up to about
+  20 seconds and runs in the management daemon. Owner and Admins already manage
+  the server; a Member setting would need new authorization state for little gain.
+
 ## Management plane
 
 The management client uses only the enrolled server certificate as its trust

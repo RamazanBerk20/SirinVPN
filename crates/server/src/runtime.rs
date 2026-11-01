@@ -48,6 +48,7 @@ pub async fn serve(paths: &ServerPaths) -> Result<()> {
         live_metrics: Arc::new(Mutex::new(LiveMetricSampler::default())),
         transport_peers: transport_peers.clone(),
         transport_activity: transport_activity.clone(),
+        speed_test: Default::default(),
     };
     if let Some(authorization) = &state.authorization {
         let mut current = authorization.write().await;

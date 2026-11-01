@@ -37,6 +37,7 @@ mod leak_test;
 mod measurement;
 mod metrics;
 mod service_metrics;
+mod speed_test;
 mod status_stream;
 pub use metrics::collect_status;
 use metrics::*;

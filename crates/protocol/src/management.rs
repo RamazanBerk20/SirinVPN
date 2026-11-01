@@ -92,6 +92,13 @@ pub struct LeakTestObservation {
     pub source_address: IpAddr,
 }
 
+/// How many upload bytes the VPS counted before the request body ended.
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SpeedTestUpload {
+    pub received_bytes: u64,
+}
+
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub struct EndpointTransitionCreateRequest {
     pub server_id: ServerId,

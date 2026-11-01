@@ -239,6 +239,7 @@ export const api = {
     invoke<CurrentConfiguration>("server_configuration", { serverId }),
   diagnostics: (serverId: string) =>
     invoke<DiagnosticReport>("run_diagnostics", { serverId }),
+  speedTest: (serverId: string) => invoke<import("./types").SpeedTestResult>("run_speed_test", { serverId }),
   membership: (serverId: string) =>
     invoke<MembershipSnapshot>("membership", { serverId }),
   dnsBlocklistSettings: (serverId: string) => invoke<import("./types").DnsBlocklistSettings>("dns_blocklist_settings", { serverId }),

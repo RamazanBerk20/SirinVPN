@@ -10,6 +10,32 @@ pub(super) async fn run_diagnostics(
     crate::diagnostics::run(app, server_id).await
 }
 
+/// Tunnel-to-VPS throughput; the result is returned to this window and kept nowhere.
+#[tauri::command]
+pub(super) async fn run_speed_test(
+    app: tauri::AppHandle,
+    server_id: String,
+) -> Result<sirinvpn_core::diagnostics::SpeedTestResult, String> {
+    let paths = app.state::<crate::AppState>().paths.clone();
+    let (profile, secret) = tauri::async_runtime::spawn_blocking(move || {
+        let profile = crate::identity::find_profile(&paths, &server_id)?;
+        let status = crate::helper::invoke_helper("status", None).map_err(safe_error)?;
+        if status.server_id != Some(profile.id) || status.state != ConnectionState::Connected {
+            return Err("Connect to this server before running the speed test.".to_owned());
+        }
+        let secret = paths
+            .secret_store()
+            .get(&profile.identity_reference)
+            .map_err(safe_error)?;
+        Ok((profile, secret))
+    })
+    .await
+    .map_err(|_| "The speed test was interrupted. Try again.".to_owned())??;
+    sirinvpn_core::diagnostics::speed_test(&profile, &secret)
+        .await
+        .map_err(safe_error)
+}
+
 #[tauri::command]
 pub(super) async fn membership(
     app: tauri::AppHandle,

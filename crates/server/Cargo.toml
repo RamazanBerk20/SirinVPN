@@ -39,3 +39,5 @@ x509-parser.workspace = true
 
 [dev-dependencies]
 sirinvpn-core = { path = "../core" }
+# Paused time for the speed-test transfer limits.
+tokio = { workspace = true, features = ["test-util"] }

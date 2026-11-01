@@ -1,5 +1,6 @@
 import { DialogContent } from "../../components/DialogContent";
 import { DiagnosticResults } from "../../components/DiagnosticResults";
+import { SpeedTest } from "../../components/SpeedTest";
 import { MaintenanceReview } from "./MaintenanceReview";
 import * as Dialog from "@radix-ui/react-dialog";
 import { ArrowClockwise } from "@phosphor-icons/react";
@@ -63,7 +64,10 @@ export function WorkspaceDialogs({
                 <ArrowClockwise className="spin" /> {t("maintenance.diagnostics.checking")}
               </div>
             ) : (
-              <DiagnosticResults report={diagnostics} />
+              <>
+                <DiagnosticResults report={diagnostics} />
+                {model.canManageAccess && <SpeedTest serverId={profile.id} />}
+              </>
             )}
           </DialogContent>
         </Dialog.Portal>

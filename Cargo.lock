@@ -4524,6 +4524,7 @@ dependencies = [
  "fs2",
  "hex",
  "http",
+ "http-body",
  "keyring",
  "qrcode",
  "rand 0.8.7",

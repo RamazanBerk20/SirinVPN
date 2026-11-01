@@ -267,6 +267,15 @@ export interface DiagnosticReport {
   checks: DiagnosticCheck[];
 }
 
+/** Measured through the tunnel to the user's own VPS; never stored or sent anywhere. */
+export interface SpeedTestResult {
+  download_bits_per_second: number;
+  upload_bits_per_second: number;
+  idle_latency_micros: number | null;
+  download_latency_micros: number | null;
+  upload_latency_micros: number | null;
+}
+
 export interface ProvisionInput {
   name: string;
   host: string;

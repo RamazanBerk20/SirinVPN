@@ -83,6 +83,7 @@ fn fixture() -> (tempfile::TempDir, AppState) {
         live_metrics: Arc::new(Mutex::new(LiveMetricSampler::default())),
         transport_peers,
         transport_activity: ActiveTransportRegistry::default(),
+        speed_test: Default::default(),
     };
     (directory, state)
 }

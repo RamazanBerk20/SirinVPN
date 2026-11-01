@@ -31,6 +31,7 @@ async fn stream_delivers_repeated_authorized_samples_and_closes_on_revocation() 
         live_metrics: Arc::new(Mutex::new(LiveMetricSampler::default())),
         transport_peers: AuthorizedPeers::default(),
         transport_activity: ActiveTransportRegistry::default(),
+        speed_test: Default::default(),
     };
     let caller = CallerIdentity {
         certificate_fingerprint: certificate_fingerprint(&owner.public.management_certificate_pem)

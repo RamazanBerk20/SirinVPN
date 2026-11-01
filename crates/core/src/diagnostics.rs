@@ -9,10 +9,12 @@ use std::error::Error;
 mod dns;
 mod leak;
 mod remote;
+mod speed;
 pub use dns::{PrivateDnsOutcome, private_dns_check, probe_private_dns};
 /// For a platform that runs only the remote checks itself (Android).
 pub use leak::checks as leak_checks;
 pub(crate) use remote::sanitize;
+pub use speed::{SpeedTestFailure, SpeedTestResult, speed_test};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Protection {
@@ -296,7 +298,9 @@ pub fn management_failure(error: &ManagementError) -> DiagnosticCheck {
         ManagementError::DiagnosticTimedOut => {
             "The private management request timed out. Check the local tunnel, included management route and VPS service. A timeout alone does not identify a certificate problem."
         }
-        ManagementError::ProtocolMismatch | ManagementError::StatusStreamingUnsupported => {
+        ManagementError::ProtocolMismatch
+        | ManagementError::StatusStreamingUnsupported
+        | ManagementError::SpeedTestUnsupported => {
             "The VPS management protocol is incompatible. Update the app and VPS to compatible versions."
         }
         ManagementError::RequestRejected {

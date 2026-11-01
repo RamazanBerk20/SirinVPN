@@ -280,6 +280,9 @@ html[data-window-chrome="custom"] .dialog-content.dialog-layout {
 .diagnostic-row.fail > span { color: var(--danger); background: rgb(245 108 108 / 9%); }
 .diagnostic-passed > summary { cursor: pointer; padding: 14px 0; font-size: var(--text-body); }
 .diagnostic-passed > .settings-note { margin: 0 0 12px; }
+.speed-test { display: grid; gap: 12px; justify-items: start; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--line); }
+.speed-test h3, .speed-test .settings-note { margin: 0; }
+.speed-test .result-facts { justify-self: stretch; }
 .wifi-paused { padding: 12px 14px; border-left: 2px solid var(--warning); background: rgb(239 189 99 / 5%); font-size: var(--text-secondary); line-height: 1.5; }
 .port-forward-form select { font-family: inherit; }
 .mtu-details { margin-top: 18px; }

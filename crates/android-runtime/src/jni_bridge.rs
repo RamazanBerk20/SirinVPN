@@ -509,6 +509,10 @@ pub extern "system" fn Java_org_sirinvpn_client_Native_call(
                 error.downcast_ref::<crate::tunnel::ConnectionFailure>()
             {
                 error.0.to_owned()
+            } else if let Some(error) =
+                error.downcast_ref::<sirinvpn_core::diagnostics::SpeedTestFailure>()
+            {
+                error.to_string()
             } else if let Some(error) = error.downcast_ref::<sirinvpn_core::ManagementError>() {
                 match error {
                     sirinvpn_core::ManagementError::RequestRejected { code, .. } => format!(

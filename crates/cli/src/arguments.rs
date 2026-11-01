@@ -22,6 +22,9 @@ pub(super) enum Commands {
     Resume(ServerSelector),
     Status,
     Diagnose(ServerSelector),
+    /// Measure download, upload and latency through the tunnel to this VPS (not internet speed).
+    /// Owner and Admins only; the result is printed here and kept nowhere.
+    SpeedTest(ServerSelector),
 }
 
 #[derive(Subcommand)]

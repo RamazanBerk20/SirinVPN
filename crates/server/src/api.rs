@@ -93,6 +93,18 @@ pub(super) fn management_router(state: AppState) -> Router {
         )
         .route("/v1/diagnostics", get(diagnostics_handler))
         .route("/v1/leak-test", get(super::leak_test::observe_handler))
+        .route(
+            "/v1/speed-test/latency",
+            get(super::speed_test::latency_handler),
+        )
+        .route(
+            "/v1/speed-test/download",
+            get(super::speed_test::download_handler),
+        )
+        .route(
+            "/v1/speed-test/upload",
+            post(super::speed_test::upload_handler),
+        )
         .route("/v1/configuration", get(configuration_handler))
         .route(
             "/v1/endpoint-transition",
