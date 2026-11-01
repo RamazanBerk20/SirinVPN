@@ -73,6 +73,7 @@
   background: transparent;
   color: var(--muted);
   font-size: 0.75rem;
+  min-height: 32px;
 }
 
 .fingerprint-heading {

@@ -44,3 +44,10 @@
 .danger-icon {
   color: var(--danger);
 }
+.application-launcher > .field {
+  margin-top: 12px;
+}
+/* Balance the last line of running text instead of leaving one orphan word (ignored where unsupported). */
+p, small, .inline-error, .warning-note {
+  text-wrap: pretty;
+}

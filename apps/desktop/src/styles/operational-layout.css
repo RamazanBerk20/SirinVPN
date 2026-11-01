@@ -162,7 +162,7 @@
   width: 100%;
   display: grid;
   gap: 4px;
-  min-height: 36px;
+  min-height: 40px;
   border: 0;
   background: transparent;
   padding: 8px 12px;
@@ -184,6 +184,10 @@
   line-height: 1.5;
 }
 /* Group headings and dividers, matching the Android action sheet. */
+.action-menu-panel > [role="group"] {
+  display: grid;
+  gap: 2px;
+}
 .menu-group-label {
   margin: 8px 12px 2px;
   color: var(--muted);

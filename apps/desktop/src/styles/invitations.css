@@ -77,7 +77,7 @@
   border-radius: 5px;
   color: var(--cyan);
   font:
-    700 8px "JetBrains Mono Variable",
+    700 0.75rem "JetBrains Mono Variable",
     ui-monospace,
     monospace;
   text-align: center;

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { type ServerProfile } from "../../types";
 import { ImportBackupFlow } from "./ImportBackupFlow";
 import { JoinFlow } from "./JoinFlow";
-import { SetupFlow } from "./SetupFlow";
+import { SetupFlow, type SetupStep } from "./SetupFlow";
 import { HetznerFlow } from "./HetznerFlow";
 import { RecoverAccessFlow } from "./RecoverAccessFlow";
 import { isAndroid } from "../../platform";
@@ -35,7 +35,9 @@ export function AddServerFlow({
   const [mode, setMode] = useState<Mode | null>(initialMode ?? null);
   // Switching unmounts the current flow; an installation in progress blocks it.
   const choose = (next: Mode | null) => { if (next !== mode && confirmNavigation()) setMode(next); };
-  const flow = mode === "provision" ? <SetupFlow onComplete={(result) => onAdded(result.profile)} compact={compact} />
+  // Past its first step the setup flow has its own Back; a second link to the options would compete with it.
+  const [setupStep, setSetupStep] = useState<SetupStep>("details");
+  const flow = mode === "provision" ? <SetupFlow onComplete={(result) => onAdded(result.profile)} compact={compact} onStepChange={setSetupStep} />
     : mode === "hetzner" ? <HetznerFlow onComplete={(result) => onAdded(result.profile)} compact={compact} />
     : mode === "join" ? <JoinFlow onComplete={onAdded} compact={compact} />
     : mode === "recovery" ? <RecoverAccessFlow onComplete={onAdded} compact={compact} />
@@ -58,7 +60,7 @@ export function AddServerFlow({
   </div>;
   return <div className="add-server-flow">
     {current ? <>
-      <button type="button" className="text-button add-server-back" onClick={() => choose(null)}><ArrowLeft size={16} /> {t("onboarding.choice.back")}</button>
+      {(mode !== "provision" || setupStep === "details") && <button type="button" className="text-button add-server-back" onClick={() => choose(null)}><ArrowLeft size={16} /> {t("onboarding.choice.back")}</button>}
       {flow}
     </> : list}
   </div>;

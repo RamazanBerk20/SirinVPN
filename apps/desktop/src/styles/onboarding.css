@@ -180,6 +180,10 @@
   gap: 14px;
 }
 
+.field-grid.two-column {
+  grid-template-columns: minmax(0, 1fr) 112px;
+}
+
 .field-grid.key-fields {
   grid-template-columns: minmax(0, 1.25fr) minmax(170px, 0.75fr);
 }

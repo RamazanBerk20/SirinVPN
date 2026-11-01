@@ -374,6 +374,7 @@ button.mobile-list-row:hover {
   color: color-mix(in srgb, var(--danger) 35%, var(--text));
   font-size: 12px;
   line-height: 1.45;
+  text-align: left;
 }
 
 .inline-error svg {

@@ -9,7 +9,8 @@
 .access-disclosure { margin-top: 24px; }
 .access-disclosure > button { display: block; margin-top: 16px; }
 .access-disclosure p { max-width: 65ch; line-height: 1.6; }
-.field [aria-invalid="true"] { border-color: color-mix(in srgb, var(--danger) 70%, var(--text)); }
+.field [aria-invalid="true"], .route-list-field [aria-invalid="true"] { border-color: color-mix(in srgb, var(--danger) 70%, var(--text)); }
+.route-list-field > .field-error { color: color-mix(in srgb, var(--danger) 70%, var(--text)); }
 .field-error { color: color-mix(in srgb, var(--danger) 70%, var(--text)); display: block; font-size: var(--text-secondary); line-height: 1.5; }
 .action-menu-panel [aria-disabled="true"] { opacity: .7; cursor: default; }
 .action-menu-panel small { white-space: normal; }

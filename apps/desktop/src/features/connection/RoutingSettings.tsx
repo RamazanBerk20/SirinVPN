@@ -102,6 +102,7 @@ export function RoutingSettings({ model }: { model: ServerWorkspaceModel }) {
             }
             rows={3}
             disabled={disabled}
+            aria-invalid={model.preferences.badRoutes.length > 0}
           />
           <small>{t("connection.routing.routes.hint", { max: formatNumber(MAX_INCLUDED_ROUTES) })}</small>
           {model.preferences.badRoutes.length > 0 && <small className="field-error" role="alert">

@@ -8,7 +8,8 @@ import { formatDateTime, getLocale, sourceLocale } from "../i18n";
 export function errorMessage(reason: unknown, fallback: string): string {
   const detail = (typeof reason === "string" ? reason : reason instanceof Error ? reason.message : "").trim();
   if (!detail || getLocale() !== sourceLocale) return fallback;
-  return detail.includes(fallback.trim()) ? detail : `${fallback.trim()} ${detail}`;
+  const summary = fallback.trim().replace(/\s*Try again\.$/, "");
+  return detail.includes(summary) ? detail : `${summary} ${detail}`;
 }
 
 export function formatExpiry(unixSeconds: number): string {

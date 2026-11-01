@@ -16,7 +16,8 @@ export function SubnetRoutesDialog({ serverId, device, onClose, onSaved }: {
 }) {
   const [draft, setDraft] = useState(() => (device.subnet_routes ?? []).join("\n"));
   const [busy, setBusy] = useState(false), [error, setError] = useState<string | null>(null);
-  const invalid = invalidLocalNetworks(parseRoutes(draft));
+  // Lines as typed, so "not a network" is reported once rather than word by word.
+  const invalid = draft.split("\n").map((line) => line.trim()).filter((line) => line && invalidLocalNetworks(parseRoutes(line)).length > 0);
   const save = async () => {
     setBusy(true); setError(null);
     try {
@@ -33,7 +34,7 @@ export function SubnetRoutesDialog({ serverId, device, onClose, onSaved }: {
       <form className="invite-form" onSubmit={(event) => { event.preventDefault(); void save(); }}>
         <label className="route-list-field">
           <span>{t("devices.localNetworks.label")}</span>
-          <textarea value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="192.168.1.0/24" rows={3} disabled={busy} />
+          <textarea value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="192.168.1.0/24" rows={3} disabled={busy} aria-invalid={invalid.length > 0} />
           <small>{t("devices.localNetworks.hint")}</small>
           {invalid.length > 0 && <small className="field-error" role="alert">{t("devices.localNetworks.invalid", { networks: invalid.join(", ") })}</small>}
         </label>

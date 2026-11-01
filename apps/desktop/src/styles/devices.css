@@ -367,7 +367,7 @@ details[open] > summary > .disclosure-chevron {
   outline: 0;
   background: var(--surface);
   font:
-    10px "JetBrains Mono Variable",
+    0.75rem "JetBrains Mono Variable",
     ui-monospace,
     monospace;
 }

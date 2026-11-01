@@ -6,7 +6,8 @@
     if (!el.getClientRects().length) return false;
     // Content of a closed <details> keeps boxes in Chromium but is not rendered.
     const closed = el.closest("details:not([open])");
-    if (closed && !(el.matches("summary") && el.parentElement === closed) && !el.closest("details:not([open]) > summary")) return false;
+    const ownSummary = el.closest("summary")?.parentElement === closed;
+    if (closed && (!ownSummary || closed.parentElement?.closest("details:not([open])"))) return false;
     for (let node = el; node; node = node.parentElement) {
       const style = getComputedStyle(node);
       if (style.visibility === "hidden" || style.display === "none" || Number(style.opacity) === 0 || node.hasAttribute("inert") || node.getAttribute("aria-hidden") === "true") return false;
