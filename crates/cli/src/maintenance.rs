@@ -243,6 +243,9 @@ pub(super) fn backup_vps(
         destination: arguments.output,
         password,
     })?;
+    let _ = paths
+        .vps_backup_schedule_store()
+        .record_success(profile.id, sirinvpn_core::unix_now());
     if json {
         println!("{}", serde_json::to_string_pretty(&outcome)?);
     } else {
@@ -250,6 +253,48 @@ pub(super) fn backup_vps(
             "Encrypted VPS backup created for {} with validated server artifact SHA-256 {}. No plaintext backup was written locally or remotely. Use `server restore-vps` for guarded recovery or current-device migration.",
             profile.name, outcome.artifact_sha256
         );
+    }
+    Ok(())
+}
+
+/// Read-only: the desktop and Android apps own the schedule, its saved SSH login and password.
+pub(super) fn backup_status(paths: &ClientPaths, json: bool) -> Result<()> {
+    let profiles = paths.profile_store().load()?;
+    let now = sirinvpn_core::unix_now();
+    let statuses: Vec<_> = paths
+        .vps_backup_schedule_store()
+        .load()?
+        .into_iter()
+        .filter_map(|schedule| {
+            let profile = profiles.iter().find(|p| p.id == schedule.server_id)?;
+            Some((profile.name.clone(), schedule.status(now)))
+        })
+        .collect();
+    if json {
+        let statuses: Vec<_> = statuses.into_iter().map(|(_, status)| status).collect();
+        println!("{}", serde_json::to_string_pretty(&statuses)?);
+        return Ok(());
+    }
+    if statuses.is_empty() {
+        println!("No scheduled VPS backups. Turn them on in the SirinVPN app.");
+    }
+    for (name, status) in statuses {
+        let schedule = &status.schedule;
+        let last = schedule.last_success.map_or_else(
+            || "no backup yet".to_owned(),
+            |at| format!("last backup {} days ago", (now - at).max(0) / 86_400),
+        );
+        println!(
+            "{name}: every {} days, keeping {} in {}; {last}.",
+            schedule.interval_days, schedule.keep, schedule.folder
+        );
+        if let Some(failure) = &schedule.last_failure {
+            println!("  The last attempt didn't finish: {}", failure.message);
+        } else if status.stale {
+            println!(
+                "  Backups are overdue. They run while the app is open and this device is disconnected."
+            );
+        }
     }
     Ok(())
 }

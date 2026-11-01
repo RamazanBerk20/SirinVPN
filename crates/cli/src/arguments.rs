@@ -65,6 +65,8 @@ pub(super) enum ServerCommand {
     /// Reads the API token from HCLOUD_TOKEN or a hidden prompt; the token is not stored.
     CreateHetzner(CreateHetznerArguments),
     BackupVps(BackupVpsArguments),
+    /// Show the scheduled VPS backups set up in the app: last backup age and warnings.
+    BackupStatus,
     RestoreVps(RestoreVpsArguments),
     CreateEndpointUpdate(ServerSelector),
     PublishEndpointUpdate(EndpointUpdateCodeArguments),

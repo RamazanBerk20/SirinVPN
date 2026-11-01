@@ -287,6 +287,7 @@ pub async fn dispatch(
                 .forget(p.id)
                 .map_err(anyhow::Error::msg)?;
             runtime.paths.network_policy_store().forget_server(p.id)?;
+            let _ = maintenance::forget_vps_backup_schedule(runtime, p.id);
             return Ok(Value::Null);
         }
         _ => {}

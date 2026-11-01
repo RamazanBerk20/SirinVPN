@@ -13,6 +13,7 @@ import { usePageNavigation } from "./hooks/usePageNavigation";
 import { confirmNavigation } from "./lib/navigationGuard";
 import { useDesktopTray, type DesktopNavigation } from "./hooks/useDesktopTray";
 import { favoritesFirst, useDesktopStatus } from "./hooks/useDesktopStatus";
+import { useScheduledVpsBackups } from "./features/settings/vpsBackupSchedules";
 import { Navigation } from "./components/Navigation";
 import { InfrastructureArt } from "./components/InfrastructureArt";
 import * as Dialog from "@radix-ui/react-dialog";
@@ -127,6 +128,7 @@ function AppContent() {
     localStatus.state === "disconnected" &&
     !localStatus.kill_switch_enabled &&
     !localStatus.auto_reconnect_enabled;
+  useScheduledVpsBackups(releaseInstallReady && servers.some((server) => server.role === "owner"));
 
   const handleServerAdded = async (profile: ServerProfile) => {
     await loadServers();

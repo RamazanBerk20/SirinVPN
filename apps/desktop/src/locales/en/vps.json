@@ -142,6 +142,56 @@
     "doneNote": "Store the file and its password separately.",
     "error": "Couldn’t create the backup. Try again."
   },
+  "schedule": {
+    "action": "Scheduled backups",
+    "title": "Scheduled VPS backups",
+    "description": "An encrypted backup is saved on a schedule. The newest ones stay in a folder you choose.",
+    "folder": "Backup folder",
+    "folderHint": "Older backups beyond the limit are deleted from this folder.",
+    "chooseFolder": "Choose folder",
+    "folderDialogTitle": "Choose a folder for VPS backups",
+    "frequency": "Frequency",
+    "daily": "Daily",
+    "weekly": "Weekly",
+    "monthly": "Every 30 days",
+    "keep": "Backups to keep",
+    "keepHint": "Between 1 and 30",
+    "passwordHint": "At least 12 characters, saved in this device’s secure storage",
+    "passwordKeepHint": "Leave empty to keep the saved password",
+    "loginMissing": "Backups use this VPS’s saved SSH login. Back up the VPS once with Remember login on.",
+    "disconnected": "Backups run while SirinVPN is open and this device is disconnected.",
+    "save": "Save schedule",
+    "runNow": "Back up now",
+    "running": "Backing up…",
+    "turnOff": "Turn off",
+    "lastBackup": "Last backup: {{age}}",
+    "noBackup": "No backup yet",
+    "failed": "The last attempt didn’t finish: {{message}}",
+    "stale": "Backups are overdue. Disconnect this device while SirinVPN is open, or choose Back up now.",
+    "summary": {
+      "off": "Off",
+      "pending": "On · first backup pending",
+      "ok": "Last backup {{age}}",
+      "stale": "Last backup {{age}} · overdue",
+      "failed": "Last attempt didn’t finish"
+    },
+    "age": {
+      "today": "today",
+      "days_one": "{{count}} day ago",
+      "days_other": "{{count}} days ago"
+    },
+    "notice": {
+      "failed": "The last scheduled VPS backup didn’t finish.",
+      "stale": "Last VPS backup: {{age}}.",
+      "none": "No scheduled VPS backup yet.",
+      "review": "Review"
+    },
+    "error": {
+      "save": "Couldn’t save the schedule. Try again.",
+      "run": "Couldn’t run the backup. Try again.",
+      "off": "Couldn’t turn off scheduled backups. Try again."
+    }
+  },
   "restore": {
     "title": "Restore {{name}}",
     "titleRunning": "Restoring VPS",

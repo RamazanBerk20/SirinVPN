@@ -268,6 +268,55 @@ impl Platform {
             Ok(())
         })
     }
+    /// Creates `name` in an Owner-chosen document tree (scheduled VPS backups).
+    pub fn write_tree_document(&self, tree: &str, name: &str, bytes: &[u8]) -> Result<()> {
+        self.with_env(|env| {
+            let tree = env.new_string(tree)?;
+            let name = env.new_string(name)?;
+            let array = env.byte_array_from_slice(bytes)?;
+            env.call_method(
+                &self.object,
+                "writeTreeDocument",
+                "(Ljava/lang/String;Ljava/lang/String;[B)V",
+                &[
+                    JValue::Object(&tree),
+                    JValue::Object(&name),
+                    JValue::Object(&array),
+                ],
+            )?;
+            Ok(())
+        })
+    }
+    /// Display names of the regular documents directly inside a tree.
+    pub fn tree_names(&self, tree: &str) -> Result<Vec<String>> {
+        let names = self.with_env(|env| {
+            let tree = env.new_string(tree)?;
+            let value = env
+                .call_method(
+                    &self.object,
+                    "listTree",
+                    "(Ljava/lang/String;)Ljava/lang/String;",
+                    &[JValue::Object(&tree)],
+                )?
+                .l()?;
+            let value: String = env.get_string(&JString::from(value))?.into();
+            Ok(value)
+        })?;
+        Ok(serde_json::from_str(&names)?)
+    }
+    pub fn delete_tree_document(&self, tree: &str, name: &str) -> Result<()> {
+        self.with_env(|env| {
+            let tree = env.new_string(tree)?;
+            let name = env.new_string(name)?;
+            env.call_method(
+                &self.object,
+                "deleteTreeDocument",
+                "(Ljava/lang/String;Ljava/lang/String;)V",
+                &[JValue::Object(&tree), JValue::Object(&name)],
+            )?;
+            Ok(())
+        })
+    }
     fn check_state(&self, method: &str, id: &str) -> Result<()> {
         self.with_env(|env| {
             let id = env.new_string(id)?;

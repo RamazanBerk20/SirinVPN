@@ -1,5 +1,6 @@
 use super::*;
 use sha2::{Digest, Sha256};
+use sirinvpn_core::{VpsBackupSchedule, expired_vps_backups, unix_now, vps_backup_file_name};
 use sirinvpn_installer::{hetzner::*, *};
 use std::sync::atomic::{AtomicBool, Ordering};
 use zeroize::Zeroizing;
@@ -28,6 +29,10 @@ pub fn accepts(command: &str) -> bool {
             | "wait_hetzner_server"
             | "cancel_hetzner_wait"
             | "delete_hetzner_server"
+            | "vps_backup_schedules"
+            | "set_vps_backup_schedule"
+            | "disable_vps_backup_schedule"
+            | "run_scheduled_vps_backup"
     )
 }
 fn reference(host: &str, kind: &str) -> String {
@@ -110,6 +115,99 @@ fn trust_reference(host: &str, port: u16) -> String {
     )
 }
 
+fn backup_password_reference(id: ServerId) -> String {
+    reference(&id.to_string(), "vpsbackup")
+}
+/// Removing a server also removes its backup schedule and saved password.
+pub(super) fn forget_vps_backup_schedule(runtime: &Runtime, id: ServerId) -> Result<()> {
+    runtime.paths.vps_backup_schedule_store().forget(id)?;
+    runtime.platform.delete_blob(&backup_password_reference(id))
+}
+fn owner(runtime: &Runtime, input: &Value) -> Result<ServerProfile> {
+    let id = input
+        .get("server_id")
+        .or_else(|| input.get("serverId"))
+        .and_then(Value::as_str)
+        .context("Missing or invalid field")?;
+    let p = profile(runtime, id)?;
+    ensure!(
+        p.role == ServerRole::Owner,
+        "Only the Owner may perform VPS maintenance"
+    );
+    Ok(p)
+}
+fn schedule_status(runtime: &Runtime, id: ServerId) -> Result<Value> {
+    encode(
+        runtime
+            .paths
+            .vps_backup_schedule_store()
+            .get(id)?
+            .context("Turn on scheduled backups for this VPS first")?
+            .status(unix_now()),
+    )
+}
+/// Writes into the Owner's document tree and keeps the newest `keep` there.
+fn scheduled_backup(
+    runtime: &Runtime,
+    p: &ServerProfile,
+    schedule: &VpsBackupSchedule,
+) -> Result<()> {
+    ensure!(
+        !sirinvpn_core::has_pending_key_rotation(&runtime.paths, p.id)?,
+        "Complete key rotation first"
+    );
+    let saved = runtime
+        .platform
+        .blob(&reference(&p.endpoint.host, "ssh"))?
+        .context("Scheduled backups need this VPS’s SSH login. Back up the VPS once with Remember login on.")?;
+    let pin = serde_json::from_slice::<Value>(&saved)?["host_key_sha256"].clone();
+    let ssh = target(
+        runtime,
+        &json!({"authentication":"saved","host_key_sha256":pin}),
+        &p.endpoint.host,
+    )?;
+    let password = runtime
+        .platform
+        .blob(&backup_password_reference(p.id))?
+        .context("The backup password is no longer saved. Enter it again.")?;
+    let password = Zeroizing::new(String::from_utf8(password.to_vec())?);
+    let secret = runtime.paths.secret_store().get(&p.identity_reference)?;
+    let staging = tempfile::Builder::new()
+        .prefix("encrypted-transfer-")
+        .tempdir_in(&runtime.paths.configuration_directory)?;
+    let path = staging.path().join("transfer.sirvps");
+    Provisioner::export_server_backup(ServerBackupRequest {
+        profile: p.clone(),
+        target: ssh,
+        server_binary: payload(runtime),
+        identity: secret.public_identity(&p.client_management_certificate_pem)?,
+        destination: path.clone(),
+        password,
+    })?;
+    let written = std::fs::read(&path)
+        .map_err(anyhow::Error::from)
+        .and_then(|bytes| {
+            runtime.platform.write_tree_document(
+                &schedule.folder,
+                &vps_backup_file_name(p.id, unix_now()),
+                &bytes,
+            )
+        });
+    let _ = std::fs::remove_file(&path);
+    written?;
+    runtime
+        .paths
+        .vps_backup_schedule_store()
+        .record_success(p.id, unix_now())?;
+    let names = runtime.platform.tree_names(&schedule.folder)?;
+    for name in expired_vps_backups(p.id, names.iter().map(String::as_str), schedule.keep) {
+        runtime
+            .platform
+            .delete_tree_document(&schedule.folder, name)?;
+    }
+    Ok(())
+}
+
 pub async fn dispatch(
     runtime: &Runtime,
     command: &str,
@@ -118,6 +216,66 @@ pub async fn dispatch(
 ) -> Result<Value> {
     runtime.platform.current(generation)?;
     match command {
+        "vps_backup_schedules" => {
+            let profiles = runtime.paths.profile_store().load()?;
+            let now = unix_now();
+            return encode(
+                runtime
+                    .paths
+                    .vps_backup_schedule_store()
+                    .load()?
+                    .into_iter()
+                    .filter(|schedule| profiles.iter().any(|p| p.id == schedule.server_id))
+                    .map(|schedule| schedule.status(now))
+                    .collect::<Vec<_>>(),
+            );
+        }
+        "set_vps_backup_schedule" => {
+            let p = owner(runtime, input)?;
+            let folder = text(input, "folder")?;
+            ensure!(
+                folder.starts_with("content://"),
+                "Choose a folder for the VPS backups"
+            );
+            let reference = backup_password_reference(p.id);
+            match input["backup_password"].as_str() {
+                Some(password) => {
+                    sirinvpn_core::validate_server_backup_password(password)?;
+                    runtime.platform.put_blob(&reference, password.as_bytes())?;
+                }
+                None => {
+                    runtime
+                        .platform
+                        .blob(&reference)?
+                        .context("Enter a backup password")?;
+                }
+            }
+            runtime.paths.vps_backup_schedule_store().set(
+                p.id,
+                folder.to_owned(),
+                serde_json::from_value(input["keep"].clone())?,
+                serde_json::from_value(input["interval_days"].clone())?,
+                unix_now(),
+            )?;
+            return schedule_status(runtime, p.id);
+        }
+        "disable_vps_backup_schedule" => {
+            forget_vps_backup_schedule(runtime, owner(runtime, input)?.id)?;
+            return Ok(Value::Null);
+        }
+        "run_scheduled_vps_backup" => {
+            let p = owner(runtime, input)?;
+            let store = runtime.paths.vps_backup_schedule_store();
+            let schedule = store
+                .get(p.id)?
+                .context("Turn on scheduled backups for this VPS first")?;
+            // Not a failure: like a manual backup, the run waits for a disconnected device.
+            runtime.platform.require_idle()?;
+            if let Err(error) = scheduled_backup(runtime, &p, &schedule) {
+                store.record_failure(p.id, unix_now(), &error.to_string())?;
+            }
+            return schedule_status(runtime, p.id);
+        }
         "get_ssh_login" => {
             return runtime
                 .platform
@@ -394,6 +552,7 @@ pub async fn dispatch(
             })?;
             runtime.paths.secret_store().delete(&p.identity_reference)?;
             runtime.paths.profile_store().remove(p.id)?;
+            let _ = forget_vps_backup_schedule(runtime, p.id);
             Ok(Value::Null)
         }
         "repair_server" => {
@@ -452,6 +611,7 @@ pub async fn dispatch(
         }
         "export_vps_backup" | "restore_vps_backup" => {
             confirmed(input)?;
+            let id = p.id;
             let staging = tempfile::Builder::new()
                 .prefix("encrypted-transfer-")
                 .tempdir_in(&runtime.paths.configuration_directory)?;
@@ -472,6 +632,10 @@ pub async fn dispatch(
                         runtime
                             .platform
                             .write_document(uri, &std::fs::read(&path)?)?;
+                        let _ = runtime
+                            .paths
+                            .vps_backup_schedule_store()
+                            .record_success(id, unix_now());
                         encode(result)
                     }
                     Err(error) => Err(error.into()),

@@ -8,11 +8,13 @@ import {
   Wrench,
   ArrowClockwise,
   CaretRight,
+  ClockCounterClockwise,
 } from "@phosphor-icons/react";
 import { canRotateDeviceKeys } from "../../access";
 import { t } from "../../i18n";
 import type { ServerWorkspaceModel } from "./useServerWorkspace";
 import { RecoveryKeys } from "../settings/RecoveryKeys";
+import { scheduleSummary, useVpsBackupSchedule } from "../settings/vpsBackupSchedules";
 
 export function MaintenanceTools({
   model,
@@ -25,6 +27,7 @@ export function MaintenanceTools({
 }) {
   const { rotationPending, connected, anotherConnected, profile, localKnown } =
     model;
+  const backupSchedule = useVpsBackupSchedule(profile.id);
   const blockedRotation = rotationPending
     ? t("maintenance.tools.finishRotationFirst")
     : undefined;
@@ -76,6 +79,14 @@ export function MaintenanceTools({
             icon: HardDrives,
             disabled: false,
             run: () => model.setMaintenanceReview("backup"),
+          },
+          {
+            id: "schedule-vps-backups",
+            label: t("vps.schedule.action"),
+            description: blockedRotation ?? scheduleSummary(backupSchedule),
+            icon: ClockCounterClockwise,
+            disabled: false,
+            run: () => model.setVpsBackupScheduleOpen(true),
           },
           {
             id: "restore-vps",

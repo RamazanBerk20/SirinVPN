@@ -9,6 +9,7 @@ import { describeConnection } from "./connectionState";
 import { InfoHint } from "../../components/InfoHint";
 import { t } from "../../i18n";
 import type { ServerWorkspaceModel } from "./useServerWorkspace";
+import { backupAge, needsAttention, useVpsBackupSchedule } from "../settings/vpsBackupSchedules";
 
 export function ConnectionHero({
   model,
@@ -22,6 +23,7 @@ export function ConnectionHero({
   const power = useRef<HTMLButtonElement>(null);
   // D-pad only: Home starts on this button, and it takes focus back after being disabled while busy.
   useEffect(() => { if (dpadOnly && document.activeElement === document.body) power.current?.focus(); });
+  const backupSchedule = useVpsBackupSchedule(model.profile.id);
   if (view !== "home") return null;
   const { localStatus, profile, serverStatus, busy, error } = model;
   const systemControlled = isAndroid && localStatus.always_on === true;
@@ -92,6 +94,12 @@ export function ConnectionHero({
       {model.presharedKeyMissing && <div className="measurement-update">
         <p>{t("home.presharedKey.missing")}</p>
         <button className="text-button" disabled={busy} onClick={() => model.setRotationOpen(true)}>{t("home.presharedKey.add")}</button>
+      </div>}
+      {profile.role === "owner" && needsAttention(backupSchedule) && <div className="measurement-update">
+        <p>{backupSchedule?.last_failure ? t("vps.schedule.notice.failed")
+          : backupSchedule?.last_success ? t("vps.schedule.notice.stale", { age: backupAge(backupSchedule.last_success) })
+            : t("vps.schedule.notice.none")}</p>
+        <button className="text-button" disabled={busy} onClick={() => model.setVpsBackupScheduleOpen(true)}>{t("vps.schedule.notice.review")}</button>
       </div>}
       {componentUpdateRequired && onReviewComponentUpdate && <div className="measurement-update">
         <p>{t("home.componentUpdate.needed")}</p>

@@ -141,7 +141,9 @@ class SirinPlugin(private val activity: Activity) : Plugin(activity) {
         }
         if (command == "android_open_document" || command == "android_save_document") {
             val save = command == "android_save_document"
-            val intent = Intent(if (save) Intent.ACTION_CREATE_DOCUMENT else Intent.ACTION_OPEN_DOCUMENT)
+            // A folder is a persisted document tree, used for scheduled VPS backups.
+            val intent = if (!save && args.optJSONObject("options")?.optBoolean("directory") == true) Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+            else Intent(if (save) Intent.ACTION_CREATE_DOCUMENT else Intent.ACTION_OPEN_DOCUMENT)
                 .addCategory(Intent.CATEGORY_OPENABLE).setType("application/octet-stream")
             if (save) intent.putExtra(Intent.EXTRA_TITLE,args.optJSONObject("options")?.optString("defaultPath")?.substringAfterLast('/') ?: "SirinVPN.sirinbackup")
             startActivityForResult(invoke,intent,"documentSelected"); return

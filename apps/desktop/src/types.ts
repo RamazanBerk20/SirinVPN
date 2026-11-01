@@ -337,6 +337,26 @@ export interface ServerBackupResult {
   artifact_sha256: string;
 }
 
+export interface VpsBackupSchedule {
+  server_id: string;
+  folder: string;
+  keep: number;
+  interval_days: number;
+  enabled_at: number;
+  last_success: number | null;
+  last_failure: { at: number; message: string } | null;
+  due: boolean;
+  stale: boolean;
+}
+
+export interface VpsBackupScheduleInput {
+  server_id: string;
+  folder: string;
+  keep: number;
+  interval_days: number;
+  backup_password?: string;
+}
+
 export interface ServerRestoreResult {
   network_preflight?: NetworkPreflight;
   events: InstallEvent[];

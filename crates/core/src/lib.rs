@@ -28,6 +28,7 @@ pub use recovery::{
 mod secrets;
 mod server_backup;
 mod store;
+mod vps_backup_schedule;
 
 use directories::ProjectDirs;
 use std::path::PathBuf;
@@ -70,6 +71,11 @@ pub use server_backup::{
     validate_server_backup_password, write_encrypted_server_backup,
 };
 pub use store::{ProfileStore, ProfileStoreError};
+pub use vps_backup_schedule::{
+    MAX_VPS_BACKUP_INTERVAL_DAYS, MAX_VPS_BACKUPS_KEPT, VPS_BACKUP_RETRY_SECONDS, VpsBackupFailure,
+    VpsBackupSchedule, VpsBackupScheduleError, VpsBackupScheduleStatus, VpsBackupScheduleStore,
+    expired_vps_backups, rotate_vps_backup_folder, unix_now, vps_backup_file_name,
+};
 mod wireguard_device;
 pub use wireguard_device::{WireGuardDeviceConfig, WireGuardDeviceDraft, WireGuardDeviceError};
 
@@ -109,5 +115,12 @@ impl ClientPaths {
 
     pub fn network_policy_store(&self) -> NetworkPolicyStore {
         NetworkPolicyStore::new(self.network_policy_file.clone())
+    }
+
+    pub fn vps_backup_schedule_store(&self) -> VpsBackupScheduleStore {
+        VpsBackupScheduleStore::new(
+            self.configuration_directory
+                .join("vps-backup-schedules.json"),
+        )
     }
 }
