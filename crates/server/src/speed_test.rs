@@ -11,6 +11,8 @@ use std::convert::Infallible;
 /// Clients stop after `SPEED_TEST_SECONDS`; the slack lets queued upload bytes drain.
 const TRANSFER_LIMIT: Duration = Duration::from_secs(SPEED_TEST_SECONDS + 7);
 const COOLDOWN: Duration = Duration::from_secs(60);
+/// A device's upload follows its download on a new connection; other devices wait this long.
+const HANDOFF: Duration = Duration::from_secs(5);
 static ZEROS: [u8; 64 * 1024] = [0; 64 * 1024];
 
 #[derive(Default)]
@@ -61,24 +63,37 @@ impl Limiter {
         self.started.insert((device.to_owned(), upload), now);
         Ok(self.next_token)
     }
+
+    /// After a download the slot stays with that device briefly, so another device cannot take
+    /// it between the device's download and upload.
+    fn release(&mut self, token: u64, upload: bool, now: Instant) {
+        let Some(running) = &mut self.running else {
+            return;
+        };
+        if running.token != token {
+            return;
+        }
+        if upload {
+            self.running = None;
+        } else {
+            running.until = running.until.min(now + HANDOFF);
+        }
+    }
 }
 
-/// Frees the transfer slot when the response body or upload ends, however it ends.
+/// Releases the transfer slot when the response body or upload ends, however it ends.
 struct Slot {
     limiter: Arc<Mutex<Limiter>>,
     token: u64,
+    upload: bool,
 }
 
 impl Drop for Slot {
     fn drop(&mut self) {
-        let mut limiter = self.limiter.lock().unwrap_or_else(|e| e.into_inner());
-        if limiter
-            .running
-            .as_ref()
-            .is_some_and(|running| running.token == self.token)
-        {
-            limiter.running = None;
-        }
+        self.limiter
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .release(self.token, self.upload, Instant::now());
     }
 }
 
@@ -93,6 +108,7 @@ async fn start(state: &AppState, caller: &CallerIdentity, upload: bool) -> Resul
     Ok(Slot {
         limiter: state.speed_test.clone(),
         token,
+        upload,
     })
 }
 
@@ -146,9 +162,10 @@ pub(super) async fn upload_handler(
                     return Err(limit_exceeded());
                 }
             }
-            Ok(None) => break,
+            // At the time limit the VPS answers with what arrived; on a bloated uplink the client
+            // may still be draining bytes it queued before it stopped.
+            Ok(None) | Err(_) => break,
             Ok(Some(Err(_))) => return Err(ApiError::invalid("the speed-test upload ended early")),
-            Err(_) => return Err(limit_exceeded()),
         }
     }
     Ok(Json(ApiEnvelope::new(SpeedTestUpload { received_bytes })))
@@ -158,7 +175,7 @@ fn limit_exceeded() -> ApiError {
     ApiError::new(
         StatusCode::PAYLOAD_TOO_LARGE,
         ErrorCode::InvalidInput,
-        "the speed-test upload exceeded the VPS's size or time limit",
+        "the speed-test upload exceeded the VPS's size limit",
     )
 }
 

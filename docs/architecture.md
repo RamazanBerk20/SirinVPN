@@ -331,12 +331,15 @@ speed, and no third-party server is involved.
 - **VPS.** All three routes sit on the private, pinned-mTLS management listener
   and require a manager. One transfer runs at a time on the VPS; a device may
   replace its own, because its download connection can outlive the switch to
-  upload. A stalled client holds the slot for at most 15 seconds. Each transfer
-  ends after 15 seconds or 1 GiB, and each device waits 60 seconds between
-  transfers in the same direction. Upload bytes are counted and discarded; the
-  router's 64 KiB limit covers only parsed bodies. Nothing is logged: the daemon
-  keeps the running transfer and each device's last start time in memory for one
-  cooldown, and a restart clears them.
+  upload. After a download the slot stays with that device for five seconds, so
+  another device cannot take it before the upload starts. A stalled client holds
+  the slot for at most 15 seconds. A download ends after 15 seconds or 1 GiB. An
+  upload is refused above 1 GiB, and at 15 seconds the VPS answers with what has
+  arrived, so a slow, bloated uplink reports a low rate instead of failing. Each
+  device waits 60 seconds between transfers in the same direction. Upload bytes
+  are counted and discarded; the router's 64 KiB limit covers only parsed bodies.
+  Nothing is logged: the daemon keeps the running transfer and each device's last
+  start time in memory for one cooldown, and a restart clears them.
 - **Why managers only.** A test fills the VPS link for everyone for up to about
   20 seconds and runs in the management daemon. Owner and Admins already manage
   the server; a Member setting would need new authorization state for little gain.

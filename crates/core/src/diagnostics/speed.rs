@@ -52,8 +52,11 @@ async fn run(
     // The first request opens the probe connection, so it is not a sample.
     probe.speed_test_latency().await?;
     let mut idle = Vec::new();
-    for _ in 0..IDLE_SAMPLES {
-        idle.extend(latency(&probe).await);
+    // A probe that fails here means the path is stalled; the transfers would only fail later.
+    while idle.len() < IDLE_SAMPLES
+        && let Some(sample) = latency(&probe).await
+    {
+        idle.push(sample);
     }
     let (download_bits_per_second, download_latency_micros) =
         under_load(&probe, download(&transfer)).await?;
