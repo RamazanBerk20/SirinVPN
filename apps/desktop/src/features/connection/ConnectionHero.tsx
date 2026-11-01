@@ -1,7 +1,6 @@
 import { ArrowClockwise, Power } from "@phosphor-icons/react";
 import { useEffect, useRef } from "react";
 import { dpadOnly, invoke, isAndroid } from "../../platform";
-import { SirinMark } from "../../components/Brand";
 import { InlineError } from "../../components/ui";
 import type { Page } from "../../components/Navigation";
 import { formatTransport, formatLatency } from "../../format";
@@ -15,10 +14,13 @@ export function ConnectionHero({
   model,
   view,
   onReviewComponentUpdate,
+  onShowActive,
 }: {
   model: ServerWorkspaceModel;
   view: Page;
   onReviewComponentUpdate?: () => void;
+  /** Selects the server whose tunnel is up, when it is not this one. */
+  onShowActive?: () => void;
 }) {
   const power = useRef<HTMLButtonElement>(null);
   // D-pad only: Home starts on this button, and it takes focus back after being disabled while busy.
@@ -43,7 +45,6 @@ export function ConnectionHero({
       aria-label={t("home.consoleLabel")}
     >
       <div className="connection-center">
-        {!isAndroid && <SirinMark className="connection-mark" />}
         <button
           className={`power-control ${state.connected ? "active" : ""}`}
           ref={power}
@@ -72,6 +73,7 @@ export function ConnectionHero({
         {!systemControlled && (model.connectionOperation === "connecting" || !state.known) && <button className="secondary-button" type="button" onClick={() => void model.cancelConnection()} disabled={model.connectionOperation === "disconnecting"}>{t("home.action.stop")}</button>}
       </div>
       <p className="connection-explanation">{state.summary}</p>
+      {state.other && onShowActive && <button className="secondary-button" type="button" onClick={onShowActive}>{t("home.action.showActive")}</button>}
       {state.active && localStatus.kill_switch_enabled && (
         <p className="disconnect-consequence">
           {t(isAndroid ? "home.consequence.android" : "home.consequence.desktop")}
@@ -80,7 +82,7 @@ export function ConnectionHero({
       {state.active && localStatus.waiting_for_user && (
         <>
         <button
-          className="secondary-button"
+          className="primary-button"
           onClick={() => void model.resume()}
           disabled={busy}
           title={t("home.action.reconnectHint")}
@@ -118,18 +120,17 @@ export function ConnectionDetails({ model }: { model: ServerWorkspaceModel }) {
   const state = describeConnection(localStatus, profile.id, serverStatus, model.preferences.saved?.policy);
   return <>
       <dl className="connection-facts">
+        {/* Method and routing only describe a running tunnel; idle, they would both just say "Not active". */}
+        {(state.active || !state.known) && <>
         <div>
           <dt>{t("home.details.method")}</dt>
-          <dd>
-            {state.active
-              ? formatTransport(localStatus.transport)
-              : t(state.known ? "home.routing.inactive" : "common.state.unknown")}
-          </dd>
+          <dd>{state.active ? formatTransport(localStatus.transport) : t("common.state.unknown")}</dd>
         </div>
         <div>
           <dt>{t("home.details.routing")}</dt>
           <dd>{state.routing}</dd>
         </div>
+        </>}
         <div>
           <dt>{t("home.details.killSwitch")}</dt>
           <dd

@@ -16,10 +16,17 @@ export function SshHostVerification({
   const changed = inspection.status === "changed";
   return (
     <>
-      <Key size={27} weight="duotone" />
+      {changed ? <Warning size={27} weight="fill" className="danger-icon" /> : <Key size={27} weight="duotone" />}
       <h3>
         {changed ? t("ssh.verify.titleChanged") : t("ssh.verify.title")}
       </h3>
+      {/* A changed key may mean interception: the advice to stop comes first, not after the guide. */}
+      {changed && (
+        <div className="warning-note replacement-warning">
+          <Warning size={18} weight="fill" />
+          <span>{t("ssh.verify.changedWarning")}</span>
+        </div>
+      )}
       <div className="uninstall-target">
         <code>
           {inspection.host}:{inspection.port}
@@ -33,12 +40,6 @@ export function SshHostVerification({
         <CopyButton value={inspection.fingerprint} label={t("ssh.verify.copyFingerprint")} />
       </div>
       <SshVerificationGuide />
-      {changed && (
-        <div className="warning-note replacement-warning">
-          <Warning size={18} weight="fill" />
-          <span>{t("ssh.verify.changedWarning")}</span>
-        </div>
-      )}
       <label className={`replacement-option ${confirmed ? "selected" : ""}`}>
         <input
           type="checkbox"

@@ -155,7 +155,8 @@ export function WifiSettings() {
       <p className="settings-note">{currentName
         ? <Rich id="settings.wifi.network.named" params={{ status: t(networkLabels[snapshot.current_network]), name: currentName }} tags={{ strong: content => <strong>{content}</strong> }} />
         : t(networkLabels[snapshot.current_network])}</p>
-      {snapshot.policy.enabled && <p className={snapshot.automation_status === "waiting_for_network_change" ? "wifi-paused" : "settings-note"} role="status">{t(statusLabels[snapshot.automation_status])}</p>}
+      {/* Just after turning it on, the native status can still read "disabled": say it is starting instead of "off". */}
+      {snapshot.policy.enabled && <p className={snapshot.automation_status === "waiting_for_network_change" ? "wifi-paused" : "settings-note"} role="status">{t(snapshot.automation_status === "disabled" ? "settings.wifi.status.starting" : statusLabels[snapshot.automation_status])}</p>}
       {snapshot.current_network === "untrusted_wifi" && <>
         <div className="settings-action-row">
           <label className="field"><span>{t("settings.wifi.trust.label")}</span><input value={label} maxLength={80} placeholder={t("settings.wifi.trust.placeholder")} onChange={(e) => setLabel(e.target.value)} disabled={busy || Boolean(trustReason)} /></label>

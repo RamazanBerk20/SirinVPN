@@ -49,51 +49,6 @@
   min-height: 36px;
   font-size: 0.875rem;
 }
-.primary-navigation strong {
-  font-size: 0.9375rem;
-}
-.primary-navigation small {
-  font-size: 0.8125rem;
-}
-.primary-navigation button {
-  min-height: 48px;
-}
-.primary-navigation button[aria-current] {
-  background: var(--surface-3);
-  box-shadow: inset 3px 0 0 -1px var(--cyan);
-}
-.server-list {
-  max-height: none;
-  min-height: 0;
-  flex: 1;
-  overflow-y: auto;
-}
-.server-row strong {
-  font-size: 0.875rem;
-}
-.server-row small {
-  font-size: 0.8125rem;
-}
-.server-row.selected {
-  border-color: color-mix(in srgb, var(--line-strong) 90%, var(--text));
-  background: color-mix(in srgb, var(--line) 55%, var(--bg));
-}
-.sidebar-foot {
-  margin-top: auto;
-  flex-shrink: 0;
-  font-size: 0.8125rem;
-}
-.sidebar-heading {
-  font-size: 0.8125rem;
-  letter-spacing: 0.04em;
-}
-.sidebar > .brand {
-  min-height: 72px;
-  flex-shrink: 0;
-}
-.primary-navigation {
-  flex-shrink: 0;
-}
 .copy-value {
   display: inline-flex;
   flex-wrap: wrap;
@@ -207,10 +162,10 @@
   width: 100%;
   display: grid;
   gap: 4px;
-  min-height: 44px;
+  min-height: 40px;
   border: 0;
   background: transparent;
-  padding: 10px 12px;
+  padding: 8px 12px;
   border-radius: 5px;
   text-align: left;
   font-size: 0.9375rem;
@@ -228,6 +183,25 @@
   color: var(--muted);
   line-height: 1.5;
 }
+/* Group headings and dividers, matching the Android action sheet. */
+.action-menu-panel > [role="group"] {
+  display: grid;
+  gap: 2px;
+}
+.menu-group-label {
+  margin: 8px 12px 2px;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.action-menu-panel > [role="group"] + [role="group"] {
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid var(--line);
+}
+
 .access-section {
   margin-top: 0;
 }
@@ -346,8 +320,6 @@
   font-size: 0.9375rem;
   width: 100%;
   min-width: 0;
-  min-height: 44px;
-  padding: 10px;
   border: 1px solid color-mix(in srgb, var(--quiet) 45%, var(--surface-3));
   border-radius: 7px;
   background-color: color-mix(in srgb, var(--line) 35%, var(--surface));
@@ -456,53 +428,6 @@ summary:focus-visible,
   .workspace {
     padding-inline: 16px;
   }
-}
-/* Phone screens reserve the first viewport for the action and device traffic. */
-
-.sidebar {
-  overflow-y: auto;
-}
-.sidebar .server-row {
-  min-height: 64px;
-  flex-shrink: 0;
-  display: grid;
-  grid-template-columns: 24px minmax(0, 1fr);
-  gap: 10px;
-  padding: 10px;
-}
-.sidebar .server-row > svg:last-child {
-  display: none;
-}
-.sidebar .server-glyph {
-  width: 24px;
-  height: 24px;
-  background: none;
-  border: 0;
-}
-.sidebar .server-row small {
-  white-space: normal;
-  overflow: visible;
-  text-overflow: clip;
-}
-/* Scale the shell and native form fields with text enlargement. */
-@media (min-width: 761px) {
-  .app-shell {
-    grid-template-columns: minmax(12.5rem, 15.85vw) minmax(0, 1fr);
-  }
-}
-.sidebar .brand > div {
-  min-width: 0;
-}
-.sidebar .brand strong {
-  white-space: normal;
-  overflow-wrap: anywhere;
-}
-.primary-navigation button > span {
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-.primary-navigation button small {
-  white-space: normal;
 }
 .port-forward-form input,
 .port-forward-form select {

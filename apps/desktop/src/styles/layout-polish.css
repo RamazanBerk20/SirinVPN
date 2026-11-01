@@ -5,7 +5,6 @@
 }
 
 .workspace-header h1 {
-  line-height: 1.18;
   overflow-wrap: anywhere;
 }
 .servers-page {
@@ -51,7 +50,6 @@
 
 /* Keep all boxed glyphs on the same optical center, including icon-only buttons. */
 .metric > span,
-.server-glyph,
 .form-heading > span,
 .server-card-icon,
 .device-icon {
@@ -60,15 +58,11 @@
 }
 .icon-button > svg,
 .metric > span > svg,
-.server-glyph > svg,
 .form-heading > span > svg,
 .server-card-icon > svg,
 .device-icon > svg {
   display: block;
   margin: auto;
-  flex-shrink: 0;
-}
-.primary-navigation > button > svg {
   flex-shrink: 0;
 }
 .onboarding-header {

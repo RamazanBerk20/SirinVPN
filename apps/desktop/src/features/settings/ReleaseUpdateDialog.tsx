@@ -114,6 +114,7 @@ export function ReleaseUpdateDialog({
     }
   };
 
+  const installable = Boolean((candidate?.newer_than_running || binding) && nativeAvailable);
   const installAvailable = Boolean(
     (candidate?.newer_than_running || binding) &&
     nativeAvailable &&
@@ -241,8 +242,9 @@ export function ReleaseUpdateDialog({
                 </div>
               ) : null}
 
-              {!ready && <button className="secondary-button" onClick={() => { changeOpen(false); onReviewPrerequisites?.(); }}>{t("release.candidate.openConnection")}</button>}
-              <label
+              {/* Readiness is the one blocker the user can fix here (controls stay, disabled); a release that can never be installed offers none. */}
+              {!ready && installable && <button className="secondary-button" onClick={() => { changeOpen(false); onReviewPrerequisites?.(); }}>{t("release.candidate.openConnection")}</button>}
+              {installable && <label
                 className={`replacement-option release-install-confirmation ${confirmed ? "selected" : ""}`}
               >
                 <input
@@ -257,7 +259,7 @@ export function ReleaseUpdateDialog({
                   </strong>
                   <small>{t("release.candidate.confirmNote")}</small>
                 </span>
-              </label>
+              </label>}
               {error ? <InlineError message={error} /> : null}
               <div className="dialog-actions">
                 <button
@@ -267,14 +269,14 @@ export function ReleaseUpdateDialog({
                 >
                   {t("release.candidate.discard")}
                 </button>
-                <button
+                {installable && <button
                   className="primary-button"
                   type="button"
                   disabled={!confirmed || !installAvailable}
                   onClick={() => void install()}
                 >
                   <ShieldCheck size={18} /> {binding ? t("release.candidate.verify") : t("release.candidate.install")}
-                </button>
+                </button>}
               </div>
               <p className="form-footnote">
                 <LockKey size={15} /> {t("release.candidate.footnote")}

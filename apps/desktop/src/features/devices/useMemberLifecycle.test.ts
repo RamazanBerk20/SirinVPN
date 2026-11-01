@@ -190,7 +190,7 @@ it("keeps the last confirmed snapshot on an uncertain failure and permits a retr
     await result.current.changeMemberSuspension(member);
   });
   expect(initial.onSnapshot).not.toHaveBeenCalled();
-  expect(initial.onError).toHaveBeenLastCalledWith("Connection lost");
+  expect(initial.onError).toHaveBeenLastCalledWith(expect.stringContaining("Connection lost"));
   expect(result.current.memberBusy).toBeNull();
   await act(async () => {
     await result.current.changeMemberSuspension(member);

@@ -1,5 +1,6 @@
+import { PreferencesPending } from "./PreferenceSaveBar";
 import { invoke, isAndroid } from "../../platform";
-import { Check, CaretDown } from "@phosphor-icons/react";
+import { CaretDown } from "@phosphor-icons/react";
 import type { ServerWorkspaceModel } from "./useServerWorkspace";
 import type { TransportPreference, NetworkProfile, TransportKind } from "../../types";
 import { describeConnection } from "./connectionState";
@@ -48,6 +49,7 @@ export function ConnectionOptions({ model }: { model: ServerWorkspaceModel }) {
   const choose = (value: TransportPreference) => {
     setSelectedTransport(value);
   };
+  if (!model.preferences.ready) return <PreferencesPending preferences={model.preferences} />;
   return (
     <div className="settings-sections connection-preferences">
       <section className="settings-card">
@@ -87,9 +89,6 @@ export function ConnectionOptions({ model }: { model: ServerWorkspaceModel }) {
                     <strong>{t(`connection.options.conditions.${value}.title`)}</strong>
                     <small>{t(`connection.options.conditions.${value}.summary`)}</small>
                   </span>
-                  {selectedNetworkProfile === value && (
-                    <Check size={18} aria-hidden="true" />
-                  )}
                 </label>
               ))}
             </div>
@@ -115,9 +114,6 @@ export function ConnectionOptions({ model }: { model: ServerWorkspaceModel }) {
                         : t(`connection.options.methods.summary.${value}`)}
                     </small>
                   </span>
-                  {selectedTransport === value && (
-                    <Check size={18} aria-hidden="true" />
-                  )}
                 </label>
               ))}
             </div>
@@ -145,6 +141,9 @@ export function ConnectionOptions({ model }: { model: ServerWorkspaceModel }) {
                 />
               </label>
               {key === "automatic_reconnect" && reconnectInfoPanel}
+              {/* A saved kill switch only arms on the next connection: say so where the toggle is, not below the fold. */}
+              {key === "kill_switch" && current.active && model.preferences.saved?.policy.kill_switch && !model.localStatus.kill_switch_enabled &&
+                <p className="warning-note" role="status">{t("connection.options.policy.kill_switch.nextConnection")}</p>}
             </Fragment>
           );
         })}

@@ -11,14 +11,6 @@
 
 .metric {
   min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: 13px;
-  min-height: 82px;
-  padding: 15px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: linear-gradient(145deg, color-mix(in srgb, var(--surface-3) 55%, var(--surface)), var(--surface));
 }
 
 .metric:nth-child(3n) {
@@ -32,8 +24,6 @@
 .metric > span {
   width: 35px;
   height: 35px;
-  display: grid;
-  place-items: center;
   flex: 0 0 auto;
   border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
   border-radius: 7px;
@@ -48,28 +38,22 @@
 
 .metric > div {
   min-width: 0;
-  display: grid;
-  gap: 5px;
 }
 
 .metric small {
   color: var(--quiet);
-  font-size: 9px;
+  font-size: 0.75rem;
   font-weight: 650;
   letter-spacing: 0.055em;
   text-transform: uppercase;
 }
 
 .metric strong {
-  overflow: hidden;
   color: color-mix(in srgb, var(--quiet) 25%, var(--text));
-  font-size: 12px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .metric strong.mono {
-  font-size: 11px;
+  font-size: 0.75rem;
   font-weight: 560;
 }
 
@@ -77,8 +61,6 @@
   position: fixed;
   inset: 0;
   z-index: 40;
-  background: color-mix(in srgb, var(--bg) 82%, transparent);
-  backdrop-filter: blur(9px);
 }
 
 .dialog-content {
@@ -87,14 +69,8 @@
   left: 50%;
   z-index: 50;
   width: min(560px, calc(100vw - 32px));
-  max-height: calc(100dvh - 32px);
   overflow-y: auto;
   padding: 28px;
-  border: 1px solid var(--line-strong);
-  border-radius: var(--radius);
-  background:
-    radial-gradient(circle at 18% 0%, color-mix(in srgb, color-mix(in srgb, var(--line-strong) 35%, var(--accent)) 13%, transparent), transparent 35%),
-    var(--surface);
   box-shadow:
     0 32px 100px color-mix(in srgb, var(--shadow) 62%, transparent),
     0 0 55px color-mix(in srgb, color-mix(in srgb, var(--line-strong) 35%, var(--accent)) 9%, transparent);
@@ -103,7 +79,6 @@
 
 .dialog-content > h2 {
   margin: 0;
-  font-size: 22px;
   letter-spacing: -0.035em;
 }
 
@@ -171,12 +146,12 @@
 }
 
 .release-download-notice strong {
-  font-size: 11px;
+  font-size: 0.75rem;
 }
 
 .release-download-notice span {
   color: var(--muted);
-  font-size: 10px;
+  font-size: 0.75rem;
   line-height: 1.5;
 }
 
@@ -207,7 +182,7 @@
 
 .release-candidate-heading p {
   color: var(--muted);
-  font-size: 10px;
+  font-size: 0.75rem;
 }
 
 .release-authenticated,
@@ -222,7 +197,7 @@
   background: color-mix(in srgb, var(--success) 8%, transparent);
   color: var(--success);
   font-family: var(--font-ui);
-  font-size: 8px;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.07em;
   text-transform: uppercase;
@@ -255,7 +230,7 @@
 .release-detail-grid span,
 .release-digest > span {
   color: var(--quiet);
-  font-size: 8px;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.07em;
   text-transform: uppercase;
@@ -265,7 +240,7 @@
 .release-detail-grid code {
   overflow: hidden;
   color: color-mix(in srgb, var(--quiet) 25%, var(--text));
-  font-size: 10px;
+  font-size: 0.75rem;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -283,7 +258,7 @@
 .release-digest code {
   overflow: hidden;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 0.75rem;
   text-overflow: ellipsis;
   white-space: nowrap;
 }

@@ -3,25 +3,16 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 16px;
 }
 .section-heading h2,
 .section-heading p {
   margin: 0;
 }
-.section-heading h2 {
-  font-size: 17px;
-  letter-spacing: -0.025em;
-}
+
 .section-heading p {
   margin-top: 4px;
-  color: var(--quiet);
-  font-size: 11px;
 }
 
-.access-section {
-  margin-top: 24px;
-}
 .access-empty {
   min-height: 88px;
   display: flex;
@@ -45,7 +36,6 @@
   gap: 10px 22px;
   margin-bottom: 2px;
   color: var(--muted);
-  font-size: 12px;
 }
 .access-summary > span {
   display: flex;
@@ -66,8 +56,6 @@
   padding: 0;
   border: 1px solid var(--line);
   border-radius: 10px;
-  background: linear-gradient(110deg, var(--surface-2), var(--surface));
-  overflow: hidden;
 }
 .device-row-summary {
   display: grid;
@@ -90,8 +78,6 @@
   position: relative;
   width: 36px;
   height: 36px;
-  display: grid;
-  place-items: center;
   border: 1px solid color-mix(in srgb, var(--muted) 20%, var(--surface-3));
   border-radius: 8px;
   background: var(--surface-3);
@@ -123,18 +109,15 @@
   align-items: baseline;
   flex-wrap: wrap;
   gap: 8px;
-  font-size: 13px;
   line-height: 1.5;
   overflow-wrap: anywhere;
 }
 .device-row-copy small {
   color: var(--muted);
-  font-size: 11px;
   overflow-wrap: anywhere;
 }
 .this-device {
   color: var(--muted);
-  font-size: 10px;
   font-weight: 500;
 }
 .disclosure-chevron {
@@ -153,13 +136,11 @@ details[open] > summary > .disclosure-chevron {
   display: grid;
   gap: 9px;
   margin: 12px 0;
-  font-size: 11px;
   line-height: 1.7;
 }
 .device-facts > div {
   display: grid;
   align-items: baseline;
-  grid-template-columns: 126px minmax(0, 1fr);
   gap: 12px;
 }
 .device-facts dt {
@@ -199,7 +180,7 @@ details[open] > summary > .disclosure-chevron {
   border: 1px solid color-mix(in srgb, color-mix(in srgb, var(--line-strong) 85%, var(--text)) 33.3%, transparent);
   border-radius: 999px;
   color: color-mix(in srgb, var(--quiet) 65%, var(--text));
-  font-size: 9px;
+  font-size: 0.75rem;
 }
 .access-badge.owner {
   color: var(--cyan);
@@ -217,7 +198,6 @@ details[open] > summary > .disclosure-chevron {
   background: transparent;
   color: var(--muted);
   cursor: pointer;
-  font-size: 11px;
   font-weight: 650;
 }
 .text-button:hover {
@@ -248,9 +228,7 @@ details[open] > summary > .disclosure-chevron {
   align-items: center;
   gap: 10px;
   padding: 13px 17px;
-  min-height: 46px;
   list-style: none;
-  font-size: 12px;
 }
 .access-disclosure > summary > svg:first-child {
   color: var(--muted);
@@ -266,7 +244,7 @@ details[open] > summary > .disclosure-chevron {
   border-radius: 5px;
   background: color-mix(in srgb, var(--line) 65%, var(--bg));
   color: var(--muted);
-  font-size: 10px;
+  font-size: 0.75rem;
 }
 .invitation-list {
   padding: 0 17px 10px;
@@ -292,11 +270,10 @@ details[open] > summary > .disclosure-chevron {
   gap: 5px;
 }
 .invitation-row strong {
-  font-size: 12px;
   overflow-wrap: anywhere;
 }
 .invitation-row small {
-  font-size: 11px;
+  font-size: 0.75rem;
   line-height: 1.6;
   color: var(--muted);
   overflow-wrap: anywhere;
@@ -321,10 +298,7 @@ details[open] > summary > .disclosure-chevron {
 }
 
 .port-forward-panel {
-  padding: 18px;
-  border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: var(--surface);
 }
 
 .port-forward-heading {
@@ -347,13 +321,12 @@ details[open] > summary > .disclosure-chevron {
 .port-forward-heading p {
   margin-top: 5px;
   color: var(--quiet);
-  font-size: 10px;
 }
 
 .port-forward-heading .eyebrow {
   color: var(--cyan);
   font-family: var(--font-ui);
-  font-size: 8px;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -366,7 +339,7 @@ details[open] > summary > .disclosure-chevron {
   border-radius: 999px;
   color: var(--quiet);
   font-family: var(--font-ui);
-  font-size: 8px;
+  font-size: 0.75rem;
   text-transform: uppercase;
 }
 
@@ -376,38 +349,25 @@ details[open] > summary > .disclosure-chevron {
 }
 
 .port-forward-form {
-  display: grid;
-  grid-template-columns: 90px 120px minmax(220px, 1fr) 120px auto;
-  align-items: end;
-  gap: 9px;
   margin-top: 16px;
 }
 
 .port-forward-form label {
-  min-width: 0;
   display: grid;
   gap: 6px;
 }
 
 .port-forward-form label > span {
   color: var(--muted);
-  font-size: 9px;
   font-weight: 650;
 }
 
 .port-forward-form input,
 .port-forward-form select {
-  width: 100%;
-  height: 38px;
-  min-width: 0;
-  padding: 0 10px;
-  border: 1px solid color-mix(in srgb, var(--line-strong) 65%, var(--surface-3));
-  border-radius: 7px;
   outline: 0;
   background: var(--surface);
-  color: var(--text);
   font:
-    10px "JetBrains Mono Variable",
+    0.75rem "JetBrains Mono Variable",
     ui-monospace,
     monospace;
 }
@@ -416,5 +376,4 @@ details[open] > summary > .disclosure-chevron {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-shrink: 0;
 }

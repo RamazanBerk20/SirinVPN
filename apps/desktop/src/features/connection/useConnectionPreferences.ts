@@ -3,6 +3,7 @@ import { api } from "../../api";
 import { invoke } from "../../platform";
 import { errorMessage } from "../../lib/errors";
 import { t } from "../../i18n";
+import { invalidRoutes } from "../../lib/cidr";
 import {
   defaultConnectionPreferences,
   type ConnectionPreferences,
@@ -17,10 +18,13 @@ const normalize = (value: ConnectionPreferences): ConnectionPreferences => ({
 });
 
 // The backend omits unset optional fields while the editor writes explicit nulls; compare them as equal.
+// Ranges only count in Selected routes mode: the editor drops them in the other modes, so a profile
+// that kept ranges from an earlier mode must not look unsaved.
 const comparable = (value: ConnectionPreferences | null) =>
   value &&
   JSON.stringify({
     ...value,
+    routing: { ...value.routing, included_routes: value.routing.mode === "selected_routes" ? value.routing.included_routes ?? [] : [] },
     manual_mtu: value.manual_mtu ?? undefined,
     android_applications: value.android_applications ?? undefined,
   });
@@ -77,6 +81,9 @@ export function useConnectionPreferences(serverId: string | undefined) {
     },
   };
   const dirty = ready && comparable(saved) !== comparable(edited);
+  // Selected routes needs at least one well-formed range: an empty list would send nothing through the VPN.
+  const badRoutes = edited.routing.mode === "selected_routes"
+    ? edited.routing.included_routes.length ? invalidRoutes(edited.routing.included_routes) : [""] : [];
   const change = (patch: Partial<ConnectionPreferences>) => {
     setDraft((value) => ({ ...value, ...patch }));
     setNotice("");
@@ -91,7 +98,7 @@ export function useConnectionPreferences(serverId: string | undefined) {
     setError(null);
   };
   const save = async () => {
-    if (!serverId || !ready || inFlight.current) return;
+    if (!serverId || !ready || inFlight.current || badRoutes.length) return;
     const request = generation.current;
     inFlight.current = true;
     setSaving(true);
@@ -151,6 +158,8 @@ export function useConnectionPreferences(serverId: string | undefined) {
     notice,
     routesText,
     setRoutesText,
+    /** Ranges that are not canonical CIDR networks; [""] when Selected routes has none. */
+    badRoutes,
     change,
     route,
     save,

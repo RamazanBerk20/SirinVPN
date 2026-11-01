@@ -14,6 +14,8 @@ export function PreferenceSaveBar({
   local?: LocalTunnelStatus;
   serverId?: string;
 }) {
+  // Until saved preferences load, the editors show PreferencesPending instead.
+  if (!preferences.ready) return null;
   const pending =
     preferences.saved && local && serverId
       ? preferenceDifferences(preferences.saved, local, serverId)
@@ -42,7 +44,7 @@ export function PreferenceSaveBar({
             </button>
             <button
               className="primary-button"
-              disabled={preferences.saving}
+              disabled={preferences.saving || preferences.badRoutes.length > 0}
               onClick={() => void preferences.save()}
             >
               {t("connection.saveBar.save")}
@@ -63,7 +65,8 @@ export function PreferenceSaveBar({
           )}
         </>
       )}
-      {pending.length > 0 && (
+      {/* Saved-but-not-live differences wait until the floating unsaved bar is gone, so it stays one line tall. */}
+      {pending.length > 0 && !preferences.dirty && (
         <p className="pending-preferences">
           <Rich
             id="connection.saveBar.pending"
@@ -74,4 +77,14 @@ export function PreferenceSaveBar({
       )}
     </div>
   );
+}
+
+/** Shown instead of a preference editor until the saved values load, so defaults never pose as saved settings. */
+export function PreferencesPending({ preferences }: { preferences: ReturnType<typeof useConnectionPreferences> }) {
+  return <section className="settings-card" aria-busy={!preferences.error}>
+    {preferences.error ? <>
+      <InlineError message={preferences.error} />
+      <div className="settings-action-row"><button className="secondary-button" onClick={() => void preferences.reload()}>{t("common.action.retry")}</button></div>
+    </> : <p role="status">{t("connection.preferences.loading")}</p>}
+  </section>;
 }

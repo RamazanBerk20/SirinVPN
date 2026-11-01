@@ -78,7 +78,7 @@ def current_states(add):
     case('measurements', 'mtu-component-unsupported', connection, {'local': {'mtu_detection_supported': False, 'mtu': None}})
     case('measurements', 'mtu-verified-configured-value', connection, {'local': {'mtu': {'suggested': 1420}}})
     for value, name in [('not-a-route', 'invalid-cidr'), ('', 'empty-selected-routes'), ('198.51.100.7/24', 'noncanonical-cidr')]:
-        case('routing', name, network + [fill('IP ranges (CIDR), one per line', value), click('Save preferences')], {'preferences': {'routing': {'mode': 'selected_routes', 'included_routes': ['198.51.100.0/24']}}})
+        case('routing', name, network + [fill('IP ranges (CIDR), one per line', value), click('Save preferences', allowDisabled=True)], {'preferences': {'routing': {'mode': 'selected_routes', 'included_routes': ['198.51.100.0/24']}}})
     appstate = {'preferences': {'routing': {'mode': 'selected_applications'}}, 'local': {'routing_mode': 'selected_applications'}}
     case('routing', 'application-launch-arguments', network + [click('Launch arguments'), fill('One argument per line', '--private-window\nhttps://example.com')], appstate)
     outcomes('routing', 'launch-application', network + [fill('Program', '/usr/bin/firefox'), click('Launch in VPN')], 'launchVpnApplication', appstate)

@@ -14,6 +14,8 @@
   --success: #00ebad;
   --radius: 14px;
   --gradient: linear-gradient(110deg, #03cdf4 0%, #3437ff 48%, #be19f0 100%);
+  --switch-on: color-mix(in srgb, var(--cyan) 45%, var(--surface));
+  --switch-knob-on: var(--text);
 }
 /* Rules mix these tokens, so the light palette only redefines them; text tokens keep WCAG AA on every surface. */
 :root[data-theme="light"] {
@@ -37,6 +39,9 @@
   --shadow: rgb(22 34 66 / 40%);
   /* Deeper ends keep white button text at AA across the whole gradient. */
   --gradient: linear-gradient(110deg, #0670b8 0%, #3437ff 48%, #a316d6 100%);
+  /* A saturated track with a white knob: the pale mix fell to 1.9:1 against light cards. */
+  --switch-on: var(--cyan);
+  --switch-knob-on: var(--surface);
 }
 [hidden] {
   display: none !important;
@@ -68,121 +73,29 @@ summary {
   font-weight: 800;
 }
 .brand small {
-  font-size: 10px;
+  font-size: 0.75rem;
   line-height: 1.5;
-}
-.app-shell {
-  grid-template-columns: 228px minmax(0, 1fr);
-  background: var(--bg);
-}
-.sidebar {
-  background: var(--surface);
-  border-right: 1px solid color-mix(in srgb, var(--muted) 15%, var(--surface-3));
-  padding: 26px 14px 18px;
-  gap: 14px;
-  min-height: 100dvh;
-}
-.sidebar > .brand {
-  padding: 0 5px 18px;
-}
-.sidebar .brand-mark {
-  width: 45px;
-  height: 45px;
-}
-.sidebar .brand strong {
-  font-size: 23px;
-}
-.sidebar .brand small {
-  display: none;
-}
-.primary-navigation {
-  display: grid;
-  gap: 10px;
-  margin-bottom: 22px;
-}
-.primary-navigation button {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  min-height: 69px;
-  padding: 12px 15px;
-  text-align: left;
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: 12px;
-  color: color-mix(in srgb, var(--muted) 70%, var(--text));
-}
-.primary-navigation button span {
-  display: grid;
-  gap: 3px;
-}
-.primary-navigation strong {
-  font-size: 13px;
-  color: var(--text);
-}
-.primary-navigation small {
-  font-size: 10px;
-}
-.primary-navigation button:hover {
-  background: color-mix(in srgb, var(--surface-3) 55%, var(--surface-2));
-}
-.primary-navigation button[aria-current] {
-  border-color: color-mix(in srgb, var(--line-strong) 20%, var(--accent));
-  border-left-color: var(--cyan);
-  background: linear-gradient(110deg, color-mix(in srgb, var(--accent) 5%, var(--surface-3)), color-mix(in srgb, var(--accent) 5%, var(--surface-3)) 70%, color-mix(in srgb, var(--accent) 35%, var(--surface-3)));
-  box-shadow:
-    inset 3px 0 0 -1px var(--cyan),
-    0 0 16px color-mix(in srgb, color-mix(in srgb, var(--accent) 85%, var(--surface)) 14.5%, transparent);
-}
-.primary-navigation button[aria-current] > svg {
-  color: var(--cyan);
-  filter: drop-shadow(0 0 7px color-mix(in srgb, var(--cyan) 43.9%, transparent));
-}
-.sidebar-heading {
-  padding: 0 12px;
-  font-size: 10px;
-  letter-spacing: 0.12em;
-}
-.server-list {
-  flex: initial;
-}
-
-.sidebar-foot {
-  font-size: 10px;
-  border: 0;
-  padding-left: 13px;
 }
 .workspace {
   padding: 24px 30px 28px;
-  overflow: hidden;
 }
 .workspace::before {
   background: radial-gradient(ellipse at 70% 0, color-mix(in srgb, color-mix(in srgb, var(--line) 75%, var(--accent)) 12.5%, transparent), transparent 65%);
 }
 
 .workspace-header {
-  display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 18px;
 }
 .workspace-header > div:first-child {
   flex: 1;
 }
-.workspace-header h1 {
-  font-size: 1.65rem;
-  line-height: 1.2;
-  letter-spacing: -0.035em;
-}
 
 .endpoint {
   margin-top: 9px;
-  font-size: 11px;
   color: var(--muted);
 }
 .section-label {
-  font-size: 9px;
+  font-size: 0.75rem;
   color: color-mix(in srgb, var(--accent) 60%, var(--text));
   letter-spacing: 0.22em;
 }
@@ -191,7 +104,6 @@ summary {
   border: 1px solid color-mix(in srgb, var(--accent) 70%, var(--text));
   border-radius: 9px;
   box-shadow: 0 0 17px color-mix(in srgb, var(--accent) 15.7%, transparent);
-  min-height: 43px;
 }
 .primary-button:hover:not(:disabled) {
   filter: brightness(1.13);

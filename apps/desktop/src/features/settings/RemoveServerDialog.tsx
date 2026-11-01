@@ -244,6 +244,8 @@ export function RemoveServerDialog({
                 confirmed={confirmed}
                 onConfirmed={setConfirmed}
               />
+              {/* The consequence is on screen before the final button, not only in the confirmation. */}
+              <p className="warning-note">{t("vps.remove.uninstall.confirmMessage")}</p>
               <button
                 className="primary-button danger-action"
                 disabled={!confirmed || !sshValid || busy}

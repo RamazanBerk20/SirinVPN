@@ -329,3 +329,5 @@ html.android[data-theme="light"] {
 @media (prefers-reduced-motion: reduce) {
   .android *, .android *::before, .android *::after { animation: none !important; transition: none !important; }
 }
+/* Segmented choices and Back links are touch controls too. */
+.android .segmented-control button, .android .back-button { min-height: 48px; }

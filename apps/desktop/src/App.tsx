@@ -19,7 +19,6 @@ import { InfrastructureArt } from "./components/InfrastructureArt";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
   ArrowClockwise,
-  CaretRight,
   Database,
   GearSix,
   LockKey,
@@ -28,7 +27,7 @@ import {
 } from "@phosphor-icons/react";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { api } from "./api";
-import { setDemo } from "./platform";
+import { isAndroid, setDemo } from "./platform";
 import { t } from "./i18n";
 import { type ClientPlatform, type ServerProfile } from "./types";
 import { Brand, PrivacyPromises } from "./components/Brand";
@@ -189,22 +188,26 @@ function AppContent() {
     },
   );
 
+  // The desktop window is frameless: before the platform is known, only the custom title bar can move or close it.
   if (loading)
     return (
       <>
-        {clientPlatform === "desktop" && <DesktopTitleBar />}
+        {!isAndroid && <DesktopTitleBar />}
         <LoadingScreen />
       </>
     );
 
   if (platformError || clientPlatform === null) {
     return (
+      <>
+      {!isAndroid && <DesktopTitleBar />}
       <PlatformUnavailable
         onRetry={() => setInitializationAttempt((value) => value + 1)}
         message={
           platformError ?? t("app.errors.platform")
         }
       />
+      </>
     );
   }
 
@@ -324,6 +327,8 @@ function AppContent() {
             return (
               <button
                 key={server.id}
+                title={server.name}
+                aria-current={selected?.id === server.id || undefined}
                 className={`server-row ${selected?.id === server.id ? "selected" : ""}`}
                 onClick={() => {
                   setSelectedId(server.id);
@@ -339,7 +344,6 @@ function AppContent() {
                     {describeConnection(localStatus, server.id, null).status}
                   </small>
                 </span>
-                <CaretRight size={14} />
               </button>
             );
           })}

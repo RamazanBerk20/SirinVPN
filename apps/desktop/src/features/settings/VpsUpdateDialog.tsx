@@ -205,7 +205,8 @@ export function VpsUpdateDialog({ profile, open, onOpenChange, disconnected, onC
   const canFinish = Boolean(baseline || (candidate?.can_install && candidate.action !== "already_bound"));
   const clearReview = () => { setCandidate(null); setBaseline(null); setMessage(null); setScheduleMessage(null); };
   const finish = () => baseline ? installBaseline() : candidate ? perform(
-    { action: "install", manifest_sha256: candidate.manifest_sha256 }, t("vps.update.busy.installing"),
+    // Finishing setup on the release already installed is not an update install.
+    { action: "install", manifest_sha256: candidate.manifest_sha256 }, t(configured ? "vps.update.busy.installing" : "vps.update.busy.installingSetup"),
     candidate.baseline_required ? t("vps.update.done.setUp", { version: candidate.release_version }) : t("vps.update.done.installed", { version: candidate.release_version }),
     candidate.release_version,
   ) : Promise.resolve();

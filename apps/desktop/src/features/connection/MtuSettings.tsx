@@ -29,20 +29,23 @@ export function MtuSettings({ model }: { model: ServerWorkspaceModel }) {
   const minimum = model.profile.ipv6_tunnel_enabled ? 1280 : 576;
   const disabled = model.busy || model.preferences.saving || !model.preferences.ready;
   const range = { min: formatMtu(minimum), max: formatMtu(MAX_MTU) };
+  const shown = mtu && manual !== null ? { ...mtu, policy: { mode: "manual" as const, value: manual } } : mtu;
+  const invalid = manual !== null && (!Number.isInteger(manual) || manual < minimum || manual > MAX_MTU);
   return <section className="settings-card" aria-label={t("connection.mtu.title")}>
     <h2>{t("connection.mtu.title")}</h2>
     <label className="preference-row"><span><strong>{t("connection.mtu.automatic.label")}</strong><small>{t("connection.mtu.automatic.summary")}</small></span>
       <input type="checkbox" role="switch" aria-label={t("connection.mtu.automatic.label")} checked={manual === null} disabled={disabled}
         onChange={(event) => model.preferences.change({ manual_mtu: event.target.checked ? null : mtu?.configured ?? MAX_MTU })} />
     </label>
-    {manual !== null && <Field label={t("connection.mtu.manual.label")} hint={t("connection.mtu.manual.hint", { ...range, obfuscatedMax: formatMtu(OBFUSCATED_UDP_MAX_MTU), quicMax: formatMtu(QUIC_MAX_MTU) })}>
+    {manual !== null && <Field label={t("connection.mtu.manual.label")} hint={t("connection.mtu.manual.hint", { ...range, obfuscatedMax: formatMtu(OBFUSCATED_UDP_MAX_MTU), quicMax: formatMtu(QUIC_MAX_MTU) })}
+      error={invalid ? t(minimum === 1280 ? "connection.mtu.manual.invalidIpv6" : "connection.mtu.manual.invalid", range) : undefined}>
       <input aria-label={t("connection.mtu.manual.label")} type="number" min={minimum} max={MAX_MTU} step={1} value={manualText} disabled={disabled}
         onChange={(event) => { setManualText(event.target.value); if (event.target.value) model.preferences.change({ manual_mtu: Number(event.target.value) }); }}
         onBlur={() => { if (!manualText) setManualText(String(manual)); }} />
     </Field>}
-    {manual !== null && (!Number.isInteger(manual) || manual < minimum || manual > MAX_MTU) && <p className="warning-note">{minimum === 1280 ? t("connection.mtu.manual.invalidIpv6", range) : t("connection.mtu.manual.invalid", range)}</p>}
-    {mtu && <MtuDetails mtu={mtu} />}
-    <p className="settings-note">{mtu ? mtuDescription(mtu) : t("connection.mtu.notConnected")}</p>
+    {/* With a manual size chosen, describe the live measurement as manual: nothing will be applied automatically. */}
+    {shown && <MtuDetails mtu={shown} />}
+    <p className="settings-note">{shown ? mtuDescription(shown) : t("connection.mtu.notConnected")}</p>
     {model.localStatus.mtu_detection_supported === false && <p className="settings-note">{t("connection.mtu.unsupported")}</p>}
   </section>;
 }

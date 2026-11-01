@@ -27,7 +27,8 @@
     "policy": {
       "kill_switch": {
         "label": "Kill switch",
-        "summary": "Blocks internet if the VPN drops, until you disconnect"
+        "summary": "Blocks internet if the VPN drops, until you disconnect",
+          "nextConnection": "Saved, but not active yet: it turns on when you reconnect. Until then, traffic isn’t blocked if the VPN drops."
       },
       "automatic_reconnect": {
         "label": "Automatic reconnect",
@@ -87,7 +88,9 @@
     },
     "routes": {
       "label": "IP ranges (CIDR), one per line",
-      "hint": "Up to {{max}} ranges. System DNS always uses the VPN."
+      "hint": "Up to {{max}} ranges. System DNS always uses the VPN.",
+        "empty": "Add at least one range. With none, no traffic would use the VPN.",
+        "invalid": "Not a network in CIDR form, such as 198.51.100.0/24: {{routes}}"
     },
     "localNetwork": {
       "label": "Allow local network",
@@ -212,6 +215,7 @@
   },
   "preferences": {
     "loadError": "Couldn’t load connection preferences.",
+    "loading": "Loading connection preferences…",
     "saved": "Saved. Changes apply on your next connection.",
     "saveError": "Couldn’t save. Your previous preferences are still in place.",
     "reconnectOn": "Automatic reconnect is on.",

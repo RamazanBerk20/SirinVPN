@@ -29,7 +29,6 @@ button,
 label > span,
 .field > span,
 .choice-row strong,
-.primary-navigation strong,
 .preference-row strong {
   font-weight: var(--weight-medium);
 }
@@ -53,7 +52,6 @@ h2,
 .preference-row,
 .settings-note,
 .choice-row,
-.primary-navigation strong,
 .connection-explanation {
   font-size: var(--text-body);
   line-height: 1.5;

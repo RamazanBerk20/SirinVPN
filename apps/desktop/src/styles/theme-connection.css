@@ -36,12 +36,10 @@
 .section-heading {
   margin-bottom: 18px;
 }
-.section-heading h2 {
-  font-size: 16px;
-}
+
 .section-heading p {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 0.75rem;
   line-height: 1.6;
 }
 
@@ -51,18 +49,14 @@
   background: linear-gradient(150deg, var(--surface-2), var(--surface));
   border-radius: 10px;
   padding: 13px 11px;
-  gap: 14px;
 }
-.metric > div {
-  gap: 7px;
-}
+
 .metric strong {
-  font-size: 15px;
   line-height: 1.5;
   overflow-wrap: anywhere;
 }
 .metric span {
-  font-size: 10px;
+  font-size: 0.75rem;
 }
 .metric svg {
   color: var(--cyan);

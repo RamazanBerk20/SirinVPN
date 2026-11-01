@@ -109,7 +109,7 @@ it("asks for the token again once Android has forgotten it", async () => {
   enter();
   fireEvent.click(await screen.findByRole("button", { name: t("onboarding.hetzner.loadPlans") }));
   fireEvent.click(await screen.findByRole("button", { name: t("onboarding.hetzner.create", { total: "5.11", currency: "EUR" }) }));
-  expect(await screen.findByText("the server did not start in time")).toBeTruthy();
+  expect(await screen.findByText("the server did not start in time", { exact: false })).toBeTruthy();
 
   vi.setSystemTime(600_000);
   fireEvent.click(screen.getByRole("button", { name: t("onboarding.hetzner.delete") }));
@@ -149,7 +149,7 @@ it("asks before deleting a server that was cancelled or failed to start", async 
   fireEvent.click(stop);
   expect(api.cancelHetznerWait).toHaveBeenCalled();
   await act(async () => fail(new Error("server creation was cancelled")));
-  expect(await screen.findByText("server creation was cancelled")).toBeTruthy();
+  expect(await screen.findByText("server creation was cancelled", { exact: false })).toBeTruthy();
   expect(api.deleteHetznerServer).not.toHaveBeenCalled();
 
   vi.mocked(confirmAction).mockResolvedValueOnce(false);

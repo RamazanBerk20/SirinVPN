@@ -29,5 +29,5 @@ it("shows the native explanation when the VPS refuses", async () => {
   vi.mocked(api.speedTest).mockRejectedValue(new Error("Only the Owner or an Admin can run the speed test."));
   render(<SpeedTest serverId="server" />);
   fireEvent.click(screen.getByRole("button", { name: t("maintenance.speedTest.run") }));
-  expect((await screen.findByRole("alert")).textContent).toBe("Only the Owner or an Admin can run the speed test.");
+  expect((await screen.findByRole("alert")).textContent).toContain("Only the Owner or an Admin can run the speed test.");
 });

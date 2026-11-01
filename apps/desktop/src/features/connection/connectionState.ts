@@ -103,6 +103,9 @@ export function describeConnection(
               : "launchedApps"
           : split
             ? "selectedRoutes"
+            // Never claim all traffic is covered while IPv6 is neither tunneled nor blocked.
+            : !local.ipv6_tunneled && !local.ipv6_blocked
+              ? "fullTunnelIpv4"
             : local.allow_lan
               ? "fullTunnelLan"
               : "fullTunnel"
@@ -115,7 +118,9 @@ export function describeConnection(
                 : "waiting"
               : local.auto_reconnect_enabled
                 ? "reconnecting"
-                : "connecting"
+                : local.state === "degraded"
+                  ? protectedSession ? "interruptedBlocked" : "interrupted"
+                  : "connecting"
             : "disconnected";
   const warningState =
     recoveringAuthorization

@@ -119,6 +119,7 @@
     },
     "status": {
       "disabled": "Auto-connect is off.",
+      "starting": "Starting auto-connect…",
       "waitingForWifi": "Waiting for Wi-Fi that isn’t trusted.",
       "trusted": "On trusted Wi-Fi. An active VPN stays connected.",
       "connecting": "Connecting…",
@@ -186,6 +187,7 @@
     "unsupported": "Update the server software to use recovery keys.",
     "registered": "A recovery key is set up.",
     "none": "No recovery key yet.",
+      "cannotIssue": "Only the Owner, and Admins the Owner chose for Admin recovery, can create a recovery key.",
     "finishing": "A recovery key is still being set up. Wait a minute before creating another.",
     "accept": "I understand that anyone with this key can replace every Owner device. A new key voids the old one.",
     "create": "Create recovery key",

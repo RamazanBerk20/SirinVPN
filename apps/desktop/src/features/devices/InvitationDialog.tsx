@@ -3,6 +3,7 @@ import { DialogContent } from "../../components/DialogContent";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
   ArrowClockwise,
+  CaretDown,
   Check,
   Copy,
   Desktop,
@@ -23,6 +24,7 @@ import { MemberPolicyFields } from "./MemberPolicyFields";
 import { policyDraft, policyFromDraft } from "./memberPolicy";
 import { InvitationShare } from "./InvitationShare";
 import { t } from "../../i18n";
+import { isAndroid } from "../../platform";
 
 export function InvitationDialog({
   profile,
@@ -54,6 +56,7 @@ export function InvitationDialog({
   const [lifetime, setLifetime] = useState("3600");
   const [access, setAccess] = useState<"member" | "admin">("member");
   const [maxUses, setMaxUses] = useState(1);
+  const usesInvalid = !Number.isInteger(maxUses) || maxUses < 1 || maxUses > 100;
   const [deviceName, setDeviceName] = useState("");
   const [policy, setPolicy] = useState(() => policyDraft(delegated ? { ...issuer?.policy, invite_members: false } as import("../../types").MemberPolicy : undefined));
   const [created, setCreated] = useState<InvitationResult | null>(null);
@@ -150,7 +153,7 @@ export function InvitationDialog({
           ) : undefined}>
           {created ? (
             <div className="invitation-result" ref={resultRef}>
-              {copyResult === "failed" && <InlineError message={t("devices.invite.copyFailed")} />}
+              {copyResult === "failed" && <InlineError message={t(isAndroid ? "devices.invite.copyFailedAndroid" : "devices.invite.copyFailed")} />}
               <div className="warning-note">
                 <Warning size={18} weight="fill" />
                 <span>{t("devices.invite.secretWarning")}</span>
@@ -182,7 +185,7 @@ export function InvitationDialog({
                   {canCreateAdmin ? (
                     <Field
                       label={t("devices.invite.role")}
-                      hint={t("devices.invite.roleHint")}
+                      hint={t(access === "admin" ? "devices.invite.roleHint" : "devices.invite.roleHintMember")}
                     >
                       <select
                         value={access}
@@ -206,9 +209,7 @@ export function InvitationDialog({
                     </button>
                   </> : <p className="settings-note">{t("devices.invite.checking")}</p>}
                 </div>
-              ) : recipientNamesAvailable ? (
-                <p className="settings-note">{t("devices.invite.recipientNames")}</p>
-              ) : <>
+              ) : recipientNamesAvailable ? null : <>
                 <p className="settings-note">{t("devices.invite.olderServer")}</p>
                 <Field label={t("devices.invite.deviceName")}>
                   <input value={deviceName} maxLength={64} required autoComplete="off" onChange={(event) => setDeviceName(event.target.value)} />
@@ -224,19 +225,21 @@ export function InvitationDialog({
                   <option value="604800">{t("devices.invite.days", { count: 7 })}</option>
                 </select>
               </Field>
-              {scopedAvailable && target?.role !== "owner" && <Field label={t("devices.invite.uses")} hint={t("devices.invite.usesHint")}>
+              {scopedAvailable && target?.role !== "owner" && <Field label={t("devices.invite.uses")} hint={t("devices.invite.usesHint")} error={usesInvalid ? t("devices.invite.usesInvalid") : undefined}>
                 <input type="number" min={1} max={100} value={maxUses} onChange={(event) => setMaxUses(Number(event.target.value))} />
               </Field>}
               {scopedAvailable && !target && <details className="access-disclosure member-policy-disclosure">
-                <summary>{t("devices.invite.permissions")}</summary>
+                <summary>{t("devices.invite.permissions")} <CaretDown size={16} className="disclosure-chevron" /></summary>
                 <MemberPolicyFields draft={policy} onChange={setPolicy} delegated={delegated} />
               </details>}
+              {/* What happens on the other side: a footnote to the create button, not a field of its own. */}
+              {recipientNamesAvailable && <p className="settings-note">{t("devices.invite.recipientNames")}</p>}
               {error ? <InlineError message={error} /> : null}
               <button
                 className="primary-button"
                 type="submit"
                 disabled={
-                  busy || !ready
+                  busy || !ready || usesInvalid
                 }
               >
                 {busy ? (

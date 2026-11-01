@@ -68,7 +68,7 @@ export function ApplicationLauncher({ serverId, local, busy }: {
       <p>{windows ? t("connection.launcher.summaryWindows") : t("connection.launcher.summaryLinux")}{infoButton}</p>
       {infoPanel}
       {!ready && <p className="settings-note">{t("connection.launcher.notReady")}</p>}
-      <label className="route-list-field">
+      <label className="field">
         <span>{t("connection.launcher.executable")}</span>
         <input value={executable} onChange={(event) => setExecutable(event.target.value)} placeholder={windows ? t("connection.launcher.placeholderWindows") : t("connection.launcher.placeholderLinux")} disabled={launching || busy} autoComplete="off" spellCheck={false} />
       </label>

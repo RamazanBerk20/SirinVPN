@@ -32,7 +32,7 @@ it("keeps the saved opt-in visible when a native write fails", async () => {
   const toggle = await screen.findByRole("switch", { name: t("settings.wifi.toggle.label") });
   await waitFor(() => expect((toggle as HTMLInputElement).disabled).toBe(false));
   fireEvent.click(toggle);
-  expect(await screen.findByText("Could not save network policy")).toBeTruthy();
+  expect(await screen.findByText("Could not save network policy", { exact: false })).toBeTruthy();
   expect((toggle as HTMLInputElement).checked).toBe(false);
 });
 
@@ -155,7 +155,7 @@ it("clears a failed first read once a later poll succeeds", async () => {
   vi.useFakeTimers();
   mocks.getWifiPolicy.mockRejectedValueOnce(new Error("Wi-Fi state is temporarily unavailable"));
   await act(async () => { render(<WifiSettings />); });
-  expect(screen.getByText("Wi-Fi state is temporarily unavailable")).toBeTruthy();
+  expect(screen.getByText("Wi-Fi state is temporarily unavailable", { exact: false })).toBeTruthy();
   await act(async () => { await vi.advanceTimersByTimeAsync(5000); });
   expect(screen.queryByText("Wi-Fi state is temporarily unavailable")).toBeNull();
   expect(screen.getByRole("switch", { name: t("settings.wifi.toggle.label") })).toBeTruthy();

@@ -41,9 +41,7 @@
 .onboarding-shell::before {
   content: none;
 }
-.onboarding-copy {
-  padding-top: 28px;
-}
+
 .onboarding-copy::before {
   /* Anchor the landscape below the copy, independently of the form's height. */
   content: "";
@@ -165,7 +163,7 @@
   color: var(--muted);
 }
 .bottom-navigation strong {
-  font-size: 10px;
+  font-size: 0.75rem;
   font-weight: 500;
 }
 .bottom-navigation button[aria-current] {

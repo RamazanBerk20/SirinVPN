@@ -88,7 +88,7 @@
     "lists": "Blocklists",
     "custom": "Other blocklists",
     "customHint": "Optional. One HTTPS address per line, hosts or domain-list format.",
-    "customInvalid": "Use up to 8 HTTPS addresses in total.",
+    "customInvalid": "Each address must be a full HTTPS address, and there can be 8 lists at most.",
     "allowlist": "Never block",
     "allowlistHint": "One domain per line. Its subdomains are allowed too.",
     "allowlistInvalid": "Use valid domain names, up to 512.",

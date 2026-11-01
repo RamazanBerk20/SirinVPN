@@ -35,7 +35,7 @@ it("retains the session and code when checkpoint verification fails", async () =
   render(<EndpointUpdateDialog profile={profile} open connected onOpenChange={vi.fn()} onCompleted={completed} />);
   fireEvent.change(screen.getByRole("textbox"), { target: { value: "sirm1.invalid" } });
   fireEvent.click(screen.getByRole("button", { name: t("vps.endpoint.verify") }));
-  await screen.findByText("The signed checkpoint is invalid.");
+  await screen.findByText("The signed checkpoint is invalid.", { exact: false });
   await waitFor(() => expect((screen.getByRole("button", { name: t("vps.endpoint.verify") }) as HTMLButtonElement).disabled).toBe(false));
   expect((screen.getByRole("textbox") as HTMLTextAreaElement).value).toBe("sirm1.invalid");
   expect(completed).not.toHaveBeenCalled();

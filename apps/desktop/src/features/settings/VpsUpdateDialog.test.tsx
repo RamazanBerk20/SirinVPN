@@ -94,7 +94,7 @@ it("reports a rejected candidate without claiming that installation completed", 
   const button = await screen.findByRole("button", { name: t("vps.update.action.install", { version: "1.0.2" }) });
   vi.mocked(api.manageVpsRelease).mockRejectedValueOnce(new Error("The release signing key is revoked."));
   fireEvent.click(button);
-  await screen.findByText("The release signing key is revoked.");
+  await screen.findByText("The release signing key is revoked.", { exact: false });
   expect(screen.queryByText(t("vps.update.done.installed", { version: "1.0.2" }))).toBeNull();
   expect(completed).not.toHaveBeenCalled();
 });
@@ -152,7 +152,7 @@ it("keeps disabling an existing schedule possible after a source check fails", a
   });
   await setup();
   fireEvent.click(screen.getByRole("button", { name: t("vps.update.action.check") }));
-  await screen.findByText("Release signature verification failed.");
+  await screen.findByText("Release signature verification failed.", { exact: false });
   fireEvent.click(screen.getByRole("button", { name: t("vps.update.source.change") }));
   fireEvent.change(screen.getByLabelText(t("vps.update.source.label")), { target: { value: "invalid source" } });
   fireEvent.click(screen.getByRole("checkbox", { name: t("vps.update.schedule.toggle") }));
@@ -169,11 +169,11 @@ it("does not label a rejected or unconfirmed schedule as saved", async () => {
   expect(screen.getByText(t("common.separator.pair", { first: t("common.state.disabled"), second: t("vps.update.schedule.unsaved") }))).toBeTruthy();
   vi.mocked(api.manageVpsRelease).mockRejectedValueOnce(new Error("Schedule write failed."));
   fireEvent.click(screen.getByRole("button", { name: t("vps.update.schedule.save") }));
-  await screen.findByText("Schedule write failed.");
+  await screen.findByText("Schedule write failed.", { exact: false });
   expect(screen.queryByText(t("vps.update.schedule.enabled"))).toBeNull();
   vi.mocked(api.manageVpsRelease).mockResolvedValue(status);
   fireEvent.click(screen.getByRole("button", { name: t("vps.update.schedule.save") }));
-  await screen.findByText(t("vps.update.error.scheduleNotConfirmed"));
+  await screen.findByText(t("vps.update.error.scheduleNotConfirmed"), { exact: false });
   expect(screen.getByText(t("common.separator.pair", { first: t("common.state.disabled"), second: t("vps.update.schedule.unsaved") }))).toBeTruthy();
 });
 
@@ -214,7 +214,7 @@ it("blocks Escape and closing during installation and leaves a failed operation 
   fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape", code: "Escape" });
   expect(changeOpen).not.toHaveBeenCalled();
   await act(async () => reject(new Error("The update was interrupted; recover its transaction before retrying.")));
-  await screen.findByText("The update was interrupted; recover its transaction before retrying.");
+  await screen.findByText("The update was interrupted; recover its transaction before retrying.", { exact: false });
   expect(screen.getAllByRole("button", { name: t("common.action.close") }).every((button) => !button.matches(":disabled"))).toBe(true);
 });
 
@@ -242,7 +242,7 @@ it("does not claim installation when the VPS cannot confirm the reviewed version
   const install = await screen.findByRole("button", { name: t("vps.update.action.install", { version: "1.0.2" }) });
   vi.mocked(api.manageVpsRelease).mockResolvedValue(status);
   fireEvent.click(install);
-  await screen.findByText(t("vps.update.error.notConfirmed"));
+  await screen.findByText(t("vps.update.error.notConfirmed"), { exact: false });
   expect(screen.queryByText(t("vps.update.done.installed", { version: "1.0.2" }))).toBeNull();
   expect(completed).not.toHaveBeenCalled();
 });

@@ -116,9 +116,11 @@ export function ServerWorkspace(
           {mobileConnection && <ConnectionOptions model={model} />}
           {mobileConnection && <PreferenceSaveBar preferences={model.preferences} local={model.localStatus} serverId={profile.id} />}
           {mobileDetails && <MobileConnectionDetails model={model} source={props.trafficUpdates} onReviewActivity={reviewActivity} />}
-          {!mobileSubpage && <ConnectionHero model={model} view={view} onReviewComponentUpdate={() => setComponentUpdateOpen(true)} />}
+          {!mobileSubpage && <ConnectionHero model={model} view={view} onReviewComponentUpdate={() => setComponentUpdateOpen(true)}
+            onShowActive={model.localStatus.server_id && props.servers.some((server) => server.id === model.localStatus.server_id) ? () => props.onSelectServer(model.localStatus.server_id!) : undefined} />}
           {isAndroid && !mobileSubpage && <ServerPicker servers={props.servers} selected={profile} local={model.localStatus} onSelect={props.onSelectServer} onAdd={props.onAddServer} onManage={() => props.onNavigate("servers")} />}
-          {!mobileSubpage && (!isAndroid || model.connected) && <DeviceTraffic
+          {/* Traffic tiles only mean something for this server's tunnel, or while the local state is unknown. */}
+          {!mobileSubpage && (model.connected || !model.localKnown) && <DeviceTraffic
             source={props.trafficUpdates}
             showDetails={false}
             onReviewUpdate={() => setComponentUpdateOpen(true)}

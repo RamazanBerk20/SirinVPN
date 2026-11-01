@@ -1,21 +1,7 @@
 @media (max-width: 1150px) {
-  .app-shell {
-    grid-template-columns: 198px minmax(0, 1fr);
-  }
   .workspace {
     padding-left: 22px;
     padding-right: 22px;
-  }
-  
-  .primary-navigation button {
-    gap: 10px;
-    padding: 11px;
-  }
-  .primary-navigation small {
-    font-size: 9px;
-  }
-  .sidebar .brand strong {
-    font-size: 20px;
   }
   
   
@@ -31,12 +17,6 @@
   
 }
 @media (max-width: 760px) {
-  .app-shell {
-    display: block;
-  }
-  .sidebar {
-    display: none;
-  }
   .workspace {
     padding: 0 20px 105px;
   }
@@ -58,7 +38,6 @@
     gap: 22px;
   }
   .onboarding-copy {
-    padding-top: 0;
     text-align: center;
   }
   .onboarding-copy h1 {

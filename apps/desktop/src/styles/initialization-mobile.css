@@ -81,12 +81,12 @@
 .identity-disclosure > summary::before { content: "+"; flex-shrink: 0; color: var(--cyan); }
 .identity-disclosure[open] > summary::before { content: "−"; }
 .identity-disclosure > :not(summary) { margin-top: 12px; }
-.confirmation-row { display: flex; align-items: flex-start; gap: 12px; min-height: 48px; padding: 12px 0; cursor: pointer; line-height: 1.5; }
+
 .confirmation-row input[type="checkbox"] { flex: 0 0 22px; width: 22px; height: 22px; margin: 1px 0 0; accent-color: var(--cyan); }
 .confirmation-row > span { display: grid; min-width: 0; gap: 6px; }
 .confirmation-row small { color: var(--muted); line-height: 1.5; font-style: normal; }
 .confirmation-row:has(input:disabled) { opacity: .6; cursor: default; }
-.confirmation-row:focus-within { outline: 2px solid var(--cyan); outline-offset: 4px; border-radius: 4px; }
+.confirmation-row:focus-within { border-radius: 4px; }
 .initialization-shell .settings-action-row { display: flex; flex-direction: column; align-items: stretch; gap: 12px; }
 .initialization-shell .preferences-status { font-size: .75rem; color: var(--muted); margin: 0; }
 .initialization-shell :focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
