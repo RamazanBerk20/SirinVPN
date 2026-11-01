@@ -653,6 +653,7 @@ mod tests {
                 server_public_key: STANDARD.encode([17_u8; 32]),
                 certificate_sha256: STANDARD.encode([18_u8; 32]),
                 https: None,
+                quic: false,
             }),
         };
         let signing_key =

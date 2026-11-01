@@ -115,6 +115,7 @@ pub fn validate_request(request: &TunnelConnectRequest) -> Result<(), HelperErro
             && request.transport == TransportKind::TlsLike
             && request.schema_version != 5)
         || (request.transport == TransportKind::TlsLike && request.persistent_protection)
+        || (request.transport == TransportKind::Quic && request.schema_version < 7)
     {
         return Err(HelperError::InvalidConfiguration(
             "unsupported schema version".to_owned(),
@@ -127,11 +128,13 @@ pub fn validate_request(request: &TunnelConnectRequest) -> Result<(), HelperErro
             "independent policy requires schema 7 without the legacy bundle".into(),
         ));
     }
+    // QUIC carries the HTTPS name only as SNI and never goes through the CDN.
     if (request.schema_version < 9 && request.requires_https_support())
-        || request
-            .https
-            .as_ref()
-            .is_some_and(|https| !https.is_valid() || request.transport != TransportKind::TlsLike)
+        || request.https.as_ref().is_some_and(|https| {
+            !https.is_valid()
+                || !(request.transport == TransportKind::TlsLike
+                    || (request.transport == TransportKind::Quic && !https.cdn))
+        })
     {
         return Err(HelperError::InvalidConfiguration(
             "HTTPS transport requires schema 9 and valid TLS endpoint metadata".into(),
@@ -222,7 +225,7 @@ pub fn validate_request(request: &TunnelConnectRequest) -> Result<(), HelperErro
                 ));
             }
         }
-        TransportKind::TlsLike => {
+        TransportKind::TlsLike | TransportKind::Quic => {
             let key = request
                 .server_transport_public_key
                 .as_deref()
@@ -350,7 +353,7 @@ pub fn validate_reconnect_candidates(request: &TunnelConnectRequest) -> Result<(
     if request.reconnect_candidates.is_empty() {
         return Ok(());
     }
-    let maximum = if request.policy.is_some() { 4 } else { 3 };
+    let maximum = if request.policy.is_some() { 5 } else { 3 };
     if (!request.persistent_protection && request.policy.is_none())
         || !(2..=maximum).contains(&request.reconnect_candidates.len())
     {
@@ -371,9 +374,14 @@ pub fn validate_reconnect_candidates(request: &TunnelConnectRequest) -> Result<(
         ));
     }
     for (index, candidate) in request.reconnect_candidates.iter().enumerate() {
-        if candidate.transport == TransportKind::TlsLike && request.policy.is_none() {
+        if matches!(
+            candidate.transport,
+            TransportKind::TlsLike | TransportKind::Quic
+        ) && request.policy.is_none()
+        {
             return Err(HelperError::InvalidConfiguration(
-                "TLS-like transport is not yet available for persistent reconnect".to_owned(),
+                "TLS-like and QUIC transports are not available for persistent reconnect"
+                    .to_owned(),
             ));
         }
         if request.reconnect_candidates[..index]
@@ -412,7 +420,7 @@ pub fn request_for_reconnect_candidate(
             TransportKind::DirectUdp => 2,
             TransportKind::ObfuscatedUdp => 3,
             TransportKind::TcpFallback => 4,
-            TransportKind::TlsLike => 5,
+            TransportKind::TlsLike | TransportKind::Quic => 5,
         }
     } else {
         6

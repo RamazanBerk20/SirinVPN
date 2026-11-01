@@ -49,6 +49,7 @@ pub fn initialize_with_capabilities(
             https_certificate: None,
             update_transport_ports: false,
             disable_https: false,
+            quic: None,
             dns_upstream: None,
             private_dns_records: None,
         },
@@ -68,6 +69,8 @@ pub struct ServerCapabilities {
     pub https_certificate: Option<HttpsCertificatePaths>,
     pub update_transport_ports: bool,
     pub disable_https: bool,
+    /// QUIC on the TLS port's UDP twin; `None` keeps the current setting.
+    pub quic: Option<bool>,
     pub dns_upstream: Option<DnsUpstream>,
     pub private_dns_records: Option<Vec<PrivateDnsRecord>>,
 }
@@ -93,6 +96,7 @@ pub fn initialize_with_transport_capabilities(
         https_certificate,
         update_transport_ports,
         disable_https,
+        quic,
         dns_upstream,
         private_dns_records,
     } = capabilities;
@@ -132,6 +136,9 @@ pub fn initialize_with_transport_capabilities(
     {
         bail!("the TLS-like and TCP fallback transports must share one public port");
     }
+    if quic == Some(true) && tls_like_port.is_some() && obfuscated_udp_port == tls_like_port {
+        bail!("QUIC needs the TLS port number on UDP, which Obfuscated UDP uses");
+    }
     if let Some(dns_upstream) = &dns_upstream {
         validate_dns_upstream(dns_upstream)?;
     }
@@ -158,6 +165,8 @@ pub fn initialize_with_transport_capabilities(
         let initial_discovery_port = configuration
             .endpoint_discovery_port
             .or_else(|| configuration.tls_like.as_ref().map(|tls| tls.port));
+        let previous_quic = configuration.tls_like.as_ref().is_some_and(|tls| tls.quic);
+        let wanted_quic = quic.unwrap_or(previous_quic);
         match fs::metadata(&paths.authorization) {
             Ok(_) => {}
             Err(error) if error.kind() == io::ErrorKind::NotFound => {
@@ -198,6 +207,7 @@ pub fn initialize_with_transport_capabilities(
                     != Some(https)
             })
             || https_certificate.is_some()
+            || wanted_quic != previous_quic
             || (disable_https
                 && configuration
                     .tls_like
@@ -251,6 +261,7 @@ pub fn initialize_with_transport_capabilities(
                         PortForwardProtocol::Udp => {
                             forward.public_port == wireguard_port
                                 || obfuscated_udp_port == Some(forward.public_port)
+                                || (wanted_quic && tls_like_port == Some(forward.public_port))
                         }
                     };
                     if conflicts {
@@ -364,6 +375,18 @@ pub fn initialize_with_transport_capabilities(
         if let Some(endpoint) = &mut configuration.public_endpoint {
             endpoint.wireguard_port = configuration.wireguard_port;
         }
+        // Ports left unchanged may still share UDP with Obfuscated UDP; QUIC then stays off.
+        let quic_enabled = wanted_quic
+            && configuration.public_endpoint.is_some()
+            && configuration
+                .obfuscated_udp
+                .as_ref()
+                .zip(configuration.tls_like.as_ref())
+                .is_none_or(|(udp, tls)| udp.port != tls.port);
+        if let Some(endpoint) = &mut configuration.tls_like {
+            configuration_changed |= endpoint.quic != quic_enabled;
+            endpoint.quic = quic_enabled;
+        }
         if configuration.public_endpoint.is_some()
             && configuration.endpoint_discovery_port.is_none()
         {
@@ -470,6 +493,9 @@ pub fn initialize_with_transport_capabilities(
     } else {
         generated_certificate
     };
+    if let Some(endpoint) = &mut tls_like {
+        endpoint.quic = quic.unwrap_or(false) && public_host.is_some();
+    }
 
     write_private(
         &paths.wireguard_private_key,
@@ -558,14 +584,17 @@ pub(super) fn ensure_transport_identity(
 }
 
 /// Schema 8 marks a public endpoint; 9 adds a generated certificate stored without HTTPS;
-/// 10 marks HTTPS through a CDN, which older servers cannot read.
+/// 10 marks HTTPS through a CDN, which older servers cannot read; 11 marks QUIC, whose flag
+/// older servers would drop from the signed endpoint and then fail to verify it.
 fn configuration_schema_version(configuration: &ServerConfiguration) -> u16 {
     let https = configuration
         .tls_like
         .as_ref()
         .and_then(|endpoint| endpoint.https.as_ref());
     if configuration.public_endpoint.is_some() {
-        if https.is_some_and(|https| https.cdn) {
+        if configuration.tls_like.as_ref().is_some_and(|tls| tls.quic) {
+            11
+        } else if https.is_some_and(|https| https.cdn) {
             10
         } else if configuration.https_certificate_pem.is_some() && https.is_none() {
             9
@@ -612,6 +641,7 @@ pub(super) fn ensure_tls_like_identity(paths: &ServerPaths, port: u16) -> Result
         server_public_key: identity.server_public_key,
         certificate_sha256: STANDARD.encode(Sha256::digest(certificate.as_ref())),
         https: None,
+        quic: false,
     })
 }
 

@@ -83,6 +83,9 @@ impl CommandRunner for KernelRunner {
                             ClientTransportConfig::Current(
                                 CurrentClientTransportConfig::TlsLike(c),
                             ) => run_tls_like_client_relay(c, ready).await,
+                            ClientTransportConfig::Current(CurrentClientTransportConfig::Quic(
+                                c,
+                            )) => run_quic_client_relay(c, ready).await,
                         };
                         if let Err(error) = result {
                             eprintln!("carrier stopped: {error}");

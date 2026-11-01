@@ -1,6 +1,6 @@
 use super::*;
 
-pub const HELPER_PROTOCOL_VERSION: u16 = 20;
+pub const HELPER_PROTOCOL_VERSION: u16 = 21;
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -83,29 +83,38 @@ pub fn request_subnet_routes(
     }
 }
 
+/// The legacy persistent bundle predates the TLS and QUIC carriers.
+fn legacy_persistent(kind: TransportKind) -> bool {
+    matches!(
+        kind,
+        TransportKind::DirectUdp | TransportKind::ObfuscatedUdp | TransportKind::TcpFallback
+    )
+}
+
 pub fn automatic_reconnect_candidates(
     selections: &[TransportSelection],
     selected: TransportKind,
 ) -> Vec<ReconnectCandidate> {
-    if selected == TransportKind::TlsLike
+    if !legacy_persistent(selected)
         || selections
             .iter()
-            .filter(|selection| selection.kind != TransportKind::TlsLike)
+            .filter(|selection| legacy_persistent(selection.kind))
             .count()
             < 2
         || !selections
             .iter()
-            .any(|selection| selection.kind == selected && selection.kind != TransportKind::TlsLike)
+            .any(|selection| selection.kind == selected)
     {
         return Vec::new();
     }
     let mut candidates = Vec::with_capacity(3);
-    for selection in selections
-        .iter()
-        .filter(|selection| selection.kind == selected && selection.kind != TransportKind::TlsLike)
-        .chain(selections.iter().filter(|selection| {
-            selection.kind != selected && selection.kind != TransportKind::TlsLike
-        }))
+    for selection in
+        selections
+            .iter()
+            .filter(|selection| selection.kind == selected)
+            .chain(selections.iter().filter(|selection| {
+                selection.kind != selected && legacy_persistent(selection.kind)
+            }))
     {
         if candidates
             .iter()
@@ -425,7 +434,7 @@ pub fn policy_transport_candidates(selections: &[TransportSelection]) -> Vec<Rec
     if selections.len() < 2 {
         Vec::new()
     } else {
-        selections.iter().take(4).map(candidate).collect()
+        selections.iter().take(5).map(candidate).collect()
     }
 }
 fn candidate(selection: &TransportSelection) -> ReconnectCandidate {

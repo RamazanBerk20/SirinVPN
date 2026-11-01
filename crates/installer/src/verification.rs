@@ -17,6 +17,16 @@ pub(super) fn install_verification_command(
         .tcp_fallback
         .as_ref()
         .expect("validated bootstrap output includes TCP fallback");
+    let quic_conditions = bootstrap
+        .tls_like
+        .as_ref()
+        .filter(|endpoint| endpoint.quic)
+        .map_or_else(String::new, |endpoint| {
+            format!(
+                "nft list chain inet sirinvpn_filter input | grep -Fq 'udp dport {port} accept' &&\n  ss -H -lun 'sport = :{port}' | grep -q ':{port}' &&\n  ",
+                port = endpoint.port
+            )
+        });
     let expected_certificate_sha256 = hex::encode(Sha256::digest(
         bootstrap.management_certificate_pem.as_bytes(),
     ));
@@ -121,7 +131,7 @@ until systemctl is-active --quiet sirinvpn-network sirinvpn-firewall unbound sir
   ss -H -lun "sport = :$EXPECTED_OBFUSCATED_UDP_PORT" | grep -q ":$EXPECTED_OBFUSCATED_UDP_PORT" &&
   ss -H -lnt "sport = :$EXPECTED_TCP_FALLBACK_PORT" | grep -q ":$EXPECTED_TCP_FALLBACK_PORT" &&
   ss -H -lnt "sport = :$EXPECTED_ENDPOINT_DISCOVERY_PORT" | grep -q ":$EXPECTED_ENDPOINT_DISCOVERY_PORT" &&
-  ss -H -lnt 'sport = :8443' | grep -q '10.77.0.1:8443'; do
+  {quic_conditions}  ss -H -lnt 'sport = :8443' | grep -q '10.77.0.1:8443'; do
   attempt=$((attempt + 1))
   [ "$attempt" -lt 15 ] || exit 1
   sleep 1
@@ -141,6 +151,7 @@ done
             .unwrap_or(tcp_fallback.port),
         dns_verification = dns_verification,
         doh_runtime_conditions = doh_runtime_conditions,
+        quic_conditions = quic_conditions,
         ipv6_verification = ipv6_verification,
         expected_operational_configuration = expected_operational_configuration,
         expected_leak_test_zone = shell_quote(&leak_test_zone()),

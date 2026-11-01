@@ -40,6 +40,7 @@ fn dns_policy_migration_is_reversible_and_preserves_server_identity() {
             https_certificate: None,
             update_transport_ports: false,
             disable_https: false,
+            quic: None,
             tls_like_port: None,
             dns_upstream: Some(secure_dns.clone()),
             private_dns_records: None,

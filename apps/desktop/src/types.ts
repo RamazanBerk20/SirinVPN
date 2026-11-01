@@ -80,6 +80,7 @@ export interface ServerProfile {
     server_public_key: string;
     certificate_sha256: string;
     https?: HttpsTransport | null;
+    quic?: boolean;
   };
 }
 
@@ -93,7 +94,8 @@ export type TransportKind =
   | "direct_udp"
   | "obfuscated_udp"
   | "tls_like"
-  | "tcp_fallback";
+  | "tcp_fallback"
+  | "quic";
 export type TransportPreference = "automatic" | TransportKind;
 export type NetworkProfile = "automatic" | "normal" | "restricted" | "extreme";
 export type TunnelRoutingMode = "full_tunnel" | "selected_routes" | "selected_applications";

@@ -38,24 +38,35 @@ pub use tcp::{
     run_tls_like_client_relay, run_tls_like_client_relay_with_remote_socket_setup,
     run_tls_like_client_relay_with_socket_protector,
 };
+pub use tcp::{
+    run_quic_client_relay, run_quic_client_relay_with_remote_socket_setup,
+    run_quic_client_relay_with_socket_protector, run_quic_server_relay,
+};
 
 pub const CLIENT_RELAY_PORT: u16 = 51_821;
 pub const TCP_CLIENT_RELAY_PORT: u16 = 51_822;
 pub const TLS_LIKE_CLIENT_RELAY_PORT: u16 = 51_823;
+pub const QUIC_CLIENT_RELAY_PORT: u16 = 51_827;
 pub const TUNNEL_SOCKET_MARK: u32 = 51_820;
 pub const DIRECT_MTU: u16 = 1_420;
 pub const OBFUSCATED_UDP_MTU: u16 = 1_320;
 pub const TCP_FALLBACK_MTU: u16 = 1_280;
 pub const TLS_LIKE_MTU: u16 = 1_280;
+pub const QUIC_MTU: u16 = 1_280;
 /// An obfuscated UDP datagram carries at most 1472 − 24 (session header) −
 /// 16 (AEAD tag) − 2 (length) = 1430 inner bytes, and a WireGuard data packet
 /// is the tunnel MTU plus 32 bytes.
 pub const OBFUSCATED_UDP_MAX_MTU: u16 = 1_398;
+/// A QUIC datagram at the 1452-byte path MTU discovery limit carries 1452 − 38 (short
+/// header, 8-byte connection ID, packet number, AEAD tag and DATAGRAM frame bound) − 2
+/// (length) = 1412 bytes, and a WireGuard data packet is the tunnel MTU plus 32 bytes.
+pub const QUIC_MAX_MTU: u16 = 1_380;
 
 /// The largest tunnel MTU whose full-size packets this transport delivers.
 pub const fn max_mtu(kind: TransportKind) -> u16 {
     match kind {
         TransportKind::ObfuscatedUdp => OBFUSCATED_UDP_MAX_MTU,
+        TransportKind::Quic => QUIC_MAX_MTU,
         TransportKind::DirectUdp | TransportKind::TcpFallback | TransportKind::TlsLike => {
             sirinvpn_protocol::MAX_TUNNEL_MTU
         }
@@ -113,6 +124,14 @@ impl TransportEngine {
         }
         if let Some(tls) = &descriptor.tls_like {
             validate_tls_like_endpoint(tls)?;
+            if tls.quic
+                && descriptor
+                    .obfuscated_udp
+                    .as_ref()
+                    .is_some_and(|udp| udp.port == tls.port)
+            {
+                return Err(TransportError::InvalidEndpoint);
+            }
             if tls.port == descriptor.endpoint.wireguard_port
                 || descriptor
                     .tcp_fallback
@@ -164,10 +183,13 @@ impl TransportEngine {
             NetworkProfile::Automatic | NetworkProfile::Normal => [
                 TransportKind::DirectUdp,
                 TransportKind::ObfuscatedUdp,
+                TransportKind::Quic,
                 TransportKind::TlsLike,
                 TransportKind::TcpFallback,
             ],
+            // Protocol-allowlisting censors pass HTTP/3 more often than unclassifiable UDP.
             NetworkProfile::Restricted => [
+                TransportKind::Quic,
                 TransportKind::ObfuscatedUdp,
                 TransportKind::TlsLike,
                 TransportKind::TcpFallback,
@@ -175,12 +197,13 @@ impl TransportEngine {
             ],
             NetworkProfile::Extreme => [
                 TransportKind::TlsLike,
+                TransportKind::Quic,
                 TransportKind::TcpFallback,
                 TransportKind::ObfuscatedUdp,
                 TransportKind::DirectUdp,
             ],
         };
-        let mut kinds = Vec::with_capacity(4);
+        let mut kinds = Vec::with_capacity(5);
         if network_profile == NetworkProfile::Automatic
             && let Some(kind) = cached_transport
             && transport_available(profile, kind)
@@ -269,6 +292,38 @@ impl TransportEngine {
                     server_certificate_sha256: Some(tls.certificate_sha256.clone()),
                 })
             }
+            TransportKind::Quic => {
+                let tls = profile
+                    .tls_like
+                    .as_ref()
+                    .filter(|tls| tls.quic)
+                    .ok_or(TransportError::Unavailable)?;
+                validate_tls_like_endpoint(tls)?;
+                if tls.port == profile.endpoint.wireguard_port
+                    || profile
+                        .obfuscated_udp
+                        .as_ref()
+                        .is_some_and(|udp| udp.port == tls.port)
+                {
+                    return Err(TransportError::InvalidEndpoint);
+                }
+                Ok(TransportSelection {
+                    kind: requested,
+                    network_endpoint: ServerEndpoint {
+                        host: profile.endpoint.host.clone(),
+                        wireguard_port: tls.port,
+                    },
+                    wireguard_endpoint: ServerEndpoint {
+                        host: Ipv4Addr::LOCALHOST.to_string(),
+                        wireguard_port: QUIC_CLIENT_RELAY_PORT,
+                    },
+                    mtu: QUIC_MTU,
+                    server_transport_public_key: Some(tls.server_public_key.clone()),
+                    // The name is only SNI; a CDN name stays off connections to the origin.
+                    https: tls.https.clone().filter(|https| !https.cdn),
+                    server_certificate_sha256: Some(tls.certificate_sha256.clone()),
+                })
+            }
             TransportKind::TcpFallback => {
                 let tcp = profile
                     .tcp_fallback
@@ -304,6 +359,7 @@ fn transport_available(profile: &ServerProfile, kind: TransportKind) -> bool {
         TransportKind::ObfuscatedUdp => profile.obfuscated_udp.is_some(),
         TransportKind::TlsLike => profile.tls_like.is_some(),
         TransportKind::TcpFallback => profile.tcp_fallback.is_some(),
+        TransportKind::Quic => profile.tls_like.as_ref().is_some_and(|tls| tls.quic),
     }
 }
 
@@ -461,6 +517,55 @@ fn tls_like_client_relay_config_with_mark(
         server_certificate_sha256: STANDARD.encode(certificate_sha256),
         https: None,
     })
+}
+
+/// QUIC reuses the TLS endpoint's keys and pin on its own loopback relay port.
+pub fn quic_client_relay_config(
+    server_address: SocketAddr,
+    client_private_key: &str,
+    server_public_key: &str,
+    server_certificate_sha256: &str,
+) -> Result<TlsLikeClientRelayConfig, TransportError> {
+    quic_client_relay_config_with_mark(
+        server_address,
+        client_private_key,
+        server_public_key,
+        server_certificate_sha256,
+        Some(TUNNEL_SOCKET_MARK),
+    )
+}
+
+pub fn quic_client_relay_config_unmarked(
+    server_address: SocketAddr,
+    client_private_key: &str,
+    server_public_key: &str,
+    server_certificate_sha256: &str,
+) -> Result<TlsLikeClientRelayConfig, TransportError> {
+    quic_client_relay_config_with_mark(
+        server_address,
+        client_private_key,
+        server_public_key,
+        server_certificate_sha256,
+        None,
+    )
+}
+
+fn quic_client_relay_config_with_mark(
+    server_address: SocketAddr,
+    client_private_key: &str,
+    server_public_key: &str,
+    server_certificate_sha256: &str,
+    socket_mark: Option<u32>,
+) -> Result<TlsLikeClientRelayConfig, TransportError> {
+    let mut config = tls_like_client_relay_config_with_mark(
+        server_address,
+        client_private_key,
+        server_public_key,
+        server_certificate_sha256,
+        socket_mark,
+    )?;
+    config.local_listen.set_port(QUIC_CLIENT_RELAY_PORT);
+    Ok(config)
 }
 
 fn tcp_client_relay_config_with_mark(

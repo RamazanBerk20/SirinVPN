@@ -49,3 +49,19 @@ it("keeps an existing server's CDN mode when repairing", () => {
   expect(draft.cdn).toBe(true);
   expect(transportSetupFromDraft(draft).https?.cdn).toBe(true);
 });
+
+it("keeps UDP at the TCP/TLS port free for QUIC and says when QUIC stays off", () => {
+  expect(newTransportDraft().obfuscated).toBe("51821");
+  const legacy = { endpoint: { host: "203.0.113.8", wireguard_port: 51820 }, obfuscated_udp: { port: 443 }, tcp_fallback: { port: 443 } };
+  expect(newTransportDraft(legacy as never).obfuscated).toBe("51821");
+  expect(newTransportDraft({ ...legacy, obfuscated_udp: { port: 4443 } } as never).obfuscated).toBe("4443");
+  function Form() {
+    const [draft, setDraft] = useState(newTransportDraft);
+    return <TransportSetupFields value={draft} onChange={setDraft} />;
+  }
+  render(<Form />);
+  fireEvent.click(screen.getByText(t("ssh.transport.summary")));
+  expect(screen.queryByText(t("ssh.transport.quicPortNote"))).toBeNull();
+  fireEvent.change(screen.getByRole("textbox", { name: t("ssh.transport.obfuscatedPort") }), { target: { value: "443" } });
+  expect(screen.getByText(t("ssh.transport.quicPortNote"))).toBeTruthy();
+});

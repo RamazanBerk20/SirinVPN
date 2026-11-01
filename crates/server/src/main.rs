@@ -61,6 +61,9 @@ struct InitArguments {
     update_transport_ports: bool,
     #[arg(long, conflicts_with = "https_server_name")]
     disable_https: bool,
+    /// Answer QUIC (HTTP/3) on the TLS port number over UDP.
+    #[arg(long)]
+    quic: Option<bool>,
     #[arg(
         long,
         conflicts_with_all = ["dns_over_tls_endpoint", "dns_over_https_endpoint"]
@@ -162,6 +165,7 @@ async fn run() -> anyhow::Result<()> {
                 https_cdn,
                 update_transport_ports,
                 disable_https,
+                quic,
                 recursive_dns,
                 dns_over_tls_endpoint,
                 dns_over_https_endpoint,
@@ -214,6 +218,7 @@ async fn run() -> anyhow::Result<()> {
                     tls_like_port: Some(tls_like_port),
                     update_transport_ports,
                     disable_https,
+                    quic,
                     https: https_server_name.map(|server_name| sirinvpn_protocol::HttpsTransport {
                         server_name,
                         path: https_path,

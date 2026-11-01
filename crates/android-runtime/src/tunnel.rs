@@ -190,6 +190,26 @@ pub async fn carrier(
                     config, protect, ready,
                 ))
         }
+        TransportKind::Quic => {
+            let mut config = quic_client_relay_config_unmarked(
+                remote,
+                private_key,
+                server_key,
+                selection
+                    .server_certificate_sha256
+                    .as_deref()
+                    .context("Missing TLS pin")?,
+            )?;
+            if let Some(local) = local {
+                config.local_listen = local;
+            }
+            config.https = selection.https.clone();
+            runtime
+                .executor
+                .spawn(run_quic_client_relay_with_socket_protector(
+                    config, protect, ready,
+                ))
+        }
         _ => bail!("Unsupported transport"),
     };
     match tokio::time::timeout(Duration::from_secs(timeout), rx).await {

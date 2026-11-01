@@ -156,16 +156,12 @@ impl FirewallPlan {
                         SystemUser,
                         Remote(host(endpoint.ip())),
                         RemotePort(endpoint.port()),
-                        Protocol(
-                            if matches!(
-                                request.transport,
-                                TransportKind::DirectUdp | TransportKind::ObfuscatedUdp
-                            ) {
-                                17
-                            } else {
-                                6
-                            },
-                        ),
+                        Protocol(match request.transport {
+                            TransportKind::DirectUdp
+                            | TransportKind::ObfuscatedUdp
+                            | TransportKind::Quic => 17,
+                            TransportKind::TcpFallback | TransportKind::TlsLike => 6,
+                        }),
                     ],
                 );
             }

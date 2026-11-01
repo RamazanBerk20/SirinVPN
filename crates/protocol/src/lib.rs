@@ -70,7 +70,9 @@ use uuid::Uuid;
 
 pub const API_VERSION: &str = "v1";
 pub const DEFAULT_WIREGUARD_PORT: u16 = 51_820;
-pub const DEFAULT_OBFUSCATED_UDP_PORT: u16 = 443;
+/// UDP 443 belongs to QUIC, which looks like HTTP/3; servers installed earlier kept
+/// Obfuscated UDP there until a Repair moves it.
+pub const DEFAULT_OBFUSCATED_UDP_PORT: u16 = 51_821;
 pub const DEFAULT_TCP_FALLBACK_PORT: u16 = 443;
 pub const DEFAULT_TLS_LIKE_PORT: u16 = 443;
 pub const DEFAULT_MANAGEMENT_PORT: u16 = 8_443;
@@ -237,6 +239,10 @@ pub struct TlsLikeEndpoint {
     pub certificate_sha256: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub https: Option<HttpsTransport>,
+    /// The server also answers QUIC (HTTP/3) on this port number over UDP, with the same
+    /// certificate pin and Noise key. Omitted when false, so existing descriptors keep their bytes.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub quic: bool,
 }
 
 /// HTTPS appearance is public endpoint metadata, authenticated with the server pins.
@@ -349,6 +355,7 @@ pub enum TransportKind {
     ObfuscatedUdp,
     TlsLike,
     TcpFallback,
+    Quic,
 }
 
 impl TransportKind {
@@ -366,6 +373,7 @@ pub enum TransportPreference {
     ObfuscatedUdp,
     TlsLike,
     TcpFallback,
+    Quic,
 }
 
 impl TransportPreference {
@@ -376,6 +384,7 @@ impl TransportPreference {
             Self::ObfuscatedUdp => Some(TransportKind::ObfuscatedUdp),
             Self::TlsLike => Some(TransportKind::TlsLike),
             Self::TcpFallback => Some(TransportKind::TcpFallback),
+            Self::Quic => Some(TransportKind::Quic),
         }
     }
 }
@@ -543,7 +552,7 @@ pub fn validate_server_dns_configuration(
             | (4, DnsUpstream::DnsOverHttps { .. }, true)
             | (5, DnsUpstream::DnsOverHttps { .. }, false)
             | (6, DnsUpstream::Split { .. }, _)
-            | (7..=10, _, _)
+            | (7..=11, _, _)
     );
     if !valid_pair {
         return Err(ValidationError::InvalidDnsConfigurationSchema);

@@ -243,6 +243,11 @@ fn ports(config: &ServerConfiguration) -> Option<bool> {
                 .as_ref()
                 .is_none_or(|endpoint| public(&tcp, endpoint.port))
             && config
+                .tls_like
+                .as_ref()
+                .filter(|endpoint| endpoint.quic)
+                .is_none_or(|endpoint| public(&udp, endpoint.port))
+            && config
                 .endpoint_discovery_port
                 .is_none_or(|port| public(&tcp, port)),
     )

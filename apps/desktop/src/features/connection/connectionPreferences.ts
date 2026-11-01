@@ -27,8 +27,9 @@ export const defaultConnectionPreferences: ConnectionPreferences = {
   routing: { mode: "full_tunnel", included_routes: [], allow_lan: false },
 };
 
-// Obfuscated UDP limits a manual MTU to this value; Android reports the limited value.
+// Obfuscated UDP and QUIC limit a manual MTU to these values; Android reports the limited value.
 export const OBFUSCATED_UDP_MAX_MTU = 1398;
+export const QUIC_MAX_MTU = 1380;
 
 /** MTU values are technical sizes: localized digits, but no thousands separator. */
 export function formatMtu(value: number): string {
@@ -40,8 +41,8 @@ function manualMtuMatches(saved: number | null, local: LocalTunnelStatus): boole
   return (
     saved === actual ||
     (saved !== null &&
-      local.transport === "obfuscated_udp" &&
-      actual === Math.min(saved, OBFUSCATED_UDP_MAX_MTU))
+      ((local.transport === "obfuscated_udp" && actual === Math.min(saved, OBFUSCATED_UDP_MAX_MTU)) ||
+        (local.transport === "quic" && actual === Math.min(saved, QUIC_MAX_MTU))))
   );
 }
 

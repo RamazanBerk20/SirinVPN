@@ -60,6 +60,9 @@ pub(super) fn validate_configuration(configuration: &ServerConfiguration) -> Res
         .as_ref()
         .and_then(|endpoint| endpoint.https.as_ref());
     let generated_certificate = configuration.https_certificate_pem.is_some() && https.is_none();
+    let cdn = https.is_some_and(|https| https.cdn);
+    let quic = configuration.tls_like.as_ref().is_some_and(|tls| tls.quic);
+    // Schema 11 marks QUIC and may also carry a generated certificate or CDN mode.
     if (configuration.schema_version < 7 && https.is_some())
         || (configuration.schema_version == 7 && https.is_none())
         || https.is_some_and(|value| !value.is_valid())
@@ -67,12 +70,15 @@ pub(super) fn validate_configuration(configuration: &ServerConfiguration) -> Res
             .https_certificate_pem
             .as_ref()
             .is_some_and(|pem| pem.is_empty() || pem.len() > 65_536)
-        || (configuration.schema_version == 9) != generated_certificate
-        || (configuration.schema_version == 10) != https.is_some_and(|https| https.cdn)
+        || (configuration.schema_version == 9 && !generated_certificate)
+        || (generated_certificate && !matches!(configuration.schema_version, 9 | 11))
+        || (configuration.schema_version == 10 && !cdn)
+        || (cdn && !matches!(configuration.schema_version, 10 | 11))
+        || (configuration.schema_version == 11) != quic
     {
-        bail!("TLS certificate metadata requires configuration schema 7, 9 or 10");
+        bail!("TLS certificate metadata requires configuration schema 7, 9, 10 or 11");
     }
-    if matches!(configuration.schema_version, 8..=10) != configuration.public_endpoint.is_some()
+    if matches!(configuration.schema_version, 8..=11) != configuration.public_endpoint.is_some()
         || (configuration.public_endpoint.is_none()
             && !configuration.alternate_endpoint_hosts.is_empty())
     {
@@ -121,6 +127,14 @@ pub(super) fn validate_configuration(configuration: &ServerConfiguration) -> Res
             != Some(tls_like.port)
         {
             bail!("the TLS-like and TCP fallback transports must share one public port");
+        }
+        if tls_like.quic
+            && configuration
+                .obfuscated_udp
+                .as_ref()
+                .is_some_and(|endpoint| endpoint.port == tls_like.port)
+        {
+            bail!("QUIC needs the TLS port number on UDP, which Obfuscated UDP uses");
         }
         decode_key(&tls_like.server_public_key)
             .map_err(|_| anyhow!("server configuration contains an invalid transport identity"))?;

@@ -216,6 +216,22 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
                     .with_https(request.https.clone())?,
                 ))
             }
+            TransportKind::Quic => {
+                ClientTransportConfig::Current(CurrentClientTransportConfig::Quic(
+                    quic_client_relay_config(
+                        server_address,
+                        &request.private_key,
+                        server_public_key,
+                        request
+                            .server_certificate_sha256
+                            .as_deref()
+                            .ok_or_else(|| {
+                                anyhow!("QUIC certificate fingerprint is unavailable")
+                            })?,
+                    )?
+                    .with_https(request.https.clone())?,
+                ))
+            }
             TransportKind::DirectUdp => bail!("Direct UDP does not use a transport relay"),
         };
         self.write_transport_config_at(&config, &self.carrier_config_path(request.transport))?;
@@ -244,6 +260,7 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
             TransportKind::ObfuscatedUdp,
             TransportKind::TcpFallback,
             TransportKind::TlsLike,
+            TransportKind::Quic,
         ] {
             self.stop_carrier(kind);
         }
@@ -311,6 +328,7 @@ pub(super) fn carrier_name(kind: TransportKind) -> &'static str {
         TransportKind::ObfuscatedUdp => "obfuscated_udp",
         TransportKind::TcpFallback => "tcp_fallback",
         TransportKind::TlsLike => "tls_like",
+        TransportKind::Quic => "quic",
     }
 }
 pub(super) fn carrier_unit(kind: TransportKind) -> String {

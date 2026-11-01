@@ -14,5 +14,6 @@ mod endpoints;
 mod generated_tls_certificate;
 mod https_transport;
 mod member_lifecycle;
+mod quic_transport;
 mod slow_handshake;
 mod status_stream;

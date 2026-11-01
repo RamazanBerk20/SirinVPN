@@ -203,6 +203,7 @@ pub fn local_checks(current: Option<&CurrentConnection>) -> Vec<DiagnosticCheck>
                 TransportKind::ObfuscatedUdp => "Obfuscated UDP is selected for the current tunnel. If it cannot connect, check its public UDP port and current server keys.",
                 TransportKind::TcpFallback => "TCP fallback is selected for the current tunnel. If it cannot connect, check its public TCP port and current server keys.",
                 TransportKind::TlsLike => "Pinned TLS/HTTPS transport is selected for the current tunnel. If it cannot connect, check its public TCP port, endpoint pin and configured HTTPS name/path.",
+                TransportKind::Quic => "QUIC (HTTP/3) is selected for the current tunnel. If it cannot connect, check that the VPS accepts UDP on its TCP/TLS port number; some networks block QUIC entirely.",
             }));
         }
         checks.push(check("local_routes", "Configured VPN routing", if state.can_probe() { Pass } else { Warning },

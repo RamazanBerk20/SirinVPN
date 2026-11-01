@@ -4,7 +4,7 @@ import type { LocalTunnelStatus } from "../../types";
 import type { ServerWorkspaceModel } from "./useServerWorkspace";
 import { t } from "../../i18n";
 import { formatTransport } from "../../format";
-import { formatMtu, OBFUSCATED_UDP_MAX_MTU } from "./connectionPreferences";
+import { formatMtu, OBFUSCATED_UDP_MAX_MTU, QUIC_MAX_MTU } from "./connectionPreferences";
 
 const MAX_MTU = 1420;
 
@@ -35,7 +35,7 @@ export function MtuSettings({ model }: { model: ServerWorkspaceModel }) {
       <input type="checkbox" role="switch" aria-label={t("connection.mtu.automatic.label")} checked={manual === null} disabled={disabled}
         onChange={(event) => model.preferences.change({ manual_mtu: event.target.checked ? null : mtu?.configured ?? MAX_MTU })} />
     </label>
-    {manual !== null && <Field label={t("connection.mtu.manual.label")} hint={t("connection.mtu.manual.hint", { ...range, obfuscatedMax: formatMtu(OBFUSCATED_UDP_MAX_MTU) })}>
+    {manual !== null && <Field label={t("connection.mtu.manual.label")} hint={t("connection.mtu.manual.hint", { ...range, obfuscatedMax: formatMtu(OBFUSCATED_UDP_MAX_MTU), quicMax: formatMtu(QUIC_MAX_MTU) })}>
       <input aria-label={t("connection.mtu.manual.label")} type="number" min={minimum} max={MAX_MTU} step={1} value={manualText} disabled={disabled}
         onChange={(event) => { setManualText(event.target.value); if (event.target.value) model.preferences.change({ manual_mtu: Number(event.target.value) }); }}
         onBlur={() => { if (!manualText) setManualText(String(manual)); }} />
