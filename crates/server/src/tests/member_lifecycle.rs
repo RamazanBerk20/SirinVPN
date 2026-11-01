@@ -1,6 +1,6 @@
 use super::*;
-mod device_pairs;
 mod alerts;
+mod device_pairs;
 mod dns_blocklist;
 mod policy_enrollment;
 mod recovery;
