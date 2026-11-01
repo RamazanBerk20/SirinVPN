@@ -17,6 +17,52 @@ fn an_ipv6_only_vps_uses_its_ipv6_uplink_as_the_external_interface() {
     assert!(parse_discovery(&isolated).is_err());
     // A link-local-only IPv6 route is not a usable uplink either.
     assert!(parse_discovery(&IPV6_ONLY.replace("ipv6_available=1", "ipv6_available=0")).is_err());
+    // An IPv4 default route whose device discovery could not read is IPv4, not IPv6-only.
+    assert!(parse_discovery(&IPV6_ONLY.replace("ipv4_available=0", "ipv4_available=1")).is_err());
+}
+
+#[test]
+fn discovery_reads_the_uplink_of_multipath_default_routes() {
+    let device = |routes: &str| {
+        let output = std::process::Command::new("/bin/sh")
+            .arg("-c")
+            .arg(format!(
+                "{DEFAULT_DEVICE}\nprintf '%s\\n' \"$1\" | default_device"
+            ))
+            .arg("sh")
+            .arg(routes)
+            .output()
+            .unwrap();
+        String::from_utf8(output.stdout).unwrap()
+    };
+    assert_eq!(
+        device("default via 192.0.2.1 dev eth0 proto dhcp src 192.0.2.10 metric 100"),
+        "eth0\n"
+    );
+    assert_eq!(
+        device(
+            "default proto static metric 1024\n\tnexthop via 192.0.2.1 dev eth1 weight 1\n\tnexthop via 192.0.2.2 dev eth2 weight 1"
+        ),
+        "eth1\n"
+    );
+    assert_eq!(
+        device("default nhid 12 via 192.0.2.1 dev ens3 proto static"),
+        "ens3\n"
+    );
+    assert_eq!(device("default nhid 10 proto static metric 20"), "");
+}
+
+#[test]
+fn repair_reads_the_installed_ipv4_uplink() {
+    let operational = r#"{"schema_version":1,"external_interface":"eth0","ssh_port":22}"#;
+    assert_eq!(
+        parse_external_interface(operational).unwrap().as_deref(),
+        Some("eth0")
+    );
+    assert_eq!(parse_external_interface("\n").unwrap(), None);
+    for invalid in [r#"{"external_interface":"eth0; reboot"}"#, "{}", "not json"] {
+        assert!(parse_external_interface(invalid).is_err(), "{invalid}");
+    }
 }
 
 #[test]
@@ -162,6 +208,10 @@ fn an_ipv6_only_install_routes_members_out_of_the_ipv6_uplink_with_optional_dns6
     assert!(
         without_nat64.contains(r#"iifname "sirinvpn0" meta nfproto ipv6 oifname "enp1s0" accept"#)
     );
+    // Like IPv4, only replies come back in from the uplink.
+    assert!(without_nat64.contains(
+        "iifname \"enp1s0\" meta nfproto ipv6 oifname \"sirinvpn0\" ct state established,related accept\n    iifname \"enp1s0\" meta nfproto ipv6 oifname \"sirinvpn0\" drop\n"
+    ));
     assert!(without_nat64.contains(r#"oifname "enp1s0" masquerade"#));
     assert!(without_nat64.contains("forward-addr: 2620:fe::fe@853#dns.quad9.net"));
     assert!(!without_nat64.contains("dns64"));
@@ -191,11 +241,24 @@ fn an_ipv6_only_install_routes_members_out_of_the_ipv6_uplink_with_optional_dns6
     request.nat64_prefix = Some("2a00:1098:2b::".parse().unwrap());
     let with_nat64 = script(&request);
     assert!(with_nat64.contains(
-        "  module-config: \"dns64 validator iterator\"\n  dns64-prefix: 2a00:1098:2b::/96\n"
+        "  module-config: \"respip dns64 validator iterator\"\n  dns64-prefix: 2a00:1098:2b::/96\n"
     ));
+    // No AAAA is synthesized from a non-global IPv4 address.
+    for line in [
+        "  response-ip: 2a00:1098:2b::a00:0/104 redirect\n",
+        "  response-ip: 2a00:1098:2b::6440:0/106 redirect\n",
+        "  response-ip: 2a00:1098:2b::ac10:0/108 redirect\n",
+        "  response-ip: 2a00:1098:2b::c0a8:0/112 redirect\n",
+    ] {
+        assert!(with_nat64.contains(line), "{line}");
+    }
     // Inside the server: section, before any forward-zone.
     assert!(with_nat64.find("dns64-prefix").unwrap() < with_nat64.find("forward-zone:").unwrap());
     assert!(verify(request.nat64_prefix, &unbound(&with_nat64)));
+    assert!(!verify(
+        request.nat64_prefix,
+        &unbound(&with_nat64).replace("respip dns64", "dns64")
+    ));
     assert!(!verify(None, &unbound(&with_nat64)));
     assert!(!verify(request.nat64_prefix, &unbound(&without_nat64)));
     assert!(!verify(
@@ -232,7 +295,7 @@ fn kernel_ipv6_only_vps_forwards_members_over_ipv6_and_reaches_ipv4_names_throug
         dns_upstream: DnsUpstream::DnsOverTls {
             endpoints: vec!["2001:db8:2::53#resolver.fixture".parse().unwrap()],
         },
-        private_dns_records: Vec::new(),
+        private_dns_records: vec!["printer.home=10.1.2.3".parse().unwrap()],
         nat64_prefix: Some("64:ff9b::".parse().unwrap()),
         replace_existing_installation: false,
     };

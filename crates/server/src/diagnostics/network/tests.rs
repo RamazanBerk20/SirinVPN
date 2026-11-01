@@ -21,15 +21,25 @@ fn route_check_rejects_wrong_interface_and_unusable_defaults() {
         );
     }
     assert_eq!(route_state(&json!({}), "sirinvpn0", "10.77.0.0/24"), None);
-    // An IPv6-only VPS: the IPv4 table has only the tunnel route, the IPv6 default is appended.
-    let ipv6_only = json!([
-        {"dst":"10.77.0.0/24", "dev":"sirinvpn0"},
-        {"dst":"default", "gateway":"fe80::1", "dev":"enp1s0", "flags":[]}
-    ]);
-    assert_eq!(
-        route_state(&ipv6_only, "sirinvpn0", "10.77.0.0/24"),
-        Some(true)
-    );
+    // An IPv6-only VPS: the IPv4 table has only the tunnel route, the IPv6 default counts.
+    let ipv4 = json!([{"dst":"10.77.0.0/24", "dev":"sirinvpn0"}]);
+    let ipv6 = json!([{"dst":"default", "gateway":"fe80::1", "dev":"enp1s0", "flags":[]}]);
+    let addresses = |uplink: Value| {
+        json!([
+            {"ifname":"sirinvpn0", "addr_info":[{"local":"10.77.0.1", "scope":"global"}]},
+            {"ifname":"enp1s0", "addr_info":uplink}
+        ])
+    };
+    let state = |addresses4| {
+        let routes = with_ipv6_only_defaults(ipv4.clone(), Some(ipv6.clone()), addresses4);
+        route_state(&routes, "sirinvpn0", "10.77.0.0/24")
+    };
+    assert_eq!(state(Some(addresses(json!([])))), Some(true));
+    // A dual-stack uplink that lost its IPv4 route is a failure, not an IPv6-only VPS.
+    let dual_stack = addresses(json!([{"local":"192.0.2.10", "scope":"global"}]));
+    assert_eq!(state(Some(dual_stack)), Some(false));
+    // Unknown addresses: only an IPv4 default route counts.
+    assert_eq!(state(None), Some(false));
 }
 
 #[test]

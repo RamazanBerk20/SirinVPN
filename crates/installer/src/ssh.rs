@@ -94,26 +94,34 @@ pub(super) fn authenticate_agent(session: &Session, username: &str) -> anyhow::R
     bail!("no SSH agent identity was accepted")
 }
 
+/// Multipath default routes name their devices on indented `nexthop` lines, so the first `dev`
+/// anywhere in the listing is the uplink.
+pub(super) const DEFAULT_DEVICE: &str = r#"default_device() { awk '{for (i = 1; i < NF; i++) if ($i == "dev") {print $(i+1); exit}}'; }"#;
+
 pub(super) fn discover(session: &Session) -> Result<ServerDiscovery, InstallerError> {
-    let command = r#"set -eu
+    let command = format!(
+        r#"set -eu
 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+{DEFAULT_DEVICE}
 . /etc/os-release
 printf 'os_id=%s\n' "$ID"
 printf 'os_version=%s\n' "$VERSION_ID"
 printf 'architecture=%s\n' "$(uname -m)"
-IPV4_INTERFACE=$(ip -4 route show default | awk 'NR==1 {for (i=1; i<=NF; i++) if ($i == "dev") {print $(i+1); exit}}')
+IPV4_ROUTES=$(ip -4 route show default)
+IPV4_INTERFACE=$(printf '%s\n' "$IPV4_ROUTES" | default_device)
 printf 'default_interface=%s\n' "$IPV4_INTERFACE"
-IPV6_INTERFACE=$(ip -6 route show default | awk 'NR==1 {for (i=1; i<=NF; i++) if ($i == "dev") {print $(i+1); exit}}')
+IPV6_INTERFACE=$(ip -6 route show default | default_device)
 printf 'ipv6_default_interface=%s\n' "$IPV6_INTERFACE"
-printf 'ssh_server_port=%s\n' "$(printf '%s' "$SSH_CONNECTION" | awk '{print $4}')"
-printf 'ssh_local_address=%s\n' "$(printf '%s' "$SSH_CONNECTION" | awk '{print $3}')"
-[ -n "$IPV4_INTERFACE" ] && printf 'ipv4_available=1\n' || printf 'ipv4_available=0\n'
-[ -n "$IPV6_INTERFACE" ] && ip -o -6 address show dev "$IPV6_INTERFACE" scope global | awk '{print $4}' | grep -Eq '^[23][0-9A-Fa-f]*:' && printf 'ipv6_available=1\n' || printf 'ipv6_available=0\n'
+printf 'ssh_server_port=%s\n' "$(printf '%s' "$SSH_CONNECTION" | awk '{{print $4}}')"
+printf 'ssh_local_address=%s\n' "$(printf '%s' "$SSH_CONNECTION" | awk '{{print $3}}')"
+[ -n "$IPV4_ROUTES" ] && printf 'ipv4_available=1\n' || printf 'ipv4_available=0\n'
+[ -n "$IPV6_INTERFACE" ] && ip -o -6 address show dev "$IPV6_INTERFACE" scope global | awk '{{print $4}}' | grep -Eq '^[23][0-9A-Fa-f]*:' && printf 'ipv6_available=1\n' || printf 'ipv6_available=0\n'
 command -v nft >/dev/null 2>&1 && printf 'nftables_available=1\n' || printf 'nftables_available=0\n'
 command -v wg >/dev/null 2>&1 && printf 'wireguard_available=1\n' || printf 'wireguard_available=0\n'
 command -v unbound >/dev/null 2>&1 && printf 'unbound_installed=1\n' || printf 'unbound_installed=0\n'
-test -x /usr/local/lib/sirinvpn/sirinvpn-server && printf 'sirinvpn_installed=1\n' || printf 'sirinvpn_installed=0\n'"#;
-    let output = run(session, command).map_err(|error| phase_error("discovery", error))?;
+test -x /usr/local/lib/sirinvpn/sirinvpn-server && printf 'sirinvpn_installed=1\n' || printf 'sirinvpn_installed=0\n'"#
+    );
+    let output = run(session, &command).map_err(|error| phase_error("discovery", error))?;
     parse_discovery(&output).map_err(|error| phase_error("discovery", error))
 }
 
@@ -125,13 +133,6 @@ pub(super) fn parse_discovery(output: &str) -> anyhow::Result<ServerDiscovery> {
             .ok_or_else(|| anyhow!("missing discovery field"))
     };
     let boolean = |key: &str| -> anyhow::Result<bool> { Ok(value(key)? == "1") };
-    let valid_interface = |interface: &str| {
-        !interface.is_empty()
-            && interface.len() <= 15
-            && interface
-                .chars()
-                .all(|character| character.is_ascii_alphanumeric() || "_.:-".contains(character))
-    };
     let ipv6_default_interface = match value("ipv6_default_interface")? {
         "" => None,
         interface if valid_interface(interface) => Some(interface.to_owned()),
@@ -144,9 +145,8 @@ pub(super) fn parse_discovery(output: &str) -> anyhow::Result<ServerDiscovery> {
     }
     // Without IPv4 the IPv6 uplink is the external interface: the IPv4 rules on it stay inert.
     let default_interface = match value("default_interface")? {
-        "" if !ipv4_available && ipv6_available => {
-            ipv6_default_interface.clone().unwrap_or_default()
-        }
+        "" if ipv4_available => bail!("the VPS's IPv4 default route names no network interface"),
+        "" if ipv6_available => ipv6_default_interface.clone().unwrap_or_default(),
         "" => bail!("the VPS has no IPv4 or global IPv6 default route for Internet forwarding"),
         interface => interface.to_owned(),
     };
@@ -172,6 +172,45 @@ pub(super) fn parse_discovery(output: &str) -> anyhow::Result<ServerDiscovery> {
         unbound_installed: boolean("unbound_installed")?,
         sirinvpn_installed: boolean("sirinvpn_installed")?,
     })
+}
+
+fn valid_interface(interface: &str) -> bool {
+    !interface.is_empty()
+        && interface.len() <= 15
+        && interface
+            .chars()
+            .all(|character| character.is_ascii_alphanumeric() || "_.:-".contains(character))
+}
+
+/// The uplink the installed configuration sends IPv4 through, so that Repair during a brief loss
+/// of the IPv4 route does not move IPv4 forwarding to the IPv6 uplink.
+pub(super) fn installed_external_interface(
+    session: &Session,
+    target: &SshTarget,
+) -> Result<Option<String>, InstallerError> {
+    let text = run_privileged(
+        session,
+        target,
+        "if [ -f /etc/sirinvpn/operational.json ]; then cat /etc/sirinvpn/operational.json; fi",
+    )
+    .map_err(|error| phase_error("operational configuration", error))?;
+    parse_external_interface(&text)
+}
+
+pub(super) fn parse_external_interface(text: &str) -> Result<Option<String>, InstallerError> {
+    if text.trim().is_empty() {
+        return Ok(None);
+    }
+    serde_json::from_str::<serde_json::Value>(text)
+        .ok()
+        .and_then(|value| value["external_interface"].as_str().map(str::to_owned))
+        .filter(|interface| valid_interface(interface))
+        .map(Some)
+        .ok_or_else(|| {
+            InstallerError::Incompatible(
+                "the installed operational configuration is invalid".to_owned(),
+            )
+        })
 }
 
 pub(super) fn check_compatibility(discovery: &ServerDiscovery) -> Result<(), InstallerError> {

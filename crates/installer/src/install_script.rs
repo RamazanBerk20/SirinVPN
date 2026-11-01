@@ -152,7 +152,8 @@ fi"#,
     let ipv6_forward_rules = if transaction.ipv6_tunnel_enabled {
         format!(
             r#"    iifname "sirinvpn0" meta nfproto ipv6 oifname {ipv6_external_interface} accept
-    iifname {ipv6_external_interface} meta nfproto ipv6 oifname "sirinvpn0" ct state established,related accept"#,
+    iifname {ipv6_external_interface} meta nfproto ipv6 oifname "sirinvpn0" ct state established,related accept
+    iifname {ipv6_external_interface} meta nfproto ipv6 oifname "sirinvpn0" drop"#,
         )
     } else {
         String::new()

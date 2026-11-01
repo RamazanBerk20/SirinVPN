@@ -7,11 +7,12 @@ use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 pub(super) async fn inspect(config: &ServerConfiguration) -> Vec<DiagnosticCheck> {
     let port_args = ["show", &config.interface_name, "listen-port"];
     let key_args = ["show", &config.interface_name, "public-key"];
-    let (port, key, routes, routes6, filter, nat4, nat6) = tokio::join!(
+    let (port, key, routes, routes6, addresses4, filter, nat4, nat6) = tokio::join!(
         output("wg", &port_args),
         output("wg", &key_args),
         output("ip", &["-j", "-4", "route", "show", "table", "main"]),
         output("ip", &["-j", "-6", "route", "show", "default"]),
+        output("ip", &["-j", "-4", "address", "show", "scope", "global"]),
         output("nft", &["-j", "list", "table", "inet", "sirinvpn_filter"]),
         output("nft", &["-j", "list", "table", "ip", "sirinvpn_nat"]),
         async {
@@ -29,11 +30,8 @@ pub(super) async fn inspect(config: &ServerConfiguration) -> Vec<DiagnosticCheck
         .map(|(port, key)| {
             port == config.wireguard_port && key.trim() == config.wireguard_public_key
         });
-    // A VPS without IPv4 leaves only through its IPv6 default route.
-    let routes = json(routes).and_then(|mut value| {
-        if let (Some(rows), Some(Value::Array(ipv6))) = (value.as_array_mut(), json(routes6)) {
-            rows.extend(ipv6);
-        }
+    let routes = json(routes).and_then(|value| {
+        let value = with_ipv6_only_defaults(value, json(routes6), json(addresses4));
         route_state(&value, &config.interface_name, &config.tunnel_cidr)
     });
     let filter = json(filter).and_then(|value| filter_state(&value, &config.interface_name));
@@ -118,6 +116,33 @@ fn ipv6_prefix(interface: &str) -> Option<String> {
         bytes[8..].fill(0);
         Some(format!("{}/64", Ipv6Addr::from(bytes)))
     })
+}
+
+/// A VPS without IPv4 leaves only through its IPv6 default route. An uplink that still has an
+/// IPv4 address but lost its IPv4 route is broken, not IPv6-only, so its IPv6 route does not count.
+fn with_ipv6_only_defaults(
+    mut routes: Value,
+    routes6: Option<Value>,
+    addresses4: Option<Value>,
+) -> Value {
+    let addresses4 = addresses4.unwrap_or_default();
+    let has_ipv4 = |device: &str| {
+        addresses4.as_array().is_none_or(|links| {
+            links.iter().any(|link| {
+                link["ifname"] == device
+                    && link["addr_info"]
+                        .as_array()
+                        .is_some_and(|addresses| !addresses.is_empty())
+            })
+        })
+    };
+    if let (Some(rows), Some(Value::Array(ipv6))) = (routes.as_array_mut(), routes6) {
+        rows.extend(
+            ipv6.into_iter()
+                .filter(|row| row["dev"].as_str().is_some_and(|dev| !has_ipv4(dev))),
+        );
+    }
+    routes
 }
 
 fn route_state(value: &Value, interface: &str, subnet: &str) -> Option<bool> {
