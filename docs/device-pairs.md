@@ -23,8 +23,9 @@ of them, the same rule as for the switch itself:
 - a **Member** whose policy allows "manage own peer communication" pairs only
   their own devices.
 
-Removing a pair needs the same authority. Members see the pairs that involve
-their own devices, including pairs with devices they cannot otherwise see
+Removing a pair needs the same authority. Members (in `GET /v1/membership` and
+every answer that carries the snapshot) see the pairs that involve their own
+devices, including pairs with devices they cannot otherwise see
 (shown as "another member's device"), so they know who may reach them.
 
 - **Desktop and Android:** **Devices → the device's menu → Device pairs**. The
@@ -54,7 +55,8 @@ their own devices, including pairs with devices they cannot otherwise see
 - A pair is active while both devices' members are active (not suspended, and
   inside their schedule and expiry). Suspension keeps the pair for
   reactivation; it does nothing meanwhile.
-- Revoking a device, or all of a member's devices, removes their pairs.
+- Revoking a device, or all of a member's devices, removes their pairs. So
+  does Owner recovery for the pairs of the Owner devices it replaces.
 - Pairs are server policy like the switch, so they survive ownership transfer.
   The new Owner sees and can remove every pair.
 
@@ -93,7 +95,7 @@ connects.
 
   ```nft
   iifname "sirinvpn0" oifname "sirinvpn0" ip saddr . ip daddr { <a> . <b>, <b> . <a>, <c> . <d> } accept
-  iifname "sirinvpn0" oifname "sirinvpn0" ip saddr . ip daddr { <d> . <c> } ct state established,related accept
+  iifname "sirinvpn0" oifname "sirinvpn0" ip saddr . ip daddr { <d> . <c> } ct direction reply ct state established,related accept
   ```
 
   A router's ranges are live while its switch is on or a pair lets another
@@ -103,11 +105,12 @@ connects.
 
   ```nft
   iifname "sirinvpn0" oifname "sirinvpn0" ip saddr { <x> } ip daddr { <router ranges> } accept
-  iifname "sirinvpn0" oifname "sirinvpn0" ip saddr { <router ranges> } ip daddr { <x> } ct state established,related accept
+  iifname "sirinvpn0" oifname "sirinvpn0" ip saddr { <router ranges> } ip daddr { <x> } ct direction reply ct state established,related accept
   ```
 
   Removing a pair removes its rules in the same commit, so its established
-  flows stop too. Stopping the server flushes the chain
+  flows stop too. Answers match only conntrack's reply direction, so making a
+  pair one way also stops the flows the answering device had started. Stopping the server flushes the chain
   (`firewall.sh isolate-runtime`) and every pair closes with it. Suspension,
   schedules and expiry change the desired WireGuard peers, so the reconcile
   loop recommits and the rules follow.
@@ -133,12 +136,17 @@ rollback. Remove every pair first, then roll back.
   reach each other both ways while an unpaired device reaches neither and
   neither reaches it; the Owner's one-way pair lets the Admin reach a Member
   device whose answers return, while that device cannot start a connection to
-  the Admin; a one-way pair with an Owner router gives the starting device the
+  the Admin, nor keep using a flow it started while the pair went both ways
+  (one ICMP identifier, so one conntrack flow); a one-way pair with an Owner router gives the starting device the
   router and its LAN, and nobody else, while the router and the LAN host cannot
   start connections to it; suspending that member closes the pair and the
   router's kernel route and reactivating restores them; flushing the runtime
   chain as on server stop closes pairs; unpairing in reverse order and revoking
   a device remove access. Admitting one-way answers as new connections makes
-  the test fail (the answering device reaches the Admin).
+  the test fail (the answering device reaches the Admin), and so does dropping
+  `ct direction reply` (the earlier flow stays open).
+- Owner recovery lab (`tests/network/run-recovery-policy.sh`): with an Owner
+  device paired, recovery succeeds and keeps only the pairs of other devices;
+  without pruning the replaced devices' pairs the recovery commit fails.
 - Not verified: a VPS with IPv6 tunnel addresses in the lab (the IPv6 rules
   are unit-tested only), Windows and Android on real devices, the two-VM lab.

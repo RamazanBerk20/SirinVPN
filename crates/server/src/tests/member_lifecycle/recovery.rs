@@ -203,6 +203,23 @@ async fn kernel_offline_recovery_consumes_authority_and_revokes_all_previous_own
         *state.authorization.as_ref().unwrap().read().await,
         registered
     );
+    // Pairs with a lost Owner device go with it; the others stay.
+    let mut paired = registered.clone();
+    let lost = document.devices.last().unwrap().id;
+    for (device_id, peer_device_id) in [
+        (lost, document.devices[2].id),
+        (document.devices[1].id, document.devices[2].id),
+    ] {
+        paired
+            .set_device_pair(DevicePair {
+                device_id,
+                peer_device_id,
+                one_way: false,
+            })
+            .unwrap();
+    }
+    write_authorization(&state.paths.authorization, &paired).unwrap();
+    *state.authorization.as_ref().unwrap().write().await = paired.clone();
 
     let result = crate::recovery::enroll_handler(
         State(state.clone()),
@@ -245,6 +262,7 @@ async fn kernel_offline_recovery_consumes_authority_and_revokes_all_previous_own
     );
 
     let mut current = state.authorization.as_ref().unwrap().write().await;
+    assert_eq!(current.device_pairs, paired.device_pairs[1..]);
     assert!(current.recovery_key.is_none());
     assert!(current.recovery_policy.administrator_member_ids.is_empty());
     assert_eq!(

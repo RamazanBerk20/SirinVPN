@@ -529,7 +529,8 @@ pub(super) fn device_pair_nft_rules(
             .find(|device| device.id == id)
             .context("device pair references an unavailable device")
     };
-    // Flows that may start, and flows that may only answer.
+    // Flows that may start, and flows that may only answer. Answers match conntrack's reply
+    // direction, so a flow the answering device started under an earlier rule stops too.
     let mut flows = [Vec::new(), Vec::new()];
     for pair in &authorization.device_pairs {
         let (source, destination) = (device(pair.device_id)?, device(pair.peer_device_id)?);
@@ -551,7 +552,10 @@ pub(super) fn device_pair_nft_rules(
             .context("could not derive the peer IPv6 tunnel address")
     };
     let mut batch = String::new();
-    for (flows, state) in flows.iter().zip(["", " ct state established,related"]) {
+    for (flows, state) in flows
+        .iter()
+        .zip(["", " ct direction reply ct state established,related"])
+    {
         if flows.is_empty() {
             continue;
         }
@@ -627,7 +631,7 @@ pub(super) fn subnet_route_nft_rules(
         batch.push_str(&format!(
             concat!(
                 "add rule inet sirinvpn_filter port_forward iifname \"{interface}\" oifname \"{interface}\" ip saddr {{ {sources} }} ip daddr {{ {routes} }} accept\n",
-                "add rule inet sirinvpn_filter port_forward iifname \"{interface}\" oifname \"{interface}\" ip saddr {{ {routes} }} ip daddr {{ {sources} }} ct state established,related accept\n",
+                "add rule inet sirinvpn_filter port_forward iifname \"{interface}\" oifname \"{interface}\" ip saddr {{ {routes} }} ip daddr {{ {sources} }} ct direction reply ct state established,related accept\n",
             ),
             interface = interface,
             sources = sources,

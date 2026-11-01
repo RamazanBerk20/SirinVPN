@@ -117,10 +117,13 @@ table ip router_lan {
              server_public, True)
 else:
     source, destination, expected = sys.argv[2], sys.argv[3], sys.argv[4] == "open"
+    # Optional extra ping arguments, such as "-e <identifier>" to keep one conntrack flow.
+    extra = sys.argv[5:]
     deadline = time.monotonic() + (45 if expected else 2)
     while True:
         probe = subprocess.run(["ip", "netns", "exec", source, "ping", "-c", "1", "-W", "1",
-                                destination], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                                *extra, destination], stdout=subprocess.DEVNULL,
+                               stderr=subprocess.DEVNULL)
         if (probe.returncode == 0) == expected:
             break
         if time.monotonic() >= deadline:
