@@ -305,6 +305,9 @@ pub struct DeviceSummary {
     /// Owner-assigned LAN ranges this device forwards for peers that may reach it.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub subnet_routes: Vec<String>,
+    /// Ranges the VPS cannot route right now because another of its interfaces routes them.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub inactive_subnet_routes: Vec<String>,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]

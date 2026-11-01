@@ -60,16 +60,15 @@ async fn subnet_route_rules_admit_only_peer_enabled_devices_and_answers() {
     let mut document = state.authorization.as_ref().unwrap().read().await.clone();
     assert!(subnet_route_nft_rules(&state.configuration, &document).is_empty());
     document.devices[0].peer_communication_enabled = true;
-    document.devices[0].subnet_routes = vec!["192.168.1.0/24".into(), "10.20.0.0/16".into()];
+    document.devices[0].subnet_routes = vec!["192.168.1.0/24".into(), "10.20.0.0/20".into()];
     document.schema_version = document.required_schema_version();
     document.validate().unwrap();
     let rules = subnet_route_nft_rules(&state.configuration, &document);
     assert_eq!(
         rules,
         concat!(
-            "add rule inet sirinvpn_filter port_forward iifname \"sirinvpn0\" oifname \"sirinvpn0\" ip saddr @peer_communication4 ip daddr { 10.20.0.0/16, 192.168.1.0/24 } accept\n",
-            "add rule inet sirinvpn_filter port_forward iifname \"sirinvpn0\" oifname \"sirinvpn0\" ip saddr { 10.20.0.0/16, 192.168.1.0/24 } ip daddr @peer_communication4 ct state established,related accept\n",
-            "add rule inet sirinvpn_filter port_forward iifname \"sirinvpn0\" ip saddr { 10.20.0.0/16, 192.168.1.0/24 } drop\n",
+            "add rule inet sirinvpn_filter port_forward iifname \"sirinvpn0\" oifname \"sirinvpn0\" ip saddr @peer_communication4 ip daddr { 10.20.0.0/20, 192.168.1.0/24 } accept\n",
+            "add rule inet sirinvpn_filter port_forward iifname \"sirinvpn0\" oifname \"sirinvpn0\" ip saddr { 10.20.0.0/20, 192.168.1.0/24 } ip daddr @peer_communication4 ct state established,related accept\n",
         )
     );
     // Both port forwards and routes share the chain flush, also without operational state.
@@ -104,6 +103,17 @@ async fn subnet_route_rules_admit_only_peer_enabled_devices_and_answers() {
     assert!(routes(&document).is_empty());
     document.devices[0].peer_communication_enabled = true;
     assert_eq!(routes(&document).len(), 2);
+}
+
+async fn nft(arguments: &[&str]) {
+    assert!(
+        Command::new("nft")
+            .args(arguments)
+            .status()
+            .await
+            .unwrap()
+            .success()
+    );
 }
 
 async fn reach(source: &str, destination: &str, open: bool) {
@@ -236,8 +246,32 @@ async fn kernel_subnet_routes_reach_a_router_lan_only_from_peer_enabled_devices(
     // LAN hosts only answer: they cannot start connections to peers or leave through the VPS.
     reach("lan", &allowed, false).await;
     reach("lan", "203.0.113.50", false).await;
+    reach("lan", "10.77.0.1", false).await;
     reach("member1", "203.0.113.50", true).await;
     println!("routes: the peer-enabled device reaches the LAN; isolation and LAN containment hold");
+
+    // A stopped server flushes its runtime rules (firewall.sh isolate-runtime), but the peer
+    // and route stay: LAN hosts still reach neither the VPS nor the internet.
+    for set in ["peer_communication4", "peer_communication6"] {
+        nft(&["flush", "set", "inet", "sirinvpn_filter", set]).await;
+    }
+    nft(&["flush", "chain", "inet", "sirinvpn_filter", "port_forward"]).await;
+    reach("member1", "192.168.1.10", false).await;
+    reach("lan", "203.0.113.50", false).await;
+    reach("lan", "10.77.0.1", false).await;
+    let current = state.authorization.as_ref().unwrap().read().await.clone();
+    sync_peer_isolation(&state.configuration, &current)
+        .await
+        .unwrap();
+    sync_port_forwards(
+        &state.configuration,
+        state.operational_configuration.as_ref(),
+        &current,
+    )
+    .await
+    .unwrap();
+    reach("member1", "192.168.1.10", true).await;
+    println!("stopped: the tunnel-source guard keeps LAN hosts contained");
 
     // A range the VPS already routes elsewhere is refused before any change.
     assert!(
@@ -284,11 +318,30 @@ async fn kernel_subnet_routes_reach_a_router_lan_only_from_peer_enabled_devices(
     host(&["route", "add", "192.168.1.0/24", "dev", "eth-test"]).await;
     assert!(set_peer_of(&document.devices[4], true).await.is_ok());
     assert!(kernel_routes().await.trim().is_empty());
+    // The Owner sees which range is inactive.
+    let snapshot = membership_handler(State(state.clone()), Extension(identity(owner)))
+        .await
+        .unwrap()
+        .0
+        .payload;
+    let summary = snapshot
+        .members
+        .iter()
+        .flat_map(|member| &member.devices)
+        .find(|device| device.id == router.id)
+        .unwrap();
+    assert_eq!(summary.inactive_subnet_routes, ["192.168.1.0/24"]);
     reach("member1", "192.168.1.10", false).await;
     host(&["route", "delete", "192.168.1.0/24", "dev", "eth-test"]).await;
-    assert!(set_peer_of(&document.devices[4], false).await.is_ok());
+    // What the runtime loop retries while a range is inactive: no authorization change.
+    let current = state.authorization.as_ref().unwrap().read().await.clone();
+    sync_subnet_kernel_routes("sirinvpn0", &current.desired_peers(unix_time()))
+        .await
+        .unwrap();
     assert_eq!(kernel_routes().await.trim(), "192.168.1.0/24 scope link");
+    assert!(inactive_subnet_routes().is_empty());
     reach("member1", "192.168.1.10", true).await;
+    assert!(set_peer_of(&document.devices[4], false).await.is_ok());
 
     // The router's own peer permission is the switch.
     let set_peer = |enabled| set_peer_of(&router, enabled);

@@ -359,6 +359,12 @@ function DeviceRow({
               <dd className="mono">{device.subnet_routes?.join(", ")}</dd>
             </div>
           )}
+          {Boolean(device.inactive_subnet_routes?.length) && (
+            <div>
+              <dt>{t("devices.row.facts.inactiveLocalNetworks")}</dt>
+              <dd className="mono">{device.inactive_subnet_routes?.join(", ")}</dd>
+            </div>
+          )}
           {device.wireguard_only && (
             <div>
               <dt>{t("devices.row.facts.connection")}</dt>

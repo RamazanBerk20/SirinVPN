@@ -47,6 +47,7 @@ fn summary(draft: &WireGuardDeviceDraft, host: u8) -> DeviceSummary {
         recent_handshake: None,
         wireguard_only: true,
         subnet_routes: Vec::new(),
+        inactive_subnet_routes: Vec::new(),
     }
 }
 

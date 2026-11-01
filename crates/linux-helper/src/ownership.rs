@@ -230,7 +230,7 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
     pub(super) fn routing_exception_rules_exist(&self, request: &TunnelConnectRequest) -> bool {
         if !subnet_route_rules(request)
             .into_iter()
-            .all(|(route, table)| self.rule_matches("-4", SUBNET_RULE_PRIORITY, route, table))
+            .all(|(route, _, table)| self.rule_matches("-4", SUBNET_RULE_PRIORITY, route, table))
         {
             return false;
         }

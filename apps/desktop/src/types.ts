@@ -411,6 +411,8 @@ export interface DeviceSummary {
   wireguard_only?: boolean;
   /** Private IPv4 networks this Owner device forwards for devices with mutual access. */
   subnet_routes?: string[];
+  /** Shared networks the VPS cannot route now because another of its interfaces routes them. */
+  inactive_subnet_routes?: string[];
 }
 
 export interface MemberSummary {

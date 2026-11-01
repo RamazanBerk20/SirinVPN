@@ -45,12 +45,15 @@ for subnet routes on the VPS: a real WireGuard VPS with the installer's forward
 chain, a router namespace with a LAN host, two peers and an internet host. The
 production handlers assign, refuse, disable and revoke routes while the probes
 check that only the peer-enabled device reaches the LAN and that the LAN host
-cannot reach peers or the internet.
+cannot reach peers, the VPS or the internet, also with the runtime rules flushed
+as on server stop. A range whose kernel route collides with a VPS route must
+show as inactive and return through the runtime retry once that route is gone.
 
 `run-policy-kernel.sh kernel_subnet_router_forwards_its_lan_and_keeps_reaching_it`
 runs the production Linux helper as a full-tunnel subnet router: it must reach
 its own LAN under the kill switch, forward and masquerade a peer's traffic to
-it, and remove its rules and NAT on disconnect.
+it, send a reached range into the tunnel while its own marked sockets keep the
+uplink, and remove its rules and NAT on disconnect.
 
 `run-installer-release-guards.sh` runs the installer release-staging guard in an
 ordinary container with no network, added capabilities or privileged mode. It

@@ -56,6 +56,9 @@ const PRIVATE_BLOCKS: [(Ipv4Addr, u8); 3] = [
     (Ipv4Addr::new(172, 16, 0, 0), 12),
     (Ipv4Addr::new(192, 168, 0, 0), 16),
 ];
+/// Wider ranges would override Allow local network for whole private blocks on every
+/// device that reaches the router; /20 still covers ordinary home and office LANs.
+pub const MIN_SUBNET_ROUTE_PREFIX: u8 = 20;
 /// The tunnel (10.77.0.0/24, bootstrap included) and measurement probes (10.77.1.0/24).
 /// The private IPv6 tunnel prefix cannot overlap: subnet routes are IPv4 only.
 const RESERVED: (Ipv4Addr, u8) = (Ipv4Addr::new(10, 77, 0, 0), 23);
@@ -89,6 +92,11 @@ pub fn parse_subnet_route(route: &str) -> Result<(Ipv4Addr, u8), String> {
     {
         return Err(format!(
             "{route} must be inside 10.0.0.0/8, 172.16.0.0/12 or 192.168.0.0/16"
+        ));
+    }
+    if prefix < MIN_SUBNET_ROUTE_PREFIX {
+        return Err(format!(
+            "{route} is wider than /{MIN_SUBNET_ROUTE_PREFIX}; share only the network behind the device, such as 192.168.1.0/24"
         ));
     }
     if overlaps((network, prefix), RESERVED) {
@@ -139,10 +147,10 @@ mod tests {
     fn only_canonical_private_routes_outside_the_tunnel_are_accepted() {
         for route in [
             "192.168.1.0/24",
-            "192.168.0.0/16",
-            "172.16.0.0/12",
-            "10.0.0.0/16",
-            "10.78.0.0/16",
+            "192.168.0.0/20",
+            "172.16.0.0/20",
+            "10.0.0.0/20",
+            "10.78.0.0/20",
             "10.76.255.0/24",
             "192.168.1.7/32",
         ] {
@@ -150,6 +158,10 @@ mod tests {
         }
         for route in [
             "0.0.0.0/0",
+            "192.168.0.0/16",
+            "172.16.0.0/12",
+            "10.0.0.0/16",
+            "192.168.0.0/19",
             "192.168.0.0/15",
             "172.0.0.0/8",
             "8.8.8.0/24",
@@ -174,6 +186,11 @@ mod tests {
             parse_subnet_route("192.168.1.9/24").unwrap_err(),
             "write \"192.168.1.9/24\" as 192.168.1.0/24"
         );
+        assert!(
+            parse_subnet_route("10.20.0.0/19")
+                .unwrap_err()
+                .contains("is wider than /20")
+        );
     }
 
     #[test]
@@ -181,7 +198,7 @@ mod tests {
         assert!(validate_subnet_routes(["192.168.1.0/24", "192.168.2.0/24"]).is_ok());
         for overlap in [
             ["192.168.1.0/24", "192.168.1.0/24"],
-            ["192.168.0.0/16", "192.168.1.0/24"],
+            ["192.168.0.0/20", "192.168.1.0/24"],
             ["192.168.1.128/25", "192.168.1.0/24"],
         ] {
             assert!(validate_subnet_routes(overlap).is_err(), "{overlap:?}");
@@ -197,10 +214,10 @@ mod tests {
 
     #[test]
     fn existing_host_routes_are_matched_by_overlap() {
-        let routes = ["192.168.1.0/24".to_owned(), "10.1.0.0/16".to_owned()];
+        let routes = ["192.168.1.0/24".to_owned(), "10.1.0.0/20".to_owned()];
         assert_eq!(
             overlapping_subnet_route("10.0.0.0/8", &routes),
-            Some("10.1.0.0/16")
+            Some("10.1.0.0/20")
         );
         assert_eq!(
             overlapping_subnet_route("192.168.1.9", &routes),

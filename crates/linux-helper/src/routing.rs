@@ -156,19 +156,22 @@ pub(super) fn route_table_destinations(
     routes.into_iter().collect()
 }
 
-/// `ip rule` destinations and tables for the Owner-assigned subnet routes.
-pub(super) fn subnet_route_rules(request: &TunnelConnectRequest) -> Vec<(&str, &str)> {
+/// `ip rule` destination, whether only the helper's marked sockets match, and table for
+/// the Owner-assigned subnet routes, in insertion (and so evaluation) order.
+pub(super) fn subnet_route_rules(request: &TunnelConnectRequest) -> Vec<(&str, bool, &str)> {
     let routes = &request.subnet_routes;
     routes
         .announced
         .iter()
-        .map(|route| (route.as_str(), "main"))
-        .chain(
-            routes
-                .reachable
-                .iter()
-                .map(|route| (route.as_str(), ROUTING_TABLE)),
-        )
+        .map(|route| (route.as_str(), false, "main"))
+        .chain(routes.reachable.iter().flat_map(|route| {
+            // `not fwmark` would invert the whole rule, so marked sockets (resolvers and the
+            // carrier inside a shared range) get their own physical-link rule first.
+            [
+                (route.as_str(), true, "main"),
+                (route.as_str(), false, ROUTING_TABLE),
+            ]
+        }))
         .collect()
 }
 

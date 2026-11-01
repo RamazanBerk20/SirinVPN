@@ -70,6 +70,12 @@ pub(super) fn print_membership(snapshot: &MembershipSnapshot, json: bool) -> Res
             if !device.subnet_routes.is_empty() {
                 println!("    forwards {}", device.subnet_routes.join(", "));
             }
+            if !device.inactive_subnet_routes.is_empty() {
+                println!(
+                    "    inactive: the VPS routes {} through another network",
+                    device.inactive_subnet_routes.join(", ")
+                );
+            }
         }
     }
     if snapshot.active_invitations.is_empty() {

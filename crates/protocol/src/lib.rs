@@ -28,8 +28,8 @@ pub use dns::{
 };
 pub use split_dns::{DnsSplitZone, SplitDnsUpstream, validate_split_dns};
 pub use subnet_routes::{
-    DeviceSubnetRoutes, MAX_SUBNET_ROUTES, overlapping_subnet_route, parse_subnet_route,
-    validate_subnet_routes,
+    DeviceSubnetRoutes, MAX_SUBNET_ROUTES, MIN_SUBNET_ROUTE_PREFIX, overlapping_subnet_route,
+    parse_subnet_route, validate_subnet_routes,
 };
 mod management;
 mod member_policy;

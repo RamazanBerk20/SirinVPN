@@ -44,7 +44,7 @@ fn subnet_routes_need_a_policy_routed_mode_and_valid_distinct_ranges() {
         validate_request(&routed(
             full.clone(),
             &["192.168.1.0/24"],
-            &["10.20.0.0/16"]
+            &["10.20.0.0/20"]
         ))
         .is_ok()
     );
@@ -108,7 +108,10 @@ fn routers_keep_their_lan_and_accept_tunnel_traffic_for_it() {
         ))
         .contains("nat")
     );
-    assert_eq!(subnet_route_rules(&request), [("192.168.1.0/24", "main")]);
+    assert_eq!(
+        subnet_route_rules(&request),
+        [("192.168.1.0/24", false, "main")]
+    );
     assert_eq!(wireguard_allowed_ips(&request), "0.0.0.0/0");
 
     // A selected-routes router also accepts and answers the tunnel addresses it forwards for.
@@ -141,22 +144,29 @@ fn reachable_routes_use_the_tunnel_even_with_local_network_access() {
         assert!(rules[drop].contains("drop"), "{chain}");
         assert!(drop < position(&rules, &lan), "{chain}");
     }
-    assert_eq!(subnet_route_rules(&request), [("192.168.1.0/24", "51820")]);
+    // The helper's marked sockets (resolvers, the carrier) keep the physical link first.
+    assert_eq!(
+        subnet_route_rules(&request),
+        [
+            ("192.168.1.0/24", true, "main"),
+            ("192.168.1.0/24", false, "51820")
+        ]
+    );
 
     let selected = TunnelRoutingPolicy::selected_routes(
         ["192.168.1.0/24".to_owned(), "198.51.100.0/24".to_owned()],
         false,
     )
     .unwrap();
-    let request = routed(selected, &[], &["192.168.1.0/24", "10.20.0.0/16"]);
+    let request = routed(selected, &[], &["192.168.1.0/24", "10.20.0.0/20"]);
     assert_eq!(
         wireguard_allowed_ips(&request),
-        "10.20.0.0/16,10.77.0.1/32,192.168.1.0/24,198.51.100.0/24"
+        "10.20.0.0/20,10.77.0.1/32,192.168.1.0/24,198.51.100.0/24"
     );
     assert_eq!(
         route_table_destinations(&request, "-4"),
         [
-            "10.20.0.0/16",
+            "10.20.0.0/20",
             "10.77.0.1/32",
             "192.168.1.0/24",
             "198.51.100.0/24"
@@ -172,7 +182,7 @@ fn subnet_rules_are_applied_ahead_of_local_network_rules() {
     let request = routed(
         TunnelRoutingPolicy::full_tunnel(true),
         &["192.168.1.0/24"],
-        &["10.20.0.0/16"],
+        &["10.20.0.0/20"],
     );
     helper
         .apply(&request, "203.0.113.8".parse().unwrap(), false)
@@ -195,17 +205,34 @@ fn subnet_rules_are_applied_ahead_of_local_network_rules() {
         "priority",
         "9989",
     ]);
-    index(&[
+    let marked = index(&[
         "-4",
         "rule",
         "add",
         "to",
-        "10.20.0.0/16",
-        "table",
+        "10.20.0.0/20",
+        "fwmark",
         "51820",
+        "table",
+        "main",
         "priority",
         "9989",
     ]);
+    // Rules at one priority match in insertion order.
+    assert!(
+        marked
+            < index(&[
+                "-4",
+                "rule",
+                "add",
+                "to",
+                "10.20.0.0/20",
+                "table",
+                "51820",
+                "priority",
+                "9989",
+            ])
+    );
     index(&[
         "-4",
         "rule",
@@ -239,10 +266,11 @@ fn kernel_subnet_router_forwards_its_lan_and_keeps_reaching_it() {
         .unwrap();
     assert!(prepared.status.success(), "lab preparation failed");
     let keys: Value = serde_json::from_slice(&prepared.stdout).unwrap();
+    // 10.20.0.0/20 is another device's LAN that this router's own uplink also routes.
     let mut request = routed(
         TunnelRoutingPolicy::full_tunnel(false),
         &["192.168.1.0/24"],
-        &[],
+        &["10.20.0.0/20"],
     );
     request.endpoint_host = "198.51.100.1".into();
     request.server_public_key = keys["vps_public_key"].as_str().unwrap().into();
@@ -272,6 +300,15 @@ fn kernel_subnet_router_forwards_its_lan_and_keeps_reaching_it() {
     // Under the full-tunnel kill switch the router still reaches its own LAN directly.
     probe("router", "192.168.1.10", true);
     probe("consumer", "192.168.1.10", true);
+    let route = |arguments: &[&str]| {
+        String::from_utf8(SystemRunner.output("ip", arguments).unwrap()).unwrap()
+    };
+    assert!(route(&["-4", "route", "get", "10.20.0.1"]).contains("dev sirinvpn0"));
+    // The helper's own marked sockets (resolvers, the carrier) stay on the physical link.
+    for destination in ["10.20.0.1", "198.51.100.1"] {
+        let marked = route(&["-4", "route", "get", destination, "mark", "51820"]);
+        assert!(marked.contains("dev uplink0"), "{destination}: {marked}");
+    }
     println!(
         "subnet router: tunnel, own LAN and forwarded peer traffic work under the kill switch"
     );

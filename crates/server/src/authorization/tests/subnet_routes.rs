@@ -61,7 +61,8 @@ fn subnet_routes_need_schema_eight_owner_devices_and_distinct_ranges() {
 
     for (target, routes) in [
         (laptop, vec!["192.168.1.128/25"]),
-        (laptop, vec!["192.168.0.0/16"]),
+        (laptop, vec!["192.168.0.0/20"]),
+        (laptop, vec!["10.20.0.0/16"]),
         (router, vec!["192.168.1.0/24", "192.168.1.0/24"]),
         (router, vec!["10.77.0.0/24"]),
         (router, vec!["10.77.1.0/24"]),
@@ -78,12 +79,12 @@ fn subnet_routes_need_schema_eight_owner_devices_and_distinct_ranges() {
     }
     let mut next = state.clone();
     let routes: Vec<_> = (2..=MAX_SUBNET_ROUTES)
-        .map(|index| format!("10.{index}.0.0/16"))
+        .map(|index| format!("10.{index}.0.0/20"))
         .collect();
     next.set_device_subnet_routes(laptop, routes.clone())
         .unwrap();
     let mut too_many = routes;
-    too_many.push("10.200.0.0/16".into());
+    too_many.push("10.200.0.0/20".into());
     assert!(next.set_device_subnet_routes(laptop, too_many).is_err());
 
     state.set_device_subnet_routes(router, Vec::new()).unwrap();

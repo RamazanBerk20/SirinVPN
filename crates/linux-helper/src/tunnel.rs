@@ -108,22 +108,13 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
             self.apply_policy_routes(request, "-6")?;
         }
         self.apply_lan_exceptions(request)?;
-        for (route, table) in subnet_route_rules(request) {
-            self.runner.run(
-                "ip",
-                &[
-                    "-4",
-                    "rule",
-                    "add",
-                    "to",
-                    route,
-                    "table",
-                    table,
-                    "priority",
-                    SUBNET_RULE_PRIORITY,
-                ],
-                None,
-            )?;
+        for (route, marked, table) in subnet_route_rules(request) {
+            let mut rule = vec!["-4", "rule", "add", "to", route];
+            if marked {
+                rule.extend(["fwmark", ROUTING_TABLE]);
+            }
+            rule.extend(["table", table, "priority", SUBNET_RULE_PRIORITY]);
+            self.runner.run("ip", &rule, None)?;
         }
         self.runner
             .kick_tunnel(request.client_address, request.dns_address);

@@ -38,7 +38,8 @@
       "network": "Network access",
       "fingerprint": "Identity fingerprint",
       "connection": "Connects with",
-      "localNetworks": "Shares local networks"
+      "localNetworks": "Shares local networks",
+      "inactiveLocalNetworks": "Inactive: the VPS routes these through another network"
     },
     "activityDetail": {
       "suspended": "Member is suspended",
@@ -154,7 +155,7 @@
     "title": "Local networks on {{name}}",
     "description": "Devices with mutual access reach these private networks through your VPS while {{name}} allows mutual access too. Their hosts can answer but can’t start connections into SirinVPN.",
     "label": "Networks",
-    "hint": "One private IPv4 network per line, such as 192.168.1.0/24. Leave empty to stop sharing.",
+    "hint": "One private IPv4 network per line, /20 or smaller, such as 192.168.1.0/24. Leave empty to stop sharing.",
     "linux": "{{name}} must run SirinVPN on Linux with IPv4 forwarding on: sudo sysctl -w net.ipv4.ip_forward=1. A WireGuard-only router forwards with its own settings.",
     "apply": "Each device applies a change when it next connects.",
     "save": "Save networks",

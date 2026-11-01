@@ -82,9 +82,23 @@ pub(super) fn desired_allowed_ips(
     Ok(allowed_ips)
 }
 
+/// Ranges whose kernel route the last sync could not add. It mirrors the one VPS kernel.
+static INACTIVE_SUBNET_ROUTES: std::sync::Mutex<BTreeSet<String>> =
+    std::sync::Mutex::new(BTreeSet::new());
+
+pub(super) fn inactive_subnet_routes() -> BTreeSet<String> {
+    INACTIVE_SUBNET_ROUTES
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+        .clone()
+}
+
 /// AllowedIPs pick the router peer; these routes send the LAN ranges into the tunnel at all.
 /// `proto static` marks them as ours; `add` never takes over a route on another interface.
-async fn sync_subnet_kernel_routes(interface: &str, desired: &[DesiredPeer]) -> Result<()> {
+pub(super) async fn sync_subnet_kernel_routes(
+    interface: &str,
+    desired: &[DesiredPeer],
+) -> Result<()> {
     let output = diagnostics::output(
         "ip",
         &["-4", "route", "show", "dev", interface, "proto", "static"],
@@ -102,17 +116,25 @@ async fn sync_subnet_kernel_routes(interface: &str, desired: &[DesiredPeer]) -> 
         .await
         .context("could not remove a subnet route within its bounds")?;
     }
-    for route in &missing {
+    let mut inactive = BTreeSet::new();
+    for route in missing {
         // A range that later collides with a VPS route stays inactive instead of failing
         // every commit and recovery, which would leave it impossible to remove.
-        let _ = diagnostics::output(
+        if diagnostics::output(
             "ip",
             &[
-                "-4", "route", "add", route, "dev", interface, "proto", "static",
+                "-4", "route", "add", &route, "dev", interface, "proto", "static",
             ],
         )
-        .await;
+        .await
+        .is_none()
+        {
+            inactive.insert(route);
+        }
     }
+    *INACTIVE_SUBNET_ROUTES
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner) = inactive;
     Ok(())
 }
 
@@ -301,16 +323,28 @@ pub(super) async fn sync_peer_isolation(
 /// A migrated source retains the pinned control channels for offline clients,
 /// but cannot continue serving traffic with its frozen authorization snapshot.
 /// A separate table survives replacement of the normal firewall rules.
+///
+/// It also confines tunnel sources outside the tunnel range (a subnet router's LAN
+/// hosts) to answers back into the tunnel, also while the server is stopped.
 pub(super) fn handoff_guard_nft_batch(configuration: &ServerConfiguration, source: bool) -> String {
-    let mut batch = concat!(
-        "add table inet sirinvpn_handoff\n",
-        "add chain inet sirinvpn_handoff input { type filter hook input priority -31; policy accept; }\n",
-        "add chain inet sirinvpn_handoff forward { type filter hook forward priority -31; policy accept; }\n",
-        "flush chain inet sirinvpn_handoff input\n",
-        "flush chain inet sirinvpn_handoff forward\n",
-    ).to_owned();
+    let interface = &configuration.interface_name;
+    // The tunnel and its measurement probes (10.77.1.0/24); subnet routes never overlap it.
+    let tunnel = "10.77.0.0/23";
+    let mut batch = format!(
+        concat!(
+            "add table inet sirinvpn_handoff\n",
+            "add chain inet sirinvpn_handoff input {{ type filter hook input priority -31; policy accept; }}\n",
+            "add chain inet sirinvpn_handoff forward {{ type filter hook forward priority -31; policy accept; }}\n",
+            "flush chain inet sirinvpn_handoff input\n",
+            "flush chain inet sirinvpn_handoff forward\n",
+            "add rule inet sirinvpn_handoff input iifname \"{interface}\" ip saddr != {tunnel} ct state != {{ established, related }} drop\n",
+            "add rule inet sirinvpn_handoff forward iifname \"{interface}\" ip saddr != {tunnel} oifname != \"{interface}\" drop\n",
+            "add rule inet sirinvpn_handoff forward iifname \"{interface}\" ip saddr != {tunnel} ct state != {{ established, related }} drop\n",
+        ),
+        interface = interface,
+        tunnel = tunnel
+    );
     if source {
-        let interface = &configuration.interface_name;
         let address = configuration.server_tunnel_address;
         let port = configuration.management_port;
         batch.push_str(&format!(concat!(
@@ -499,7 +533,6 @@ pub(super) fn subnet_route_nft_rules(
         concat!(
             "add rule inet sirinvpn_filter port_forward iifname \"{interface}\" oifname \"{interface}\" ip saddr @peer_communication4 ip daddr {{ {routes} }} accept\n",
             "add rule inet sirinvpn_filter port_forward iifname \"{interface}\" oifname \"{interface}\" ip saddr {{ {routes} }} ip daddr @peer_communication4 ct state established,related accept\n",
-            "add rule inet sirinvpn_filter port_forward iifname \"{interface}\" ip saddr {{ {routes} }} drop\n",
         ),
         interface = configuration.interface_name,
         routes = routes
@@ -623,11 +656,11 @@ mod tests {
             format!("10.77.0.2/32,{ipv6}/128,192.168.1.0/24,192.168.7.7/32")
         );
         // `ip route show` prints host routes without /32.
-        let current = "192.168.7.7 scope link\n10.20.0.0/16 scope link\n";
+        let current = "192.168.7.7 scope link\n10.20.0.0/20 scope link\n";
         assert_eq!(
             subnet_kernel_route_changes(current, std::slice::from_ref(&router)),
             (
-                vec!["10.20.0.0/16".to_owned()],
+                vec!["10.20.0.0/20".to_owned()],
                 vec!["192.168.1.0/24".to_owned()]
             )
         );
@@ -655,7 +688,7 @@ mod tests {
             conflict(&["172.17.3.0/24"]).as_deref(),
             Some("172.17.3.0/24")
         );
-        assert_eq!(conflict(&["10.9.0.0/16"]).as_deref(), Some("10.9.0.0/16"));
-        assert!(vps_route_overlap("not json", "sirinvpn0", &routes(&["10.9.0.0/16"])).is_err());
+        assert_eq!(conflict(&["10.9.0.0/20"]).as_deref(), Some("10.9.0.0/20"));
+        assert!(vps_route_overlap("not json", "sirinvpn0", &routes(&["10.9.0.0/20"])).is_err());
     }
 }

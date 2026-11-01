@@ -43,6 +43,8 @@ if sys.argv[1] == "prepare":
         run("ip", "netns", "add", namespace)
     veth("uplink0", "198.51.100.2/24", "vps", "eth0", "198.51.100.1/24")
     veth("lan0", "192.168.1.1/24", "lan", "eth0", "192.168.1.10/24")
+    # The router's physical network also routes a range another device shares.
+    run("ip", "route", "add", "10.20.0.0/20", "via", "198.51.100.1")
     vps, router, consumer = key(), key(), key()
     directory = Path(sys.argv[2])
     for name, (private, _) in (("vps", vps), ("consumer", consumer)):

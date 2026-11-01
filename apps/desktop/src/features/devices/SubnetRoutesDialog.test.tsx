@@ -21,11 +21,11 @@ it("replaces the whole list and an empty list stops sharing", async () => {
   render(<SubnetRoutesDialog serverId="server" device={router} onClose={onClose} onSaved={onSaved} />);
   const field = screen.getByRole("textbox") as HTMLTextAreaElement;
   expect(field.value).toBe("192.168.1.0/24");
-  fireEvent.change(field, { target: { value: " 192.168.1.0/24\n10.20.0.0/16, " } });
+  fireEvent.change(field, { target: { value: " 192.168.1.0/24\n10.20.0.0/20, " } });
   fireEvent.click(screen.getByRole("button", { name: t("devices.localNetworks.save") }));
   await waitFor(() => expect(onClose).toHaveBeenCalled());
   expect(invoke).toHaveBeenCalledWith("update_device_subnet_routes", { input: {
-    server_id: "server", device_id: "router", routes: ["192.168.1.0/24", "10.20.0.0/16"],
+    server_id: "server", device_id: "router", routes: ["192.168.1.0/24", "10.20.0.0/20"],
   } });
   expect(onSaved).toHaveBeenCalled();
   expect(parseRoutes("  \n ")).toEqual([]);
@@ -59,4 +59,15 @@ it("offers local networks only to the Owner, on the Owner's own devices", () => 
   // An Admin cannot manage the Owner's devices at all, so the row has no actions.
   render(<DeviceList {...base} accessLevel="admin" />);
   expect(screen.queryByRole("button", { name: t("devices.menu.deviceActions", { name: "Home server" }) })).toBeNull();
+});
+
+it("shows the ranges the VPS cannot route right now", () => {
+  const blocked = { ...router, inactive_subnet_routes: ["192.168.1.0/24"] };
+  const snapshot: MembershipSnapshot = { active_invitations: [], members: [
+    { id: "owner", name: "Owner", role: "owner", devices: [blocked] },
+  ] };
+  render(<DeviceList snapshot={snapshot} query="" accessBusy={null} peerBusy={null} onInvite={vi.fn()} onAccess={vi.fn()}
+    onTransfer={vi.fn()} onRename={vi.fn()} onRevoke={vi.fn()} onPeer={vi.fn()} onSubnetRoutes={vi.fn()} accessLevel="owner" />);
+  const label = screen.getByText(t("devices.row.facts.inactiveLocalNetworks"));
+  expect(label.nextElementSibling?.textContent).toBe("192.168.1.0/24");
 });

@@ -180,6 +180,7 @@ impl AuthorizationDocument {
     }
 
     pub(crate) fn snapshot(&self, now: u64) -> MembershipSnapshot {
+        let inactive = crate::network_policy::inactive_subnet_routes();
         let mut members: Vec<_> = self
             .members
             .iter()
@@ -198,6 +199,12 @@ impl AuthorizationDocument {
                         recent_handshake: None,
                         wireguard_only: device.wireguard_only(),
                         subnet_routes: device.subnet_routes.clone(),
+                        inactive_subnet_routes: device
+                            .subnet_routes
+                            .iter()
+                            .filter(|route| inactive.contains(*route))
+                            .cloned()
+                            .collect(),
                     })
                     .collect();
                 devices.sort_by(|left, right| left.name.cmp(&right.name));

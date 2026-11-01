@@ -75,6 +75,7 @@ pub async fn serve(paths: &ServerPaths) -> Result<()> {
             let mut applied = None;
             let mut failures = 0u32;
             let mut retry_at = Instant::now();
+            let mut route_retry_at = Instant::now();
             loop {
                 interval.tick().await;
                 if Instant::now() < retry_at {
@@ -96,6 +97,16 @@ pub async fn serve(paths: &ServerPaths) -> Result<()> {
                     next.prune_expired(unix_time());
                     let key = (next.clone(), next.desired_peers(unix_time()));
                     if applied.as_ref() == Some(&key) {
+                        // A range blocked by another VPS route returns once that route is gone.
+                        if Instant::now() >= route_retry_at && !inactive_subnet_routes().is_empty()
+                        {
+                            route_retry_at = Instant::now() + Duration::from_secs(10);
+                            let _ = sync_subnet_kernel_routes(
+                                &cleanup_state.configuration.interface_name,
+                                &key.1,
+                            )
+                            .await;
+                        }
                         continue;
                     }
                     commit_authorization(&cleanup_state, &mut current, next)
