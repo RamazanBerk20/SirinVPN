@@ -1,5 +1,6 @@
 //! Opt-in VPS alerts: an unprivileged task checks the VPS every five minutes and sends only
-//! when the Owner has set an alert or heartbeat address. It needs no capability.
+//! when the Owner has set an alert or heartbeat address. It needs no capability, and of
+//! /etc/sirinvpn it sees only the server configuration and authorization, never the keys.
 pub(super) const ALERTS_MANAGED_PATHS: &str = "etc/systemd/system/sirinvpn-alerts.service etc/systemd/system/sirinvpn-alerts.timer var/lib/sirinvpn-alerts";
 
 pub(super) const ALERTS_SETUP: &str = r#"
@@ -22,6 +23,8 @@ PrivateDevices=yes
 PrivateTmp=yes
 ProtectHome=yes
 ProtectSystem=strict
+TemporaryFileSystem=/etc/sirinvpn:ro
+BindReadOnlyPaths=/etc/sirinvpn/server.json -/etc/sirinvpn/authorization
 ProtectKernelTunables=yes
 ProtectKernelModules=yes
 ProtectControlGroups=yes

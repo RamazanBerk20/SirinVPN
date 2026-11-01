@@ -97,6 +97,7 @@ fn script_has_scoped_firewall_ownership_and_docker_interop() {
     assert!(script.contains(crate::alerts::ALERTS_MANAGED_PATHS));
     let alerts = crate::alerts::ALERTS_SETUP;
     assert!(alerts.contains("User=sirinvpn\n") && alerts.contains("CapabilityBoundingSet=\n"));
+    assert!(alerts.contains("TemporaryFileSystem=/etc/sirinvpn:ro\n"));
     assert!(alerts.contains("ExecStart=/usr/local/lib/sirinvpn/sirinvpn-server alerts check"));
     let alerts_stop = script
         .find("systemctl stop sirinvpn-alerts.timer sirinvpn-alerts.service")

@@ -22,9 +22,15 @@ fn ownership_transfer_is_atomic_and_keeps_a_single_owner() {
         .find(|device| device.member_id == destination_member_id)
         .unwrap()
         .id;
+    state.alerts = sirinvpn_protocol::AlertPolicy {
+        alert_url: Some("https://ntfy.example/previous-owner?auth=token".into()),
+        heartbeat_url: Some("https://ping.example/previous-owner".into()),
+        ..Default::default()
+    };
 
     state.transfer_ownership(destination_device_id).unwrap();
     state.validate().unwrap();
+    assert!(state.alerts.is_default());
     let previous_owner = state
         .members
         .iter()

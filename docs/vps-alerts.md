@@ -18,7 +18,8 @@ sirinvpn server alerts off <server>
 
 `set` replaces the whole setting; an address left out is removed. Admins and
 Members can neither see nor change it: the addresses are the Owner's own
-notification channels and can carry access tokens. The API is
+notification channels and can carry access tokens. An ownership transfer clears
+both addresses; the new Owner sets their own. The API is
 `GET`/`PUT /v1/alerts` and `POST /v1/alerts/test` on the private management
 endpoint. A server installed before this feature needs a repair first, which
 installs the alert timer.
@@ -37,8 +38,9 @@ There are two addresses:
 
 A sandboxed task, `sirinvpn-alerts.service`, runs every five minutes as the
 unprivileged `sirinvpn` account with no capabilities. It is separate from the
-SirinVPN service, so it can report that service stopping. It only reads local
-state:
+SirinVPN service, so it can report that service stopping. Of `/etc/sirinvpn` it
+sees only `server.json` and the authorization document, not the keys. It only
+reads local state:
 
 | Problem | Condition | Text the receiver gets |
 | --- | --- | --- |
@@ -62,18 +64,25 @@ space, Security updates, Pending restart.
 - **Deduplication.** Each problem is sent once when it starts and once when
   it clears. Nothing is repeated while it lasts.
 - **Rate limit.** Notices are at least 15 minutes apart and at most 12 in any
-  24 hours. A change held back by the limit goes out with the next notice
-  that may be sent, which carries only the net change: a problem that started
-  and cleared in between is never sent.
-- **Failure.** A notice that could not be delivered is offered again at the
-  next check. Settings shows the latest failure kind.
+  24 hours, counting every attempt, delivered or not. A change held back by the
+  limit goes out with the next notice that may be sent, which carries only the
+  net change: a problem that started and cleared in between is never sent.
+- **Failure.** A notice that could not be delivered is offered again once the
+  rate limit allows, at least 15 minutes later. Settings shows the latest
+  failure kind.
+- **Record first.** Each check is written to disk before anything is sent. If
+  it cannot be written, for example when a full root file system's reserved
+  blocks (about the last 5% on ext4) refuse ordinary accounts, nothing is sent,
+  not even the heartbeat, so a heartbeat monitor reports the VPS as silent. The
+  disk alert is sent from 90%, before that point.
 - **Test.** The test button and `sirinvpn server alerts test` send one fixed
   test notice from the VPS to the saved alert address and report whether it
   arrived, with the HTTP status if the receiver refused it. One test may be
   sent every ten seconds.
-- **New address.** Changing the setting forgets which problems were sent, so
-  a new address hears about current problems too. The rate limit carries
-  over.
+- **New address.** Changing the alert address forgets which problems were
+  sent, so the new address hears about current problems too. The rate limit
+  carries over. Changing only the format, the heartbeat or the private-address
+  choice keeps what the alert address was told.
 
 With the **ntfy** format the VPS sends `POST <topic address>` with the text
 as the body and `Title`, `Tags` and, for problems, `Priority: high` headers.
@@ -153,8 +162,8 @@ On the VPS, the setting is stored in the authorization document, so repair
 keeps it and server-state backups include it. The alert task keeps one file,
 `/var/lib/sirinvpn-alerts/state.json` (mode 0600, `sirinvpn`): the kinds of
 the current problems and when each was first seen, which ones the receiver was
-told about, the send times of the last 24 hours, the services' restart
-counters, and the latest check, delivery and heartbeat times with the latest
+told about, a fingerprint of the alert address they were sent to, the send
+times of the last 24 hours, the services' restart counters, and the latest check, delivery and heartbeat times with the latest
 failure kind. There is no history. Turning alerts off deletes the file.
 
 ## Install, repair, uninstall and backup
