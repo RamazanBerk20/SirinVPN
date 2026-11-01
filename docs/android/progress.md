@@ -31,6 +31,43 @@ the app launched successfully. Physical QR retesting remains pending.
 This is a **debug-signed, debuggable development build**, not a production release.
 Existing desktop changes and the existing signing identity were retained.
 
+## Widget, automation intents and Android TV, 1 November
+
+- **Home-screen widget.** The VPN process redraws it when the state, server,
+  Quick Settings server, Always-on or session changes. Its button sends the
+  notification's Connect/Stop broadcast, opens Android's consent screen through
+  `ControlActionActivity` when consent is missing, or opens VPN settings under
+  Always-on. It shows the server's name, never its address, and is home-screen
+  only, so Android never offers it on the lock screen.
+- **Automation intents.** `AutomationReceiver` accepts CONNECT, DISCONNECT and
+  SELECT_SERVER only from apps the user grants the `dangerous`
+  `org.sirinvpn.permission.CONTROL_VPN`; see [automation](automation.md).
+- **Android TV.** Leanback launcher entry and banner; no required touchscreen,
+  camera or autofocus. On wide Android screens (TV, tablets, landscape phones
+  over 760 dp) the desktop window rules had stopped page scrolling, so content
+  below the fold was unreachable; the page now scrolls as on a phone. With a
+  D-pad the destinations lead the page, Home starts on Connect, sub-pages start
+  on Back, the server picker keeps focus after a switch, and rows draw their
+  focus ring inside their clipped lists.
+
+Fresh-AVD harness with `ExternalControlsTest` added: API 29 and API 36 each
+passed 11 tests (APK sha256 `60e5c16b…`, test APK `5946dc86…`). The test hosts the real widget,
+switches it through Connect and Stop, renames and removes its server, and checks
+that no view shows the endpoint. Broadcasts from the shell and from the test
+APK's separate UID without the grant change nothing; with the grant, the same
+UID selects the server by name, connects and disconnects. The package check
+requires the leanback entry, banner and no required hardware.
+`tests/ui/android_tv_dpad.py` passed connect/disconnect, server choice,
+connection details and the destinations with arrow keys and Enter, with a
+visible, unclipped focus ring at every step.
+
+Not verified: an Android TV device or TV image, a launcher-hosted widget on a
+physical device, CONNECT's no-op while already connected (needs a live tunnel),
+and a real automation app. Tasker and Automate can use the intents only if they
+declare the permission. These APKs reused main's prebuilt native libraries
+(this change has no Rust), so their embedded web UI predates the CSS and React
+changes, which were checked in Chromium.
+
 ## Wi-Fi auto-connect removed, 29 October
 
 Wi-Fi auto-connect is now desktop-only. Android cannot watch for a new Wi-Fi

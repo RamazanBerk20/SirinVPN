@@ -2,6 +2,8 @@ import { Channel, invoke as tauriInvoke } from "@tauri-apps/api/core";
 import type { LocalStatusEvent, ServerStatus, ServerStatusEvent } from "./types";
 
 export const isAndroid = typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent);
+/** Android TV: no pointer, only a D-pad. Pages then start focus on their first control. */
+export const dpadOnly = isAndroid && window.matchMedia?.("(pointer: none)").matches === true;
 
 const DEMO_KEY = "sirin.demo";
 /** Fixed for the page's life: entering or leaving the demo reloads, so no state crosses between demo and real use. */

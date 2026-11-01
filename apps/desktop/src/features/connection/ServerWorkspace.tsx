@@ -23,7 +23,7 @@ const PortForwardSettings = lazy(() => import("../devices/PortForwardSettings").
 import { formatDnsPolicy } from "../../format";
 import { useServerWorkspace } from "./useServerWorkspace";
 import { PreferenceSaveBar } from "./PreferenceSaveBar";
-import { isAndroid } from "../../platform";
+import { dpadOnly, isAndroid } from "../../platform";
 import { Brand } from "../../components/Brand";
 import { ArrowLeft, CaretRight, SlidersHorizontal, Info } from "@phosphor-icons/react";
 import { formatTransport } from "../../format";
@@ -83,7 +83,7 @@ export function ServerWorkspace(
       hidden={view === "servers"}
     >
       {isAndroid && view === "home" && (mobileSubpage ?
-        <header className="mobile-page-header"><button className="icon-button" aria-label={t("common.action.back")} onClick={props.onBack}><ArrowLeft size={24} /></button><h1>{t(mobileDetails ? "app.home.detailsTitle" : "app.home.connectionTitle")}</h1></header> :
+        <header className="mobile-page-header"><button className="icon-button" autoFocus={dpadOnly} aria-label={t("common.action.back")} onClick={props.onBack}><ArrowLeft size={24} /></button><h1>{t(mobileDetails ? "app.home.detailsTitle" : "app.home.connectionTitle")}</h1></header> :
         <header className="mobile-home-header"><Brand compact /></header>)}
       {(!isAndroid || view === "devices" || view === "settings" && !props.detail) && <header className="workspace-header">
         <div>

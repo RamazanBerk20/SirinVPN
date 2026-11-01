@@ -164,7 +164,7 @@ def main():
             (output / "network-before-native.log").write_bytes(state.stdout+state.stderr)
         cases = ["VaultAcceptanceTest", "NotificationTrafficTest", "QrScannerTest", "NetworkRecoveryTest",
                  "OptionHandlingTest#packageReplacementUsesOrdinaryRecovery",
-                 "OptionHandlingTest#optionsControlTheRunningService"]
+                 "OptionHandlingTest#optionsControlTheRunningService", "ExternalControlsTest"]
         result = run([*adb, "shell", "am", "instrument", "-w", "-r", "-e", "class",
             ",".join("org.sirinvpn.client." + case for case in cases),
             "org.sirinvpn.client.test/androidx.test.runner.AndroidJUnitRunner"], timeout=300)

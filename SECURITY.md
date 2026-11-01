@@ -98,7 +98,9 @@ storage behavior apply to that baseline; the current sections above take precede
 SirinVPN is designed to protect traffic between authorized Linux, Windows, and Android clients and one user-controlled VPS. It does not make the VPS provider, destination services, upstream DNS infrastructure, or the network path cease to exist.
 
 Android uses a separate native VPN process and same-UID Binder calls, with
-Keystore-protected credential storage. See the current [Android security and
+Keystore-protected credential storage. Other apps can only connect, disconnect
+or choose the server, and only after the user grants them a `dangerous`
+permission ([automation intents](docs/android/automation.md)). See the current [Android security and
 platform boundaries](docs/android/security-and-platform.md). Historical Android
 audits apply only to their named builds, not to the current port.
 

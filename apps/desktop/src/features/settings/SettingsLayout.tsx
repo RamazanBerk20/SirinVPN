@@ -12,6 +12,7 @@ import { usePageTransition } from "../../hooks/usePageTransition";
 import { pageScrollPort } from "../../lib/scrolling";
 import { confirmNavigation } from "../../lib/navigationGuard";
 import { t } from "../../i18n";
+import { dpadOnly } from "../../platform";
 
 export type SettingsCategory =
   "general" | "connection" | "network" | "recovery" | "maintenance";
@@ -43,7 +44,7 @@ export function SettingsLayout({
   const panel = usePageTransition<HTMLDivElement>(category);
   const current = categories.find(item => item.id === category);
   if (mobile) return detail ? <div className="mobile-settings-detail">
-    <header className="mobile-page-header"><button className="icon-button" aria-label={t("common.action.back")} onClick={onBack}><ArrowLeft size={24} /></button><h1>{current && t(current.label)}</h1></header>
+    <header className="mobile-page-header"><button className="icon-button" autoFocus={dpadOnly} aria-label={t("common.action.back")} onClick={onBack}><ArrowLeft size={24} /></button><h1>{current && t(current.label)}</h1></header>
     <div className="settings-panel">{children}</div>
   </div> : <div className="mobile-choice-list" aria-label={t("settings.layout.categories")}>
     {categories.map(({ id: value, label, hint, icon: Icon }) => <button key={value} className="mobile-list-row" aria-label={t(label)} aria-describedby={`${id}-${value}-hint`} onClick={() => onChange(value)}>

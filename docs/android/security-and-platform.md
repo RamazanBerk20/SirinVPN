@@ -82,7 +82,16 @@ honor the notification switch; Android still controls the foreground VPN notice.
 
 The exported launcher accepts no enrollment/destructive command. The exported
 VPN and tile services require Android's signature-level bind permissions.
-Controller, maintenance, action and package-result components are not exported.
+The [automation receiver](automation.md) is exported only behind
+`org.sirinvpn.permission.CONTROL_VPN`, a `dangerous` permission the user grants
+to an automation app; it can connect, disconnect and choose the Quick Settings
+server, and returns nothing. `scripts/check-remediation-contracts.py` rejects
+any other exported component without a permission.
+Controller, maintenance, action, widget and package-result components are not exported.
+The home-screen widget is drawn by the VPN process and uses the tile's and
+notification's control paths. It shows the state and the server's name, never
+its address, and declares only the home-screen category, so Android never
+offers it on the lock screen.
 The VPN uses the documented authorized-VPN `systemExempted` foreground-service
 eligibility; finite maintenance uses `dataSync`. There is no wake lock, overlay,
 device administrator, broad filesystem permission or permanent hidden WebView.

@@ -1,5 +1,6 @@
 import { ArrowClockwise, Power } from "@phosphor-icons/react";
-import { invoke, isAndroid } from "../../platform";
+import { useEffect, useRef } from "react";
+import { dpadOnly, invoke, isAndroid } from "../../platform";
 import { SirinMark } from "../../components/Brand";
 import { InlineError } from "../../components/ui";
 import type { Page } from "../../components/Navigation";
@@ -18,6 +19,9 @@ export function ConnectionHero({
   view: Page;
   onReviewComponentUpdate?: () => void;
 }) {
+  const power = useRef<HTMLButtonElement>(null);
+  // D-pad only: Home starts on this button, and it takes focus back after being disabled while busy.
+  useEffect(() => { if (dpadOnly && document.activeElement === document.body) power.current?.focus(); });
   if (view !== "home") return null;
   const { localStatus, profile, serverStatus, busy, error } = model;
   const systemControlled = isAndroid && localStatus.always_on === true;
@@ -40,6 +44,7 @@ export function ConnectionHero({
         {!isAndroid && <SirinMark className="connection-mark" />}
         <button
           className={`power-control ${state.connected ? "active" : ""}`}
+          ref={power}
           disabled={busy || state.other}
           aria-label={systemControlled ? t("home.action.androidVpnSettings") : busy ? t("home.action.changing") : state.action}
           onClick={() =>
