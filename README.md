@@ -119,6 +119,13 @@ servers or a VPN subscription.
 On Android, notification permission enables app notifications. The Android app has
 no Wi-Fi auto-connect and does not request location permission.
 
+If a connection fails, **Can’t connect? Find out why** on Home (or **Troubleshoot**
+in **VPS maintenance**) goes through the usual causes one at a time, from the
+local network to the VPS service, and offers the matching fix where the app has
+one. To look around before you have a VPS, choose **Explore the demo** on the
+first screen: it runs on sample data, contacts nothing, saves nothing, and
+**Exit demo** returns to setup ([details](docs/in-app-help.md)).
+
 ## Build from source
 
 ```sh
@@ -237,6 +244,7 @@ codes, keys, passwords, backups, or private VPS details.
 - [Testing](docs/testing.md) and [source map](docs/module-map.md)
 - [Android build, design, and verification](docs/android/README.md)
 - [Desktop feature map](docs/overhaul-feature-map.md)
+- [In-app help](docs/in-app-help.md) — the “Can’t connect?” guide and the demo
 - [Interface text and localization](docs/ui-text.md) — writing guide and how to add a language
 - [Windows integration](docs/windows-integration-2026-09-07.md)
 - [Signed update design](docs/releases.md) — implementation documentation; no published releases yet

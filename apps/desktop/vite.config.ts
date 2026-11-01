@@ -9,6 +9,8 @@ export default defineConfig({
     port: 1420,
     strictPort: true,
     host: "127.0.0.1",
+    // Outside the app root: the demo's sample data, and the core messages a troubleshooting test pins.
+    fs: { allow: [".", "../../tests/ui/fixtures.js", "../../crates/core/src"] },
   },
   envPrefix: ["VITE_", "TAURI_"],
   test: {

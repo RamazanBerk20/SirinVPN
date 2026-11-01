@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { invoke } from "@tauri-apps/api/core";
+import { invoke } from "../platform";
 import { listen } from "@tauri-apps/api/event";
 
 export interface DesktopNavigation {

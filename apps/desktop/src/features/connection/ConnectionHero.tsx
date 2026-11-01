@@ -93,6 +93,9 @@ export function ConnectionHero({
         <button className="text-button" disabled={busy} onClick={onReviewComponentUpdate}>{t("home.componentUpdate.review")}</button>
       </div>}
       {error && <InlineError message={error} />}
+      {!state.connected && (error || localStatus.server_id === profile.id && localStatus.state === "degraded") && (
+        <button className="text-button" disabled={busy} onClick={() => model.setTroubleshootOpen(true)}>{t("help.troubleshoot.open")}</button>
+      )}
     </section>
   );
 }

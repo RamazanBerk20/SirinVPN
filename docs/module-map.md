@@ -18,6 +18,7 @@ a file boundary does not change which process owns an operation or its secrets.
 | `features/settings/` | Backup, repair, uninstall, key rotation, migration, explicit releases |
 | `features/dns/` | Typed recursive/DoT/DoH and private-record inputs |
 | `platform.ts`, `hooks/useAndroidBack.ts` | Android native bridge selection and platform navigation |
+| `demo.ts` | Demo mode: answers `platform.ts` commands from sample data, never the native bridge ([details](in-app-help.md)) |
 | `i18n/`, `locales/<lang>/` | Interface text: `t()` lookup, plurals and formatting; JSON catalogs per namespace ([guide](ui-text.md)) |
 | `components/ListRow.tsx`, `components/InfoHint.tsx` | The Android row pattern; ⓘ explanations that replace long notes |
 | `styles/mobile-native.css` | Android tokens (colour, type, radius), card/row system, touch targets and bottom navigation |
