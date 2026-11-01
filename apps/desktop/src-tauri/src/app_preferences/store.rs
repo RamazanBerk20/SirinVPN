@@ -9,6 +9,16 @@ pub struct AppPreferences {
     pub close_to_tray: bool,
     pub notifications: bool,
     pub animations: bool,
+    pub theme: Theme,
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Theme {
+    #[default]
+    System,
+    Light,
+    Dark,
 }
 
 impl Default for AppPreferences {
@@ -19,6 +29,7 @@ impl Default for AppPreferences {
             close_to_tray: false,
             notifications: false,
             animations: true,
+            theme: Theme::System,
         }
     }
 }
@@ -84,6 +95,7 @@ mod tests {
             close_to_tray: true,
             notifications: true,
             animations: false,
+            theme: Theme::Light,
             ..AppPreferences::default()
         };
         write(&path, &preferences).unwrap();
@@ -102,6 +114,7 @@ mod tests {
             " ".repeat(4097),
             r#"{"schema_version":2,"preferences":{}}"#.to_owned(),
             r#"{"schema_version":1,"preferences":{"notifications":"yes"}}"#.to_owned(),
+            r#"{"schema_version":1,"preferences":{"theme":"sepia"}}"#.to_owned(),
         ] {
             fs::write(&path, &bytes).unwrap();
             assert!(read(&path).is_err());

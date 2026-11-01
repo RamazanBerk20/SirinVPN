@@ -31,6 +31,7 @@ const initial: PreferencesSnapshot = {
     close_to_tray: false,
     notifications: false,
     animations: true,
+    theme: "system",
   },
   startup_available: true,
   tray_available: true,
@@ -205,4 +206,14 @@ it("keeps settings disabled when the native store cannot be read", async () => {
     ).disabled,
   ).toBe(true);
   expect(mocks.setAppPreferences).not.toHaveBeenCalled();
+});
+it("saves the theme choice and applies it before the next paint", async () => {
+  setup();
+  const light = await screen.findByRole("button", { name: t("settings.general.notifications.theme.light") });
+  await waitFor(() => expect(light.matches(":disabled")).toBe(false));
+  expect(screen.getByRole("button", { name: t("settings.general.notifications.theme.system") }).getAttribute("aria-pressed")).toBe("true");
+  fireEvent.click(light);
+  await waitFor(() => expect(light.getAttribute("aria-pressed")).toBe("true"));
+  expect(mocks.setAppPreferences).toHaveBeenCalledWith({ ...initial.preferences, theme: "light" });
+  expect(document.documentElement.dataset.theme).toBe("light");
 });

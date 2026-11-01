@@ -3,6 +3,7 @@ package org.sirinvpn.client
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
 import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 
 class MainActivity : TauriActivity() {
@@ -45,6 +46,15 @@ class MainActivity : TauriActivity() {
         }
         super.setContentView(view)
     }
+    // Mirrors --bg and --nav in mobile-native.css: the bars show this view, not the WebView.
+    private val barBackground=android.graphics.drawable.LayerDrawable(arrayOf(android.graphics.drawable.ColorDrawable(),android.graphics.drawable.ColorDrawable()))
+        .apply { setLayerGravity(1,android.view.Gravity.BOTTOM or android.view.Gravity.FILL_HORIZONTAL) }
+    fun systemBars(light:Boolean) {
+        (barBackground.getDrawable(0) as android.graphics.drawable.ColorDrawable).color=if(light) 0xFFF2F5FA.toInt() else 0xFF080F1D.toInt()
+        (barBackground.getDrawable(1) as android.graphics.drawable.ColorDrawable).color=if(light) 0xFFFFFFFF.toInt() else 0xFF0C1728.toInt()
+        barBackground.invalidateSelf()
+        WindowCompat.getInsetsController(window,window.decorView).apply { isAppearanceLightStatusBars=light;isAppearanceLightNavigationBars=light }
+    }
     private companion object { const val MINIMUM_WEBVIEW=111 }
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
@@ -54,9 +64,13 @@ class MainActivity : TauriActivity() {
         lifecycle.addObserver(TauriLifecycleObserver)
         // Insets are consumed once at the native boundary, including the IME.
         val root = findViewById<android.view.View>(android.R.id.content)
+        root.background = barBackground
+        // The web theme reports overrides once it loads; until then match the system setting.
+        systemBars(resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK != android.content.res.Configuration.UI_MODE_NIGHT_YES)
         ViewCompat.setOnApplyWindowInsetsListener(root) { view, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
             val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
+            barBackground.setLayerHeight(1, bars.bottom)
             view.setPadding(bars.left, bars.top, bars.right, maxOf(bars.bottom, ime.bottom))
             WindowInsetsCompat.CONSUMED
         }

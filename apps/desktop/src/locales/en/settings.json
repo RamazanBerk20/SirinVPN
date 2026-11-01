@@ -72,6 +72,13 @@
       "animations": {
         "label": "Interface animations",
         "summary": "Page transitions; your system’s reduced motion still applies"
+      },
+      "theme": {
+        "label": "Theme",
+        "summary": "System follows your device’s light or dark setting",
+        "system": "System",
+        "light": "Light",
+        "dark": "Dark"
       }
     },
     "updates": {

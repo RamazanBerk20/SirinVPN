@@ -58,6 +58,7 @@ class SirinPlugin(private val activity: Activity) : Plugin(activity) {
         val command = request.getString("command") ?: return reject(invoke,"Missing command")
         val args = request.optJSONObject("args") ?: JSONObject()
         if(command=="android_close_ui") {resolve(invoke);activity.moveTaskToBack(true);return}
+        if(command=="android_system_bars") {val light=args.optBoolean("light");activity.runOnUiThread {(activity as? MainActivity)?.systemBars(light)};resolve(invoke);return}
         if(command=="android_share_document") {
             val uri=android.net.Uri.parse(args.optString("uri"))
             if(uri.scheme!="content") {reject(invoke,R.string.error_choose_document);return}

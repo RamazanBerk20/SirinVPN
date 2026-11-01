@@ -1,9 +1,12 @@
+export type ThemePreference = "system" | "light" | "dark";
+
 export type AppPreferences = {
   start_on_login: boolean;
   launch_minimized: boolean;
   close_to_tray: boolean;
   notifications: boolean;
   animations: boolean;
+  theme: ThemePreference;
 };
 
 export type NotificationPermission =

@@ -38,7 +38,7 @@ export function GeneralSettings({
     testNotification,
   } = usePreferences();
   const row = (
-    key: keyof AppPreferences,
+    key: Exclude<keyof AppPreferences, "theme">,
     label: string,
     description: string,
     unavailable = false,
@@ -156,6 +156,30 @@ export function GeneralSettings({
           t("settings.general.notifications.animations.label"),
           t("settings.general.notifications.animations.summary"),
         )}
+        <div className="preference-row" role="group" aria-labelledby="theme-preference-label">
+          <span>
+            <strong id="theme-preference-label">{t("settings.general.notifications.theme.label")}</strong>
+            <small>{t("settings.general.notifications.theme.summary")}</small>
+            {changedKey === "theme" && (
+              <small className={error ? "danger-text" : "preference-feedback"} role={error ? "alert" : "status"}>
+                {saving ? t("common.state.saving") : error || status}
+              </small>
+            )}
+          </span>
+          <div className="segmented-control theme-choice">
+            {(["system", "light", "dark"] as const).map((theme) => (
+              <button
+                key={theme}
+                type="button"
+                aria-pressed={(snapshot?.preferences.theme ?? "system") === theme}
+                disabled={loading || saving || !snapshot}
+                onClick={() => void change("theme", theme)}
+              >
+                {t(`settings.general.notifications.theme.${theme}`)}
+              </button>
+            ))}
+          </div>
+        </div>
       </section>
       {onCheckUpdates && (
         <section className="settings-card settings-action-row">

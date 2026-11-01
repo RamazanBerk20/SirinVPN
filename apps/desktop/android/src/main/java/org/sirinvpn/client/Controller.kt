@@ -266,13 +266,16 @@ object Controller {
                 synchronized(this) {
                     if (command == "set_app_preferences") {
                         val value = JSONObject(arguments).getJSONObject("preferences")
+                        val theme = value.optString("theme", "system")
+                        check(theme in setOf("system", "light", "dark"))
                         check(prefs.edit().putBoolean("notifications", value.getBoolean("notifications"))
-                            .putBoolean("animations", value.getBoolean("animations")).commit())
+                            .putBoolean("animations", value.getBoolean("animations")).putString("theme", theme).commit())
                         if (!value.getBoolean("notifications")) VpnNotifications.clearFailure(context)
                     }
                     callback.complete(success(JSONObject().put("preferences", JSONObject()
                         .put("notifications", prefs.getBoolean("notifications", true))
                         .put("animations", prefs.getBoolean("animations", true))
+                        .put("theme", prefs.getString("theme", "system"))
                         .put("start_on_login", false).put("launch_minimized", false).put("close_to_tray", false))
                         .put("startup_available", false).put("tray_available", false)
                         .put("notification_permission", if (context.getSystemService(android.app.NotificationManager::class.java).areNotificationsEnabled()) "granted" else "denied")
