@@ -107,7 +107,7 @@ fn notices_are_spaced_and_capped_and_only_the_net_change_is_sent() {
 }
 
 #[test]
-fn a_pending_restart_waits_three_days_and_a_failed_delivery_is_retried() {
+fn a_pending_restart_waits_three_days_and_a_failed_delivery_is_retried_within_the_limit() {
     let mut state = AlertState::default();
     let restart = [Problem::RestartPending];
     assert_eq!(tick(&mut state, &restart, 0), None);
@@ -116,12 +116,16 @@ fn a_pending_restart_waits_three_days_and_a_failed_delivery_is_retried() {
         None
     );
     let current = problems(&restart);
-    let notice = due(&mut state, &current, RESTART_PENDING_SECONDS).unwrap();
-    // Not delivered: the next check offers the same notice again.
+    let start = RESTART_PENDING_SECONDS;
+    let notice = due(&mut state, &current, start).unwrap();
+    // Not delivered: the attempt still counts, so the receiver is not asked every check.
+    assert_eq!(due(&mut state, &current, start + 5 * MINUTE), None);
+    assert_eq!(due(&mut state, &current, start + 10 * MINUTE), None);
     assert_eq!(
-        due(&mut state, &current, RESTART_PENDING_SECONDS + 5 * MINUTE),
+        due(&mut state, &current, start + MIN_SECONDS_BETWEEN_ALERTS),
         Some(notice)
     );
+    assert!(state.notified.is_empty());
 }
 
 #[test]
@@ -329,8 +333,7 @@ async fn ntfy_webhook_and_heartbeat_requests_carry_only_the_fixed_notice() {
     receiver_task.await.unwrap();
 }
 
-#[tokio::test]
-async fn the_timer_task_records_heartbeats_and_forgets_everything_when_alerts_are_off() {
+fn initialized_server() -> (tempfile::TempDir, ServerPaths, AuthorizationDocument) {
     let directory = tempfile::tempdir().unwrap();
     let paths = ServerPaths::under(directory.path());
     let owner = sirinvpn_core::LocalIdentity::generate("Alert owner").unwrap();
@@ -343,18 +346,30 @@ async fn the_timer_task_records_heartbeats_and_forgets_everything_when_alerts_ar
         51820,
     )
     .unwrap();
-    let state_directory = tempfile::tempdir().unwrap();
-    let (port, receiver_task) = receiver(200).await;
-    let mut document = load_authorization(&paths.authorization).unwrap();
-    document.alerts = AlertPolicy {
+    let document = load_authorization(&paths.authorization).unwrap();
+    (directory, paths, document)
+}
+
+fn heartbeat_policy(port: u16) -> AlertPolicy {
+    AlertPolicy {
         heartbeat_url: Some(format!("https://127.0.0.1:{port}/ping")),
         allow_private_addresses: true,
         ..Default::default()
-    };
+    }
+}
+
+#[tokio::test]
+async fn the_timer_task_records_heartbeats_and_forgets_everything_when_alerts_are_off() {
+    let (_directory, paths, mut document) = initialized_server();
+    let state_directory = tempfile::tempdir().unwrap();
+    let notified = problems(&[Problem::DiskNearlyFull]);
+    let (port, receiver_task) = receiver(200).await;
+    document.alerts = heartbeat_policy(port);
     write_authorization(&paths.authorization, &document).unwrap();
     let stale = AlertState {
-        notified: problems(&[Problem::DiskNearlyFull]),
+        notified: notified.clone(),
         sent: vec![unix_time()],
+        destination_sha256: Some(fingerprint(&Some("https://old.example/topic"))),
         ..Default::default()
     };
     write_state(state_directory.path(), &stale).unwrap();
@@ -362,7 +377,7 @@ async fn the_timer_task_records_heartbeats_and_forgets_everything_when_alerts_ar
     check(&paths, state_directory.path()).await.unwrap();
     receiver_task.await.unwrap();
     let state = read_state(state_directory.path());
-    // Problems told to another address are forgotten; the rate limit is kept.
+    // Problems told to another alert address are forgotten; the rate limit is kept.
     assert!(state.notified.is_empty());
     assert_eq!(state.sent, stale.sent);
     assert!(state.status.heartbeat_sent_at_unix.is_some());
@@ -372,8 +387,43 @@ async fn the_timer_task_records_heartbeats_and_forgets_everything_when_alerts_ar
         Some(fingerprint(&document.alerts))
     );
 
+    // Changing only the heartbeat keeps what the alert address was told.
+    write_state(
+        state_directory.path(),
+        &AlertState {
+            notified: notified.clone(),
+            ..state
+        },
+    )
+    .unwrap();
+    let (port, receiver_task) = receiver(200).await;
+    document.alerts = heartbeat_policy(port);
+    write_authorization(&paths.authorization, &document).unwrap();
+    check(&paths, state_directory.path()).await.unwrap();
+    receiver_task.await.unwrap();
+    let state = read_state(state_directory.path());
+    assert_eq!(state.notified, notified);
+    assert_eq!(
+        state.status.policy_sha256,
+        Some(fingerprint(&document.alerts))
+    );
+
     document.alerts = AlertPolicy::default();
     write_authorization(&paths.authorization, &document).unwrap();
     check(&paths, state_directory.path()).await.unwrap();
     assert!(!state_directory.path().join(STATE_FILE).exists());
+}
+
+#[tokio::test]
+async fn nothing_is_sent_when_the_check_cannot_be_recorded() {
+    let (directory, paths, mut document) = initialized_server();
+    let (port, receiver_task) = receiver(200).await;
+    document.alerts = heartbeat_policy(port);
+    write_authorization(&paths.authorization, &document).unwrap();
+    // As on a disk whose reserved blocks refuse the service account.
+    let unwritable = directory.path().join("missing");
+    assert!(check(&paths, &unwritable).await.is_err());
+    tokio::time::sleep(Duration::from_millis(200)).await;
+    assert!(!receiver_task.is_finished(), "a heartbeat was sent");
+    receiver_task.abort();
 }

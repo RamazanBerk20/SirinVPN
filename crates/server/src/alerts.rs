@@ -110,6 +110,8 @@ pub(crate) struct AlertState {
     pub sent: Vec<u64>,
     /// Automatic restart counters at the previous check, by unit.
     pub restarts: BTreeMap<String, u64>,
+    /// Fingerprint of the alert address that `notified` refers to.
+    pub destination_sha256: Option<String>,
     pub status: AlertStatus,
 }
 
@@ -121,7 +123,8 @@ pub(crate) struct Notice {
 
 /// Records the current problems and returns the net change the receiver has not heard yet,
 /// unless the rate limit holds it back. A held change is sent by a later check, and a problem
-/// that started and cleared in between is never sent.
+/// that started and cleared in between is never sent. Each returned notice counts against the
+/// limit whether or not it is delivered, so a failing receiver is not retried every check.
 pub(crate) fn due(state: &mut AlertState, current: &BTreeSet<Problem>, now: u64) -> Option<Notice> {
     state
         .first_seen
@@ -151,8 +154,11 @@ pub(crate) fn due(state: &mut AlertState, current: &BTreeSet<Problem>, now: u64)
             .sent
             .last()
             .is_some_and(|sent| now.saturating_sub(*sent) < MIN_SECONDS_BETWEEN_ALERTS);
-    ((!problems.is_empty() || !resolved.is_empty()) && !limited)
-        .then_some(Notice { problems, resolved })
+    if (problems.is_empty() && resolved.is_empty()) || limited {
+        return None;
+    }
+    state.sent.push(now);
+    Some(Notice { problems, resolved })
 }
 
 pub(crate) fn delivered(state: &mut AlertState, notice: &Notice, now: u64) {
@@ -160,7 +166,6 @@ pub(crate) fn delivered(state: &mut AlertState, notice: &Notice, now: u64) {
     for problem in &notice.resolved {
         state.notified.remove(problem);
     }
-    state.sent.push(now);
     state.status.alert_sent_at_unix = Some(now);
     state.status.alert_failure = None;
 }
@@ -383,10 +388,10 @@ pub(crate) async fn send(
         .unwrap_or(Err((AlertFailure::Connection, None)))
 }
 
-/// The fingerprint ties stored outcomes and notified problems to one policy.
-fn fingerprint(policy: &AlertPolicy) -> String {
+/// Ties stored outcomes to the policy, and notified problems to the alert address.
+fn fingerprint(value: &impl Serialize) -> String {
     hex::encode(Sha256::digest(
-        serde_json::to_vec(policy).unwrap_or_default(),
+        serde_json::to_vec(value).unwrap_or_default(),
     ))
 }
 
@@ -421,30 +426,41 @@ pub(crate) async fn check(paths: &ServerPaths, directory: &Path) -> Result<()> {
     let mut state = read_state(directory);
     let policy_sha256 = fingerprint(&policy);
     if state.status.policy_sha256.as_deref() != Some(policy_sha256.as_str()) {
-        // A changed address has heard nothing yet; the rate limit still applies.
-        state = AlertState {
-            sent: state.sent,
-            restarts: state.restarts,
+        // The outcomes Settings shows belong to the previous setting.
+        state.status = AlertStatus {
+            policy_sha256: Some(policy_sha256),
             ..Default::default()
         };
-        state.status.policy_sha256 = Some(policy_sha256);
+    }
+    let destination_sha256 = fingerprint(&policy.alert_url);
+    if state.destination_sha256.as_deref() != Some(destination_sha256.as_str()) {
+        // A new alert address has heard nothing yet; the rate limit still applies.
+        state.notified.clear();
+        state.destination_sha256 = Some(destination_sha256);
     }
     let now = unix_time();
     state.status.checked_at_unix = Some(now);
-    if let Some(url) = &policy.alert_url {
-        let current = current_problems(&load_configuration(paths)?, &mut state).await;
-        if let Some(notice) = due(&mut state, &current, now) {
-            let message = message(&notice);
-            match send(
-                url,
-                policy.allow_private_addresses,
-                Some((&message, policy.format)),
-            )
-            .await
-            {
-                Ok(()) => delivered(&mut state, &notice, now),
-                Err((failure, _)) => state.status.alert_failure = Some(failure),
-            }
+    let notice = match &policy.alert_url {
+        Some(_) => {
+            let current = current_problems(&load_configuration(paths)?, &mut state).await;
+            due(&mut state, &current, now)
+        }
+        None => None,
+    };
+    // Nothing is sent unless this check is on disk: an unwritable state would repeat every
+    // notice, and the missing heartbeat then tells the outside monitor.
+    write_state(directory, &state)?;
+    if let (Some(url), Some(notice)) = (&policy.alert_url, &notice) {
+        let message = message(notice);
+        match send(
+            url,
+            policy.allow_private_addresses,
+            Some((&message, policy.format)),
+        )
+        .await
+        {
+            Ok(()) => delivered(&mut state, notice, now),
+            Err((failure, _)) => state.status.alert_failure = Some(failure),
         }
     }
     if let Some(url) = &policy.heartbeat_url {

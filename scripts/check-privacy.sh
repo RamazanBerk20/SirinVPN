@@ -119,7 +119,7 @@ fi
 
 # VPS alerts go only to addresses the Owner enters. The URL-validation and delivery tests
 # use reserved names, loopback, private and fixed example IP literals.
-ALERT_FIXTURES='(protocol/src/alerts[.]rs|server/src/(alerts/tests|tests/member_lifecycle/alerts)[.]rs|features/settings/VpsAlertSettings[.]test[.]tsx):[0-9]+:.*"https?://(user:pass@)?((([a-z]+[.])+example|([a-z]+[.])?localhost|ntfy|[0-9.]+|[0-9a-f:]+|\[[0-9a-f:.]+\]|\[[a-z.]+\])[:/]|/)'
+ALERT_FIXTURES='(protocol/src/alerts[.]rs|server/src/(alerts/tests|tests/member_lifecycle/alerts|authorization/tests/ownership_transfer_is_atomic_and_keeps_a_single_owner)[.]rs|features/settings/VpsAlertSettings[.]test[.]tsx):[0-9]+:.*"https?://(user:pass@)?((([a-z]+[.])+example|([a-z]+[.])?localhost|ntfy|[0-9.]+|[0-9a-f:]+|\[[0-9a-f:.]+\]|\[[a-z.]+\])[:/]|/)'
 if printf '%s\n' \
   'protocol/src/alerts.rs:1:            "https://ntfy.sh/topic",' \
   'server/src/alerts/tests.rs:1:        send("https://hooks.attacker.test/a", true, None)' \

@@ -753,6 +753,8 @@ impl AuthorizationDocument {
         self.recovery_key = None;
         self.recovery_receipt = None;
         self.recovery_policy = Default::default();
+        // The addresses are the previous owner's channels and can carry their tokens.
+        self.alerts = Default::default();
         self.invitations.retain(|invitation| {
             invitation.issued_by != Some(current_owner_id)
                 && invitation.issued_by != Some(destination_member_id)
