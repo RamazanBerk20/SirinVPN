@@ -22,16 +22,16 @@
   min-height: 72px;
   resize: vertical;
   padding: 9px 11px;
-  border: 1px solid #173963;
+  border: 1px solid color-mix(in srgb, var(--line-strong) 55%, var(--surface-2));
   border-radius: 6px;
   outline: none;
-  background: #030d20;
-  color: #dbe3f3;
+  background: var(--surface);
+  color: color-mix(in srgb, var(--quiet) 25%, var(--text));
   font-family: var(--font-ui);
   font-size: 10px;
   line-height: 1.55;
 }
 
 .route-list-field textarea:focus {
-  border-color: rgb(35 220 244 / 58%);
+  border-color: color-mix(in srgb, var(--cyan) 58%, transparent);
 }

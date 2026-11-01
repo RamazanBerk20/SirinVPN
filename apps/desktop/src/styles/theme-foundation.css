@@ -15,6 +15,29 @@
   --radius: 14px;
   --gradient: linear-gradient(110deg, #03cdf4 0%, #3437ff 48%, #be19f0 100%);
 }
+/* Rules mix these tokens, so the light palette only redefines them; text tokens keep WCAG AA on every surface. */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #eef2f9;
+  --surface: #ffffff;
+  --surface-2: #f6f8fc;
+  --surface-3: #e4ebf8;
+  --line: #d3dcec;
+  --line-strong: #7d8eb0;
+  --text: #0b1430;
+  --muted: #45557a;
+  --quiet: #56678c;
+  --accent: #3347e0;
+  --accent-strong: #0a6c8f;
+  --cyan: #0a6f8f;
+  --violet: #7a2fd6;
+  --success: #03704e;
+  --warning: #8f5400;
+  --danger: #c0223f;
+  --shadow: rgb(22 34 66 / 40%);
+  /* Deeper ends keep white button text at AA across the whole gradient. */
+  --gradient: linear-gradient(110deg, #0670b8 0%, #3437ff 48%, #a316d6 100%);
+}
 [hidden] {
   display: none !important;
 }
@@ -53,8 +76,8 @@ summary {
   background: var(--bg);
 }
 .sidebar {
-  background: #080e1e;
-  border-right: 1px solid #293b60;
+  background: var(--surface);
+  border-right: 1px solid color-mix(in srgb, var(--muted) 15%, var(--surface-3));
   padding: 26px 14px 18px;
   gap: 14px;
   min-height: 100dvh;
@@ -87,7 +110,7 @@ summary {
   background: transparent;
   border: 1px solid transparent;
   border-radius: 12px;
-  color: #bdcbed;
+  color: color-mix(in srgb, var(--muted) 70%, var(--text));
 }
 .primary-navigation button span {
   display: grid;
@@ -95,25 +118,25 @@ summary {
 }
 .primary-navigation strong {
   font-size: 13px;
-  color: #f6f6ff;
+  color: var(--text);
 }
 .primary-navigation small {
   font-size: 10px;
 }
 .primary-navigation button:hover {
-  background: #101c39;
+  background: color-mix(in srgb, var(--surface-3) 55%, var(--surface-2));
 }
 .primary-navigation button[aria-current] {
-  border-color: #365ee9;
+  border-color: color-mix(in srgb, var(--line-strong) 20%, var(--accent));
   border-left-color: var(--cyan);
-  background: linear-gradient(110deg, #102854, #172753 70%, #12388c);
+  background: linear-gradient(110deg, color-mix(in srgb, var(--accent) 5%, var(--surface-3)), color-mix(in srgb, var(--accent) 5%, var(--surface-3)) 70%, color-mix(in srgb, var(--accent) 35%, var(--surface-3)));
   box-shadow:
     inset 3px 0 0 -1px var(--cyan),
-    0 0 16px #143df225;
+    0 0 16px color-mix(in srgb, color-mix(in srgb, var(--accent) 85%, var(--surface)) 14.5%, transparent);
 }
 .primary-navigation button[aria-current] > svg {
   color: var(--cyan);
-  filter: drop-shadow(0 0 7px #00caff70);
+  filter: drop-shadow(0 0 7px color-mix(in srgb, var(--cyan) 43.9%, transparent));
 }
 .sidebar-heading {
   padding: 0 12px;
@@ -134,7 +157,7 @@ summary {
   overflow: hidden;
 }
 .workspace::before {
-  background: radial-gradient(ellipse at 70% 0, #123e8420, transparent 65%);
+  background: radial-gradient(ellipse at 70% 0, color-mix(in srgb, color-mix(in srgb, var(--line) 75%, var(--accent)) 12.5%, transparent), transparent 65%);
 }
 
 .workspace-header {
@@ -160,14 +183,14 @@ summary {
 }
 .section-label {
   font-size: 9px;
-  color: #829eff;
+  color: color-mix(in srgb, var(--accent) 60%, var(--text));
   letter-spacing: 0.22em;
 }
 .primary-button {
   background: var(--gradient);
-  border: 1px solid #6f98ff;
+  border: 1px solid color-mix(in srgb, var(--accent) 70%, var(--text));
   border-radius: 9px;
-  box-shadow: 0 0 17px #313aff28;
+  box-shadow: 0 0 17px color-mix(in srgb, var(--accent) 15.7%, transparent);
   min-height: 43px;
 }
 .primary-button:hover:not(:disabled) {
@@ -175,16 +198,17 @@ summary {
   background: var(--gradient);
 }
 .secondary-button {
-  background: linear-gradient(140deg, #091830, #10102e);
-  border-color: #344973;
+  background: linear-gradient(140deg, var(--surface-2), var(--surface-2));
+  border-color: color-mix(in srgb, var(--quiet) 30%, var(--surface-3));
   border-radius: 8px;
 }
 .secondary-button:hover:not(:disabled) {
   border-color: var(--cyan);
-  background: #101d37;
+  background: color-mix(in srgb, var(--line-strong) 20%, var(--surface));
 }
 .segmented-control button[aria-pressed="true"] {
   background: var(--gradient);
-  box-shadow: 0 0 13px #443cff40;
+  color: var(--accent-ink);
+  box-shadow: 0 0 13px color-mix(in srgb, var(--accent) 25.1%, transparent);
   border-radius: 6px;
 }

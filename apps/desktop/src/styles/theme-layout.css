@@ -102,8 +102,8 @@ h3 {
   min-width: 0;
   padding: 13px 16px;
   border-radius: 10px;
-  background: #09152a;
-  border: 1px solid #2b4772;
+  background: var(--surface-2);
+  border: 1px solid color-mix(in srgb, var(--line-strong) 80%, var(--bg));
   color: var(--text);
 }
 .access-section > .settings-note {

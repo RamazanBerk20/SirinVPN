@@ -7,12 +7,12 @@
 @keyframes quiet-pulse {
   0%,
   100% {
-    border-color: #214a7f;
+    border-color: color-mix(in srgb, var(--line-strong) 75%, var(--surface-3));
     background: transparent;
   }
   50% {
-    border-color: #23b5dc;
-    background: rgb(35 220 244 / 5%);
+    border-color: color-mix(in srgb, var(--line-strong) 30%, var(--cyan));
+    background: color-mix(in srgb, var(--cyan) 5%, transparent);
   }
 }
 
@@ -20,13 +20,13 @@
   0%,
   100% {
     box-shadow:
-      0 0 34px rgb(27 108 255 / 18%),
-      inset 0 0 20px rgb(31 195 255 / 7%);
+      0 0 34px color-mix(in srgb, var(--accent) 18%, transparent),
+      inset 0 0 20px color-mix(in srgb, color-mix(in srgb, var(--cyan) 80%, var(--accent)) 7%, transparent);
   }
   50% {
     box-shadow:
-      0 0 64px rgb(27 165 255 / 36%),
-      inset 0 0 32px rgb(31 195 255 / 13%);
+      0 0 64px color-mix(in srgb, color-mix(in srgb, var(--cyan) 60%, var(--accent)) 36%, transparent),
+      inset 0 0 32px color-mix(in srgb, color-mix(in srgb, var(--cyan) 80%, var(--accent)) 13%, transparent);
   }
 }
 
