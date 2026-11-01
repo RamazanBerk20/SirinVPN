@@ -14,6 +14,7 @@ struct State {
     calls: Vec<(String, String, String, Value)>,
     statuses: Vec<&'static str>,
     create_error: Option<(u16, Value)>,
+    key_error: Option<(u16, Value)>,
     create_delay: Option<Duration>,
     created: bool,
 }
@@ -170,7 +171,11 @@ fn respond(
             200,
             json!({"images": [{"id": if path.contains("arm") { 8 } else { 7 }}], "meta": last_page}),
         ),
-        ("POST", "/v1/ssh_keys") => (201, json!({"ssh_key": {"id": 11}})),
+        ("POST", "/v1/ssh_keys") => state_guard
+            .key_error
+            .clone()
+            .unwrap_or((201, json!({"ssh_key": {"id": 11}}))),
+        ("GET", "/v1/ssh_keys") => (200, json!({"ssh_keys": [{"id": 11}], "meta": last_page})),
         ("DELETE", "/v1/ssh_keys/11") => (204, Value::Null),
         ("POST", "/v1/servers") => {
             if let Some(error) = state_guard.create_error.clone() {
@@ -322,27 +327,41 @@ async fn creation_pre_seeds_keys_and_continues_once_the_pinned_key_answers() {
     );
 
     let attempts = Arc::new(Mutex::new(0));
-    let seen = attempts.clone();
+    let replaced = Arc::new(AtomicBool::new(false));
+    let (seen, done) = (attempts.clone(), replaced.clone());
     let expected = server.host_key_sha256.clone();
-    let addresses = client
-        .wait_with(&server, &AtomicBool::new(false), move |ipv4| {
-            assert_eq!(ipv4, Ipv4Addr::new(203, 0, 113, 7));
-            let mut attempts = seen.lock().unwrap();
-            *attempts += 1;
-            match *attempts {
-                1 => None,
-                2 => Some("SHA256:cloud-init-has-not-run-yet".to_owned()),
-                _ => Some(expected.clone()),
-            }
-        })
+    let ready = client
+        .wait_with(
+            &server,
+            &AtomicBool::new(false),
+            move |ipv4| {
+                assert_eq!(ipv4, Ipv4Addr::new(203, 0, 113, 7));
+                let mut attempts = seen.lock().unwrap();
+                *attempts += 1;
+                match *attempts {
+                    1 => None,
+                    2 => Some("SHA256:cloud-init-has-not-run-yet".to_owned()),
+                    // sshd still restarting after the replacement
+                    3 | 4 => Some(expected.clone()),
+                    _ if done.load(Ordering::SeqCst) => Some("SHA256:replaced".to_owned()),
+                    _ => None,
+                }
+            },
+            move |ipv4| {
+                assert_eq!(ipv4, Ipv4Addr::new(203, 0, 113, 7));
+                replaced.store(true, Ordering::SeqCst);
+                Ok("SHA256:replaced".to_owned())
+            },
+        )
         .await
         .unwrap();
-    assert_eq!(*attempts.lock().unwrap(), 3);
+    assert_eq!(*attempts.lock().unwrap(), 5);
     assert_eq!(
-        addresses,
-        HetznerAddresses {
+        ready,
+        HetznerReady {
             ipv4: Ipv4Addr::new(203, 0, 113, 7),
             ipv6: Some("2001:db8:1:2::1".parse().unwrap()),
+            host_key_sha256: "SHA256:replaced".to_owned(),
         }
     );
 }
@@ -367,6 +386,43 @@ async fn an_api_error_creates_nothing_and_removes_the_uploaded_key() {
             if code == "resource_limit_exceeded" && message == "server limit reached"
     ));
     assert_eq!(mock.calls("DELETE")[0].0, "/v1/ssh_keys/11");
+
+    // A server error is no refusal: the server may exist, so its name is looked up.
+    let failed = Mock::start(State {
+        create_error: Some((503, Value::Null)),
+        ..State::default()
+    });
+    let prepared = PreparedServer::generate();
+    assert!(matches!(
+        failed.client(quick()).create_server(&prepared, &plan("5.11"), false).await,
+        Err(HetznerError::Uncertain(name)) if name == prepared.name
+    ));
+    assert!(
+        failed
+            .calls("GET")
+            .iter()
+            .any(|call| call.0.starts_with("/v1/servers?name="))
+    );
+    assert_eq!(failed.calls("DELETE")[0].0, "/v1/ssh_keys/11");
+
+    // An unanswered key upload may have stored the key; it is found and removed.
+    for (status, removed) in [(502, true), (422, false)] {
+        let mock = Mock::start(State {
+            key_error: Some((status, Value::Null)),
+            ..State::default()
+        });
+        assert!(matches!(
+            mock.client(quick()).create_server(&PreparedServer::generate(), &plan("5.11"), false).await,
+            Err(HetznerError::Api { status: code, .. }) if code == status
+        ));
+        assert_eq!(
+            mock.calls("DELETE")
+                .iter()
+                .any(|call| call.0 == "/v1/ssh_keys/11"),
+            removed
+        );
+        assert_eq!(mock.calls("POST").len(), 1, "no server is created");
+    }
 
     let rejected = Mock::start(State::default());
     let http = Client::new();
@@ -430,18 +486,55 @@ async fn waiting_times_out_and_never_trusts_another_host_key() {
         host_key_sha256: "SHA256:pinned".to_owned(),
     };
     let never = AtomicBool::new(false);
+    let unused = |_| unreachable!("the pinned key never answered");
     assert!(matches!(
-        client.wait_with(&server, &never, |_| None).await,
+        client.wait_with(&server, &never, |_| None, unused).await,
         Err(HetznerError::Timeout("start"))
     ));
     mock.state.lock().unwrap().statuses = vec!["running"];
     assert!(matches!(
-        client.wait_with(&server, &never, |_| None).await,
+        client.wait_with(&server, &never, |_| None, unused).await,
         Err(HetznerError::Timeout("accept SSH connections"))
     ));
     assert!(matches!(
         client
-            .wait_with(&server, &never, |_| Some("SHA256:other".to_owned()))
+            .wait_with(&server, &never, |_| Some("SHA256:other".to_owned()), unused)
+            .await,
+        Err(HetznerError::HostKeyMismatch)
+    ));
+
+    // After the replacement only the new key is trusted.
+    let pinned = |_| Some("SHA256:pinned".to_owned());
+    assert!(matches!(
+        client
+            .wait_with(&server, &never, pinned, |_| Err(
+                HetznerError::HostKeyReplacement("failed".to_owned())
+            ))
+            .await,
+        Err(HetznerError::HostKeyReplacement(_))
+    ));
+    assert!(matches!(
+        client
+            .wait_with(&server, &never, pinned, |_| Ok("SHA256:new".to_owned()))
+            .await,
+        Err(HetznerError::Timeout("accept SSH connections"))
+    ));
+    let probes = Arc::new(Mutex::new(0));
+    let third = move |_| {
+        let mut probes = probes.lock().unwrap();
+        *probes += 1;
+        Some(
+            if *probes == 1 {
+                "SHA256:pinned"
+            } else {
+                "SHA256:other"
+            }
+            .to_owned(),
+        )
+    };
+    assert!(matches!(
+        client
+            .wait_with(&server, &never, third, |_| Ok("SHA256:new".to_owned()))
             .await,
         Err(HetznerError::HostKeyMismatch)
     ));
@@ -469,7 +562,9 @@ async fn cancelling_stops_waiting_and_the_server_is_deleted_only_when_asked() {
         flag.store(true, Ordering::SeqCst);
     });
     assert!(matches!(
-        client.wait_with(&server, &cancel, |_| None).await,
+        client
+            .wait_with(&server, &cancel, |_| None, |_| unreachable!())
+            .await,
         Err(HetznerError::Cancelled)
     ));
     assert!(
@@ -567,7 +662,11 @@ fn keys_use_the_openssh_format_and_the_installer_fingerprint() {
         "the login private key stays local"
     );
 
-    let target = prepared.ssh_target(Ipv4Addr::new(203, 0, 113, 7));
+    let target = ssh_target(
+        Ipv4Addr::new(203, 0, 113, 7),
+        prepared.login_private_key(),
+        prepared.host_key_sha256(),
+    );
     assert_eq!(
         (target.host.as_str(), target.port, target.username.as_str()),
         ("203.0.113.7", 22, "root")
@@ -596,6 +695,11 @@ fn keys_use_the_openssh_format_and_the_installer_fingerprint() {
             0
         );
     }
+    assert_eq!(
+        load_login_key(directory.path(), &prepared.name).unwrap(),
+        prepared.login_private_key()
+    );
+    assert!(load_login_key(directory.path(), "../host").is_err());
     assert!(forget_login_key(directory.path(), "../host").is_err());
     let copy = directory.path().join("login-copy");
     std::fs::copy(&path, &copy).unwrap();

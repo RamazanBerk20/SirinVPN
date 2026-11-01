@@ -16,12 +16,14 @@ object SecretInputs {
     @Synchronized fun remember(value: String, qr: JSONArray? = null, field: String? = null): String {
         require(value.length in 1..131072)
         purge()
+        val expires = SystemClock.elapsedRealtime() + 600000
+        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ purge() },600001)
         // Confirmation fields can compare opaque handles without seeing the password.
-        entries.entries.firstOrNull { it.value.field == field && it.value.value.contentEquals(value.toCharArray()) }?.let { return it.key }
+        // Entering a value again starts its lifetime again.
+        entries.entries.firstOrNull { it.value.field == field && it.value.value.contentEquals(value.toCharArray()) }?.let { it.setValue(it.value.copy(expires = expires)); return it.key }
         check(entries.size < 16) { "Too many protected values. Finish the current operation." }
         val reference = "native-secret:" + UUID.randomUUID()
-        entries[reference] = Entry(value.toCharArray(), SystemClock.elapsedRealtime() + 600000, qr, field)
-        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ purge() },600001)
+        entries[reference] = Entry(value.toCharArray(), expires, qr, field)
         return reference
     }
     @Synchronized fun reveal(reference: String): JSONObject {

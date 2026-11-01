@@ -226,14 +226,16 @@ pub(super) async fn create_hetzner_server(
     // Ctrl-C drops the wait instead of using the cancel flag.
     let never = AtomicBool::new(false);
     let ready = tokio::select! {
-        ready = client.wait_until_ready(&server, &never) => ready,
+        ready = client.wait_until_ready(&server, prepared.login_private_key(), &never) => ready,
         _ = tokio::signal::ctrl_c() => Err(HetznerError::Cancelled),
     };
+    let mut host_key = server.host_key_sha256.clone();
     let result = match ready {
-        Ok(addresses) => {
+        Ok(ready) => {
+            host_key.clone_from(&ready.host_key_sha256);
             eprintln!(
-                "{} is ready at {}. Installing SirinVPN; this cannot be interrupted.",
-                server.name, addresses.ipv4
+                "{} is ready at {} with SSH host key {}. Installing SirinVPN; this cannot be interrupted.",
+                server.name, ready.ipv4, ready.host_key_sha256
             );
             let identity = new_identity_for_server(&arguments.name)?;
             let server_id = ServerId::new();
@@ -242,7 +244,11 @@ pub(super) async fn create_hetzner_server(
                 InstallRequest {
                     server_id,
                     server_name: arguments.name,
-                    target: prepared.ssh_target(addresses.ipv4),
+                    target: ssh_target(
+                        ready.ipv4,
+                        prepared.login_private_key(),
+                        ready.host_key_sha256,
+                    ),
                     server_binary,
                     identity: identity.public.clone(),
                     identity_reference: server_id.to_string(),
@@ -273,7 +279,7 @@ pub(super) async fn create_hetzner_server(
         bail!(
             "The server was kept. Log in with: ssh -i {} root@<its IPv4>; its SSH host key is {}.",
             key_path.display(),
-            server.host_key_sha256
+            host_key
         );
     }
     eprintln!(

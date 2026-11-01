@@ -2,9 +2,11 @@
 //!
 //! The API token is sent only to api.hetzner.cloud and is never stored. The SSH
 //! login key and the SSH host key are generated here; the host key reaches the
-//! VPS through cloud-init, so the first SSH connection is already pinned.
+//! VPS through cloud-init, so the first SSH connection is already pinned. That
+//! connection replaces the host key, because cloud-init user data stays readable
+//! on the server for its whole life.
 
-use crate::{Provisioner, SshAuthentication, SshTarget};
+use crate::{InstallerError, Provisioner, SshAuthentication, SshTarget};
 use base64::{
     Engine as _,
     engine::general_purpose::{STANDARD, STANDARD_NO_PAD},
@@ -57,6 +59,8 @@ pub enum HetznerError {
         "the server answered SSH with a host key other than the pre-seeded one; it was not trusted"
     )]
     HostKeyMismatch,
+    #[error("the server's SSH host key could not be replaced: {0}")]
+    HostKeyReplacement(String),
     #[error("server creation was cancelled")]
     Cancelled,
 }
@@ -138,10 +142,12 @@ pub struct HetznerServer {
     pub host_key_sha256: String,
 }
 
+/// A running server and the host key that replaced the pre-seeded one.
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
-pub struct HetznerAddresses {
+pub struct HetznerReady {
     pub ipv4: Ipv4Addr,
     pub ipv6: Option<Ipv6Addr>,
+    pub host_key_sha256: String,
 }
 
 /// Keys and the server name, generated before anything is sent to Hetzner so a
@@ -193,11 +199,6 @@ impl PreparedServer {
             openssh_public_key(&self.host, &format!("{}-host", self.name)),
         )
     }
-
-    /// The pinned root login for the installer once the server is ready.
-    pub fn ssh_target(&self, ipv4: Ipv4Addr) -> SshTarget {
-        ssh_target(ipv4, self.login_private_key(), self.host_key_sha256())
-    }
 }
 
 pub fn ssh_target(
@@ -218,6 +219,34 @@ pub fn ssh_target(
     }
 }
 
+const REPLACE_HOST_KEY: &str = "set -eu
+key=/etc/ssh/ssh_host_ed25519_key
+rm -f \"$key.new\" \"$key.new.pub\"
+ssh-keygen -q -t ed25519 -N '' -C '' -f \"$key.new\"
+mv -f \"$key.new.pub\" \"$key.pub\"
+mv -f \"$key.new\" \"$key\"
+/usr/sbin/sshd -t
+systemctl reload ssh
+cat \"$key.pub\"";
+
+/// Replaces the pre-seeded host key with one generated on the server and
+/// returns its fingerprint, read over the session pinned to the old key.
+pub fn replace_host_key(target: &SshTarget) -> Result<String, InstallerError> {
+    let session = crate::connect_transport(target)
+        .map_err(|error| crate::phase_error("connection", error))?;
+    crate::verify_host_key(&session, target.expected_host_key_sha256.as_deref())?;
+    crate::authenticate(&session, target)?;
+    let public = crate::run(&session, REPLACE_HOST_KEY)
+        .map_err(|error| crate::phase_error("host key", error))?;
+    public
+        .strip_prefix("ssh-ed25519 ")
+        .and_then(|rest| rest.split_whitespace().next())
+        .and_then(|key| STANDARD.decode(key).ok())
+        .filter(|blob| blob.starts_with(b"\0\0\0\x0bssh-ed25519"))
+        .map(|blob| fingerprint(&blob))
+        .ok_or_else(|| crate::phase_error("host key", anyhow::anyhow!("unexpected host key")))
+}
+
 /// Saves the login key next to the app's settings so the Owner can reach the
 /// VPS later, also outside SirinVPN. The file is readable only by this user.
 pub fn save_login_key(
@@ -231,8 +260,7 @@ pub fn save_login_key(
     Ok(path)
 }
 
-/// Removes the saved login key once its server is deleted.
-pub fn forget_login_key(configuration_directory: &Path, name: &str) -> std::io::Result<()> {
+fn login_key_path(configuration_directory: &Path, name: &str) -> std::io::Result<PathBuf> {
     // The name comes back from the UI; accept only names `PreparedServer` generates.
     let generated = name
         .strip_prefix("sirinvpn-")
@@ -240,7 +268,19 @@ pub fn forget_login_key(configuration_directory: &Path, name: &str) -> std::io::
     if !generated {
         return Err(std::io::ErrorKind::InvalidInput.into());
     }
-    match std::fs::remove_file(configuration_directory.join("ssh-keys").join(name)) {
+    Ok(configuration_directory.join("ssh-keys").join(name))
+}
+
+pub fn load_login_key(
+    configuration_directory: &Path,
+    name: &str,
+) -> std::io::Result<Zeroizing<String>> {
+    std::fs::read_to_string(login_key_path(configuration_directory, name)?).map(Zeroizing::new)
+}
+
+/// Removes the saved login key once its server is deleted.
+pub fn forget_login_key(configuration_directory: &Path, name: &str) -> std::io::Result<()> {
+    match std::fs::remove_file(login_key_path(configuration_directory, name)?) {
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
         result => result,
     }
@@ -530,8 +570,8 @@ impl HetznerClient {
         })?;
 
         let labels: Value = serde_json::from_str(LABELS).expect("valid labels");
-        let key: ApiSshKey = self
-            .call(
+        let key = match self
+            .call::<ApiSshKey>(
                 Method::POST,
                 "ssh_keys",
                 Some(json!({
@@ -540,7 +580,16 @@ impl HetznerClient {
                     "labels": labels,
                 })),
             )
-            .await?;
+            .await
+        {
+            Ok(key) => key.ssh_key.id,
+            Err(error) => {
+                if !refused(&error) && let Some(id) = self.find("ssh_keys", &prepared.name).await {
+                    self.forget_ssh_key(id).await;
+                }
+                return Err(error);
+            }
+        };
         let created = self
             .call::<ApiServerResponse>(
                 Method::POST,
@@ -550,7 +599,7 @@ impl HetznerClient {
                     "server_type": request.server_type,
                     "location": request.location,
                     "image": image.id.to_string(),
-                    "ssh_keys": [key.ssh_key.id],
+                    "ssh_keys": [key],
                     "user_data": prepared.user_data(),
                     "labels": labels,
                     "start_after_create": true,
@@ -560,24 +609,17 @@ impl HetznerClient {
             .await;
         let server = match created {
             Ok(response) => Ok(response.server.id),
-            // No answer: the server may exist anyway. Look it up before reporting.
-            Err(HetznerError::Request(_)) => self
-                .list::<ApiId>(&format!("servers?name={}", prepared.name), "servers")
+            Err(error) if refused(&error) => Err(error),
+            // No answer, a server error or an unreadable answer: the server may
+            // exist anyway. Look it up before reporting.
+            Err(_) => self
+                .find("servers", &prepared.name)
                 .await
-                .ok()
-                .and_then(|servers| servers.first().map(|server| server.id))
                 .ok_or_else(|| HetznerError::Uncertain(prepared.name.clone())),
-            Err(error) => Err(error),
         };
         // The login key reaches root through user_data too, so the per-server
         // project key is no longer needed once the server exists (or failed).
-        let _ = self
-            .call::<serde::de::IgnoredAny>(
-                Method::DELETE,
-                &format!("ssh_keys/{}", key.ssh_key.id),
-                None,
-            )
-            .await;
+        self.forget_ssh_key(key).await;
         Ok(HetznerServer {
             id: server?,
             name: prepared.name.clone(),
@@ -585,23 +627,34 @@ impl HetznerClient {
         })
     }
 
-    /// Waits until the server runs and answers SSH with the pre-seeded host key.
+    /// Waits until the server runs and answers SSH with the pre-seeded host key,
+    /// then replaces that key over the pinned session. Pin the returned key.
     pub async fn wait_until_ready(
         &self,
         server: &HetznerServer,
+        login_private_key: Zeroizing<String>,
         cancel: &AtomicBool,
-    ) -> Result<HetznerAddresses, HetznerError> {
-        self.wait_with(server, cancel, |ipv4| {
-            Provisioner::host_key_fingerprint(&SshTarget {
-                host: ipv4.to_string(),
-                port: 22,
-                username: "unused".to_owned(),
-                authentication: SshAuthentication::Agent,
-                sudo_password: None,
-                expected_host_key_sha256: None,
-            })
-            .ok()
-        })
+    ) -> Result<HetznerReady, HetznerError> {
+        let pin = server.host_key_sha256.clone();
+        self.wait_with(
+            server,
+            cancel,
+            |ipv4| {
+                Provisioner::host_key_fingerprint(&SshTarget {
+                    host: ipv4.to_string(),
+                    port: 22,
+                    username: "unused".to_owned(),
+                    authentication: SshAuthentication::Agent,
+                    sudo_password: None,
+                    expected_host_key_sha256: None,
+                })
+                .ok()
+            },
+            move |ipv4| {
+                replace_host_key(&ssh_target(ipv4, login_private_key, pin))
+                    .map_err(|error| HetznerError::HostKeyReplacement(error.to_string()))
+            },
+        )
         .await
     }
 
@@ -610,9 +663,10 @@ impl HetznerClient {
         server: &HetznerServer,
         cancel: &AtomicBool,
         probe: impl Fn(Ipv4Addr) -> Option<String> + Clone + Send + 'static,
-    ) -> Result<HetznerAddresses, HetznerError> {
+        replace: impl FnOnce(Ipv4Addr) -> Result<String, HetznerError> + Send + 'static,
+    ) -> Result<HetznerReady, HetznerError> {
         let deadline = Instant::now() + self.wait.running;
-        let addresses = loop {
+        let (ipv4, ipv6) = loop {
             if cancel.load(Ordering::SeqCst) {
                 return Err(HetznerError::Cancelled);
             }
@@ -623,16 +677,45 @@ impl HetznerClient {
             if current.server.status == "running"
                 && let Some(ipv4) = network.ipv4.and_then(|address| address.ip.parse().ok())
             {
-                break HetznerAddresses {
+                break (
                     ipv4,
-                    ipv6: network.ipv6.and_then(|address| first_address(&address.ip)),
-                };
+                    network.ipv6.and_then(|address| first_address(&address.ip)),
+                );
             }
             if Instant::now() > deadline {
                 return Err(HetznerError::Timeout("start"));
             }
             tokio::time::sleep(self.wait.poll).await;
         };
+        self.wait_for_key(ipv4, &server.host_key_sha256, None, cancel, &probe)
+            .await?;
+        let host_key_sha256 = tokio::task::spawn_blocking(move || replace(ipv4))
+            .await
+            .map_err(|error| HetznerError::HostKeyReplacement(error.to_string()))??;
+        // sshd restarts on reload; until then it may still present the old key.
+        self.wait_for_key(
+            ipv4,
+            &host_key_sha256,
+            Some(&server.host_key_sha256),
+            cancel,
+            &probe,
+        )
+        .await?;
+        Ok(HetznerReady {
+            ipv4,
+            ipv6,
+            host_key_sha256,
+        })
+    }
+
+    async fn wait_for_key(
+        &self,
+        ipv4: Ipv4Addr,
+        expected: &str,
+        previous: Option<&str>,
+        cancel: &AtomicBool,
+        probe: &(impl Fn(Ipv4Addr) -> Option<String> + Clone + Send + 'static),
+    ) -> Result<(), HetznerError> {
         let deadline = Instant::now() + self.wait.ssh;
         let mut mismatch = false;
         loop {
@@ -640,11 +723,9 @@ impl HetznerClient {
                 return Err(HetznerError::Cancelled);
             }
             let probe = probe.clone();
-            let ipv4 = addresses.ipv4;
             match tokio::task::spawn_blocking(move || probe(ipv4)).await {
-                Ok(Some(fingerprint)) if fingerprint == server.host_key_sha256 => {
-                    return Ok(addresses);
-                }
+                Ok(Some(fingerprint)) if fingerprint == expected => return Ok(()),
+                Ok(Some(fingerprint)) if Some(fingerprint.as_str()) == previous => {}
                 // Keep waiting: cloud-init may not have written the key yet.
                 Ok(Some(_)) => mismatch = true,
                 _ => {}
@@ -658,6 +739,21 @@ impl HetznerClient {
             }
             tokio::time::sleep(self.wait.poll).await;
         }
+    }
+
+    /// The ID of the named resource, if it exists.
+    async fn find(&self, collection: &str, name: &str) -> Option<u64> {
+        self.list::<ApiId>(&format!("{collection}?name={name}"), collection)
+            .await
+            .ok()?
+            .first()
+            .map(|item| item.id)
+    }
+
+    async fn forget_ssh_key(&self, id: u64) {
+        let _ = self
+            .call::<serde::de::IgnoredAny>(Method::DELETE, &format!("ssh_keys/{id}"), None)
+            .await;
     }
 
     /// Deletes the server. A server that no longer exists counts as deleted.
@@ -755,6 +851,11 @@ struct ApiPrimaryIpPrice {
     #[serde(rename = "type")]
     kind: String,
     prices: Vec<ApiPrice>,
+}
+
+/// Hetzner answered and refused, so nothing was created.
+fn refused(error: &HetznerError) -> bool {
+    matches!(error, HetznerError::Api { status, .. } if *status < 500)
 }
 
 /// A decimal string in ten-thousandths, the precision cents are rounded from.

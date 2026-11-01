@@ -73,26 +73,28 @@ pub(crate) async fn wait_hetzner_server(
     state: State<'_, AppState>,
     api_token: String,
     server: HetznerServer,
-) -> Result<HetznerAddresses, String> {
+) -> Result<HetznerReady, String> {
     let token = Zeroizing::new(api_token);
     let client = client(&token)?;
+    let login = load_login_key(&state.paths.configuration_directory, &server.name)
+        .map_err(|_| "The new server’s SSH key is missing from the app’s settings folder.".to_owned())?;
     CANCEL_WAIT.store(false, Ordering::SeqCst);
-    let addresses = client
-        .wait_until_ready(&server, &CANCEL_WAIT)
+    let ready = client
+        .wait_until_ready(&server, login, &CANCEL_WAIT)
         .await
         .map_err(|error| error.to_string())?;
-    // The key was generated on this device, so it needs no human review.
+    // The key was read over a pinned session, so it needs no human review.
     if crate::ssh_trust::remember_verified(
         &state.paths,
-        &addresses.ipv4.to_string(),
+        &ready.ipv4.to_string(),
         22,
-        &server.host_key_sha256,
+        &ready.host_key_sha256,
     )
     .is_err()
     {
         eprintln!("The new VPS SSH identity could not be remembered.");
     }
-    Ok(addresses)
+    Ok(ready)
 }
 
 #[tauri::command]

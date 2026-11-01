@@ -592,7 +592,9 @@ export interface CreatedHetznerServer {
   private_key_path: string | null;
 }
 
-export interface HetznerAddresses {
+/** The pre-seeded host key was replaced; pin `host_key_sha256`. */
+export interface HetznerReady {
   ipv4: string;
   ipv6: string | null;
+  host_key_sha256: string;
 }

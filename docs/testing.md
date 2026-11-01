@@ -259,7 +259,7 @@ Disposable overlays default to the repository's ignored `.cache` directory so a 
 
 For installer diagnosis, `SIRINVPN_TEST_CLI_BINARY` can select a debug CLI. Remote command output is bounded, and remote stderr is withheld from errors in both debug and release builds because it may echo credentials.
 
-`tests/vm/hetzner-cloud-init.sh` takes the same image variable and checks the cloud-init user data of [Hetzner VPS creation](hetzner-vps-creation.md): the guest boots with no Internet access, the installer's pinned SSH login works as root with the generated key, another pin is rejected, sshd offers and loads only the pre-seeded ed25519 host key, and password login is off. It needs QEMU, `xorriso`, OpenSSH and Cargo.
+`tests/vm/hetzner-cloud-init.sh` takes the same image variable and checks the cloud-init user data of [Hetzner VPS creation](hetzner-vps-creation.md): the guest boots with no Internet access, the installer's pinned SSH login works as root with the generated key, another pin is rejected, the host key replacement that follows leaves sshd offering and loading only the new ed25519 host key (also after a reboot) and refusing the pre-seeded one, and password login is off. It needs QEMU, `xorriso`, OpenSSH and Cargo.
 
 ### Full-package release interruption gate
 

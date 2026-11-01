@@ -49,6 +49,13 @@ fn script_has_scoped_firewall_ownership_and_docker_interop() {
         script_transaction("10.77.0.2", false, false),
     );
     assert!(script.contains("table inet sirinvpn_filter"));
+    // Cloud metadata services (Hetzner serves cloud-init user data there) stay
+    // out of reach of tunnel devices; the drops come before any forward accept.
+    let metadata = script
+        .find("    iifname \"sirinvpn0\" ip daddr 169.254.0.0/16 drop\n    iifname \"sirinvpn0\" ip6 daddr { fd00:ec2::254, fd20:ce::254 } drop\n")
+        .unwrap();
+    let forward = script.find("chain forward {").unwrap();
+    assert!(forward < metadata && !script[forward..metadata].contains(" accept\n"));
     // Security updates are installed and enabled only where unattended-upgrades is missing.
     assert!(script.contains("if ! command -v unattended-upgrade >/dev/null 2>&1; then"));
     let enable = script.find("APT::Periodic::Unattended-Upgrade").unwrap();
