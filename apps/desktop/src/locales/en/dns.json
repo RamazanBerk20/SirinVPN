@@ -1,4 +1,5 @@
 {
+  "example": "e.g. {{value}}",
   "resolver": {
     "legend": "DNS resolver",
     "mode": {
@@ -17,7 +18,13 @@
     "endpointOptional": "Resolver {{number}} (optional)",
     "address": "IP address",
     "tlsName": "TLS hostname",
-    "httpsPath": "HTTPS path"
+    "httpsPath": "HTTPS path",
+    "error": {
+      "address": "Enter the resolver’s IP address, for example 9.9.9.9.",
+      "duplicate": "This is the same resolver as resolver 1.",
+      "name": "Enter the hostname on the resolver’s certificate, for example dns.quad9.net.",
+      "path": "Start with / and use only letters, digits and - _ . ~"
+    }
   },
   "records": {
     "legend": "Private DNS records",
@@ -29,10 +36,12 @@
     "note": {
       "preserve": "Current records stay as they are",
       "replace": "Names that resolve only inside your VPN",
-      "clear": "Removes all private records"
+      "clear": "Removes every private DNS record from the server, for all devices"
     },
     "label": "Records",
-    "hint": "One name=IP per line, up to 64"
+    "hint": "One name=IP per line, up to 64",
+    "invalidLine": "“{{line}}” isn’t a record. Write name=IP, for example nas.home=10.20.30.40.",
+    "invalid": "Enter at most 64 records."
   },
   "nat64": {
     "legend": "IPv4 websites through NAT64",
@@ -48,14 +57,16 @@
       "clear": "Without IPv4 on the VPS, members reach only IPv6 websites"
     },
     "label": "NAT64 prefix",
-    "hint": "From your VPS provider or a public NAT64 service"
+    "hint": "From your VPS provider or a public NAT64 service",
+    "invalid": "Enter an IPv6 prefix, for example 64:ff9b::/96."
   },
   "split": {
     "label": "Split DNS zones",
     "summary": "Optional. Send a domain to its own resolver: domain=IP, one per line.",
     "infoLabel": "About split DNS zones",
     "info": "Private-IP resolvers are trusted without DNSSEC. IP#TLS-name uses DNS over TLS with DNSSEC. Separate backup resolvers with commas; zones never fall back to the main resolver.",
-    "invalid": "Check the domain names and resolver addresses. Up to 16 zones."
+    "invalid": "List each domain once, with at most 16 zones.",
+    "invalidLine": "“{{line}}” isn’t a zone. Write domain=IP with a private resolver address, or IP#TLS-name."
   },
   "review": {
     "label": "DNS change review",

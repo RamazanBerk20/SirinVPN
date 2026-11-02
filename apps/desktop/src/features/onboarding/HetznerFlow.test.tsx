@@ -45,8 +45,8 @@ beforeEach(() => {
 });
 afterEach(() => { cleanup(); vi.useRealTimers(); });
 
-async function showPlans() {
-  render(<HetznerFlow onComplete={vi.fn()} />);
+async function showPlans(props: { onDone?: () => void } = {}) {
+  render(<HetznerFlow onComplete={vi.fn()} {...props} />);
   fireEvent.change(screen.getByLabelText(t("onboarding.hetzner.token")), { target: { value: token } });
   fireEvent.click(screen.getByRole("button", { name: t("onboarding.hetzner.loadPlans") }));
   return screen.findByRole("button", { name: t("onboarding.hetzner.create", { total: "5.11", currency: "EUR" }) });
@@ -67,23 +67,49 @@ it("shows the monthly price and creates nothing until the Owner confirms it", as
   expect(api.createHetznerServer).not.toHaveBeenCalled();
 });
 
-it("creates, waits for the pinned key and hands the server to the installer", async () => {
+it("creates, waits for the pinned key and installs from a ready step with one button", async () => {
   const replaced = `SHA256:${"C".repeat(43)}`;
   vi.mocked(api.waitHetznerServer).mockResolvedValue({ ipv4: "203.0.113.7", ipv6: "2001:db8::1", host_key_sha256: replaced });
+  vi.mocked(api.saveSshLogin).mockResolvedValue({ username: "root", ssh_port: 22, authentication: "private_key", private_key_path: "/config/ssh-keys/sirinvpn-0a1b2c3d" });
+  vi.mocked(api.inspectServerNetwork).mockResolvedValue({ public_endpoint: "203.0.113.7", endpoint_addresses: ["203.0.113.7"], ssh_local_address: null, exposure: "public_interface", assigned_addresses: [], required_ports: [], issues: [] });
+  vi.mocked(api.provisionServer).mockResolvedValue({ profile: { id: "new", name: "My server" }, dns_upstream: { mode: "recursive" }, private_dns_records: [], events: [] } as never);
   fireEvent.click(await showPlans());
   await waitFor(() => expect(api.createHetznerServer).toHaveBeenCalledWith(token, { location: "fsn1", server_type: "cx23", accepted_monthly_price: "5.11" }));
   expect(api.waitHetznerServer).toHaveBeenCalledWith(token, server);
-  const host = await screen.findByLabelText(t("onboarding.setup.host"));
-  expect((host as HTMLInputElement).value).toBe("203.0.113.7");
-  expect((host as HTMLInputElement).disabled).toBe(true);
-  // The generated key is filled in once the saved-login lookup finishes.
-  await waitFor(() => expect(screen.getByDisplayValue("/config/ssh-keys/sirinvpn-0a1b2c3d")).toBeTruthy());
+  expect(await screen.findByText(t("onboarding.setup.created.title", { name: server.name }))).toBeTruthy();
+  // No address to type and no sign-in to choose: the details are filled in and folded away.
+  expect(screen.queryByLabelText(t("onboarding.setup.host"))).toBeNull();
   expect(screen.getByRole("button", { name: t("onboarding.hetzner.delete") })).toBeTruthy();
-  fireEvent.click(screen.getByRole("button", { name: t("onboarding.setup.verify") }));
-  expect(await screen.findByText(t("onboarding.setup.fingerprint.pinned"))).toBeTruthy();
+  const install = screen.getByRole("button", { name: t("onboarding.setup.fingerprint.install") }) as HTMLButtonElement;
+  await waitFor(() => expect(install.disabled).toBe(false));
+  expect(screen.queryByText(t("ssh.login.username"))).toBeNull();
+  fireEvent.click(install);
   // The installer pins the key that replaced the pre-seeded one.
-  expect(screen.getByText(replaced)).toBeTruthy();
-  expect(screen.queryByText(server.host_key_sha256)).toBeNull();
+  await waitFor(() => expect(api.provisionServer).toHaveBeenCalledWith(expect.objectContaining({ host: "203.0.113.7", host_key_sha256: replaced })));
+  expect(api.inspectServerNetwork).toHaveBeenCalledWith(expect.objectContaining({ ssh: expect.objectContaining({ host_key_sha256: replaced }) }));
+  expect(await screen.findByText(t("onboarding.setup.success.title"))).toBeTruthy();
+});
+
+it("offers Try again when prices can't be loaded", async () => {
+  vi.mocked(api.hetznerCatalog).mockRejectedValueOnce(new Error("rate limited"));
+  render(<HetznerFlow onComplete={vi.fn()} />);
+  fireEvent.change(screen.getByLabelText(t("onboarding.hetzner.token")), { target: { value: token } });
+  fireEvent.click(screen.getByRole("button", { name: t("onboarding.hetzner.loadPlans") }));
+  fireEvent.click(await screen.findByRole("button", { name: t("common.action.retry") }));
+  expect(await screen.findByRole("button", { name: t("onboarding.hetzner.create", { total: "5.11", currency: "EUR" }) })).toBeTruthy();
+  expect(api.hetznerCatalog).toHaveBeenCalledTimes(2);
+});
+
+it("ends a kept server with its keys and Done, without asking for the token again", async () => {
+  vi.mocked(api.waitHetznerServer).mockRejectedValue(new Error("the server did not start in time"));
+  const onDone = vi.fn();
+  fireEvent.click(await showPlans({ onDone }));
+  fireEvent.click(await screen.findByRole("button", { name: t("onboarding.hetzner.keep") }));
+  expect(await screen.findByText(t("onboarding.hetzner.keptTitle", { name: server.name }))).toBeTruthy();
+  expect(screen.getByText(server.host_key_sha256)).toBeTruthy();
+  expect(screen.queryByLabelText(t("onboarding.hetzner.token"))).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: t("common.action.done") }));
+  expect(onDone).toHaveBeenCalled();
 });
 
 it("does not let the Owner leave while the server is being created", async () => {

@@ -1,4 +1,4 @@
-import { dnsEndpointAddressIsUsable, dnsOverHttpsPathIsValid } from "../../dns";
+import { dnsEndpointAddressIsUsable, dnsOverHttpsPathIsValid, privateDnsDraftIsValid } from "../../dns";
 import { validateHost } from "../../format";
 import { type DnsUpstream } from "../../types";
 import { Field } from "../../components/ui";
@@ -32,6 +32,34 @@ export function newDnsEndpointDrafts(): DnsEndpointDraft[] {
   ];
 }
 
+function endpointKey(choice: DnsPolicyChoice, endpoint: DnsEndpointDraft) {
+  return [endpoint.address.trim().toLowerCase(), endpoint.authenticationName.trim().toLowerCase(), choice === "dns_over_https" ? endpoint.path.trim() : ""].join("#");
+}
+
+function tlsNameIsValid(value: string) {
+  // TLS names are DNS names; the VPS rejects IPv6 literals here.
+  return validateHost(value) && !value.includes(":") && !value.trim().endsWith(".");
+}
+
+/** The first field-level problem in each part of a resolver, once the user has started filling it. */
+function endpointErrors(choice: DnsPolicyChoice, endpoints: DnsEndpointDraft[], index: number) {
+  const endpoint = endpoints[index];
+  if (!endpoint.address.trim() && !endpoint.authenticationName.trim()) return {};
+  const duplicate = index > 0 && endpointKey(choice, endpoint) === endpointKey(choice, endpoints[0]);
+  return {
+    address: !dnsEndpointAddressIsUsable(endpoint.address) ? t("dns.resolver.error.address") : duplicate ? t("dns.resolver.error.duplicate") : undefined,
+    name: !tlsNameIsValid(endpoint.authenticationName) ? t("dns.resolver.error.name") : undefined,
+    path: choice === "dns_over_https" && !dnsOverHttpsPathIsValid(endpoint.path) ? t("dns.resolver.error.path") : undefined,
+  };
+}
+
+/** Names the first invalid record line, or the limit when there are too many. */
+export function privateDnsError(value: string): string | undefined {
+  if (privateDnsDraftIsValid(value, true)) return undefined;
+  const line = value.split(/\r?\n/).map((item) => item.trim()).filter(Boolean).find((item) => !privateDnsDraftIsValid(item, true));
+  return line ? t("dns.records.invalidLine", { line }) : t("dns.records.invalid");
+}
+
 export function dnsDraftIsValid(
   choice: DnsPolicyChoice,
   endpoints: DnsEndpointDraft[],
@@ -40,22 +68,13 @@ export function dnsDraftIsValid(
   const populated = endpoints.filter(
     (endpoint) => endpoint.address.trim() || endpoint.authenticationName.trim(),
   );
-  const normalized = populated.map((endpoint) =>
-    [
-      endpoint.address.trim().toLowerCase(),
-      endpoint.authenticationName.trim().toLowerCase(),
-      choice === "dns_over_https" ? endpoint.path.trim() : "",
-    ].join("#"),
-  );
+  const normalized = populated.map((endpoint) => endpointKey(choice, endpoint));
   return (
     populated.length > 0 &&
     populated.every(
       (endpoint) =>
         dnsEndpointAddressIsUsable(endpoint.address) &&
-        validateHost(endpoint.authenticationName) &&
-        // TLS names are DNS names; the VPS rejects IPv6 literals here.
-        !endpoint.authenticationName.includes(":") &&
-        !endpoint.authenticationName.trim().endsWith(".") &&
+        tlsNameIsValid(endpoint.authenticationName) &&
         (choice !== "dns_over_https" || dnsOverHttpsPathIsValid(endpoint.path)),
     ) &&
     new Set(normalized).size === normalized.length
@@ -122,6 +141,7 @@ export function PrivateDnsRecordFields({
           </button>
           <button
             type="button"
+            className="danger-choice"
             aria-pressed={choice === "clear"}
             onClick={() => onChoiceChange("clear")}
           >
@@ -129,20 +149,16 @@ export function PrivateDnsRecordFields({
           </button>
         </div>
       ) : null}
-      <p className="dns-policy-note">
-        {choice === "preserve"
-          ? t("dns.records.note.preserve")
-          : choice === "clear"
-            ? t("dns.records.note.clear")
-            : t("dns.records.note.replace")}
-      </p>
+      {choice === "clear"
+        ? <p className="dns-policy-note danger-note">{t("dns.records.note.clear")}</p>
+        : <p className="dns-policy-note">{t(choice === "preserve" ? "dns.records.note.preserve" : "dns.records.note.replace")}</p>}
       {choice === "replace" ? (
-        <Field label={t("dns.records.label")} hint={t("dns.records.hint")}>
+        <Field label={t("dns.records.label")} hint={t("dns.records.hint")} error={privateDnsError(value)}>
           <textarea
             className="private-dns-record-input mono"
             value={value}
             onChange={(event) => onValueChange(event.target.value)}
-            placeholder={"nas.home=10.20.30.40\nserver.home=fd00::10"}
+            placeholder={t("dns.example", { value: "nas.home=10.20.30.40" })}
             autoCapitalize="none"
             autoComplete="off"
             spellCheck={false}
@@ -185,12 +201,12 @@ export function Nat64Fields({
       ) : null}
       <p className="dns-policy-note">{t(`dns.nat64.note.${allowPreserve ? choice : "setup"}`)}</p>
       {choice === "replace" ? (
-        <Field label={t("dns.nat64.label")} hint={t("dns.nat64.hint")}>
+        <Field label={t("dns.nat64.label")} hint={t("dns.nat64.hint")} error={value.trim() && !nat64PrefixIsValid(value) ? t("dns.nat64.invalid") : undefined}>
           <input
             className="mono"
             value={value}
             onChange={(event) => onValueChange(event.target.value)}
-            placeholder={"64:ff9b::/96"}
+            placeholder={t("dns.example", { value: "64:ff9b::/96" })}
             autoCapitalize="none"
             autoComplete="off"
             spellCheck={false}
@@ -266,7 +282,7 @@ export function DnsPolicyFields({
       </p>
       {choice === "dns_over_tls" || choice === "dns_over_https" ? (
         <div className="dns-endpoints">
-          {endpoints.map((endpoint, index) => (
+          {endpoints.map((endpoint, index) => { const errors = endpointErrors(choice, endpoints, index); return (
             <div className="dns-endpoint" key={index}>
               <strong>
                 {t(index === 1 ? "dns.resolver.endpointOptional" : "dns.resolver.endpoint", { number: formatNumber(index + 1) })}
@@ -274,19 +290,19 @@ export function DnsPolicyFields({
               <div
                 className={`field-grid dns-endpoint-fields ${choice === "dns_over_https" ? "with-path" : ""}`}
               >
-                <Field label={t("dns.resolver.address")}>
+                <Field label={t("dns.resolver.address")} error={errors.address}>
                   <input
                     value={endpoint.address}
                     onChange={(event) =>
                       onEndpointChange(index, "address", event.target.value)
                     }
-                    placeholder={index === 0 ? "1.1.1.1" : "1.0.0.1"}
+                    placeholder={t("dns.example", { value: index === 0 ? "1.1.1.1" : "1.0.0.1" })}
                     autoCapitalize="none"
                     autoComplete="off"
                     spellCheck={false}
                   />
                 </Field>
-                <Field label={t("dns.resolver.tlsName")}>
+                <Field label={t("dns.resolver.tlsName")} error={errors.name}>
                   <input
                     value={endpoint.authenticationName}
                     onChange={(event) =>
@@ -296,24 +312,20 @@ export function DnsPolicyFields({
                         event.target.value,
                       )
                     }
-                    placeholder={
-                      choice === "dns_over_https"
-                        ? "cloudflare-dns.com"
-                        : "one.one.one.one"
-                    }
+                    placeholder={t("dns.example", { value: choice === "dns_over_https" ? "cloudflare-dns.com" : "one.one.one.one" })}
                     autoCapitalize="none"
                     autoComplete="off"
                     spellCheck={false}
                   />
                 </Field>
                 {choice === "dns_over_https" ? (
-                  <Field label={t("dns.resolver.httpsPath")}>
+                  <Field label={t("dns.resolver.httpsPath")} error={errors.path}>
                     <input
                       value={endpoint.path}
                       onChange={(event) =>
                         onEndpointChange(index, "path", event.target.value)
                       }
-                      placeholder={defaultDohPath}
+                      placeholder={t("dns.example", { value: defaultDohPath })}
                       autoCapitalize="none"
                       autoComplete="off"
                       spellCheck={false}
@@ -322,7 +334,7 @@ export function DnsPolicyFields({
                 ) : null}
               </div>
             </div>
-          ))}
+          ); })}
         </div>
       ) : null}
     </fieldset>

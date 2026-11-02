@@ -187,3 +187,458 @@
 .field-grid.key-fields {
   grid-template-columns: minmax(0, 1.25fr) minmax(170px, 0.75fr);
 }
+
+/* Setup flow: one label and one helper size, steps, back control, outcomes. */
+.setup-form .field > span {
+  font-size: 0.8125rem;
+}
+.setup-form .field > small {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+.setup-fields {
+  display: contents;
+}
+/* `.field small` would otherwise keep a field error grey. */
+:is(.setup-form, .dns-policy, .split-dns-fields, .advanced-fields) .field > .field-error {
+  color: color-mix(in srgb, var(--danger) 70%, var(--text));
+}
+.setup-form .setup-advanced > summary {
+  color: var(--text);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.flow-back {
+  justify-self: start;
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  margin: 0 0 8px -8px;
+  padding: 6px 10px 6px 8px;
+  border-radius: 7px;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+.flow-back:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  color: var(--text);
+}
+
+.setup-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+.setup-steps li {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.setup-steps li > span {
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: 650;
+}
+.setup-steps li.current {
+  color: var(--text);
+  font-weight: 600;
+}
+.setup-steps li.current > span {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+}
+.setup-steps li.done > span {
+  border-color: color-mix(in srgb, var(--success) 60%, transparent);
+  color: var(--success);
+}
+.install-state .setup-steps,
+.install-failure .setup-steps {
+  margin-bottom: 28px;
+}
+
+.fingerprint-confirmed {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 16px 0 0;
+  color: color-mix(in srgb, var(--success) 70%, var(--text));
+  font-size: 0.875rem;
+}
+.danger-callout {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 16px 0 0;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--danger) 45%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--danger) 9%, transparent);
+  color: color-mix(in srgb, var(--danger) 30%, var(--text));
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+.danger-callout > svg {
+  flex-shrink: 0;
+  color: var(--danger);
+}
+.change-port {
+  align-self: flex-start;
+  margin-top: 12px;
+  min-height: 40px;
+  padding: 0 16px;
+}
+
+.install-keep-open {
+  font-weight: 600;
+}
+
+.install-failure {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  min-height: 420px;
+  justify-content: center;
+  text-align: center;
+}
+.install-failure h2 {
+  margin: 0;
+  font-size: 1.375rem;
+  letter-spacing: -0.03em;
+}
+.install-failure-icon {
+  width: 62px;
+  height: 62px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--danger) 13%, transparent);
+  color: var(--danger);
+}
+.install-failure-facts,
+.hetzner-facts {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  text-align: left;
+}
+.install-failure-facts > div,
+.hetzner-facts > div {
+  display: grid;
+  grid-template-columns: minmax(110px, 0.4fr) minmax(0, 1fr);
+  gap: 4px 14px;
+}
+.install-failure-facts dt,
+.hetzner-facts dt {
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+.install-failure-facts dd,
+.hetzner-facts dd {
+  min-width: 0;
+  margin: 0;
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+.install-failure-facts code,
+.hetzner-facts code {
+  font-size: 0.8125rem;
+}
+.hetzner-facts dd {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.install-failure .inline-error {
+  width: 100%;
+}
+.install-failure-actions,
+.install-success-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+.install-failure-actions > button,
+.install-success-actions > button {
+  min-height: 42px;
+  padding: 0 20px;
+}
+.install-success .install-success-actions .primary-button {
+  margin-top: 0;
+}
+
+.recovery-prompt {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  margin-top: 20px;
+  padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, var(--warning) 40%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--warning) 7%, transparent);
+  text-align: left;
+}
+.recovery-prompt > svg {
+  flex-shrink: 0;
+  color: var(--warning);
+}
+.recovery-prompt strong {
+  font-size: 0.9375rem;
+}
+.install-success .recovery-prompt p {
+  max-width: none;
+  margin: 4px 0 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+/* A server SirinVPN created: ready to install with the details folded away. */
+.ready-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+.ready-heading > span {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--success) 14%, transparent);
+  color: var(--success);
+}
+.ready-heading h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  letter-spacing: -0.025em;
+}
+.ready-heading p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+.created-facts {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  align-items: center;
+  gap: 8px 14px;
+  font-size: 0.875rem;
+}
+.created-facts > span:nth-child(odd) {
+  color: var(--muted);
+}
+.created-key {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.created-facts code {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 0.8125rem;
+}
+
+/* Hetzner: an inline price note and a separated, destructive delete. */
+.hetzner-price {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+.hetzner-price > svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--accent-strong);
+}
+.hetzner-plan-select {
+  text-overflow: ellipsis;
+}
+.hetzner-not-ready h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+.hetzner-not-ready > p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+.hetzner-danger-zone {
+  display: grid;
+  gap: 10px;
+  margin-top: 8px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+.hetzner-danger-zone > p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+.hetzner-danger-zone > .secondary-button {
+  justify-self: start;
+  min-height: 40px;
+  padding: 0 16px;
+  border-color: color-mix(in srgb, var(--danger) 55%, transparent);
+}
+.hetzner-danger-zone > .secondary-button:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+}
+.hetzner-end .hetzner-facts {
+  margin-top: 20px;
+}
+
+/* One picker row for a file: what to choose, or the chosen file's name. */
+.file-pick {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 52px;
+  padding: 10px 14px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+.file-pick:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+.file-pick.chosen {
+  border-style: solid;
+}
+.file-pick > svg {
+  color: var(--cyan);
+}
+.file-pick > span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.file-pick strong {
+  overflow: hidden;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.file-pick small {
+  color: var(--accent-strong);
+  font-size: 0.8125rem;
+}
+.recovery-file-content {
+  display: grid;
+  gap: 14px;
+  margin-top: 12px;
+}
+
+/* DNS choices: a destructive Clear, field-level notes, and three equal segments. */
+.private-dns-policy .dns-segmented.with-preserve {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.dns-segmented .danger-choice[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--danger) 80%, var(--surface));
+  color: var(--text);
+}
+.dns-change-review dd.danger-note {
+  color: color-mix(in srgb, var(--danger) 55%, var(--text));
+  font-weight: 600;
+}
+.dns-policy-note.danger-note {
+  color: color-mix(in srgb, var(--danger) 45%, var(--text));
+}
+.split-dns-fields {
+  display: grid;
+  gap: 8px;
+}
+.replacement-option.danger-option {
+  --checkbox-accent: var(--danger);
+}
+.replacement-option.danger-option.selected {
+  border-color: color-mix(in srgb, var(--danger) 55%, transparent);
+  background: color-mix(in srgb, var(--danger) 8%, transparent);
+}
+.setup-form .replacement-option strong {
+  font-size: 0.875rem;
+}
+.setup-form .replacement-option small {
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+
+/* Android: the demo is a text link under the ways to add a server, not the first button. */
+.android .onboarding-shell > .onboarding-copy {
+  display: contents;
+}
+.android .onboarding-shell .onboarding-copy > p:not(.section-label) {
+  margin-bottom: 28px;
+}
+.android .onboarding-shell .onboarding-demo {
+  order: 1;
+  justify-items: center;
+  gap: 2px;
+  margin: 8px 0 0;
+  text-align: center;
+}
+.android .onboarding-shell .onboarding-demo > p {
+  color: var(--muted);
+  font-size: var(--fs-small);
+}
+.android .onboarding-shell .onboarding-demo > .secondary-button {
+  order: -1;
+  min-height: 48px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--accent-strong);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.android .setup-form .setup-advanced > summary {
+  padding-block: 14px;
+  font-size: var(--fs-body);
+}
+.android .hetzner-danger-zone > .secondary-button {
+  justify-self: stretch;
+  border-color: color-mix(in srgb, var(--danger) 55%, transparent);
+}
+.android .install-failure-actions,
+.android .install-success-actions {
+  flex-direction: column;
+  align-self: stretch;
+}
+.android .install-failure-facts > div,
+.android .hetzner-facts > div {
+  grid-template-columns: minmax(0, 1fr);
+}
