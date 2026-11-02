@@ -154,14 +154,22 @@ input[type="checkbox"]:not([role="switch"]):disabled {
   background: var(--bg);
 }
 
+/* One equal column per option: two options fill the track, four never leave an empty cell. */
+.segmented-control:where(:has(> button:nth-child(2):last-child)) {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.segmented-control:where(:has(> button:nth-child(4):last-child)) {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
 .segmented-control button {
-  height: 35px;
+  min-height: 36px;
   border: 0;
   border-radius: 5px;
   background: transparent;
   color: var(--muted);
   cursor: pointer;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 650;
 }
 
@@ -175,13 +183,6 @@ input[type="checkbox"]:not([role="switch"]):disabled {
   margin-bottom: 8px;
 }
 
-.dns-segmented {
-  grid-template-columns: repeat(3, 1fr);
-}
-
-.dns-segmented.with-preserve {
-  grid-template-columns: repeat(4, 1fr);
-}
 
 .dns-policy-note {
   margin: 0;

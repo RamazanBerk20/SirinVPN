@@ -200,7 +200,8 @@ html.android[data-theme="light"] {
 .android .field > span { font-size: var(--fs-small); color: var(--text-strong); }
 .android .field small { font-size: var(--fs-small); line-height: 1.5; }
 .android .dns-policy { min-width: 0; overflow-wrap: anywhere; }
-.android .dns-segmented:not(.with-preserve) { grid-template-columns: repeat(auto-fit, minmax(min(100%, 6rem), 1fr)); }
+.android .dns-segmented:not(.with-preserve) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.android .dns-segmented.with-preserve { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .android .dns-segmented button { height: auto; min-height: 48px; min-width: 0; overflow-wrap: anywhere; }
 .android .field .private-dns-record-input { field-sizing: content; min-width: 0; max-height: 24rem; }
 
