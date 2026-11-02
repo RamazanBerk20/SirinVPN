@@ -6,6 +6,7 @@ import { describeConnection } from "./features/connection/connectionState";
 import { DesktopTitleBar } from "./components/DesktopTitleBar";
 import { ServerCollection } from "./features/servers/ServerCollection";
 import type { SettingsCategory } from "./features/settings/SettingsLayout";
+import type { SetupNext } from "./features/onboarding/SetupFlow";
 import { DialogContent } from "./components/DialogContent";
 import { PreferencesProvider } from "./features/settings/PreferencesProvider";
 const GeneralSettings = lazy(() => import("./features/settings/GeneralSettings").then(m => ({ default: m.GeneralSettings })));
@@ -130,15 +131,17 @@ function AppContent() {
     !localStatus.auto_reconnect_enabled;
   useScheduledVpsBackups(releaseInstallReady && servers.some((server) => server.role === "owner"));
 
-  const handleServerAdded = async (profile: ServerProfile) => {
-    await loadServers();
-    setSelectedId(profile.id);
-    setAddOpen(false);
-    setPage("home");
-  };
   const openSettings = (category: SettingsCategory) => {
     setSettingsCategory(category);
     setPage("settings", clientPlatform === "android" ? category : undefined);
+  };
+  /** `next` lands on the page the finished flow pointed at, such as Keys & recovery after setup. */
+  const handleServerAdded = async (profile: ServerProfile, next?: SetupNext) => {
+    await loadServers();
+    setSelectedId(profile.id);
+    setAddOpen(false);
+    if (next === "recovery") openSettings("recovery");
+    else setPage("home");
   };
 
   useDesktopTray(
@@ -265,7 +268,7 @@ function AppContent() {
           </header>
           <section className="onboarding-copy">
             <p className="section-label">{t("app.onboarding.welcome")}</p>
-            <h1>{clientPlatform === "android" ? <>{t("app.onboarding.headlineFirst")}<br />{t("app.onboarding.headlineSecond")}</> : t("app.onboarding.desktopTitle")}</h1>
+            <h1>{t("app.onboarding.headlineFirst")}<br />{t("app.onboarding.headlineSecond")}</h1>
             {clientPlatform !== "android" && <InfrastructureArt />}
             <p>
               {t(clientPlatform === "android" ? "app.onboarding.androidIntro" : "app.onboarding.desktopIntro")}

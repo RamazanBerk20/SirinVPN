@@ -151,30 +151,6 @@
   margin-top: 24px;
 }
 
-.local-data-error {
-  min-height: 360px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.local-data-error > svg {
-  color: var(--danger);
-}
-
-.local-data-error h2 {
-  margin: 18px 0 0;
-  font-size: 22px;
-  letter-spacing: -0.035em;
-}
-
-.local-data-error > p {
-  margin: 8px 0 20px;
-  color: var(--muted);
-  font-size: 12px;
-  line-height: 1.6;
-}
-
 .field-grid {
   display: grid;
   gap: 14px;
@@ -198,10 +174,6 @@
 }
 .setup-fields {
   display: contents;
-}
-/* `.field small` would otherwise keep a field error grey. */
-:is(.setup-form, .dns-policy, .split-dns-fields, .advanced-fields) .field > .field-error {
-  color: color-mix(in srgb, var(--danger) 70%, var(--text));
 }
 .setup-form .setup-advanced > summary {
   color: var(--text);
