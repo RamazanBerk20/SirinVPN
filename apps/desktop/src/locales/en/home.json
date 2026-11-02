@@ -245,5 +245,8 @@
     "storage": "The server’s storage is {{percent}} full. Free some space before it stops working.",
     "rotationPending": "A key rotation didn’t finish. Finish it so this device keeps its access.",
     "finishRotation": "Finish key rotation"
+  },
+  "consequence": {
+    "desktop": "Disconnecting also turns off the kill switch block and automatic reconnect."
   }
 }

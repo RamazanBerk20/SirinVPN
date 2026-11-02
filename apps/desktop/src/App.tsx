@@ -226,7 +226,16 @@ function AppContent() {
           message={loadError}
           help={t(clientPlatform === "android" ? "app.onboarding.storeHelpAndroid" : "app.onboarding.storeHelpDesktop")}
           onRetry={() => { setLoading(true); void loadServers(); }}
-        />
+        >
+          {/* A locked keyring must not also lock out a fix that comes as an update. */}
+          {clientPlatform === "desktop" && <button className="text-button" type="button" onClick={() => setReleaseUpdateOpen(true)}>{t("app.onboarding.checkUpdates")}</button>}
+        </StartupProblem>
+        {clientPlatform === "desktop" && <ReleaseUpdateDialog
+          open={releaseUpdateOpen}
+          onOpenChange={setReleaseUpdateOpen}
+          installationReady={releaseInstallReady}
+          onReviewPrerequisites={() => setReleaseUpdateOpen(false)}
+        />}
         <ToastRegion />
       </>
     );

@@ -64,7 +64,9 @@ export function ConnectionHero({
     localStatus.mtu_detection_supported === false ||
     localStatus.endpoint_updates_supported === false
   );
-  const tone = busy || loading || autoReconnecting ? "busy" : state.tone;
+  // Lost reachability checks undermine the connection as much as a fault the status reports.
+  const unstable = state.connected && probeLoss(localStatus) >= 0.2;
+  const tone = busy || loading || autoReconnecting ? "busy" : unstable && state.tone === "ok" ? "warn" : state.tone;
   const headline = loading ? t("home.status.checking")
     : operation === "connecting" ? t("home.status.connectingTo", { name: profile.name })
     : operation === "disconnecting" ? t("home.status.disconnecting")
@@ -85,14 +87,16 @@ export function ConnectionHero({
 
   const alerts: Alert[] = [];
   const diagnose = { label: t("home.alert.runDiagnostics"), run: () => void model.runDiagnostics() };
-  if (error) alerts.push({ id: "error", tone: "danger", message: error, action: !state.connected ? { label: t("help.troubleshoot.open"), run: () => model.setTroubleshootOpen(true) } : undefined });
+  if (error) alerts.push({ id: "error", tone: "danger", message: error, action: state.connected
+    ? { label: t("home.action.refresh"), run: () => void model.onRefresh() }
+    : { label: t("help.troubleshoot.open"), run: () => model.setTroubleshootOpen(true) } });
   if (state.warningState) {
     const info = state.warningState === "androidLockdown" || state.warningState === "accessContained";
     const repair = state.warningState === "serverInterfaceDown" && onOpenMaintenance ? { label: t("home.alert.checkServer"), run: onOpenMaintenance } : undefined;
     alerts.push({ id: "warning", tone: info ? "info" : "warn", message: state.warning ?? "",
       action: info || state.warningState === "accessUnenforced" ? undefined : repair ?? diagnose });
   }
-  if (state.connected && probeLoss(localStatus) >= 0.2) {
+  if (unstable) {
     const sample = localStatus.transport_quality!.sample!;
     alerts.push({ id: "loss", tone: "warn", message: t("home.alert.unstable", { lost: sample.probes_sent - sample.probes_received, sent: sample.probes_sent }), action: diagnose });
   }
@@ -123,6 +127,7 @@ export function ConnectionHero({
           <p className="connection-state" role="status">{headline}</p>
           {summary && <p className="connection-explanation">{summary}</p>}
           {systemControlled && <p className="connection-note">{t("home.alwaysOnNote")}</p>}
+          {!isAndroid && state.connected && localStatus.kill_switch_enabled && <p className="connection-note">{t("home.consequence.desktop")}</p>}
           <ConnectionFacts model={model} />
           <div className="hero-actions">
             {operation === "connecting" && <button className="secondary-button" type="button" onClick={() => void model.cancelConnection()}>{t("home.action.cancelConnection")}</button>}
@@ -163,7 +168,7 @@ export function ConnectionFacts({ model }: { model: ServerWorkspaceModel }) {
     const value = state.connected && state.protectionState === "blocking" ? t("home.killSwitch.armed") : state.protection;
     facts.push({ id: "killSwitch", label: t("home.details.killSwitch"), value, flag: ["failed", "unknown", "unverified"].includes(state.protectionState) });
   }
-  if (state.connected && local.routing_mode !== "selected_routes") {
+  if (state.connected && local.routing_mode !== "selected_routes" && (isAndroid || local.routing_mode !== "selected_applications")) {
     facts.push({ id: "ipv6", label: t("home.device.ipv6"), value: evidence.ipv6, flag: !local.ipv6_tunneled && !(local.ipv6_blocked && (evidence.verified || isAndroid)) });
   }
   if (state.applicationIsolation) facts.push({ id: "isolation", label: t("home.details.appIsolation"), value: state.applicationIsolation });

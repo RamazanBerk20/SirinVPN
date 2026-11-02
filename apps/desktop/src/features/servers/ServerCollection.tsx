@@ -113,13 +113,12 @@ export function ServerCollection({
                   />
                 </div>
               </div>
-              <button
+              {selectedId === server.id ? <span className="status-chip">{t("servers.onHome")}</span> : <button
                 className="secondary-button"
                 onClick={() => onOpen(server.id)}
-                disabled={selectedId === server.id}
               >
-                {t(selectedId === server.id ? "servers.onHome" : "servers.showOnHome")}
-              </button></>}
+                {t("servers.showOnHome")}
+              </button>}</>}
               <ActionMenu
                 label={t("servers.actions.label", { name: server.name })}
                 title={server.name}

@@ -45,3 +45,10 @@ it("turns a server fault into an amber alert with a way to act on it", () => {
   expect(open).toHaveBeenCalledOnce();
   expect(document.querySelector(".connection-console")?.getAttribute("data-tone")).toBe("warn");
 });
+
+it("is amber while reachability checks go unanswered", () => {
+  const local = { ...connected, transport_quality: { sample: { transport: "direct_udp", probes_sent: 8, probes_received: 0, latency_micros: 0, jitter_micros: 0 } } } as unknown as LocalTunnelStatus;
+  render(<ConnectionHero model={model(local)} view="home" />);
+  expect(document.querySelector(".connection-console")?.getAttribute("data-tone")).toBe("warn");
+  expect(screen.getByRole("button", { name: t("home.alert.runDiagnostics") })).toBeTruthy();
+});

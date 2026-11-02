@@ -48,7 +48,7 @@ export function MobileConnectionDetails({ model, source, onReviewActivity }: {
       <Row label={t("home.details.routing")} value={state.routing} />
       {/* Android has no kill switch of its own: traffic blocking is the system's Always-on and Block settings. */}
       <Row label={t("home.details.alwaysOn")} value={t(!state.known || local.always_on === undefined ? "common.state.unknown" : local.always_on ? "common.state.enabled" : "common.state.disabled")} />
-      <Row label={t("home.details.blockWithoutVpn")} value={t(!state.known || local.lockdown === undefined ? "common.state.unknown" : local.lockdown ? "common.state.enabled" : "common.state.disabled")} />
+      <Row label={t("home.details.blockWithoutVpn")} value={t(!state.known || local.lockdown === undefined ? "connection.options.android.unknown" : local.lockdown ? "common.state.enabled" : "common.state.disabled")} />
       {state.applicationIsolation && <Row label={t("home.details.appIsolation")} value={state.applicationIsolation} />}
       {connected && <Row label={t("home.details.reachability")} value={state.health.reachability} note={state.health.detail} />}
       {connected && server?.management_latency_ms !== undefined && <Row label={t("home.details.serverResponse")} value={formatLatency(server.management_latency_ms)} info={t("home.details.serverResponseInfo")} />}

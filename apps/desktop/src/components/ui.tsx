@@ -96,7 +96,7 @@ export function LoadingScreen() {
 }
 
 /** A startup failure: what went wrong as body text, how to fix it on this platform, and a retry. */
-export function StartupProblem({ title, message, help, onRetry }: { title: string; message: string; help: string; onRetry?: () => void }) {
+export function StartupProblem({ title, message, help, onRetry, children }: { title: string; message: string; help: string; onRetry?: () => void; children?: React.ReactNode }) {
   return (
     <main className="startup-problem">
       <header><Brand compact={false} /></header>
@@ -108,6 +108,7 @@ export function StartupProblem({ title, message, help, onRetry }: { title: strin
         <div className="startup-problem-actions">
           {onRetry && <button className="primary-button" onClick={onRetry}>{t("common.action.retry")}</button>}
           <button className="secondary-button" onClick={() => void navigator.clipboard.writeText(t("app.unavailable.report", { message })).catch(() => {})}>{t("app.unavailable.copy")}</button>
+          {children}
         </div>
       </section>
     </main>
