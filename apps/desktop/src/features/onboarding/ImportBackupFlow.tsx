@@ -66,7 +66,7 @@ export function ImportBackupFlow({
       notify(t("onboarding.backup.restored", { name: profile.name }));
       await onComplete(profile);
     } catch (reason) {
-      setPassword("");
+      // Keep the password: most failures (a duplicate identity, a newer format, a write error) aren't about it.
       setError(
         errorMessage(reason, t("onboarding.backup.error.restore")),
       );

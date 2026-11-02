@@ -27,7 +27,8 @@
     "aloneTitle": "Only this device so far",
     "aloneBody": "Add your phone or another computer, or invite someone to use your VPN.",
     "aloneBodyOwn": "Add your phone or another computer to use your VPN there too.",
-    "addOwnDevice": "Add a device"
+    "addOwnDevice": "Add a device",
+    "connect": "Connect"
   },
   "member": {
     "suspended": "Suspended",

@@ -19,7 +19,7 @@ import { formatDateTime, t } from "../../i18n";
 const SEARCH_FROM = 4;
 
 export function AccessPanel(
-  props: AccessProps & { onNetwork?: () => void; onOpenHome?: () => void },
+  props: AccessProps & { onNetwork?: () => void; onOpenHome?: () => void; onConnect?: () => void },
 ) {
   const { profile, connected, onNetwork } = props;
   const [policyTarget, setPolicyTarget] = useState<MemberSummary | null>(null);
@@ -66,7 +66,8 @@ export function AccessPanel(
       {!connected ? (
         <div className="devices-notice">
           <LockKey size={20} aria-hidden="true" /> <p>{t("devices.panel.connectFirst")}</p>
-          {props.onOpenHome && <button className="secondary-button" onClick={props.onOpenHome}>{t("devices.panel.openHome")}</button>}
+          {props.onConnect ? <button className="primary-button" onClick={props.onConnect}>{t("devices.panel.connect")}</button>
+            : props.onOpenHome && <button className="secondary-button" onClick={props.onOpenHome}>{t("devices.panel.openHome")}</button>}
         </div>
       ) : loading && !snapshot && !loadError ? (
         <div className="devices-notice" role="status">

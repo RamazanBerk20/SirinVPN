@@ -186,7 +186,7 @@
     "probes": "Probe replies",
     "probesValue": "{{received}} of {{sent}} · {{jitter}} jitter",
     "ipv6": "IPv6",
-    "autoReconnect": "Auto-reconnect",
+    "autoReconnect": "Automatic reconnect",
     "fallback": "Fallback methods",
     "countersNote": "Counters reset when you reconnect. No history is kept."
   },

@@ -7,6 +7,7 @@ import { ConnectionHero } from "./ConnectionHero";
 import type { ServerWorkspaceModel } from "./useServerWorkspace";
 
 vi.mock("../../platform", () => ({ isAndroid: false, dpadOnly: false, invoke: vi.fn() }));
+vi.mock("../../api", () => ({ api: { localComponentUpdateStatus: async () => ({ install_available: true, update_required: false }) } }));
 vi.mock("../settings/vpsBackupSchedules", () => ({ useVpsBackupSchedule: () => null, needsAttention: () => false, backupAge: () => "" }));
 
 afterEach(cleanup);

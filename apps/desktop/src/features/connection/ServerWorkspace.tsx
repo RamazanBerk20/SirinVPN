@@ -255,6 +255,8 @@ export function ServerWorkspace(
             accessLevel={accessLevel}
             onAccessChanged={onAccessChanged}
             onOpenHome={() => props.onNavigate("home")}
+            // Connecting shows its progress on Home, so the button goes there too.
+            onConnect={connectHere && (() => { props.onNavigate("home"); connectHere(); })}
             onNetwork={() => {
               props.onOpenSettings("network");
             }}

@@ -1,5 +1,6 @@
 import { ArrowClockwise, GearSix, Info, Power, Warning, WarningOctagon } from "@phosphor-icons/react";
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { api } from "../../api";
 import { dpadOnly, invoke, isAndroid } from "../../platform";
 import type { Page } from "../../components/Navigation";
 import { formatTransport, formatLatency } from "../../format";
@@ -43,6 +44,14 @@ export function ConnectionHero({
   // D-pad only: Home starts on this button, and it takes focus back after being disabled while busy.
   useEffect(() => { if (dpadOnly && document.activeElement === document.body) power.current?.focus(); });
   const backupSchedule = useVpsBackupSchedule(model.profile.id);
+  // The local component reports its own update need; status flags only cover two of its features.
+  const [componentCheck, setComponentCheck] = useState(false);
+  useEffect(() => {
+    if (isAndroid) return;
+    let current = true;
+    Promise.resolve().then(() => api.localComponentUpdateStatus()).then((status) => { if (current) setComponentCheck(status?.update_required === true); }).catch(() => undefined);
+    return () => { current = false; };
+  }, [model.localStatus.state]);
   if (view !== "home") return null;
   const { localStatus, profile, serverStatus, busy, error, connectionOperation: operation } = model;
   const systemControlled = isAndroid && localStatus.always_on === true;
@@ -51,6 +60,7 @@ export function ConnectionHero({
   const waiting = state.active && localStatus.waiting_for_user === true;
   const autoReconnecting = state.statusState === "reconnecting" && !busy;
   const componentUpdateRequired = !isAndroid && state.known && (
+    componentCheck ||
     localStatus.mtu_detection_supported === false ||
     localStatus.endpoint_updates_supported === false
   );
