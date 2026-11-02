@@ -70,9 +70,6 @@
 }
 
 @media (max-width: 620px) {
-  .initialization-shell {
-    gap: 20px;
-  }
 
   .onboarding-shell {
     gap: 28px;
@@ -97,10 +94,6 @@
   .field-grid.two-column,
   .field-grid.key-fields,
   .field-grid.dns-endpoint-fields {
-    grid-template-columns: 1fr;
-  }
-
-  .release-detail-grid {
     grid-template-columns: 1fr;
   }
 
@@ -182,8 +175,4 @@
     grid-column: 1 / -1;
   }
 
-  .dialog-actions {
-    align-items: stretch;
-    flex-direction: column;
-  }
 }

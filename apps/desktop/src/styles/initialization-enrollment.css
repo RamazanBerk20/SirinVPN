@@ -1,8 +1,0 @@
-.platform-unavailable > svg {
-  margin-bottom: 22px;
-  color: var(--danger);
-}
-
-.platform-unavailable .section-label {
-  color: var(--danger);
-}

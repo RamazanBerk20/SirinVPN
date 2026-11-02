@@ -78,7 +78,6 @@ html[data-window-chrome="custom"] .dialog-content.dialog-layout {
 .dialog-layout .segmented-control button,
 .dialog-layout .replacement-option strong,
 .dialog-layout .preference-checkbox,
-.dialog-layout .field-help,
 .dialog-layout .field > span,
 .dialog-layout .field small {
   font-size: var(--text-secondary);

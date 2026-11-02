@@ -96,10 +96,3 @@ textarea:focus-visible {
   filter: drop-shadow(0 0 13px color-mix(in srgb, var(--accent) 34%, transparent));
 }
 
-.initialization-shell {
-  position: relative;
-  grid-template-rows: auto 1fr;
-  justify-items: center;
-  overflow-x: hidden;
-  overflow-y: auto;
-}

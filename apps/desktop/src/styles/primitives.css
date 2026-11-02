@@ -73,3 +73,9 @@ p, small, .inline-error, .warning-note {
 .android .toast > .icon-button { width: 44px; height: 44px; }
 @keyframes toast-in { from { opacity: 0; transform: translateY(-8px); } }
 @media (prefers-reduced-motion: reduce) { .toast { animation: none; } }
+
+.confirmation-row input[type="checkbox"] { flex: 0 0 22px; width: 22px; height: 22px; margin: 1px 0 0; accent-color: var(--cyan); }
+.confirmation-row > span { display: grid; min-width: 0; gap: 6px; }
+.confirmation-row small { color: var(--muted); line-height: 1.5; font-style: normal; }
+.confirmation-row:has(input:disabled) { opacity: .6; cursor: default; }
+.confirmation-row:focus-within { border-radius: 4px; }

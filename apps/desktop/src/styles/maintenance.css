@@ -65,17 +65,6 @@
   margin-top: 24px;
 }
 
-.back-button {
-  align-self: flex-start;
-  margin-bottom: 32px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--muted);
-  font-size: 0.75rem;
-  min-height: 32px;
-}
-
 .fingerprint-heading {
   display: flex;
   align-items: center;
@@ -112,7 +101,6 @@
   border-radius: 7px;
   background: var(--bg);
 }
-
 
 .warning-note {
   display: flex;
@@ -191,10 +179,6 @@
   margin: 0;
   font-size: 0.875rem;
   color: var(--muted);
-}
-
-.backup-confirmation {
-  border-color: color-mix(in srgb, var(--warning) 26%, transparent);
 }
 
 .key-rotation-confirmation {
