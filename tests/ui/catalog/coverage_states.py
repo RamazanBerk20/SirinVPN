@@ -206,8 +206,18 @@ def coverage_states(cases):
     add('extremes', 'long-names-home', [], {'longNames': True})
     add('extremes', 'long-names-settings', settings('', 'maintenance'), {'longNames': True})
     add('extremes', 'twelve-servers-home', [], {'profileCount': 12})
+    # Android reports its own "Block connections without VPN" instead of a kill switch.
+    add('connection', 'android-blocking-on', settings('', 'connection'), {'local': {'lockdown': True}}, forms=('mobile',))
+    # Settings wording after the settings redesign: a separate message for an unknown permission answer,
+    # numbered names for hidden Wi-Fi, and Android's recovery QR as a direct button (no disclosure).
+    expects = {('general', 'notification-request-unknown'): 'Couldn’t confirm notification access',
+               ('wifi', 'os-wifi-names-unavailable'): 'didn’t share Wi-Fi names'}
     for case in cases:
         # The Android runtime has no command to export WireGuard configurations (AccessPanel hides the action).
         if case['family'] == 'wireguard-devices':
+            case['forms'] = ('desktop',)
+        if (case['family'], case['id']) in expects:
+            case['expect'] = expects[(case['family'], case['id'])]
+        if case['family'] == 'recovery-keys' and case['id'] in ('recovery-qr-expanded', 'recovery-qr-enlarged'):
             case['forms'] = ('desktop',)
     return cases

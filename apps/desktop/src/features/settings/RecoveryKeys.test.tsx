@@ -71,3 +71,17 @@ it("ignores recovery material issued for a profile that is no longer displayed",
   expect(screen.queryByDisplayValue(key.key)).toBeNull();
   expect(screen.queryByRole("button", { name: t("settings.recovery.key.copy") })).toBeNull();
 });
+it("hides Replace and the acknowledgement until setup is finished, then asks again", async () => {
+  Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: vi.fn().mockResolvedValue(undefined) } });
+  await issue();
+  expect(screen.queryByRole("checkbox", { name: t("settings.recovery.accept") })).toBeNull();
+  expect(screen.queryByRole("button", { name: t("settings.recovery.replace") })).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: t("settings.recovery.key.copy") }));
+  // Copy feedback sits next to the copy button, not at the end of the card.
+  const copied = await screen.findByText(t("settings.recovery.key.copied"));
+  expect(copied.parentElement!.contains(screen.getByRole("button", { name: t("settings.recovery.key.copy") }))).toBe(true);
+  fireEvent.click(screen.getByRole("checkbox", { name: t("settings.recovery.key.retained") }));
+  fireEvent.click(screen.getByRole("button", { name: t("settings.recovery.key.finish") }));
+  expect((screen.getByRole("checkbox", { name: t("settings.recovery.accept") }) as HTMLInputElement).checked).toBe(false);
+  expect((screen.getByRole("button", { name: t("settings.recovery.replace") }) as HTMLButtonElement).disabled).toBe(true);
+});

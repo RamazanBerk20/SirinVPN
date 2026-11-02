@@ -9,6 +9,8 @@ export interface TroubleshootStep {
   status: TroubleshootStatus;
   message: MessageKey;
   fix?: TroubleshootFix;
+  /** The diagnostic result that made this step a likely cause, shown as "What we saw". */
+  evidence?: string;
 }
 
 // A failed management check names its cause only in core's fixed text (crates/core/src/diagnostics.rs, management_failure).
@@ -36,8 +38,17 @@ export function troubleshootSteps({ report, online, profile, transport, rotation
   // A handshake proves the network, address and method; authenticated management also proves the clock, keys and access.
   const tunnel = passed("local_tunnel");
   const authenticated = passed("management");
-  const step = (id: TroubleshootStep["id"], status: TroubleshootStatus, message: MessageKey, fix?: TroubleshootFix): TroubleshootStep =>
-    fix ? { id, status, message, fix } : { id, status, message };
+  const seen = (...codes: string[]) => codes.map((code) => checks.get(code)).find((check) => check && diagnosticGroup(check) === "attention")?.message;
+  // Each step's evidence: the failed checks that could have made it a likely cause.
+  const evidence: Partial<Record<TroubleshootStep["id"], string[]>> = {
+    dns: ["dns", "dns_resolver_response"], reachability: ["local_tunnel"], transport: ["local_tunnel"],
+    clock: ["management"], enrollment: ["local_identity", "management"], membership: ["management"],
+    service: ["server_process", "interface", "wireguard", "server_ports", "management"],
+  };
+  const step = (id: TroubleshootStep["id"], status: TroubleshootStatus, message: MessageKey, fix?: TroubleshootFix): TroubleshootStep => {
+    const detail = status === "problem" ? seen(...evidence[id] ?? []) : undefined;
+    return { id, status, message, ...(fix ? { fix } : {}), ...(detail ? { evidence: detail } : {}) };
+  };
   return [
     !online ? step("network", "problem", "help.troubleshoot.network.offline")
       : tunnel ? step("network", "ok", "help.troubleshoot.network.ok")

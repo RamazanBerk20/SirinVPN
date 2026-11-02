@@ -131,7 +131,8 @@ it("requests permission before enabling notifications and never saves a denial",
   mocks.requestNotificationPermission.mockResolvedValue("denied");
   setup();
   const input = await toggle(t("settings.general.notifications.connection.label"));
-  expect(await screen.findByText(t("settings.preferences.notificationsBlocked"), { exact: false })).toBeTruthy();
+  expect(await screen.findByText(t("settings.general.notifications.blocked"))).toBeTruthy();
+  expect(screen.queryByRole("alert")).toBeNull();
   expect(mocks.setAppPreferences).not.toHaveBeenCalled();
   expect(input.checked).toBe(false);
 });
@@ -192,20 +193,28 @@ it("locks unavailable tray and startup controls while other preferences remain u
   ).toBe(true);
 });
 
-it("keeps settings disabled when the native store cannot be read", async () => {
-  mocks.getAppPreferences.mockRejectedValue(
+it("replaces the switches with a retry when the native store cannot be read", async () => {
+  mocks.getAppPreferences.mockRejectedValueOnce(
     new Error("Settings could not be read"),
   );
   setup();
   expect(await screen.findByText("Settings could not be read", { exact: false })).toBeTruthy();
-  expect(
-    (
-      screen.getByRole("switch", {
-        name: t("settings.general.notifications.connection.label"),
-      }) as HTMLInputElement
-    ).disabled,
-  ).toBe(true);
+  // Defaults never pose as saved values.
+  expect(screen.queryByRole("switch", { name: t("settings.general.notifications.connection.label") })).toBeNull();
   expect(mocks.setAppPreferences).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole("button", { name: t("common.action.retry") }));
+  expect(await screen.findByRole("switch", { name: t("settings.general.notifications.connection.label") })).toBeTruthy();
+});
+it("shows the test notification result next to its button", async () => {
+  mocks.getAppPreferences.mockResolvedValue({ ...initial, preferences: { ...initial.preferences, notifications: true } });
+  mocks.testNotification.mockRejectedValue(new Error("No notification daemon"));
+  setup();
+  const button = await screen.findByRole("button", { name: t("settings.general.notifications.test") });
+  await waitFor(() => expect(button.matches(":disabled")).toBe(false));
+  fireEvent.click(button);
+  const alert = await screen.findByRole("alert");
+  expect(alert.textContent).toContain("No notification daemon");
+  expect(button.parentElement!.contains(alert)).toBe(true);
 });
 it("saves the theme choice and applies it before the next paint", async () => {
   setup();

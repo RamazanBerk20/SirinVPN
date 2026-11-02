@@ -65,22 +65,23 @@ it("preserves friendly labels and distinguishes unnamed profiles when OS names a
     { id: "office", label: "Work" }, { id: "home", label: "Family" },
   ], network_names: { home: "Home hotspot" } });
   render(<WifiSettings />);
-  expect(await screen.findByText(t("settings.wifi.trusted.savedName", { id: "11111111" }))).toBeTruthy();
-  expect(screen.getByText(t("settings.wifi.trusted.savedName", { id: "22222222" }))).toBeTruthy();
+  // Hidden names are numbered, never shown as a fragment of the network token.
+  expect(await screen.findByText(t("settings.wifi.trusted.unnamed", { number: 1 }))).toBeTruthy();
+  expect(screen.getByText(t("settings.wifi.trusted.unnamed", { number: 2 }))).toBeTruthy();
+  expect(screen.queryByText("11111111", { exact: false })).toBeNull();
   expect(screen.getByText("Work")).toBeTruthy();
   expect(screen.getByText(t("settings.wifi.trusted.label", { label: "Family" }))).toBeTruthy();
-  expect(screen.getAllByText(t("settings.wifi.trusted.nameUnavailable"), { exact: false })).toHaveLength(3);
+  expect(screen.getAllByText(t("settings.wifi.trusted.namesHidden"))).toHaveLength(1);
 });
 
 it("shows why an unidentified Wi-Fi connection cannot be marked trusted", async () => {
   mocks.getWifiPolicy.mockResolvedValue({ ...initial, can_trust_current: false, current_network_token: null });
   render(<WifiSettings />);
-  const trust = await screen.findByRole("button", { name: t("settings.wifi.trust.action") });
-  expect(trust.matches(":disabled")).toBe(true);
-  expect(screen.getByText(t("settings.wifi.access.unidentified"))).toBeTruthy();
+  expect(await screen.findByText(t("settings.wifi.access.unidentified"))).toBeTruthy();
+  expect(screen.queryByRole("button", { name: t("settings.wifi.trust.action") })).toBeNull();
 });
 
-it("refreshes a manual-disconnect pause but requires review when the network token changes", async () => {
+it("follows a network change on its own and says so before trusting", async () => {
   vi.useFakeTimers();
   mocks.getWifiPolicy.mockResolvedValue({ ...initial, policy: { enabled: true, server_id: "server-one" }, automation_status: "session_active" });
   await act(async () => { render(<WifiSettings />); });
@@ -88,10 +89,10 @@ it("refreshes a manual-disconnect pause but requires review when the network tok
   mocks.getWifiPolicy.mockResolvedValue({ ...initial, policy: { enabled: true, server_id: "server-one" }, current_network_token: "network-two", automation_status: "waiting_for_network_change" });
   await act(async () => { await vi.advanceTimersByTimeAsync(5000); });
   expect(screen.getByText(t("settings.wifi.status.paused"))).toBeTruthy();
-  expect(screen.getByRole("button", { name: t("settings.wifi.trust.action") }).matches(":disabled")).toBe(true);
-  expect(mocks.trustCurrentWifi).not.toHaveBeenCalled();
-  await act(async () => { fireEvent.click(screen.getByRole("button", { name: t("settings.wifi.refresh") })); });
+  // The label typed for the old network is cleared, and the change is announced.
   expect((screen.getByLabelText(t("settings.wifi.trust.label")) as HTMLInputElement).value).toBe("");
+  expect(screen.getByText(t("settings.wifi.access.changed"))).toBeTruthy();
+  expect(mocks.trustCurrentWifi).not.toHaveBeenCalled();
   await act(async () => { fireEvent.click(screen.getByRole("button", { name: t("settings.wifi.trust.action") })); });
   expect(mocks.trustCurrentWifi).toHaveBeenCalledWith("network-two", "Wi-Fi exception");
 });
@@ -111,7 +112,7 @@ it("pauses hidden network reads and refreshes on return without trusting a chang
   await act(async () => { hidden = false; document.dispatchEvent(new Event("visibilitychange")); });
   expect(mocks.getWifiPolicy).toHaveBeenCalledTimes(initialReads + 1);
   expect(mocks.listServers).toHaveBeenCalledOnce();
-  expect(screen.getByRole("button", { name: t("settings.wifi.trust.action") }).matches(":disabled")).toBe(true);
+  expect(screen.getByText(t("settings.wifi.access.changed"))).toBeTruthy();
   expect(mocks.trustCurrentWifi).not.toHaveBeenCalled();
 });
 

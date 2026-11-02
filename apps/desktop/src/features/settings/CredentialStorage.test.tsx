@@ -12,7 +12,7 @@ it("requires explicit fallback consent and waits for native acknowledgement", as
   render(<CredentialStorage />);
   const allow = await screen.findByRole("button", { name: t("settings.credentials.allowFile") });
   expect(allow.matches(":disabled")).toBe(true);
-  fireEvent.click(screen.getByRole("switch", { name: t("settings.credentials.consent") }));
+  fireEvent.click(screen.getByRole("checkbox", { name: t("settings.credentials.consent") }));
   let complete!: (value: unknown) => void;
   vi.mocked(invoke).mockImplementationOnce(() => new Promise(resolve => { complete = resolve; }));
   fireEvent.click(allow); fireEvent.click(allow);

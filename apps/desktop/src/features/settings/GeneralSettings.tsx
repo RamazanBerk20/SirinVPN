@@ -1,16 +1,18 @@
 import { WifiSettings } from "./WifiSettings";
 import { CredentialStorage } from "./CredentialStorage";
 import { invoke } from "../../platform";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { api } from "../../api";
 import type { ServerProfile } from "../../types";
 import { ArrowClockwise, Bell, Desktop } from "@phosphor-icons/react";
 import { InlineError } from "../../components/ui";
+import { notify } from "../../components/Toasts";
 import type { ClientPlatform } from "../../types";
 import type { AppPreferences } from "./preferences";
 import { usePreferences } from "./PreferencesProvider";
 import { t } from "../../i18n";
 import { useInfoHint } from "../../components/InfoHint";
+import { SettingsNotice } from "./SettingsParts";
 
 export function GeneralSettings({
   platform,
@@ -37,52 +39,52 @@ export function GeneralSettings({
     change,
     testNotification,
   } = usePreferences();
+  const android = platform === "android";
+  const denied = snapshot?.notification_permission === "denied";
+  /** Each result sits next to the control that caused it. */
+  const feedback = (key: keyof AppPreferences | "test"): ReactNode => {
+    if (changedKey !== key) return null;
+    if (error) return <InlineError message={error} />;
+    return (saving || status) ? <small className="preference-feedback" role="status">{saving ? t("common.state.saving") : status}</small> : null;
+  };
   const row = (
     key: Exclude<keyof AppPreferences, "theme">,
     label: string,
     description: string,
     unavailable = false,
+    extra?: ReactNode,
   ) => (
-    <label className="preference-row">
-      <span>
-        <strong>{label}</strong>
-        <small>{description}</small>
-        {changedKey === key && (
-          <small
-            className={error ? "danger-text" : "preference-feedback"}
-            role={error ? "alert" : "status"}
-          >
-            {saving ? t("common.state.saving") : error || status}
-          </small>
-        )}
-      </span>
-      <input
-        type="checkbox"
-        role="switch"
-        aria-label={label}
-        checked={(snapshot?.preferences[key] ?? false) && (key !== "notifications" || platform !== "android" || snapshot?.notification_permission === "granted")}
-        disabled={loading || saving || !snapshot || unavailable}
-        onChange={(event) => void change(key, event.target.checked)}
-      />
-    </label>
+    <div className="preference-group">
+      <label className="preference-row">
+        <span>
+          <strong>{label}</strong>
+          <small>{description}</small>
+          {changedKey === key && !error && feedback(key)}
+        </span>
+        <input
+          type="checkbox"
+          role="switch"
+          aria-label={label}
+          // Notifications the system blocks are off, whatever was saved.
+          checked={(snapshot?.preferences[key] ?? false) && !(key === "notifications" && (android ? snapshot?.notification_permission !== "granted" : denied))}
+          disabled={loading || saving || !snapshot || unavailable}
+          onChange={(event) => void change(key, event.target.checked)}
+        />
+      </label>
+      {changedKey === key && error && feedback(key)}
+      {extra}
+    </div>
   );
+  // Until app preferences load, their switches would show defaults as if saved: show the load state instead.
+  const pending = !snapshot && <section className="settings-card" aria-busy={loading}>
+    {error && !loading
+      ? <InlineError message={error} onRetry={() => void refresh()} />
+      : <p role="status">{t("settings.general.loading")}</p>}
+  </section>;
   return (
     <div className="settings-sections" aria-busy={loading || saving}>
-      {error && !changedKey && (
-        <div className="preferences-error">
-          <InlineError message={error} />
-          {!snapshot && (
-            <button
-              className="secondary-button"
-              disabled={loading}
-              onClick={() => void refresh()}
-            >
-              {t("common.action.retry")}
-            </button>
-          )}
-        </div>
-      )}
-      {platform === "desktop" && (
+      {pending}
+      {snapshot && platform === "desktop" && (
         <section className="settings-card">
           <div className="settings-section-heading">
             <Desktop size={21} />
@@ -91,10 +93,10 @@ export function GeneralSettings({
           {row(
             "start_on_login",
             t("settings.general.startup.startOnLogin.label"),
-            snapshot && !snapshot.startup_available
+            !snapshot.startup_available
               ? t("settings.general.startup.startOnLogin.unavailable")
               : t("settings.general.startup.startOnLogin.summary"),
-            !snapshot?.startup_available,
+            !snapshot.startup_available,
           )}
           {row(
             "launch_minimized",
@@ -104,83 +106,86 @@ export function GeneralSettings({
           {row(
             "close_to_tray",
             t("settings.general.startup.closeToTray.label"),
-            snapshot && !snapshot.tray_available
+            !snapshot.tray_available
               ? t("settings.general.startup.closeToTray.unavailable")
               : t("settings.general.startup.closeToTray.summary"),
-            !snapshot?.tray_available,
+            !snapshot.tray_available,
           )}
           <p className="settings-note">{t("settings.general.startup.note")}</p>
         </section>
       )}
       {platform === "desktop" && <WifiSettings />}
       {platform === "desktop" && <CredentialStorage />}
-      {platform === "android" && <section className="settings-card">
+      {android && <section className="settings-card">
         <h2>{t("settings.general.android.title")}</h2>
-        <QuickProfile />
         <p>{t("settings.general.android.summary")}</p>
+        <QuickProfile />
         <div className="settings-action-row"><button className="secondary-button" onClick={() => void invoke("android_vpn_settings")}>{t("settings.general.android.vpnSettings")}</button>
         <button className="secondary-button" onClick={() => void invoke<unknown>("android_add_tile")
           .then(value => setTileMessage(typeof value === "string" ? value : ""))
           .catch(() => setTileMessage(t("settings.general.android.addTileManually")))}>{t("settings.general.android.addTile")}</button></div>
         {tileMessage && <p role="status">{tileMessage}</p>}
       </section>}
-      <section className="settings-card">
+      {snapshot && <section className="settings-card">
         <div className="settings-section-heading">
           <Bell size={21} />
           <h2>{t("settings.general.notifications.title")}</h2>
           {notificationInfo}
         </div>
         {notificationInfoPanel}
-        {(platform === "desktop" || platform === "android") && <>
-          {row(
-            "notifications",
-            t("settings.general.notifications.connection.label"),
-            t("settings.general.notifications.connection.summary"),
-          )}
-          <div className="settings-action-row">
-            <div className="native-settings-actions">
+        {row(
+          "notifications",
+          t("settings.general.notifications.connection.label"),
+          t("settings.general.notifications.connection.summary"),
+          false,
+          <>
+            {denied && <SettingsNotice tone="warning"
+              action={android ? { label: t("settings.general.notifications.androidSettings"), onClick: () => void invoke("android_notification_settings") } : undefined}>
+              {t(android ? "settings.general.notifications.blockedAndroid" : "settings.general.notifications.blocked")}
+            </SettingsNotice>}
+            <div className="preference-actions">
               <button
                 className="secondary-button"
-                disabled={saving || !snapshot?.preferences.notifications}
+                disabled={saving || !snapshot.preferences.notifications}
                 onClick={() => void testNotification()}
               >
-                {t("settings.general.notifications.test")}
+                {changedKey === "test" && saving ? t("settings.general.notifications.testing") : t("settings.general.notifications.test")}
               </button>
-              {platform === "android" && <button className="secondary-button" onClick={() => void invoke("android_notification_settings")}>{t("settings.general.notifications.androidSettings")}</button>}
+              {android && !denied && <button className="secondary-button" onClick={() => void invoke("android_notification_settings")}>{t("settings.general.notifications.androidSettings")}</button>}
+              {!snapshot.preferences.notifications && <small>{t("settings.general.notifications.testNeedsNotifications")}</small>}
+              {changedKey === "test" && !saving && feedback("test")}
             </div>
-          </div>
-          {platform === "android" && snapshot?.notification_permission === "denied" && <p>{t("settings.general.notifications.blockedAndroid")}</p>}
-        </>}
+          </>,
+        )}
         {row(
           "animations",
           t("settings.general.notifications.animations.label"),
           t("settings.general.notifications.animations.summary"),
         )}
-        <div className="preference-row" role="group" aria-labelledby="theme-preference-label">
-          <span>
-            <strong id="theme-preference-label">{t("settings.general.notifications.theme.label")}</strong>
-            <small>{t("settings.general.notifications.theme.summary")}</small>
-            {changedKey === "theme" && (
-              <small className={error ? "danger-text" : "preference-feedback"} role={error ? "alert" : "status"}>
-                {saving ? t("common.state.saving") : error || status}
-              </small>
-            )}
-          </span>
-          <div className="segmented-control theme-choice">
-            {(["system", "light", "dark"] as const).map((theme) => (
-              <button
-                key={theme}
-                type="button"
-                aria-pressed={(snapshot?.preferences.theme ?? "system") === theme}
-                disabled={loading || saving || !snapshot}
-                onClick={() => void change("theme", theme)}
-              >
-                {t(`settings.general.notifications.theme.${theme}`)}
-              </button>
-            ))}
+        <div className="preference-group">
+          <div className="preference-row" role="group" aria-labelledby="theme-preference-label">
+            <span>
+              <strong id="theme-preference-label">{t("settings.general.notifications.theme.label")}</strong>
+              <small>{t("settings.general.notifications.theme.summary")}</small>
+              {changedKey === "theme" && !error && feedback("theme")}
+            </span>
+            <div className="segmented-control theme-choice">
+              {(["system", "light", "dark"] as const).map((theme) => (
+                <button
+                  key={theme}
+                  type="button"
+                  aria-pressed={snapshot.preferences.theme === theme}
+                  disabled={loading || saving}
+                  onClick={() => void change("theme", theme)}
+                >
+                  {t(`settings.general.notifications.theme.${theme}`)}
+                </button>
+              ))}
+            </div>
           </div>
+          {changedKey === "theme" && error && feedback("theme")}
         </div>
-      </section>
+      </section>}
       {onCheckUpdates && (
         <section className="settings-card settings-action-row">
           <div>
@@ -195,15 +200,6 @@ export function GeneralSettings({
         <div><h2>{t("settings.general.component.title")}</h2><p>{t("settings.general.component.summary")}</p></div>
         <button className="secondary-button" onClick={onReviewComponentUpdate}>{t("settings.general.component.review")}</button>
       </section>}
-      {!changedKey && (
-        <p className="preferences-status" role="status">
-          {loading
-            ? t("common.state.loading")
-            : saving
-              ? t("common.state.saving")
-              : status}
-        </p>
-      )}
     </div>
   );
 }
@@ -211,16 +207,29 @@ export function GeneralSettings({
 function QuickProfile() {
   const [profiles, setProfiles] = useState<ServerProfile[]>([]);
   const [selected, setSelected] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError] = useState<{ message: string; retry: () => void } | null>(null);
+  const load = useCallback((active: () => boolean = () => true) => {
+    setError(null);
+    void Promise.all([api.listServers(), invoke<{ quick_profile: string | null }>("android_snapshot")]).then(([list, state]) => {
+      if (active()) { setProfiles(list); setSelected(state.quick_profile ?? ""); }
+    }).catch(() => { if (active()) setError({ message: t("settings.general.quickServer.loadFailed"), retry: () => load() }); });
+  }, []);
   useEffect(() => {
     let active = true;
-    void Promise.all([api.listServers(), invoke<{ quick_profile: string | null }>("android_snapshot")]).then(([list, state]) => {
-      if (active) { setProfiles(list); setSelected(state.quick_profile ?? ""); }
-    }).catch(() => { if (active) setError(t("settings.general.quickServer.loadFailed")); });
+    load(() => active);
     return () => { active = false; };
-  }, []);
-  return <label className="field"><span>{t("settings.general.quickServer.label")}</span><select value={selected} disabled={!profiles.length}
-    onChange={event => { const id = event.target.value; void invoke("android_set_quick_profile", { serverId: id }).then(() => { setSelected(id); setError(""); }).catch(() => setError(t("settings.general.quickServer.saveFailed"))); }}>
-    <option value="" disabled>{t("settings.general.quickServer.placeholder")}</option>{profiles.map(profile => <option key={profile.id} value={profile.id}>{profile.name}</option>)}
-  </select>{error && <span role="alert">{error}</span>}</label>;
+  }, [load]);
+  const choose = (id: string) => {
+    setError(null);
+    void invoke("android_set_quick_profile", { serverId: id })
+      .then(() => { setSelected(id); notify(t("settings.general.quickServer.saved", { name: profiles.find((profile) => profile.id === id)?.name ?? "" })); })
+      .catch(() => setError({ message: t("settings.general.quickServer.saveFailed"), retry: () => choose(id) }));
+  };
+  return <div className="quick-profile">
+    <label className="field"><span>{t("settings.general.quickServer.label")}</span><select value={selected} disabled={!profiles.length}
+      onChange={event => choose(event.target.value)}>
+      <option value="" disabled>{t("settings.general.quickServer.placeholder")}</option>{profiles.map(profile => <option key={profile.id} value={profile.id}>{profile.name}</option>)}
+    </select></label>
+    {error && <InlineError message={error.message} onRetry={error.retry} />}
+  </div>;
 }

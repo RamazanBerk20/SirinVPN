@@ -35,12 +35,15 @@ it("saves the chosen lists and normalized allowed domains for every device", asy
     pending: true,
   }));
   render(<DnsBlocklistSettings profile={{ id: "fixture" }} connected canManage />);
-  const save = await screen.findByRole("button", { name: t("dns.blocklist.save") });
-  fireEvent.click(screen.getByRole("checkbox", { name: t("dns.blocklist.enable") }));
+  fireEvent.click(await screen.findByRole("switch", { name: t("dns.blocklist.enable") }));
+  // Save appears with the first edit, disabled with its reason until a list is chosen.
+  const save = screen.getByRole("button", { name: t("dns.blocklist.save") });
   expect((save as HTMLButtonElement).disabled).toBe(true);
+  expect(screen.getByText(t("settings.dnsBlocking.needsList"))).toBeTruthy();
   fireEvent.click(screen.getByRole("checkbox", { name: light.name }));
   fireEvent.change(screen.getByLabelText(t("dns.blocklist.custom"), { exact: false }), { target: { value: "http://own.example/list.txt" } });
-  expect(screen.getByText(t("dns.blocklist.customInvalid"))).toBeTruthy();
+  expect(screen.getByText(t("settings.dnsBlocking.invalidSources", { values: "http://own.example/list.txt" }))).toBeTruthy();
+  expect((save as HTMLButtonElement).disabled).toBe(true);
   fireEvent.change(screen.getByLabelText(t("dns.blocklist.custom"), { exact: false }), { target: { value: "https://own.example/list.txt\n" } });
   fireEvent.change(screen.getByLabelText(t("dns.blocklist.allowlist"), { exact: false }), { target: { value: "CDN.Example.com.\ncdn.example.com" } });
   fireEvent.click(save);
@@ -49,7 +52,7 @@ it("saves the chosen lists and normalized allowed domains for every device", asy
     sources: [light.url, "https://own.example/list.txt"],
     allowlist: ["cdn.example.com"],
   }));
-  expect(await screen.findByText(t("dns.blocklist.status.pending"))).toBeTruthy();
+  expect(await screen.findByText(t("dns.blocklist.status.pending"), { exact: false })).toBeTruthy();
   expect(screen.getByText(t("dns.blocklist.saved"))).toBeTruthy();
 });
 

@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { invoke } from "../../platform";
 import { InlineError } from "../../components/ui";
+import { notify } from "../../components/Toasts";
+import { errorMessage } from "../../lib/errors";
 import { t, type MessageKey } from "../../i18n";
 
 interface Snapshot {
@@ -44,10 +46,10 @@ export function CredentialStorage() {
     setBusy(true); setError("");
     try {
       const next = await invoke<Snapshot>("credential_storage", { action, serverId });
-      if (request === generation.current) { setSnapshot(next); setConsent(false); }
+      if (request === generation.current) { setSnapshot(next); setConsent(false); if (action) notify(t("settings.credentials.changed")); }
     } catch (cause) {
       if (request === generation.current) {
-        setError(typeof cause === "string" ? cause : t("settings.credentials.loadFailed"));
+        setError(errorMessage(cause, t("settings.credentials.loadFailed")));
         // A failed action can have committed provenance or partial cleanup.
         if (action) {
           try {
@@ -72,13 +74,14 @@ export function CredentialStorage() {
   return <section className="settings-card" aria-busy={busy}>
     <h2>{t("settings.credentials.title")}</h2>
     <p>{t("settings.credentials.summary")}</p>
-    {error && <InlineError message={error} />}
-    {!snapshot && <button className="secondary-button" disabled={busy} onClick={() => void run()}>{busy ? t("common.state.checking") : t("common.action.retry")}</button>}
+    {/* Without a snapshot there is no current value to show: say it is being read, or why it couldn't be. */}
+    {error ? <InlineError message={error} onRetry={snapshot ? undefined : () => void run()} retryDisabled={busy} />
+      : !snapshot && <p role="status">{t("settings.credentials.checking")}</p>}
     {snapshot && <>
       <p role="status">{snapshot.policy === "secure_store_required" ? t("settings.credentials.policy.secure") : t("settings.credentials.policy.fileAllowed")}</p>
       {snapshot.policy === "secure_store_required" ? <>
-        <label className="preference-row"><span>{t("settings.credentials.consent")}</span>
-          <input type="checkbox" role="switch" checked={consent} disabled={busy} onChange={event => setConsent(event.target.checked)} /></label>
+        <label className="preference-checkbox"><input type="checkbox" checked={consent} disabled={busy} onChange={event => setConsent(event.target.checked)} />
+          <span>{t("settings.credentials.consent")}</span></label>
         <button className="secondary-button" disabled={busy || !consent} onClick={() => void run("allow_private_file")}>{t("settings.credentials.allowFile")}</button>
       </> : <button className="secondary-button" disabled={busy} onClick={() => void run("require_secure")}>{t("settings.credentials.requireKeyring")}</button>}
       {snapshot.profiles.map(profile => <div className="preference-row" key={profile.server_id}>

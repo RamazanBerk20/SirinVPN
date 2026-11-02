@@ -3,6 +3,8 @@ import { protectionEvidence } from "./protectionEvidence";
 import { describeConnection } from "./connectionState";
 import { t } from "../../i18n";
 import type { ServerWorkspaceModel } from "./useServerWorkspace";
+import { isAndroid } from "../../platform";
+import { androidBlocking } from "./ConnectionOptions";
 
 export function SystemHealth({
   model,
@@ -26,9 +28,10 @@ export function SystemHealth({
           <dt>{t("maintenance.health.connection")}</dt>
           <dd>{state.status}</dd>
         </div>
+        {/* Android has no kill switch of its own: it reports the system's Block connections without VPN. */}
         <div>
-          <dt>{t("maintenance.health.killSwitch")}</dt>
-          <dd>{state.protection}</dd>
+          <dt>{t(isAndroid ? "connection.options.status.blocking" : "maintenance.health.killSwitch")}</dt>
+          <dd>{isAndroid ? androidBlocking(local) : state.protection}</dd>
         </div>
         <div>
           <dt>{t("maintenance.health.autoReconnect")}</dt>
@@ -66,7 +69,7 @@ export function SystemHealth({
         )}
       </dl>
       {local.server_id === profile.id && <TransportQuality status={local} />}
-      {state.active && local.kill_switch_enabled && <p className="settings-note">{protectionEvidence(local).detail}</p>}
+      {state.active && (isAndroid ? protectionEvidence(local).verified : local.kill_switch_enabled) && <p className="settings-note">{protectionEvidence(local).detail}</p>}
       <div className="settings-action-row">
         <p>{t("maintenance.health.diagnosticsSummary")}</p>
         <button

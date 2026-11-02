@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
+import { ArrowClockwise } from "@phosphor-icons/react";
 import { api } from "../../api";
 import { InlineError } from "../../components/ui";
+import { notify } from "../../components/Toasts";
 import { errorMessage } from "../../lib/errors";
 import type { ServerProfile, WifiPolicySnapshot } from "../../types";
 import { t, type MessageKey } from "../../i18n";
@@ -31,12 +33,17 @@ export function WifiSettings() {
   const [servers, setServers] = useState<ServerProfile[]>([]);
   const [selected, setSelected] = useState("");
   const [label, setLabel] = useState("");
-  const [reviewedToken, setReviewedToken] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  // Set when polling saw the network change, so the user re-reads the name before trusting it.
+  const [networkChanged, setNetworkChanged] = useState(false);
+  const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [loaded, setLoaded] = useState(false);
   const generation = useRef(0);
   const active = useRef(false);
   const writing = useRef(false);
+  const poll = useRef<() => void>(() => {});
+  // The network token the user was last shown; a different one means the network changed under them.
+  const seenToken = useRef<string | null>(null);
   // A later successful poll clears only errors that polling itself reported.
   const pollFailed = useRef(false);
   const [info, infoPanel] = useInfoHint(t("settings.wifi.infoDesktop"), t("settings.wifi.infoLabel"));
@@ -71,11 +78,17 @@ export function WifiSettings() {
         if (pollFailed.current) { pollFailed.current = false; setError(""); }
         if (!initialized) {
           applySnapshot(next, profiles);
-          setReviewedToken(next.current_network_token);
+          seenToken.current = next.current_network_token;
           initialized = true;
+          setLoaded(true);
         } else {
           setSnapshot(next);
           if (next.policy.server_id) setSelected(next.policy.server_id);
+          // Follow a network change at once; the backend still refuses to trust a network other than the one shown.
+          if (seenToken.current !== next.current_network_token) {
+            seenToken.current = next.current_network_token;
+            setNetworkChanged(true); setLabel("");
+          }
         }
       } catch (reason) {
         if (current()) {
@@ -92,6 +105,7 @@ export function WifiSettings() {
         }
       }
     };
+    poll.current = () => void refresh();
     const resume = () => {
       ++visibility;
       clearInterval(timer);
@@ -109,78 +123,94 @@ export function WifiSettings() {
       document.removeEventListener("visibilitychange", resume);
     };
   }, []);
-  async function action(operation: () => Promise<unknown>, reviewNetwork = false) {
+  async function action(key: string, operation: () => Promise<unknown>, done?: (next: WifiPolicySnapshot) => void) {
+    const failure = t(key === "refresh" ? "settings.wifi.refreshFailed" : "settings.wifi.saveFailed");
     if (writing.current) return;
     const epoch = ++generation.current;
     writing.current = true;
-    setBusy(true); setError(""); pollFailed.current = false;
+    setBusy(key); setError(""); pollFailed.current = false;
     try {
       await operation();
       const [next, profiles] = await Promise.all([api.getWifiPolicy(), api.listServers()]);
       if (!active.current || epoch !== generation.current) return;
       applySnapshot(next, profiles);
-      if (reviewNetwork) { setReviewedToken(next.current_network_token); setLabel(""); }
+      seenToken.current = next.current_network_token; setNetworkChanged(false);
+      done?.(next);
     } catch (e) {
       if (active.current && epoch === generation.current) {
-        setError(errorMessage(e, t("settings.wifi.saveFailed")));
+        setError(errorMessage(e, failure));
         setSelected(snapshot?.policy.server_id ?? servers[0]?.id ?? "");
       }
     } finally {
       writing.current = false;
-      if (active.current && epoch === generation.current) setBusy(false);
+      if (active.current && epoch === generation.current) setBusy(null);
     }
   }
-  const networkChanged = snapshot?.current_network_token !== reviewedToken;
+  const enabled = snapshot?.policy.enabled ?? false;
   const currentName = snapshot?.network_names?.[snapshot.current_network_token ?? ""];
-  const trustReason = !snapshot?.can_trust_current || !snapshot.current_network_token
-    ? t("settings.wifi.access.unidentified")
-    : networkChanged ? t("settings.wifi.access.changed") : "";
-  return <section className="settings-card wifi-settings" aria-label={t("settings.wifi.title")} aria-busy={busy}>
+  const trustBlocked = !snapshot?.can_trust_current || !snapshot.current_network_token;
+  // Hidden names get a stable number from their place in the list, never a fragment of the token.
+  const trusted = (snapshot?.trusted_networks ?? []).map((network, index) => {
+    const osName = snapshot?.network_names?.[network.id];
+    const friendly = network.label !== UNNAMED_NETWORK_LABEL ? network.label : "";
+    return { network, osName, friendly, name: osName || friendly || t("settings.wifi.trusted.unnamed", { number: index + 1 }) };
+  });
+  return <section className="settings-card wifi-settings" aria-label={t("settings.wifi.title")} aria-busy={Boolean(busy)}>
     <div className="settings-section-heading"><h2>{t("settings.wifi.title")}</h2>{info}</div>
     {infoPanel}
-    <label className="preference-row">
-      <span><strong>{t("settings.wifi.toggle.label")}</strong><small>{t("settings.wifi.toggle.summary")}</small></span>
-      <input type="checkbox" role="switch" aria-label={t("settings.wifi.toggle.label")}
-        checked={snapshot?.policy.enabled ?? false} disabled={busy || !snapshot || !selected}
-        onChange={(e) => { const enabled = e.target.checked; void action(() => api.setWifiPolicy({ enabled, server_id: selected })); }} />
-    </label>
-    <label className="field"><span>{t("settings.wifi.server.label")}</span>
-      <select aria-label={t("settings.wifi.server.label")} value={selected} disabled={busy || !snapshot || !servers.length}
-        onChange={(e) => { const id = e.target.value; setSelected(id); void action(() => api.setWifiPolicy({ enabled: snapshot?.policy.enabled ?? false, server_id: id })); }}>
-        {!servers.length && <option value="">{t("settings.wifi.server.empty")}</option>}
-        {servers.map((server) => <option key={server.id} value={server.id}>{server.name}</option>)}
-      </select>
-    </label>
-    {snapshot && <>
-      <p className="settings-note">{currentName
-        ? <Rich id="settings.wifi.network.named" params={{ status: t(networkLabels[snapshot.current_network]), name: currentName }} tags={{ strong: content => <strong>{content}</strong> }} />
-        : t(networkLabels[snapshot.current_network])}</p>
+    {!loaded && error ? <InlineError message={error} onRetry={() => poll.current()} /> : <>
+      <label className="preference-row">
+        <span><strong>{t("settings.wifi.toggle.label")}</strong><small>{t("settings.wifi.toggle.summary")}</small></span>
+        <input type="checkbox" role="switch" aria-label={t("settings.wifi.toggle.label")}
+          checked={enabled} disabled={Boolean(busy) || !snapshot || !selected}
+          onChange={(e) => { const next = e.target.checked; void action("toggle", () => api.setWifiPolicy({ enabled: next, server_id: selected })); }} />
+      </label>
       {/* Just after turning it on, the native status can still read "disabled": say it is starting instead of "off". */}
-      {snapshot.policy.enabled && <p className={snapshot.automation_status === "waiting_for_network_change" ? "wifi-paused" : "settings-note"} role="status">{t(snapshot.automation_status === "disabled" ? "settings.wifi.status.starting" : statusLabels[snapshot.automation_status])}</p>}
-      {snapshot.current_network === "untrusted_wifi" && <>
-        <div className="settings-action-row">
-          <label className="field"><span>{t("settings.wifi.trust.label")}</span><input value={label} maxLength={80} placeholder={t("settings.wifi.trust.placeholder")} onChange={(e) => setLabel(e.target.value)} disabled={busy || Boolean(trustReason)} /></label>
-          <button className="secondary-button" disabled={busy || Boolean(trustReason)}
-            aria-describedby={trustReason ? "wifi-trust-reason" : undefined}
-            onClick={() => void action(() => api.trustCurrentWifi(reviewedToken!, label.trim() || UNNAMED_NETWORK_LABEL), true)}>{t("settings.wifi.trust.action")}</button>
+      {snapshot && enabled && <p className={snapshot.automation_status === "waiting_for_network_change" ? "wifi-paused" : "settings-note"} role="status">{t(snapshot.automation_status === "disabled" ? "settings.wifi.status.starting" : statusLabels[snapshot.automation_status])}</p>}
+      <label className="field"><span>{t("settings.wifi.server.label")}</span>
+        <select aria-label={t("settings.wifi.server.label")} value={selected} disabled={Boolean(busy) || !snapshot || !servers.length || !enabled}
+          onChange={(e) => { const id = e.target.value; setSelected(id); void action("server", () => api.setWifiPolicy({ enabled, server_id: id })); }}>
+          {!servers.length && <option value="">{t("settings.wifi.server.empty")}</option>}
+          {servers.map((server) => <option key={server.id} value={server.id}>{server.name}</option>)}
+        </select>
+        {!enabled && servers.length > 0 && <small>{t("settings.wifi.server.offHint")}</small>}
+      </label>
+      {snapshot && <div className="wifi-network">
+        <h3>{t("settings.wifi.network.heading")}</h3>
+        <div className="wifi-network-line">
+          <p>{currentName
+            ? <Rich id="settings.wifi.network.named" params={{ status: t(networkLabels[snapshot.current_network]), name: currentName }} tags={{ strong: content => <strong>{content}</strong> }} />
+            : t(networkLabels[snapshot.current_network])}</p>
+          <button type="button" className="icon-button" aria-label={t("settings.wifi.refresh")} title={t("settings.wifi.refresh")} disabled={Boolean(busy)}
+            onClick={() => void action("refresh", async () => {})}><ArrowClockwise size={18} className={busy === "refresh" ? "spin" : undefined} /></button>
         </div>
-        {trustReason && <p id="wifi-trust-reason" className="settings-note">{trustReason}</p>}
-      </>}
-      {snapshot.trusted_networks.length > 0 && <ul className="plain-list">{snapshot.trusted_networks.map((network) => {
-        const osName = snapshot.network_names?.[network.id];
-        const friendly = network.label !== UNNAMED_NETWORK_LABEL ? network.label : "";
-        const name = osName || friendly || t("settings.wifi.trusted.savedName", { id: network.id.slice(0, 8) });
-        const kind = t(network.id === snapshot.current_network_token ? "settings.wifi.trusted.current" : "settings.wifi.trusted.saved");
-        return <li key={network.id} className="settings-action-row trusted-wifi-row">
+        {networkChanged && snapshot.current_network === "untrusted_wifi" && <p className="settings-note" role="status">{t("settings.wifi.access.changed")}</p>}
+        {snapshot.current_network === "untrusted_wifi" && (trustBlocked
+          ? <p className="settings-note">{t("settings.wifi.access.unidentified")}</p>
+          : <div className="wifi-trust-form">
+            <label className="field"><span>{t("settings.wifi.trust.label")}</span><input value={label} maxLength={80} placeholder={t("settings.wifi.trust.placeholder")} onChange={(e) => setLabel(e.target.value)} disabled={Boolean(busy)} /></label>
+            <button className="secondary-button" disabled={Boolean(busy)}
+              onClick={() => { const name = label.trim() || currentName || t("settings.wifi.trusted.unnamed", { number: trusted.length + 1 });
+                void action("trust", () => api.trustCurrentWifi(snapshot.current_network_token!, label.trim() || UNNAMED_NETWORK_LABEL), () => { setLabel(""); notify(t("settings.wifi.trust.trusted", { name })); }); }}>
+              {t("settings.wifi.trust.action")}</button>
+          </div>)}
+      </div>}
+      {trusted.length > 0 && <div className="wifi-trusted">
+        <h3>{t("settings.wifi.trusted.title")}</h3>
+        <ul className="plain-list">{trusted.map(({ network, osName, friendly, name }) => <li key={network.id} className="trusted-wifi-row">
           <div><strong>{name}</strong>
-            {osName && friendly && friendly !== osName && <p className="settings-note">{t("settings.wifi.trusted.label", { label: friendly })}</p>}
-            <p className="settings-note">{osName ? kind : t("common.separator.pair", { first: kind, second: t("settings.wifi.trusted.nameUnavailable") })}</p>
+            <small>{[
+              network.id === snapshot?.current_network_token ? t("settings.wifi.trusted.current") : null,
+              osName && friendly && friendly !== osName ? t("settings.wifi.trusted.label", { label: friendly }) : null,
+            ].filter(Boolean).join(" · ") || t("settings.wifi.trusted.saved")}</small>
           </div>
-          <button className="text-button" aria-label={t("settings.wifi.trusted.removeLabel", { name })} disabled={busy} onClick={() => void action(() => api.forgetTrustedWifi(network.id))}>{t("settings.wifi.trusted.remove")}</button>
-        </li>;
-      })}</ul>}
+          <button className="text-button" aria-label={t("settings.wifi.trusted.removeLabel", { name })} disabled={Boolean(busy)}
+            onClick={() => void action(network.id, () => api.forgetTrustedWifi(network.id), () => notify(t("settings.wifi.trusted.removed", { name })))}>
+            {busy === network.id ? t("settings.wifi.trusted.removing") : t("settings.wifi.trusted.remove")}</button>
+        </li>)}</ul>
+        {trusted.some((item) => !item.osName) && <p className="settings-note">{t("settings.wifi.trusted.namesHidden")}</p>}
+      </div>}
+      <InlineError message={error} onRetry={loaded ? () => void action("refresh", async () => {}) : undefined} retryDisabled={Boolean(busy)} />
     </>}
-    <button className="text-button" disabled={busy} onClick={() => void action(async () => {}, true)}>{t("settings.wifi.refresh")}</button>
-    <InlineError message={error} />
   </section>;
 }

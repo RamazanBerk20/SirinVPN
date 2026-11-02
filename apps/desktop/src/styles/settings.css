@@ -484,3 +484,365 @@ select {
     flex-direction: row;
   }
 }
+
+/* Settings building blocks (features/settings/SettingsParts.tsx). */
+.settings-notice {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 12px;
+  margin: 14px 0;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--cyan) 30%, var(--line));
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--cyan) 6%, var(--surface-2));
+}
+.settings-notice > svg {
+  flex: 0 0 auto;
+  align-self: flex-start;
+  margin-top: 3px;
+  color: var(--cyan);
+}
+.settings-notice > p {
+  flex: 1 1 16rem;
+  margin: 0;
+  color: var(--text);
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+.settings-card .settings-notice > p {
+  color: var(--text);
+}
+.settings-notice > button {
+  flex-shrink: 0;
+}
+.settings-notice.warning {
+  border-color: color-mix(in srgb, var(--warning) 40%, var(--line));
+  background: color-mix(in srgb, var(--warning) 7%, var(--surface-2));
+}
+.settings-notice.warning > svg {
+  color: var(--warning);
+}
+.card-save-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid color-mix(in srgb, var(--quiet) 20%, var(--surface-2));
+}
+.settings-card .card-save-row > p {
+  flex: 1 1 14rem;
+  margin: 0;
+}
+.settings-card .card-save-row.is-dirty > p:not(.field-error) {
+  color: var(--text);
+}
+.settings-card .card-save-row > p.field-error {
+  color: color-mix(in srgb, var(--danger) 70%, var(--text));
+}
+/* The unsaved marker: a dot before "Unsaved changes". */
+.card-save-row.is-dirty > p::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background: var(--warning);
+  vertical-align: 1px;
+}
+.card-save-row small,
+.preference-actions small {
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+.settings-disclosure {
+  margin-top: 14px;
+  border-top: 1px solid color-mix(in srgb, var(--quiet) 20%, var(--surface-2));
+}
+.settings-disclosure > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  padding: 10px 0;
+  list-style: none;
+  cursor: pointer;
+  font-weight: 650;
+}
+.settings-disclosure > summary::-webkit-details-marker {
+  display: none;
+}
+.settings-disclosure > summary > .disclosure-chevron {
+  flex-shrink: 0;
+  color: var(--muted);
+  transition: transform 160ms ease;
+}
+.settings-disclosure[open] > summary > .disclosure-chevron {
+  transform: rotate(180deg);
+}
+.settings-disclosure-body {
+  display: grid;
+  gap: 12px;
+  padding-bottom: 12px;
+}
+.settings-sections > .settings-disclosure {
+  margin-top: 0;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 11px;
+  background: var(--surface-2);
+}
+.status-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+  gap: 16px;
+  margin: 0;
+}
+.status-facts dt {
+  margin-bottom: 5px;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+.status-facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.card-result {
+  margin: 0;
+  color: var(--success);
+  font-size: 0.875rem;
+}
+.settings-card p.card-result {
+  color: var(--success);
+}
+
+/* Rows grouped with what belongs to them (a note, a test button); the group carries the divider. */
+.preference-group {
+  padding-bottom: 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--quiet) 20%, var(--surface-2));
+}
+.preference-group:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+.preference-group > .preference-row {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+.preference-group > .info-panel {
+  margin: 10px 0 0;
+}
+/* A field that follows a switch row (Manual MTU) keeps clear of its divider. */
+.settings-card .preference-row + .field {
+  margin-top: 12px;
+}
+/* Shared `.field small` would otherwise mute field errors to helper grey. */
+.settings-card .field .field-error {
+  color: color-mix(in srgb, var(--danger) 70%, var(--text));
+}
+.preference-row small.preference-value,
+.android .preference-row small.preference-value {
+  color: var(--text);
+}
+.settings-card .card-save-row ~ .inline-error,
+.settings-card .card-result + .inline-error,
+.wifi-settings .inline-error {
+  margin-top: 12px;
+}
+.quick-profile {
+  margin: 12px 0 4px;
+}
+.preference-group > .settings-notice,
+.preference-group > .inline-error {
+  margin: 4px 0 0;
+}
+.preference-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  padding-top: 10px;
+}
+.preference-actions > .inline-error {
+  flex-basis: 100%;
+}
+.preference-value {
+  color: var(--text);
+  font-weight: 600;
+}
+.android-system-row > button {
+  flex-shrink: 0;
+}
+.fieldset-hint {
+  margin: -4px 0 12px;
+}
+.condition-choices.method-choices {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+}
+.theme-choice button[aria-pressed="true"] {
+  background: var(--surface-3);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cyan) 55%, var(--surface-3));
+  color: var(--cyan);
+}
+
+/* App launcher: the path field with Browse beside it. */
+.field-with-button {
+  display: flex;
+  gap: 8px;
+}
+.field-with-button > input {
+  flex: 1;
+  min-width: 0;
+}
+.launcher-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin-top: 14px;
+}
+.settings-card .launcher-actions > p {
+  margin: 0;
+  color: var(--success);
+}
+.application-launcher small,
+.application-launcher .field-hint {
+  color: var(--muted);
+  font-weight: 400;
+}
+.android-apps .preference-row {
+  border-bottom: 0;
+}
+
+/* Wi-Fi: the current network with its refresh, the trust form, then the trusted list. */
+.wifi-network h3,
+.wifi-trusted h3 {
+  margin: 20px 0 8px;
+  font-size: 0.9375rem;
+}
+.wifi-network-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.settings-card .wifi-network-line > p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.wifi-trust-form {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+}
+.wifi-trust-form > .field {
+  flex: 1;
+}
+.wifi-trusted .plain-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.trusted-wifi-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid color-mix(in srgb, var(--quiet) 20%, var(--surface-2));
+}
+.trusted-wifi-row > div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.trusted-wifi-row small {
+  color: var(--muted);
+}
+.trusted-wifi-row > .text-button {
+  flex-shrink: 0;
+}
+
+/* Recovery keys. */
+.recovery-state {
+  margin: 10px 0 4px;
+}
+.busy-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0 4px;
+}
+.settings-action-row.recovery-actions {
+  justify-content: flex-start;
+}
+.recovery-key-panel {
+  display: grid;
+  gap: 14px;
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+}
+.recovery-key-panel > h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+.recovery-key-panel > .settings-notice {
+  margin: 0;
+}
+.recovery-key-panel textarea.recovery-key-text {
+  min-height: 0;
+  height: auto;
+  resize: none;
+  field-sizing: content;
+}
+.recovery-key-action {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+}
+.recovery-key-action > .inline-error {
+  flex-basis: 100%;
+}
+.alert-status p {
+  margin: 6px 0;
+}
+
+@media (max-width: 600px) {
+  .wifi-trust-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+.android .settings-disclosure > summary {
+  min-height: 48px;
+}
+.android .settings-sections > .settings-disclosure {
+  padding: 0;
+  background: transparent;
+}
+.android .preference-actions > button,
+.android .recovery-key-action > button {
+  flex: 1 1 100%;
+}
+/* Discard and Save share one row under the status line. */
+.android .card-save-row > p {
+  flex-basis: 100%;
+}
+.android .card-save-row > button {
+  flex: 1 1 0;
+}
+.android .android-system-row {
+  flex-wrap: wrap;
+}
+.android .android-system-row > button {
+  flex: 1 1 100%;
+}

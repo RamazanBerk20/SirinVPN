@@ -20,6 +20,19 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 describe("saved connection preferences", () => {
+  it("refuses to save a manual MTU outside the profile's range", async () => {
+    const { result } = renderHook(() => useConnectionPreferences("a"));
+    await waitFor(() => expect(result.current.ready).toBe(true));
+    act(() => result.current.change({ manual_mtu: 1421 }));
+    expect(result.current.mtuInvalid).toBe(true);
+    act(() => result.current.change({ manual_mtu: 1200 }));
+    expect(result.current.mtuInvalid).toBe(false);
+    // With IPv6 in the tunnel, MtuSettings raises the minimum to 1280.
+    act(() => result.current.setMtuMinimum(1280));
+    expect(result.current.mtuInvalid).toBe(true);
+    await act(async () => { await result.current.save(); });
+    expect(api.setConnectionPreferences).not.toHaveBeenCalled();
+  });
   it("treats a reverted optional field as unchanged", async () => {
     const { result } = renderHook(() => useConnectionPreferences("a"));
     await waitFor(() => expect(result.current.ready).toBe(true));

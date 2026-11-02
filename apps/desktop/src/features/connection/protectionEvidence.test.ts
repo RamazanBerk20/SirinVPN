@@ -77,29 +77,12 @@ describe("protection evidence and saved policy", () => {
 });
 
 it("reports startup service evidence without guessing manual-disconnect history", () => {
-  expect(
-    describeStartup(
-      { ...emptyLocalStatus, startup_service_enabled: false },
-      "a",
-    ),
-  ).toContain("saved, not active");
-  expect(
-    describeStartup(
-      { ...armed, connect_on_startup: true, startup_service_enabled: true },
-      "a",
-    ),
-  ).toContain("active for this server");
-  expect(describeStartup(armed, "a")).toContain("unavailable");
-  expect(
-    describeStartup(
-      { ...emptyLocalStatus, startup_service_enabled: true },
-      "a",
-    ),
-  ).toContain("server not confirmed");
-  expect(describeStartup(armed, "b")).toContain("Another server");
-  expect(describeStartup({ ...armed, state: "unknown" }, "a")).toContain(
-    "unknown",
-  );
+  expect(describeStartup({ ...emptyLocalStatus, startup_service_enabled: false }, "a")).toBe(t("connection.startup.inactive"));
+  expect(describeStartup({ ...armed, connect_on_startup: true, startup_service_enabled: true }, "a")).toBe(t("connection.startup.active"));
+  expect(describeStartup(armed, "a")).toBe(t("connection.startup.serviceUnknown"));
+  expect(describeStartup({ ...emptyLocalStatus, startup_service_enabled: true }, "a")).toBe(t("connection.startup.unconfirmed"));
+  expect(describeStartup(armed, "b")).toBe(t("connection.startup.otherServer"));
+  expect(describeStartup({ ...armed, state: "unknown" }, "a")).toBe(t("connection.startup.unknown"));
 });
 
 it("formats short sessions and counts without inventing values", () => {
