@@ -26,5 +26,8 @@ it("keeps the zone details behind an info button and flags invalid zones", () =>
   expect(details.hidden).toBe(false);
   expect(screen.queryByText(t("dns.split.invalid"))).toBeNull();
   rerender(<SplitDnsFields value="office.home=1.1.1.1" onChange={vi.fn()} />);
-  expect(screen.getByText(t("dns.split.invalid"))).toBeTruthy();
+  expect(screen.getByRole("alert").textContent).toBe(t("dns.split.invalidLine", { line: "office.home=1.1.1.1" }));
+  expect(screen.getByRole("textbox", { name: t("dns.split.label") }).getAttribute("aria-invalid")).toBe("true");
+  rerender(<SplitDnsFields value={"office.home=10.20.0.1\noffice.home=10.20.0.2"} onChange={vi.fn()} />);
+  expect(screen.getByRole("alert").textContent).toBe(t("dns.split.invalid"));
 });

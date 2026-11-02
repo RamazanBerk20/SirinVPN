@@ -2,13 +2,13 @@ import { useState } from "react";
 import { type ServerProfile } from "../../types";
 import { ImportBackupFlow } from "./ImportBackupFlow";
 import { JoinFlow } from "./JoinFlow";
-import { SetupFlow, type SetupStep } from "./SetupFlow";
+import { SetupFlow, type SetupNext, type SetupStep } from "./SetupFlow";
 import { HetznerFlow } from "./HetznerFlow";
 import { RecoverAccessFlow } from "./RecoverAccessFlow";
 import { isAndroid } from "../../platform";
 import * as Dialog from "@radix-ui/react-dialog";
 import { DialogContent } from "../../components/DialogContent";
-import { QrCode, Database, Key, Archive, ArrowLeft, CaretRight, ShieldCheck, CloudArrowUp } from "@phosphor-icons/react";
+import { QrCode, Database, Lifebuoy, Archive, ArrowLeft, CaretRight, ShieldCheck, CloudArrowUp } from "@phosphor-icons/react";
 import { ListRow } from "../../components/ListRow";
 import { confirmNavigation } from "../../lib/navigationGuard";
 import { t } from "../../i18n";
@@ -18,7 +18,7 @@ const choices = [
   { id: "provision", label: "onboarding.choice.provision.title", hint: "onboarding.choice.provision.summary", icon: Database },
   { id: "hetzner", label: "onboarding.choice.hetzner.title", hint: "onboarding.choice.hetzner.summary", icon: CloudArrowUp },
   { id: "backup", label: "onboarding.choice.backup.title", hint: "onboarding.choice.backup.summary", icon: Archive },
-  { id: "recovery", label: "onboarding.choice.recovery.title", hint: "onboarding.choice.recovery.summary", icon: Key },
+  { id: "recovery", label: "onboarding.choice.recovery.title", hint: "onboarding.choice.recovery.summary", icon: Lifebuoy },
 ] as const;
 type Mode = (typeof choices)[number]["id"];
 
@@ -27,7 +27,8 @@ export function AddServerFlow({
   compact = false,
   initialMode,
 }: {
-  onAdded: (profile: ServerProfile) => Promise<void>;
+  /** `next` asks the app to open a page for the new server, e.g. Keys & recovery after setup. */
+  onAdded: (profile: ServerProfile, next?: SetupNext) => Promise<void>;
   compact?: boolean;
   initialMode?: "provision" | "join" | "backup";
 }) {
@@ -35,10 +36,10 @@ export function AddServerFlow({
   const [mode, setMode] = useState<Mode | null>(initialMode ?? null);
   // Switching unmounts the current flow; an installation in progress blocks it.
   const choose = (next: Mode | null) => { if (next !== mode && confirmNavigation()) setMode(next); };
-  // Past its first step the setup flow has its own Back; a second link to the options would compete with it.
+  // Past its first step the setup flow (also inside Hetzner) has its own Back; a second link to the options would compete with it.
   const [setupStep, setSetupStep] = useState<SetupStep>("details");
-  const flow = mode === "provision" ? <SetupFlow onComplete={(result) => onAdded(result.profile)} compact={compact} onStepChange={setSetupStep} />
-    : mode === "hetzner" ? <HetznerFlow onComplete={(result) => onAdded(result.profile)} compact={compact} />
+  const flow = mode === "provision" ? <SetupFlow onComplete={(result, next) => onAdded(result.profile, next)} compact={compact} onStepChange={setSetupStep} />
+    : mode === "hetzner" ? <HetznerFlow onComplete={(result, next) => onAdded(result.profile, next)} onDone={() => choose(null)} onStepChange={setSetupStep} compact={compact} />
     : mode === "join" ? <JoinFlow onComplete={onAdded} compact={compact} />
     : mode === "recovery" ? <RecoverAccessFlow onComplete={onAdded} compact={compact} />
     : mode === "backup" ? <ImportBackupFlow onComplete={onAdded} compact={compact} /> : null;
@@ -60,7 +61,7 @@ export function AddServerFlow({
   </div>;
   return <div className="add-server-flow">
     {current ? <>
-      {(mode !== "provision" || setupStep === "details") && <button type="button" className="text-button add-server-back" onClick={() => choose(null)}><ArrowLeft size={16} /> {t("onboarding.choice.back")}</button>}
+      {(mode !== "provision" && mode !== "hetzner" || setupStep === "details") && <button type="button" className="text-button flow-back" onClick={() => choose(null)}><ArrowLeft size={16} aria-hidden="true" /> {t("onboarding.choice.back")}</button>}
       {flow}
     </> : list}
   </div>;

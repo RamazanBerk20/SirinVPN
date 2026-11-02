@@ -113,7 +113,7 @@ def current_states(add):
     for zones, name in [('office.home=10.20.0.53', 'private-split-zone'), ('corp.example=192.0.2.53#dns.example.com', 'tls-split-zone'), ('office.local=8.8.8.8', 'invalid-split-zone')]:
         case('dns', name, advanced + [fill('Split DNS zones', zones)], empty)
     dns = network + [click('Configure DNS'), click('Continue')]
-    case('dns', 'clear-private-records-review', dns + [click('Clear')], {'connected': False})
+    case('dns', 'clear-private-records-review', dns + [click('Clear'), fill('SSH password', 'example-password'), click('Review changes'), check('I verified this fingerprint'), click('Review changes')], {'connected': False})
     case('dns', 'replace-private-records-filled', dns + [click('Replace'), fill('Records', 'nas.home=10.20.30.40\nserver.home=fd00::10')], {'connected': False})
 
     repair = maintenance + [click('Repair VPS configuration', False)]
@@ -125,7 +125,7 @@ def current_states(add):
     case('vps-repair', 'edit-saved-ssh-login', ssh + [click('Change login')], saved)
     outcomes('vps-repair', 'forget-saved-ssh-login', ssh + [click('Forget login')], 'forgetSshLogin', saved)
 
-    recover = [click('Recovery key'), click('Open a recovery key file'), fill('File password', PASS), click('Open file')]
+    recover = [click('Recovery key'), click('Open a recovery key file'), click('Choose file'), fill('File password', PASS), click('Open file')]
     outcomes('owner-recovery', 'import-encrypted-recovery-package', recover, 'importRecoveryPackage', empty)
     case('recovery-keys', 'recovery-qr-expanded', recovery + [check('I understand that anyone with this key'), click('Create recovery key'), click('Recovery QR code')])
     case('recovery-keys', 'recovery-package-password-mismatch', recovery + [check('I understand that anyone with this key'), click('Create recovery key'), fill('File password', PASS), fill('Repeat file password', 'different-password')])

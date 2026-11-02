@@ -98,3 +98,51 @@ it("does not repeat the handoff after Open server", async () => {
   cleanup();
   expect(onComplete).toHaveBeenCalledExactlyOnceWith(provisioned);
 });
+
+it("keeps a failed install on the install step with what stopped, what changed and both ways on", async () => {
+  vi.mocked(api.provisionServer).mockRejectedValueOnce(new Error("server transaction failed during server configuration: apt-get exited with status 100"));
+  const onComplete = vi.fn().mockResolvedValue(undefined);
+  fireEvent.click(await verifyHost(onComplete));
+  fireEvent.click(await screen.findByRole("button", { name: t("onboarding.setup.fingerprint.install") }));
+  expect(await screen.findByText(t("onboarding.setup.failed.title"))).toBeTruthy();
+  expect(screen.getByText(t("onboarding.setup.failed.stages.configure"))).toBeTruthy();
+  expect(screen.getByText(t("onboarding.setup.failed.change.rolledBack"))).toBeTruthy();
+  expect(screen.getByText(`SHA256:${"A".repeat(43)}`)).toBeTruthy();
+  expect(screen.getByRole("alert").textContent).toContain("apt-get exited with status 100");
+  expect(screen.queryByLabelText(t("onboarding.setup.host"))).toBeNull();
+
+  // Back to settings keeps the verified fingerprint and network check: no new probe or check.
+  fireEvent.click(screen.getByRole("button", { name: t("onboarding.setup.failed.back") }));
+  fireEvent.click(screen.getByRole("button", { name: new RegExp(t("onboarding.setup.continue")) }));
+  expect(await screen.findByText(t("onboarding.setup.fingerprint.confirmed"))).toBeTruthy();
+  expect(api.probeHostKey).toHaveBeenCalledTimes(1);
+  expect(api.inspectServerNetwork).toHaveBeenCalledTimes(1);
+
+  vi.mocked(api.provisionServer).mockResolvedValueOnce(provisioned);
+  fireEvent.click(screen.getByRole("button", { name: t("onboarding.setup.fingerprint.install") }));
+  fireEvent.click(await screen.findByRole("button", { name: t("onboarding.setup.success.recoveryKey") }));
+  expect(onComplete).toHaveBeenCalledExactlyOnceWith(provisioned, "recovery");
+});
+
+it("retries a failed install in place", async () => {
+  vi.mocked(api.provisionServer).mockRejectedValueOnce(new Error("SSH authentication failed")).mockResolvedValueOnce(provisioned);
+  fireEvent.click(await verifyHost());
+  fireEvent.click(await screen.findByRole("button", { name: t("onboarding.setup.fingerprint.install") }));
+  expect(await screen.findByText(t("onboarding.setup.failed.change.unchanged"))).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: t("onboarding.setup.failed.retry") }));
+  expect(await screen.findByText(t("onboarding.setup.success.title"))).toBeTruthy();
+  expect(api.provisionServer).toHaveBeenCalledTimes(2);
+});
+
+it("labels the network retry and leads a port conflict back to the port field", async () => {
+  vi.mocked(api.inspectServerNetwork).mockRejectedValueOnce(new Error("timed out"));
+  fireEvent.click(await verifyHost());
+  const again = await screen.findByRole("button", { name: t("onboarding.setup.fingerprint.checkAgain") });
+  expect(screen.getByRole("alert").textContent).toContain("timed out");
+  vi.mocked(api.inspectServerNetwork).mockResolvedValueOnce({ ...report, issues: [{ code: "port_conflict", blocking: true, message: "UDP port 51820 is already owned by another service." }] });
+  fireEvent.click(again);
+  fireEvent.click(await screen.findByRole("button", { name: t("onboarding.setup.fingerprint.changePort") }));
+  const port = await screen.findByRole("textbox", { name: t("ssh.transport.directPort") });
+  await waitFor(() => expect(document.activeElement).toBe(port));
+  expect((port.closest("details") as HTMLDetailsElement).open).toBe(true);
+});

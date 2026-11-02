@@ -39,6 +39,13 @@ export function splitDnsDraftIsValid(value: string): boolean {
   try { splitDnsZones(value); return true; } catch { return false; }
 }
 
+/** Names the first zone line that is invalid on its own, or the cross-zone rule that failed. */
+export function splitDnsError(value: string): string | undefined {
+  if (splitDnsDraftIsValid(value)) return undefined;
+  const line = value.split(/\r?\n/).map((item) => item.trim()).filter(Boolean).find((item) => !splitDnsDraftIsValid(item));
+  return line ? t("dns.split.invalidLine", { line }) : t("dns.split.invalid");
+}
+
 export function withSplitDns(defaultPolicy: DnsUpstream, value: string): DnsUpstream {
   const zones = splitDnsZones(value);
   return zones.length ? { mode: "split", default: defaultPolicy, zones } : defaultPolicy;
@@ -46,11 +53,12 @@ export function withSplitDns(defaultPolicy: DnsUpstream, value: string): DnsUpst
 
 export function SplitDnsFields({ value, onChange }: { value: string; onChange: (value: string) => void }) {
   const [info, infoPanel] = useInfoHint(t("dns.split.info"), t("dns.split.infoLabel"));
-  return <Field label={t("dns.split.label")}>
-    <textarea className="private-dns-record-input mono" aria-label={t("dns.split.label")} value={value} onChange={(event) => onChange(event.target.value)}
-      placeholder={"office.home=10.20.0.53\ncorp.example=192.0.2.53#dns.example.com"} spellCheck={false} autoCapitalize="none" autoComplete="off" />
+  return <div className="split-dns-fields">
+    <Field label={t("dns.split.label")} error={splitDnsError(value)}>
+      <textarea className="private-dns-record-input mono" aria-label={t("dns.split.label")} value={value} onChange={(event) => onChange(event.target.value)}
+        placeholder={t("dns.example", { value: "office.home=10.20.0.53" })} spellCheck={false} autoCapitalize="none" autoComplete="off" />
+    </Field>
     <p className="dns-policy-note">{t("dns.split.summary")}{info}</p>
     {infoPanel}
-    {value && !splitDnsDraftIsValid(value) && <p className="warning-note">{t("dns.split.invalid")}</p>}
-  </Field>;
+  </div>;
 }

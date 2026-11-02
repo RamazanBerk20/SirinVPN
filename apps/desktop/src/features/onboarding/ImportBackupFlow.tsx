@@ -1,13 +1,21 @@
 import { SecretInput } from "../../components/SecretInput";
 import { open } from "../../lib/nativeDialog";
-import { ArrowClockwise, UploadSimple } from "@phosphor-icons/react";
+import { ArrowClockwise, FileArrowUp, UploadSimple } from "@phosphor-icons/react";
 import { useState } from "react";
 import { api } from "../../api";
 import { type ServerProfile } from "../../types";
 import { Field, InlineError } from "../../components/ui";
 import { preferredBackupDirectory } from "../../lib/backupPaths";
 import { errorMessage } from "../../lib/errors";
+import { notify } from "../../components/Toasts";
 import { t } from "../../i18n";
+
+/** The file name of a chosen path or Android document address, for display; the full path stays in the tooltip. */
+export function fileName(path: string): string {
+  let decoded = path;
+  try { decoded = decodeURIComponent(path); } catch { /* keep the raw path */ }
+  return decoded.split(/[\\/:]/).filter(Boolean).pop() ?? path;
+}
 
 export function ImportBackupFlow({
   onComplete,
@@ -55,6 +63,7 @@ export function ImportBackupFlow({
       const profile = await api.importServerBackup(path, password);
       setPassword("");
       setPath("");
+      notify(t("onboarding.backup.restored", { name: profile.name }));
       await onComplete(profile);
     } catch (reason) {
       setPassword("");
@@ -83,27 +92,25 @@ export function ImportBackupFlow({
           <p>{t("onboarding.backup.summary")}</p>
         </div>
       </div>
-      <Field
-        label={t("onboarding.backup.file")}
-        hint={t("onboarding.backup.fileHint")}
-      >
-        <div className="file-picker-row">
-          <input
-            className="mono"
-            value={path}
-            readOnly
-            placeholder={t("onboarding.backup.filePlaceholder")}
-          />
-          <button
-            className="secondary-button"
-            type="button"
-            onClick={() => void chooseBackup()}
-            disabled={busy}
-          >
-            {t("onboarding.backup.choose")}
-          </button>
-        </div>
-      </Field>
+      <div className="field">
+        <span>{t("onboarding.backup.file")}</span>
+        {/* One picker row: the chosen file name, or what to choose; the whole row opens the picker. */}
+        <button
+          type="button"
+          className={`file-pick ${path ? "chosen" : ""}`}
+          title={path || undefined}
+          aria-describedby="backup-file-hint"
+          onClick={() => void chooseBackup()}
+          disabled={busy}
+        >
+          <FileArrowUp size={22} aria-hidden="true" />
+          <span>
+            <strong>{path ? fileName(path) : t("onboarding.backup.choose")}</strong>
+            {path && <small>{t("onboarding.backup.change")}</small>}
+          </span>
+        </button>
+        <small id="backup-file-hint">{t("onboarding.backup.fileHint")}</small>
+      </div>
       <Field label={t("onboarding.backup.password")}>
         <SecretInput
           type="password"

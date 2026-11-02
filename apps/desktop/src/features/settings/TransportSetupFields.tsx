@@ -59,6 +59,19 @@ export function transportDraftIsValid(draft: TransportDraft): boolean {
   return [draft.certificate, draft.privateKey].every((path) => !path || (path.startsWith("/") && path.length <= 4096 && !/[\x00-\x1f\x7f]/.test(path)));
 }
 
+type PortKey = "wireguard" | "obfuscated" | "tcpTls";
+const RESERVED_PORTS = [53, 5053, 8443];
+
+/** Why one port field is rejected, so the message sits under that field instead of after the section. */
+export function transportPortError(draft: TransportDraft, key: PortKey): string | undefined {
+  const value = draft[key];
+  if (!/^\d{1,5}$/.test(value) || Number(value) < 1 || Number(value) > 65535) return t("onboarding.port.range");
+  if (RESERVED_PORTS.includes(Number(value))) return t("onboarding.port.reserved", { port: value });
+  if (key !== "wireguard" && Number(value) === Number(draft.wireguard)) return t("onboarding.port.sameAsDirect");
+  if (key === "obfuscated" && draft.quic && Number(value) === Number(draft.tcpTls)) return t("onboarding.port.sameAsQuic");
+  return undefined;
+}
+
 export function transportSetupFromDraft(draft: TransportDraft, profile?: ServerProfile): TransportSetup {
   return {
     public_host: draft.publicHost.trim() || null,
@@ -84,9 +97,9 @@ export function TransportSetupFields({ value, onChange, existing = false }: {
     <Field label={t("ssh.transport.alternateHosts")}><textarea rows={3} placeholder={t("ssh.transport.alternateHostsPlaceholder")} value={value.alternateHosts} onChange={(event) => update("alternateHosts", event.target.value)} autoCapitalize="none" spellCheck={false} /></Field>
     <p className="settings-note">{t("ssh.transport.alternateNote")}</p>
     <div className="field-grid">
-      <Field label={t("ssh.transport.directPort")}><input inputMode="numeric" value={value.wireguard} onChange={(event) => update("wireguard", event.target.value)} /></Field>
-      <Field label={t("ssh.transport.obfuscatedPort")}><input inputMode="numeric" value={value.obfuscated} onChange={(event) => update("obfuscated", event.target.value)} /></Field>
-      <Field label={t("ssh.transport.tcpTlsPort")}><input inputMode="numeric" value={value.tcpTls} onChange={(event) => update("tcpTls", event.target.value)} /></Field>
+      <Field label={t("ssh.transport.directPort")} error={transportPortError(value, "wireguard")}><input inputMode="numeric" value={value.wireguard} onChange={(event) => update("wireguard", event.target.value)} /></Field>
+      <Field label={t("ssh.transport.obfuscatedPort")} error={transportPortError(value, "obfuscated")}><input inputMode="numeric" value={value.obfuscated} onChange={(event) => update("obfuscated", event.target.value)} /></Field>
+      <Field label={t("ssh.transport.tcpTlsPort")} error={transportPortError(value, "tcpTls")}><input inputMode="numeric" value={value.tcpTls} onChange={(event) => update("tcpTls", event.target.value)} /></Field>
     </div>
     <p className="settings-note">{t("ssh.transport.portsNote")}{portsHint}</p>
     <label className="checkbox-row"><input type="checkbox" checked={value.quic} onChange={(event) => onChange({
@@ -112,6 +125,6 @@ export function TransportSetupFields({ value, onChange, existing = false }: {
       <Field label={t("ssh.transport.privateKey")}><input placeholder={t("ssh.transport.privateKeyPlaceholder")} value={value.privateKey} onChange={(event) => update("privateKey", event.target.value)} autoCapitalize="none" spellCheck={false} /></Field>
     </>}
     {existing && <p className="settings-note">{t("ssh.transport.existingNote")}</p>}
-    {!transportDraftIsValid(value) && <p className="settings-note" role="status">{t("ssh.transport.invalid")}</p>}
+    {!transportDraftIsValid(value) && !(["wireguard", "obfuscated", "tcpTls"] as const).some((key) => transportPortError(value, key)) && <p className="settings-note" role="status">{t("ssh.transport.invalid")}</p>}
   </details>;
 }

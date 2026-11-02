@@ -166,6 +166,9 @@ def coverage_states(cases):
     add('provisioning', 'password-fingerprint-review', setup + [click('Verify server')], empty)
     add('provisioning', 'password-network-review', verified, empty)
     outcomes('provisioning', 'password-install', verified, click('Install SirinVPN'), 'provisionServer', empty)
+    # A failure after the installer changed the server (it rolls back), as the installer reports it.
+    add('provisioning', 'password-install-failed-configuring', verified + [patch(errors={'provisionServer': 'server transaction failed during server configuration: apt-get exited with status 100'}), click('Install SirinVPN')], empty, required=['provisionServer'])
+    add('provisioning', 'password-install-retry-settings', verified + [patch(errors={'provisionServer': 'SSH authentication failed'}), click('Install SirinVPN'), click('Back to settings')], empty)
 
     # Android sub-pages and the server picker.
     mobile = ('mobile',)
