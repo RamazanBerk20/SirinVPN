@@ -162,7 +162,7 @@ html.android[data-theme="light"] {
 .android .detail-list > .stacked { flex-direction: column; gap: 4px; }
 .android .detail-list > .stacked dd { max-width: 100%; justify-items: start; text-align: left; }
 .android .detail-list .copy-value { display: flex; align-items: center; gap: 4px; }
-.android .detail-list .copy-value .icon-button { width: 40px; height: 40px; min-height: 40px; margin: -10px -8px -10px 0; border: 0; background: transparent; }
+.android .detail-list .copy-value .icon-button { width: 48px; height: 48px; min-height: 48px; margin: -12px -12px -12px 0; border: 0; background: transparent; }
 .android .detail-list dd small { font-size: var(--fs-caption); color: var(--muted); }
 .android .detail-list dt .info-panel { margin-top: 6px; }
 .android .detail-group .mtu-details { margin: 0; padding: 0; border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--surface); }

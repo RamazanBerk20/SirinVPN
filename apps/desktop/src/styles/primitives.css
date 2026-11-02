@@ -79,3 +79,5 @@ p, small, .inline-error, .warning-note {
 .confirmation-row small { color: var(--muted); line-height: 1.5; font-style: normal; }
 .confirmation-row:has(input:disabled) { opacity: .6; cursor: default; }
 .confirmation-row:focus-within { border-radius: 4px; }
+/* A dialog moves focus to its heading while its controls are busy; keyboard users must see where it went. */
+[role="dialog"] :is(h1, h2)[tabindex]:focus-visible { outline: 2px solid var(--cyan); outline-offset: 4px; border-radius: 4px; }
