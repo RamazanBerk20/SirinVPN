@@ -2,16 +2,13 @@ import { SecretInput } from "../../components/SecretInput";
 import { useSshLogin } from "../../hooks/useSshLogin";
 import { SshLoginFields } from "./SshLoginFields";
 import { ServerNetworkPreflight } from "./ServerNetworkPreflight";
-import { DialogContent } from "../../components/DialogContent";
+import { DialogBack, DialogContent } from "../../components/DialogContent";
+import { HashValue } from "../../components/CopyValue";
+import { Busy, OperationProgress, OperationResult } from "../../components/OperationResult";
 import * as Dialog from "@radix-ui/react-dialog";
 import { open } from "../../lib/nativeDialog";
-import {
-  ArrowClockwise,
-  Check,
-  UploadSimple,
-  Warning,
-} from "@phosphor-icons/react";
-import { useEffect, useState } from "react";
+import { Warning } from "@phosphor-icons/react";
+import { useEffect, useId, useState } from "react";
 import { api } from "../../api";
 import {
   useSshHostTrust,
@@ -24,6 +21,9 @@ import { Field, InlineError } from "../../components/ui";
 import { errorMessage } from "../../lib/errors";
 import { t } from "../../i18n";
 import { Rich } from "../../i18n/Rich";
+
+/** The backend's wording for a wrong backup password; only then is the entered password cleared. */
+const WRONG_PASSWORD = /password is incorrect/i;
 
 export function VpsRestoreDialog({
   profile,
@@ -42,8 +42,9 @@ export function VpsRestoreDialog({
   onReviewAccess?: () => void;
   onMoveDevices?: () => void;
 }) {
+  const formId = useId();
   const [step, setStep] = useState<
-    "details" | "fingerprint" | "restoring" | "success"
+    "details" | "fingerprint" | "review" | "restoring" | "success"
   >("details");
   const [host, setHost] = useState(profile.endpoint.host);
   const login = useSshLogin(host, dialogOpen);
@@ -86,12 +87,19 @@ export function VpsRestoreDialog({
     if (!next) reset();
   };
 
+  const hostValid = validateHost(host);
+  const passwordLong = [...backupPassword].length >= 12;
   const valid =
     disconnected &&
     path.length > 0 &&
-    [...backupPassword].length >= 12 &&
-    validateHost(host) &&
+    passwordLong &&
+    hostValid &&
     login.valid;
+  const blocker = !disconnected ? t("vps.common.disconnectFirst")
+    : !path ? t("vps.restore.missing.file")
+    : !passwordLong ? t("vps.restore.missing.password")
+    : !hostValid ? t("vps.restore.missing.host")
+    : login.missing ?? (step === "fingerprint" && !confirmed ? t("ssh.verify.confirmFirst") : null);
 
   const chooseSource = async () => {
     try {
@@ -125,11 +133,7 @@ export function VpsRestoreDialog({
       const checked = await trust.inspect();
       if (!checked) return;
       setConfirmed(false);
-      if (checked.status === "trusted") {
-        await restore(checked);
-      } else {
-        setStep("fingerprint");
-      }
+      setStep(checked.status === "trusted" ? "review" : "fingerprint");
     } catch (reason) {
       setError(
         errorMessage(reason, t("vps.common.error.unreachable")),
@@ -163,38 +167,48 @@ export function VpsRestoreDialog({
       await onCompleted();
       setStep("success");
     } catch (reason) {
-      clearSecrets();
+      const message = errorMessage(reason, t("vps.restore.error"));
+      // Keep what was entered, except a backup password the file just rejected.
+      if (WRONG_PASSWORD.test(message)) setBackupPassword("");
       setConfirmed(false);
       setStep("details");
-      setError(
-        errorMessage(reason, t("vps.restore.error")),
-      );
+      setError(message);
     } finally {
       setBusy(false);
     }
   };
+
+  const fileName = path.split(/[\\/]/).pop() ?? path;
 
   return (
     <Dialog.Root open={dialogOpen} onOpenChange={changeOpen}>
       <Dialog.Portal>
         <Dialog.Overlay className="dialog-overlay" />
         <DialogContent className="dialog-content remove-server-dialog repair-server-dialog vps-restore-dialog"
-          heading={<>{step === "restoring"
-              ? t("vps.restore.titleRunning")
-              : step === "success"
-                ? t("vps.restore.titleDone")
-                : t("vps.restore.title", { name: profile.name })}</>}
-          description={<>{t("vps.restore.description")}</>}
-          closeDisabled={busy || step === "restoring"}>
+          heading={t("vps.restore.title", { name: profile.name })}
+          description={step === "success" ? t("vps.restore.titleDone") : t("vps.restore.description")}
+          closeDisabled={busy || step === "restoring"}
+          footerNote={step === "details" || step === "fingerprint" ? busy ? null : blocker : null}
+          footer={step === "restoring" ? null
+            : step === "success" ? <button className="primary-button" type="button" onClick={() => changeOpen(false)}>{t("common.action.done")}</button>
+            : <>
+              {step !== "details" && <DialogBack disabled={busy} onClick={() => setStep("details")} />}
+              <button className="secondary-button" type="button" disabled={busy} onClick={() => changeOpen(false)}>{t("common.action.cancel")}</button>
+              {step === "details" && <button className="primary-button" type="submit" form={formId} disabled={!valid || busy}>{busy ? <Busy label={t("vps.common.checking")} /> : t("vps.restore.review")}</button>}
+              {step === "fingerprint" && <button className="primary-button" type="button" disabled={!confirmed || !valid || busy} onClick={() => setStep("review")}>{t("vps.restore.review")}</button>}
+              {step === "review" && <button className="primary-button danger-action" type="button" disabled={!valid || busy} onClick={() => void restore()}>{t("vps.restore.action")}</button>}
+            </>}>
 
           {step === "details" ? (
             <form
               className="uninstall-form"
+              id={formId}
               onSubmit={(event) => {
                 event.preventDefault();
                 void inspect();
               }}
             >
+              {error ? <InlineError message={error} onRetry={() => void inspect()} retryDisabled={busy || !valid} /> : null}
               <fieldset disabled={busy} className="ssh-operation-fields">
                 <div className="sensitive-backup-warning">
                   <Warning size={19} weight="fill" />
@@ -202,9 +216,6 @@ export function VpsRestoreDialog({
                     <Rich id="vps.restore.warning" tags={{ strong: (content) => <strong>{content}</strong> }} />
                   </p>
                 </div>
-                {!disconnected ? (
-                  <InlineError message={t("vps.common.disconnectFirst")} />
-                ) : null}
                 <Field label={t("vps.restore.file")}>
                   <div className="file-picker-row">
                     <input
@@ -234,6 +245,7 @@ export function VpsRestoreDialog({
                 <Field
                   label={t("vps.restore.host")}
                   hint={t("vps.restore.hostHint")}
+                  error={host.trim() && !hostValid ? t("vps.restore.missing.host") : undefined}
                 >
                   <input
                     value={host}
@@ -258,70 +270,51 @@ export function VpsRestoreDialog({
                     <small>{t("vps.restore.replaceHint")}</small>
                   </span>
                 </label>
-                {error ? <InlineError message={error} /> : null}
-                <button
-                  className="primary-button"
-                  type="submit"
-                  disabled={!valid || busy}
-                >
-                  {busy ? t("vps.common.checking") : t("vps.restore.action")}
-                </button>
               </fieldset>
             </form>
           ) : null}
 
           {step === "fingerprint" && trust.inspection ? (
-            <div className="uninstall-fingerprint repair-fingerprint">
-              <button
-                className="back-button"
-                onClick={() => setStep("details")}
-              >
-                {t("common.action.back")}
-              </button>
-              <SshHostVerification
-                inspection={trust.inspection}
-                confirmed={confirmed}
-                onConfirmed={setConfirmed}
-              />
-              {!disconnected ? (
-                <InlineError message={t("vps.common.disconnectFirst")} />
-              ) : null}
-              <button
-                className="primary-button"
-                disabled={!confirmed || !valid || busy}
-                onClick={() => void restore()}
-              >
-                <UploadSimple size={18} /> {t("vps.restore.action")}
-              </button>
-            </div>
+            <SshHostVerification
+              inspection={trust.inspection}
+              confirmed={confirmed}
+              onConfirmed={setConfirmed}
+            />
           ) : null}
 
-          {step === "restoring" ? (
-            <div className="uninstall-progress repair-progress">
-              <ArrowClockwise className="spin" size={26} />
-              <strong>{t("vps.restore.progress")}</strong>
-              <p>{t("vps.common.keepOpen")}</p>
-            </div>
+          {/* What the restore replaces, said once more before the only button that changes the VPS. */}
+          {step === "review" ? (
+            <section className="restore-review" aria-labelledby="restore-review-heading">
+              <h3 id="restore-review-heading">{t("vps.restore.reviewTitle")}</h3>
+              <dl className="result-facts">
+                <div><dt>{t("vps.restore.file")}</dt><dd className="mono">{fileName}</dd></div>
+                <div><dt>{t("vps.restore.host")}</dt><dd className="mono">{`${host.trim()}:${port}`}</dd></div>
+              </dl>
+              <div className="danger-note">
+                <Warning size={18} weight="fill" />
+                <ul>
+                  <li>{replaceExisting ? t("vps.restore.consequence.replace") : t("vps.restore.consequence.install")}</li>
+                  <li>{t("vps.restore.consequence.access")}</li>
+                  <li>{t("vps.restore.consequence.device", { host: host.trim() })}</li>
+                </ul>
+              </div>
+            </section>
           ) : null}
+
+          {step === "restoring" ? <OperationProgress title={t("vps.restore.progress")} /> : null}
 
           {step === "success" && result ? (
-            <div className="backup-success repair-success">
-              <span>
-                <Check size={26} weight="bold" />
-              </span>
-              <h3>{t("vps.restore.done")}</h3>
+            <OperationResult title={t("vps.restore.done")}>
               <p>{t("vps.restore.doneNote", { host: result.profile.endpoint.host })}</p>
-              {onReviewAccess && <button className="secondary-button" onClick={() => { changeOpen(false); onReviewAccess(); }}>{t("vps.restore.reviewAccess")}</button>}
-              {onMoveDevices && <button className="secondary-button" onClick={() => { changeOpen(false); onMoveDevices(); }}>{t("vps.restore.moveDevices")}</button>}
-              <code>{result.artifact_sha256}</code>
+              {(onReviewAccess || onMoveDevices) && <div className="operation-result-actions">
+                {onReviewAccess && <button type="button" className="secondary-button" onClick={() => { changeOpen(false); onReviewAccess(); }}>{t("vps.restore.reviewAccess")}</button>}
+                {onMoveDevices && <button type="button" className="secondary-button" onClick={() => { changeOpen(false); onMoveDevices(); }}>{t("vps.restore.moveDevices")}</button>}
+              </div>}
               {result.network_preflight && <ServerNetworkPreflight report={result.network_preflight} />}
-              <button
-                className="primary-button"
-                onClick={() => changeOpen(false)}
-              >
-                {t("common.action.done")}
-              </button>
-            </div>
+              <details className="result-disclosure"><summary>{t("vps.common.softwareDetails")}</summary>
+                <HashValue label={t("vps.common.softwareHash")} value={result.artifact_sha256} />
+              </details>
+            </OperationResult>
           ) : null}
         </DialogContent>
       </Dialog.Portal>

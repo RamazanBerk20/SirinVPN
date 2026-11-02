@@ -1,17 +1,19 @@
 import { confirmAction } from "../../lib/confirmAction";
 import { useSshLogin } from "../../hooks/useSshLogin";
 import { SshLoginFields } from "./SshLoginFields";
-import { DialogContent } from "../../components/DialogContent";
+import { DialogBack, DialogContent } from "../../components/DialogContent";
+import { Busy, OperationProgress } from "../../components/OperationResult";
+import { notify } from "../../components/Toasts";
 import { forgetReleaseSource } from "./vpsRelease";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
-  ArrowClockwise,
   CaretRight,
   Desktop,
   GlobeHemisphereWest,
   Trash,
+  Warning,
 } from "@phosphor-icons/react";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { api } from "../../api";
 import {
   useSshHostTrust,
@@ -34,6 +36,7 @@ export function RemoveServerDialog({
   onOpenChange: (open: boolean) => void;
   onRemoved: () => Promise<void>;
 }) {
+  const formId = useId();
   const owner = profile.role === "owner";
   const [step, setStep] = useState<
     "choice" | "details" | "fingerprint" | "uninstalling"
@@ -83,6 +86,8 @@ export function RemoveServerDialog({
       forgetReleaseSource(profile.id);
       await onRemoved();
       onOpenChange(false);
+      // The dialog and the server's page are gone; say what happened.
+      notify(t("vps.remove.local.done", { name: profile.name }));
     } catch (reason) {
       setError(errorMessage(reason, t("vps.remove.local.error")));
     } finally {
@@ -91,6 +96,7 @@ export function RemoveServerDialog({
   };
 
   const sshValid = login.valid;
+  const blocker = login.missing ?? (step === "fingerprint" && !confirmed ? t("ssh.verify.confirmFirst") : null);
 
   const inspect = async () => {
     if (!sshValid) return;
@@ -138,6 +144,7 @@ export function RemoveServerDialog({
       clearSecrets();
       await onRemoved();
       onOpenChange(false);
+      notify(t("vps.remove.uninstall.done", { host: profile.endpoint.host }));
     } catch (reason) {
       clearSecrets();
       setStep("details");
@@ -154,16 +161,22 @@ export function RemoveServerDialog({
       <Dialog.Portal>
         <Dialog.Overlay className="dialog-overlay" />
         <DialogContent className="dialog-content remove-server-dialog"
-          heading={<>{step === "uninstalling"
-              ? t("vps.remove.titleRunning")
-              : t("vps.remove.title", { name: profile.name })}</>}
-          description={<>{owner
-              ? t("vps.remove.description.owner")
-              : t("vps.remove.description.member")}</>}
-          closeDisabled={busy || step === "uninstalling"}>
+          heading={t("vps.remove.title", { name: profile.name })}
+          description={step === "uninstalling" ? t("vps.remove.description.running")
+            : owner ? t("vps.remove.description.owner") : t("vps.remove.description.member")}
+          closeDisabled={busy || step === "uninstalling"}
+          footerNote={(step === "details" || step === "fingerprint") && !busy ? blocker : null}
+          footer={step === "details" || step === "fingerprint" ? <>
+            <DialogBack disabled={busy} onClick={() => setStep(step === "details" ? "choice" : "details")} />
+            <button className="secondary-button" type="button" disabled={busy} onClick={() => changeOpen(false)}>{t("common.action.cancel")}</button>
+            {step === "details"
+              ? <button className="primary-button" type="submit" form={formId} disabled={!sshValid || busy}>{busy ? <Busy label={t("vps.common.checking")} /> : t("vps.remove.uninstall.review")}</button>
+              : <button className="primary-button danger-action" type="button" disabled={!confirmed || !sshValid || busy} onClick={() => void uninstall()}>{t("vps.remove.uninstall.action")}</button>}
+          </> : null}>
 
           {step === "choice" ? (
             <div className="removal-choices">
+              {error ? <InlineError message={error} /> : null}
               <button
                 className="removal-choice"
                 disabled={busy}
@@ -194,75 +207,45 @@ export function RemoveServerDialog({
                   <CaretRight size={16} />
                 </button>
               ) : null}
-              {error ? <InlineError message={error} /> : null}
             </div>
           ) : null}
 
           {step === "details" ? (
             <form
               className="uninstall-form"
+              id={formId}
               onSubmit={(event) => {
                 event.preventDefault();
                 void inspect();
               }}
             >
+              {error ? <InlineError message={error} onRetry={() => void inspect()} retryDisabled={busy || !sshValid} /> : null}
               <fieldset disabled={busy} className="ssh-operation-fields">
-                <button
-                  type="button"
-                  className="back-button"
-                  onClick={() => setStep("choice")}
-                >
-                  {t("common.action.back")}
-                </button>
                 <div className="uninstall-target">
                   <GlobeHemisphereWest size={16} />
                   <code>{profile.endpoint.host}</code>
                 </div>
                 <SshLoginFields login={login} />
-                {error ? <InlineError message={error} /> : null}
-                <button
-                  className="primary-button"
-                  type="submit"
-                  disabled={!sshValid || busy}
-                >
-                  {busy ? t("vps.common.checking") : t("vps.remove.uninstall.review")}
-                </button>
               </fieldset>
             </form>
           ) : null}
 
           {step === "fingerprint" && trust.inspection ? (
             <div className="uninstall-fingerprint">
-              <button
-                className="back-button"
-                onClick={() => setStep("details")}
-              >
-                {t("common.action.back")}
-              </button>
               <SshHostVerification
                 inspection={trust.inspection}
                 confirmed={confirmed}
                 onConfirmed={setConfirmed}
               />
               {/* The consequence is on screen before the final button, not only in the confirmation. */}
-              <p className="warning-note">{t("vps.remove.uninstall.confirmMessage")}</p>
-              <button
-                className="primary-button danger-action"
-                disabled={!confirmed || !sshValid || busy}
-                onClick={() => void uninstall()}
-              >
-                {t("vps.remove.uninstall.action")}
-              </button>
+              <div className="danger-note">
+                <Warning size={18} weight="fill" />
+                <span>{t("vps.remove.uninstall.confirmMessage")}</span>
+              </div>
             </div>
           ) : null}
 
-          {step === "uninstalling" ? (
-            <div className="uninstall-progress">
-              <ArrowClockwise className="spin" size={26} />
-              <strong>{t("vps.remove.uninstall.progress")}</strong>
-              <p>{t("vps.common.keepOpen")}</p>
-            </div>
-          ) : null}
+          {step === "uninstalling" ? <OperationProgress title={t("vps.remove.uninstall.progress")} /> : null}
         </DialogContent>
       </Dialog.Portal>
     </Dialog.Root>

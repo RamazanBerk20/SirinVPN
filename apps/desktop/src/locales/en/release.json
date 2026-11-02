@@ -17,7 +17,8 @@
     "bodyWindows": "Finish the Windows installer, then reopen SirinVPN.",
     "bodyAppImage": "Close and reopen the AppImage to use the new version. The previous version is kept for rollback.",
     "bodyDebian": "Close and reopen SirinVPN to use the new version.",
-    "closeLater": "Restart later"
+    "closeLater": "Restart later",
+    "checkNewer": "Check for a newer release"
   },
   "progress": {
     "verifying": "Verifying installed version…",
@@ -32,7 +33,7 @@
     "verified": "Signature verified",
     "security": "Security update",
     "title": "SirinVPN {{version}}",
-    "meta": "{{channel}} · installed {{current}} · sequence {{sequence}}",
+    "meta": "{{channel}} · installed {{current}}",
     "package": "Package for this device · {{size}}",
     "source": "Source: {{source}}",
     "details": "Verification details",
@@ -59,7 +60,10 @@
     "discard": "Discard",
     "verify": "Verify version",
     "install": "Install update",
-    "footnote": "This check is kept until you quit. Discard deletes the download; rollback copies stay."
+    "footnote": "This check is kept until you quit. Discard deletes the download; rollback copies stay.",
+    "detailRelease": "Release number",
+    "confirmFirst": "Tick the confirmation above to continue.",
+    "readyFirst": "Disconnect this device to install."
   },
   "channel": {
     "stable": "Stable channel",
@@ -74,11 +78,14 @@
     "noticeBody": "Signed release metadata is verified first.",
     "checking": "Verifying and downloading…",
     "check": "Check release",
-    "privacy": "The source and your network can see your IP address and which package you request."
+    "privacy": "The source and your network can see your IP address and which package you request.",
+    "channel": "Release channel",
+    "previewHint": "Preview builds come early and may be less stable.",
+    "sourceFirst": "Enter the release source to check."
   },
   "error": {
     "discard": "Couldn’t delete the download. Try again.",
-    "check": "No signed release for this device was found at this source. Check the URL and channel.",
+    "check": "No signed release for this device was found at this source. Check the address and channel.",
     "installWindows": "The Windows update didn’t finish. Try again; recovery data is kept.",
     "installAppImage": "Couldn’t confirm the AppImage was replaced. Reopen App updates to check it.",
     "installDebian": "The update didn’t finish and was rolled back where possible. Try again."
@@ -92,7 +99,7 @@
     "restoreConfirm": "Restore AppImage {{version}}",
     "restoreNote": "Keeps your settings. Works only if that version is still trusted.",
     "restore": "Roll back",
-    "errorStatus": "Couldn’t load the update status. Reopen App updates to try again.",
+    "errorStatus": "Couldn’t load the update status.",
     "errorRestore": "Couldn’t restore the previous AppImage. Try again.",
     "errorCancel": "Couldn’t cancel the pending install. Try again."
   },
@@ -114,7 +121,7 @@
     "stepReconnect": "Reopen SirinVPN and connect again.",
     "serverNote": "Server updates don’t update the VPN component on this device.",
     "openUpdates": "Open app updates",
-    "errorCheck": "Couldn’t check the VPN component. Close and reopen this dialog.",
+    "errorCheck": "Couldn’t check the VPN component.",
     "errorInstall": "The VPN component wasn’t updated. Approve the administrator prompt and try again."
   }
 }

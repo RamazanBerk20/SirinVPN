@@ -1,12 +1,10 @@
 import { DialogContent } from "../../components/DialogContent";
+import { Busy, OperationResult } from "../../components/OperationResult";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
-  ArrowClockwise,
-  CaretRight,
-  Check,
-  DownloadSimple,
+  ArrowRight,
   GlobeHemisphereWest,
-  Key,
+  Info,
   LockKey,
   ShieldCheck,
   Warning,
@@ -21,6 +19,8 @@ import { t } from "../../i18n";
 
 /** Shape of a signed update code; a format sample, not translatable text. */
 const CODE_PLACEHOLDER = "sirm1.…";
+
+type Task = null | "create" | "retrieve" | "publish" | "apply";
 
 export function EndpointUpdateDialog({
   profile,
@@ -41,20 +41,22 @@ export function EndpointUpdateDialog({
   );
   const [update, setUpdate] = useState<EndpointUpdateCodeResult | null>(null);
   const [code, setCode] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<Task>(null);
   const [published, setPublished] = useState(false);
   const [applied, setApplied] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{ message: string; retry: () => void } | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) {
       setMode(owner && profile.pending_previous_endpoint ? "share" : "apply");
       setUpdate(null);
       setCode("");
-      setBusy(false);
+      setBusy(null);
       setPublished(false);
       setApplied(false);
       setError(null);
+      setNotice(null);
     }
   }, [open, owner, profile.pending_previous_endpoint]);
 
@@ -63,100 +65,108 @@ export function EndpointUpdateDialog({
     onOpenChange(next);
   };
 
-  const createOrRetrieve = async () => {
-    setBusy(true);
+  const run = async (kind: Exclude<Task, null>, action: () => Promise<void>, fallback: string, retry: () => void) => {
+    setBusy(kind);
     setError(null);
+    setNotice(null);
     try {
-      const result = await api.createEndpointUpdate(profile.id);
-      setUpdate(result);
-      setCode(result.code);
-      await onCompleted();
+      await action();
     } catch (reason) {
-      setError(
-        errorMessage(reason, t("vps.endpoint.error.create")),
-      );
+      setError({ message: errorMessage(reason, fallback), retry });
     } finally {
-      setBusy(false);
+      setBusy(null);
     }
   };
 
-  const checkCurrent = async () => {
-    setBusy(true);
-    setError(null);
-    try {
-      const result = await api.availableEndpointUpdate(profile.id);
-      if (!result)
-        throw new Error(t("vps.endpoint.error.none"));
-      setUpdate(result);
-      setCode(result.code);
-    } catch (reason) {
-      setError(
-        errorMessage(reason, t("vps.endpoint.error.retrieve")),
-      );
-    } finally {
-      setBusy(false);
-    }
-  };
+  const createOrRetrieve = () => run("create", async () => {
+    const result = await api.createEndpointUpdate(profile.id);
+    setUpdate(result);
+    setCode(result.code);
+    await onCompleted();
+  }, t("vps.endpoint.error.create"), () => void createOrRetrieve());
 
-  const publish = async () => {
-    // Publish exactly the signed code shown in this tab, not the apply tab's draft.
-    if (!update?.code.trim()) return;
-    setBusy(true);
-    setError(null);
-    try {
-      await api.publishEndpointUpdate(profile.id, update.code.trim());
-      setPublished(true);
-      await onCompleted();
-    } catch (reason) {
-      setError(
-        errorMessage(reason, t("vps.endpoint.error.publish")),
-      );
-    } finally {
-      setBusy(false);
-    }
-  };
+  const checkCurrent = () => run("retrieve", async () => {
+    const result = await api.availableEndpointUpdate(profile.id);
+    // No update waiting is an answer, not a failure.
+    if (!result) { setNotice(t("vps.endpoint.none")); return; }
+    setUpdate(result);
+    setCode(result.code);
+  }, t("vps.endpoint.error.retrieve"), () => void checkCurrent());
 
-  const apply = async () => {
-    if (!code.trim()) return;
-    setBusy(true);
-    setError(null);
-    try {
-      await api.applyEndpointUpdate(profile.id, code.trim());
-      setApplied(true);
-      await onCompleted();
-    } catch (reason) {
-      setError(
-        errorMessage(reason, t("vps.endpoint.error.apply")),
-      );
-    } finally {
-      setBusy(false);
-    }
-  };
+  // Publish exactly the signed code shown in this tab, not the apply tab's draft.
+  const publish = () => update?.code.trim() ? run("publish", async () => {
+    await api.publishEndpointUpdate(profile.id, update.code.trim());
+    setPublished(true);
+    await onCompleted();
+  }, t("vps.endpoint.error.publish"), () => void publish()) : Promise.resolve();
+
+  const apply = () => code.trim() ? run("apply", async () => {
+    await api.applyEndpointUpdate(profile.id, code.trim());
+    setApplied(true);
+    await onCompleted();
+  }, t("vps.endpoint.error.apply"), () => void apply()) : Promise.resolve();
+
+  const transition = (value: EndpointUpdateCodeResult) => <div className="endpoint-transition-summary">
+    <code>{endpointLabel(value.previous_endpoint)}</code>
+    <ArrowRight size={18} aria-label={t("vps.endpoint.to")} />
+    <code>{endpointLabel(value.endpoint)}</code>
+    <span>{t("vps.endpoint.number", { number: value.generation })}</span>
+  </div>;
+
+  const failure = error && <InlineError message={error.message} onRetry={error.retry} retryDisabled={Boolean(busy)} />;
+  const footer = mode === "share"
+    ? !update
+      ? <button className="primary-button" type="button" disabled={!connected || Boolean(busy)} onClick={() => void createOrRetrieve()}>
+          {busy === "create" ? <Busy label={t("vps.endpoint.working")} /> : profile.pending_previous_endpoint ? t("vps.endpoint.create.action") : t("vps.endpoint.retrieve.action")}
+        </button>
+      : <>
+          <CopyButton className="secondary-button" value={update.code}>{" "}{t("vps.endpoint.copy")}</CopyButton>
+          {published
+            ? <button className="primary-button" type="button" onClick={() => changeOpen(false)}>{t("common.action.done")}</button>
+            : <button className="primary-button" type="button" disabled={Boolean(busy)} onClick={() => void publish()}>
+                {busy === "publish" ? <Busy label={t("vps.endpoint.publishing")} /> : <><GlobeHemisphereWest size={18} />{t("vps.endpoint.publish")}</>}
+              </button>}
+        </>
+    : applied
+      ? <button className="primary-button" type="button" onClick={() => changeOpen(false)}>{t("common.action.done")}</button>
+      : <>
+          <button className="secondary-button" type="button" disabled={!connected || Boolean(busy)} onClick={() => void checkCurrent()}>
+            {busy === "retrieve" ? <Busy label={t("vps.endpoint.working")} /> : t("vps.endpoint.getFromServer")}
+          </button>
+          <button className="primary-button" type="button" disabled={!code.trim() || Boolean(busy)} onClick={() => void apply()}>
+            {busy === "apply" ? <Busy label={t("vps.endpoint.applying")} /> : <><ShieldCheck size={18} />{t("vps.endpoint.verify")}</>}
+          </button>
+        </>;
+  const footerNote = busy ? null
+    : mode === "share" ? (!update && !connected ? t("vps.endpoint.connectFirst") : null)
+    : applied ? null : !code.trim() ? t("vps.endpoint.pasteFirst") : null;
 
   return (
     <Dialog.Root open={open} onOpenChange={changeOpen}>
       <Dialog.Portal>
         <Dialog.Overlay className="dialog-overlay" />
         <DialogContent className="dialog-content invitation-dialog endpoint-update-dialog"
-          heading={<>{mode === "share"
-              ? t("vps.endpoint.titleShare")
-              : t("vps.endpoint.titleApply")}</>}
-          description={<>{t("vps.endpoint.description")}</>}
-          closeDisabled={busy}>
+          heading={owner ? t("vps.endpoint.titleShare") : t("vps.endpoint.titleApply")}
+          description={t("vps.endpoint.description")}
+          closeDisabled={Boolean(busy)}
+          footerNote={footerNote}
+          footer={footer}>
 
           {owner ? (
-            <div className="segmented-control endpoint-update-tabs">
+            <div className="segmented-control endpoint-update-tabs" role="group" aria-label={t("vps.endpoint.tab.label")}>
               <button
                 type="button"
                 aria-pressed={mode === "share"}
-                onClick={() => setMode("share")}
+                disabled={Boolean(busy)}
+                onClick={() => { setMode("share"); setError(null); setNotice(null); }}
               >
                 {t("vps.endpoint.tab.share")}
               </button>
               <button
                 type="button"
                 aria-pressed={mode === "apply"}
-                onClick={() => setMode("apply")}
+                disabled={Boolean(busy)}
+                onClick={() => { setMode("apply"); setError(null); setNotice(null); }}
               >
                 {t("vps.endpoint.tab.apply")}
               </button>
@@ -165,6 +175,7 @@ export function EndpointUpdateDialog({
 
           {mode === "share" ? (
             <div className="endpoint-update-flow">
+              {failure}
               {profile.pending_previous_endpoint ? (
                 <div className="warning-note replacement-warning">
                   <Warning size={18} weight="fill" />
@@ -173,7 +184,11 @@ export function EndpointUpdateDialog({
                   </span>
                 </div>
               ) : null}
-              {!update ? (
+              {published && update ? (
+                <OperationResult title={t("vps.endpoint.published")}>
+                  <p>{t("vps.endpoint.publishNote")}</p>
+                </OperationResult>
+              ) : !update ? (
                 <div className="endpoint-update-intro">
                   <GlobeHemisphereWest size={28} weight="duotone" />
                   <h3>
@@ -182,89 +197,30 @@ export function EndpointUpdateDialog({
                       : t("vps.endpoint.retrieve.title")}
                   </h3>
                   <p>{t("vps.endpoint.intro")}</p>
-                  <button
-                    className="primary-button"
-                    disabled={!connected || busy}
-                    onClick={() => void createOrRetrieve()}
-                  >
-                    {busy ? (
-                      <ArrowClockwise className="spin" size={18} />
-                    ) : (
-                      <Key size={18} />
-                    )}
-                    {profile.pending_previous_endpoint
-                      ? t("vps.endpoint.create.action")
-                      : t("vps.endpoint.retrieve.action")}
-                  </button>
-                  {!connected ? (
-                    <small>{t("vps.endpoint.connectFirst")}</small>
-                  ) : null}
                 </div>
               ) : (
                 <>
-                  <div className="endpoint-transition-summary">
-                    <code>
-                      {endpointLabel(update.previous_endpoint)}
-                    </code>
-                    <CaretRight size={18} />
-                    <code>
-                      {endpointLabel(update.endpoint)}
-                    </code>
-                    <span>{t("vps.endpoint.number", { number: update.generation })}</span>
-                  </div>
-                  <Field
-                    label={t("vps.endpoint.code")}
-                    hint={t("vps.endpoint.codeHint")}
-                  >
-                    <textarea
-                      className="secret-code-output mono"
-                      value={update.code}
-                      readOnly
-                      aria-label={t("vps.endpoint.code")}
-                    />
-                  </Field>
-                  <div className="dialog-actions">
-                    <CopyButton className="secondary-button" value={update.code}>
-                      {" "}{t("vps.endpoint.copy")}
-                    </CopyButton>
-                    <button
-                      className="primary-button"
-                      disabled={busy || published}
-                      onClick={() => void publish()}
-                    >
-                      {busy ? (
-                        <ArrowClockwise className="spin" size={18} />
-                      ) : (
-                        <GlobeHemisphereWest size={18} />
-                      )}
-                      {published
-                        ? t("vps.endpoint.published")
-                        : t("vps.endpoint.publish")}
-                    </button>
-                  </div>
+                  {transition(update)}
+                  {/* Copy is in the footer; the code itself is rarely read, so it stays folded. */}
+                  <details className="result-disclosure endpoint-code">
+                    <summary>{t("vps.endpoint.showCode")}</summary>
+                    <Field label={t("vps.endpoint.code")} hint={t("vps.endpoint.codeHint")}>
+                      <textarea className="secret-code-output mono" value={update.code} readOnly aria-label={t("vps.endpoint.code")} />
+                    </Field>
+                  </details>
                   <p className="form-footnote">
                     <LockKey size={15} /> {t("vps.endpoint.publishNote")}
                   </p>
                 </>
               )}
-              {error ? <InlineError message={error} /> : null}
             </div>
           ) : (
             <div className="endpoint-update-flow">
+              {failure}
               {applied ? (
-                <div className="backup-success endpoint-update-success">
-                  <span>
-                    <Check size={26} weight="bold" />
-                  </span>
-                  <h3>{t("vps.endpoint.applied")}</h3>
+                <OperationResult title={t("vps.endpoint.applied")}>
                   <p>{t("vps.endpoint.appliedNote")}</p>
-                  <button
-                    className="primary-button"
-                    onClick={() => changeOpen(false)}
-                  >
-                    {t("common.action.done")}
-                  </button>
-                </div>
+                </OperationResult>
               ) : (
                 <>
                   <p>{t("vps.endpoint.applyIntro")}</p>
@@ -272,45 +228,13 @@ export function EndpointUpdateDialog({
                     <textarea
                       className="secret-code-output mono"
                       value={code}
-                      onChange={(event) => setCode(event.target.value)}
+                      onChange={(event) => { setCode(event.target.value); setNotice(null); }}
                       placeholder={CODE_PLACEHOLDER}
                       spellCheck={false}
                     />
                   </Field>
-                  {update && update.code.trim() === code.trim() ? (
-                    <div className="endpoint-transition-summary">
-                      <code>
-                        {endpointLabel(update.previous_endpoint)}
-                      </code>
-                      <CaretRight size={18} />
-                      <code>
-                        {endpointLabel(update.endpoint)}
-                      </code>
-                      <span>{t("vps.endpoint.number", { number: update.generation })}</span>
-                    </div>
-                  ) : null}
-                  {error ? <InlineError message={error} /> : null}
-                  <div className="dialog-actions">
-                    <button
-                      className="secondary-button"
-                      disabled={!connected || busy}
-                      onClick={() => void checkCurrent()}
-                    >
-                      <DownloadSimple size={17} /> {t("vps.endpoint.getFromServer")}
-                    </button>
-                    <button
-                      className="primary-button"
-                      disabled={!code.trim() || busy}
-                      onClick={() => void apply()}
-                    >
-                      {busy ? (
-                        <ArrowClockwise className="spin" size={18} />
-                      ) : (
-                        <ShieldCheck size={18} />
-                      )}
-                      {t("vps.endpoint.verify")}
-                    </button>
-                  </div>
+                  {notice && <p className="settings-note endpoint-notice" role="status"><Info size={16} />{notice}</p>}
+                  {update && update.code.trim() === code.trim() ? transition(update) : null}
                   <p className="form-footnote">
                     <ShieldCheck size={15} /> {t("vps.endpoint.identityNote")}
                   </p>

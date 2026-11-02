@@ -107,7 +107,7 @@ describe("Desktop release update boundary", () => {
     fireEvent.click(screen.getByRole("button",{name:t("release.form.check")}));
     fireEvent.click(await screen.findByRole("checkbox",{name:startsWith(t("release.candidate.confirmAndroid"))}));
     fireEvent.click(screen.getByRole("button",{name:t("release.candidate.install")}));
-    await screen.findByRole("heading",{name:t("release.done.titleAndroid")});
+    await screen.findByText(t("release.done.titleAndroid"));
     fireEvent.click(screen.getByRole("button",{name:t("common.action.close")}));
     expect(apiMocks.discardReleaseUpdate).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole("button",{name:t("app.onboarding.checkUpdates")}));
@@ -142,7 +142,8 @@ describe("Desktop release update boundary", () => {
       await screen.findByRole("heading", { name: t("release.candidate.title", { version: "0.2.0" }) }),
     ).toBeTruthy();
     expect(screen.getByText("x86_64-unknown-linux-gnu")).toBeTruthy();
-    expect(screen.getByTitle("a".repeat(64))).toBeTruthy();
+    // Keys are shown whole, labelled, with Copy, rather than truncated behind a tooltip.
+    expect(screen.getByText("a".repeat(64))).toBeTruthy();
     const install = screen.getByRole("button", {
       name: t("release.candidate.install"),
     }) as HTMLButtonElement;
@@ -195,7 +196,7 @@ describe("Desktop release update boundary", () => {
     expect(apiMocks.installReleaseUpdate).not.toHaveBeenCalled();
     fireEvent.click(confirmation);
     fireEvent.click(screen.getByRole("button", { name: t("release.candidate.install") }));
-    expect(await screen.findByRole("heading", { name: t("release.done.titleWindows") })).toBeTruthy();
+    expect(await screen.findByText(t("release.done.titleWindows"))).toBeTruthy();
     expect(screen.queryByRole("heading", { name: /is installed/ })).toBeNull();
     expect(apiMocks.installReleaseUpdate).toHaveBeenCalledWith(true);
   });

@@ -8,12 +8,14 @@ type DialogContentProps = ComponentProps<typeof Dialog.Content> & {
   heading?: ReactNode;
   description?: ReactNode;
   footer?: ReactNode;
+  /** One line beside the actions: why the primary action is unavailable, or what is running. */
+  footerNote?: ReactNode;
   closeDisabled?: boolean;
   closeLabel?: string;
 };
 
 /** Restore focus for dialogs opened from state, as well as Radix triggers. */
-export function DialogContent({ heading, description, footer, closeDisabled = false, closeLabel = t("common.action.close"), children, ...props }: DialogContentProps) {
+export function DialogContent({ heading, description, footer, footerNote, closeDisabled = false, closeLabel = t("common.action.close"), children, ...props }: DialogContentProps) {
   const returnFocus = useRef<HTMLElement | null>(null);
   const title = useRef<HTMLHeadingElement | null>(null);
   const framed = heading !== undefined;
@@ -66,8 +68,19 @@ export function DialogContent({ heading, description, footer, closeDisabled = fa
           </Dialog.Close>
         </header>
         <div className="dialog-body">{children}</div>
-        {(footer || closeDisabled) && <footer className="dialog-footer">{footer ?? <p role="status">{t("app.dialog.running")}</p>}</footer>}
+        {/* A running task says so once, in the body next to its spinner; the footer never repeats it. */}
+        {(footer || footerNote) && <footer className="dialog-footer">
+          {footerNote && <p className="dialog-footer-note" role="status">{footerNote}</p>}
+          {footer}
+        </footer>}
       </> : children}
     </Dialog.Content>
   );
+}
+
+/** Returns to the previous step of a dialog. On Android the app bar's arrow closes the dialog, so this names the step. */
+export function DialogBack({ onClick, disabled }: { onClick: () => void; disabled?: boolean }) {
+  return <button type="button" className="secondary-button dialog-back" disabled={disabled} onClick={onClick}>
+    <ArrowLeft size={16} />{isAndroid ? t("vps.common.previousStep") : t("common.action.back")}
+  </button>;
 }

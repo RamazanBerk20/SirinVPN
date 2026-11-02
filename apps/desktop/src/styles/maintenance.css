@@ -91,6 +91,15 @@
 .fingerprint-step > .ssh-verification-steps {
   margin-top: 16px;
 }
+.fingerprint-step > .danger-note {
+  margin: 0 0 20px;
+}
+
+.fingerprint-value code {
+  overflow-wrap: anywhere;
+  color: color-mix(in srgb, var(--quiet) 30%, var(--text));
+  font-size: 0.75rem;
+}
 
 .fingerprint-value {
   display: grid;
@@ -104,12 +113,6 @@
   background: var(--bg);
 }
 
-.fingerprint-value code {
-  overflow: hidden;
-  color: color-mix(in srgb, var(--quiet) 30%, var(--text));
-  font-size: 0.75rem;
-  text-overflow: ellipsis;
-}
 
 .warning-note {
   display: flex;
@@ -194,63 +197,18 @@
   border-color: color-mix(in srgb, var(--warning) 26%, transparent);
 }
 
-.backup-success {
-  min-height: 270px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  text-align: center;
-}
-
-.backup-success > span {
-  width: 48px;
-  height: 48px;
+.key-rotation-confirmation {
   display: grid;
-  place-items: center;
-  border: 1px solid color-mix(in srgb, var(--success) 38%, transparent);
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--success) 9%, transparent);
-  color: var(--success);
+  gap: 16px;
 }
 
-.backup-success h3,
-.backup-success p {
+.key-rotation-confirmation h3,
+.rotation-outcome {
   margin: 0;
 }
 
-.backup-success p {
-  max-width: 390px;
-  color: var(--muted);
-  font-size: 0.75rem;
-  line-height: 1.6;
-}
-
-.backup-success .primary-button {
-  min-width: 150px;
-  margin-top: 8px;
-}
-
-.repair-success code,
-.key-rotation-success code {
-  max-width: 100%;
-  overflow: hidden;
-  padding: 9px 11px;
-  border: 1px solid var(--line);
-  border-radius: 7px;
-  background: var(--bg);
-  color: var(--muted);
-  font-size: 0.75rem;
-  text-overflow: ellipsis;
-}
-
-.key-rotation-confirmation {
-  padding-top: 18px;
-}
-
-.key-rotation-confirmation > svg {
-  color: var(--accent-strong);
+.rotation-outcome {
+  font-weight: 650;
 }
 
 .removal-choices,
@@ -329,12 +287,6 @@
   color: var(--danger);
 }
 
-.uninstall-form .back-button,
-.uninstall-fingerprint .back-button {
-  margin-bottom: 2px;
-  cursor: pointer;
-}
-
 .uninstall-target {
   display: flex;
   align-items: center;
@@ -353,67 +305,20 @@
   text-overflow: ellipsis;
 }
 
-.uninstall-fingerprint > svg {
-  margin-top: 4px;
-  color: var(--danger);
-}
-
-.uninstall-fingerprint.repair-fingerprint > svg {
-  color: var(--cyan);
-}
-
-.uninstall-fingerprint h3 {
-  margin: 0;
-  font-size: 17px;
-  letter-spacing: -0.025em;
-}
-
-.uninstall-fingerprint .fingerprint-value,
-.uninstall-fingerprint .warning-note {
-  margin-top: 0;
-}
+/* A fill that keeps white button text above 4.5:1 in both themes. */
+:root { --danger-fill: color-mix(in srgb, var(--danger) 62%, var(--surface)); }
+:root[data-theme="light"] { --danger-fill: var(--danger); }
 
 .primary-button.danger-action {
-  border-color: color-mix(in srgb, var(--danger) 80%, var(--surface));
-  background: color-mix(in srgb, var(--danger) 80%, var(--surface));
+  border-color: var(--danger-fill);
+  background: var(--danger-fill);
   box-shadow: none;
 }
 
 .primary-button.danger-action:hover:not(:disabled) {
-  border-color: color-mix(in srgb, var(--danger) 95%, var(--surface-3));
-  background: color-mix(in srgb, var(--danger) 95%, var(--surface-3));
-  box-shadow: 0 9px 25px color-mix(in srgb, color-mix(in srgb, var(--danger) 80%, var(--surface)) 20%, transparent);
-}
-
-.uninstall-progress {
-  min-height: 260px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  color: var(--muted);
-  text-align: center;
-}
-
-.uninstall-progress > svg {
-  color: var(--danger);
-}
-
-.uninstall-progress.repair-progress > svg {
-  color: var(--cyan);
-}
-
-.uninstall-progress strong {
-  color: var(--text);
-  font-size: 15px;
-}
-
-.uninstall-progress p {
-  max-width: 390px;
-  margin: 0;
-  font-size: 0.75rem;
-  line-height: 1.55;
+  border-color: color-mix(in srgb, var(--danger-fill) 85%, var(--text));
+  background: var(--danger-fill);
+  box-shadow: 0 9px 25px color-mix(in srgb, var(--danger-fill) 30%, transparent);
 }
 
 .diagnostics-dialog {

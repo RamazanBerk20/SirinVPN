@@ -1,6 +1,8 @@
 import { t } from "../i18n";
 import { Copy, Check } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
+import { CopyButton } from "./CopyButton";
+
 export function CopyValue({
   value,
   label,
@@ -56,4 +58,15 @@ export function CopyValue({
       </span>
     </span>
   );
+}
+
+/** A key, hash or fingerprint people compare by eye: labelled, shown in full (wrapping), with Copy. */
+export function HashValue({ label, value }: { label: string; value: string }) {
+  return <div className="hash-value">
+    <span>{label}</span>
+    <div>
+      <code>{value}</code>
+      <CopyButton value={value} label={t("app.copy.label", { label })} />
+    </div>
+  </div>;
 }

@@ -1,6 +1,6 @@
 import { SshVerificationGuide } from "./SshVerificationGuide";
 import { Key, Warning } from "@phosphor-icons/react";
-import { CopyButton } from "../../components/CopyButton";
+import { HashValue } from "../../components/CopyValue";
 import type { InspectedSshHost } from "../../hooks/useSshHostTrust";
 import { t } from "../../i18n";
 
@@ -15,30 +15,20 @@ export function SshHostVerification({
 }) {
   const changed = inspection.status === "changed";
   return (
-    <>
-      {changed ? <Warning size={27} weight="fill" className="danger-icon" /> : <Key size={27} weight="duotone" />}
-      <h3>
-        {changed ? t("ssh.verify.titleChanged") : t("ssh.verify.title")}
-      </h3>
+    <div className={`ssh-host-verification${changed ? " changed" : ""}`}>
+      <div className="ssh-verification-heading">
+        {changed ? <Warning size={24} weight="fill" /> : <Key size={24} weight="duotone" />}
+        <h3>{changed ? t("ssh.verify.titleChanged") : t("ssh.verify.title")}</h3>
+      </div>
       {/* A changed key may mean interception: the advice to stop comes first, not after the guide. */}
       {changed && (
-        <div className="warning-note replacement-warning">
+        <div className="danger-note" role="alert">
           <Warning size={18} weight="fill" />
           <span>{t("ssh.verify.changedWarning")}</span>
         </div>
       )}
-      <div className="uninstall-target">
-        <code>
-          {inspection.host}:{inspection.port}
-        </code>
-      </div>
-      <p>
-        {changed ? t("ssh.verify.bodyChanged") : t("ssh.verify.body")}
-      </p>
-      <div className="fingerprint-value">
-        <code>{inspection.fingerprint}</code>
-        <CopyButton value={inspection.fingerprint} label={t("ssh.verify.copyFingerprint")} />
-      </div>
+      <p>{changed ? t("ssh.verify.bodyChanged") : t("ssh.verify.body")}</p>
+      <HashValue label={t("ssh.verify.fingerprintLabel", { host: `${inspection.host}:${inspection.port}` })} value={inspection.fingerprint} />
       <SshVerificationGuide />
       <label className={`replacement-option ${confirmed ? "selected" : ""}`}>
         <input
@@ -55,6 +45,6 @@ export function SshHostVerification({
           </small>
         </span>
       </label>
-    </>
+    </div>
   );
 }

@@ -54,8 +54,8 @@ with sync_playwright() as pw:
     page.close()
     # Both SSH maintenance workflows share the host-key gate: (menu item, submit, proceed, completion heading, command).
     workflows = [
-        ("Update VPS software", "Continue", "Continue", "Set up updates for My private VPS", "manage_vps_release"),
-        ("Repair VPS configuration", "Repair server", "Repair server", "Repair complete", "repair_server"),
+        ("Update VPS software", "Continue", "Continue", "Updates aren’t set up for this server yet.", "manage_vps_release"),
+        ("Repair VPS configuration", "Repair VPS", "Repair VPS", "Repair complete", "repair_server"),
     ]
     for item, submit, proceed, completed, command in workflows:
         for status in ["unknown", "trusted", "changed"]:
@@ -77,7 +77,7 @@ with sync_playwright() as pw:
                 page.screenshot(path=str(OUT / f"{command}-ssh-{status}.png"))
                 dialog.get_by_role("checkbox", name="I verified", exact=False).check()
                 dialog.get_by_role("button", name=proceed, exact=True).click()
-            expect(dialog.get_by_role("heading", name=completed, exact=True)).to_be_visible()
+            expect(dialog.get_by_text(completed, exact=True)).to_be_visible()
             assert page.evaluate("window.__sirinCommands.filter(c=>c==='trust_ssh_host').length") == (0 if status == "trusted" else 1)
             sent = page.evaluate(f"window.__sirinCommandArguments.find(c=>c.command==='{command}').args.input")
             assert (sent.get("ssh") or sent)["host_key_sha256"] == "SHA256:" + "A" * 43, sent

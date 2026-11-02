@@ -58,3 +58,11 @@ it("ties the update summary to its own code and publishes the signed code from t
   fireEvent.click(screen.getByRole("button", { name: t("vps.endpoint.publish") }));
   await waitFor(() => expect(api.publishEndpointUpdate).toHaveBeenCalledWith(owner.id, "sirm1.signed"));
 });
+
+it("reports a server with no waiting update as information, not as a failure", async () => {
+  vi.mocked(api.availableEndpointUpdate).mockResolvedValue(null as never);
+  render(<EndpointUpdateDialog profile={profile} open connected onOpenChange={vi.fn()} onCompleted={vi.fn()} />);
+  fireEvent.click(screen.getByRole("button", { name: t("vps.endpoint.getFromServer") }));
+  await screen.findByText(t("vps.endpoint.none"));
+  expect(screen.queryByRole("alert")).toBeNull();
+});

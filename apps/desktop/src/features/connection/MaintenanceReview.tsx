@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { DialogContent } from "../../components/DialogContent";
 import { InlineError } from "../../components/ui";
+import { Busy } from "../../components/OperationResult";
 import { api } from "../../api";
 import { errorMessage } from "../../lib/errors";
 import { t, type MessageKey } from "../../i18n";
@@ -99,12 +100,25 @@ export function MaintenanceReview({ model }: { model: ServerWorkspaceModel }) {
         <DialogContent className="dialog-content maintenance-review"
           heading={<>{plan && t(plan.title)}</>}
           description={t("maintenance.review.description", { name: model.profile.name })}
-          closeDisabled={busy} closeLabel={t("maintenance.review.close")}>
-          <ol className="maintenance-plan">
+          closeDisabled={busy} closeLabel={t("maintenance.review.close")}
+          footerNote={busy || (disconnected && !model.rotationPending) ? null : t("maintenance.review.blocked")}
+          footer={<>
+            <button type="button" className="secondary-button" disabled={busy} onClick={() => model.setMaintenanceReview(null)}>{t("common.action.cancel")}</button>
+            <button
+              type="button"
+              className="primary-button"
+              disabled={!disconnected || model.rotationPending || busy}
+              onClick={proceed}
+            >
+              {t("common.action.continue")}
+            </button>
+          </>}>
+          {/* What will happen: facts, not steps to follow, so a bulleted list. */}
+          <ul className="maintenance-plan">
             {plan?.steps.map((step) => (
               <li key={step}>{t(step)}</li>
             ))}
-          </ol>
+          </ul>
           {model.rotationPending && (
             <div className="maintenance-prerequisite">
               <p>{t("maintenance.review.rotationFirst")}</p>
@@ -136,23 +150,14 @@ export function MaintenanceReview({ model }: { model: ServerWorkspaceModel }) {
                 }
               >
                 {busy
-                  ? t("maintenance.review.disconnecting")
+                  ? <Busy label={t("maintenance.review.disconnecting")} />
                   : model.localKnown
                     ? t("maintenance.review.disconnect")
                     : t("maintenance.review.refresh")}
               </button>
             </div>
           )}
-          {error && <InlineError message={error} />}
-          <div className="dialog-actions">
-            <button
-              className="primary-button"
-              disabled={!disconnected || model.rotationPending || busy}
-              onClick={proceed}
-            >
-              {t("common.action.continue")}
-            </button>
-          </div>
+          {error && <InlineError message={error} onRetry={() => void disconnect()} retryDisabled={busy} />}
         </DialogContent>
       </Dialog.Portal>
     </Dialog.Root>

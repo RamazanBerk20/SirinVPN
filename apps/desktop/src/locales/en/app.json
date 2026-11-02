@@ -66,8 +66,7 @@
     "helpAndroid": "Unlock your phone, then try again. Your saved servers are safe."
   },
   "dialog": {
-    "waitToClose": "Wait for the current task to finish",
-    "running": "Working… You can close this when it finishes."
+    "waitToClose": "Wait for the current task to finish"
   },
   "operation": {
     "result": "Result",

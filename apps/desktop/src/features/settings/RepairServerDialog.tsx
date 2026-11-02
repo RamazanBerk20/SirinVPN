@@ -3,12 +3,10 @@ import { DnsChangeReview } from "../dns/DnsChangeReview";
 import { useSshLogin } from "../../hooks/useSshLogin";
 import { SshLoginFields } from "./SshLoginFields";
 import { RepairSummary } from "./RepairSummary";
-import { DialogContent } from "../../components/DialogContent";
+import { DialogBack, DialogContent } from "../../components/DialogContent";
+import { Busy, OperationProgress } from "../../components/OperationResult";
 import * as Dialog from "@radix-ui/react-dialog";
-import {
-  ArrowClockwise,
-  GlobeHemisphereWest,
-} from "@phosphor-icons/react";
+import { GlobeHemisphereWest } from "@phosphor-icons/react";
 import { useEffect, useId, useState } from "react";
 import { api } from "../../api";
 import {
@@ -54,6 +52,7 @@ export function RepairServerDialog({
   intent?: "repair" | "dns";
 }) {
   const formId = useId();
+  const dns = intent === "dns";
   const [step, setStep] = useState<
     "details" | "fingerprint" | "review" | "repairing" | "success"
   >("details");
@@ -108,15 +107,19 @@ export function RepairServerDialog({
     onOpenChange(next);
   };
 
-  const sshValid =
-    disconnected &&
-    login.valid &&
-    (intent === "dns" || transportDraftIsValid(transport)) &&
+  const transportValid = dns || transportDraftIsValid(transport);
+  const settingsValid =
     dnsDraftIsValid(dnsChoice, dnsEndpoints) &&
     (dnsChoice === "preserve" || splitDnsDraftIsValid(splitDns)) &&
     (privateDnsChoice !== "replace" ||
       privateDnsDraftIsValid(privateDnsRecords, false)) &&
     (nat64Choice !== "replace" || nat64PrefixIsValid(nat64Prefix));
+  const sshValid = disconnected && login.valid && transportValid && settingsValid;
+  // Why the primary action is unavailable, most important first.
+  const blocker = !disconnected ? t("vps.common.disconnectFirst")
+    : !transportValid ? t("ssh.transport.invalid")
+    : !settingsValid ? t("vps.repair.blocked.settings")
+    : login.missing ?? (step === "fingerprint" && !confirmed ? t("ssh.verify.confirmFirst") : null);
 
   const updateDnsEndpoint = (
     index: number,
@@ -139,7 +142,7 @@ export function RepairServerDialog({
       if (!checked) return;
       setConfirmed(false);
       if (checked.status === "trusted") {
-        if (intent === "dns") setStep("review");
+        if (dns) setStep("review");
         else await repair(checked);
       } else {
         setStep("fingerprint");
@@ -165,7 +168,7 @@ export function RepairServerDialog({
         server_id: profile.id,
         ...(await login.prepare(fingerprint)),
         confirmed: true,
-        transport: intent === "dns" ? null : transportSetupFromDraft(transport, profile),
+        transport: dns ? null : transportSetupFromDraft(transport, profile),
         dns_upstream:
           dnsChoice === "preserve"
             ? null
@@ -178,7 +181,7 @@ export function RepairServerDialog({
             : privateDnsChoice === "clear"
               ? []
               : privateDnsRecordsFromDraft(privateDnsRecords),
-        ...(intent !== "dns" && nat64Choice !== "preserve" && {
+        ...(!dns && nat64Choice !== "preserve" && {
           nat64_prefix: nat64Choice === "replace" ? nat64Prefix.trim() : null,
         }),
       });
@@ -191,34 +194,52 @@ export function RepairServerDialog({
       setConfirmed(false);
       setStep("details");
       setError(
-        errorMessage(reason, intent === "dns" ? t("vps.repair.error.dns") : t("vps.repair.error.repair")),
+        errorMessage(reason, dns ? t("vps.repair.error.dns") : t("vps.repair.error.repair")),
       );
     } finally {
       setBusy(false);
     }
   };
 
+  const dnsFields = <>
+    <DnsPolicyFields
+      choice={dnsChoice}
+      endpoints={dnsEndpoints}
+      allowPreserve
+      onChoiceChange={setDnsChoice}
+      onEndpointChange={updateDnsEndpoint}
+    />
+    <PrivateDnsRecordFields
+      choice={privateDnsChoice}
+      value={privateDnsRecords}
+      allowPreserve
+      onChoiceChange={setPrivateDnsChoice}
+      onValueChange={setPrivateDnsRecords}
+    />
+    {dnsChoice !== "preserve" && <SplitDnsFields value={splitDns} onChange={setSplitDns} />}
+  </>;
+  const primaryLabel = dns ? t("vps.repair.action.review") : t("vps.repair.action.repair");
+
   return (
     <Dialog.Root open={open} onOpenChange={changeOpen}>
       <Dialog.Portal>
         <Dialog.Overlay className="dialog-overlay" />
         <DialogContent className="dialog-content remove-server-dialog repair-server-dialog"
-          heading={step === "repairing"
-              ? intent === "dns" ? t("vps.repair.titleRunningDns") : t("vps.repair.titleRunning")
-              : step === "success" ? intent === "dns" ? t("vps.repair.titleDoneDns") : t("vps.repair.titleDone")
-              : intent === "dns" ? t("vps.repair.titleDns", { name: profile.name }) : t("vps.repair.title", { name: profile.name })}
+          heading={dns ? t("vps.repair.titleDns", { name: profile.name }) : t("vps.repair.title", { name: profile.name })}
           description={step === "success"
-            ? t("vps.repair.description.done")
+            ? dns ? t("vps.repair.titleDoneDns") : t("vps.repair.titleDone")
             : step === "repairing"
               ? t("vps.repair.description.running")
-              : intent === "dns" ? t("vps.repair.description.dns") : t("vps.repair.description.repair")}
+              : dns ? t("vps.repair.description.dns") : t("vps.repair.description.repair")}
           closeDisabled={busy || step === "repairing"}
-          footer={step === "repairing" ? <p role="status">{t("vps.common.keepOpen")}</p>
+          footerNote={step === "details" || step === "fingerprint" || step === "review" ? busy ? null : blocker : null}
+          footer={step === "repairing" ? null
             : step === "success" ? <button className="primary-button" type="button" onClick={() => { onOpenChange(false); onReturnHome?.(); }}>{t("vps.repair.action.home")}</button>
             : <>
+              {step !== "details" && <DialogBack disabled={busy} onClick={() => setStep("details")} />}
               <button className="secondary-button" type="button" disabled={busy} onClick={() => changeOpen(false)}>{t("common.action.cancel")}</button>
-              {step === "details" ? <button className="primary-button" type="submit" form={formId} disabled={!sshValid || busy}>{busy ? t("vps.common.checking") : intent === "dns" ? t("vps.repair.action.review") : t("vps.repair.action.repair")}</button>
-                : <button className="primary-button" type="button" disabled={busy || !sshValid || step === "fingerprint" && !confirmed} onClick={() => { if (intent === "dns" && step === "fingerprint") setStep("review"); else void repair(); }}>{intent === "dns" ? step === "fingerprint" ? t("vps.repair.action.review") : t("vps.repair.action.apply") : t("vps.repair.action.repair")}</button>}
+              {step === "details" ? <button className="primary-button" type="submit" form={formId} disabled={!sshValid || busy}>{busy ? <Busy label={t("vps.common.checking")} /> : primaryLabel}</button>
+                : <button className="primary-button" type="button" disabled={busy || !sshValid || step === "fingerprint" && !confirmed} onClick={() => { if (dns && step === "fingerprint") setStep("review"); else void repair(); }}>{dns ? step === "fingerprint" ? t("vps.repair.action.review") : t("vps.repair.action.apply") : t("vps.repair.action.repair")}</button>}
             </>}
         >
 
@@ -231,68 +252,49 @@ export function RepairServerDialog({
                 void inspect();
               }}
             >
+              {/* The failure leads the form, where it is seen without scrolling. */}
+              {error ? <InlineError message={error} onRetry={() => void inspect()} retryDisabled={busy || !sshValid} /> : null}
               <fieldset disabled={busy} className="ssh-operation-fields">
                 <div className="uninstall-target">
                   <GlobeHemisphereWest size={16} />
                   <code>{profile.endpoint.host}</code>
                 </div>
-                {!disconnected ? (
-                  <InlineError message={t("vps.common.disconnectFirst")} />
-                ) : null}
-                <SshLoginFields login={login} />
-                {intent !== "dns" && <TransportSetupFields value={transport} onChange={setTransport} existing />}
-                <DnsPolicyFields
-                  choice={dnsChoice}
-                  endpoints={dnsEndpoints}
-                  allowPreserve
-                  onChoiceChange={setDnsChoice}
-                  onEndpointChange={updateDnsEndpoint}
-                />
-                <PrivateDnsRecordFields
-                  choice={privateDnsChoice}
-                  value={privateDnsRecords}
-                  allowPreserve
-                  onChoiceChange={setPrivateDnsChoice}
-                  onValueChange={setPrivateDnsRecords}
-                />
-                {dnsChoice !== "preserve" && <SplitDnsFields value={splitDns} onChange={setSplitDns} />}
-                {intent !== "dns" && <Nat64Fields choice={nat64Choice} value={nat64Prefix} allowPreserve onChoiceChange={setNat64Choice} onValueChange={setNat64Prefix} />}
-                {intent !== "dns" && <p className="settings-note">{t("vps.repair.note")}</p>}
-                {error ? <InlineError message={error} /> : null}
+                {dns ? <>
+                  {/* DNS is what this flow changes, so it comes first; sign-in is the last step. */}
+                  {dnsFields}
+                  <h3 className="form-section-title">{t("vps.repair.signIn")}</h3>
+                  <SshLoginFields login={login} />
+                </> : <>
+                  <SshLoginFields login={login} />
+                  <details className="advanced-fields repair-options">
+                    <summary>{t("vps.repair.options")}</summary>
+                    <p className="settings-note">{t("vps.repair.optionsNote")}</p>
+                    <TransportSetupFields value={transport} onChange={setTransport} existing />
+                    {dnsFields}
+                    <Nat64Fields choice={nat64Choice} value={nat64Prefix} allowPreserve onChoiceChange={setNat64Choice} onValueChange={setNat64Prefix} />
+                  </details>
+                  <p className="settings-note">{t("vps.repair.note")}</p>
+                </>}
               </fieldset>
             </form>
           ) : null}
 
           {step === "fingerprint" && trust.inspection ? (
-            <div className="uninstall-fingerprint repair-fingerprint">
-              <button
-                className="back-button"
-                onClick={() => setStep("details")}
-              >
-                {t("common.action.back")}
-              </button>
-              <SshHostVerification
-                inspection={trust.inspection}
-                confirmed={confirmed}
-                onConfirmed={setConfirmed}
-              />
-              {!disconnected && <InlineError message={t("vps.common.disconnectFirst")} />}
-            </div>
+            <SshHostVerification
+              inspection={trust.inspection}
+              confirmed={confirmed}
+              onConfirmed={setConfirmed}
+            />
           ) : null}
 
-          {step === "review" && <>
-            <button type="button" className="back-button" disabled={busy} onClick={() => setStep("details")}>{t("common.action.back")}</button>
+          {step === "review" && <div className="dns-change-review-step">
+            {error && <InlineError message={error} />}
             <p>{t("vps.repair.reviewTarget", { name: profile.name, host: profile.endpoint.host, port })}</p>
             <DnsChangeReview choice={dnsChoice} endpoints={dnsEndpoints} privateChoice={privateDnsChoice} records={privateDnsRecords} splitDns={splitDns} />
-            {!disconnected && <InlineError message={t("vps.common.disconnectFirst")} />}
-            {error && <InlineError message={error} />}
-          </>}
+          </div>}
 
           {step === "repairing" ? (
-            <div className="uninstall-progress repair-progress">
-              <ArrowClockwise className="spin" size={26} />
-              <strong>{t("vps.repair.progress")}</strong>
-            </div>
+            <OperationProgress title={dns ? t("vps.repair.progressDns") : t("vps.repair.progress")} />
           ) : null}
 
           {step === "success" && result ? (

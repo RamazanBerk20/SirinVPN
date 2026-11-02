@@ -84,7 +84,8 @@
     "disconnect": "Disconnect this device",
     "disconnecting": "Disconnecting…",
     "refresh": "Refresh status",
-    "disconnectFailed": "Couldn’t disconnect the VPN. Try again."
+    "disconnectFailed": "Couldn’t disconnect the VPN.",
+    "blocked": "Do the step above to continue."
   },
   "health": {
     "title": "System health",

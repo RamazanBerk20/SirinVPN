@@ -11,12 +11,13 @@
     "softwareHash": "Software SHA-256",
     "error": {
       "picker": "Couldn’t open the file picker. Try again.",
-      "unreachable": "Couldn’t reach the VPS over SSH. Check the login and try again."
-    }
+      "unreachable": "Couldn’t reach the VPS over SSH. Check the login, then try again."
+    },
+    "previousStep": "Previous step",
+    "passwordsMatch": "Passwords match."
   },
   "update": {
     "title": "Update {{name}}",
-    "titleSetup": "Set up updates for {{name}}",
     "description": {
       "login": "Sign in over SSH to check this server’s version.",
       "configured": "Check for a signed release and review it before installing.",
@@ -30,7 +31,8 @@
       "installingSetup": "Installing and finishing setup…",
       "recovering": "Recovering update…",
       "rollingBack": "Restoring previous version…",
-      "saving": "Saving schedule…"
+      "saving": "Saving schedule…",
+      "finishing": "Finishing setup…"
     },
     "action": {
       "check": "Check for updates",
@@ -38,7 +40,8 @@
       "install": "Install {{version}}",
       "installAndFinish": "Install and finish setup",
       "finishSetup": "Finish setup",
-      "changeLogin": "Change SSH login"
+      "changeLogin": "Change SSH login",
+      "repair": "Repair VPS…"
     },
     "steps": {
       "label": "Setup steps",
@@ -64,12 +67,14 @@
       "label": "Release source",
       "placeholder": "HTTPS folder URL",
       "help": "An HTTPS address ending in /, from whoever installed this server",
-      "change": "Change source"
+      "change": "Change source",
+      "invalid": "Use an HTTPS address that ends in / and has no user name, ? or #."
     },
     "channel": {
       "label": "Release channel",
       "stable": "Stable",
-      "preview": "Preview"
+      "preview": "Preview",
+      "previewHint": "Early builds that may be less stable. Use them only to try new features."
     },
     "review": {
       "label": "Verified release",
@@ -84,30 +89,31 @@
       "compatible": "Compatible",
       "incompatible": "Can’t be installed in the server’s current state",
       "type": "Release type",
-      "security": "Security update",
+      "security": "Security update. Install it soon.",
       "standard": "Standard release"
     },
     "schedule": {
-      "title": "Automatic security updates",
-      "unsaved": "Unsaved changes",
       "toggle": "Install security updates automatically",
-      "help": "Checked daily from the release source. Signature and rollback checks still apply.",
-      "save": "Save schedule",
+      "help": "Checked daily from the release source above. Signature and rollback checks still apply.",
       "enabled": "Automatic security updates turned on.",
-      "disabled": "Automatic security updates turned off."
+      "disabled": "Automatic security updates turned off.",
+      "otherSource": "Automatic updates still check {{source}}.",
+      "useSource": "Use the source above"
     },
     "rollback": {
-      "summary": "Previous version {{version}}",
-      "confirm": "Restore version {{version}}",
-      "help": "Works only if this version is still trusted and compatible.",
-      "action": "Roll back"
+      "title": "Previous version",
+      "kept": "Version {{version}} is kept so you can roll back if this one misbehaves.",
+      "action": "Roll back to {{version}}…",
+      "confirmTitle": "Roll back to version {{version}}?",
+      "confirmMessage": "Services restart and devices reconnect briefly. This works only if that version is still trusted and compatible.",
+      "confirm": "Roll back"
     },
     "privacy": {
       "summary": "Privacy and verification",
       "identifiers": "Requests carry no device, server, or user identifiers.",
       "signing": "Only releases signed by keys built into SirinVPN are accepted, whatever the source."
     },
-    "disconnectFirst": "Disconnect this device before installing, recovering, or rolling back.",
+    "disconnectFirst": "Disconnect this device to install, recover or roll back.",
     "done": {
       "installed": "Version {{version}} is installed.",
       "setUp": "Updates are set up. Version {{version}} is installed.",
@@ -117,30 +123,39 @@
     "error": {
       "notVerified": "Verify the server’s SSH key first.",
       "cancelled": "The operation was cancelled.",
-      "status": "Couldn’t read the server’s update status. Try again.",
-      "check": "Couldn’t verify this release. Check the source and try again.",
+      "status": "Couldn’t read the server’s update status.",
+      "check": "Couldn’t verify this release. Check the source and channel.",
       "notConfirmed": "The server didn’t confirm the new version. Check its status before trying again.",
       "stopped": "The operation stopped. Check the server’s status before trying again.",
       "scheduleNotConfirmed": "The server didn’t confirm the new schedule. Check its settings before trying again.",
-      "schedule": "Couldn’t save the schedule. Try again."
+      "schedule": "Couldn’t save automatic updates."
+    },
+    "blocked": {
+      "mismatch": "Repair the VPS before checking for or installing updates.",
+      "recovery": "Recover the interrupted update first.",
+      "source": "Enter a release source to check."
     }
   },
   "backup": {
     "title": "Back up {{name}}",
-    "titleRunning": "Creating backup",
     "titleDone": "Backup complete",
     "description": "Save the server’s identity and settings to restore or move it later.",
     "warning": "<strong>Anyone with this file and its password can clone the server.</strong> Store them separately.",
     "saveDialogTitle": "Save VPS backup",
     "destination": "Save to",
     "destinationHint": "Existing files are never overwritten.",
-    "passwordHint": "At least 12 characters",
+    "passwordHint": "Use at least 12 characters.",
     "repeatPassword": "Repeat password",
     "create": "Create backup",
     "progress": "Encrypting server state…",
     "done": "Encrypted backup saved",
     "doneNote": "Store the file and its password separately.",
-    "error": "Couldn’t create the backup. Try again."
+    "error": "Couldn’t create the backup.",
+    "missing": {
+      "file": "Choose where to save the backup.",
+      "password": "Enter a backup password of at least 12 characters.",
+      "repeat": "Repeat the same password."
+    }
   },
   "schedule": {
     "action": "Scheduled backups",
@@ -156,7 +171,7 @@
     "monthly": "Every 30 days",
     "keep": "Backups to keep",
     "keepHint": "Between 1 and 30",
-    "passwordHint": "At least 12 characters, saved in this device’s secure storage",
+    "passwordHint": "Use at least 12 characters. It’s saved in this device’s secure storage.",
     "passwordKeepHint": "Leave empty to keep the saved password",
     "loginMissing": "Backups use this VPS’s saved SSH login. Back up the VPS once with Remember login on.",
     "disconnected": "Backups run while SirinVPN is open and this device is disconnected.",
@@ -187,14 +202,21 @@
       "review": "Review"
     },
     "error": {
-      "save": "Couldn’t save the schedule. Try again.",
-      "run": "Couldn’t run the backup. Try again.",
-      "off": "Couldn’t turn off scheduled backups. Try again."
+      "save": "Couldn’t save the schedule.",
+      "run": "Couldn’t run the backup.",
+      "off": "Couldn’t turn off scheduled backups."
+    },
+    "saving": "Saving…",
+    "turningOff": "Turning off…",
+    "saved": "Scheduled backups saved.",
+    "backedUp": "VPS backup saved.",
+    "turnedOff": "Scheduled backups turned off.",
+    "missing": {
+      "folder": "Choose a backup folder."
     }
   },
   "restore": {
     "title": "Restore {{name}}",
-    "titleRunning": "Restoring VPS",
     "titleDone": "Restore complete",
     "description": "Restore this server’s identity onto the same or a new VPS.",
     "warning": "<strong>An old backup can bring back access you’ve since revoked.</strong> Review members and devices afterward.",
@@ -204,30 +226,40 @@
     "hostHint": "Keep the current address to recover, or enter a new one to move the server.",
     "replace": "Replace an existing SirinVPN install",
     "replaceHint": "Use if SirinVPN is already on that VPS. Other services aren’t touched.",
-    "action": "Restore",
+    "action": "Restore VPS",
     "progress": "Restoring and verifying the server…",
     "done": "Server identity restored",
     "doneNote": "This device now uses {{host}}. If the address changed, move your other devices before shutting down the old VPS.",
     "reviewAccess": "Review access",
     "moveDevices": "Move devices",
-    "error": "Restore stopped. The VPS returns to its previous state and this device is unchanged."
+    "error": "Restore stopped. The VPS returns to its previous state and this device is unchanged.",
+    "review": "Review restore",
+    "reviewTitle": "Restore this backup?",
+    "missing": {
+      "file": "Choose a backup file.",
+      "password": "Enter the backup’s password (at least 12 characters).",
+      "host": "Enter the VPS address as a hostname or IP address."
+    },
+    "consequence": {
+      "replace": "The SirinVPN install on this VPS is replaced by the one in the backup.",
+      "install": "SirinVPN is installed on this VPS from the backup.",
+      "access": "Members and devices you removed after this backup was made get access again.",
+      "device": "This device switches to {{host}}. Services restart briefly."
+    }
   },
   "repair": {
     "title": "Repair {{name}}",
     "titleDns": "Configure DNS for {{name}}",
-    "titleRunning": "Repairing server",
-    "titleRunningDns": "Applying DNS settings",
     "titleDone": "Repair complete",
     "titleDoneDns": "DNS settings applied",
     "description": {
       "repair": "Reinstall server software without changing identities or access.",
       "dns": "Anything you don’t change stays as it is.",
-      "running": "The VPN is briefly unavailable.",
-      "done": "All changes were applied and checked."
+      "running": "The VPN is briefly unavailable."
     },
     "note": "The VPN is briefly unavailable while the server restarts.",
     "action": {
-      "repair": "Repair server",
+      "repair": "Repair VPS",
       "review": "Review changes",
       "apply": "Apply changes",
       "home": "Return to Home"
@@ -237,6 +269,13 @@
     "error": {
       "repair": "Repair stopped. Identities are unchanged and partial changes roll back automatically.",
       "dns": "DNS changes stopped. Partial changes roll back automatically."
+    },
+    "options": "Change server settings (optional)",
+    "optionsNote": "Addresses, ports, DNS and NAT64 stay as they are unless you change them here.",
+    "signIn": "Sign in to the VPS",
+    "progressDns": "Applying DNS settings and checking the server…",
+    "blocked": {
+      "settings": "Check the server settings above."
     }
   },
   "summary": {
@@ -264,10 +303,10 @@
   },
   "remove": {
     "title": "Remove {{name}}",
-    "titleRunning": "Uninstalling SirinVPN",
     "description": {
       "owner": "Remove it from this device, or uninstall SirinVPN from the VPS.",
-      "member": "Only the Owner can uninstall SirinVPN from the VPS."
+      "member": "Only the Owner can uninstall SirinVPN from the VPS.",
+      "running": "Removing SirinVPN from the VPS."
     },
     "local": {
       "title": "Remove from this device",
@@ -275,7 +314,8 @@
       "confirmTitle": "Remove {{name}} from this device?",
       "confirmOwner": "Its Owner key on this device is deleted. The server stays installed and claimed.",
       "confirmMember": "This device’s key is deleted. The server isn’t changed.",
-      "error": "Couldn’t remove the server from this device. Try again."
+      "error": "Couldn’t remove the server from this device.",
+      "done": "{{name}} was removed from this device."
     },
     "uninstall": {
       "title": "Uninstall from VPS",
@@ -286,16 +326,18 @@
       "confirmMessage": "All devices and invitations for this server stop working. Docker and other services on the VPS are kept.",
       "confirm": "Uninstall",
       "progress": "Cleaning up the VPS…",
-      "error": "Uninstall didn’t finish. The VPS rolls back partial changes and this device keeps the server."
+      "error": "Uninstall didn’t finish. The VPS rolls back partial changes and this device keeps the server.",
+      "done": "SirinVPN was uninstalled from {{host}}."
     }
   },
   "endpoint": {
-    "titleShare": "Move devices",
-    "titleApply": "Update server address",
+    "titleShare": "Move to a new address",
+    "titleApply": "Apply address update",
     "description": "Signed updates move devices to the server’s new address and settings.",
     "tab": {
-      "share": "Share update",
-      "apply": "Update this device"
+      "label": "Address update task",
+      "share": "Share new address",
+      "apply": "Use new address"
     },
     "pending": "Devices still using {{host}} need this update before you retire that VPS.",
     "create": {
@@ -313,7 +355,7 @@
     "codeHint": "Contains no access keys; its signature prevents tampering",
     "copy": "Copy code",
     "publish": "Publish on old VPS",
-    "published": "Published on old VPS",
+    "published": "Published on the old VPS",
     "publishNote": "Devices still connecting to the old VPS get the update there.",
     "applied": "Address updated",
     "appliedNote": "Check that the connection works at the new address.",
@@ -323,11 +365,17 @@
     "identityNote": "The new address must still prove the same server identity.",
     "error": {
       "create": "Couldn’t create the update. Keep the old VPS running and try again while connected.",
-      "none": "This server has no address update.",
-      "retrieve": "Couldn’t get an address update from this server. Try again.",
+      "retrieve": "Couldn’t get an address update from this server.",
       "publish": "Couldn’t publish on the old VPS. It’s unchanged, so you can try again.",
-      "apply": "Couldn’t apply the update. Check your connection and try again."
-    }
+      "apply": "Couldn’t apply the update. Check your connection."
+    },
+    "showCode": "Show update code",
+    "to": "moves to",
+    "working": "Getting update…",
+    "publishing": "Publishing…",
+    "applying": "Verifying…",
+    "pasteFirst": "Paste a code to verify it.",
+    "none": "This server has no address update waiting."
   },
   "alerts": {
     "title": "VPS alerts",
@@ -370,5 +418,14 @@
       "rejected": "The address refused the request.",
       "rejectedStatus": "The address answered with HTTP status {{status}}."
     }
+  },
+  "rotation": {
+    "confirmFirst": "Tick the box above to continue.",
+    "fingerprint": "New device identity fingerprint",
+    "unchanged": "Nothing changed. Your current keys still work.",
+    "interrupted": "The rotation was interrupted. Resume it to finish; until then this device can’t connect."
+  },
+  "deviceBackup": {
+    "confirmFirst": "Tick the box above to confirm."
   }
 }

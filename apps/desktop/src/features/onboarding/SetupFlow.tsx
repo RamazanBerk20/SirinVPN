@@ -291,7 +291,7 @@ export function SetupFlow({
               : confirmed ? t("onboarding.setup.fingerprint.checkAgain")
               : created ? t("onboarding.setup.fingerprint.checkNetwork") : t("onboarding.setup.fingerprint.matches")}
           </button>
-          {preflight && <button className="primary-button" disabled={busy || !installable} onClick={() => void provision()}>
+          {preflight && <button className={`primary-button${replaceExistingInstallation ? " danger-action" : ""}`} disabled={busy || !installable} onClick={() => void provision()}>
             {replaceExistingInstallation ? t("onboarding.setup.fingerprint.replace") : t("onboarding.setup.fingerprint.install")}
           </button>}
         </div>
