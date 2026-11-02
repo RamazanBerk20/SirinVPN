@@ -68,7 +68,7 @@ export function WorkspaceDialogs({
               </div>
             ) : (
               <>
-                <DiagnosticResults report={diagnostics} />
+                <DiagnosticResults report={diagnostics} onRunAgain={() => void model.runDiagnostics()} />
                 {model.canManageAccess && <SpeedTest serverId={profile.id} />}
               </>
             )}

@@ -326,7 +326,7 @@
   },
   "parts": {
     "connect": "Connect",
-    "repair": "Repair VPS"
+    "repair": "Update VPS"
   },
   "diagnostics": {
     "allPassed_one": "The {{count}} check passed.",

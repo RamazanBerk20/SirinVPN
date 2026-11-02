@@ -89,6 +89,9 @@ export function ServerWorkspace(
   const mobileConnection = isAndroid && view === "home" && props.detail === "connection";
   const mobileSubpage = mobileDetails || mobileConnection;
   const scope = category === "general" ? t("app.settingsScope.general") : t(`app.settingsScope.${category}`, { name: profile.name });
+  // Notices that say "connect first" or "update the VPS" do it in place.
+  const connectHere = model.localKnown && model.localStatus.state === "disconnected" ? () => void model.toggle() : undefined;
+  const reviewUpdate = profile.role === "owner" ? () => model.setMaintenanceReview("update") : undefined;
   const reviewActivity = () => {
     props.onOpenSettings("maintenance");
     if (model.serverStatus && !model.serverStatus.peer_activity_supported && profile.role === "owner") model.setMaintenanceReview("update");
@@ -206,7 +209,7 @@ export function ServerWorkspace(
                   </div>
                 )}
               </section>
-              <DnsBlocklistSettings profile={profile} connected={connected} canManage={model.canManageAccess} />
+              <DnsBlocklistSettings profile={profile} connected={connected} canManage={model.canManageAccess} onConnect={connectHere} onRepair={reviewUpdate} />
               {(
                 <PortForwardSettings
                   onManageDevices={() => props.onNavigate("devices")}
@@ -230,7 +233,7 @@ export function ServerWorkspace(
               <SystemHealth
                 model={model}
               />
-              <VpsAlertSettings profile={profile} connected={connected} />
+              <VpsAlertSettings profile={profile} connected={connected} onConnect={connectHere} onRepair={reviewUpdate} />
               <MaintenanceTools
                 model={model}
                 category="maintenance"
