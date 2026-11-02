@@ -294,7 +294,7 @@ export function VpsUpdateDialog({ profile, open, onOpenChange, disconnected, onC
               <button type="button" className="secondary-button" disabled={Boolean(busy) || !disconnected} onClick={() => void perform({ action: "recover" }, t("vps.update.busy.recovering"), t("vps.update.done.recovered"))}>{t("vps.update.recovery.action")}</button></div>
           </div>}
           {!configured && <>
-            <ol className="setup-steps" aria-label={t("vps.update.steps.label")}>
+            <ol className="update-steps" aria-label={t("vps.update.steps.label")}>
               {steps.map((label, index) => <li key={label} data-state={index < currentStep ? "done" : index === currentStep ? "current" : "todo"} aria-current={index === currentStep ? "step" : undefined}>
                 <span>{index < currentStep ? <Check size={14} weight="bold" /> : index + 1}</span>{label}
               </li>)}

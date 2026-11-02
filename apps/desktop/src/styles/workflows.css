@@ -395,12 +395,12 @@ html[data-window-chrome="custom"] .dialog-content.dialog-layout {
 .update-blocker > div { display: grid; gap: 12px; justify-items: start; min-width: 0; }
 .update-blocker p { margin: 0; }
 .update-blocker-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
-.setup-steps { display: flex; flex-wrap: wrap; gap: 10px 24px; margin: 0; padding: 0; list-style: none; color: var(--muted); font-size: var(--text-secondary); }
-.setup-steps li { display: inline-flex; align-items: center; gap: 8px; }
-.setup-steps li > span { display: grid; place-items: center; width: 24px; height: 24px; border: 1px solid var(--line-strong); border-radius: 50%; font-variant-numeric: tabular-nums; }
-.setup-steps [data-state="current"] { color: var(--text); font-weight: 650; }
-.setup-steps [data-state="current"] > span { border-color: var(--cyan); color: var(--cyan); }
-.setup-steps [data-state="done"] > span { border-color: var(--success); background: color-mix(in srgb, var(--success) 14%, transparent); color: var(--success); }
+.update-steps { display: flex; flex-wrap: wrap; gap: 10px 24px; margin: 0; padding: 0; list-style: none; color: var(--muted); font-size: var(--text-secondary); }
+.update-steps li { display: inline-flex; align-items: center; gap: 8px; }
+.update-steps li > span { display: grid; place-items: center; width: 24px; height: 24px; border: 1px solid var(--line-strong); border-radius: 50%; font-variant-numeric: tabular-nums; }
+.update-steps [data-state="current"] { color: var(--text); font-weight: 650; }
+.update-steps [data-state="current"] > span { border-color: var(--cyan); color: var(--cyan); }
+.update-steps [data-state="done"] > span { border-color: var(--success); background: color-mix(in srgb, var(--success) 14%, transparent); color: var(--success); }
 .update-section .preference-row { padding: 0; border-bottom: 0; }
 .update-section .preference-row > span { display: grid; gap: 4px; }
 .update-workflow > .text-button,
