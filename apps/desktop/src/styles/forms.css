@@ -183,7 +183,6 @@ input[type="checkbox"]:not([role="switch"]):disabled {
   margin-bottom: 8px;
 }
 
-
 .dns-policy-note {
   margin: 0;
   color: var(--quiet);
@@ -239,13 +238,6 @@ input[type="checkbox"]:not([role="switch"]):disabled {
 .add-server-flow {
   display: grid;
   gap: 12px;
-}
-.add-server-back {
-  justify-self: start;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 32px;
 }
 
 /* Described choice rows (ways to add a server, the Android server picker); mobile-native.css sets Android metrics. */

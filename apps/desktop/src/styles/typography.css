@@ -33,8 +33,7 @@ label > span,
   font-weight: var(--weight-medium);
 }
 .workspace-header h1,
-.server-collection h1,
-.initialization-card > h1 {
+.server-collection h1 {
   font-size: var(--text-page);
   font-weight: var(--weight-semibold);
   line-height: 1.25;
@@ -92,8 +91,7 @@ code,
   letter-spacing: normal;
 }
 .endpoint,
-.connection-facts,
-.port-forward-route {
+.connection-facts {
   font-family: var(--font-ui);
   letter-spacing: normal;
 }

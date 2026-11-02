@@ -55,22 +55,7 @@ h3 {
 .advanced-fields > :not(summary) {
   margin-top: 16px;
 }
-.device-search {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  color: var(--muted);
-  margin: 0 0 20px;
-}
-.device-search input {
-  flex: 1;
-  min-width: 0;
-  padding: 13px 16px;
-  border-radius: 10px;
-  background: var(--surface-2);
-  border: 1px solid color-mix(in srgb, var(--line-strong) 80%, var(--bg));
-  color: var(--text);
-}
+
 .access-section > .settings-note {
   margin: 12px 0 16px;
 }
@@ -78,9 +63,5 @@ h3 {
   .onboarding-copy {
     padding-top: 0;
   }
-  .device-search {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 7px;
-  }
+
 }

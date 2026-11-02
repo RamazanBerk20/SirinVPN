@@ -247,16 +247,16 @@ html.android[data-theme="light"] {
 .android .mobile-server-open > .row-check { color: var(--tile-ink); }
 .android .overflow-button { border: 0; background: transparent; color: var(--muted); }
 .android .device-row { border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--surface); box-shadow: none; }
-.android .device-row-header { display: flex; align-items: center; padding: 0 4px 0 0; gap: 0; }
+
 .android .device-row-summary { min-width: 0; flex: 1; padding: 12px 4px 12px var(--inset); gap: 4px 14px; grid-template-columns: var(--tile-size) minmax(0,1fr); }
 .android .device-row-summary .device-icon { grid-row: span 2; width: var(--tile-size); height: var(--tile-size); border-radius: var(--radius-tile); background: var(--tile); color: var(--tile-ink); }
-.android .device-row-summary .device-activity-label { grid-column: 2; font-size: var(--fs-caption); text-align: left; color: var(--muted); }
+
 .android .device-row-summary > .disclosure-chevron { display: none; }
 .android .device-row-copy strong { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; font-size: var(--fs-row); font-weight: 500; }
 .android .device-row-copy small { font-size: var(--fs-small); line-height: 1.45; color: var(--muted); }
-.android .device-row-copy .this-device { font-size: var(--fs-caption); font-weight: 500; color: var(--tile-ink); }
+
 .android .device-row-details { padding: 0 var(--inset) 14px; }
-.android .device-member-controls { gap: 12px; padding: 14px 4px; }
+
 .android .member-actions { gap: 8px; flex-wrap: wrap; }
 
 /* Dialog-backed tasks act as native pages; overflow actions and pickers open as a bottom sheet. */

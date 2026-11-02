@@ -35,13 +35,7 @@
     grid-template-columns: 120px 1fr 120px auto;
   }
 
-  .port-forward-device-field {
-    grid-column: span 2;
-    order: 2;
-  }
-
-  .port-forward-form label:nth-child(4),
-  .port-forward-submit {
+.port-forward-form label:nth-child(4) {
     order: 3;
   }
 }
@@ -78,15 +72,6 @@
 @media (max-width: 620px) {
   .initialization-shell {
     gap: 20px;
-  }
-
-  .initialization-brand .brand-mark {
-    width: 44px;
-    height: 44px;
-  }
-
-  .initialization-card {
-    border-radius: 14px;
   }
 
   .onboarding-shell {
@@ -149,42 +134,12 @@
     display: grid;
   }
 
-  
-
-  
-
-  .access-summary {
-    grid-template-columns: 1fr;
-  }
-
-  .port-forward-heading {
-    flex-direction: column;
-    gap: 10px;
-  }
-
   .port-forward-form {
     grid-template-columns: 1fr;
   }
 
-  .port-forward-device-field {
-    grid-column: auto;
+.port-forward-form label:nth-child(4) {
     order: initial;
-  }
-
-  .port-forward-form label:nth-child(4),
-  .port-forward-submit {
-    order: initial;
-  }
-
-  .port-forward-row {
-    grid-template-columns: 48px minmax(0, 1fr) auto;
-    gap: 8px;
-    padding: 9px 0;
-  }
-
-  .port-forward-target {
-    grid-column: 2 / -1;
-    grid-row: 2;
   }
 
   .metric,
@@ -214,9 +169,7 @@
     width: min(280px, 100%);
     justify-self: center;
   }
-
-  .invitation-result-actions,
-  .section-heading {
+.section-heading {
     align-items: flex-start;
     flex-direction: column;
   }

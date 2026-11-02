@@ -18,9 +18,7 @@
 
 .operation-result { display: grid; gap: 14px; padding: 20px 0; }
 .operation-result h3, .operation-result p { margin: 0; }
-.weekly-access-rows { display: grid; gap: 12px; }
-.weekly-access-row { display: grid; grid-template-columns: minmax(100px, 1fr) 1fr 1fr auto; gap: 10px; align-items: end; }
-.weekly-access-row label { min-width: 0; }
+
 @media (max-height: 600px) {
   .dialog-content.dialog-layout { max-height: calc(100dvh - 16px); }
   .dialog-header { padding: 10px 16px; }
@@ -35,13 +33,6 @@
   .invitation-dialog-ready .qr-share small { display: none; }
   .invitation-dialog-ready .invitation-result { gap: 8px; }
   .invitation-dialog-ready .code-share .secret-code-output { min-height: 80px; }
-}
-@media (max-width: 680px) {
-  .weekly-access-row { grid-template-columns: 1fr 1fr; }
-  
-  
-  .initialization-card > h1 { margin-bottom: 16px; }
-  .initialization-card .settings-card > h2 { margin-top: 0; }
 }
 
 .port-forward-panel .field-error { color: color-mix(in srgb, var(--danger) 70%, var(--text)); }
