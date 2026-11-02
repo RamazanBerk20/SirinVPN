@@ -15,7 +15,9 @@ import type {
   ServerProfile,
 } from "../../types";
 import { errorMessage } from "../../lib/errors";
+import { notify } from "../../components/Toasts";
 import { t } from "../../i18n";
+import { invitationTitle } from "./ActiveInvitations";
 import type { Confirmation } from "../../lib/confirmAction";
 import { useMemberLifecycle } from "./useMemberLifecycle";
 import { cachedMembership, invalidateMembership, readMembership, retainMembership, withoutLiveActivity } from "./membershipCache";
@@ -99,7 +101,8 @@ export function useAccessController({
       accessLevel,
       snapshot,
       onSnapshot: updateSnapshot,
-      onError: setError,
+      // The member menu has closed, so the result is a toast rather than a line on the page.
+      onError: (message) => { if (message) notify(message, "error"); },
     });
   const [portForwardingAvailable, setPortForwardingAvailable] = useState<
     boolean | null
@@ -188,16 +191,15 @@ export function useAccessController({
     };
   }, [connected, refresh]);
 
-  const rename = async (deviceId: string, currentName: string) => {
-    if (!verified) return;
-    const name = window.prompt(t("devices.rename.prompt"), currentName)?.trim();
-    if (!name || name === currentName) return;
-    setError(null);
+  /** Rejects with a message for the rename dialog, which stays open to show it. */
+  const renameDevice = async (deviceId: string, name: string) => {
+    if (!verified) throw new Error(t("devices.error.rename"));
     try {
       updateSnapshot(await api.renameDevice(profile.id, deviceId, name));
     } catch (reason) {
-      setError(errorMessage(reason, t("devices.error.rename")));
+      throw new Error(errorMessage(reason, t("devices.error.rename")));
     }
+    notify(t("devices.notice.renamed", { name }));
   };
 
   const confirmCurrentAction = async (confirmation: Confirmation) => {
@@ -215,11 +217,11 @@ export function useAccessController({
       })
     )
       return;
-    setError(null);
     try {
       updateSnapshot(await api.revokeDevice(profile.id, deviceId));
+      notify(t("devices.notice.revoked", { name: deviceName }));
     } catch (reason) {
-      setError(errorMessage(reason, t("devices.error.revoke")));
+      notify(errorMessage(reason, t("devices.error.revoke")), "error");
     }
   };
 
@@ -242,13 +244,13 @@ export function useAccessController({
         };
     if (!await confirmCurrentAction(confirmation)) return;
     setPeerBusy(deviceId);
-    setError(null);
     try {
       updateSnapshot(
         await api.updateDevicePeerCommunication(profile.id, deviceId, enabled),
       );
+      notify(t(enabled ? "devices.notice.mutualAllowed" : "devices.notice.isolated", { name: deviceName }));
     } catch (reason) {
-      setError(errorMessage(reason, t("devices.error.mutualAccess")));
+      notify(errorMessage(reason, t("devices.error.mutualAccess")), "error");
     } finally {
       setPeerBusy(null);
     }
@@ -306,6 +308,7 @@ export function useAccessController({
       );
       setForwardPublicPort("");
       setForwardDevicePort("");
+      notify(t("devices.notice.portOpened", { port: publicPort }));
     } catch (reason) {
       setPortError(reason, t("devices.error.openPort"));
     } finally {
@@ -332,6 +335,7 @@ export function useAccessController({
       updateSnapshot(
         await api.removePortForward(profile.id, protocol, publicPort),
       );
+      notify(t("devices.notice.portClosed", { port: publicPort }));
     } catch (reason) {
       setPortError(reason, t("devices.error.closePort"));
     } finally {
@@ -339,15 +343,21 @@ export function useAccessController({
     }
   };
 
+  /** Rejects with a message for the invitation's row. */
   const cancel = async (invitationId: string) => {
-    if (!verified) return;
-    setError(null);
+    const invitation = snapshot?.active_invitations.find((entry) => entry.id === invitationId);
+    if (!invitation || !await confirmCurrentAction({
+      title: t("devices.confirm.cancelInvitation.title", { name: invitationTitle(invitation, snapshot?.members ?? []) }),
+      message: t("devices.confirm.cancelInvitation.message"),
+      confirm: t("devices.confirm.cancelInvitation.action"),
+    })) return;
     try {
       await api.cancelInvitation(profile.id, invitationId);
-      await refreshAfterChange();
     } catch (reason) {
-      setError(errorMessage(reason, t("devices.error.cancelInvitation")));
+      throw new Error(errorMessage(reason, t("devices.error.cancelInvitation")));
     }
+    notify(t("devices.notice.invitationCancelled"));
+    await refreshAfterChange();
   };
 
   const updateAccess = async (member: MemberSummary) => {
@@ -365,13 +375,13 @@ export function useAccessController({
         };
     if (!await confirmCurrentAction(confirmation)) return;
     setAccessBusy(member.id);
-    setError(null);
     try {
       updateSnapshot(
         await api.updateMemberAccess(profile.id, member.id, administrator),
       );
+      notify(t(administrator ? "devices.notice.madeAdmin" : "devices.notice.removedAdmin", { name: member.name }));
     } catch (reason) {
-      setError(errorMessage(reason, t("devices.error.role")));
+      notify(errorMessage(reason, t("devices.error.role")), "error");
     } finally {
       setAccessBusy(null);
     }
@@ -391,12 +401,12 @@ export function useAccessController({
     });
     if (!confirmed) return;
     setAccessBusy(member.id);
-    setError(null);
     try {
       updateSnapshot(await api.transferOwnership(profile.id, destination.id));
+      notify(t("devices.notice.transferred", { name: member.name }));
       await onAccessChanged();
     } catch (reason) {
-      setError(errorMessage(reason, t("devices.error.transfer")));
+      notify(errorMessage(reason, t("devices.error.transfer")), "error");
     } finally {
       setAccessBusy(null);
     }
@@ -449,7 +459,7 @@ export function useAccessController({
     owner,
     refresh,
     refreshAfterChange,
-    rename,
+    renameDevice,
     revoke,
     updatePeerCommunication,
     createPortForward,

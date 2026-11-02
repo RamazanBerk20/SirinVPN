@@ -1,8 +1,9 @@
+import { Warning } from "@phosphor-icons/react";
 import { WeeklyAccessFields } from "./WeeklyAccessFields";
-import { policyFieldErrors } from "./memberPolicy";
+import { expiryUnix, policyFieldErrors } from "./memberPolicy";
 import { Field } from "../../components/ui";
 import type { PolicyDraft } from "./memberPolicy";
-import { t } from "../../i18n";
+import { formatDateTime, t } from "../../i18n";
 
 const PERMISSIONS = [
   ["invite_members", "devices.policy.permission.inviteMembers"],
@@ -11,23 +12,39 @@ const PERMISSIONS = [
   ["manage_own_port_forwards", "devices.policy.permission.managePortForwards"],
 ] as const;
 
-export function MemberPolicyFields({ draft, onChange, delegated = false }: {
+/** Limits, schedule and permissions, shared by the invite form and the access policy editor. */
+export function MemberPolicyFields({ draft, onChange, delegated = false, creating = false }: {
   draft: PolicyDraft; onChange: (draft: PolicyDraft) => void; delegated?: boolean;
+  /** A new member has no devices to revoke yet. */
+  creating?: boolean;
 }) {
   const errors = policyFieldErrors(draft);
+  const expires = draft.expires && !errors.expires ? expiryUnix(draft.expires) : null;
+  const utc = expires === null ? null : formatDateTime(new Date(expires * 1000), { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" });
   return <div className="member-policy-fields">
-    <Field error={errors.limit} label={t("devices.policy.deviceLimit")} hint={t("devices.policy.deviceLimitHint")}>
-      <input type="number" min={1} max={222} value={draft.limit} onChange={(event) => onChange({ ...draft, limit: event.target.value })} />
-    </Field>
-    <Field error={errors.expires} label={t("devices.policy.expires")} hint={t("devices.policy.expiresHint")}>
-      <input type="datetime-local" value={draft.expires} onChange={(event) => onChange({ ...draft, expires: event.target.value })} />
-    </Field>
+    <fieldset className="policy-group">
+      <legend>{t("devices.policy.limits")}</legend>
+      <div className="policy-limit-fields">
+        <Field error={errors.limit} label={t("devices.policy.deviceLimit")} hint={t(creating ? "devices.policy.deviceLimitHintNew" : "devices.policy.deviceLimitHint")}>
+          <input type="number" min={1} max={222} inputMode="numeric" value={draft.limit} onChange={(event) => onChange({ ...draft, limit: event.target.value })} />
+        </Field>
+        <Field error={errors.expires} label={t("devices.policy.expires")} hint={utc ? t("devices.policy.expiresUtc", { time: utc }) : t("devices.policy.expiresHint")}>
+          <input type="datetime-local" value={draft.expires} onChange={(event) => onChange({ ...draft, expires: event.target.value })} />
+        </Field>
+      </div>
+      {expires !== null && expires * 1000 <= Date.now() && <p className="policy-warning" role="status">
+        <Warning size={17} weight="fill" /> <span>{t("devices.policy.expiresPast")}</span>
+      </p>}
+    </fieldset>
     <WeeklyAccessFields value={draft.schedule} error={errors.schedule} onChange={(schedule) => onChange({ ...draft, schedule })} />
-    {PERMISSIONS.filter(([key]) => !delegated || key !== "invite_members").map(([key, label]) =>
-      <label className="preference-checkbox" key={key}>
-        <input type="checkbox" checked={draft.policy[key]} onChange={(event) => onChange({ ...draft, policy: { ...draft.policy, [key]: event.target.checked } })} />
-        <span>{t(label)}</span>
-      </label>,
-    )}
+    <fieldset className="policy-group">
+      <legend>{t("devices.policy.permissions")}</legend>
+      {PERMISSIONS.filter(([key]) => !delegated || key !== "invite_members").map(([key, label]) =>
+        <label className="preference-checkbox" key={key}>
+          <input type="checkbox" checked={draft.policy[key]} onChange={(event) => onChange({ ...draft, policy: { ...draft.policy, [key]: event.target.checked } })} />
+          <span>{t(label)}</span>
+        </label>,
+      )}
+    </fieldset>
   </div>;
 }

@@ -2,6 +2,7 @@
   "panel": {
     "title": "Members and devices",
     "refresh": "Refresh devices",
+    "refreshing": "Refreshing…",
     "invite": "Invite member",
     "connectFirst": "Connect to see and manage devices.",
     "openHome": "Open Home",
@@ -12,20 +13,36 @@
     "savedStaleAt": "Showing devices saved at {{time}}. Changes are off until the list refreshes.",
     "lifecycleUnsupported": "Update the server to suspend members or revoke all their devices.",
     "search": "Search devices",
-    "searchPlaceholder": "Name or VPN address",
+    "searchPlaceholder": "Search by name or VPN address",
+    "clearSearch": "Clear search",
+    "noMatches": "No member or device matches “{{query}}”.",
     "summary": {
       "label": "Access summary",
-      "members_one": "<strong>{{count}}</strong> member",
-      "members_other": "<strong>{{count}}</strong> members",
-      "devices_one": "<strong>{{count}}</strong> device",
-      "devices_other": "<strong>{{count}}</strong> devices",
-      "invitations_one": "<strong>{{count}}</strong> invitation",
-      "invitations_other": "<strong>{{count}}</strong> invitations"
+      "members_one": "{{count}} member",
+      "members_other": "{{count}} members",
+      "devices_one": "{{count}} device",
+      "devices_other": "{{count}} devices"
     },
-    "addWireguard": "Add WireGuard device"
+    "addWireguard": "Add WireGuard device",
+    "aloneTitle": "Only this device so far",
+    "aloneBody": "Add your phone or another computer, or invite someone to use your VPN.",
+    "aloneBodyOwn": "Add your phone or another computer to use your VPN there too.",
+    "addOwnDevice": "Add a device"
+  },
+  "member": {
+    "suspended": "Suspended",
+    "devices_one": "{{count}} device",
+    "devices_other": "{{count}} devices",
+    "devicesOfLimit_one": "{{count}} of {{limit}} devices",
+    "devicesOfLimit_other": "{{count}} of {{limit}} devices",
+    "limitedHours": "Limited hours",
+    "expires": "Access until {{date}}",
+    "expired": "Access ended {{date}}",
+    "canInvite": "Can invite",
+    "noDevices": "No devices yet.",
+    "noDevicesSuspended": "No devices. Suspended members can’t add any."
   },
   "row": {
-    "subtitle": "{{member}} · {{role}} · <address>{{address}}</address>",
     "activity": {
       "suspended": "Suspended",
       "recent": "Recently active",
@@ -33,20 +50,11 @@
       "unknown": "Activity unknown"
     },
     "facts": {
-      "address": "VPN address",
-      "activity": "Activity",
       "network": "Network access",
       "fingerprint": "Identity fingerprint",
       "connection": "Connects with",
       "localNetworks": "Shares local networks",
-      "inactiveLocalNetworks": "Inactive: the VPS routes these through another network",
       "pairs": "Pairs"
-    },
-    "activityDetail": {
-      "suspended": "Member is suspended",
-      "recent": "Seen in the last 3 minutes",
-      "idle": "Not seen in the last 3 minutes",
-      "unknown": "Not reported by the server"
     },
     "network": {
       "suspended": "Blocked until the member is reactivated",
@@ -54,21 +62,21 @@
       "isolated": "Internet only, isolated from other devices",
       "paired": "Internet and paired devices only"
     },
+    "networkActive": "Active",
+    "networkInactive": "Not routed",
+    "networkInactiveHint": "Not routed: the VPS sends these ranges through another of its networks.",
+    "networksUnreachable": "No other device can reach these until {{name}} allows mutual access or is paired.",
     "fingerprintLabel": "{{name}} fingerprint",
     "lastOwnerDevice": "The last Owner device can’t be revoked.",
+    "lastOwnerHelp": "Add another Owner device first, or transfer ownership from another member’s menu.",
     "addOwnerDevice": "Add Owner device",
-    "transferToOther": "Transfer to another member",
-    "transferTo": "Transfer to {{name}}",
-    "noDevices": "No devices",
-    "suspendedNoDevices": "Suspended · No devices",
-    "noMatches": "No devices match your search.",
+    "wireguardShort": "WireGuard app",
     "wireguardOnly": "WireGuard app or router, Direct UDP only"
   },
   "menu": {
     "deviceActions": "Actions for {{name}}",
     "memberActions": "Member actions for {{name}}",
     "group": {
-      "device": "Device",
       "member": "Member",
       "ownership": "Ownership"
     },
@@ -79,9 +87,8 @@
     "allowMutual": "Allow mutual access",
     "isolate": "Isolate device",
     "revoke": "Revoke {{name}}",
-    "makeAdmin": "Make Admin",
-    "removeAdmin": "Remove Admin",
-    "applying": "Applying…",
+    "makeAdmin": "Make admin",
+    "removeAdmin": "Remove admin",
     "transfer": "Transfer ownership",
     "portForwarding": "Port forwarding",
     "suspend": "Suspend member",
@@ -89,38 +96,55 @@
     "revokeAll": "Revoke all devices",
     "reactivateFirst": "Reactivate this member first.",
     "cancelInvitationFirst": "Cancel this member’s invitation first.",
+    "limitReached": "Device limit reached ({{count}}). Raise it in Access policy.",
+    "needsManagedDevice": "Needs a device running SirinVPN, not only WireGuard.",
     "addWireguardFor": "Add WireGuard device for {{name}}",
     "localNetworks": "Local networks",
     "pairs": "Device pairs"
   },
   "invitations": {
-    "empty": "No active invitations",
-    "title": "Active invitations",
+    "title": "Pending invitations",
     "newMember": "New member invitation",
-    "row": "{{role}} · Expires {{date}}",
-    "cancel": "Cancel invitation"
+    "newDevice": "New device for {{name}}",
+    "row": "{{role}} · {{uses}} · Expires {{date}}",
+    "singleUse": "Single use",
+    "reusable": "Reusable · up to {{max}} uses",
+    "usesLeft": "Reusable · {{left}} of {{max}} uses left",
+    "cancel": "Cancel invitation",
+    "cancelling": "Cancelling…"
   },
   "invite": {
     "title": "Invite member",
+    "titleSelf": "Add another device",
     "titleForMember": "Add device for {{name}}",
     "titleReady": "Invitation ready",
     "targetSummary_one": "{{role}} · {{count}} device",
     "targetSummary_other": "{{role}} · {{count}} devices",
-    "description": "Their device creates its own keys and joins this server directly.",
-    "descriptionForMember": "The new device creates its own keys and joins {{name}}.",
-    "descriptionReady_one": "Copy or share this code before closing. It’s shown only once and adds one device.",
-    "descriptionReady_other": "Copy or share this code before closing. It’s shown only once and adds up to {{count}} devices.",
-    "expires": "Expires {{date}}",
+    "description": "Create a code for someone to join this VPN.",
+    "descriptionNamed": "Create a code for someone to join this VPN. They name themselves and their device when joining.",
+    "descriptionSelf": "Create a code, then use it on your new device.",
+    "descriptionForMember": "Create a code for {{name}}’s new device.",
+    "descriptionReady": "Send this code to the person you’re inviting.",
+    "descriptionReadyDevice": "Use this code on the new device.",
+    "onceTitle": "This code is shown only once",
+    "secretWarning": "Anyone with it can join until it’s used, cancelled or expired. Share it privately.",
+    "resultMeta": "{{uses}} · Expires {{date}}",
+    "usesUpTo_one": "Up to {{count}} device",
+    "usesUpTo_other": "Up to {{count}} devices",
     "copyCode": "Copy code",
     "copyFailed": "Couldn’t copy the code. Select it and copy it manually.",
     "copyFailedAndroid": "Couldn’t copy the code. Use View or share invitation to send it instead.",
-    "secretWarning": "Anyone with this code can join until it’s used, cancelled or expired. Share it privately.",
+    "done": "Done",
+    "closeUnshared": {
+      "title": "Close without sharing the code?",
+      "message": "It can’t be shown again. If you haven’t copied, scanned or shared it, cancel this invitation and create a new one.",
+      "action": "Close"
+    },
     "role": "Access level",
-    "roleHint": "Admins can invite and manage Members.",
+    "roleHint": "Admins can invite and manage members, but not other admins or the Owner.",
     "roleHintMember": "Members connect their own devices. They can’t invite or manage others unless you allow it below.",
     "checking": "Checking the server…",
     "checkAgain": "Check again",
-    "recipientNames": "The recipient names the device when joining.",
     "olderServer": "This server needs the device name now. Update the server to let recipients choose it.",
     "deviceName": "Device name",
     "lifetime": "Expires after",
@@ -150,7 +174,6 @@
     "scanInvitation": "Scan invitation code",
     "scanRecovery": "Scan recovery key",
     "closeQr": "Close QR code",
-    "copyInvitation": "Copy invitation code",
     "copyRecovery": "Copy recovery key",
     "altInvitation": "Invitation QR code",
     "altInvitationEnlarged": "Enlarged invitation QR code",
@@ -160,54 +183,66 @@
   },
   "localNetworks": {
     "title": "Local networks on {{name}}",
-    "description": "Devices with mutual access reach these private networks through your VPS while {{name}} allows mutual access too, and so does a device paired to start connections to {{name}}. Their hosts can answer but can’t start connections into SirinVPN.",
+    "description": "Share private networks behind {{name}}, such as a home network, with your other devices.",
+    "whoCanReach": "Who can reach these?",
+    "reach": "Devices with mutual access reach these networks through your VPS while {{name}} allows mutual access too, and so does a device paired to start connections to {{name}}. Hosts on these networks can answer, but can’t start connections into SirinVPN.",
     "label": "Networks",
     "hint": "One private IPv4 network per line, /20 or smaller, such as 192.168.1.0/24. Leave empty to stop sharing.",
     "invalid": "Not a private IPv4 network of /20 or smaller: {{networks}}",
-    "linux": "{{name}} must run SirinVPN on Linux with IPv4 forwarding on: sudo sysctl -w net.ipv4.ip_forward=1. A WireGuard-only router forwards with its own settings.",
+    "linux": "{{name}} must run SirinVPN on Linux with IPv4 forwarding on:",
+    "router": "A WireGuard-only router forwards with its own settings.",
+    "copyCommand": "Copy command",
     "apply": "Each device applies a change when it next connects.",
     "save": "Save networks",
     "saveFailed": "Couldn’t save the local networks. Try again."
   },
   "pairs": {
     "title": "Pairs for {{name}}",
-    "description": "A pair lets two devices reach each other even when mutual access is off. Mutual access still reaches every device that has it on too.",
+    "description": "A pair lets two devices reach each other even when mutual access is off.",
     "none": "No pairs yet.",
-    "bothWays": "{{name}}, both ways",
-    "starts": "Starts connections to {{name}}",
-    "answers": "Only answers {{name}}",
+    "bothWays": "{{first}} ↔ {{second}} (both ways)",
+    "oneWay": "{{from}} → {{to}} (one way)",
     "otherDevice": "another member’s device",
+    "addHeading": "Add a pair",
     "peer": "Device",
+    "pairedOption": "{{name}} · paired",
     "direction": "Direction",
+    "directionHint": "The arrow points from the device that starts connections; the other only answers. Starting connections to a device that shares local networks also reaches them.",
     "option": {
       "both": "Both ways",
-      "starts": "{{name}} starts, the other only answers",
-      "answers": "The other starts, {{name}} only answers"
+      "oneWay": "{{from}} → {{to}}"
     },
-    "localNetworks": "Starting connections to a device that shares local networks also reaches them.",
+    "replaces": "{{name}} is already paired. Adding replaces its direction.",
     "save": "Add pair",
     "remove": "Remove",
+    "removing": "Removing…",
     "saveFailed": "Couldn’t change the pair. Try again."
   },
   "policy": {
     "title": "Access policy for {{name}}",
-    "description": "Applies to all their devices. Saving cancels invitations for or from this member.",
+    "description": "Applies to all their devices.",
+    "cancelsInvitations": "Saving cancels pending invitations for or from {{name}}.",
     "fixFields": "Fix the highlighted fields.",
     "saveFailed": "Couldn’t save the access policy. Try again.",
     "save": "Save policy",
+    "limits": "Limits",
     "deviceLimit": "Device limit",
     "deviceLimitHint": "Leave empty for no limit. Revoke extra devices before lowering it.",
-    "expires": "Access expires (UTC)",
-    "expiresHint": "Leave empty to never expire.",
+    "deviceLimitHintNew": "Leave empty for no limit.",
+    "expires": "Access expires",
+    "expiresHint": "Your local time. Leave empty to never expire.",
+    "expiresUtc": "Your local time ({{time}} UTC).",
+    "expiresPast": "This time has passed. The member loses access as soon as you save.",
+    "permissions": "Permissions",
     "permission": {
       "inviteMembers": "Invite members",
       "addOwnDevices": "Add their own devices",
       "manageMutualAccess": "Manage mutual access for their devices",
-      "managePortForwards": "Forward ports to their devices"
+      "managePortForwards": "Open public internet ports to their devices"
     },
     "error": {
       "limit": "Enter a limit from 1 to 222, or leave it empty.",
-      "expires": "Enter a valid UTC date and time.",
+      "expires": "Enter a valid date and time.",
       "format": "Use one window per line, like {{example}}.",
       "order": "Each window must end after it starts, on the same day. Use 24:00 for midnight.",
       "overlap": "Use up to 28 windows that don’t overlap.",
@@ -216,20 +251,25 @@
   },
   "schedule": {
     "label": "Weekly schedule",
-    "title": "Weekly access (UTC)",
-    "allWeek": "With no intervals, access is allowed all week.",
-    "day": "Day {{number}}",
-    "start": "Start {{number}} (UTC)",
-    "end": "End {{number}} (UTC)",
-    "midnight": "Midnight, end of day",
+    "title": "Weekly access",
+    "allWeek": "Access is allowed all week. Add an interval to limit it to certain hours.",
+    "localTime": "Times are in your time zone ({{zone}}). Daylight saving changes can shift them by an hour.",
+    "interval": "Interval {{number}}",
+    "day": "Day",
+    "start": "Start",
+    "end": "End",
+    "wholeDay": "The whole day.",
+    "midnight": "Ends at midnight.",
+    "nextDay": "Ends the next day.",
+    "utc": "Stored as UTC: {{windows}}",
+    "incomplete": "Choose a start and end time for interval {{number}}.",
+    "sameTime": "Interval {{number}} starts and ends at the same time. Use 00:00 to 00:00 for a whole day.",
     "remove": "Remove interval {{number}}",
     "add": "Add interval",
     "useControls": "Use time pickers",
     "editText": "Edit as text",
-    "textHint": "One window per line, like {{example}}. Up to 28.",
-    "preview": "Preview in local time",
-    "previewNote": "Local times can shift with daylight saving.",
-    "range": "{{start}} → {{end}}"
+    "textLabel": "Weekly access (UTC)",
+    "textHint": "One window per line in UTC, like {{example}}. Up to 28."
   },
   "ports": {
     "title": "Port forwarding",
@@ -241,21 +281,23 @@
     "manageDevices": "Manage devices",
     "protocol": "Protocol",
     "publicPort": "Public port",
+    "publicPortHint": "Opens on your VPS’s address.",
     "device": "Device",
     "devicePort": "Device port",
-    "noDevice": "No device available",
+    "devicePortHint": "Where the service listens.",
     "targetOption": "{{member}} / {{device}} · {{address}}",
     "publicPortLow": "Use a port from 1024 to 65535. Lower ports are reserved.",
     "publicPortRange": "Use a port from 1024 to 65535.",
     "devicePortRange": "Use a port from 1 to 65535.",
     "previewLabel": "Forwarding preview",
     "preview": "Public {{protocol}} port <strong>{{publicPort}}</strong> → <strong>{{device}}</strong> → port <strong>{{devicePort}}</strong>",
-    "chooseDevice": "Choose a device",
     "previewEmpty": "Enter both ports to see a preview.",
     "previewInvalid": "Fix the highlighted fields to see a preview.",
+    "full": "All {{max}} ports are in use. Close one to open another.",
     "open": "Open port",
     "opening": "Opening…",
     "visitorAddress": "The service sees visitors as <address>{{address}}</address>, not their real IP.",
+    "listLabel": "Open ports",
     "empty": "No open ports",
     "target": "{{member}} / {{device}}",
     "targetPaused": "{{member}} / {{device}} · Paused while suspended",
@@ -268,7 +310,15 @@
     "settingsUnavailable": "Server settings are unavailable."
   },
   "rename": {
-    "prompt": "Device name"
+    "title": "Rename {{name}}",
+    "description": "Everyone who manages this VPN sees the new name.",
+    "label": "Device name",
+    "hint": "Up to 64 characters.",
+    "save": "Rename",
+    "empty": "Enter a name.",
+    "tooLong_one": "Use at most {{count}} character.",
+    "tooLong_other": "Use at most {{count}} characters.",
+    "invalid": "Remove line breaks and other control characters."
   },
   "confirm": {
     "revoke": {
@@ -297,18 +347,18 @@
       "action": "Close port"
     },
     "makeAdmin": {
-      "title": "Make {{name}} an Admin?",
-      "message": "Admins can invite and manage Members.",
-      "action": "Make Admin"
+      "title": "Make {{name}} an admin?",
+      "message": "Admins can invite and manage members.",
+      "action": "Make admin"
     },
     "removeAdmin": {
-      "title": "Remove Admin from {{name}}?",
+      "title": "Remove admin from {{name}}?",
       "message": "Their devices keep VPN access.",
-      "action": "Remove Admin"
+      "action": "Remove admin"
     },
     "transfer": {
       "title": "Transfer ownership to {{name}}?",
-      "message": "{{device}} ({{fingerprint}}) and their other devices become Owner devices. This device becomes an Admin.",
+      "message": "{{device}} ({{fingerprint}}) and their other devices become Owner devices. This device becomes an admin.",
       "action": "Transfer"
     },
     "suspend": {
@@ -327,7 +377,49 @@
       "message_one": "This permanently removes {{count}} device, plus port forwards and invitations. They’ll need a new invitation to return.",
       "message_other": "This permanently removes {{count}} devices, plus port forwards and invitations. They’ll need a new invitation to return.",
       "action": "Revoke all"
+    },
+    "cancelInvitation": {
+      "title": "Cancel “{{name}}”?",
+      "message": "The code stops working immediately. Devices that already joined keep their access.",
+      "action": "Cancel invitation"
+    },
+    "removePair": {
+      "title": "Remove the pair {{first}} and {{second}}?",
+      "message": "They can no longer reach each other unless both allow mutual access.",
+      "action": "Remove pair"
     }
+  },
+  "notice": {
+    "renamed": "Renamed to {{name}}.",
+    "revoked": "{{name}} was revoked.",
+    "mutualAllowed": "{{name}} now allows mutual access.",
+    "isolated": "{{name}} is isolated.",
+    "portOpened": "Port {{port}} is open.",
+    "portClosed": "Port {{port}} is closed.",
+    "invitationCancelled": "Invitation cancelled.",
+    "madeAdmin": "{{name}} is now an admin.",
+    "removedAdmin": "{{name}} is no longer an admin.",
+    "transferred": "{{name}} is now the Owner. This device is an admin.",
+    "revokedAll": "All of {{name}}’s devices were revoked.",
+    "suspended": "{{name}} is suspended.",
+    "reactivated": "{{name}} is active again.",
+    "policySaved": "Access policy for {{name}} saved.",
+    "pairAdded": "Paired with {{name}}.",
+    "pairRemoved": "Pair with {{name}} removed.",
+    "networksSaved": "Local networks on {{name}} saved.",
+    "networksCleared": "{{name}} no longer shares local networks."
+  },
+  "join": {
+    "codeAccepted": "Invitation code accepted",
+    "changeCode": "Change code",
+    "rejected": {
+      "expired": "This invitation has expired. Ask for a new one.",
+      "used": "This invitation has already been used or was cancelled. Ask for a new one.",
+      "invalid": "This isn’t a valid invitation code. Check that you copied all of it, or ask for a new one."
+    },
+    "ownerDevice": "Adds this device to {{name}}’s Owner access.",
+    "ownerPower": "Owner devices can manage the server, every member and every device. Join only if you expected this.",
+    "renameLater": "You can rename it later in Devices."
   },
   "error": {
     "load": "Couldn’t load devices from the server.",

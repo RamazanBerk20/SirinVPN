@@ -32,7 +32,8 @@ it("creates recipient-named invitations without asking the inviter for names on 
   fireEvent.change(screen.getByLabelText(new RegExp(t("devices.invite.role"))), { target: { value: "admin" } });
   fireEvent.click(createButton());
   await screen.findByText("Invitation to share");
-  expect(screen.getByText(t("devices.invite.descriptionReady", { count: 1 }))).toBeTruthy();
+  expect(screen.getByText(t("devices.invite.descriptionReady"))).toBeTruthy();
+  expect(screen.getByText(t("devices.invite.onceTitle"))).toBeTruthy();
   expect(invoke).toHaveBeenCalledWith("create_invitation", { input: expect.objectContaining({
     server_id: "server", recipient_names: true, member_name: "", device_name: "",
     administrator: true, max_uses: 1, target_member_id: null,
@@ -57,14 +58,18 @@ it("confirms copying only after clipboard access succeeds and explains failures"
 });
 
 it("keeps a newly created code visible through refresh failures and clears it when closed", async () => {
+  vi.stubGlobal("navigator", { clipboard: { writeText: vi.fn().mockResolvedValue(undefined) } });
   const { rerender } = render(<InvitationDialog {...props} />);
   fireEvent.click(createButton());
   await screen.findByText("Invitation to share");
   rerender(<InvitationDialog {...props} recipientNamesAvailable={null} configurationError="Access unavailable" />);
   expect(screen.getByText("Invitation to share")).toBeTruthy();
   await waitFor(() => expect((screen.getByRole("button", { name: t("common.action.close") }) as HTMLButtonElement).disabled).toBe(false));
-  fireEvent.click(screen.getByRole("button", { name: t("common.action.close") }));
-  expect(props.onOpenChange).toHaveBeenCalledWith(false);
+  // A copied code closes without asking.
+  fireEvent.click(screen.getByRole("button", { name: t("devices.invite.copyCode") }));
+  await screen.findByRole("button", { name: t("common.action.copied") });
+  fireEvent.click(screen.getByRole("button", { name: t("devices.invite.done") }));
+  await waitFor(() => expect(props.onOpenChange).toHaveBeenCalledWith(false));
   rerender(<InvitationDialog {...props} open={false} />);
   rerender(<InvitationDialog {...props} />);
   expect(screen.queryByText("Invitation to share")).toBeNull();
@@ -103,7 +108,7 @@ it("waits for a confirmed capability and offers a retry after a server check fai
   const { rerender } = render(<InvitationDialog {...props} recipientNamesAvailable={null} onRefreshConfiguration={retry} />);
   expect(screen.getByText(t("devices.invite.checking"))).toBeTruthy();
   expect(createButton().disabled).toBe(true);
-  fireEvent.submit(createButton().closest("form")!);
+  fireEvent.submit(document.getElementById(createButton().getAttribute("form")!)!);
   expect(invoke).not.toHaveBeenCalled();
   rerender(<InvitationDialog {...props} recipientNamesAvailable={null} onRefreshConfiguration={retry} configurationError="VPS is unreachable." />);
   fireEvent.click(screen.getByRole("button", { name: t("devices.invite.checkAgain") }));
@@ -113,4 +118,25 @@ it("waits for a confirmed capability and offers a retry after a server check fai
   rerender(<InvitationDialog {...props} recipientNamesAvailable={true} />);
   expect(createButton().disabled).toBe(false);
   expect(screen.queryByText(t("devices.invite.olderServer"))).toBeNull();
+});
+
+it("asks before closing a code that was never copied or shared", async () => {
+  const confirm = vi.fn().mockReturnValueOnce(false).mockReturnValueOnce(true);
+  vi.stubGlobal("confirm", confirm);
+  const onOpenChange = vi.fn();
+  render(<InvitationDialog {...props} onOpenChange={onOpenChange} />);
+  fireEvent.click(createButton());
+  await screen.findByText("Invitation to share");
+  fireEvent.click(screen.getByRole("button", { name: t("devices.invite.done") }));
+  await waitFor(() => expect(confirm).toHaveBeenCalledOnce());
+  expect(confirm.mock.calls[0][0]).toContain(t("devices.invite.closeUnshared.title"));
+  expect(onOpenChange).not.toHaveBeenCalledWith(false);
+  fireEvent.click(screen.getByRole("button", { name: t("common.action.close") }));
+  await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
+});
+
+it("titles a code for the inviter's own next device as another device", () => {
+  render(<InvitationDialog {...props} self target={{ id: "me", name: "You", role: "owner", devices: [] }} />);
+  expect(screen.getByText(t("devices.invite.titleSelf"))).toBeTruthy();
+  expect(screen.queryByText(/Add device for You/)).toBeNull();
 });

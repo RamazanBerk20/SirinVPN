@@ -1,118 +1,4 @@
-.port-forward-form input:focus,
-.port-forward-form select:focus {
-  border-color: var(--cyan);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--cyan) 10%, transparent);
-}
-
-.port-forward-form input:disabled,
-.port-forward-form select:disabled {
-  opacity: 0.48;
-}
-
-.port-forward-submit {
-  height: 38px;
-  white-space: nowrap;
-}
-
-.port-forward-notice {
-  display: flex;
-  gap: 9px;
-  margin-top: 13px;
-  padding: 10px 12px;
-  border: 1px solid color-mix(in srgb, var(--warning) 28%, transparent);
-  border-radius: 7px;
-  background: color-mix(in srgb, var(--warning) 5%, transparent);
-  color: color-mix(in srgb, var(--warning) 90%, var(--surface-2));
-}
-
-.port-forward-notice svg {
-  flex: 0 0 auto;
-  color: var(--warning);
-}
-
-.port-forward-notice p {
-  margin: 0;
-}
-
-.port-forward-list {
-  margin-top: 13px;
-  border-top: 1px solid var(--line);
-}
-
-.port-forward-empty {
-  margin: 0;
-  padding: 18px 2px 2px;
-  color: var(--quiet);
-}
-
-.port-forward-row {
-  display: grid;
-  grid-template-columns: 48px minmax(220px, 0.8fr) minmax(180px, 1fr) auto;
-  align-items: center;
-  gap: 12px;
-  min-height: 48px;
-  border-bottom: 1px solid var(--line);
-}
-
-.port-forward-row:last-child {
-  border-bottom: 0;
-}
-
-.device-pair-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  min-height: 44px;
-  border-bottom: 1px solid var(--line);
-}
-
-.device-pair-row:last-child {
-  border-bottom: 0;
-}
-
-.port-forward-protocol {
-  padding: 4px 6px;
-  border: 1px solid color-mix(in srgb, var(--cyan) 28%, transparent);
-  border-radius: 5px;
-  color: var(--cyan);
-  font:
-    700 0.75rem "JetBrains Mono Variable",
-    ui-monospace,
-    monospace;
-  text-align: center;
-}
-
-.port-forward-protocol.udp {
-  border-color: color-mix(in srgb, color-mix(in srgb, var(--violet) 45%, var(--accent)) 40%, transparent);
-  color: color-mix(in srgb, var(--violet) 55%, var(--text));
-}
-
-.port-forward-route {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  color: var(--text);
-  font-size: 0.75rem;
-}
-
-.port-forward-route svg {
-  color: var(--quiet);
-}
-
-.port-forward-target,
-.port-forward-managed {
-  overflow: hidden;
-  color: var(--muted);
-  font-size: 0.75rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.port-forward-managed {
-  color: var(--quiet);
-}
-
+/* Invitation, policy, rename and pair dialogs, and joining with an invitation. */
 .invitation-dialog {
   width: min(720px, calc(100vw - 32px));
 }
@@ -120,13 +6,42 @@
 .invite-form,
 .invitation-result {
   display: grid;
-  gap: 15px;
+  gap: 16px;
   margin-top: 24px;
+}
+
+/* The committing button lives in the dialog footer, so it never scrolls away from a long form. */
+.dialog-commit {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px 12px;
+  width: 100%;
+}
+.dialog-commit-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 18rem;
+  margin: 0;
+  color: color-mix(in srgb, var(--warning) 70%, var(--text));
+}
+.dialog-commit-note svg {
+  flex: 0 0 auto;
+  color: var(--warning);
+}
+
+.invite-form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  align-items: start;
+  gap: 16px;
 }
 
 .member-policy-fields {
   display: grid;
-  gap: 16px;
+  gap: 20px;
   min-width: 0;
 }
 
@@ -134,9 +49,103 @@
   margin-top: 0;
 }
 
+.member-policy-disclosure > summary {
+  min-height: 48px;
+  font-weight: 650;
+}
+
 .member-policy-disclosure > .member-policy-fields {
   padding: 16px 17px 17px;
   border-top: 1px solid var(--line);
+}
+
+.policy-form-fields {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+/* A titled group of policy settings: limits, weekly access or permissions. */
+.policy-group {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.policy-group > legend {
+  margin-bottom: 4px;
+  padding: 0;
+  color: var(--text);
+  font-size: var(--text-section);
+  font-weight: 700;
+}
+.policy-group-note {
+  margin: 0;
+  color: var(--muted);
+}
+.policy-limit-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  align-items: start;
+  gap: 16px;
+}
+.policy-warning {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: color-mix(in srgb, var(--warning) 70%, var(--text));
+}
+.policy-warning svg {
+  flex: 0 0 auto;
+  color: var(--warning);
+}
+
+.weekly-interval {
+  position: relative;
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  margin: 0;
+  padding: 12px 14px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+.weekly-interval[data-invalid="true"] {
+  border-color: color-mix(in srgb, var(--danger) 60%, var(--line));
+}
+.weekly-interval > legend {
+  float: left;
+  padding: 0;
+  font-weight: 650;
+}
+.weekly-interval-heading {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+}
+.weekly-interval-fields {
+  clear: both;
+  display: grid;
+  grid-template-columns: minmax(8rem, 1.4fr) minmax(7rem, 1fr) minmax(7rem, 1fr);
+  gap: 10px;
+}
+.weekly-interval-fields .field {
+  min-width: 0;
+}
+.weekly-interval-note {
+  color: var(--muted);
+  font-size: var(--text-caption);
+}
+.weekly-access-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
 }
 
 .dialog-body > .invitation-result {
@@ -157,40 +166,47 @@
   overflow-wrap: anywhere;
 }
 
+/* Who a device code is for: a person, not a selectable card. */
 .invite-target {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 13px;
-  border: 1px solid color-mix(in srgb, var(--line-strong) 65%, var(--surface-3));
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--surface-3) 74%, transparent);
+}
+.invite-target p {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+}
+.invite-target p > span {
+  color: var(--muted);
 }
 
-.invite-target > span {
-  width: 36px;
-  height: 36px;
-  display: grid;
-  place-items: center;
+/* The code is shown once: say so at body size, next to it. */
+.invitation-secret-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--warning) 40%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--warning) 7%, transparent);
+}
+.invitation-secret-note > svg {
   flex: 0 0 auto;
-  border: 1px solid color-mix(in srgb, var(--cyan) 28%, transparent);
-  border-radius: 7px;
-  background: color-mix(in srgb, var(--cyan) 7%, transparent);
-  color: var(--cyan);
+  margin-top: 2px;
+  color: var(--warning);
 }
-
-.invite-target > div {
-  display: grid;
-  gap: 3px;
+.invitation-secret-note strong {
+  display: block;
+  color: var(--text);
 }
-
-.invite-target strong {
-  font-size: 12px;
+.invitation-secret-note p {
+  margin: 4px 0 0;
+  color: color-mix(in srgb, var(--muted) 60%, var(--text));
 }
-
-.invite-target small {
-  color: var(--quiet);
-  font-size: 0.75rem;
+.invitation-secret-note .invitation-result-meta {
+  color: var(--text);
+  font-weight: 600;
 }
 
 .invitation-share-grid {
@@ -221,8 +237,8 @@
 }
 
 .qr-share small {
-  color: var(--quiet);
-  font-size: 0.75rem;
+  color: var(--muted);
+  font-size: var(--text-caption);
   line-height: 1.45;
 }
 
@@ -233,11 +249,9 @@
 }
 
 .code-share > span {
-  color: var(--quiet);
-  font-size: 0.75rem;
+  color: var(--muted);
+  font-size: var(--text-caption);
   font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
 }
 
 .code-share .secret-code-output {
@@ -246,13 +260,9 @@
   resize: none;
 }
 
-.invitation-result-actions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  color: var(--quiet);
-  font-size: 0.75rem;
+.secret-share-button {
+  width: 100%;
+  min-height: 52px;
 }
 
 .endpoint-update-dialog {
@@ -341,6 +351,110 @@
   min-height: 150px;
 }
 
-.invitation-review { display: grid; gap: 18px; min-width: 0; padding: 16px 0; border-top: 1px solid var(--line); }
-.invitation-review p { margin: 6px 0; color: var(--muted); line-height: 1.5; }
-.invitation-review small { color: var(--muted); line-height: 1.45; }
+/* Joining with an invitation */
+.code-entered {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 6px 6px 6px 14px;
+  border: 1px solid color-mix(in srgb, var(--success) 40%, var(--line));
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--success) 6%, transparent);
+}
+.code-entered > svg {
+  flex: 0 0 auto;
+  color: var(--success);
+}
+.code-entered > span {
+  flex: 1;
+}
+/* A refused code is not "ready to review". */
+.join-form[data-rejected="true"] .code-ready {
+  display: none;
+}
+.invitation-review {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+  padding: 16px 0;
+  border-top: 1px solid var(--line);
+}
+.invitation-review p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.invitation-review small {
+  color: var(--muted);
+}
+.invitation-review-server {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.invitation-review-server > svg {
+  flex: 0 0 auto;
+  color: var(--cyan);
+}
+.invitation-review-server p {
+  margin: 2px 0;
+}
+.invitation-review-owner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--warning) 40%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--warning) 7%, transparent);
+}
+.invitation-review-owner > svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+  color: var(--warning);
+}
+.invitation-review-owner strong {
+  color: var(--text);
+}
+.invitation-review > .invitation-identity {
+  margin-top: 0;
+}
+.invitation-identity-body {
+  display: grid;
+  gap: 8px;
+  padding: 0 17px 14px;
+}
+.invitation-identity-body code {
+  font-family: var(--font-mono);
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 600px) {
+  .weekly-interval-fields {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .weekly-interval-fields > :first-child {
+    grid-column: 1 / -1;
+  }
+}
+
+.android .weekly-interval,
+.android .invitation-secret-note,
+.android .invitation-review-owner {
+  border-radius: var(--radius-card);
+}
+.android .weekly-interval-heading .icon-button {
+  width: 44px;
+  height: 44px;
+}
+.android .member-policy-disclosure > summary,
+.android .invitation-identity > summary {
+  min-height: 48px;
+}
+.android .dialog-commit > button {
+  flex: 1 1 100%;
+}
+.android .code-entered .text-button {
+  min-height: 44px;
+}

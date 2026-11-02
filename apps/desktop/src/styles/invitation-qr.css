@@ -7,18 +7,6 @@
   width: min(900px, calc(100vw - 32px));
 }
 
-.invitation-result {
-  margin-top: 0;
-}
-
-.invitation-result > .warning-note {
-  margin: 0;
-}
-
-.invitation-dialog-ready .invitation-result-actions {
-  width: 100%;
-}
-
 .invitation-share-grid {
   grid-template-columns: minmax(0, 1.6fr) minmax(220px, 1fr);
   align-items: stretch;
@@ -72,9 +60,11 @@
   z-index: 60;
 }
 
+/* The enlarged code fills most of the window: only the title and Copy code surround it. */
 .dialog-content.invitation-qr-dialog {
   z-index: 70;
   width: min(1000px, calc(100vw - 32px));
+  max-height: calc(100dvh - 24px);
 }
 
 html[data-window-chrome="custom"] .dialog-content.invitation-qr-dialog {
@@ -82,14 +72,22 @@ html[data-window-chrome="custom"] .dialog-content.invitation-qr-dialog {
 }
 
 .invitation-qr-dialog .dialog-header {
-  padding: 14px 16px;
+  padding: 12px 16px;
 }
 
 .invitation-qr-dialog .dialog-body {
   display: grid;
   justify-items: center;
-  padding: 12px 16px;
+  padding: 8px 16px;
   scrollbar-gutter: auto;
+}
+
+.invitation-qr-dialog .invitation-qr-frame.invitation-qr-enlarged {
+  width: min(100%, calc(100dvh - 160px));
+}
+
+.invitation-qr-dialog .dialog-footer {
+  padding: 10px 16px;
 }
 
 @media (max-width: 680px) {

@@ -30,15 +30,15 @@ def extra_states(p, add):
     add('port-forwarding', 'valid-udp-rule', ports + [fill('Protocol', 'udp'), fill('Public port', '48443'), fill('Device port', '443')], expand=True)
     forward = ports + [fill('Public port', '48080'), fill('Device port', '8080')]
     outcomes('port-forwarding', 'create-port-forward', forward, click('Open port'), 'createPortForward')
-    member = [click('Devices'), click('Family', False), click('Access policy')]
+    member = [click('Devices'), click('Member actions for Family'), click('Access policy')]
     policy = {'emptyMember': True}
     # Scenario IDs keep their original names; the checkbox labels are the current interface text.
-    permission_labels = {'Invite ordinary members': 'Invite members', 'Add devices to their own membership': 'Add their own devices', 'Manage peer access for their devices': 'Manage mutual access for their devices', 'Manage public port forwarding to their devices': 'Forward ports to their devices'}
+    permission_labels = {'Invite ordinary members': 'Invite members', 'Add devices to their own membership': 'Add their own devices', 'Manage peer access for their devices': 'Manage mutual access for their devices', 'Manage public port forwarding to their devices': 'Open public internet ports to their devices'}
     for label in ['Invite ordinary members', 'Add devices to their own membership', 'Manage peer access for their devices', 'Manage public port forwarding to their devices']:
         add('member-policy', label.lower().replace(' ', '-'), member + [check(permission_labels[label])], policy, True)
     for value, name in [('Mon 09:00-17:00\nTue 18:00-24:00', 'weekly-access-windows'), ('not a time range', 'invalid-weekly-access')]:
         add('member-policy', name, member + [click('Edit as text'), fill('Weekly access (UTC)', value)], policy, True)
-    add('member-policy', 'device-limit-and-expiration', member + [fill('Device limit', '3'), fill('Access expires (UTC)', '2026-12-31T23:59')], policy, True)
+    add('member-policy', 'device-limit-and-expiration', member + [fill('Device limit', '3'), fill('Access expires', '2026-12-31T23:59')], policy, True)
     outcomes('member-policy', 'save-member-policy', member + [fill('Device limit', '3')], click('Save policy'), 'updateMemberPolicy', policy)
     for msg, name in [('This invitation has expired. Ask for a new code.', 'expired-code'), ('The invitation signature is invalid.', 'invalid-signature'), ('The invitation has no joins remaining.', 'invitation-used-up')]:
         add('join', name, [click('Invitation'), fill('Invitation code', 'sirin1.EXAMPLE'), click('Review invitation')], {'empty': True, 'errors': {'previewInvitation': msg}}, True)

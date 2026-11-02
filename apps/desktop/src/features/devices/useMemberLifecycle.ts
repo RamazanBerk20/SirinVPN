@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { canManageMember } from "../../access";
 import { api } from "../../api";
 import { errorMessage } from "../../lib/errors";
+import { notify } from "../../components/Toasts";
 import { t } from "../../i18n";
 import type { MemberSummary, MembershipSnapshot } from "../../types";
 
@@ -79,7 +80,10 @@ export function useMemberLifecycle(options: Options) {
       const snapshot = revoke
         ? await api.revokeMemberDevices(serverId, member.id, true)
         : await api.updateMemberSuspension(serverId, member.id, suspended);
-      if (isCurrent()) latest.current.onSnapshot(snapshot);
+      if (isCurrent()) {
+        latest.current.onSnapshot(snapshot);
+        notify(t(revoke ? "devices.notice.revokedAll" : suspended ? "devices.notice.suspended" : "devices.notice.reactivated", { name }));
+      }
     } catch (reason) {
       if (isCurrent())
         latest.current.onError(

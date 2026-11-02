@@ -85,8 +85,8 @@ def current_states(add):
     case('routing', 'launched-command-already-finished', network + [fill('Program', '/usr/bin/true'), click('Launch in VPN')], {**appstate, 'responses': {'launchVpnApplication': {'process_id': 4242, 'completed': True}}})
     case('routing', 'windows-driver-unavailable', network, {'local': {'application_routing_backend': 'windows_bind_redirect', 'application_routing_supported': False}})
 
-    member = devices + [click('Family', False), click('Access policy')]
-    for actions, name in [([click('Add interval')], 'weekly-day-time-controls'), ([click('Add interval'), fill('Start 1', '22:00'), fill('End 1', '06:00')], 'overnight-weekly-access'), ([fill('Device limit', '0')], 'invalid-device-limit'), ([fill('Access expires', '2020-01-01T12:00')], 'expired-access-date')]:
+    member = devices + [click('Member actions for Family'), click('Access policy')]
+    for actions, name in [([click('Add interval')], 'weekly-day-time-controls'), ([click('Add interval'), css('.weekly-interval input[type=time]', fill='22:00'), css('.weekly-interval input[type=time]', index=1, fill='06:00')], 'overnight-weekly-access'), ([fill('Device limit', '0')], 'invalid-device-limit'), ([fill('Access expires', '2020-01-01T12:00')], 'expired-access-date')]:
         case('member-policy', name, member + actions, {'emptyMember': True})
     for method, label, state in [
         ('cancelInvitation', 'Cancel', {'activeInvitation': 'reusable'}),

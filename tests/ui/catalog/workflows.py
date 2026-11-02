@@ -36,14 +36,18 @@ def workflows(p, add):
     add('servers', 'long-server-names', servers, {'profileCount': 4, 'longNames': True}, True)
     add('servers', 'server-rename-confirmation', servers + [click('Actions for My private VPS'), click('Rename')], expand=True)
     # Scenario IDs keep their original names; the menu labels are the current interface text.
-    menu_labels = {'Revoke all member devices': 'Revoke all devices', 'Enable mutual device access': 'Allow mutual access'}
+    menu_labels = {'Revoke all member devices': 'Revoke all devices', 'Enable mutual device access': 'Allow mutual access', 'Make Admin': 'Make admin'}
+    # Member-wide actions live in the member's menu, device actions in the device's.
+    member_wide = {'Suspend member', 'Revoke all member devices', 'Make Admin', 'Transfer ownership'}
     for label in ['Rename device', 'Suspend member', 'Revoke all member devices', 'Enable mutual device access', 'Revoke Android phone', 'Make Admin', 'Transfer ownership']:
-        action = devices + [click('Actions for Android phone'), click(menu_labels.get(label, label))]
+        action = devices + [click('Member actions for Family' if label in member_wide else 'Actions for Android phone'), click(menu_labels.get(label, label))]
         add('member-actions', label.lower().replace(' ', '-') + '-confirmation', action, expand=True)
+        if label == 'Rename device':
+            action = action + [fill('Device name', 'Renamed device'), click('Rename')]
         method = {'Rename device': 'renameDevice', 'Suspend member': 'updateMemberSuspension', 'Revoke all member devices': 'revokeMemberDevices', 'Enable mutual device access': 'updateDevicePeerCommunication', 'Revoke Android phone': 'revokeDevice', 'Make Admin': 'updateMemberAccess', 'Transfer ownership': 'transferOwnership'}[label]
         add('member-actions', label.lower().replace(' ', '-') + '-failed', action, {'errors': {method: ERROR}}, True)
-    expandmember = devices + [click('Family', False)]
-    add('member-policy', 'member-policy-editor', expandmember + [click('Access policy')], {'emptyMember': True}, True)
+    # The exact member menu, so the click can't land on another control that mentions Family.
+    add('member-policy', 'member-policy-editor', devices + [click('Member actions for Family'), click('Access policy')], {'emptyMember': True}, True)
     for name, st in [('member-suspended', {'suspendedMember': True}), ('active-single-use-invitation', {'activeInvitation': 'single'}), ('active-reusable-invitation', {'activeInvitation': 'reusable'}), ('existing-member-device-invitation', {'activeInvitation': 'device'}), ('delegated-member-permissions', {'role': 'member', 'delegated': True}), ('weekly-member-access-limits', {'limitedMember': True})]:
         add('devices', name, devices, st, True)
     add('invitations', 'delegated-member-invitation', devices + [click('Invite member')], {'role': 'member', 'delegated': True}, True)
