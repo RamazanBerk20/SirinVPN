@@ -56,7 +56,9 @@ def coverage_states(cases):
                 assertion['selector'] = '[role=menu],[role=dialog]'
 
     def add(family, name, actions=(), state=None, forms=BOTH, required=()):
-        case = {'family': family, 'id': name, 'description': name.replace('-', ' ').capitalize(), 'actions': list(actions),
+        # As in scenarios.py, a state starts without the previous state's toasts.
+        dismiss = mutate("document.querySelectorAll('.toast-region .icon-button').forEach(b=>b.click())")
+        case = {'family': family, 'id': name, 'description': name.replace('-', ' ').capitalize(), 'actions': [dismiss, *actions],
                 'state': state or {}, 'expand': True, 'forms': forms}
         if required:
             case['required_calls'] = list(required)
@@ -201,7 +203,7 @@ def coverage_states(cases):
 
     # Data extremes.
     add('extremes', 'many-members-and-devices', [mutate(MANY_DEVICES)] + devices)
-    add('extremes', 'many-devices-expanded', [mutate(MANY_DEVICES)] + devices + [mutate("document.querySelectorAll('.device-row-summary').forEach(el=>el.click())")])
+    add('extremes', 'many-devices-expanded', [mutate(MANY_DEVICES)] + devices + [mutate("document.querySelectorAll('.device-item-summary').forEach(el=>el.click())")])
     add('extremes', 'only-own-device', [mutate("const s=window.__catalog.state;s.members.members=s.members.members.slice(0,1);")] + devices)
     add('extremes', 'long-names-home', [], {'longNames': True})
     add('extremes', 'long-names-settings', settings('', 'maintenance'), {'longNames': True})

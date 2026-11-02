@@ -30,8 +30,8 @@ const snapshot: MembershipSnapshot = {
 it("adds a pair in the chosen direction and removes only pairs the caller manages", async () => {
   const onSaved = vi.fn().mockResolvedValue(undefined);
   render(<DevicePairsDialog serverId="server" device={laptop} snapshot={snapshot} candidates={[phone]} onClose={vi.fn()} onSaved={onSaved} />);
-  expect(screen.getByText(t("devices.pairs.bothWays", { name: "Phone" }))).toBeTruthy();
-  expect(screen.getByText(t("devices.pairs.answers", { name: t("devices.pairs.otherDevice") }))).toBeTruthy();
+  expect(screen.getByText(t("devices.pairs.bothWays", { first: "Laptop", second: "Phone" }))).toBeTruthy();
+  expect(screen.getByText(t("devices.pairs.oneWay", { from: t("devices.pairs.otherDevice"), to: "Laptop" }))).toBeTruthy();
   expect(screen.getAllByRole("button", { name: t("devices.pairs.remove") })).toHaveLength(1);
 
   // "The other starts" makes the peer the starting device of a one-way pair.
@@ -43,8 +43,12 @@ it("adds a pair in the chosen direction and removes only pairs the caller manage
   expect(invoke).toHaveBeenCalledWith("set_device_pair", { input: {
     server_id: "server", device_id: "phone", peer_device_id: "laptop", one_way: true,
   } });
+  // Removing asks first and confirms the result.
+  vi.stubGlobal("confirm", vi.fn(() => true));
   fireEvent.click(screen.getByRole("button", { name: t("devices.pairs.remove") }));
   await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(2));
+  expect(window.confirm).toHaveBeenCalledOnce();
+  vi.unstubAllGlobals();
   expect(invoke).toHaveBeenCalledWith("remove_device_pair", { input: {
     server_id: "server", device_id: "laptop", peer_device_id: "phone",
   } });
@@ -60,7 +64,7 @@ it("offers pairs with the switch permission and lists them in the device facts",
   expect(onPairs).toHaveBeenCalledWith(laptop);
   const label = screen.getAllByText(t("devices.row.facts.pairs"))[0];
   expect(label.nextElementSibling?.textContent).toBe(
-    `${t("devices.pairs.bothWays", { name: "Phone" })}; ${t("devices.pairs.answers", { name: t("devices.pairs.otherDevice") })}`,
+    `${t("devices.pairs.bothWays", { first: "Laptop", second: "Phone" })}; ${t("devices.pairs.oneWay", { from: t("devices.pairs.otherDevice"), to: "Laptop" })}`,
   );
   expect(screen.getAllByText(t("devices.row.network.paired"))).toHaveLength(2);
   cleanup();

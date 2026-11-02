@@ -110,7 +110,7 @@ def scenarios(p):
     for name in ['My Linux desktop', 'Morgan’s laptop', 'Android phone', 'Work laptop']:
         add('devices', 'details-' + name.lower().replace(' ', '-').replace('’', ''), devices + [click(name, False)], expand=True)
         add('devices', 'menu-' + name.lower().replace(' ', '-').replace('’', ''), devices + [click('Actions for ' + name)])
-    add('devices', 'all-device-details-expanded', devices + [mutate("document.querySelectorAll('.device-row-summary').forEach(el=>el.click())")], expand=True)
+    add('devices', 'all-device-details-expanded', devices + [mutate("document.querySelectorAll('.device-item-summary').forEach(el=>el.click())")], expand=True)
     add('devices', 'older-vps-device-capabilities', devices, {'configuration': {'member_lifecycle_enabled': False, 'member_policies_enabled': False, 'reusable_invitations_enabled': False}}, True)
     inv = devices + [click('Invite member')]
     add('invitations', 'new-member-invitation', inv, expand=True)
@@ -127,8 +127,9 @@ def scenarios(p):
     add('invitations', 'invitation-created-qr-and-code', result, expand=True)
     add('invitations', 'invitation-enlarged-qr', result + [click('Enlarge invitation QR code')])
     add('invitations', 'reusable-invitation-created', inv + [fill('Number of uses', '10'), click('Create reusable code')], expand=True)
-    for target in ['My Linux desktop', 'Morgan’s laptop', 'Android phone']:
-        add('invitations', 'add-device-' + target.lower().replace(' ', '-').replace('’', ''), devices + [click('Actions for ' + target), click('Add device', False)], expand=True)
+    # Scenario IDs keep the device names; Add device sits on the member's header (in its menu on Android).
+    for target, member in [('My Linux desktop', 'You'), ('Morgan’s laptop', 'Morgan'), ('Android phone', 'Family')]:
+        add('invitations', 'add-device-' + target.lower().replace(' ', '-').replace('’', ''), devices + [click('Member actions for ' + member, android=True), click('Add device for ' + member)], expand=True)
     empty = {'empty': True}
     for mode in ['My VPS', 'Invitation', 'Backup', 'Recovery key']:
         add('onboarding', 'first-launch-' + mode.lower().replace(' ', '-'), [click(mode)] if mode != 'My VPS' else [], empty, True)
@@ -153,6 +154,8 @@ def scenarios(p):
     from current_states import current_states
     current_states(add)
     for case in cases:
+        # Toasts are module state and outlive the remount: start each state without the previous state's results.
+        case['actions'].insert(0, mutate("document.querySelectorAll('.toast-region .icon-button').forEach(b=>b.click())"))
         checks = case.setdefault('assertions', [])
         if case['family'] == 'startup' and case['state'].get('errors'):
             checks.append({'selector': '[role=alert]'})

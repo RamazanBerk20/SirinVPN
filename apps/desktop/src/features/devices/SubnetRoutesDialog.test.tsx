@@ -68,6 +68,7 @@ it("shows the ranges the VPS cannot route right now", () => {
   ] };
   render(<DeviceList snapshot={snapshot} query="" accessBusy={null} peerBusy={null} onInvite={vi.fn()} onAccess={vi.fn()}
     onTransfer={vi.fn()} onRename={vi.fn()} onRevoke={vi.fn()} onPeer={vi.fn()} onSubnetRoutes={vi.fn()} accessLevel="owner" />);
-  const label = screen.getByText(t("devices.row.facts.inactiveLocalNetworks"));
-  expect(label.nextElementSibling?.textContent).toBe("192.168.1.0/24");
+  const label = screen.getByText(t("devices.row.facts.localNetworks"));
+  expect(label.nextElementSibling?.querySelector("li")?.textContent).toBe(`192.168.1.0/24${t("devices.row.networkInactive")}`);
+  expect(screen.getByText(t("devices.row.networkInactiveHint"))).toBeTruthy();
 });

@@ -1,54 +1,71 @@
-import { useId, useState } from "react";
+import { Plus, Trash } from "@phosphor-icons/react";
+import { useState } from "react";
 import { Field } from "../../components/ui";
-import { policyDraft, policyFromDraft, SCHEDULE_EXAMPLE } from "./memberPolicy";
+import { DAYS, policyDraft, policyFromDraft, rowProblem, rowsToSchedule, scheduleToRows, SCHEDULE_EXAMPLE, type WeeklyRow } from "./memberPolicy";
 import { formatDateTime, t } from "../../i18n";
 
-const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 /** Day codes stay fixed in the schedule text; the picker shows the localized weekday. 1 January 2024 is a Monday. */
-const dayName = (index: number) => formatDateTime(new Date(Date.UTC(2024, 0, 1 + index)), { weekday: "short", timeZone: "UTC" });
-type Row = { day: string; start: string; end: string };
-function rowsFrom(value: string): Row[] {
-  return value.split("\n").filter(Boolean).map(line => {
-    const match = /^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\s+(\d\d:\d\d)\s*[-–]\s*(\d\d:\d\d)$/i.exec(line.trim());
-    return match ? { day: days.find(day => day.toLowerCase() === match[1].toLowerCase())!, start: match[2], end: match[3] } : { day: "Mon", start: "", end: "" };
-  });
+const dayName = (index: number) => formatDateTime(new Date(Date.UTC(2024, 0, 1 + index)), { weekday: "long", timeZone: "UTC" });
+const offset = () => new Date().getTimezoneOffset();
+const zone = () => Intl.DateTimeFormat().resolvedOptions().timeZone ?? "";
+
+function rowsFrom(value: string): WeeklyRow[] | null {
+  try { return scheduleToRows(policyFromDraft({ ...policyDraft(), schedule: value }).weekly_access, offset()); }
+  catch { return null; }
 }
-export function serializeWeeklyRows(rows: Row[]) {
-  return rows.flatMap(row => {
-    const day = days.indexOf(row.day);
-    // A time control cannot enter 24:00, so an end of 00:00 always means midnight at the end of the day.
-    if (row.start && row.end && (row.end < row.start || row.end === "00:00")) {
-      return [`${row.day} ${row.start}-24:00`, ...(row.end === "00:00" ? [] : [`${days[(day + 1) % 7]} 00:00-${row.end}`])];
-    }
-    return [`${row.day} ${row.start}-${row.end}`];
-  }).join("\n");
-}
+
+/** Weekly access entered in local time, one card per interval; the text form is the UTC schedule the server keeps. */
 export function WeeklyAccessFields({ value, onChange, error }: { value: string; onChange: (value: string) => void; error?: string }) {
-  const [rows, setRows] = useState(() => rowsFrom(value));
-  const [advanced, setAdvanced] = useState(false);
-  const errorId = useId();
-  const invalid = { "aria-invalid": Boolean(error), "aria-describedby": error ? errorId : undefined } as const;
-  const update = (next: Row[]) => { setRows(next); onChange(serializeWeeklyRows(next)); };
-  let preview: string[] = [];
-  try {
-    const policy = policyFromDraft({ ...policyDraft(), schedule: value });
-    const monday = new Date();
-    monday.setUTCDate(monday.getUTCDate() - (monday.getUTCDay() + 6) % 7); monday.setUTCHours(0, 0, 0, 0);
-    const local = (minute: number) => formatDateTime(new Date(monday.getTime() + minute * 60000), { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", timeZoneName: "short" });
-    preview = policy.weekly_access.map(window => t("devices.schedule.range", { start: local(window.start_minute), end: local(window.end_minute) }));
-  } catch { /* Field validation supplies the actionable error. */ }
-  return <section className="weekly-access-rows" aria-label={t("devices.schedule.label")}>
-    <h3>{t("devices.schedule.title")}</h3><p className="settings-note">{t("devices.schedule.allWeek")}</p>
-    {!advanced && rows.map((row, index) => <div className="weekly-access-row" key={index}>
-      <Field label={t("devices.schedule.day", { number: index + 1 })}><select {...invalid} value={row.day} onChange={event => update(rows.map((item, at) => at === index ? { ...item, day: event.target.value } : item))}>{days.map((day, at) => <option key={day} value={day}>{dayName(at)}</option>)}</select></Field>
-      <Field label={t("devices.schedule.start", { number: index + 1 })}><input {...invalid} type="time" value={row.start} onChange={event => update(rows.map((item, at) => at === index ? { ...item, start: event.target.value } : item))} /></Field>
-      <Field label={t("devices.schedule.end", { number: index + 1 })} hint={row.end === "24:00" ? t("devices.schedule.midnight") : undefined}><input {...invalid} type="time" value={row.end === "24:00" ? "00:00" : row.end} onChange={event => update(rows.map((item, at) => at === index ? { ...item, end: event.target.value } : item))} /></Field>
-      <button type="button" className="text-button" onClick={() => update(rows.filter((_, at) => at !== index))}>{t("devices.schedule.remove", { number: index + 1 })}</button>
-    </div>)}
-    {!advanced && <button type="button" className="secondary-button" onClick={() => update([...rows, { day: "Mon", start: "09:00", end: "17:00" }])}>{t("devices.schedule.add")}</button>}
-    <button type="button" className="text-button" onClick={() => { if (advanced) { if (error) return; setRows(rowsFrom(value)); } setAdvanced(!advanced); }}>{t(advanced ? "devices.schedule.useControls" : "devices.schedule.editText")}</button>
-    {advanced && <Field label={t("devices.schedule.title")} error={error} hint={t("devices.schedule.textHint", { example: SCHEDULE_EXAMPLE })}><textarea rows={3} value={value} onChange={event => onChange(event.target.value)} /></Field>}
-    {!advanced && error && <p id={errorId} className="field-error" role="alert">{error}</p>}
-    {!!preview.length && <details><summary>{t("devices.schedule.preview")}</summary><p>{t("devices.schedule.previewNote")}</p>{preview.map((line, index) => <p key={index}>{line}</p>)}</details>}
-  </section>;
+  const [rows, setRows] = useState<WeeklyRow[]>(() => rowsFrom(value) ?? []);
+  const [advanced, setAdvanced] = useState(() => rowsFrom(value) === null);
+  const update = (next: WeeklyRow[]) => { setRows(next); onChange(rowsToSchedule(next, offset())); };
+  const change = (index: number, patch: Partial<WeeklyRow>) => update(rows.map((row, at) => at === index ? { ...row, ...patch } : row));
+  const problems = rows.map((row, index) => rowProblem(row, index + 1));
+  const message = problems.find(Boolean) ?? error;
+  return <fieldset className="policy-group weekly-access" aria-label={t("devices.schedule.label")}>
+    <legend>{t("devices.schedule.title")}</legend>
+    <p className="policy-group-note">
+      {rows.length === 0 && !advanced ? t("devices.schedule.allWeek") : t("devices.schedule.localTime", { zone: zone() })}
+    </p>
+    {!advanced && rows.map((row, index) => {
+      const utc = offset() !== 0 && !problems[index] ? rowsToSchedule([row], offset()).split("\n").join(", ") : null;
+      return <fieldset className="weekly-interval" key={index} data-invalid={Boolean(problems[index])}>
+        <legend>{t("devices.schedule.interval", { number: index + 1 })}</legend>
+        <div className="weekly-interval-heading">
+          <button type="button" className="icon-button" aria-label={t("devices.schedule.remove", { number: index + 1 })}
+            onClick={() => update(rows.filter((_, at) => at !== index))}><Trash size={17} /></button>
+        </div>
+        <div className="weekly-interval-fields">
+          <Field label={t("devices.schedule.day")}>
+            <select value={row.day} onChange={(event) => change(index, { day: Number(event.target.value) })}>
+              {DAYS.map((day, at) => <option key={day} value={at}>{dayName(at)}</option>)}
+            </select>
+          </Field>
+          <Field label={t("devices.schedule.start")}>
+            <input type="time" value={row.start} aria-invalid={Boolean(problems[index])} onChange={(event) => change(index, { start: event.target.value })} />
+          </Field>
+          <Field label={t("devices.schedule.end")}>
+            <input type="time" value={row.end} aria-invalid={Boolean(problems[index])} onChange={(event) => change(index, { end: event.target.value })} />
+          </Field>
+        </div>
+        {!problems[index] && (row.end <= row.start) && <small className="weekly-interval-note">
+          {row.end === "00:00" && row.start === "00:00" ? t("devices.schedule.wholeDay") : row.end === "00:00" ? t("devices.schedule.midnight") : t("devices.schedule.nextDay")}
+        </small>}
+        {utc && <small className="weekly-interval-note">{t("devices.schedule.utc", { windows: utc })}</small>}
+      </fieldset>;
+    })}
+    {!advanced && message && <p className="field-error" role="alert">{message}</p>}
+    {advanced && <Field label={t("devices.schedule.textLabel")} error={error} hint={t("devices.schedule.textHint", { example: SCHEDULE_EXAMPLE })}>
+      <textarea rows={3} value={value} onChange={(event) => onChange(event.target.value)} />
+    </Field>}
+    <div className="weekly-access-actions">
+      {!advanced && <button type="button" className="secondary-button" onClick={() => update([...rows, { day: 0, start: "09:00", end: "17:00" }])}>
+        <Plus size={16} /> {t("devices.schedule.add")}
+      </button>}
+      <button type="button" className="text-button" disabled={advanced && Boolean(error)} onClick={() => {
+        if (advanced) setRows(rowsFrom(value) ?? []);
+        setAdvanced(!advanced);
+      }}>{t(advanced ? "devices.schedule.useControls" : "devices.schedule.editText")}</button>
+    </div>
+  </fieldset>;
 }

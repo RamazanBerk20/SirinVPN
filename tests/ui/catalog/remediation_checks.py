@@ -67,20 +67,27 @@ def main():
 
         def policy_navigation():
             engine.call('mount', {'platform': 'desktop'})
-            engine.call('actions', [click('Devices'), click('Actions for Android phone'), click('Access policy'), click('Edit as text'), fill('Weekly access (UTC)', 'not a time range'), click('Save policy')])
+            engine.call('actions', [click('Devices'), click('Member actions for Family'), click('Access policy'), click('Edit as text'), fill('Weekly access (UTC)', 'not a time range'), click('Save policy', allowDisabled=True)])
             engine.call('assertVisible', {'selector': '[aria-invalid=true]'})
             assert not engine.evaluate('window.__catalog.state.calls.some(call=>call.name==="updateMemberPolicy")')
         run('populated-member-policy-invalid-submit', policy_navigation)
 
         def weekly_schedule():
             engine.call('mount', {'platform': 'desktop'})
-            engine.call('actions', [click('Devices'), click('Actions for Android phone'), click('Access policy'), click('Add interval'), fill('Day 1', 'Sun'), fill('Start 1 (UTC)', '22:00'), fill('End 1 (UTC)', '02:00')])
-            engine.call('act', click('Preview in local time'))
-            engine.call('assertVisible', {'text': 'Local times can shift with daylight saving.', 'complete': True})
+            # Intervals are entered in local time: Sunday 22:00 to Monday 02:00 here.
+            engine.call('actions', [click('Devices'), click('Member actions for Family'), click('Access policy'), click('Add interval'),
+                                    {'css': '.weekly-interval select', 'fill': '6'}, {'css': '.weekly-interval input[type=time]', 'fill': '22:00'},
+                                    {'css': '.weekly-interval input[type=time]', 'index': 1, 'fill': '02:00'}])
+            engine.call('assertVisible', {'text': 'Ends the next day.', 'complete': True})
             engine.shot(capture.OUT / 'desktop' / 'structured-overnight-schedule-editor.png')
             engine.call('act', click('Save policy'))
             policy = engine.evaluate('window.__catalog.state.calls.find(call=>call.name==="updateMemberPolicy")?.args[2]')
-            assert policy['weekly_access'] == [{'start_minute': 0, 'end_minute': 120}, {'start_minute': 9960, 'end_minute': 10080}], policy
+            start, left, expected = (9960 + engine.evaluate('new Date().getTimezoneOffset()')) % 10080, 240, []
+            while left:
+                span = min(left, 1440 - start % 1440)
+                expected.append({'start_minute': start, 'end_minute': start + span})
+                left, start = left - span, (start + span) % 10080
+            assert policy['weekly_access'] == sorted(expected, key=lambda window: window['start_minute']), policy
         run('structured-overnight-schedule', weekly_schedule)
 
         def keyboard_menu():
