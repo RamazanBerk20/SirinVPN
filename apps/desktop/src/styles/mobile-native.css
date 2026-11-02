@@ -80,7 +80,7 @@ html.android[data-theme="light"] {
 .android .icon-button { width: 48px; height: 48px; flex-shrink: 0; border-radius: var(--radius-control); }
 .android .primary-button, .android .secondary-button { border-radius: var(--radius-control); padding: 13px 18px; font-size: var(--fs-body); box-shadow: none; }
 .android .primary-button { background: var(--accent-fill); border-color: var(--accent-line); }
-.android .primary-button:disabled { background: var(--control); border-color: var(--control-line); color: var(--quiet); }
+.android .primary-button:disabled { background: var(--tile); border-color: var(--tile); color: var(--quiet); }
 .android .secondary-button { background: var(--control); border-color: var(--control-line); }
 .android .text-button { min-height: 48px; font-size: var(--fs-small); }
 .android .danger-text, .android .mobile-sheet-action.danger-text { color: var(--danger); }
@@ -114,6 +114,7 @@ html.android[data-theme="light"] {
 /* Cards and rows. Every group card has the same inset; icon tiles start at the inset and
  * row text starts after the tile, so all content shares two left edges. */
 .android .mobile-choice-list { margin: 0 0 12px; border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--surface); overflow: hidden; }
+.android .command-block code { white-space: pre-wrap; overflow-wrap: anywhere; }
 .android .favorite-star { flex-shrink: 0; color: var(--warning); }
 .android :is(.mobile-list-row, .mobile-server-open) small:has(> .favorite-star) { display: flex; align-items: center; gap: 4px; }
 .android .mobile-demo { display: grid; justify-items: center; gap: 0; margin: 4px 0 0; text-align: center; }

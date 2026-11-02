@@ -187,7 +187,7 @@ export function RemoveServerDialog({
                 </span>
                 <div>
                   <strong>{t("vps.remove.local.title")}</strong>
-                  <small>{t("vps.remove.local.summary")}</small>
+                  <small>{busy ? <Busy label={t("vps.remove.local.removing")} /> : t("vps.remove.local.summary")}</small>
                 </div>
                 <CaretRight size={16} />
               </button>

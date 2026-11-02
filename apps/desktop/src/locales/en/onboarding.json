@@ -85,7 +85,6 @@
       "type": "SirinVPN recovery key"
     },
     "serverIdentity": "Server identity",
-    "copyServerIdentity": "server identity",
     "deviceName": "Owner device name",
     "defaultDeviceName": "Recovered Owner device",
     "confirmRevoke": "Revoke all previous Owner devices and use up this key. Members keep access; Admins lose recovery permissions.",

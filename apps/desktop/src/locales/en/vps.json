@@ -315,7 +315,8 @@
       "confirmOwner": "Its Owner key on this device is deleted. The server stays installed and claimed.",
       "confirmMember": "This device’s key is deleted. The server isn’t changed.",
       "error": "Couldn’t remove the server from this device.",
-      "done": "{{name}} was removed from this device."
+      "done": "{{name}} was removed from this device.",
+      "removing": "Removing…"
     },
     "uninstall": {
       "title": "Uninstall from VPS",

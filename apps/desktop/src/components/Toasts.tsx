@@ -1,5 +1,6 @@
 import { CheckCircle, Info, Warning, X } from "@phosphor-icons/react";
 import { useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 import { t } from "../i18n";
 
 export type ToastTone = "success" | "info" | "error";
@@ -26,17 +27,18 @@ export function notify(message: string, tone: ToastTone = "success") {
   const id = ++next;
   toasts = [...toasts.filter((toast) => toast.message !== message), { id, message, tone }].slice(-3);
   emit();
-  // Errors stay until dismissed: they may need reading twice.
-  if (tone !== "error") setTimeout(() => dismissToast(id), 5000);
+  // Errors stay longer: they may need reading twice.
+  setTimeout(() => dismissToast(id), tone === "error" ? 12000 : 5000);
 }
 
 export function ToastRegion() {
   const current = useSyncExternalStore((listener) => { listeners.add(listener); return () => listeners.delete(listener); }, () => toasts);
-  return <div className="toast-region" role="status" aria-live="polite">
+  // Portaled to body: inside the app shell's stacking context a toast would sit under any dialog's backdrop.
+  return createPortal(<div className="toast-region" role="status" aria-live="polite">
     {current.map((toast) => <div key={toast.id} className={`toast ${toast.tone}`}>
       {toast.tone === "success" ? <CheckCircle size={20} weight="fill" /> : toast.tone === "error" ? <Warning size={20} weight="fill" /> : <Info size={20} weight="fill" />}
       <p>{toast.message}</p>
       <button type="button" className="icon-button" aria-label={t("common.action.dismiss")} onClick={() => dismissToast(toast.id)}><X size={16} /></button>
     </div>)}
-  </div>;
+  </div>, document.body);
 }

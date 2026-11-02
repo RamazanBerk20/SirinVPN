@@ -420,7 +420,8 @@
     },
     "ownerDevice": "Adds this device to {{name}}’s Owner access.",
     "ownerPower": "Owner devices can manage the server, every member and every device. Join only if you expected this.",
-    "renameLater": "You can rename it later in Devices."
+    "renameLater": "You can rename it later in Devices.",
+    "codeEntered": "Invitation code entered"
   },
   "error": {
     "load": "Couldn’t load devices from the server.",

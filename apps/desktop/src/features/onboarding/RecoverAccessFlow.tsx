@@ -5,7 +5,7 @@ import { open } from "../../lib/nativeDialog";
 import { FileArrowUp, Lifebuoy, UploadSimple, Warning } from "@phosphor-icons/react";
 import { api } from "../../api";
 import { Field, InlineError } from "../../components/ui";
-import { CopyValue } from "../../components/CopyValue";
+import { HashValue } from "../../components/CopyValue";
 import { notify } from "../../components/Toasts";
 import { errorMessage } from "../../lib/errors";
 import type { RecoveryPreview, ServerProfile } from "../../types";
@@ -85,7 +85,7 @@ export function RecoverAccessFlow({ onComplete, compact = false }: { onComplete:
       </details>
       {preview && <>
         <div className="recovery-target"><strong>{preview.preview.server_name}</strong><p>{preview.preview.host}</p>
-          <div className="result-identity"><span>{t("onboarding.recover.serverIdentity")}</span><CopyValue value={preview.preview.server_identity_fingerprint} label={t("onboarding.recover.copyServerIdentity")} shorten showCopyLabel /></div>
+          <HashValue label={t("onboarding.recover.serverIdentity")} value={preview.preview.server_identity_fingerprint} />
         </div>
         <Field label={t("onboarding.recover.deviceName")}><input maxLength={64} value={deviceName} onChange={(event) => setDeviceName(event.target.value)} /></Field>
         <ConfirmationRow checked={confirmed} onChange={setConfirmed} danger>{t("onboarding.recover.confirmRevoke")}</ConfirmationRow>

@@ -130,7 +130,7 @@ export function ExportBackupDialog({
                 void exportBackup();
               }}
             >
-              {error ? <InlineError message={error} onRetry={() => void exportBackup()} retryDisabled={busy || Boolean(blocker)} /> : null}
+              {error ? <InlineError message={error} /> : null}
               <fieldset disabled={busy} className="ssh-operation-fields">
                 <div className="sensitive-backup-warning">
                   <Warning size={19} weight="fill" />

@@ -70,9 +70,10 @@ export function JoinFlow({
         </div>
       </div>
       {review.preview ? (
-        <div className="code-entered" role="status">
-          <CheckCircle size={20} weight="fill" aria-hidden="true" />
-          <span>{t("devices.join.codeAccepted")}</span>
+        <div className={`code-entered${error ? " rejected" : ""}`} role="status">
+          {/* After a failed join the code was read but not accepted: no green check above the error. */}
+          {!error && <CheckCircle size={20} weight="fill" aria-hidden="true" />}
+          <span>{t(error ? "devices.join.codeEntered" : "devices.join.codeAccepted")}</span>
           <button type="button" className="text-button" disabled={busy} onClick={changeCode}>{t("devices.join.changeCode")}</button>
         </div>
       ) : (

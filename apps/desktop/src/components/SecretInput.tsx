@@ -19,7 +19,7 @@ export function SecretInput(props: InputHTMLAttributes<HTMLInputElement>) {
         props.onChange?.({ target: { value: reference }, currentTarget: { value: reference } } as ChangeEvent<HTMLInputElement>);
       }).catch(() => setError(t("app.secret.unchanged"))); }}>
       {props.value ? <CheckCircle size={18} weight="fill" /> : <LockKey size={18} />}
-      <span>{props.value ? t("app.secret.entered") : props["aria-label"] ? t("app.secret.enterLabel", { label }) : t("app.secret.enter")}</span>
+      <span>{props.value ? t("app.secret.entered") : t("app.secret.enter")}</span>
     </button>
     {error && <small role="alert">{error}</small>}
   </span>;

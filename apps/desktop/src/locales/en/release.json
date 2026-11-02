@@ -85,7 +85,7 @@
   },
   "error": {
     "discard": "Couldn’t delete the download. Try again.",
-    "check": "No signed release for this device was found at this source. Check the address and channel.",
+    "check": "Couldn’t find a signed release for this device at this source. Check the address and channel.",
     "installWindows": "The Windows update didn’t finish. Try again; recovery data is kept.",
     "installAppImage": "Couldn’t confirm the AppImage was replaced. Reopen App updates to check it.",
     "installDebian": "The update didn’t finish and was rolled back where possible. Try again."

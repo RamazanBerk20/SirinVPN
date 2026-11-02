@@ -8,7 +8,8 @@ import { formatDateTime, getLocale, sourceLocale } from "../i18n";
 export function errorMessage(reason: unknown, fallback: string): string {
   const detail = (typeof reason === "string" ? reason : reason instanceof Error ? reason.message : "").trim();
   if (!detail || getLocale() !== sourceLocale) return fallback;
-  const summary = fallback.trim().replace(/\s*Try again\.$/, "");
+  // Only the first sentence names the action; any advice after it would repeat the cause's own.
+  const summary = fallback.trim().match(/^.*?[.!?](?=\s|$)/)?.[0] ?? fallback.trim();
   return detail.includes(summary) ? detail : `${summary} ${detail}`;
 }
 
