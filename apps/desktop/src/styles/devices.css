@@ -326,8 +326,9 @@ details[open] > summary > .disclosure-chevron {
 .device-item + .device-item {
   border-top: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
 }
-.device-item[data-state="suspended"] .device-item-summary {
-  opacity: 0.72;
+/* Dim only the icon: the text must stay readable, and the status already says Suspended. */
+.device-item[data-state="suspended"] .device-tile {
+  opacity: 0.6;
 }
 .device-item-header {
   display: flex;
@@ -709,6 +710,9 @@ details[open] > summary > .disclosure-chevron {
 }
 .command-note {
   display: grid;
+  /* The unwrapped command scrolls inside its block instead of widening the form. */
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
   gap: 8px;
   padding: 12px 14px;
   border: 1px solid var(--line);
@@ -735,6 +739,12 @@ details[open] > summary > .disclosure-chevron {
   font-family: var(--font-mono);
 }
 
+/* From this width the workspace, not the page, scrolls below the title bar. */
+@media (min-width: 761px) {
+  .devices-toolbar {
+    top: 0;
+  }
+}
 @media (max-width: 760px) {
   .ports-form-fields {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -780,11 +790,8 @@ details[open] > summary > .disclosure-chevron {
     grid-template-columns: minmax(0, 1fr);
   }
   .ports-rule {
-    grid-template-columns: 48px minmax(0, 1fr);
-  }
-  .ports-rule > :last-child {
-    grid-column: 2;
-    justify-self: start;
+    grid-template-columns: 48px minmax(0, 1fr) auto;
+    gap: 10px;
   }
   .devices-summary {
     margin-left: 0;
@@ -871,7 +878,8 @@ details[open] > summary > .disclosure-chevron {
 .android .devices-next-step-actions > button {
   width: 100%;
 }
-.android .ports-form-footer > .primary-button {
+.android .ports-form-footer > .primary-button,
+.android .devices-next-step-actions {
   width: 100%;
 }
 .android .command-block .icon-button {

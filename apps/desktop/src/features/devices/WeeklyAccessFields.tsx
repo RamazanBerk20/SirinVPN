@@ -24,9 +24,10 @@ export function WeeklyAccessFields({ value, onChange, error }: { value: string; 
   const message = problems.find(Boolean) ?? error;
   return <fieldset className="policy-group weekly-access" aria-label={t("devices.schedule.label")}>
     <legend>{t("devices.schedule.title")}</legend>
-    <p className="policy-group-note">
-      {rows.length === 0 && !advanced ? t("devices.schedule.allWeek") : t("devices.schedule.localTime", { zone: zone() })}
-    </p>
+    {/* The text form states its own time zone (UTC) in its label. */}
+    {!advanced && <p className="policy-group-note">
+      {rows.length === 0 ? t("devices.schedule.allWeek") : t("devices.schedule.localTime", { zone: zone() })}
+    </p>}
     {!advanced && rows.map((row, index) => {
       const utc = offset() !== 0 && !problems[index] ? rowsToSchedule([row], offset()).split("\n").join(", ") : null;
       return <fieldset className="weekly-interval" key={index} data-invalid={Boolean(problems[index])}>
