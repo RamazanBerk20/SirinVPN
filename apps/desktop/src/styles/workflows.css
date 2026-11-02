@@ -54,6 +54,7 @@ html[data-window-chrome="custom"] .dialog-content.dialog-layout {
   scroll-padding-block: 20px;
 }
 .dialog-body > .uninstall-form,
+.dialog-body > .backup-form,
 .dialog-body > .release-update-form,
 .dialog-body > .release-candidate,
 .dialog-body > .invite-form {
@@ -79,9 +80,7 @@ html[data-window-chrome="custom"] .dialog-content.dialog-layout {
 .dialog-layout .preference-checkbox,
 .dialog-layout .field-help,
 .dialog-layout .field > span,
-.dialog-layout .field small,
-.dialog-layout .uninstall-progress p,
-.dialog-layout .backup-success p {
+.dialog-layout .field small {
   font-size: var(--text-secondary);
   line-height: 1.5;
 }
@@ -111,39 +110,16 @@ html[data-window-chrome="custom"] .dialog-content.dialog-layout {
 .repair-result {
   gap: 24px;
 }
-.repair-result-heading {
-  display: grid;
-  justify-items: center;
-  gap: 10px;
-  padding: 4px 0 6px;
-  text-align: center;
-}
-.result-check {
-  display: grid;
-  place-items: center;
-  width: 46px;
-  height: 46px;
-  border-radius: 50%;
-  color: var(--success);
-  background: color-mix(in srgb, var(--success) 9%, transparent);
-  border: 1px solid color-mix(in srgb, var(--success) 28%, transparent);
-}
 .repair-result h3,
 .repair-result p,
 .result-facts,
 .result-facts dd {
   margin: 0;
 }
-.repair-result-heading h3,
 .result-section h3,
 .network-preflight h3 {
   font-size: var(--text-section);
   line-height: 1.4;
-}
-.repair-result-heading p {
-  max-width: 48ch;
-  color: var(--muted);
-  font-size: var(--text-secondary);
 }
 .result-section + .result-section {
   padding-top: 20px;
@@ -252,20 +228,14 @@ html[data-window-chrome="custom"] .dialog-content.dialog-layout {
 .update-workflow h3 { font-size: var(--text-section); margin: 0 0 10px; }
 .update-workflow p { margin: 0; line-height: 1.55; }
 .update-workflow p + p { margin-top: 10px; }
-.setup-progress { display: flex; flex-wrap: wrap; gap: 12px 24px; margin: 0; padding-left: 22px; color: var(--muted); font-size: var(--text-secondary); }
-.setup-progress [data-complete="true"] { color: var(--success); }
-.setup-progress [aria-current="step"] { color: var(--text); }
 .update-versions { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 0; }
 .update-versions dt { color: var(--muted); font-size: var(--text-secondary); margin-bottom: 8px; }
 .update-versions dd { margin: 0; font-size: 22px; line-height: 1.3; overflow-wrap: anywhere; }
 .update-source-saved { display: grid; gap: 8px; justify-items: start; min-width: 0; }
 .update-source-saved > span { color: var(--muted); }
 .update-source-saved p { overflow-wrap: anywhere; }
-.update-review, .update-schedule { display: grid; gap: 14px; border-top: 1px solid var(--line); padding-top: 22px; }
-.update-review h3, .update-schedule h3 { margin: 0; }
-.workflow-progress { width: 100%; display: grid; gap: 6px; }
-.workflow-progress strong { font-size: var(--text-secondary); }
-.workflow-message { margin: 20px 0 0; color: var(--success); }
+.update-review, .update-section { display: grid; gap: 14px; min-width: 0; border-top: 1px solid var(--line); padding-top: 22px; }
+.update-review h3, .update-section h3 { margin: 0; }
 .dialog-layout .diagnostic-summary { margin-top: 0; }
 .diagnostic-summary > p, .diagnostic-loading { font-size: var(--text-secondary); }
 .diagnostic-groups { display: grid; gap: 24px; }
@@ -289,11 +259,213 @@ html[data-window-chrome="custom"] .dialog-content.dialog-layout {
 .recovery-target { display: grid; gap: 10px; min-width: 0; padding: 16px; border: 1px solid var(--line); border-radius: 8px; overflow-wrap: anywhere; }
 .recovery-target p { margin: 0; color: var(--muted); }
 .dialog-layout .inline-error { font-size: var(--text-secondary); line-height: 1.5; }
+/* Footer: Back first, then the reason a primary action is unavailable, then the actions. */
+.dialog-footer-note {
+  flex: 1 1 200px;
+  min-width: 0;
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-secondary);
+  line-height: 1.45;
+}
+.dialog-footer .dialog-back { order: -1; }
+.dialog-back { min-height: 40px; padding-inline: 12px; }
+.dialog-footer .text-button.dialog-back { margin-right: auto; }
+.dialog-body > .inline-error { margin-bottom: 16px; }
+/* A disabled action reads as unavailable, not as a faded version of the live one. */
+.dialog-layout .primary-button:disabled,
+.dialog-layout .primary-button.danger-action:disabled {
+  border-color: var(--line);
+  background: var(--surface-3);
+  color: var(--muted);
+  box-shadow: none;
+  filter: none;
+  opacity: 1;
+}
+.dialog-layout button .spin { flex: 0 0 auto; }
+
+/* One result and one progress layout for every maintenance task. */
+/* audit-remediation.css gives .operation-result its grid, gap and padding. */
+.operation-result {
+  grid-template-columns: 44px minmax(0, 1fr);
+  align-items: center;
+  min-width: 0;
+  outline: none;
+}
+.dialog-layout .operation-result { padding: 0 0 8px; }
+.operation-result > :not(.operation-result-icon):not(h3) { grid-column: 1 / -1; }
+/* Focused only so it scrolls into view and is announced; it is not a tab stop. */
+.operation-result:focus,
+.operation-result:focus-visible { outline: none; }
+.operation-result-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid color-mix(in srgb, var(--success) 30%, transparent);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--success) 10%, transparent);
+  color: var(--success);
+}
+.operation-result h3 { font-size: var(--text-section); line-height: 1.4; }
+.operation-result p { color: var(--muted); font-size: var(--text-secondary); line-height: 1.55; }
+.operation-result .operation-result-path { color: var(--text); overflow-wrap: anywhere; }
+.operation-result-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.operation-progress {
+  min-height: 240px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--muted);
+  text-align: center;
+}
+.operation-progress > svg { color: var(--cyan); }
+.operation-progress strong { color: var(--text); font-size: var(--text-section); }
+.operation-progress p { max-width: 44ch; margin: 0; font-size: var(--text-secondary); line-height: 1.55; }
+
+/* Keys, hashes and fingerprints: labelled, whole and wrapping, with Copy. */
+.hash-value { display: grid; gap: 6px; min-width: 0; }
+.hash-value > span { color: var(--muted); font-size: var(--text-secondary); }
+.hash-value > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 8px 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+}
+.hash-value code { overflow-wrap: anywhere; color: var(--text); font-size: var(--text-secondary); line-height: 1.5; }
+
+.danger-note,
+.info-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  color: var(--text);
+  font-size: var(--text-body);
+  line-height: 1.5;
+}
+.danger-note { border: 1px solid color-mix(in srgb, var(--danger) 42%, transparent); background: color-mix(in srgb, var(--danger) 8%, transparent); }
+.info-note { border: 1px solid var(--line); background: color-mix(in srgb, var(--line) 22%, transparent); }
+.danger-note > svg,
+.info-note > svg { flex: 0 0 auto; margin-top: 2px; }
+.danger-note > svg { color: var(--danger); }
+.info-note > svg { color: var(--cyan); }
+.danger-note ul { display: grid; gap: 6px; margin: 0; padding-left: 18px; list-style: disc; }
+.confirmation-row.danger {
+  --checkbox-accent: var(--danger);
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--danger) 42%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--danger) 7%, transparent);
+}
+
+.ssh-login-error { display: grid; gap: 8px; justify-items: start; }
+.ssh-host-verification { display: grid; gap: 16px; min-width: 0; }
+.ssh-host-verification > p { margin: 0; }
+.ssh-verification-heading { display: flex; align-items: center; gap: 10px; }
+.ssh-verification-heading h3 { margin: 0; font-size: var(--text-section); }
+.ssh-verification-heading > svg { flex: 0 0 auto; color: var(--accent-strong); }
+.ssh-host-verification.changed .ssh-verification-heading > svg { color: var(--danger); }
+.form-section-title { margin: 8px 0 0; font-size: var(--text-section); }
+.repair-options[open] > summary { margin-bottom: 4px; }
+.dns-change-review-step, .restore-review { display: grid; gap: 16px; min-width: 0; }
+.dns-change-review-step > p, .restore-review h3 { margin: 0; }
+.restore-review h3 { font-size: var(--text-section); }
+
+/* VPS updates: blockers with their fix, numbered setup steps, one section per setting. */
+.update-blocker {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, var(--warning) 35%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--warning) 7%, transparent);
+}
+.update-blocker > svg { margin-top: 2px; color: var(--warning); }
+.update-blocker.danger { border-color: color-mix(in srgb, var(--danger) 42%, transparent); background: color-mix(in srgb, var(--danger) 8%, transparent); }
+.update-blocker.danger > svg { color: var(--danger); }
+.update-blocker > div { display: grid; gap: 12px; justify-items: start; min-width: 0; }
+.update-blocker p { margin: 0; }
+.update-blocker-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.setup-steps { display: flex; flex-wrap: wrap; gap: 10px 24px; margin: 0; padding: 0; list-style: none; color: var(--muted); font-size: var(--text-secondary); }
+.setup-steps li { display: inline-flex; align-items: center; gap: 8px; }
+.setup-steps li > span { display: grid; place-items: center; width: 24px; height: 24px; border: 1px solid var(--line-strong); border-radius: 50%; font-variant-numeric: tabular-nums; }
+.setup-steps [data-state="current"] { color: var(--text); font-weight: 650; }
+.setup-steps [data-state="current"] > span { border-color: var(--cyan); color: var(--cyan); }
+.setup-steps [data-state="done"] > span { border-color: var(--success); background: color-mix(in srgb, var(--success) 14%, transparent); color: var(--success); }
+.update-section .preference-row { padding: 0; border-bottom: 0; }
+.update-section .preference-row > span { display: grid; gap: 4px; }
+.update-workflow > .text-button,
+.update-section > button { justify-self: start; }
+.result-disclosure > :not(summary) + :not(summary) { margin-top: 12px; }
+/* `.field small` is muted; a field's error must still read as an error. */
+.field small.field-error { color: color-mix(in srgb, var(--danger) 70%, var(--text)); }
+.update-saved { display: flex; align-items: center; gap: 6px; color: var(--success); font-size: var(--text-secondary); }
+.release-preview-note { margin: 0; color: color-mix(in srgb, var(--warning) 60%, var(--text)); font-size: var(--text-secondary); }
+.release-verification-details[open] { display: grid; gap: 14px; }
+.release-verification-details > summary { cursor: pointer; }
+
+/* The endpoint tabs pick a task, so they look like tabs, not like two primary buttons. */
+.dialog-layout .endpoint-update-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0 0 20px; }
+.dialog-layout .endpoint-update-tabs button[aria-pressed="true"] {
+  background: var(--surface-3);
+  color: var(--text);
+  box-shadow: inset 0 -2px 0 var(--cyan);
+}
+.dialog-layout .endpoint-update-flow { gap: 16px; margin-top: 0; }
+.dialog-layout .endpoint-update-flow > p, .dialog-layout .endpoint-update-intro p { font-size: var(--text-secondary); }
+.dialog-layout .endpoint-transition-summary code { font-size: var(--text-secondary); }
+.dialog-layout .endpoint-transition-summary > span { font-size: var(--text-secondary); letter-spacing: 0; text-transform: none; }
+.dialog-layout .endpoint-update-flow .secret-code-output { min-height: 96px; }
+.endpoint-notice { display: flex; align-items: center; gap: 8px; margin: 0; }
+.vps-backup-status p.vps-backup-failure { color: var(--danger); }
+
+/* Facts are bulleted, steps are numbered, and blockers get card padding. */
+.dialog-layout ul.maintenance-plan { list-style: disc; }
+.dialog-layout ol.maintenance-plan { list-style: decimal; }
+.dialog-layout .maintenance-plan { margin-block: 0 16px; }
+.dialog-layout .maintenance-prerequisite { display: grid; gap: 12px; justify-items: start; padding: 16px; }
+.dialog-layout .maintenance-prerequisite p { margin: 0; }
+
+/* Android secure entry: a field that says what to enter and when a value is in. */
+.android .native-secret-input > .native-secret-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid color-mix(in srgb, var(--line) 95%, var(--text));
+  border-radius: var(--radius-control);
+  background: var(--surface-2);
+  color: var(--muted);
+  font: inherit;
+  font-weight: 500;
+  text-align: left;
+}
+.android .native-secret-input > .native-secret-field.entered { color: var(--text); }
+.android .native-secret-input > .native-secret-field.entered > svg { color: var(--success); }
+.android .native-secret-input > .native-secret-field:disabled { opacity: 0.6; }
+/* The final button of an irreversible action stays red on Android's flat buttons too. */
+.android .primary-button.danger-action:not(:disabled) {
+  border-color: var(--danger-fill);
+  background: var(--danger-fill);
+}
+
 @media (max-width: 600px) {
   .dialog-header { padding: 18px 18px 16px; gap: 12px; }
   .dialog-body { padding: 18px; }
   .dialog-footer { padding: 14px 18px; }
   .dialog-footer > button { flex: 1 1 auto; }
+  .dialog-footer-note { flex-basis: 100%; order: -2; }
   .result-facts > div { grid-template-columns: 1fr; gap: 4px; }
   .dialog-layout .dns-segmented.with-preserve { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

@@ -1,4 +1,5 @@
 import { SecretInput, SecretTextarea } from "../../components/SecretInput";
+import { ConfirmationRow } from "../../components/ConfirmationRow";
 import { useEffect, useRef, useState } from "react";
 import { open } from "../../lib/nativeDialog";
 import { Key, UploadSimple } from "@phosphor-icons/react";
@@ -53,10 +54,10 @@ export function RecoverAccessFlow({ onComplete, compact = false }: { onComplete:
         <div className="result-identity"><span>{t("onboarding.recover.serverIdentity")}</span><CopyValue value={preview.preview.server_identity_fingerprint} label={t("onboarding.recover.copyServerIdentity")} shorten showCopyLabel /></div>
       </div>
       <Field label={t("onboarding.recover.deviceName")}><input maxLength={64} value={deviceName} onChange={(event) => setDeviceName(event.target.value)} /></Field>
-      <label className="preference-checkbox"><input type="checkbox" checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} /><span>{t("onboarding.recover.confirmRevoke")}</span></label>
+      <ConfirmationRow checked={confirmed} onChange={setConfirmed} danger>{t("onboarding.recover.confirmRevoke")}</ConfirmationRow>
       {preview.existing_profile && <label className="preference-checkbox"><input type="checkbox" checked={replace} onChange={(event) => setReplace(event.target.checked)} /><span>{t("onboarding.recover.replaceProfile", { name: preview.preview.server_name })}</span></label>}
     </>}
     {error && <InlineError message={error} />}
-    <button className="primary-button" type="submit" disabled={busy || !key.trim() || Boolean(preview && (!confirmed || !deviceName.trim() || (preview.existing_profile && !replace)))}>{busy ? t("common.state.working") : preview ? t("onboarding.recover.submit") : t("onboarding.recover.review")}</button>
+    <button className={`primary-button${preview ? " danger-action" : ""}`} type="submit" disabled={busy || !key.trim() || Boolean(preview && (!confirmed || !deviceName.trim() || (preview.existing_profile && !replace)))}>{busy ? t("common.state.working") : preview ? t("onboarding.recover.submit") : t("onboarding.recover.review")}</button>
   </form>;
 }

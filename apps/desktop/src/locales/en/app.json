@@ -65,8 +65,7 @@
     "report": "SirinVPN couldn’t start: {{message}} No VPN action was taken."
   },
   "dialog": {
-    "waitToClose": "Wait for the current task to finish",
-    "running": "Working… You can close this when it finishes."
+    "waitToClose": "Wait for the current task to finish"
   },
   "operation": {
     "result": "Result",

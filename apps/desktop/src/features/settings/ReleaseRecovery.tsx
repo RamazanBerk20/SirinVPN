@@ -10,12 +10,14 @@ export function ReleaseRecovery({ busy, setBusy }: { busy: boolean; setBusy: (va
   const [confirmed, setConfirmed] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [statusFailed, setStatusFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   useEffect(() => {
     let active = true;
-    void api.releaseUpdateStatus().then((next) => { if (active) setStatus(next); })
-      .catch((reason) => { if (active) setError(errorMessage(reason, t("release.recovery.errorStatus"))); });
+    void api.releaseUpdateStatus().then((next) => { if (active) { setStatus(next); setStatusFailed(false); setError(null); } })
+      .catch((reason) => { if (active) { setStatusFailed(true); setError(errorMessage(reason, t("release.recovery.errorStatus"))); } });
     return () => { active = false; };
-  }, []);
+  }, [attempt]);
   const rollback = async () => {
     if (!confirmed || !status?.rollback_version || busy) return;
     setBusy(true);
@@ -47,6 +49,6 @@ export function ReleaseRecovery({ busy, setBusy }: { busy: boolean; setBusy: (va
         <button className="secondary-button" type="button" disabled={!confirmed || busy} onClick={() => void rollback()}>{t("release.recovery.restore")}</button>
       </>}
     </div>}
-    {error && <InlineError message={error} />}
+    {error && <InlineError message={error} onRetry={statusFailed ? () => setAttempt((value) => value + 1) : undefined} />}
   </>;
 }

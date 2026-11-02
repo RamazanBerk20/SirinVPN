@@ -1,6 +1,9 @@
 import { DialogContent } from "../../components/DialogContent";
+import { HashValue } from "../../components/CopyValue";
+import { ConfirmationRow } from "../../components/ConfirmationRow";
+import { OperationProgress, OperationResult } from "../../components/OperationResult";
 import * as Dialog from "@radix-ui/react-dialog";
-import { ArrowClockwise, Check, Key, Warning, } from "@phosphor-icons/react";
+import { Info, Warning } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import { api } from "../../api";
 import { type KeyRotationResult, type ServerProfile } from "../../types";
@@ -53,7 +56,7 @@ export function KeyRotationDialog({
       setResult(completed);
       await onCompleted();
     } catch (reason) {
-      setConfirmed(false);
+      // The consent still holds, so trying again is one click.
       setError(errorMessage(reason, t("settings.keyRotation.failed")));
       await onPendingChanged();
     } finally {
@@ -61,83 +64,54 @@ export function KeyRotationDialog({
     }
   };
 
+  const action = error ? pending ? t("settings.keyRotation.confirmation.resume") : t("common.action.retry")
+    : pending ? t("settings.keyRotation.confirmation.resume") : t("settings.keyRotation.confirmation.rotate");
+
   return (
     <Dialog.Root open={open} onOpenChange={changeOpen}>
       <Dialog.Portal>
         <Dialog.Overlay className="dialog-overlay" />
         <DialogContent className="dialog-content remove-server-dialog key-rotation-dialog"
-          heading={<>{result
-              ? t("settings.keyRotation.doneTitle")
-              : pending
-                ? t("settings.keyRotation.resumeTitle")
-                : t("settings.keyRotation.title")}</>}
-          description={<>{t(addsPresharedKey && !pending ? "settings.keyRotation.presharedKeyDescription" : "settings.keyRotation.description")}</>}
-          closeDisabled={busy} closeLabel={t("common.action.close")}>
+          heading={pending && !result ? t("settings.keyRotation.resumeTitle") : t("settings.keyRotation.title")}
+          description={result ? t("settings.keyRotation.doneTitle")
+            : t(addsPresharedKey && !pending ? "settings.keyRotation.presharedKeyDescription" : "settings.keyRotation.description")}
+          closeDisabled={busy} closeLabel={t("common.action.close")}
+          footerNote={!result && !busy && !confirmed ? t("vps.rotation.confirmFirst") : null}
+          footer={busy ? null : result
+            ? <button className="primary-button" type="button" onClick={() => onOpenChange(false)}>{t("common.action.done")}</button>
+            : <>
+              <button className="secondary-button" type="button" onClick={() => changeOpen(false)}>{t("common.action.cancel")}</button>
+              <button className="primary-button" type="button" disabled={!confirmed} onClick={() => void rotate()}>{action}</button>
+            </>}>
 
           {result ? (
-            <div className="backup-success key-rotation-success">
-              <span>
-                <Check size={26} weight="bold" />
-              </span>
-              <h3>{t("settings.keyRotation.done.title")}</h3>
+            <OperationResult title={t("settings.keyRotation.done.title")}>
               <p>{t("settings.keyRotation.done.summary")}</p>
-              <code>{result.identity_fingerprint}</code>
-              <button
-                className="primary-button"
-                onClick={() => onOpenChange(false)}
-              >
-                {t("common.action.done")}
-              </button>
-            </div>
+              <HashValue label={t("vps.rotation.fingerprint")} value={result.identity_fingerprint} />
+            </OperationResult>
           ) : busy ? (
-            <div className="uninstall-progress key-rotation-progress">
-              <ArrowClockwise className="spin" size={26} />
-              <strong>
-                {pending
-                  ? t("settings.keyRotation.progress.resuming")
-                  : t("settings.keyRotation.progress.rotating")}
-              </strong>
-              <p>{t("settings.keyRotation.progress.summary")}</p>
-            </div>
+            <OperationProgress
+              title={pending ? t("settings.keyRotation.progress.resuming") : t("settings.keyRotation.progress.rotating")}
+              note={t("settings.keyRotation.progress.summary")} />
           ) : (
-            <div className="uninstall-fingerprint key-rotation-confirmation">
-              <Key size={28} weight="duotone" />
+            <div className="key-rotation-confirmation">
+              {error ? <>
+                <InlineError message={error} />
+                {/* Whether the old keys still work is the first thing to know after a failure. */}
+                <p className="rotation-outcome">{pending ? t("vps.rotation.interrupted") : t("vps.rotation.unchanged")}</p>
+              </> : null}
               <h3>
                 {pending
                   ? t("settings.keyRotation.confirmation.resumeTitle")
                   : t("settings.keyRotation.confirmation.title")}
               </h3>
-              <div className="warning-note replacement-warning">
-                <Warning size={18} weight="fill" />
-                <span>
-                  {pending
-                    ? t("settings.keyRotation.confirmation.resumeWarning")
-                    : t("settings.keyRotation.confirmation.warning")}
-                </span>
-              </div>
-              <label
-                className={`replacement-option ${confirmed ? "selected" : ""}`}
-              >
-                <input
-                  type="checkbox"
-                  checked={confirmed}
-                  onChange={(event) => setConfirmed(event.target.checked)}
-                />
-                <span>
-                  <strong>{t("settings.keyRotation.confirmation.accept")}</strong>
-                  <small>{t("settings.keyRotation.confirmation.acceptHint")}</small>
-                </span>
-              </label>
-              {error ? <InlineError message={error} /> : null}
-              <button
-                className="primary-button"
-                disabled={!confirmed}
-                onClick={() => void rotate()}
-              >
-                {pending
-                  ? t("settings.keyRotation.confirmation.resume")
-                  : t("settings.keyRotation.confirmation.rotate")}
-              </button>
+              {pending
+                ? <div className="warning-note replacement-warning"><Warning size={18} weight="fill" /><span>{t("settings.keyRotation.confirmation.resumeWarning")}</span></div>
+                : <div className="info-note"><Info size={18} weight="fill" /><span>{t("settings.keyRotation.confirmation.warning")}</span></div>}
+              <ConfirmationRow checked={confirmed} onChange={setConfirmed}>
+                <strong>{t("settings.keyRotation.confirmation.accept")}</strong>
+                <small>{t("settings.keyRotation.confirmation.acceptHint")}</small>
+              </ConfirmationRow>
             </div>
           )}
         </DialogContent>

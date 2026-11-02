@@ -109,6 +109,8 @@ export function WorkspaceDialogs({
         onOpenChange={setRepairOpen}
         disconnected={localStatus.state === "disconnected" && !localStatus.kill_switch_enabled && !localStatus.auto_reconnect_enabled}
         onCompleted={onAccessChanged}
+        // Same open flag: switching the intent closes the update and opens the repair.
+        onRepair={() => model.setRepairIntent("repair")}
       />
       <RepairServerDialog
         intent={model.repairIntent === "dns" ? "dns" : "repair"}

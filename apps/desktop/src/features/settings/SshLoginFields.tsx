@@ -25,17 +25,13 @@ export function SshLoginFields({
       <p className="ssh-login-status settings-note" role="status">
         {login.checkingSavedLogin ? t("ssh.login.checking") : ""}
       </p>
-      {login.error && <InlineError message={login.error} />}
-      {login.error && !login.saved && (
-        <button
-          type="button"
-          className="text-button"
-          disabled={login.forgetting}
-          onClick={() => void login.forget()}
-        >
+      {/* A locked keyring is usually fixed by unlocking it, so reading again comes first; forgetting is the fallback. */}
+      {login.error && <div className="ssh-login-error">
+        <InlineError message={login.error} onRetry={login.saved ? undefined : login.retry} retryDisabled={login.loading || login.forgetting} />
+        {!login.saved && <button type="button" className="text-button" disabled={login.loading || login.forgetting} onClick={() => void login.forget()}>
           {t("ssh.login.forgetSaved")}
-        </button>
-      )}
+        </button>}
+      </div>}
       <fieldset className="ssh-login-content" disabled={login.loading || login.forgetting}>
       {login.usingSaved ? (
         <div className="saved-ssh-login">

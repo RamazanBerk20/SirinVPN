@@ -45,9 +45,10 @@ beforeEach(() => {
   });
 });
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
-async function setup() {
+const toggle = () => screen.getByRole("switch", { name: new RegExp(t("vps.update.schedule.toggle")) }) as HTMLInputElement;
+async function setup(onRepair?: () => void) {
   const completed = vi.fn().mockResolvedValue(undefined);
-  render(<VpsUpdateDialog profile={profile} open onOpenChange={vi.fn()} disconnected onCompleted={completed} />);
+  render(<VpsUpdateDialog profile={profile} open onOpenChange={vi.fn()} disconnected onCompleted={completed} onRepair={onRepair} />);
   const agent = await screen.findByRole("button", { name: t("ssh.auth.agent") });
   await waitFor(() => expect(agent.matches(":disabled")).toBe(false));
   fireEvent.click(agent);
@@ -58,7 +59,7 @@ async function setup() {
 
 it("checks without installing or enabling a schedule and binds installation to the reviewed manifest", async () => {
   const completed = await setup();
-  expect((screen.getByRole("checkbox", { name: t("vps.update.schedule.toggle") }) as HTMLInputElement).checked).toBe(false);
+  expect(toggle().checked).toBe(false);
   fireEvent.click(screen.getByRole("button", { name: t("vps.update.action.check") }));
   const install = await screen.findByRole("button", { name: t("vps.update.action.install", { version: "1.0.2" }) });
   expect(api.manageVpsRelease).not.toHaveBeenCalledWith(expect.objectContaining({ operation: expect.objectContaining({ action: "install" }) }));
@@ -76,16 +77,17 @@ it("clears a reviewed candidate when the release source changes and rejects priv
   await setup(); fireEvent.click(screen.getByRole("button", { name: t("vps.update.action.check") }));
   await screen.findByRole("button", { name: t("vps.update.action.install", { version: "1.0.2" }) });
   fireEvent.click(screen.getByRole("button", { name: t("vps.update.source.change") }));
-  fireEvent.change(screen.getByLabelText(t("vps.update.source.label")), { target: { value: "https://releases.example/?device=private" } });
+  fireEvent.change(screen.getByLabelText(new RegExp(`^${t("vps.update.source.label")}`)), { target: { value: "https://releases.example/?device=private" } });
   expect(screen.queryByRole("button", { name: t("vps.update.action.install", { version: "1.0.2" }) })).toBeNull();
   expect((screen.getByRole("button", { name: t("vps.update.action.check") }) as HTMLButtonElement).disabled).toBe(true);
 });
 
-it("saves automatic security updates only after an explicit choice", async () => {
-  await setup(); fireEvent.click(screen.getByRole("checkbox", { name: t("vps.update.schedule.toggle") }));
+it("saves automatic security updates only when the switch changes", async () => {
+  await setup();
   expect(api.manageVpsRelease).not.toHaveBeenCalledWith(expect.objectContaining({ operation: expect.objectContaining({ action: "configure" }) }));
-  fireEvent.click(screen.getByRole("button", { name: t("vps.update.schedule.save") }));
+  fireEvent.click(toggle());
   await screen.findByText(t("vps.update.schedule.enabled"));
+  expect(toggle().checked).toBe(true);
   expect(api.manageVpsRelease).toHaveBeenCalledWith(expect.objectContaining({ operation: { action: "configure", enabled: true, source } }));
 });
 
@@ -113,7 +115,7 @@ it("prepares a first baseline for a legacy VPS and waits for its separate instal
   fireEvent.click(agent);
   fireEvent.click(screen.getByRole("button", { name: t("common.action.continue") }));
   await screen.findByText(t("vps.update.description.setup"));
-  fireEvent.change(screen.getByLabelText(t("vps.update.source.label")), { target: { value: source } });
+  fireEvent.change(screen.getByLabelText(new RegExp(`^${t("vps.update.source.label")}`)), { target: { value: source } });
   fireEvent.click(screen.getByRole("button", { name: t("vps.update.action.verify") }));
   const install = await screen.findByRole("button", { name: t("vps.update.action.installAndFinish") });
   expect(api.installVpsBaseline).not.toHaveBeenCalled();
@@ -154,27 +156,58 @@ it("keeps disabling an existing schedule possible after a source check fails", a
   fireEvent.click(screen.getByRole("button", { name: t("vps.update.action.check") }));
   await screen.findByText("Release signature verification failed.", { exact: false });
   fireEvent.click(screen.getByRole("button", { name: t("vps.update.source.change") }));
-  fireEvent.change(screen.getByLabelText(t("vps.update.source.label")), { target: { value: "invalid source" } });
-  fireEvent.click(screen.getByRole("checkbox", { name: t("vps.update.schedule.toggle") }));
-  const save = screen.getByRole("button", { name: t("vps.update.schedule.save") });
-  expect(save.matches(":disabled")).toBe(false);
-  fireEvent.click(save);
+  fireEvent.change(screen.getByLabelText(new RegExp(`^${t("vps.update.source.label")}`)), { target: { value: "invalid source" } });
+  expect(toggle().matches(":disabled")).toBe(false);
+  fireEvent.click(toggle());
   await screen.findByText(t("vps.update.schedule.disabled"));
   expect(api.manageVpsRelease).toHaveBeenCalledWith(expect.objectContaining({ operation: { action: "configure", enabled: false, source: null } }));
 });
 
-it("does not label a rejected or unconfirmed schedule as saved", async () => {
+it("puts the switch back when the VPS rejects or doesn't confirm the schedule", async () => {
   await setup();
-  fireEvent.click(screen.getByRole("checkbox", { name: t("vps.update.schedule.toggle") }));
-  expect(screen.getByText(t("common.separator.pair", { first: t("common.state.disabled"), second: t("vps.update.schedule.unsaved") }))).toBeTruthy();
   vi.mocked(api.manageVpsRelease).mockRejectedValueOnce(new Error("Schedule write failed."));
-  fireEvent.click(screen.getByRole("button", { name: t("vps.update.schedule.save") }));
+  fireEvent.click(toggle());
   await screen.findByText("Schedule write failed.", { exact: false });
+  expect(toggle().checked).toBe(false);
   expect(screen.queryByText(t("vps.update.schedule.enabled"))).toBeNull();
   vi.mocked(api.manageVpsRelease).mockResolvedValue(status);
-  fireEvent.click(screen.getByRole("button", { name: t("vps.update.schedule.save") }));
+  fireEvent.click(toggle());
   await screen.findByText(t("vps.update.error.scheduleNotConfirmed"), { exact: false });
-  expect(screen.getByText(t("common.separator.pair", { first: t("common.state.disabled"), second: t("vps.update.schedule.unsaved") }))).toBeTruthy();
+  expect(toggle().checked).toBe(false);
+});
+
+it("offers Repair for a receipt mismatch and blocks checking until repaired", async () => {
+  vi.mocked(api.manageVpsRelease).mockResolvedValue({ ...status, installed_binary_matches: false });
+  const repair = vi.fn();
+  await setup(repair);
+  expect(screen.getByRole("button", { name: t("vps.update.action.check") }).matches(":disabled")).toBe(true);
+  expect(screen.getByText(t("vps.update.blocked.mismatch"))).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: t("vps.update.action.repair") }));
+  expect(repair).toHaveBeenCalledOnce();
+});
+
+it("rolls back only after a confirmation that names the version", async () => {
+  vi.mocked(api.manageVpsRelease).mockResolvedValue({ ...status, release: { ...status.release, rollback_version: "1.0.0" } });
+  const confirm = vi.fn().mockReturnValueOnce(false).mockReturnValueOnce(true);
+  vi.stubGlobal("confirm", confirm);
+  await setup();
+  const rollback = screen.getByRole("button", { name: t("vps.update.rollback.action", { version: "1.0.0" }) });
+  fireEvent.click(rollback);
+  await waitFor(() => expect(confirm).toHaveBeenCalledOnce());
+  expect(confirm.mock.calls[0][0]).toContain(t("vps.update.rollback.confirmTitle", { version: "1.0.0" }));
+  expect(api.manageVpsRelease).not.toHaveBeenCalledWith(expect.objectContaining({ operation: expect.objectContaining({ action: "rollback" }) }));
+  fireEvent.click(rollback);
+  await screen.findByText(t("vps.update.done.rolledBack", { version: "1.0.0" }));
+  expect(api.manageVpsRelease).toHaveBeenCalledWith(expect.objectContaining({ operation: { action: "rollback", confirmed: true } }));
+});
+
+it("names an invalid release source at the field and says why checking is unavailable", async () => {
+  await setup();
+  fireEvent.click(screen.getByRole("button", { name: t("vps.update.source.change") }));
+  fireEvent.change(screen.getByLabelText(new RegExp(`^${t("vps.update.source.label")}`)), { target: { value: "http://releases.example/" } });
+  expect(screen.getByText(t("vps.update.source.invalid"))).toBeTruthy();
+  expect(screen.getByLabelText(new RegExp(`^${t("vps.update.source.label")}`)).getAttribute("aria-invalid")).toBe("true");
+  expect(screen.getByText(t("vps.update.blocked.source"))).toBeTruthy();
 });
 
 it("finishes setup using a matching verified installation without reinstalling it", async () => {
@@ -210,7 +243,7 @@ it("blocks Escape and closing during installation and leaves a failed operation 
   vi.mocked(api.manageVpsRelease).mockImplementationOnce(() => new Promise((_, fail) => { reject = fail; }));
   fireEvent.click(install);
   await waitFor(() => expect(reject).toBeDefined());
-  expect(screen.getByRole("button", { name: t("common.action.close") }).matches(":disabled")).toBe(true);
+  expect(screen.getAllByRole("button", { name: t("common.action.close") }).every((button) => button.matches(":disabled"))).toBe(true);
   fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape", code: "Escape" });
   expect(changeOpen).not.toHaveBeenCalled();
   await act(async () => reject(new Error("The update was interrupted; recover its transaction before retrying.")));
@@ -226,13 +259,13 @@ it("remembers only a verified source for this VPS and never carries it to anothe
   vi.mocked(api.manageVpsRelease).mockResolvedValue({ ...status, security_updates: { ...status.security_updates, source: null } });
   await setup();
   expect(screen.getByText(source)).toBeTruthy();
-  expect(screen.queryByRole("textbox", { name: t("vps.update.source.label") })).toBeNull();
+  expect(screen.queryByRole("textbox", { name: new RegExp(`^${t("vps.update.source.label")}`) })).toBeNull();
   cleanup();
   render(<VpsUpdateDialog profile={{ ...profile, id: "b" }} open onOpenChange={vi.fn()} disconnected onCompleted={vi.fn().mockResolvedValue(undefined)} />);
   const agent = await screen.findByRole("button", { name: t("ssh.auth.agent") });
   await waitFor(() => expect(agent.matches(":disabled")).toBe(false));
   fireEvent.click(agent); fireEvent.click(screen.getByRole("button", { name: t("common.action.continue") }));
-  const input = await screen.findByRole("textbox", { name: t("vps.update.source.label") });
+  const input = await screen.findByRole("textbox", { name: new RegExp(`^${t("vps.update.source.label")}`) });
   expect((input as HTMLInputElement).value).toBe("");
 });
 

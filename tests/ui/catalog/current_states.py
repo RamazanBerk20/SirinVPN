@@ -123,7 +123,7 @@ def current_states(add):
     ssh = repair + [click('Continue')]
     saved = {'connected': False, 'savedLogin': {'username': 'admin', 'ssh_port': 2222, 'authentication': 'agent', 'private_key_path': None}}
     case('vps-repair', 'edit-saved-ssh-login', ssh + [click('Change login')], saved)
-    outcomes('vps-repair', 'forget-saved-ssh-login', ssh + [click('Forget login')], 'forgetSshLogin', saved)
+    outcomes('vps-repair', 'forget-saved-ssh-login', ssh + [click('Forget saved login')], 'forgetSshLogin', saved)
 
     recover = [click('Recovery key'), click('Open a recovery key file'), fill('File password', PASS), click('Open file')]
     outcomes('owner-recovery', 'import-encrypted-recovery-package', recover, 'importRecoveryPackage', empty)
@@ -138,7 +138,7 @@ def current_states(add):
         case('recovery-keys', 'recovery-key-copy-' + ('failed' if fail else 'completed'), created + [click('Copy recovery key')], {'clipboardError': fail})
     endpoint = maintenance + [click('Move to a new address', False)]
     outcomes('endpoint', 'retrieve-published-handoff', endpoint + [click('Get from server')], 'availableEndpointUpdate')
-    case('endpoint', 'share-migration-disconnected', endpoint + [click('Share update')], {'connected': False})
+    case('endpoint', 'share-migration-disconnected', endpoint + [click('Share new address')], {'connected': False})
     case('endpoint', 'migration-pending-old-vps', endpoint, {'profile': {'pending_previous_endpoint': {'host': 'old-vps.example.com', 'wireguard_port': 51820}}})
 
     app = general + [click('Check for updates')]

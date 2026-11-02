@@ -268,7 +268,7 @@ export function SetupFlow({
           <span>{t("onboarding.setup.fingerprint.mismatch")}</span>
         </div>}
         {replaceExistingInstallation ? (
-          <div className="warning-note replacement-warning">
+          <div className="danger-note">
             <Warning size={18} weight="fill" />
             <span>{t("onboarding.setup.fingerprint.replaceWarning")}</span>
           </div>
@@ -280,7 +280,7 @@ export function SetupFlow({
           <button className={preflight ? "secondary-button" : "primary-button"} disabled={busy} onClick={() => void inspectNetwork()}>
             {busy ? t("onboarding.setup.fingerprint.checking") : preflight ? t("onboarding.setup.fingerprint.checkAgain") : created ? t("onboarding.setup.fingerprint.checkNetwork") : t("onboarding.setup.fingerprint.matches")}
           </button>
-          {preflight && <button className="primary-button" disabled={busy || preflight.issues.some((issue) => issue.blocking) || (nat64 !== "" && !nat64PrefixIsValid(nat64))} onClick={() => void provision()}>
+          {preflight && <button className={`primary-button${replaceExistingInstallation ? " danger-action" : ""}`} disabled={busy || preflight.issues.some((issue) => issue.blocking) || (nat64 !== "" && !nat64PrefixIsValid(nat64))} onClick={() => void provision()}>
             {replaceExistingInstallation ? t("onboarding.setup.fingerprint.replace") : t("onboarding.setup.fingerprint.install")}
           </button>}
         </div>

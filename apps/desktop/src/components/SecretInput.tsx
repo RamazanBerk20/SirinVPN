@@ -3,21 +3,23 @@ import type { ChangeEvent, InputHTMLAttributes, TextareaHTMLAttributes } from "r
 import { useState } from "react";
 import { invoke, isAndroid } from "../platform";
 import { errorMessage } from "../lib/errors";
-import { QrCode } from "@phosphor-icons/react";
+import { CheckCircle, LockKey, QrCode } from "@phosphor-icons/react";
 
 /** Android returns an opaque native handle. The secret never enters React state. */
 export function SecretInput(props: InputHTMLAttributes<HTMLInputElement>) {
   const [error, setError] = useState("");
   if (!isAndroid) return <input {...props} />;
   const label = props["aria-label"] ?? t("app.secret.value");
+  // Styled as a field, not a button: it is where the value goes, and it says when one was entered.
   return <span className="native-secret-input">
-    <button type="button" className="secondary-button" disabled={props.disabled} aria-label={t("app.secret.enterLabel", { label })}
+    <button type="button" className={`native-secret-field${props.value ? " entered" : ""}`} disabled={props.disabled} aria-label={t("app.secret.enterLabel", { label })}
       id={props.id} aria-describedby={props["aria-describedby"]} aria-invalid={props["aria-invalid"]}
       onClick={() => { void invoke<string>("android_secret_input", { label, minimumLength: props.minLength ?? (props.autoComplete === "new-password" ? 12 : 0) }).then(reference => {
         setError("");
         props.onChange?.({ target: { value: reference }, currentTarget: { value: reference } } as ChangeEvent<HTMLInputElement>);
       }).catch(() => setError(t("app.secret.unchanged"))); }}>
-      {props.value ? t("app.secret.entered") : t("app.secret.enter")}
+      {props.value ? <CheckCircle size={18} weight="fill" /> : <LockKey size={18} />}
+      <span>{props.value ? t("app.secret.entered") : props["aria-label"] ? t("app.secret.enterLabel", { label }) : t("app.secret.enter")}</span>
     </button>
     {error && <small role="alert">{error}</small>}
   </span>;

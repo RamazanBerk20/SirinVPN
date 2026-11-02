@@ -1,5 +1,5 @@
-import { Check } from "@phosphor-icons/react";
-import { CopyValue } from "../../components/CopyValue";
+import { HashValue } from "../../components/CopyValue";
+import { OperationResult } from "../../components/OperationResult";
 import { formatDnsPolicy } from "../../format";
 import { t } from "../../i18n";
 import type { RepairResult, ServerProfile } from "../../types";
@@ -14,10 +14,7 @@ export function RepairSummary({ profile, result, dnsPreserved, recordsPreserved 
   const fingerprint = result.server_identity_fingerprint;
   const records = result.private_dns_records.length;
   return <div className="repair-result">
-    <div className="repair-result-heading">
-      <span className="result-check"><Check size={26} weight="bold" /></span>
-      <h3>{t("vps.summary.title", { name: profile.name })}</h3>
-    </div>
+    <OperationResult title={t("vps.summary.title", { name: profile.name })} />
     <section className="result-section" aria-labelledby="repair-completed-heading">
       <h3 id="repair-completed-heading">{t("vps.summary.completed")}</h3>
       <dl className="result-facts">
@@ -34,11 +31,8 @@ export function RepairSummary({ profile, result, dnsPreserved, recordsPreserved 
         {dnsPreserved && <li>{t("vps.summary.dnsPolicy")}</li>}
         {recordsPreserved && <li>{t("vps.summary.dnsRecords")}</li>}
       </ul>
-      <div className="result-identity">
-        <span>{t("vps.summary.fingerprint")}</span>
-        {fingerprint ? <CopyValue value={fingerprint} label={t("vps.summary.fingerprint")} shorten showCopyLabel />
-          : <span className="settings-note">{t("vps.summary.fingerprintSaved")}</span>}
-      </div>
+      {fingerprint ? <HashValue label={t("vps.summary.fingerprint")} value={fingerprint} />
+        : <div className="result-identity"><span>{t("vps.summary.fingerprint")}</span><span className="settings-note">{t("vps.summary.fingerprintSaved")}</span></div>}
     </section>
     {result.network_preflight && <details className="result-disclosure">
       <summary>{t("vps.summary.network")}</summary>
@@ -47,9 +41,7 @@ export function RepairSummary({ profile, result, dnsPreserved, recordsPreserved 
     </details>}
     <details className="result-disclosure">
       <summary>{t("vps.common.softwareDetails")}</summary>
-      <div className="result-identity"><span>{t("vps.common.softwareHash")}</span>
-        <CopyValue value={result.artifact_sha256} label={t("vps.common.softwareHash")} shorten showCopyLabel />
-      </div>
+      <HashValue label={t("vps.common.softwareHash")} value={result.artifact_sha256} />
     </details>
     <p className="result-next-step">{t("vps.summary.next")}</p>
   </div>;

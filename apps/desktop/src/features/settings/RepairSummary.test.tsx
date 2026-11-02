@@ -16,7 +16,7 @@ it("distinguishes the preserved server identity from the installed software hash
   expect(screen.getByText(t("vps.summary.recordsNone"))).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: new RegExp(t("vps.summary.fingerprint"), "i") }));
   await waitFor(() => expect(writeText).toHaveBeenCalledWith("a".repeat(64)));
-  fireEvent.click(within(preserved).getByRole("button", { name: t("app.copy.showAll") }));
+  // Fingerprints are compared by eye, so the whole value is shown, never shortened.
   expect(within(preserved).getByText("a".repeat(64))).toBeTruthy();
   expect(within(preserved).queryByText("b".repeat(64))).toBeNull();
 });

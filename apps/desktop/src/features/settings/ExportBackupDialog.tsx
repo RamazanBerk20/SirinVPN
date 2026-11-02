@@ -1,15 +1,12 @@
 import { SecretInput } from "../../components/SecretInput";
 import { ShareEncryptedFile } from "../../components/ShareEncryptedFile";
 import { DialogContent } from "../../components/DialogContent";
+import { ConfirmationRow } from "../../components/ConfirmationRow";
+import { Busy, OperationResult } from "../../components/OperationResult";
 import * as Dialog from "@radix-ui/react-dialog";
 import { save } from "../../lib/nativeDialog";
-import {
-  ArrowClockwise,
-  Check,
-  DownloadSimple,
-  Warning,
-} from "@phosphor-icons/react";
-import { useState } from "react";
+import { Warning } from "@phosphor-icons/react";
+import { useId, useState } from "react";
 import { api } from "../../api";
 import { type ServerProfile } from "../../types";
 import { Field, InlineError } from "../../components/ui";
@@ -27,6 +24,7 @@ export function ExportBackupDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const formId = useId();
   const [path, setPath] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirmation, setPasswordConfirmation] = useState("");
@@ -34,8 +32,12 @@ export function ExportBackupDialog({
   const [busy, setBusy] = useState(false);
   const [complete, setComplete] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const passwordValid =
-    [...password].length >= 12 && password === passwordConfirmation;
+  const passwordLong = [...password].length >= 12;
+  const passwordValid = passwordLong && password === passwordConfirmation;
+  const blocker = !path ? t("vps.backup.missing.file")
+    : !passwordLong ? t("vps.backup.missing.password")
+    : !passwordValid ? t("vps.backup.missing.repeat")
+    : !confirmed ? t("vps.deviceBackup.confirmFirst") : null;
 
   const reset = () => {
     setPath("");
@@ -85,12 +87,13 @@ export function ExportBackupDialog({
     setError(null);
     try {
       await api.exportServerBackup(profile.id, path, password, confirmed);
-      setComplete(true);
-    } catch (reason) {
-      setError(errorMessage(reason, t("settings.backup.failed")));
-    } finally {
       setPassword("");
       setPasswordConfirmation("");
+      setComplete(true);
+    } catch (reason) {
+      // A write failure says nothing about the password, so it stays entered for Try again.
+      setError(errorMessage(reason, t("settings.backup.failed")));
+    } finally {
       setBusy(false);
     }
   };
@@ -100,106 +103,88 @@ export function ExportBackupDialog({
       <Dialog.Portal>
         <Dialog.Overlay className="dialog-overlay" />
         <DialogContent className="dialog-content backup-dialog"
-          heading={<>{t("settings.backup.title")}</>}
-          description={<>{t("settings.backup.description")}</>}
-          closeDisabled={busy} closeLabel={t("common.action.close")}>
-          {complete ? (
-            <div className="backup-success">
-              <span>
-                <Check size={24} weight="bold" />
-              </span>
-              <h3>{t("settings.backup.done.title")}</h3>
-              <ShareEncryptedFile uri={path} />
-              <p>{t("settings.backup.done.summary")}</p>
-              <button
-                className="primary-button"
-                type="button"
-                onClick={() => changeOpen(false)}
-              >
-                {t("common.action.done")}
+          heading={t("settings.backup.title")}
+          description={complete ? t("settings.backup.done.title") : t("settings.backup.description")}
+          closeDisabled={busy} closeLabel={t("common.action.close")}
+          footerNote={complete || busy ? null : blocker}
+          footer={complete
+            ? <button className="primary-button" type="button" onClick={() => changeOpen(false)}>{t("common.action.done")}</button>
+            : <>
+              <button className="secondary-button" type="button" disabled={busy} onClick={() => changeOpen(false)}>{t("common.action.cancel")}</button>
+              <button className="primary-button" type="submit" form={formId} disabled={busy || Boolean(blocker)}>
+                {busy ? <Busy label={t("settings.backup.creating")} /> : t("settings.backup.create")}
               </button>
-            </div>
+            </>}>
+          {complete ? (
+            <OperationResult title={t("settings.backup.done.title")}>
+              <p className="operation-result-path">{path}</p>
+              <p>{t("settings.backup.done.summary")}</p>
+              <ShareEncryptedFile uri={path} />
+            </OperationResult>
           ) : (
             <form
               className="backup-form"
+              id={formId}
               onSubmit={(event) => {
                 event.preventDefault();
                 void exportBackup();
               }}
             >
-              <div className="sensitive-backup-warning">
-                <Warning size={19} weight="fill" />
-                <p>
-                  <Rich id="settings.backup.warning" tags={{ strong: content => <strong>{content}</strong> }} />
-                </p>
-              </div>
-              <Field
-                label={t("settings.backup.destination.label")}
-                hint={t("settings.backup.destination.hint")}
-              >
-                <div className="file-picker-row">
-                  <input
-                    className="mono"
-                    value={path}
-                    readOnly
-                    placeholder={t("settings.backup.destination.placeholder")}
-                  />
-                  <button
-                    className="secondary-button"
-                    type="button"
-                    onClick={() => void chooseDestination()}
-                    disabled={busy}
-                  >
-                    {t("settings.backup.destination.choose")}
-                  </button>
+              {error ? <InlineError message={error} onRetry={() => void exportBackup()} retryDisabled={busy || Boolean(blocker)} /> : null}
+              <fieldset disabled={busy} className="ssh-operation-fields">
+                <div className="sensitive-backup-warning">
+                  <Warning size={19} weight="fill" />
+                  <p>
+                    <Rich id="settings.backup.warning" tags={{ strong: content => <strong>{content}</strong> }} />
+                  </p>
                 </div>
-              </Field>
-              <div className="field-grid two-column backup-passwords">
-                <Field label={t("settings.backup.password.label")} hint={t("settings.backup.password.hint")}>
-                  <SecretInput
-                    type="password"
-                    value={password}
-                    onChange={(event) => setPassword(event.target.value)}
-                    autoComplete="new-password"
-                  />
+                <Field
+                  label={t("settings.backup.destination.label")}
+                  hint={t("settings.backup.destination.hint")}
+                >
+                  <div className="file-picker-row">
+                    <input
+                      className="mono"
+                      value={path}
+                      readOnly
+                      placeholder={t("settings.backup.destination.placeholder")}
+                    />
+                    <button
+                      className="secondary-button"
+                      type="button"
+                      onClick={() => void chooseDestination()}
+                    >
+                      {t("settings.backup.destination.choose")}
+                    </button>
+                  </div>
                 </Field>
-                <Field label={t("settings.backup.password.repeat")} error={passwordConfirmation && passwordConfirmation !== password ? t("common.error.passwordsDiffer") : undefined}>
-                  <SecretInput
-                    type="password"
-                    value={passwordConfirmation}
-                    onChange={(event) =>
-                      setPasswordConfirmation(event.target.value)
-                    }
-                    autoComplete="new-password"
-                  />
-                </Field>
-              </div>
-              <label
-                className={`replacement-option backup-confirmation ${confirmed ? "selected" : ""}`}
-              >
-                <input
-                  type="checkbox"
-                  checked={confirmed}
-                  onChange={(event) => setConfirmed(event.target.checked)}
-                />
-                <span>
+                <div className="field-grid two-column backup-passwords">
+                  <Field label={t("settings.backup.password.label")} hint={t("settings.backup.password.hint")}>
+                    <SecretInput
+                      type="password"
+                      value={password}
+                      onChange={(event) => setPassword(event.target.value)}
+                      autoComplete="new-password"
+                    />
+                  </Field>
+                  <Field label={t("settings.backup.password.repeat")}
+                    hint={passwordValid ? t("vps.common.passwordsMatch") : undefined}
+                    error={passwordConfirmation && passwordConfirmation !== password ? t("common.error.passwordsDiffer") : undefined}>
+                    <SecretInput
+                      type="password"
+                      value={passwordConfirmation}
+                      onChange={(event) =>
+                        setPasswordConfirmation(event.target.value)
+                      }
+                      autoComplete="new-password"
+                    />
+                  </Field>
+                </div>
+                <ConfirmationRow checked={confirmed} onChange={setConfirmed}>
                   <strong>{t("settings.backup.accept.label")}</strong>
                   <small>{t("settings.backup.accept.hint")}</small>
-                </span>
-              </label>
-              {error ? <InlineError message={error} /> : null}
-              <button
-                className="primary-button"
-                type="submit"
-                disabled={busy || !path || !passwordValid || !confirmed}
-              >
-                {busy ? (
-                  <ArrowClockwise className="spin" size={18} />
-                ) : (
-                  <DownloadSimple size={18} />
-                )}
-                {busy ? t("settings.backup.creating") : t("settings.backup.create")}
-              </button>
+                </ConfirmationRow>
+              </fieldset>
             </form>
           )}
         </DialogContent>

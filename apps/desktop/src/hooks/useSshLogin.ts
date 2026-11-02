@@ -26,6 +26,7 @@ export function useSshLogin(host: string, active = true) {
   const [remember, setRemember] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [forgetting, setForgetting] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const clearSecrets = () => {
     setPassword("");
     setKeyPassphrase("");
@@ -33,21 +34,25 @@ export function useSshLogin(host: string, active = true) {
   };
 
   useEffect(() => {
-    const epoch = ++generation.current;
-    const validContext = () =>
-      current.current === context && generation.current === epoch;
     clearSecrets();
     setSaved(null);
     setUseSaved(true);
-    setError(null);
     setRemember(true);
     setUsername("root");
     setPort("22");
     setAuth("password");
     setKeyPath("");
+    setForgetting(false);
+  }, [context]);
+
+  // Reading the saved login again (Try again after a locked keyring) keeps what was typed.
+  useEffect(() => {
+    const epoch = ++generation.current;
+    const validContext = () =>
+      current.current === context && generation.current === epoch;
+    setError(null);
     setLoadedFor("");
     setCheckingFor("");
-    setForgetting(false);
     if (!active || !validateHost(destination)) return;
     // Avoid asking the wallet about each partial hostname while typing.
     let progressTimer: number | undefined;
@@ -83,7 +88,7 @@ export function useSshLogin(host: string, active = true) {
       window.clearTimeout(progressTimer);
       generation.current++;
     };
-  }, [context]);
+  }, [context, attempt]);
 
   const loading = active && validateHost(destination) && loadedFor !== context;
   const usingSaved = loadedFor === context && saved !== null && useSaved;
@@ -101,6 +106,14 @@ export function useSshLogin(host: string, active = true) {
       auth === "agent" ||
       (auth === "password" && password.length > 0) ||
       (auth === "private_key" && keyPath.trim().length > 0));
+
+  /** What is still missing, for the line beside a disabled Continue. */
+  const missing = valid || loading || forgetting || !active ? null
+    : !username.trim() ? t("ssh.missing.username")
+    : !(Number.isInteger(parsedPort) && parsedPort > 0 && parsedPort <= 65_535) ? t("ssh.missing.port")
+    : auth === "password" ? t("ssh.missing.password")
+    : auth === "private_key" ? t("ssh.missing.key")
+    : null;
 
   const prepare = async (fingerprint: string): Promise<SshCredentials> => {
     const epoch = generation.current;
@@ -192,6 +205,8 @@ export function useSshLogin(host: string, active = true) {
     forgetting,
     error,
     valid,
+    missing,
+    retry: () => setAttempt((value) => value + 1),
     prepare,
     clearSecrets,
     forget,

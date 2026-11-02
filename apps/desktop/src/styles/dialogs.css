@@ -209,72 +209,10 @@
   color: var(--warning);
 }
 
-.release-detail-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1px;
-  overflow: hidden;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--line);
-}
-
-.release-detail-grid > div {
-  min-width: 0;
-  display: grid;
-  gap: 5px;
-  padding: 12px;
-  background: var(--surface);
-}
-
-.release-detail-grid span,
-.release-digest > span {
-  color: var(--quiet);
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-}
-
-.release-detail-grid strong,
-.release-detail-grid code {
-  overflow: hidden;
-  color: color-mix(in srgb, var(--quiet) 25%, var(--text));
-  font-size: 0.75rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.release-digest {
-  min-width: 0;
-  display: grid;
-  gap: 6px;
-  padding: 11px 12px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--bg);
-}
-
-.release-digest code {
-  overflow: hidden;
-  color: var(--muted);
-  font-size: 0.75rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .release-candidate .warning-note.replacement-warning,
 .release-install-confirmation,
 .release-candidate .form-footnote {
   margin: 0;
-}
-
-.release-update-progress {
-  min-height: 300px;
-}
-
-.release-update-success code {
-  max-width: 100%;
 }
 
 .install-state,
@@ -314,11 +252,13 @@
   border-radius: 7px;
   background: var(--surface);
 }
+/* Break only between words, so a command retyped into a provider console keeps its tokens whole. */
 .ssh-verification-command code {
   white-space: normal;
-  overflow-wrap: anywhere;
+  overflow-x: auto;
   font-size: 0.8125rem;
 }
+.ssh-verification-command code > span { white-space: nowrap; }
 
 .ssh-login-fields {
   position: relative;

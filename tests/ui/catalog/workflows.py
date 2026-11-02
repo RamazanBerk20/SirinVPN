@@ -97,8 +97,8 @@ def workflows(p, add):
     outcome('key-rotation', 'rotate-desktop-device-keys', rotation + [click('Rotate keys')], 'rotateDeviceKeys')
     add('key-rotation', 'resume-interrupted-key-rotation', recovery + [click('Resume key rotation', False)], {'pendingRotation': True}, True)
     endpoint = maintenance + [click('Move to a new address', False)]
-    add('endpoint', 'share-migration-introduction', endpoint + [click('Share update')], expand=True)
-    retrieve = endpoint + [click('Share update'), click('Get update')]
+    add('endpoint', 'share-migration-introduction', endpoint + [click('Share new address')], expand=True)
+    retrieve = endpoint + [click('Share new address'), click('Get update')]
     outcome('endpoint', 'retrieve-signed-address-update', retrieve, 'createEndpointUpdate')
     outcome('endpoint', 'publish-signed-address-update', retrieve + [click('Publish on old VPS')], 'publishEndpointUpdate')
     outcome('endpoint', 'apply-signed-address-update', endpoint + [fill('Update code', 'sire1.' + 'EXAMPLE-' * 60), click('Verify and switch')], 'applyEndpointUpdate')
@@ -110,7 +110,7 @@ def workflows(p, add):
     outcome('provisioning', 'probe-new-vps', setup + [click('Verify server')], 'probeHostKey', empty)
     for method in ['Private key', 'Password', 'SSH agent']:
         add('provisioning', 'new-vps-auth-' + method.lower().replace(' ', '-'), [click(method)], empty, True)
-    operations = [('vps-backup', 'Back up VPS', recovery, 'Create backup', 'exportVpsBackup', [click('Choose file'), fill('Backup password', PASS), fill('Repeat password', PASS)]), ('vps-restore', 'Restore or migrate VPS', recovery, 'Restore', 'restoreVpsBackup', [click('Choose file'), fill('Backup password', PASS)]), ('vps-repair', 'Repair VPS configuration', maintenance, 'Repair server', 'repairServer', []), ('vps-updates', 'Update VPS software', maintenance, 'Continue', 'manageVpsRelease', [])]
+    operations = [('vps-backup', 'Back up VPS', recovery, 'Create backup', 'exportVpsBackup', [click('Choose file'), fill('Backup password', PASS), fill('Repeat password', PASS)]), ('vps-restore', 'Restore or migrate VPS', recovery, 'Review restore', 'restoreVpsBackup', [click('Choose file'), fill('Backup password', PASS)]), ('vps-repair', 'Repair VPS configuration', maintenance, 'Repair VPS', 'repairServer', []), ('vps-updates', 'Update VPS software', maintenance, 'Continue', 'manageVpsRelease', [])]
     for family, label, base, submit, method, fields in operations:
         base = base + [click(label, False), click('Continue')]
         for authentication in ['Password', 'SSH agent']:
@@ -124,7 +124,7 @@ def workflows(p, add):
         add(family, family + '-ssh-fingerprint-checking', inspect, {'connected': False, 'holds': ['inspectSshHost']}, True)
         add(family, family + '-ssh-fingerprint-failed', inspect, {'connected': False, 'errors': {'inspectSshHost': ERROR}}, True)
         if family != 'vps-updates':
-            outcome(family, family + '-operation', inspect, 'repairServer' if family == 'vps-repair' else method, {'connected': False, 'sshInspection': {'status': 'trusted'}})
+            outcome(family, family + '-operation', inspect + ([click('Restore VPS')] if family == 'vps-restore' else []), 'repairServer' if family == 'vps-repair' else method, {'connected': False, 'sshInspection': {'status': 'trusted'}})
         else:
             release = inspect
             trusted = {'connected': False, 'sshInspection': {'status': 'trusted'}}
@@ -140,8 +140,8 @@ def workflows(p, add):
                 add(family, name, release, {**configured, **opts}, True)
             add(family, 'verified-vps-update-available', release + [click('Check for updates')], configured, True)
             outcome(family, 'install-reviewed-vps-update', release + [click('Check for updates'), click('Install 1.0.2')], 'manageVpsRelease', configured)
-            outcome(family, 'save-automatic-update-schedule', release + [check('Install security updates automatically'), click('Save schedule')], 'manageVpsRelease', configured)
-            add(family, 'rollback-vps-review', release + [click('Previous version 1.0.0'), check('Restore version 1.0.0')], configured, True)
+            outcome(family, 'save-automatic-update-schedule', release + [check('Install security updates automatically')], 'manageVpsRelease', configured)
+            add(family, 'rollback-vps-review', release + [click('Roll back to 1.0.0…')], configured, True)
     dns_setup = network + [click('Configure DNS'), click('Continue')]
     for mode in ['Recursive', 'DNS over TLS', 'DNS over HTTPS']:
         add('dns', 'desktop-dns-' + mode.lower().replace(' ', '-'), dns_setup + [click(mode)], {'connected': False}, True)

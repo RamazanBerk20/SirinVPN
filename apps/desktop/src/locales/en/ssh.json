@@ -5,7 +5,7 @@
     "savedTitle": "Saved SSH login",
     "savedSummary": "{{username}} · port {{port}} · {{method}}",
     "change": "Change login",
-    "forget": "Forget login",
+    "forget": "Forget saved login",
     "username": "SSH username",
     "port": "SSH port",
     "method": "Sign-in method",
@@ -16,7 +16,7 @@
     "keyPassphrase": "Key passphrase",
     "keyPassphraseHint": "Leave empty if the key has no passphrase",
     "password": "SSH password",
-    "sudoPassword": "sudo password",
+    "sudoPassword": "Sudo password",
     "sudoPasswordHint": "Leave empty for passwordless sudo",
     "remember": "Remember login on this device",
     "rememberNote": "Saved securely after a successful sign-in.",
@@ -29,7 +29,7 @@
   },
   "error": {
     "picker": "Couldn’t open the file picker. Try again.",
-    "readSaved": "Couldn’t read the saved login. Enter the login below.",
+    "readSaved": "Couldn’t read the saved login from this device’s keyring. Unlock the keyring and try again, or enter the login below.",
     "forget": "Couldn’t remove the saved login. Try again.",
     "cancelled": "Cancelled because the server address changed. Try again.",
     "invalidLogin": "Enter a valid SSH login.",
@@ -41,12 +41,13 @@
     "title": "Verify this server",
     "bodyChanged": "It doesn’t match the saved key. Verify the new key before replacing it.",
     "body": "Check that this fingerprint belongs to your server:",
-    "copyFingerprint": "Copy fingerprint",
     "changedWarning": "If you didn’t rebuild the server or change its keys, stop and contact your provider.",
     "confirmChanged": "I verified the new key",
     "confirm": "I verified this fingerprint",
     "confirmChangedNote": "Replaces the saved key for this address and port.",
-    "confirmNote": "Saved for next time. You’re asked again only if it changes."
+    "confirmNote": "Saved for next time. You’re asked again only if it changes.",
+    "fingerprintLabel": "SSH key fingerprint for {{host}}",
+    "confirmFirst": "Check the fingerprint, then tick the box above."
   },
   "guide": {
     "openConsole": "Open the server’s browser console on your hosting provider’s website and sign in.",
@@ -102,5 +103,11 @@
     "privateKeyPlaceholder": "/etc/letsencrypt/live/vpn.example.org/privkey.pem",
     "existingNote": "Before changing ports or certificates, cancel open invitations and finish key rotations.",
     "invalid": "Check the ports, hostname, path and certificate paths."
+  },
+  "missing": {
+    "username": "Enter the SSH username.",
+    "port": "Enter an SSH port from 1 to 65535.",
+    "password": "Enter the SSH password.",
+    "key": "Choose the SSH private key."
   }
 }
