@@ -196,3 +196,9 @@
 .metrics-unavailable > button {
   margin-top: 8px;
 }
+.metrics-details dd > small {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.8125rem;
+}

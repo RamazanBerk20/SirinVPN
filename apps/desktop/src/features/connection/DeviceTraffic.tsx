@@ -11,7 +11,6 @@ import {
 import type { LocalTunnelStatus } from "../../types";
 import { useTunnelDuration } from "../../hooks/useTunnelDuration";
 import { currentQualitySample } from "./TransportQuality";
-import { MtuDetails } from "./MtuSettings";
 
 import { useTrafficStore, type TrafficStore } from "../../hooks/trafficStore";
 import { InfoHint } from "../../components/InfoHint";
@@ -65,7 +64,11 @@ export function DeviceTraffic({
           {t(connected ? "home.traffic.session" : local.state === "unknown" ? "home.traffic.countersUnavailable" : "home.traffic.notConnected")}
         </span>
       </div>
-      <div className="device-traffic-grid">
+      {/* Without counter support every tile would say "Unavailable": one notice says why instead. */}
+      {unsupported ? <div className="metrics-unavailable">
+        <p>{t("home.traffic.updateNeeded")}</p>
+        {onReviewUpdate && <button className="secondary-button" onClick={onReviewUpdate}>{t("home.componentUpdate.review")}</button>}
+      </div> : <div className="device-traffic-grid">
         <Metric
           label={t("home.traffic.download")}
           value={rate(local.rx_bytes_per_second)}
@@ -115,17 +118,7 @@ export function DeviceTraffic({
               : "state"
           }
         />
-      </div>
-      {unsupported && (
-        <div className="measurement-update">
-          <p>{t("home.traffic.updateNeeded")}</p>
-          {onReviewUpdate && (
-            <button className="text-button" onClick={onReviewUpdate}>
-              {t("home.componentUpdate.review")}
-            </button>
-          )}
-        </div>
-      )}
+      </div>}
       {showDetails && (
         <DeviceTrafficDetails
           local={local}
@@ -205,8 +198,17 @@ export function DeviceTrafficDetails({
             </>
           </>
         )}
+        {connected && local.mtu && (() => {
+          const mtu = local.mtu;
+          // Same row as the other facts; a smaller measured size applies only on the next connection.
+          const pending = mtu.policy.mode === "automatic" && mtu.outcome === "measured" && mtu.suggested !== null && mtu.suggested < mtu.configured;
+          return <div>
+            <dt>{t("home.details.mtu")}</dt>
+            <dd>{t("home.details.mtuValue", { value: formatNumber(mtu.configured) })}
+              {pending && <small className="metric-detail">{t("home.details.mtuPending", { value: formatNumber(mtu.suggested!) })}</small>}</dd>
+          </div>;
+        })()}
       </dl>
-      {connected && local.mtu && <MtuDetails mtu={local.mtu} />}
       <p className="settings-note">{t("home.device.countersNote")}</p>
     </details>
   );

@@ -151,6 +151,7 @@ export function ServerWorkspace(
           {!isAndroid && <><ServerMetrics
             model={model}
             onReviewActivity={reviewActivity}
+            onReviewUpdate={profile.role === "owner" ? () => { props.onOpenSettings("maintenance"); model.setMaintenanceReview("update"); } : undefined}
           />
           <DeviceTrafficDetails
             source={props.trafficUpdates}

@@ -61,9 +61,12 @@ export function serverMetrics(status: ServerStatus): { id: string; label: string
 export function ServerMetrics({
   model,
   onReviewActivity,
+  onReviewUpdate,
 }: {
   model: ServerWorkspaceModel;
   onReviewActivity: () => void;
+  /** Owners only: opens the VPS update review. */
+  onReviewUpdate?: () => void;
 }) {
   const { serverStatus: status, connected, freshness } = model;
   const state = serverFreshness(connected, status, freshness);
@@ -87,7 +90,10 @@ export function ServerMetrics({
       ) : (
         <>
           {freshness.mode === "polling" && (
-            <p className="settings-note">{t("home.server.pollingNote")}</p>
+            <div className="measurement-update">
+              <p>{t(onReviewUpdate ? "home.server.pollingNote" : "home.server.pollingNoteMember")}</p>
+              {onReviewUpdate && <button className="text-button" onClick={onReviewUpdate}>{t("home.server.reviewUpdate")}</button>}
+            </div>
           )}
           <div className="resource-grid">
             {serverMetrics(status).map(metric => (

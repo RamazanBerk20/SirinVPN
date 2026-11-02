@@ -80,6 +80,7 @@ html.android[data-theme="light"] {
 .android .icon-button { width: 48px; height: 48px; flex-shrink: 0; border-radius: var(--radius-control); }
 .android .primary-button, .android .secondary-button { border-radius: var(--radius-control); padding: 13px 18px; font-size: var(--fs-body); box-shadow: none; }
 .android .primary-button { background: var(--accent-fill); border-color: var(--accent-line); }
+.android .primary-button:disabled { background: var(--control); border-color: var(--control-line); color: var(--quiet); }
 .android .secondary-button { background: var(--control); border-color: var(--control-line); }
 .android .text-button { min-height: 48px; font-size: var(--fs-small); }
 .android .danger-text, .android .mobile-sheet-action.danger-text { color: var(--danger); }
@@ -115,6 +116,9 @@ html.android[data-theme="light"] {
 .android .mobile-choice-list { margin: 0 0 12px; border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--surface); overflow: hidden; }
 .android .favorite-star { flex-shrink: 0; color: var(--warning); }
 .android :is(.mobile-list-row, .mobile-server-open) small:has(> .favorite-star) { display: flex; align-items: center; gap: 4px; }
+.android .mobile-demo { display: grid; justify-items: center; gap: 0; margin: 4px 0 0; text-align: center; }
+.android .mobile-demo > p { margin: 0; color: var(--muted); font-size: var(--fs-small); }
+.android .mobile-demo > .text-button { color: var(--tile-ink); font-size: var(--fs-body); text-decoration: underline; text-underline-offset: 3px; }
 .android .settings-index > section + section { margin-top: 24px; }
 .android .settings-index-heading { margin: 0 4px 8px; color: var(--muted); font-size: var(--fs-small); font-weight: 600; letter-spacing: .02em; overflow-wrap: anywhere; }
 .android .settings-index-note { margin: -4px 4px 10px; color: var(--quiet); font-size: var(--fs-caption); line-height: 1.5; }

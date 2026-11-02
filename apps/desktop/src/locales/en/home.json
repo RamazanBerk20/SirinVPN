@@ -156,7 +156,9 @@
     "mtu": "Packet size (MTU)",
     "server": "Server",
     "blockWithoutVpn": "Block without VPN",
-    "alwaysOn": "Always-on VPN"
+    "alwaysOn": "Always-on VPN",
+    "mtuValue": "{{value}} bytes",
+    "mtuPending": "{{value}} bytes measured · applies on your next connection"
   },
   "traffic": {
     "label": "This device’s traffic",
@@ -172,7 +174,7 @@
     "counterFailed": "Couldn’t read counters",
     "needsUpdate": "Needs a VPN component update",
     "durationFailed": "Couldn’t read session time",
-    "updateNeeded": "Live rates need a VPN component update."
+    "updateNeeded": "This device’s traffic counters and session time need a VPN component update."
   },
   "device": {
     "summary": "Device details",
@@ -193,13 +195,13 @@
     "freshness": {
       "unavailable": "Unavailable",
       "live": "Live",
-      "polling": "Updating",
-      "connecting": "Connecting…",
-      "reconnecting": "Reconnecting…"
+      "polling": "Refreshed periodically",
+      "connecting": "Loading stats…",
+      "reconnecting": "Stats reconnecting…"
     },
     "unavailable": "Server stats are unavailable. They’ll return automatically.",
     "connectToSee": "Connect to see server stats.",
-    "pollingNote": "Update the server software for live stats.",
+    "pollingNote": "Live server stats need a server update.",
     "noMeasurement": "Not measured",
     "usedOf": "{{used}} of {{total}}",
     "cpu": "CPU",
@@ -227,7 +229,8 @@
     "dns": "DNS",
     "dnsRunning": "Running",
     "dnsDown": "Not responding",
-    "totalsInfo": "Totals cover all devices since the server’s VPN started."
+    "totalsInfo": "Totals cover all devices since the server’s VPN started.",
+    "pollingNoteMember": "Live server stats need a server update. The server’s owner can install it."
   },
   "alwaysOnNote": "Always-on VPN is on, so Android decides when the VPN stops. Disconnect from Android’s VPN settings.",
   "method": {

@@ -271,10 +271,10 @@ function AppContent() {
               {t(clientPlatform === "android" ? "app.onboarding.androidIntro" : "app.onboarding.desktopIntro")}
             </p>
             {clientPlatform !== "android" && <PrivacyPromises />}
-            <div className="onboarding-demo">
+            {clientPlatform !== "android" && <div className="onboarding-demo">
               <p>{t("help.demo.enterHint")}</p>
               <button className="secondary-button" type="button" onClick={() => setDemo(true)}>{t("help.demo.enter")}</button>
-            </div>
+            </div>}
           </section>
           <section
             className="onboarding-form-wrap"
@@ -282,6 +282,11 @@ function AppContent() {
           >
             <AddServerFlow onAdded={handleServerAdded} />
           </section>
+          {/* On a phone the real ways in come first; the demo is a quiet way to look around. */}
+          {clientPlatform === "android" && <div className="onboarding-demo mobile-demo">
+            <button className="text-button" type="button" onClick={() => setDemo(true)}>{t("help.demo.enter")}</button>
+            <p>{t("help.demo.enterHint")}</p>
+          </div>}
         </main>
         <ReleaseUpdateDialog
           open={releaseUpdateOpen}

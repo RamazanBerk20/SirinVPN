@@ -348,9 +348,13 @@ button.mobile-list-row:hover {
   box-shadow: 0 0 24px color-mix(in srgb, color-mix(in srgb, var(--cyan) 50%, var(--accent)) 18%, transparent);
 }
 
+/* Disabled is flat and neutral in both themes: a faded gradient read as "almost ready". */
 .primary-button:disabled {
   cursor: not-allowed;
-  opacity: 0.42;
+  border-color: var(--line);
+  background: var(--surface-3);
+  color: color-mix(in srgb, var(--muted) 80%, var(--surface-3));
+  box-shadow: none;
 }
 
 .form-footnote {
