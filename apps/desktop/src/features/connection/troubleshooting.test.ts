@@ -37,6 +37,13 @@ describe("Troubleshooting steps", () => {
     expect(firstTroubleshootStep(steps)).toBe(0);
   });
 
+  it("quotes the failed check behind a likely cause and nothing else", () => {
+    const steps = run(degraded.map((item) => item.code === "local_tunnel" ? check("local_tunnel", "fail", "No authenticated handshake.") : item));
+    expect(steps.find((step) => step.id === "reachability")?.evidence).toBe("No authenticated handshake.");
+    expect(steps.filter((step) => step.evidence).every((step) => step.status === "problem")).toBe(true);
+    expect(run(connected).some((step) => step.evidence)).toBe(false);
+  });
+
   it("opens at the first likely cause", () => {
     expect(summary(run(disconnected, { online: false })).network).toEqual(["problem", "offline", null]);
     const fixed = run(degraded, { transport: "direct_udp" });

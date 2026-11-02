@@ -32,17 +32,17 @@ it("saves HTTPS addresses and tests only what is saved", async () => {
   vi.mocked(api.updateAlerts).mockResolvedValue(saved);
   vi.mocked(api.sendTestAlert).mockResolvedValue({ failure: "rejected", http_status: 403 });
   render(<VpsAlertSettings profile={owner} connected />);
-  const save = await screen.findByRole("button", { name: t("vps.alerts.save") });
-  const test = screen.getByRole("button", { name: t("vps.alerts.test") });
-  expect((save as HTMLButtonElement).disabled).toBe(true);
-  expect((test as HTMLButtonElement).disabled).toBe(true);
+  // Nothing saved yet: no Save, and the test says what it needs instead of sitting disabled.
+  expect(await screen.findByText(t("settings.alerts.testNeedsAddress"))).toBeTruthy();
+  expect(screen.queryByRole("button", { name: t("vps.alerts.save") })).toBeNull();
   fireEvent.click(screen.getByRole("radio", { name: new RegExp(t("vps.alerts.formats.webhook.label")) }));
+  const save = screen.getByRole("button", { name: t("vps.alerts.save") });
   fireEvent.change(screen.getByLabelText(t("vps.alerts.alertUrl"), { exact: false }), { target: { value: "http://hooks.example/a" } });
   expect(screen.getByText(t("vps.alerts.invalid"))).toBeTruthy();
   expect((save as HTMLButtonElement).disabled).toBe(true);
   fireEvent.change(screen.getByLabelText(t("vps.alerts.alertUrl"), { exact: false }), { target: { value: "https://hooks.example/a?token=x  " } });
   fireEvent.change(screen.getByLabelText(t("vps.alerts.heartbeatUrl"), { exact: false }), { target: { value: "https://ping.example/abc" } });
-  expect((test as HTMLButtonElement).disabled).toBe(true);
+  expect(screen.queryByRole("button", { name: t("vps.alerts.test") })).toBeNull();
   fireEvent.click(save);
   await waitFor(() => expect(api.updateAlerts).toHaveBeenCalledWith("fixture", {
     format: "webhook",
@@ -51,9 +51,10 @@ it("saves HTTPS addresses and tests only what is saved", async () => {
     allow_private_addresses: false,
   }));
   expect(await screen.findByText(t("vps.alerts.saved"))).toBeTruthy();
-  await waitFor(() => expect((test as HTMLButtonElement).disabled).toBe(false));
-  fireEvent.click(test);
-  expect(await screen.findByText(t("vps.alerts.failure.rejectedStatus", { status: 403 }))).toBeTruthy();
+  fireEvent.click(await screen.findByRole("button", { name: t("vps.alerts.test") }));
+  // A 4xx answer adds what to check, next to the test button.
+  expect(await screen.findByText(t("vps.alerts.failure.rejectedStatus", { status: 403 }), { exact: false })).toBeTruthy();
+  expect(screen.getByText(t("settings.alerts.rejectedHint"), { exact: false })).toBeTruthy();
 });
 
 it("reports what the VPS check last saw", async () => {

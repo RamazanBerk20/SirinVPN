@@ -6,10 +6,12 @@ import { api } from "../../api";
 import { t } from "../../i18n";
 import type { DiagnosticReport } from "../../types";
 import type { SettingsCategory } from "../settings/SettingsLayout";
-import { firstTroubleshootStep, troubleshootSteps, type TroubleshootFix } from "./troubleshooting";
+import { firstTroubleshootStep, troubleshootSteps, type TroubleshootFix, type TroubleshootStatus } from "./troubleshooting";
 import type { ServerWorkspaceModel } from "./useServerWorkspace";
 
 const rowClass = { problem: "fail attention", check: "warning unavailable", ok: "pass passed" };
+const StatusIcon = ({ status }: { status: TroubleshootStatus }) =>
+  status === "ok" ? <Check weight="bold" /> : status === "check" ? <Info /> : <Warning weight="fill" />;
 
 export function Troubleshooter({ model, onOpenSettings, onRestoreDevice }: {
   model: ServerWorkspaceModel;
@@ -47,24 +49,37 @@ export function Troubleshooter({ model, onOpenSettings, onRestoreDevice }: {
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Portal>
         <Dialog.Overlay className="dialog-overlay" />
-        <DialogContent className="dialog-content diagnostics-dialog" heading={t("help.troubleshoot.title")} description={t("help.troubleshoot.description")}
+        <DialogContent className="dialog-content diagnostics-dialog troubleshooter" heading={t("help.troubleshoot.title")} description={t("help.troubleshoot.description")}
           footer={steps && <>
-            <button type="button" className="secondary-button" disabled={shown === 0} onClick={() => setIndex(shown - 1)}>{t("common.action.back")}</button>
+            <button type="button" className="secondary-button" disabled={shown === 0} onClick={() => setIndex(shown - 1)}>{t("help.troubleshoot.previous")}</button>
             {shown < steps.length - 1
               ? <button type="button" className="primary-button" onClick={() => setIndex(shown + 1)}>{t("help.troubleshoot.next")}</button>
               : <Dialog.Close asChild><button type="button" className="primary-button">{t("common.action.done")}</button></Dialog.Close>}
           </>}>
-          {!step ? (
-            <div className="diagnostic-loading"><ArrowClockwise className="spin" /> {t("help.troubleshoot.checking")}</div>
+          {!steps || !step ? (
+            <div className="diagnostic-loading" role="status"><ArrowClockwise className="spin" /> {t("help.troubleshoot.checking")}</div>
           ) : (
-            <div className="troubleshoot-step">
-              <p className="settings-note">{t("common.separator.pair", { first: t("help.troubleshoot.progress", { current: shown + 1, total: steps.length }), second: t(`help.troubleshoot.status.${step.status}`) })}</p>
-              <div className={`diagnostic-row ${rowClass[step.status]}`}>
-                <span>{step.status === "ok" ? <Check weight="bold" /> : step.status === "check" ? <Info /> : <Warning weight="fill" />}</span>
-                <div>
-                  <strong>{t(`help.troubleshoot.step.${step.id}`)}</strong>
-                  <p>{t(step.message)}</p>
-                  {fix && <div className="settings-action-row"><button type="button" className="secondary-button" onClick={() => { setOpen(false); fix.run(); }}>{fix.label}</button></div>}
+            <div className="troubleshoot-layout">
+              {/* Every step at a glance, so opening at a later step never hides what looked fine. */}
+              <ol className="troubleshoot-steps" aria-label={t("help.troubleshoot.stepsLabel")}>
+                {steps.map((item, position) => <li key={item.id}>
+                  <button type="button" className={`troubleshoot-step-link ${item.status}`} aria-current={position === shown ? "step" : undefined}
+                    onClick={() => setIndex(position)}>
+                    <span className="troubleshoot-step-icon" aria-label={t(`help.troubleshoot.status.${item.status}`)}><StatusIcon status={item.status} /></span>
+                    <span>{t(`help.troubleshoot.step.${item.id}`)}</span>
+                  </button>
+                </li>)}
+              </ol>
+              <div className="troubleshoot-step">
+                <p className="settings-note">{t("common.separator.pair", { first: t("help.troubleshoot.progress", { current: shown + 1, total: steps.length }), second: t(`help.troubleshoot.status.${step.status}`) })}</p>
+                <div className={`diagnostic-row ${rowClass[step.status]}`}>
+                  <span><StatusIcon status={step.status} /></span>
+                  <div>
+                    <strong>{t(`help.troubleshoot.step.${step.id}`)}</strong>
+                    <p>{t(step.message)}</p>
+                    {step.evidence && <p className="troubleshoot-evidence">{t("help.troubleshoot.seen", { detail: step.evidence })}</p>}
+                    {fix && <div className="settings-action-row"><button type="button" className="secondary-button" onClick={() => { setOpen(false); fix.run(); }}>{fix.label}</button></div>}
+                  </div>
                 </div>
               </div>
             </div>

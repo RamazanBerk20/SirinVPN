@@ -1,18 +1,23 @@
 import { PreferencesPending } from "./PreferenceSaveBar";
 import { invoke, isAndroid } from "../../platform";
-import { CaretDown } from "@phosphor-icons/react";
 import type { ServerWorkspaceModel } from "./useServerWorkspace";
-import type { TransportPreference, NetworkProfile, TransportKind } from "../../types";
+import type { NetworkProfile, TransportKind, LocalTunnelStatus } from "../../types";
 import { describeConnection } from "./connectionState";
 import { formatTransport } from "../../format";
 import { StartupConnectionState } from "./StartupConnectionState";
 import { MtuSettings } from "./MtuSettings";
-import { t } from "../../i18n";
+import { formatList, t } from "../../i18n";
 import { useInfoHint } from "../../components/InfoHint";
-import { Fragment } from "react";
+import { SettingsDisclosure, SettingsNotice } from "../settings/SettingsParts";
 
 const conditions: NetworkProfile[] = ["automatic", "normal", "restricted", "extreme"];
 const policies = ["kill_switch", "automatic_reconnect", "connect_on_startup"] as const;
+
+/** Android owns "Block connections without VPN"; the app only reports what Android says. */
+export function androidBlocking(local: LocalTunnelStatus): string {
+  return t(local.state === "unknown" || local.lockdown === undefined ? "connection.options.android.unknown"
+    : local.lockdown ? "connection.options.android.on" : "connection.options.android.off");
+}
 
 export function ConnectionOptions({ model }: { model: ServerWorkspaceModel }) {
   const {
@@ -46,15 +51,14 @@ export function ConnectionOptions({ model }: { model: ServerWorkspaceModel }) {
     { value: "tls_like", unavailable: !profile.tls_like },
     { value: "tcp_fallback", unavailable: !profile.tcp_fallback },
   ];
-  const choose = (value: TransportPreference) => {
-    setSelectedTransport(value);
-  };
+  const missing = transports.filter((item) => item.unavailable).map((item) => formatTransport(item.value));
+  const owner = profile.role === "owner";
   if (!model.preferences.ready) return <PreferencesPending preferences={model.preferences} />;
   return (
     <div className="settings-sections connection-preferences">
       <section className="settings-card">
         <h2>{t("connection.options.title")}</h2>
-        <p>{t("connection.scope", { server: profile.name })}</p>
+        <p>{t("connection.nextConnection")}</p>
         <label className="preference-row">
           <span>
             <strong>{t("connection.options.automatic.label")}</strong>
@@ -67,13 +71,14 @@ export function ConnectionOptions({ model }: { model: ServerWorkspaceModel }) {
             checked={selectedTransport === "automatic"}
             disabled={disabled}
             onChange={(e) =>
-              choose(e.target.checked ? "automatic" : "direct_udp")
+              setSelectedTransport(e.target.checked ? "automatic" : "direct_udp")
             }
           />
         </label>
         {selectedTransport === "automatic" ? (
           <fieldset className="choice-fieldset">
             <legend>{t("connection.options.conditions.legend")}</legend>
+            <p className="fieldset-hint">{t("connection.options.conditions.hint")}</p>
             <div className="condition-choices">
               {conditions.map((value) => (
                 <label key={value} className="choice-row">
@@ -96,7 +101,11 @@ export function ConnectionOptions({ model }: { model: ServerWorkspaceModel }) {
         ) : (
           <fieldset className="choice-fieldset">
             <legend>{t("connection.options.methods.legend")}</legend>
-            <div className="condition-choices">
+            {missing.length > 0 && <SettingsNotice
+              action={owner ? { label: t("connection.options.methods.unsupported.update"), onClick: () => model.setMaintenanceReview("update"), disabled: model.busy } : undefined}>
+              {t(owner ? "connection.options.methods.unsupported.owner" : "connection.options.methods.unsupported.member", { methods: formatList(missing), count: missing.length })}
+            </SettingsNotice>}
+            <div className="condition-choices method-choices">
               {transports.map(({ value, unavailable }) => (
                 <label className="choice-row" key={value}>
                   <input
@@ -104,7 +113,7 @@ export function ConnectionOptions({ model }: { model: ServerWorkspaceModel }) {
                     name="manual-transport"
                     checked={selectedTransport === value}
                     disabled={disabled || unavailable}
-                    onChange={() => choose(value)}
+                    onChange={() => setSelectedTransport(value)}
                   />
                   <span>
                     <strong>{formatTransport(value)}</strong>
@@ -119,11 +128,15 @@ export function ConnectionOptions({ model }: { model: ServerWorkspaceModel }) {
             </div>
           </fieldset>
         )}
+      </section>
+      <section className="settings-card">
+        <h2>{t(isAndroid ? "connection.options.protection.titleAndroid" : "connection.options.protection.title")}</h2>
+        {!isAndroid && <p>{t("connection.nextConnection")}</p>}
         {policies.filter((key) => !isAndroid || key === "automatic_reconnect").map((key) => {
           const label = t(`connection.options.policy.${key}.label`);
           const androidReconnect = isAndroid && key === "automatic_reconnect";
           return (
-            <Fragment key={key}>
+            <div key={key} className="preference-group">
               <label className="preference-row">
                 <span>
                   <strong>{label}{key === "automatic_reconnect" && reconnectInfoButton}</strong>
@@ -143,11 +156,19 @@ export function ConnectionOptions({ model }: { model: ServerWorkspaceModel }) {
               {key === "automatic_reconnect" && reconnectInfoPanel}
               {/* A saved kill switch only arms on the next connection: say so where the toggle is, not below the fold. */}
               {key === "kill_switch" && current.active && model.preferences.saved?.policy.kill_switch && !model.localStatus.kill_switch_enabled &&
-                <p className="warning-note" role="status">{t("connection.options.policy.kill_switch.nextConnection")}</p>}
-            </Fragment>
+                <SettingsNotice tone="warning">{t("connection.options.policy.kill_switch.nextConnection")}</SettingsNotice>}
+              {key === "connect_on_startup" && <StartupConnectionState model={model} />}
+            </div>
           );
         })}
-        {isAndroid ? <div className="settings-action-row"><p>{t("connection.options.android.summary")}</p><button className="secondary-button" onClick={() => void invoke("android_vpn_settings")}>{t("connection.options.android.open")}</button></div> : <StartupConnectionState model={model} />}
+        {isAndroid && <div className="preference-row android-system-row">
+          <span>
+            <strong>{t("connection.options.android.label")}</strong>
+            <small>{t("connection.options.android.summary")}</small>
+            <small className="preference-value">{androidBlocking(model.localStatus)}</small>
+          </span>
+          <button className="secondary-button" onClick={() => void invoke("android_vpn_settings")}>{t("connection.options.android.open")}</button>
+        </div>}
         {model.routingMode === "selected_routes" && (
           <p className="settings-note">{t("connection.options.notes.selectedRoutes")}</p>
         )}
@@ -156,11 +177,8 @@ export function ConnectionOptions({ model }: { model: ServerWorkspaceModel }) {
           : t("connection.options.notes.launchedApps")}</p>}
       </section>
       <MtuSettings model={model} />
-      <details className="metrics-details">
-        <summary>
-          {t("connection.options.status.title")} <CaretDown className="disclosure-chevron" size={17} />
-        </summary>
-        <dl>
+      <SettingsDisclosure summary={t("connection.options.status.title")}>
+        <dl className="status-facts">
           <div>
             <dt>{t("connection.options.status.method")}</dt>
             <dd>
@@ -170,15 +188,15 @@ export function ConnectionOptions({ model }: { model: ServerWorkspaceModel }) {
             </dd>
           </div>
           <div>
-            <dt>{t("connection.options.status.killSwitch")}</dt>
-            <dd>{current.protection}</dd>
+            <dt>{t(isAndroid ? "connection.options.status.blocking" : "connection.options.status.killSwitch")}</dt>
+            <dd>{isAndroid ? androidBlocking(model.localStatus) : current.protection}</dd>
           </div>
           <div>
             <dt>{t("connection.options.status.routing")}</dt>
             <dd>{current.routing}</dd>
           </div>
         </dl>
-      </details>
+      </SettingsDisclosure>
     </div>
   );
 }

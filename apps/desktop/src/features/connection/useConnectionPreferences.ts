@@ -3,9 +3,12 @@ import { api } from "../../api";
 import { invoke } from "../../platform";
 import { errorMessage } from "../../lib/errors";
 import { t } from "../../i18n";
+import { notify } from "../../components/Toasts";
 import { invalidRoutes } from "../../lib/cidr";
 import {
   defaultConnectionPreferences,
+  MAX_MTU,
+  MIN_MTU,
   type ConnectionPreferences,
 } from "./connectionPreferences";
 
@@ -37,7 +40,8 @@ export function useConnectionPreferences(serverId: string | undefined) {
   const [ready, setReady] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState("");
+  // MtuSettings knows the profile's IPv6 minimum and reports it here, so Save can refuse an out-of-range draft.
+  const [mtuMinimum, setMtuMinimum] = useState(MIN_MTU);
   const generation = useRef(0);
   const inFlight = useRef(false);
   const load = useCallback(async () => {
@@ -45,7 +49,6 @@ export function useConnectionPreferences(serverId: string | undefined) {
     setReady(false);
     setSaved(null);
     setError(null);
-    setNotice("");
     setDraft(defaultConnectionPreferences);
     setRoutesText("");
     if (!serverId) return;
@@ -84,9 +87,10 @@ export function useConnectionPreferences(serverId: string | undefined) {
   // Selected routes needs at least one well-formed range: an empty list would send nothing through the VPN.
   const badRoutes = edited.routing.mode === "selected_routes"
     ? edited.routing.included_routes.length ? invalidRoutes(edited.routing.included_routes) : [""] : [];
+  const mtu = draft.manual_mtu ?? null;
+  const mtuInvalid = mtu !== null && (!Number.isInteger(mtu) || mtu < mtuMinimum || mtu > MAX_MTU);
   const change = (patch: Partial<ConnectionPreferences>) => {
     setDraft((value) => ({ ...value, ...patch }));
-    setNotice("");
     setError(null);
   };
   const route = (patch: Partial<ConnectionPreferences["routing"]>) => {
@@ -94,16 +98,14 @@ export function useConnectionPreferences(serverId: string | undefined) {
       ...value,
       routing: { ...value.routing, ...patch },
     }));
-    setNotice("");
     setError(null);
   };
   const save = async () => {
-    if (!serverId || !ready || inFlight.current || badRoutes.length) return;
+    if (!serverId || !ready || inFlight.current || badRoutes.length || mtuInvalid) return;
     const request = generation.current;
     inFlight.current = true;
     setSaving(true);
     setError(null);
-    setNotice("");
     try {
       const value = normalize(
         await api.setConnectionPreferences(serverId, edited),
@@ -112,7 +114,8 @@ export function useConnectionPreferences(serverId: string | undefined) {
       setSaved(value);
       setDraft(value);
       setRoutesText((value.routing.included_routes ?? []).join("\n"));
-      setNotice(t("connection.preferences.saved"));
+      // The save bar disappears with the edits, so the confirmation is a toast.
+      notify(t("connection.preferences.saved"));
     } catch (reason) {
       if (request === generation.current)
         setError(
@@ -127,14 +130,14 @@ export function useConnectionPreferences(serverId: string | undefined) {
     if (!serverId || !ready || inFlight.current) return;
     const request = generation.current;
     inFlight.current = true;
-    setSaving(true); setError(null); setNotice("");
+    setSaving(true); setError(null);
     try {
       const value = normalize(await invoke<ConnectionPreferences>("android_set_reconnect", { serverId, enabled }));
       if (request !== generation.current) return;
       setSaved(value);
       // This switch saves only its own value, not incomplete routing or transport drafts.
       setDraft(current => ({ ...current, policy: { ...current.policy, automatic_reconnect: value.policy.automatic_reconnect } }));
-      setNotice(enabled ? t("connection.preferences.reconnectOn") : t("connection.preferences.reconnectOff"));
+      notify(enabled ? t("connection.preferences.reconnectOn") : t("connection.preferences.reconnectOff"));
     } catch (reason) {
       if (request === generation.current) setError(errorMessage(reason, t("connection.preferences.reconnectError")));
     } finally {
@@ -146,7 +149,6 @@ export function useConnectionPreferences(serverId: string | undefined) {
     setDraft(saved);
     setRoutesText((saved.routing.included_routes ?? []).join("\n"));
     setError(null);
-    setNotice("");
   };
   return {
     saved,
@@ -155,11 +157,13 @@ export function useConnectionPreferences(serverId: string | undefined) {
     saving,
     dirty,
     error,
-    notice,
     routesText,
     setRoutesText,
     /** Ranges that are not canonical CIDR networks; [""] when Selected routes has none. */
     badRoutes,
+    /** True while the draft's manual MTU is out of range; Save stays disabled. */
+    mtuInvalid,
+    setMtuMinimum,
     change,
     route,
     save,

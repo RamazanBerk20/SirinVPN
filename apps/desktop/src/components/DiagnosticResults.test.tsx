@@ -70,3 +70,17 @@ it("shows leak test results as tested and not applicable families as not checked
   expect(row("IPv4 leak test").closest("details")).not.toBeNull();
   expect(row("IPv4 leak test").querySelector(".diagnostic-evidence")?.textContent).toBe(t("maintenance.diagnostics.evidence.observed"));
 });
+
+it("shows a failed or empty run as such, with Run again, and headlines an all-pass report", () => {
+  const onRunAgain = vi.fn();
+  const failed = { api_version: "v1", checks: [{ code: "local_diagnostics_unavailable", label: "Diagnostics", level: "fail" as const, message: "Couldn’t run diagnostics." }] };
+  const view = render(<DiagnosticResults report={failed} onRunAgain={onRunAgain} />);
+  expect(screen.getByRole("alert").textContent).toContain("Couldn’t run diagnostics.");
+  expect(screen.queryByRole("status")).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: t("settings.diagnostics.runAgain") }));
+  expect(onRunAgain).toHaveBeenCalledOnce();
+  view.rerender(<DiagnosticResults report={{ api_version: "v1", checks: [] }} />);
+  expect(screen.getByText(t("settings.diagnostics.empty"))).toBeTruthy();
+  view.rerender(<DiagnosticResults report={{ api_version: "v1", checks: [{ code: "local_backend", label: "Service", level: "pass" as const, message: "Running." }] }} />);
+  expect(screen.getByText(t("settings.diagnostics.allPassed", { count: 1 }))).toBeTruthy();
+});

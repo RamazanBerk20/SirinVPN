@@ -25,3 +25,110 @@ html.android:has(.demo-banner) .workspace { padding-bottom: 184px; }
 .onboarding-demo > p { margin: 0; color: var(--muted); }
 .troubleshoot-step { display: grid; gap: 12px; }
 .troubleshoot-step .settings-action-row { margin-top: 14px; padding: 0; border: 0; }
+/* Troubleshooter: every step at a glance beside the current one. */
+.troubleshoot-layout {
+  display: grid;
+  grid-template-columns: minmax(12rem, 15rem) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+.troubleshoot-steps {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.troubleshoot-step-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 36px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.875rem;
+  text-align: left;
+  cursor: pointer;
+}
+.troubleshoot-step-link:hover {
+  background: color-mix(in srgb, var(--line) 40%, transparent);
+}
+.troubleshoot-step-link[aria-current="step"] {
+  background: var(--surface-3);
+  color: var(--text);
+  font-weight: 650;
+}
+.troubleshoot-step-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+.troubleshoot-step-link.ok .troubleshoot-step-icon { color: var(--success); }
+.troubleshoot-step-link.check .troubleshoot-step-icon { color: var(--muted); }
+.troubleshoot-step-link.problem .troubleshoot-step-icon { color: var(--danger); }
+.troubleshoot-evidence {
+  padding-left: 10px;
+  border-left: 3px solid var(--line-strong);
+  color: var(--muted);
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 640px) {
+  .troubleshoot-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .troubleshoot-steps {
+    grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+  }
+}
+.android .troubleshoot-step-link {
+  min-height: 44px;
+}
+
+/* Diagnostics: a headline when everything passed, one counter line with its actions, and the speed test's progress. */
+.diagnostic-headline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 12px;
+  color: var(--success);
+  font-weight: 650;
+}
+.diagnostic-summary-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+.diagnostic-passed.settings-disclosure {
+  margin-top: 6px;
+}
+.speed-test-progress {
+  display: grid;
+  gap: 8px;
+  justify-self: stretch;
+}
+.speed-test > .inline-error {
+  justify-self: stretch;
+}
+/* Each group ends without a rule, so the next section's divider is the only line. */
+.diagnostic-groups .diagnostic-row:last-child {
+  border-bottom: 0;
+}
+.speed-test-progress > strong {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.speed-test-progress > progress {
+  width: 100%;
+  height: 8px;
+  accent-color: var(--cyan);
+}
+.speed-test-progress > p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.875rem;
+}

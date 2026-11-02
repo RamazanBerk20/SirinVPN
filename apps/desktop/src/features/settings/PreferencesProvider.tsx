@@ -21,7 +21,8 @@ function usePreferencesController() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState("");
-  const [changedKey, setChangedKey] = useState<keyof AppPreferences | null>(
+  // The control whose result is shown next to it: a preference, or the test notification.
+  const [changedKey, setChangedKey] = useState<keyof AppPreferences | "test" | null>(
     null,
   );
   const inFlight = useRef(false);
@@ -79,9 +80,9 @@ function usePreferencesController() {
           (current) =>
             current && { ...current, notification_permission: permission },
         );
-        if (permission !== "granted") {
-          throw new Error(t("settings.preferences.notificationsBlocked"));
-        }
+        // A denial is explained once, by the card's "blocked" notice with its settings button.
+        if (permission === "denied") return;
+        if (permission !== "granted") throw new Error(t("settings.preferences.notificationsUnknown"));
       }
       const saved = await api.setAppPreferences({
         ...snapshot.preferences,
@@ -104,7 +105,7 @@ function usePreferencesController() {
     ++generation.current;
     setLoading(false);
     inFlight.current = true;
-    setChangedKey(null);
+    setChangedKey("test");
     setSaving(true);
     setError(null);
     setStatus("");

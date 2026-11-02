@@ -44,7 +44,7 @@ export function StartupConnectionState({
           {t("connection.startup.activate")}
         </button>
       )}
-      {model.error && <InlineError message={model.error} />}
+      {model.error && <InlineError message={model.error} onRetry={canActivate ? () => void model.toggle() : undefined} retryDisabled={model.busy} />}
     </div>
   );
 }

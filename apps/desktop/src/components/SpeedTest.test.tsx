@@ -1,8 +1,8 @@
 import { afterEach, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { api } from "../api";
 import { t } from "../i18n";
-import { SpeedTest } from "./SpeedTest";
+import { SpeedTest, speedTestPhase } from "./SpeedTest";
 
 vi.mock("../api", () => ({ api: { speedTest: vi.fn() } }));
 
@@ -30,4 +30,16 @@ it("shows the native explanation when the VPS refuses", async () => {
   render(<SpeedTest serverId="server" />);
   fireEvent.click(screen.getByRole("button", { name: t("maintenance.speedTest.run") }));
   expect((await screen.findByRole("alert")).textContent).toContain("Only the Owner or an Admin can run the speed test.");
+});
+
+it("shows the phase and time left while it runs, since it can't be cancelled", async () => {
+  vi.useFakeTimers();
+  vi.mocked(api.speedTest).mockReturnValue(new Promise(() => {}));
+  render(<SpeedTest serverId="server" />);
+  fireEvent.click(screen.getByRole("button", { name: t("maintenance.speedTest.run") }));
+  expect(screen.queryByRole("button")).toBeNull();
+  await act(async () => { await vi.advanceTimersByTimeAsync(4000); });
+  expect(screen.getByText(t("settings.speedTest.left", { phase: t("settings.speedTest.phase.download"), seconds: "16" }))).toBeTruthy();
+  expect([0, 1.9, 2, 9.9, 10, 17.9, 18, 40].map(speedTestPhase)).toEqual(["idle", "idle", "download", "download", "upload", "upload", "finishing", "finishing"]);
+  vi.useRealTimers();
 });

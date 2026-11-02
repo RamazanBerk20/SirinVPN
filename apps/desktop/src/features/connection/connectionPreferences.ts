@@ -27,6 +27,10 @@ export const defaultConnectionPreferences: ConnectionPreferences = {
   routing: { mode: "full_tunnel", included_routes: [], allow_lan: false },
 };
 
+// A manual MTU's range; with IPv6 in the tunnel the minimum is 1280.
+export const MIN_MTU = 576;
+export const IPV6_MIN_MTU = 1280;
+export const MAX_MTU = 1420;
 // Obfuscated UDP and QUIC limit a manual MTU to these values; Android reports the limited value.
 export const OBFUSCATED_UDP_MAX_MTU = 1398;
 export const QUIC_MAX_MTU = 1380;

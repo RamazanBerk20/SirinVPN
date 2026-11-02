@@ -54,8 +54,9 @@
     "quickServer": {
       "label": "Quick Settings server",
       "placeholder": "Choose a server",
-      "loadFailed": "Couldn’t load your servers. Reopen this page to try again.",
-      "saveFailed": "Couldn’t save the Quick Settings server. Try again."
+      "loadFailed": "Couldn’t load your servers.",
+      "saveFailed": "Couldn’t save the Quick Settings server.",
+      "saved": "Quick Settings uses {{name}}."
     },
     "notifications": {
       "title": "Notifications & interface",
@@ -67,8 +68,9 @@
         "summary": "Alerts when the VPN connects, drops or reconnects"
       },
       "test": "Test notification",
-      "androidSettings": "Android notification settings",
-      "blockedAndroid": "Android is blocking SirinVPN notifications. Control the VPN from the app or its Quick Settings tile.",
+      "testing": "Sending…",
+      "androidSettings": "Open notification settings",
+      "blockedAndroid": "Notifications are blocked for SirinVPN in Android. Allow them in notification settings; until then, control the VPN from the app or its Quick Settings tile.",
       "animations": {
         "label": "Interface animations",
         "summary": "Page transitions; your system’s reduced motion still applies"
@@ -79,7 +81,9 @@
         "system": "System",
         "light": "Light",
         "dark": "Dark"
-      }
+      },
+      "testNeedsNotifications": "Turn on connection notifications to send a test.",
+      "blocked": "Notifications are blocked for SirinVPN. Allow them in system settings to get connection alerts."
     },
     "updates": {
       "title": "App updates",
@@ -89,14 +93,15 @@
       "title": "Local VPN component",
       "summary": "Keep this device’s VPN service matched to the app",
       "review": "Review component"
-    }
+    },
+    "loading": "Loading app preferences…"
   },
   "preferences": {
-    "loadFailed": "Couldn’t load preferences. Try again.",
+    "loadFailed": "Couldn’t load preferences.",
     "saveFailed": "Couldn’t save this setting. Your previous choice still applies.",
-    "notificationsBlocked": "Notifications are blocked. Allow them for SirinVPN in system settings, then try again.",
     "testSent": "Test notification sent; check system settings if it doesn’t appear.",
-    "testFailed": "Couldn’t send the test notification. Try again."
+    "testFailed": "Couldn’t send the test notification.",
+    "notificationsUnknown": "Couldn’t confirm notification access. Try again, or allow notifications for SirinVPN in system settings."
   },
   "wifi": {
     "title": "Wi-Fi auto-connect",
@@ -108,14 +113,16 @@
     },
     "server": {
       "label": "Auto-connect server",
-      "empty": "Add a server first"
+      "empty": "Add a server first",
+      "offHint": "Turn on auto-connect to choose its server."
     },
     "network": {
       "unavailable": "No active network",
       "otherNetwork": "Current network isn’t Wi-Fi",
       "trusted": "Current Wi-Fi is trusted",
       "untrusted": "Current Wi-Fi isn’t trusted",
-      "named": "{{status}} — <strong>{{name}}</strong>"
+      "named": "{{status}} — <strong>{{name}}</strong>",
+      "heading": "Current network"
     },
     "status": {
       "disabled": "Auto-connect is off.",
@@ -130,26 +137,30 @@
     },
     "access": {
       "unidentified": "This Wi-Fi can’t be identified reliably, so it can’t be trusted.",
-      "changed": "The network changed. Select Refresh network before trusting it."
+      "changed": "The network changed. Check its name before trusting it."
     },
     "trust": {
       "label": "Label (optional)",
       "placeholder": "For example, Home",
-      "action": "Trust this Wi-Fi"
+      "action": "Trust this Wi-Fi",
+      "trusted": "{{name}} is now trusted. Auto-connect skips it."
     },
     "trusted": {
-      "savedName": "Saved Wi-Fi ({{id}})",
+      "title": "Trusted Wi-Fi",
+      "unnamed": "Unnamed network {{number}}",
       "label": "Label: {{label}}",
       "current": "Current network",
-      "saved": "Saved Wi-Fi",
-      "nameUnavailable": "Name unavailable",
+      "saved": "Saved",
+      "namesHidden": "This device didn’t share Wi-Fi names. On Windows, turning on location access shows them.",
       "remove": "Remove trust",
-      "removeLabel": "Remove trust for {{name}}"
+      "removing": "Removing…",
+      "removeLabel": "Remove trust for {{name}}",
+      "removed": "{{name}} is no longer trusted."
     },
     "refresh": "Refresh network",
-    "loadFailed": "Couldn’t load Wi-Fi settings. Try again.",
-    "refreshFailed": "Couldn’t refresh the network status. Select Refresh network to try again.",
-    "saveFailed": "Couldn’t change the Wi-Fi setting. Try again."
+    "loadFailed": "Couldn’t load Wi-Fi settings.",
+    "refreshFailed": "Couldn’t refresh the network status.",
+    "saveFailed": "Couldn’t change the Wi-Fi setting."
   },
   "credentials": {
     "title": "Credential storage",
@@ -177,7 +188,9 @@
     "pendingCleanup": "Some removed keys are still on this device. Unlock the keyring and retry cleanup.",
     "refresh": "Refresh storage",
     "retryCleanup": "Retry cleanup",
-    "loadFailed": "Couldn’t read credential storage. Unlock the system keyring and try again."
+    "loadFailed": "Couldn’t read the credential storage setting.",
+    "checking": "Checking where keys are stored…",
+    "changed": "Credential storage updated."
   },
   "recovery": {
     "title": "Owner recovery",
@@ -187,8 +200,8 @@
     "unsupported": "Update the server software to use recovery keys.",
     "registered": "A recovery key is set up.",
     "none": "No recovery key yet.",
-      "cannotIssue": "Only the Owner, and Admins the Owner chose for Admin recovery, can create a recovery key.",
-    "finishing": "A recovery key is still being set up. Wait a minute before creating another.",
+    "cannotIssue": "Only the Owner, and Admins the Owner chose for Admin recovery, can create a recovery key.",
+    "finishing": "Finishing the previous recovery key… This page checks again on its own.",
     "accept": "I understand that anyone with this key can replace every Owner device. A new key voids the old one.",
     "create": "Create recovery key",
     "replace": "Replace recovery key",
@@ -215,10 +228,11 @@
         "title": "Turn off Admin recovery?",
         "message": "No Admin will be able to issue Owner recovery keys.",
         "confirm": "Turn off"
-      }
+      },
+      "saving": "Saving…"
     },
     "key": {
-      "warning": "Store this key offline. It works once and can’t be shown again.",
+      "warning": "Store this key offline now. It works once and can’t be shown again after you finish setup.",
       "label": "Recovery key",
       "copy": "Copy recovery key",
       "copied": "Recovery key copied. Store it offline before you finish.",
@@ -231,10 +245,15 @@
       "saved": "Recovery key file saved. Keep its password somewhere else.",
       "retained": "I’ve stored this key or the recovery key file offline and can reach it",
       "finish": "Finish setup",
-      "finished": "Done. The key is no longer shown here."
+      "finished": "Done. The key is no longer shown here.",
+      "title": "Your new recovery key",
+      "saving": "Saving file…"
     },
-    "loadFailed": "Couldn’t load recovery settings. Try again.",
-    "actionFailed": "Couldn’t complete the recovery action. Try again."
+    "loadFailed": "Couldn’t load recovery settings.",
+    "actionFailed": "Couldn’t complete the recovery action.",
+    "update": "Update VPS",
+    "creating": "Creating key…",
+    "revoked": "Recovery key revoked. Saved copies no longer work."
   },
   "keyRotation": {
     "title": "Rotate device keys",
@@ -292,5 +311,37 @@
     },
     "pickerFailed": "Couldn’t open the file picker. Try again.",
     "failed": "Couldn’t create the backup. Try again."
+  },
+  "alerts": {
+    "rejectedHint": "Check the address and any access token it needs.",
+    "testNeedsAddress": "Save an alert address to send a test.",
+    "testing": "Sending…",
+    "allowPrivateSummary": "Only for a monitor on your own network or the VPN"
+  },
+  "dnsBlocking": {
+    "invalidSources": "Not a full HTTPS address: {{values}}",
+    "invalidDomains": "Not a domain name: {{values}}",
+    "needsList": "Choose at least one blocklist to turn blocking on.",
+    "serverStatus": "On the server now"
+  },
+  "parts": {
+    "connect": "Connect",
+    "repair": "Repair VPS"
+  },
+  "diagnostics": {
+    "allPassed_one": "The {{count}} check passed.",
+    "allPassed_other": "All {{count}} checks passed.",
+    "empty": "No checks ran. Connect to this server, then run diagnostics again.",
+    "runAgain": "Run again"
+  },
+  "speedTest": {
+    "phase": {
+      "idle": "Measuring latency",
+      "download": "Measuring download",
+      "upload": "Measuring upload",
+      "finishing": "Finishing"
+    },
+    "left": "{{phase}} · about {{seconds}} s left. It can’t be stopped once started.",
+    "finishingLine": "{{phase}}… It can’t be stopped once started."
   }
 }
