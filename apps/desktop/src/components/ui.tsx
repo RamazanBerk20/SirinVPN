@@ -1,5 +1,5 @@
 import { t } from "../i18n";
-import { cloneElement, isValidElement, useId, type InputHTMLAttributes } from "react";
+import { cloneElement, isValidElement, useEffect, useId, useRef, type InputHTMLAttributes } from "react";
 import { Warning } from "@phosphor-icons/react";
 import { Brand, SirinMark } from "./Brand";
 import { SecretInput, SecretTextarea } from "./SecretInput";
@@ -68,11 +68,15 @@ export function Metric({
   );
 }
 
-export function InlineError({ message }: { message: string }) {
+/** A failure next to the control that caused it; it scrolls itself into view so it is never off screen. */
+export function InlineError({ message, onRetry, retryLabel, retryDisabled }: { message: string; onRetry?: () => void; retryLabel?: string; retryDisabled?: boolean }) {
+  const box = useRef<HTMLDivElement>(null);
+  useEffect(() => { if (message.trim()) box.current?.scrollIntoView?.({ block: "nearest" }); }, [message]);
   if (!message.trim()) return null;
   return (
-    <div className="inline-error" role="alert">
-      <Warning size={17} weight="fill" /> {message}
+    <div className={`inline-error${onRetry ? " with-retry" : ""}`} role="alert" ref={box}>
+      <Warning size={17} weight="fill" /> <span>{message}</span>
+      {onRetry && <button type="button" className="secondary-button" disabled={retryDisabled} onClick={onRetry}>{retryLabel ?? t("common.action.retry")}</button>}
     </div>
   );
 }

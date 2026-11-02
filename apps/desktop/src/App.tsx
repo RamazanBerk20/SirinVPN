@@ -1,5 +1,6 @@
 import { ReleaseUpdateSession } from "./features/settings/ReleaseUpdateSession";
 import { AndroidOperation } from "./components/AndroidOperation";
+import { ToastRegion } from "./components/Toasts";
 import { useAndroidBack } from "./hooks/useAndroidBack";
 import { describeConnection } from "./features/connection/connectionState";
 import { DesktopTitleBar } from "./components/DesktopTitleBar";
@@ -282,6 +283,7 @@ function AppContent() {
           installationReady={releaseInstallReady}
           onReviewPrerequisites={() => { setPage("home"); setSettingsCategory("connection"); }}
         />
+        <ToastRegion />
       </>
     );
   }
@@ -427,6 +429,7 @@ function AppContent() {
         installationReady={releaseInstallReady}
           onReviewPrerequisites={() => { setPage("home"); setSettingsCategory("connection"); }}
       />
+      <ToastRegion />
     </div>
   );
 }

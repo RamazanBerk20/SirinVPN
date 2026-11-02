@@ -51,3 +51,24 @@
 p, small, .inline-error, .warning-note {
   text-wrap: pretty;
 }
+
+.inline-error > span { flex: 1 1 auto; min-width: 0; }
+.inline-error.with-retry { align-items: center; }
+.inline-error > button { flex: 0 0 auto; min-height: 32px; padding: 0 12px; }
+/* Sticky dialog and save bars must not cover an error that scrolled itself into view. */
+.inline-error { scroll-margin: 16px 0 120px; }
+
+.toast-region { position: fixed; right: 24px; bottom: 24px; z-index: 200; display: grid; gap: 8px; width: min(420px, calc(100vw - 32px)); pointer-events: none; }
+.toast { display: flex; align-items: center; gap: 10px; padding: 10px 8px 10px 14px; border: 1px solid var(--line-strong); border-radius: 12px; background: var(--surface); color: var(--text); box-shadow: 0 12px 32px color-mix(in srgb, var(--bg) 60%, transparent); pointer-events: auto; animation: toast-in 160ms ease-out; }
+.toast > p { flex: 1 1 auto; margin: 0; line-height: 1.45; }
+.toast > svg { flex: 0 0 auto; }
+.toast.success > svg { color: var(--success); }
+.toast.info > svg { color: var(--cyan); }
+.toast.error { border-color: color-mix(in srgb, var(--danger) 45%, var(--line)); }
+.toast.error > svg { color: var(--danger); }
+.toast > .icon-button { flex: 0 0 auto; width: 32px; height: 32px; }
+.android .toast-region { right: 16px; left: 16px; bottom: 92px; width: auto; }
+.android .toast { min-height: 56px; border-radius: 16px; }
+.android .toast > .icon-button { width: 44px; height: 44px; }
+@keyframes toast-in { from { opacity: 0; transform: translateY(8px); } }
+@media (prefers-reduced-motion: reduce) { .toast { animation: none; } }
