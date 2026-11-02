@@ -6,7 +6,9 @@ import '@fontsource-variable/jetbrains-mono';
 import '../../../apps/desktop/src/styles.css';
 import App from '../../../apps/desktop/src/App';
 import {clearMembershipCache} from '../../../apps/desktop/src/features/devices/membershipCache';
-import {clearToasts} from '../../../apps/desktop/src/components/Toasts';
+// Optional so this harness also serves checkouts from before toasts existed (serve_ui.sh).
+const toastModules=import.meta.glob('../../../apps/desktop/src/components/Toasts.tsx',{eager:true}) as Record<string,{clearToasts?:()=>void}>;
+const clearToasts=()=>Object.values(toastModules).forEach(module=>module.clearToasts?.());
 import {CatalogBridge} from './bridge';
 import {initialState,merge} from './data';
 const catalog:any=new CatalogBridge();
