@@ -15,6 +15,12 @@ export function dismissToast(id: number) {
   emit();
 }
 
+/** Drops every toast, e.g. when the whole app remounts. */
+export function clearToasts() {
+  toasts = [];
+  emit();
+}
+
 /** Confirms the result of an action whose own control may have gone away or be off screen. */
 export function notify(message: string, tone: ToastTone = "success") {
   const id = ++next;

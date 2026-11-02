@@ -154,8 +154,6 @@ def scenarios(p):
     from current_states import current_states
     current_states(add)
     for case in cases:
-        # Toasts are module state and outlive the remount: start each state without the previous state's results.
-        case['actions'].insert(0, mutate("document.querySelectorAll('.toast-region .icon-button').forEach(b=>b.click())"))
         checks = case.setdefault('assertions', [])
         if case['family'] == 'startup' and case['state'].get('errors'):
             checks.append({'selector': '[role=alert]'})

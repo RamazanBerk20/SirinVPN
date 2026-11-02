@@ -56,9 +56,7 @@ def coverage_states(cases):
                 assertion['selector'] = '[role=menu],[role=dialog]'
 
     def add(family, name, actions=(), state=None, forms=BOTH, required=()):
-        # As in scenarios.py, a state starts without the previous state's toasts.
-        dismiss = mutate("document.querySelectorAll('.toast-region .icon-button').forEach(b=>b.click())")
-        case = {'family': family, 'id': name, 'description': name.replace('-', ' ').capitalize(), 'actions': [dismiss, *actions],
+        case = {'family': family, 'id': name, 'description': name.replace('-', ' ').capitalize(), 'actions': [*actions],
                 'state': state or {}, 'expand': True, 'forms': forms}
         if required:
             case['required_calls'] = list(required)

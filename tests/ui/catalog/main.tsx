@@ -6,6 +6,7 @@ import '@fontsource-variable/jetbrains-mono';
 import '../../../apps/desktop/src/styles.css';
 import App from '../../../apps/desktop/src/App';
 import {clearMembershipCache} from '../../../apps/desktop/src/features/devices/membershipCache';
+import {clearToasts} from '../../../apps/desktop/src/components/Toasts';
 import {CatalogBridge} from './bridge';
 import {initialState,merge} from './data';
 const catalog:any=new CatalogBridge();
@@ -20,7 +21,7 @@ catalog.assertVisible=assertVisible;
 catalog.settled=settled;
 catalog.mount=async(options:any={})=>{
   // A desktop mount leaves the custom title-bar marker behind if a second mount races its cleanup.
-  root.render(null);await delay(20);clearMembershipCache();delete document.documentElement.dataset.windowChrome;
+  root.render(null);await delay(20);clearMembershipCache();clearToasts();delete document.documentElement.dataset.windowChrome;
   catalog.ready=false;catalog.state=initialState(options);catalog.prompts=[];
   localStorage.clear();history.replaceState(null,'','#home');
   document.documentElement.style.fontSize='';
