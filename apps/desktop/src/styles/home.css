@@ -1,0 +1,138 @@
+/* Home: the connection hero. One tone drives the ring, the headline and the panel, so the
+ * state reads at a glance: green only while nothing undermines the connection. */
+.connection-console { --tone: var(--quiet); margin: 0 0 16px; }
+.connection-console[data-tone="ok"] { --tone: var(--success); }
+.connection-console[data-tone="warn"] { --tone: var(--warning); }
+.connection-console[data-tone="busy"] { --tone: var(--cyan); }
+.connection-console[data-tone="off"] { --tone: var(--accent); }
+
+.hero-panel {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 28px;
+  padding: 24px 28px;
+  border: 1px solid color-mix(in srgb, var(--tone) 30%, var(--line));
+  border-radius: 18px;
+  background:
+    radial-gradient(120% 160% at 0% 50%, color-mix(in srgb, var(--tone) 12%, transparent), transparent 62%),
+    var(--surface-2);
+}
+.power-control {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 8px;
+  width: 8.5rem;
+  height: 8.5rem;
+  flex-shrink: 0;
+  padding: 12px;
+  border: 3px solid var(--tone);
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--tone) 18%, var(--surface-3)), var(--surface) 75%);
+  color: var(--text);
+  box-shadow:
+    0 0 0 8px color-mix(in srgb, var(--tone) 10%, transparent),
+    0 0 32px color-mix(in srgb, var(--tone) 22%, transparent);
+  cursor: pointer;
+  transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s;
+}
+.power-control > svg { color: var(--tone); }
+.power-control > span { max-width: 100%; font-size: 0.875rem; font-weight: 700; line-height: 1.3; }
+.power-control:hover:not(:disabled) {
+  transform: scale(1.03);
+  box-shadow:
+    0 0 0 10px color-mix(in srgb, var(--tone) 14%, transparent),
+    0 0 40px color-mix(in srgb, var(--tone) 30%, transparent);
+}
+.power-control:disabled { cursor: default; }
+/* A spinner ring is busy, not unavailable; only a ring that can't act right now is dimmed. */
+.connection-console:not([data-tone="busy"]) .power-control:disabled { opacity: 0.5; }
+.connection-console[data-tone="busy"] .power-control { animation: ring-pulse 1.6s ease-in-out infinite; }
+@keyframes ring-pulse {
+  50% { box-shadow: 0 0 0 14px color-mix(in srgb, var(--tone) 4%, transparent), 0 0 20px color-mix(in srgb, var(--tone) 12%, transparent); }
+}
+
+.hero-copy { display: grid; justify-items: start; gap: 8px; min-width: 0; }
+.connection-state { margin: 0; color: var(--tone); font-size: 1.5rem; font-weight: 700; line-height: 1.25; overflow-wrap: anywhere; }
+.connection-console:is([data-tone="off"], [data-tone="unknown"]) .connection-state { color: var(--text); }
+.connection-explanation { margin: 0; max-width: 62ch; color: var(--muted); }
+.connection-note { margin: 0; color: var(--muted); font-size: 0.875rem; }
+.connection-facts { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 0; }
+.connection-facts > div {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 4px 11px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: 0.8125rem;
+}
+.connection-facts dt { display: inline-flex; align-items: center; gap: 4px; color: var(--muted); }
+.connection-facts dd { margin: 0; font-weight: 600; }
+.connection-facts > .flagged { border-color: color-mix(in srgb, var(--warning) 55%, var(--line)); }
+.connection-facts > .flagged dd { color: var(--warning); }
+.hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.hero-actions:empty { display: none; }
+
+/* Alerts have one slot under the hero, so they never shift the status above them. */
+.home-alerts { display: grid; gap: 8px; margin: 12px 0 0; padding: 0; list-style: none; }
+.home-alert {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+.home-alert > svg { flex: 0 0 auto; color: var(--cyan); }
+.home-alert > p { flex: 1 1 auto; min-width: 0; margin: 0; line-height: 1.45; }
+.home-alert > button { flex: 0 0 auto; }
+.home-alert.warn { border-color: color-mix(in srgb, var(--warning) 40%, var(--line)); background: color-mix(in srgb, var(--warning) 7%, var(--surface-2)); }
+.home-alert.warn > svg { color: var(--warning); }
+.home-alert.danger { border-color: color-mix(in srgb, var(--danger) 40%, var(--line)); background: color-mix(in srgb, var(--danger) 7%, var(--surface-2)); }
+.home-alert.danger > svg { color: var(--danger); }
+
+@media (max-width: 640px) {
+  .hero-panel { grid-template-columns: minmax(0, 1fr); justify-items: center; padding: 22px 18px; text-align: center; }
+  .hero-copy { justify-items: center; }
+  .connection-facts, .hero-actions { justify-content: center; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .connection-console[data-tone="busy"] .power-control { animation: none; }
+}
+
+/* Android: a centred hero card, headline first, sized for a thumb. */
+.android .connection-console[data-tone="ok"] { --tone: var(--positive); }
+.android .connection-console[data-tone="busy"] { --tone: var(--tile-ink); }
+.android .connection-console[data-tone="off"] { --tone: var(--accent-line); }
+.android .hero-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 24px var(--inset) 22px;
+  border-radius: 24px;
+  text-align: center;
+  background:
+    radial-gradient(90% 60% at 50% 34%, color-mix(in srgb, var(--tone) 14%, transparent), transparent 72%),
+    var(--surface);
+}
+.android .hero-copy { display: contents; }
+.android .connection-state { order: -1; margin-bottom: 8px; font-size: 1.5rem; line-height: 1.3; }
+.android .connection-console:is([data-tone="off"], [data-tone="unknown"]) .connection-state { color: var(--text-strong); }
+.android .power-control { width: 164px; height: 164px; min-height: 164px; margin-bottom: 8px; border-width: 2px; background: radial-gradient(circle at 50% 28%, color-mix(in srgb, var(--tone) 20%, var(--surface)), var(--surface) 78%); color: var(--text-strong); }
+.android .power-control > span { font-size: var(--fs-body); font-weight: 600; }
+.android .connection-explanation { max-width: 420px; font-size: var(--fs-small); line-height: 1.55; }
+.android .connection-note { max-width: 420px; font-size: var(--fs-small); }
+.android .connection-facts { justify-content: center; margin: 4px 0 0; }
+.android .connection-facts > div { min-height: 32px; background: var(--control); border-color: var(--control-line); font-size: var(--fs-caption); }
+.android .hero-actions { justify-content: center; }
+.android .home-alerts { margin: 12px 0 0; }
+.android .home-alert { flex-wrap: wrap; gap: 8px 12px; padding: 14px var(--inset); border-radius: var(--radius-card); background: var(--surface); font-size: var(--fs-small); }
+.android .home-alert > p { flex-basis: calc(100% - 40px); }
+.android .home-alert > button { margin-left: 32px; }
+.android[data-font-scale=large] .power-control { width: 190px; height: 190px; }

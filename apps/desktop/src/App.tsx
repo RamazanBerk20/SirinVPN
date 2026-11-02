@@ -22,7 +22,6 @@ import {
   ArrowClockwise,
   Database,
   GearSix,
-  LockKey,
   Plus,
   ShieldCheck,
 } from "@phosphor-icons/react";
@@ -36,6 +35,7 @@ import {
   InlineError,
   LoadingScreen,
   PlatformUnavailable,
+  StartupProblem,
 } from "./components/ui";
 const AddServerFlow = lazy(() => import("./features/onboarding/AddServerFlow").then(m => ({ default: m.AddServerFlow })));
 const ServerWorkspace = lazy(() => import("./features/connection/ServerWorkspace").then(m => ({ default: m.ServerWorkspace })));
@@ -213,6 +213,22 @@ function AppContent() {
   }
 
 
+  // Saved servers that can't be read are a problem to fix, not a first launch: no setup pitch, no demo.
+  if (servers.length === 0 && loadError) {
+    return (
+      <>
+        {clientPlatform === "desktop" && <DesktopTitleBar />}
+        <StartupProblem
+          title={t("app.onboarding.storeTitle")}
+          message={loadError}
+          help={t(clientPlatform === "android" ? "app.onboarding.storeHelpAndroid" : "app.onboarding.storeHelpDesktop")}
+          onRetry={() => { setLoading(true); void loadServers(); }}
+        />
+        <ToastRegion />
+      </>
+    );
+  }
+
   if (servers.length === 0) {
     return (
       <>
@@ -264,17 +280,7 @@ function AppContent() {
             className="onboarding-form-wrap"
             aria-label={t("app.onboarding.firstServer")}
           >
-            {loadError ? (
-              <div className="local-data-error">
-                <LockKey size={28} weight="duotone" />
-                <h2>{t("app.onboarding.storeTitle")}</h2>
-                <p>{t("app.onboarding.storeHelp")}</p>
-                <InlineError message={loadError} />
-                <button className="secondary-button" onClick={() => { setLoading(true); void loadServers(); }}>{t("common.action.retry")}</button>
-              </div>
-            ) : (
-              <AddServerFlow onAdded={handleServerAdded} />
-            )}
+            <AddServerFlow onAdded={handleServerAdded} />
           </section>
         </main>
         <ReleaseUpdateDialog

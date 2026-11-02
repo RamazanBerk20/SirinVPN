@@ -3,6 +3,7 @@ import { cloneElement, isValidElement, useEffect, useId, useRef, type InputHTMLA
 import { Warning } from "@phosphor-icons/react";
 import { Brand, SirinMark } from "./Brand";
 import { SecretInput, SecretTextarea } from "./SecretInput";
+import { isAndroid } from "../platform";
 
 export function Field({
   label,
@@ -60,6 +61,10 @@ export function Metric({
             min={0}
             max={100}
             value={Math.max(0, Math.min(100, percent))}
+            // Amber from 85%, red from 95%: a nearly full server needs attention before it fails.
+            low={85}
+            high={95}
+            optimum={0}
             aria-label={t("app.metric.usage", { label })}
           />
         )}
@@ -90,23 +95,25 @@ export function LoadingScreen() {
   );
 }
 
-export function PlatformUnavailable({ message, onRetry }: { message: string; onRetry?: () => void }) {
+/** A startup failure: what went wrong as body text, how to fix it on this platform, and a retry. */
+export function StartupProblem({ title, message, help, onRetry }: { title: string; message: string; help: string; onRetry?: () => void }) {
   return (
-    <main className="initialization-shell">
-      <header className="initialization-brand">
-        <Brand compact={false} />
-      </header>
-      <section
-        className="initialization-card platform-unavailable"
-        role="alert"
-      >
-        <Warning size={34} weight="duotone" />
-        <h1>{t("app.unavailable.title")}</h1>
-        <p className="initialization-summary">{message}</p>
-        <p>{t("app.unavailable.help")}</p>
-        {onRetry && <button className="primary-button" onClick={onRetry}>{t("common.action.retry")}</button>}
-        <button className="text-button" onClick={() => void navigator.clipboard.writeText(t("app.unavailable.report", { message })).catch(() => {})}>{t("app.unavailable.copy")}</button>
+    <main className="startup-problem">
+      <header><Brand compact={false} /></header>
+      <section role="alert">
+        <span className="startup-problem-icon"><Warning size={28} weight="duotone" /></span>
+        <h1>{title}</h1>
+        <p className="startup-problem-message">{message}</p>
+        <p>{help}</p>
+        <div className="startup-problem-actions">
+          {onRetry && <button className="primary-button" onClick={onRetry}>{t("common.action.retry")}</button>}
+          <button className="secondary-button" onClick={() => void navigator.clipboard.writeText(t("app.unavailable.report", { message })).catch(() => {})}>{t("app.unavailable.copy")}</button>
+        </div>
       </section>
     </main>
   );
+}
+
+export function PlatformUnavailable({ message, onRetry }: { message: string; onRetry?: () => void }) {
+  return <StartupProblem title={t("app.unavailable.title")} message={message} help={t(isAndroid ? "app.unavailable.helpAndroid" : "app.unavailable.helpDesktop")} onRetry={onRetry} />;
 }

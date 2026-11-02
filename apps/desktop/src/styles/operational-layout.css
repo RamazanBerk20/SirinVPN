@@ -122,7 +122,7 @@
 }
 .collection-copy h2 svg {
   flex-shrink: 0;
-  color: var(--cyan);
+  color: var(--warning);
 }
 .collection-copy > span {
   font-size: 0.875rem;
@@ -417,11 +417,7 @@ summary:focus-visible,
   .health-checks {
     min-width: 0;
   }
-  
-  .connection-facts {
-    display: grid;
-    gap: 7px;
-  }
+
   .endpoint {
     font-size: 0.8125rem;
   }

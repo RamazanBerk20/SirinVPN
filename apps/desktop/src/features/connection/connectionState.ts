@@ -131,13 +131,25 @@ export function describeConnection(
       ? "killSwitchFailed"
       : connected && applications && local.application_routing_ready !== true
         ? android ? "androidAppsUnverified" : "appsUnverified"
+      : connected && remote && remote.interface_up === false
+        ? "serverInterfaceDown"
       : connected && remote && !remote.dns_healthy
         ? "dnsDown"
         : connected && !split && !applications && !local.ipv6_tunneled && !local.ipv6_blocked
           ? "ipv6"
           : null;
+  // One colour for the ring, headline and panel: green only while nothing undermines the connection.
+  const tone = !known
+    ? "unknown"
+    : statusState === "connecting" || statusState === "reconnecting"
+      ? "busy"
+      : connected
+        ? warningState && warningState !== "androidLockdown" || statusState === "monitorUnavailable" || summaryState === "fullTunnelIpv4" ? "warn" : "ok"
+        : active ? "warn" : "off";
   return {
     known,
+    tone: tone as "unknown" | "busy" | "ok" | "warn" | "off",
+    warningState,
     connected,
     recoveringAuthorization,
     active,

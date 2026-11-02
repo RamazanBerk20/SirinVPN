@@ -1,68 +1,5 @@
-/* Operational Home: connection, this device, then server resources. */
-.connection-console {
-  text-align: center;
-  margin: 0 0 12px;
-}
-.connection-center {
-  display: grid;
-  justify-items: center;
-  gap: 2px;
-}
-.connection-center .power-control {
-  width: 7rem;
-  height: 7rem;
-  padding: 18px 10px;
-  align-content: center;
-  gap: 10px;
-  background:
-    linear-gradient(var(--surface-3), var(--surface-2)) padding-box,
-    var(--gradient) border-box;
-  box-shadow: 0 0 24px color-mix(in srgb, var(--accent) 18.8%, transparent);
-}
-.connection-center .power-control.active {
-  box-shadow: 0 0 26px color-mix(in srgb, var(--cyan) 20%, transparent);
-}
-.connection-center .power-control span {
-  font-size: 0.8125rem;
-  line-height: 1.4;
-  font-weight: 700;
-  max-width: 100%;
-}
-.connection-state {
-  margin: 2px 0;
-  font-size: 1rem;
-  font-weight: 650;
-  overflow-wrap: anywhere;
-}
-.is-connected .connection-state {
-  color: var(--success);
-}
-.connection-explanation {
-  margin: 4px auto;
-  max-width: 65ch;
-  color: var(--muted);
-}
-.connection-facts {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 12px 28px;
-  margin: 8px 0 0;
-  font-size: 0.8125rem;
-}
-.connection-facts div {
-  display: flex;
-  gap: 8px;
-  align-items: baseline;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-.connection-facts dt {
-  color: var(--muted);
-}
-.connection-facts dd {
-  margin: 0;
-}
+/* Operational Home: this device, then server resources. The connection hero is in home.css. */
+
 .device-traffic,
 .server-metrics {
   margin-top: 12px;
@@ -148,28 +85,14 @@
 .measurement-update p {
   margin: 0;
 }
-.disconnect-consequence {
-  margin: 3px auto;
-  font-size: 0.875rem;
-  color: var(--muted);
-}
-.protection-evidence {
-  display: block;
-  color: var(--warning);
-  font-size: var(--text-secondary, 0.875rem);
-}
+
 .startup-connection-state {
   margin-block: 10px;
 }
 .startup-connection-state p {
   margin-block: 8px;
 }
-.protection-off {
-  border-radius: 4px;
-  padding: 1px 6px;
-  background: color-mix(in srgb, var(--quiet) 20%, var(--surface-2));
-  color: color-mix(in srgb, var(--warning) 30%, var(--text));
-}
+
 .device-traffic .metric small,
 .server-metrics .metric small {
   font-size: 0.875rem;
@@ -202,6 +125,20 @@
 .metric meter::-moz-meter-bar {
   background: color-mix(in srgb, var(--cyan) 90%, var(--surface));
   border-radius: 6px;
+}
+.metric meter::-webkit-meter-suboptimum-value {
+  background: var(--warning);
+  border-radius: 6px;
+}
+.metric meter::-webkit-meter-even-less-good-value {
+  background: var(--danger);
+  border-radius: 6px;
+}
+.metric meter:-moz-meter-sub-optimum::-moz-meter-bar {
+  background: var(--warning);
+}
+.metric meter:-moz-meter-sub-sub-optimum::-moz-meter-bar {
+  background: var(--danger);
 }
 .metrics-details {
   border-top: 1px solid var(--line);

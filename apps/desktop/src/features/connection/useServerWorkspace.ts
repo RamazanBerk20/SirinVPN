@@ -133,11 +133,16 @@ export function useServerWorkspace({
     return value === undefined ? t("maintenance.workspace.metric.sampling") : format(value);
   };
 
+  // Maintenance treats an unknown answer as pending; Home only reports a confirmed one.
+  const [rotationPendingConfirmed, setRotationPendingConfirmed] = useState(false);
   const refreshRotationPending = useCallback(async () => {
     try {
-      setRotationPending(await api.keyRotationPending(profile.id));
+      const pending = await api.keyRotationPending(profile.id);
+      setRotationPending(pending);
+      setRotationPendingConfirmed(pending);
     } catch {
       setRotationPending(true);
+      setRotationPendingConfirmed(false);
     }
   }, [profile.id]);
 
@@ -280,6 +285,7 @@ export function useServerWorkspace({
     setEndpointUpdateOpen,
     rotationPending,
     presharedKeyMissing,
+    rotationPendingConfirmed,
     setPresharedKeyMissing,
     removeOpen,
     setRemoveOpen,

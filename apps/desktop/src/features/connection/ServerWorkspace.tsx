@@ -34,6 +34,21 @@ import type { ServerProfile } from "../../types";
 import { ServerPicker } from "../servers/ServerPicker";
 import { MobileConnectionDetails } from "./MobileConnectionDetails";
 
+/** What each Android settings page is set to now, so the index answers before it is opened. */
+function settingsSummaries(model: ReturnType<typeof useServerWorkspace>): Partial<Record<SettingsCategory, string>> {
+  const saved = model.preferences.saved;
+  const routing = saved?.routing.mode;
+  return {
+    general: t("app.settingsIndex.general"),
+    connection: saved ? t("common.separator.pair", {
+      first: saved.transport === "automatic" ? t("app.settingsIndex.automaticMethod") : formatTransport(saved.transport),
+      second: t(saved.policy.automatic_reconnect ? "app.settingsIndex.reconnectOn" : "app.settingsIndex.reconnectOff"),
+    }) : undefined,
+    network: routing ? t(routing === "selected_routes" ? "home.routing.selectedRoutes" : routing === "selected_applications" ? "home.routing.selectedApps" : "home.routing.fullTunnel") : undefined,
+    maintenance: model.rotationPendingConfirmed ? t("app.settingsIndex.attention") : undefined,
+  };
+}
+
 export function ServerWorkspace(
   props: Parameters<typeof useServerWorkspace>[0] & {
     view: Page;
@@ -96,7 +111,7 @@ export function ServerWorkspace(
                 : profile.name}
           </h1>
           {view === "settings" ? (
-            <p>{isAndroid ? profile.name : scope}</p>
+            !isAndroid && <p>{scope}</p>
           ) : view === "devices" ? (
             <p>{t("common.separator.pair", { first: profile.name, second: t(`common.role.${accessLevel}`) })}</p>
           ) : (
@@ -117,10 +132,11 @@ export function ServerWorkspace(
           {mobileConnection && <PreferenceSaveBar preferences={model.preferences} local={model.localStatus} serverId={profile.id} />}
           {mobileDetails && <MobileConnectionDetails model={model} source={props.trafficUpdates} onReviewActivity={reviewActivity} />}
           {!mobileSubpage && <ConnectionHero model={model} view={view} onReviewComponentUpdate={() => setComponentUpdateOpen(true)}
-            onShowActive={model.localStatus.server_id && props.servers.some((server) => server.id === model.localStatus.server_id) ? () => props.onSelectServer(model.localStatus.server_id!) : undefined} />}
+            onShowActive={model.localStatus.server_id && props.servers.some((server) => server.id === model.localStatus.server_id) ? () => props.onSelectServer(model.localStatus.server_id!) : undefined}
+            onOpenMaintenance={() => props.onOpenSettings("maintenance")} />}
           {isAndroid && !mobileSubpage && <ServerPicker servers={props.servers} selected={profile} local={model.localStatus} onSelect={props.onSelectServer} onAdd={props.onAddServer} onManage={() => props.onNavigate("servers")} />}
           {/* Traffic tiles only mean something for this server's tunnel, or while the local state is unknown. */}
-          {!mobileSubpage && (model.connected || !model.localKnown) && <DeviceTraffic
+          {!mobileSubpage && (model.connected || !model.localKnown && model.freshness.updatedAt !== null) && <DeviceTraffic
             source={props.trafficUpdates}
             showDetails={false}
             onReviewUpdate={() => setComponentUpdateOpen(true)}
@@ -145,7 +161,8 @@ export function ServerWorkspace(
         </>
       )}
       {view === "settings" && (
-        <SettingsLayout category={category} onChange={onCategoryChange} mobile={isAndroid} detail={Boolean(props.detail)} onBack={props.onBack}>
+        <SettingsLayout category={category} onChange={onCategoryChange} mobile={isAndroid} detail={Boolean(props.detail)} onBack={props.onBack}
+          serverName={profile.name} summaries={isAndroid ? settingsSummaries(model) : undefined}>
           {category === "general" && (
             <GeneralSettings
               platform={isAndroid ? "android" : "desktop"}

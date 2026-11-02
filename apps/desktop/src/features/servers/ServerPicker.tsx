@@ -42,8 +42,9 @@ export function ServerPicker({ servers, selected, local, onSelect, onAdd, onMana
             return <div role="listitem" key={server.id}>
               <ListRow
                 icon={<Database size={22} />}
-                title={<>{server.favorite && <Star size={14} weight="fill" aria-label={t("servers.favorite")} />}{server.name}</>}
-                subtitle={state.status}
+                title={server.name}
+                // The star lives in the subtitle: inside a long, wrapping title it shrank to a dot.
+                subtitle={server.favorite ? <><Star size={13} weight="fill" className="favorite-star" aria-hidden /> {t("common.separator.pair", { first: t("servers.favorite"), second: state.status })}</> : state.status}
                 trailing={current ? <Check size={20} className="row-check" /> : null}
                 current={current}
                 onClick={() => close(() => { if (!current && confirmNavigation()) { focusNextTrigger = true; onSelect(server.id); } })}

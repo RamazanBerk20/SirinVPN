@@ -10,6 +10,17 @@ const connected = {
   ipv6_blocked: true,
 };
 describe("operational connection states", () => {
+  it("is green only while nothing undermines the connection", () => {
+    expect(describeConnection(connected, "a", null).tone).toBe("ok");
+    expect(describeConnection({ ...connected, ipv6_blocked: false }, "a", null).tone).toBe("warn");
+    expect(describeConnection(connected, "a", { interface_up: false, dns_healthy: true } as ServerStatus).warning).toBe(t("home.warning.serverInterfaceDown"));
+    expect(describeConnection({ ...connected, kill_switch_enabled: true, kill_switch_state: "failed" }, "a", null).tone).toBe("warn");
+    expect(describeConnection({ ...connected, state: "degraded", waiting_for_user: true }, "a", null).tone).toBe("warn");
+    expect(describeConnection({ ...connected, state: "connecting" }, "a", null).tone).toBe("busy");
+    expect(describeConnection({ ...connected, state: "disconnected", server_id: null }, "a", null).tone).toBe("off");
+    // Android's Block connections without VPN is protection, not a fault.
+    expect(describeConnection({ ...connected, application_routing_backend: "android_packages", lockdown: true }, "a", null).tone).toBe("ok");
+  });
   it("reports authorization recovery independently from an established tunnel", () => {
     const remote = { authorization_recovery: { health: "recovery_failed", generation: 4, committed: true, containment_verified: false } } as ServerStatus;
     const state = describeConnection(connected, "a", remote);

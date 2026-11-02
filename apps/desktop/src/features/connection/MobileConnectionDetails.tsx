@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 import { CopyValue } from "../../components/CopyValue";
 import { InfoHint } from "../../components/InfoHint";
-import { formatBytes, formatCount, formatLatency, formatRate, formatTransport } from "../../format";
+import { formatBytes, formatCount, formatLatency, formatRate } from "../../format";
+import { methodLabel } from "./ConnectionHero";
 import { useTrafficStore, type TrafficStore } from "../../hooks/trafficStore";
 import { formatNumber, t } from "../../i18n";
 import type { LocalTunnelStatus } from "../../types";
@@ -43,9 +44,11 @@ export function MobileConnectionDetails({ model, source, onReviewActivity }: {
   return <div className="mobile-details">
     <Group title={t("home.details.connection")}>
       <Row label={t("home.details.status")} value={state.status} />
-      <Row label={t("home.details.method")} value={state.active ? formatTransport(local.transport) : state.known ? t("home.routing.inactive") : t("common.state.unknown")} />
+      <Row label={t("home.details.method")} value={state.active ? methodLabel(local, profile, model.preferences.saved?.transport) : state.known ? t("home.routing.inactive") : t("common.state.unknown")} />
       <Row label={t("home.details.routing")} value={state.routing} />
-      <Row label={t("home.details.killSwitch")} value={state.protection} note={state.protectionDetail} />
+      {/* Android has no kill switch of its own: traffic blocking is the system's Always-on and Block settings. */}
+      <Row label={t("home.details.alwaysOn")} value={t(!state.known || local.always_on === undefined ? "common.state.unknown" : local.always_on ? "common.state.enabled" : "common.state.disabled")} />
+      <Row label={t("home.details.blockWithoutVpn")} value={t(!state.known || local.lockdown === undefined ? "common.state.unknown" : local.lockdown ? "common.state.enabled" : "common.state.disabled")} />
       {state.applicationIsolation && <Row label={t("home.details.appIsolation")} value={state.applicationIsolation} />}
       {connected && <Row label={t("home.details.reachability")} value={state.health.reachability} note={state.health.detail} />}
       {connected && server?.management_latency_ms !== undefined && <Row label={t("home.details.serverResponse")} value={formatLatency(server.management_latency_ms)} info={t("home.details.serverResponseInfo")} />}

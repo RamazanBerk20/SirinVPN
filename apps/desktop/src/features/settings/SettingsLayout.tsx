@@ -31,6 +31,8 @@ export function SettingsLayout({
   mobile = false,
   detail = false,
   onBack,
+  serverName,
+  summaries = {},
 }: {
   category: SettingsCategory;
   onChange: (category: SettingsCategory) => void;
@@ -38,6 +40,10 @@ export function SettingsLayout({
   mobile?: boolean;
   detail?: boolean;
   onBack?: () => void;
+  /** Android's index groups the per-server pages under this name. */
+  serverName?: string;
+  /** Current values shown under each Android row in place of its static hint. */
+  summaries?: Partial<Record<SettingsCategory, string>>;
 }) {
   const id = useId();
   const tabs = useRef<HTMLDivElement>(null);
@@ -46,10 +52,17 @@ export function SettingsLayout({
   if (mobile) return detail ? <div className="mobile-settings-detail">
     <header className="mobile-page-header"><button className="icon-button" autoFocus={dpadOnly} aria-label={t("common.action.back")} onClick={onBack}><ArrowLeft size={24} /></button><h1>{current && t(current.label)}</h1></header>
     <div className="settings-panel">{children}</div>
-  </div> : <div className="mobile-choice-list" aria-label={t("settings.layout.categories")}>
-    {categories.map(({ id: value, label, hint, icon: Icon }) => <button key={value} className="mobile-list-row" aria-label={t(label)} aria-describedby={`${id}-${value}-hint`} onClick={() => onChange(value)}>
-      <span className="mobile-row-icon"><Icon size={23} /></span><span><strong>{t(label)}</strong><small id={`${id}-${value}-hint`}>{t(hint)}</small></span><CaretRight size={18} />
-    </button>)}
+  </div> : <div className="settings-index" aria-label={t("settings.layout.categories")}>
+    {/* App-wide preferences first, then the pages that only change the selected server. */}
+    {[categories.slice(0, 1), categories.slice(1)].map((group, index) => <section key={index} aria-labelledby={`${id}-group-${index}`}>
+      <h2 id={`${id}-group-${index}`} className="settings-index-heading">{index === 0 ? t("app.settingsIndex.app") : serverName ?? t("app.settingsIndex.server")}</h2>
+      {index === 1 && <p className="settings-index-note">{t("app.settingsIndex.serverNote")}</p>}
+      <div className="mobile-choice-list">
+        {group.map(({ id: value, label, hint, icon: Icon }) => <button key={value} className="mobile-list-row" aria-label={t(label)} aria-describedby={`${id}-${value}-hint`} onClick={() => onChange(value)}>
+          <span className="mobile-row-icon"><Icon size={23} /></span><span><strong>{t(label)}</strong><small id={`${id}-${value}-hint`}>{summaries[value] ?? t(hint)}</small></span><CaretRight size={18} />
+        </button>)}
+      </div>
+    </section>)}
   </div>;
   return (
     <div className="settings-layout">

@@ -1,37 +1,4 @@
-.power-control {
-  display: grid;
-  place-items: center;
-  width: 128px;
-  height: 128px;
-  flex-shrink: 0;
-  border: 3px solid transparent;
-  border-radius: 50%;
-  background:
-    linear-gradient(color-mix(in srgb, var(--violet) 5%, var(--surface-2)), var(--surface)) padding-box,
-    var(--gradient) border-box;
-  color: color-mix(in srgb, var(--violet) 5%, var(--text));
-  box-shadow:
-    0 0 27px color-mix(in srgb, var(--accent) 40%, transparent),
-    inset 0 0 25px color-mix(in srgb, var(--accent) 20.8%, transparent);
-  transition:
-    box-shadow 0.2s,
-    transform 0.2s;
-}
-.power-control:hover:not(:disabled) {
-  box-shadow:
-    0 0 38px color-mix(in srgb, color-mix(in srgb, var(--violet) 60%, var(--accent)) 56.1%, transparent),
-    inset 0 0 28px color-mix(in srgb, var(--accent) 47.8%, transparent);
-  transform: scale(1.03);
-}
-.power-control.active {
-  box-shadow:
-    -10px 0 30px color-mix(in srgb, var(--cyan) 20%, transparent),
-    10px 0 30px color-mix(in srgb, var(--violet) 33.3%, transparent),
-    inset 0 0 25px color-mix(in srgb, var(--accent) 37.6%, transparent);
-}
-.power-control:disabled {
-  opacity: 0.6;
-}
+
 
 .section-heading {
   margin-bottom: 18px;

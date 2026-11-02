@@ -10,7 +10,10 @@
     "interrupted": "Connection interrupted",
     "disconnected": "Disconnected",
     "changing": "Changing connection…",
-    "connectedTo": "Connected to {{name}}"
+    "connectedTo": "Connected to {{name}}",
+    "checking": "Checking VPN status…",
+    "connectingTo": "Connecting to {{name}}…",
+    "disconnecting": "Disconnecting…"
   },
   "action": {
     "showActive": "Go to the connected server",
@@ -25,7 +28,10 @@
     "cancelConnection": "Cancel",
     "reconnect": "Reconnect",
     "reconnectHint": "Resume with the current settings",
-    "stop": "Stop VPN"
+    "stop": "Stop VPN",
+    "connecting": "Connecting…",
+    "disconnecting": "Disconnecting…",
+    "checkAgain": "Check again"
   },
   "routing": {
     "unknown": "Unknown",
@@ -69,7 +75,8 @@
     "waiting": "Automatic reconnect is off. Reconnect when you’re ready.",
     "reconnecting": "Trying to restore the connection.",
     "connecting": "Setting up a secure connection.",
-    "disconnected": "Your traffic isn’t using the VPN."
+    "disconnected": "Your traffic isn’t using the VPN.",
+    "disconnecting": "Turning off the VPN."
   },
   "warning": {
     "accessContained": "Server access is being restored. VPN traffic is held until it finishes.",
@@ -78,12 +85,9 @@
     "killSwitchFailed": "The kill switch couldn’t be verified. Don’t rely on it until this is fixed.",
     "androidAppsUnverified": "Couldn’t verify app routing. Check the connection before relying on it.",
     "appsUnverified": "Couldn’t verify app routing. New app launches are off.",
-    "dnsDown": "The server’s DNS isn’t responding. Run diagnostics.",
-    "ipv6": "Couldn’t route or block IPv6. Check the connection."
-  },
-  "consequence": {
-    "android": "Android’s VPN settings control traffic blocking.",
-    "desktop": "Disconnecting also lifts the kill switch block and stops auto-reconnect."
+    "dnsDown": "The server’s DNS isn’t responding, so websites may not load.",
+    "ipv6": "IPv6 traffic is neither tunneled nor blocked, so it may bypass the VPN.",
+    "serverInterfaceDown": "The server reports that its VPN interface is down. Traffic may stop at any moment."
   },
   "componentUpdate": {
     "needed": "Update the VPN component to connect.",
@@ -143,14 +147,16 @@
     "killSwitch": "Kill switch",
     "appIsolation": "App isolation",
     "reachability": "Server reachable",
-    "reachabilityLine": "Server reachable: {{state}}.",
     "serverResponse": "Server response",
     "serverResponseInfo": "How long the server takes to answer a status request. It isn’t VPN latency.",
     "addresses": "Addresses",
     "serverAddress": "Server address",
     "vpnAddress": "VPN address",
     "thisDevice": "This device",
-    "mtu": "Packet size (MTU)"
+    "mtu": "Packet size (MTU)",
+    "server": "Server",
+    "blockWithoutVpn": "Block without VPN",
+    "alwaysOn": "Always-on VPN"
   },
   "traffic": {
     "label": "This device’s traffic",
@@ -222,5 +228,19 @@
     "dnsRunning": "Running",
     "dnsDown": "Not responding",
     "totalsInfo": "Totals cover all devices since the server’s VPN started."
+  },
+  "alwaysOnNote": "Always-on VPN is on, so Android decides when the VPN stops. Disconnect from Android’s VPN settings.",
+  "method": {
+    "https": "HTTPS",
+    "automatic": "Automatic · {{method}}"
+  },
+  "alert": {
+    "label": "Alerts",
+    "runDiagnostics": "Run diagnostics",
+    "checkServer": "Check server health",
+    "unstable": "Unstable connection: {{lost}} of the last {{sent}} checks got no reply.",
+    "storage": "The server’s storage is {{percent}} full. Free some space before it stops working.",
+    "rotationPending": "A key rotation didn’t finish. Finish it so this device keeps its access.",
+    "finishRotation": "Finish key rotation"
   }
 }

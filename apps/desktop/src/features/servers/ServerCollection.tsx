@@ -3,6 +3,7 @@ import { useState } from "react";
 import { api } from "../../api";
 import { ActionMenu } from "../../components/ActionMenu";
 import { CopyValue } from "../../components/CopyValue";
+import { notify } from "../../components/Toasts";
 import { InlineError } from "../../components/ui";
 import { describeConnection } from "../connection/connectionState";
 import type { LocalTunnelStatus, ServerProfile } from "../../types";
@@ -42,11 +43,8 @@ export function ServerCollection({
   const [draftName, setDraftName] = useState("");
   const filtered = servers.filter((server) => `${server.name} ${server.endpoint.host}`.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
   const edit = async (server: ServerProfile, favorite?: boolean, newName?: string) => {
-    if (isAndroid && favorite === undefined && newName === undefined) { setRenaming(server); setDraftName(server.name); return; }
-    const name =
-      favorite === undefined
-        ? (newName ?? window.prompt(t("servers.rename.prompt"), server.name))?.trim()
-        : null;
+    if (favorite === undefined && newName === undefined) { setRenaming(server); setDraftName(server.name); return; }
+    const name = favorite === undefined ? newName?.trim() : null;
     if (favorite === undefined && (!name || name === server.name)) return;
     setBusy(true);
     setError(null);
@@ -58,6 +56,7 @@ export function ServerCollection({
       );
       await onChanged();
       setRenaming(null);
+      notify(favorite === undefined ? t("servers.renamed", { name: name! }) : t(favorite ? "servers.favorited" : "servers.unfavorited", { name: server.name }));
     } catch (e) {
       setError(errorMessage(e, t("common.error.localSave")));
     } finally {
@@ -89,7 +88,7 @@ export function ServerCollection({
             >
               {isAndroid ? <button className="mobile-server-open" onClick={() => onOpen(server.id)} aria-label={t("servers.open", { name: server.name })} aria-current={selectedId === server.id || undefined}>
                 <span className={`mobile-row-icon ${state.connected ? "online" : ""}`}><Database size={22} /></span>
-                <span><strong>{server.favorite && <Star size={14} weight="fill" aria-label={t("servers.favorite")} />}{server.name}</strong><small>{t("common.separator.pair", { first: roleLabel(server), second: state.status })}</small></span>
+                <span><strong>{server.name}</strong><small>{server.favorite && <><Star size={13} weight="fill" className="favorite-star" aria-label={t("servers.favorite")} />{" "}</>}{t("common.separator.pair", { first: roleLabel(server), second: state.status })}</small></span>
                 {selectedId === server.id && <Check size={20} className="row-check" />}
               </button> : <><span
                 className={`server-card-icon ${state.connected ? "online" : ""}`}
@@ -104,9 +103,7 @@ export function ServerCollection({
                   {server.name}
                 </h2>
                 <span>
-                  {selectedId === server.id
-                    ? t("common.separator.triple", { first: roleLabel(server), second: state.status, third: t("servers.selected") })
-                    : t("common.separator.pair", { first: roleLabel(server), second: state.status })}
+                  {t("common.separator.pair", { first: roleLabel(server), second: state.status })}
                 </span>
                 <div className="collection-address">
                   <span>{t("home.details.serverAddress")}</span>
@@ -119,8 +116,9 @@ export function ServerCollection({
               <button
                 className="secondary-button"
                 onClick={() => onOpen(server.id)}
+                disabled={selectedId === server.id}
               >
-                {t("common.action.open")}
+                {t(selectedId === server.id ? "servers.onHome" : "servers.showOnHome")}
               </button></>}
               <ActionMenu
                 label={t("servers.actions.label", { name: server.name })}

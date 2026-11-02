@@ -11,7 +11,7 @@
   "sidebar": {
     "servers": "My servers",
     "serverList": "Saved servers",
-    "privacy": "No account. No telemetry."
+    "privacy": "No account · No telemetry"
   },
   "addServer": {
     "title": "Add a server",
@@ -51,7 +51,8 @@
     "desktopIntro": "Set up your own server over SSH, or join one with an invitation.",
     "firstServer": "Add your first server",
     "storeTitle": "Saved servers unavailable",
-    "storeHelp": "Unlock this device’s secure storage, then try again."
+    "storeHelpDesktop": "Your system keyring may be locked. Unlock it, for example by signing out and in again, then try again.",
+    "storeHelpAndroid": "Unlock your phone, then try again. Your saved servers stay encrypted until then."
   },
   "errors": {
     "profiles": "Couldn’t open the servers saved on this device.",
@@ -60,9 +61,10 @@
   },
   "unavailable": {
     "title": "SirinVPN can’t start",
-    "help": "Unlock this device and make sure the SirinVPN service is installed. Your saved servers are safe.",
     "copy": "Copy details",
-    "report": "SirinVPN couldn’t start: {{message}} No VPN action was taken."
+    "report": "SirinVPN couldn’t start: {{message}} No VPN action was taken.",
+    "helpDesktop": "Make sure the SirinVPN service is installed and running, then try again. Your saved servers are safe.",
+    "helpAndroid": "Unlock your phone, then try again. Your saved servers are safe."
   },
   "dialog": {
     "waitToClose": "Wait for the current task to finish",
@@ -117,5 +119,15 @@
     "actionFailed": "That didn’t work. Use your desktop’s window controls.",
     "resizeFailed": "Can’t resize here. Use your desktop’s resize shortcut."
   },
-  "recoveryKeyGuard": "You can’t view this recovery key again. Leave without saving it?"
+  "recoveryKeyGuard": "You can’t view this recovery key again. Leave without saving it?",
+  "settingsIndex": {
+    "app": "This app",
+    "server": "This server",
+    "serverNote": "These settings apply only to this server.",
+    "general": "Theme, notifications, Quick Settings",
+    "automaticMethod": "Automatic method",
+    "reconnectOn": "Reconnects automatically",
+    "reconnectOff": "Doesn’t reconnect automatically",
+    "attention": "Needs attention: a key rotation didn’t finish"
+  }
 }
