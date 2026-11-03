@@ -3,6 +3,7 @@ import { validateHost } from "../../format";
 import type { ServerProfile, TransportSetup } from "../../types";
 import { useInfoHint } from "../../components/InfoHint";
 import { t } from "../../i18n";
+import { SettingsDisclosure } from "./SettingsParts";
 
 /** Cloudflare proxies HTTPS only on these ports; other CDNs may differ, so this only warns. */
 const CDN_HTTPS_PORTS = [443, 2053, 2083, 2087, 2096];
@@ -91,8 +92,7 @@ export function TransportSetupFields({ value, onChange, existing = false }: {
   const update = <K extends keyof TransportDraft>(key: K, next: TransportDraft[K]) => onChange({ ...value, [key]: next });
   const [portsHint, portsPanel] = useInfoHint(t("ssh.transport.portsInfo"), t("ssh.transport.portsInfoLabel"));
   const [httpsHint, httpsPanel] = useInfoHint(t("ssh.transport.httpsInfo"), t("ssh.transport.httpsInfoLabel"));
-  return <details className="advanced-fields">
-    <summary>{t("ssh.transport.summary")}</summary>
+  return <SettingsDisclosure className="advanced-fields" summary={t("ssh.transport.summary")}>
     <Field label={t("ssh.transport.publicHost")}><input placeholder={t("ssh.transport.publicHostPlaceholder")} value={value.publicHost} onChange={(event) => update("publicHost", event.target.value)} autoCapitalize="none" spellCheck={false} /></Field>
     <Field label={t("ssh.transport.alternateHosts")}><textarea rows={3} placeholder={t("ssh.transport.alternateHostsPlaceholder")} value={value.alternateHosts} onChange={(event) => update("alternateHosts", event.target.value)} autoCapitalize="none" spellCheck={false} /></Field>
     <p className="settings-note">{t("ssh.transport.alternateNote")}</p>
@@ -126,5 +126,5 @@ export function TransportSetupFields({ value, onChange, existing = false }: {
     </>}
     {existing && <p className="settings-note">{t("ssh.transport.existingNote")}</p>}
     {!transportDraftIsValid(value) && !(["wireguard", "obfuscated", "tcpTls"] as const).some((key) => transportPortError(value, key)) && <p className="settings-note" role="status">{t("ssh.transport.invalid")}</p>}
-  </details>;
+  </SettingsDisclosure>;
 }

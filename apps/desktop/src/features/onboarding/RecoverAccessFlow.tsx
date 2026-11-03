@@ -12,6 +12,7 @@ import type { RecoveryPreview, ServerProfile } from "../../types";
 import { t } from "../../i18n";
 import { fileName } from "./ImportBackupFlow";
 import type { SetupNext } from "./SetupFlow";
+import { SettingsDisclosure } from "../settings/SettingsParts";
 
 type Busy = "" | "preview" | "recover" | "file";
 const busyLabels = { preview: "onboarding.recover.reviewing", recover: "onboarding.recover.submitting", file: "onboarding.recover.file.opening" } as const;
@@ -70,7 +71,7 @@ export function RecoverAccessFlow({ onComplete, compact = false }: { onComplete:
     {tunnelUp && <p className="warning-note" role="status"><Warning size={18} weight="fill" /><span>{t("onboarding.recover.disconnectFirst")}</span></p>}
     <fieldset className="setup-fields" disabled={busy !== ""}>
       <Field label={t("onboarding.recover.key")} hint={t("onboarding.recover.keyHint")}><SecretTextarea aria-label={t("onboarding.recover.key")} rows={5} value={key} onChange={(event) => reset(event.target.value)} spellCheck={false} autoComplete="off" /></Field>
-      <details className="recovery-file" open={file !== "" || undefined}><summary>{t("onboarding.recover.file.toggle")}</summary>
+      <SettingsDisclosure boxed className="recovery-file" open={file !== ""} summary={t("onboarding.recover.file.toggle")}>
         <div className="recovery-file-content">
           <button type="button" className={`file-pick ${file ? "chosen" : ""}`} title={file || undefined} onClick={chooseFile}>
             <FileArrowUp size={22} aria-hidden="true" />
@@ -82,7 +83,7 @@ export function RecoverAccessFlow({ onComplete, compact = false }: { onComplete:
           </>}
           {fileError && <InlineError message={fileError} />}
         </div>
-      </details>
+      </SettingsDisclosure>
       {preview && <>
         <div className="recovery-target"><strong>{preview.preview.server_name}</strong><p>{preview.preview.host}</p>
           <HashValue label={t("onboarding.recover.serverIdentity")} value={preview.preview.server_identity_fingerprint} />

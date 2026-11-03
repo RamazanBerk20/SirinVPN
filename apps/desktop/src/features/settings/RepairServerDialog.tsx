@@ -33,6 +33,7 @@ import {
   Nat64Fields,
   nat64PrefixIsValid,
 } from "../dns/DnsFields";
+import { SettingsDisclosure } from "./SettingsParts";
 
 export function RepairServerDialog({
   profile,
@@ -266,13 +267,12 @@ export function RepairServerDialog({
                   <SshLoginFields login={login} />
                 </> : <>
                   <SshLoginFields login={login} />
-                  <details className="advanced-fields repair-options">
-                    <summary>{t("vps.repair.options")}</summary>
+                  <SettingsDisclosure className="advanced-fields repair-options" summary={t("vps.repair.options")}>
                     <p className="settings-note">{t("vps.repair.optionsNote")}</p>
                     <TransportSetupFields value={transport} onChange={setTransport} existing />
                     {dnsFields}
                     <Nat64Fields choice={nat64Choice} value={nat64Prefix} allowPreserve onChoiceChange={setNat64Choice} onValueChange={setNat64Prefix} />
-                  </details>
+                  </SettingsDisclosure>
                   <p className="settings-note">{t("vps.repair.note")}</p>
                 </>}
               </fieldset>

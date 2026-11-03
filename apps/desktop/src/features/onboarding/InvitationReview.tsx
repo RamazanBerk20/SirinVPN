@@ -1,4 +1,4 @@
-import { CaretDown, ShieldCheck, Warning } from "@phosphor-icons/react";
+import { ShieldCheck, Warning } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
 import { api } from "../../api";
 import { Field } from "../../components/ui";
@@ -7,6 +7,7 @@ import { errorMessage, formatExpiry } from "../../lib/errors";
 import { deviceNameProblem } from "../devices/RenameDeviceDialog";
 import { t } from "../../i18n";
 import { Rich } from "../../i18n/Rich";
+import { SettingsDisclosure } from "../settings/SettingsParts";
 
 type Rejection = "expired" | "used" | "invalid";
 
@@ -81,12 +82,9 @@ export function InvitationReviewFields({ review, disabled }: { review: ReturnTyp
       <Rich id="onboarding.invitation.presetName" params={{ name: preview.device_name }} tags={{ strong: (content) => <strong>{content}</strong> }} />
       {" "}{t("devices.join.renameLater")}
     </p>}
-    <details className="access-disclosure invitation-identity">
-      <summary>{t("onboarding.invitation.identity")} <CaretDown size={16} className="disclosure-chevron" /></summary>
-      <div className="invitation-identity-body">
-        <code className="fingerprint-value">{preview.server_identity_fingerprint}</code>
-        <p className="settings-note">{t("onboarding.invitation.trust")}</p>
-      </div>
-    </details>
+    <SettingsDisclosure boxed className="access-disclosure invitation-identity" summary={t("onboarding.invitation.identity")}>
+      <code className="fingerprint-value">{preview.server_identity_fingerprint}</code>
+      <p className="settings-note">{t("onboarding.invitation.trust")}</p>
+    </SettingsDisclosure>
   </div>;
 }

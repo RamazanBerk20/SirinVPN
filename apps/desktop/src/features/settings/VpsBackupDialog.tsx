@@ -21,6 +21,7 @@ import { preferredBackupPath } from "../../lib/backupPaths";
 import { errorMessage } from "../../lib/errors";
 import { t } from "../../i18n";
 import { Rich } from "../../i18n/Rich";
+import { SettingsDisclosure } from "./SettingsParts";
 
 export function VpsBackupDialog({
   profile,
@@ -277,9 +278,9 @@ export function VpsBackupDialog({
               <p>{t("vps.backup.doneNote")}</p>
               <ShareEncryptedFile uri={path} />
               {/* The hash is of the helper the VPS ran to read its state, not of the backup file. */}
-              <details className="result-disclosure"><summary>{t("vps.common.softwareDetails")}</summary>
+              <SettingsDisclosure className="result-disclosure" summary={t("vps.common.softwareDetails")}>
                 <HashValue label={t("vps.common.softwareHash")} value={result.artifact_sha256} />
-              </details>
+              </SettingsDisclosure>
             </OperationResult>
           ) : null}
         </DialogContent>

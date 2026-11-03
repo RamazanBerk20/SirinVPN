@@ -15,7 +15,7 @@ import { useSshHostTrust, type InspectedSshHost } from "../../hooks/useSshHostTr
 import { SshLoginFields } from "./SshLoginFields";
 import { SshHostVerification } from "./SshHostVerification";
 import type { ServerProfile } from "../../types";
-import { rememberedReleaseSource, rememberReleaseSource, validReleaseSource, type VpsBaselineCandidate, type VpsReleaseCandidate, type VpsReleaseOperation, type VpsReleaseStatus } from "./vpsRelease";
+import { completeReleaseSource, rememberedReleaseSource, rememberReleaseSource, validReleaseSource, type VpsBaselineCandidate, type VpsReleaseCandidate, type VpsReleaseOperation, type VpsReleaseStatus } from "./vpsRelease";
 
 type Failure = { message: string; retry?: () => void };
 
@@ -37,7 +37,9 @@ export function VpsUpdateDialog({ profile, open, onOpenChange, disconnected, onC
   const [status, setStatus] = useState<VpsReleaseStatus | null>(null);
   const [candidate, setCandidate] = useState<VpsReleaseCandidate | null>(null);
   const [baseline, setBaseline] = useState<VpsBaselineCandidate | null>(null);
-  const [source, setSource] = useState("");
+  const [sourceText, setSource] = useState("");
+  // A folder address typed without its trailing "/" still counts; the field shows it once left.
+  const source = completeReleaseSource(sourceText);
   const [editingSource, setEditingSource] = useState(false);
   const [channel, setChannel] = useState<"stable" | "preview">("stable");
   const [automatic, setAutomatic] = useState(false);
@@ -320,7 +322,7 @@ export function VpsUpdateDialog({ profile, open, onOpenChange, disconnected, onC
             <section className="update-section">
               {!configured || editingSource || !source ? <>
                 <Field label={t("vps.update.source.label")} hint={t("vps.update.source.help")} error={sourceError}>
-                  <input type="url" value={source} placeholder={t("vps.update.source.placeholder")} autoCapitalize="none" spellCheck={false} onChange={(event) => { setSource(event.target.value); clearReview(); }} />
+                  <input type="url" value={sourceText} placeholder={t("vps.update.source.placeholder")} autoCapitalize="none" spellCheck={false} onChange={(event) => { setSource(event.target.value); clearReview(); }} onBlur={() => setSource(source)} />
                 </Field>
               </> : <div className="update-source-saved"><span>{t("vps.update.source.label")}</span><p>{source}</p><button type="button" className="text-button" onClick={() => setEditingSource(true)}>{t("vps.update.source.change")}</button></div>}
               <Field label={t("vps.update.channel.label")} hint={channel === "preview" ? t("vps.update.channel.previewHint") : undefined}>

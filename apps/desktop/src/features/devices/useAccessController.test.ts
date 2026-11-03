@@ -21,6 +21,7 @@ vi.mock("../../api", () => ({
     revokeDevice: vi.fn(),
     createPortForward: vi.fn(),
     removePortForward: vi.fn(),
+    transferOwnership: vi.fn(),
   },
 }));
 afterEach(() => {
@@ -321,4 +322,27 @@ it("routes port failures to the public port field without matching translated te
   await act(async () => { await result.current.removePortForward("tcp", 48080); });
   expect(result.current.error).toBe("the private management connection failed");
   expect(result.current.publicPortError).toBeNull();
+});
+
+it("reloads this device's saved role after handing ownership to another member", async () => {
+  const device = (id: string, member_id: string) => ({ id, member_id, name: id, client_tunnel_address: "10.0.0.2" });
+  const before = { members: [
+    { id: "me", name: "Me", role: "owner", administrator: false, devices: [device("self", "me")] },
+    { id: "family", name: "Family", role: "member", administrator: false, devices: [device("phone", "family")] },
+  ], active_invitations: [] } as unknown as MembershipSnapshot;
+  const after = { ...before, members: [{ ...before.members[0], role: "member", administrator: true }, { ...before.members[1], role: "owner" }] } as MembershipSnapshot;
+  vi.mocked(api.membership).mockResolvedValue(before);
+  vi.mocked(api.serverConfiguration).mockResolvedValue({});
+  vi.mocked(api.transferOwnership).mockResolvedValue(after);
+  const props = confirmationProps();
+  const { result } = renderHook(useAccessController, { initialProps: props });
+  await waitFor(() => expect(result.current.snapshot).toBe(before));
+  const answer = pendingNativeConfirmation();
+  let pending!: Promise<void>;
+  act(() => { pending = result.current.transferOwnership(before.members[1]); });
+  await act(async () => { answer(true); await pending; });
+  expect(api.transferOwnership).toHaveBeenCalledExactlyOnceWith("server", "phone");
+  // The backend has saved the new role; reloading servers re-gates every Owner-only control.
+  expect(props.onAccessChanged).toHaveBeenCalledOnce();
+  expect(result.current.snapshot).toBe(after);
 });

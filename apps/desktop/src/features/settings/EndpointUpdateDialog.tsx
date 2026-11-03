@@ -16,6 +16,7 @@ import { Field, InlineError } from "../../components/ui";
 import { errorMessage } from "../../lib/errors";
 import { CopyButton } from "../../components/CopyButton";
 import { t } from "../../i18n";
+import { SettingsDisclosure } from "./SettingsParts";
 
 /** Shape of a signed update code; a format sample, not translatable text. */
 const CODE_PLACEHOLDER = "sirm1.…";
@@ -203,12 +204,11 @@ export function EndpointUpdateDialog({
                 <>
                   {transition(update)}
                   {/* Copy is in the footer; the code itself is rarely read, so it stays folded. */}
-                  <details className="result-disclosure endpoint-code">
-                    <summary>{t("vps.endpoint.showCode")}</summary>
+                  <SettingsDisclosure className="result-disclosure endpoint-code" summary={t("vps.endpoint.showCode")}>
                     <Field label={t("vps.endpoint.code")} hint={t("vps.endpoint.codeHint")}>
                       <textarea className="secret-code-output mono" value={update.code} readOnly aria-label={t("vps.endpoint.code")} />
                     </Field>
-                  </details>
+                  </SettingsDisclosure>
                   <p className="form-footnote">
                     <LockKey size={15} /> {t("vps.endpoint.publishNote")}
                   </p>

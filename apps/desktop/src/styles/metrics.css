@@ -140,21 +140,6 @@
 .metric meter:-moz-meter-sub-sub-optimum::-moz-meter-bar {
   background: var(--danger);
 }
-.metrics-details {
-  border-top: 1px solid var(--line);
-  margin-top: 10px;
-}
-.metrics-details > summary {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  min-height: 44px;
-  padding: 12px 0;
-  font-size: 0.875rem;
-  color: var(--muted);
-  list-style: none;
-}
 .metrics-details dl {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));

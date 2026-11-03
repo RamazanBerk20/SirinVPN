@@ -28,6 +28,7 @@ import {
   nat64PrefixIsValid,
 } from "../dns/DnsFields";
 import { FingerprintValue, InstallFailure, InstallProgress, InstallSuccess, SetupProgress, StepBack } from "./SetupOutcome";
+import { SettingsDisclosure } from "../settings/SettingsParts";
 
 export type SetupStep = "details" | "fingerprint" | "installing" | "failed" | "success";
 /** Where the app goes after a finished setup; "recovery" opens Keys & recovery for the new server. */
@@ -344,8 +345,7 @@ export function SetupFlow({
         </div>
         <fieldset className="setup-fields" disabled={busy}>
           {/* Opens itself only when the prefilled sign-in turned out unusable. */}
-          <details className="setup-advanced" open={!login.loading && !login.valid && (prefilled.current || !created.private_key_path)}>
-            <summary>{t("onboarding.setup.created.settings")}</summary>
+          <SettingsDisclosure boxed className="setup-advanced" open={!login.loading && !login.valid && (prefilled.current || !created.private_key_path)} summary={t("onboarding.setup.created.settings")}>
             <div className="setup-advanced-content">
               {nameField}
               <div className="created-facts">
@@ -356,7 +356,7 @@ export function SetupFlow({
               {!login.valid && <SshLoginFields login={login} />}
               {advanced}
             </div>
-          </details>
+          </SettingsDisclosure>
         </fieldset>
         {error && <InlineError message={error} />}
         <button className="primary-button" type="submit" disabled={!valid || busy}>
@@ -398,10 +398,9 @@ export function SetupFlow({
           />
         </Field>
         <SshLoginFields login={login} />
-        <details className="setup-advanced">
-          <summary>{t("onboarding.setup.advanced")}</summary>
+        <SettingsDisclosure boxed className="setup-advanced" summary={t("onboarding.setup.advanced")}>
           {advanced}
-        </details>
+        </SettingsDisclosure>
       </fieldset>
       {error ? <InlineError message={error} /> : null}
       <button

@@ -251,10 +251,6 @@
   line-height: 1.6;
 }
 
-.access-disclosure > summary {
-  font-size: 0.9375rem;
-  min-height: 48px;
-}
 
 .port-forward-panel p {
   font-size: 0.875rem;

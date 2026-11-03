@@ -6,12 +6,10 @@
 .preference-checkbox, .checkbox-row, .confirmation-row { display: flex; align-items: flex-start; gap: 12px; min-height: 44px; padding: 10px 0; line-height: 1.5; cursor: pointer; }
 .preference-checkbox input, .checkbox-row input, .confirmation-row input { flex: 0 0 20px; width: 20px; height: 20px; margin: 2px 0 0; accent-color: var(--cyan); }
 .preference-checkbox:focus-within, .checkbox-row:focus-within, .confirmation-row:focus-within { outline: 2px solid var(--cyan); outline-offset: 4px; }
-.access-disclosure { margin-top: 24px; }
-.access-disclosure > button { display: block; margin-top: 16px; }
 .access-disclosure p { max-width: 65ch; line-height: 1.6; }
 .field [aria-invalid="true"], .route-list-field [aria-invalid="true"] { border-color: color-mix(in srgb, var(--danger) 70%, var(--text)); }
 /* `.field small` is more specific than a bare class; errors must stay red in every form. */
-.field-error, :is(.field, .route-list-field) > small.field-error { color: color-mix(in srgb, var(--danger) 70%, var(--text)); display: block; font-size: var(--text-secondary); line-height: 1.5; }
+.field-error, :is(.field, .route-list-field) > small.field-error { color: color-mix(in srgb, var(--danger) 70%, var(--text)); display: block; font-size: var(--text-helper); line-height: 1.5; }
 .action-menu-panel [aria-disabled="true"] { opacity: .7; cursor: default; }
 .action-menu-panel small { white-space: normal; }
 .release-verification-details { overflow-wrap: anywhere; }

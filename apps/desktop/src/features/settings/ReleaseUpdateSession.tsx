@@ -1,8 +1,9 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
 import type { ReleaseUpdateCandidate, ReleaseUpdateChannel } from "../../types";
+import { rememberedAppReleaseSource } from "./vpsRelease";
 
 function useSessionState() {
-  const [source, setSource] = useState("");
+  const [source, setSource] = useState(rememberedAppReleaseSource);
   const [channel, setChannel] = useState<ReleaseUpdateChannel>("stable");
   const [candidate, setCandidate] = useState<ReleaseUpdateCandidate | null>(null);
   const [installed, setInstalled] = useState(false);

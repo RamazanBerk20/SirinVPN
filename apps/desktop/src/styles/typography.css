@@ -5,6 +5,9 @@
   --text-body: 0.9375rem;
   --text-secondary: 0.875rem;
   --text-caption: 0.8125rem;
+  /* Every field label and helper line, in every form: the helper never outsizes its label. */
+  --text-label: var(--text-secondary);
+  --text-helper: var(--text-secondary);
   --text-metric: 1.5625rem;
   --weight-regular: 400;
   --weight-medium: 500;
@@ -55,7 +58,6 @@ h2,
   font-size: var(--text-body);
   line-height: 1.5;
 }
-.field small,
 .preference-row small,
 .settings-note,
 .choice-row small,
@@ -65,6 +67,11 @@ h2,
   font-weight: var(--weight-regular);
   line-height: 1.5;
   letter-spacing: normal;
+}
+.field small {
+  font-size: var(--text-helper);
+  font-weight: var(--weight-regular);
+  line-height: 1.5;
 }
 .metric .metric-value,
 .metric .metric-state {

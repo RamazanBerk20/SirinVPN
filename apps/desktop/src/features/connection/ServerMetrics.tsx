@@ -1,5 +1,4 @@
 import {
-  CaretDown,
   Cpu,
   HardDrives,
   Pulse,
@@ -19,6 +18,7 @@ import { Metric } from "../../components/ui";
 import { formatNumber, t } from "../../i18n";
 import type { ServerStatus } from "../../types";
 import type { ServerWorkspaceModel } from "./useServerWorkspace";
+import { SettingsDisclosure } from "../settings/SettingsParts";
 
 export type ServerFreshness = "unavailable" | "live" | "polling" | "connecting" | "reconnecting";
 
@@ -116,11 +116,7 @@ export function ServerMetrics({
               </button>
             </div>
           )}
-          <details className="metrics-details">
-            <summary>
-              {t("home.server.detailsSummary")}{" "}
-              <CaretDown className="disclosure-chevron" size={17} />
-            </summary>
+          <SettingsDisclosure className="metrics-details" summary={t("home.server.detailsSummary")}>
             <dl>
               <div>
                 <dt>{t("home.server.inbound")}</dt>
@@ -158,7 +154,7 @@ export function ServerMetrics({
               </div>
             </dl>
             <p className="settings-note">{t("home.server.totalsInfo")}</p>
-          </details>
+          </SettingsDisclosure>
         </>
       )}
     </section>

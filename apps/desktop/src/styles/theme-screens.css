@@ -107,9 +107,9 @@
 .field small {
   color: var(--muted);
 }
-.field > span {
+:is(.field, .route-list-field) > span {
   color: color-mix(in srgb, var(--accent) 10%, var(--text));
-  font-size: 12px;
+  font-size: var(--text-label);
 }
 .dialog-overlay {
   background: color-mix(in srgb, var(--bg) 85.1%, transparent);

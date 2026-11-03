@@ -2,7 +2,7 @@ import { copyText } from "../../lib/clipboard";
 import { confirmAction } from "../../lib/confirmAction";
 import { DialogContent } from "../../components/DialogContent";
 import * as Dialog from "@radix-ui/react-dialog";
-import { ArrowClockwise, CaretDown, Check, Copy, Key, Warning } from "@phosphor-icons/react";
+import { ArrowClockwise, Check, Copy, Key, Warning } from "@phosphor-icons/react";
 import { useId, useLayoutEffect, useRef, useState } from "react";
 import { memberAccessLabel, memberAccessLevel } from "../../access";
 import { api } from "../../api";
@@ -14,6 +14,7 @@ import { policyDraft, policyFieldErrors, policyFromDraft } from "./memberPolicy"
 import { InvitationShare } from "./InvitationShare";
 import { t } from "../../i18n";
 import { isAndroid } from "../../platform";
+import { SettingsDisclosure } from "../settings/SettingsParts";
 
 export function InvitationDialog({
   profile,
@@ -227,10 +228,9 @@ export function InvitationDialog({
                 )}
               </div>
               {scopedAvailable && !target && (
-                <details className="access-disclosure member-policy-disclosure">
-                  <summary>{t("devices.invite.permissions")} <CaretDown size={16} className="disclosure-chevron" /></summary>
+                <SettingsDisclosure boxed className="access-disclosure member-policy-disclosure" summary={t("devices.invite.permissions")}>
                   <MemberPolicyFields draft={policy} onChange={setPolicy} delegated={delegated} creating />
-                </details>
+                </SettingsDisclosure>
               )}
               {error ? <InlineError message={error} /> : null}
             </form>

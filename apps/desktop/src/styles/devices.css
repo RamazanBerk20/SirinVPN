@@ -13,10 +13,6 @@
 .section-heading p {
   margin-top: 4px;
 }
-.access-disclosure > summary::-webkit-details-marker,
-.metrics-details > summary::-webkit-details-marker {
-  display: none;
-}
 .disclosure-chevron {
   flex-shrink: 0;
   color: var(--muted);
@@ -61,28 +57,6 @@ details[open] > summary > .disclosure-chevron {
 }
 .danger-text:hover {
   color: var(--danger);
-}
-.access-disclosure {
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--surface);
-  overflow: hidden;
-}
-.access-disclosure > summary {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 13px 17px;
-  list-style: none;
-}
-.access-disclosure > summary > svg:first-child {
-  color: var(--muted);
-}
-.access-disclosure > summary > svg {
-  flex-shrink: 0;
-}
-.access-disclosure > summary > .disclosure-chevron {
-  margin-left: auto;
 }
 
 /* Chips: one shape for counts, states and limits. */

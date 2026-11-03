@@ -32,18 +32,6 @@ h3 {
   padding-top: 80px;
 }
 
-.setup-advanced {
-  border: 1px solid var(--line);
-  border-radius: 9px;
-  padding: 16px;
-}
-.setup-advanced > summary {
-  color: var(--muted);
-  font-size: 12px;
-}
-.setup-advanced[open] > summary {
-  margin-bottom: 20px;
-}
 .setup-advanced .replacement-option {
   margin-top: 0;
 }
@@ -51,9 +39,6 @@ h3 {
   display: grid;
   gap: 20px;
   min-width: 0;
-}
-.advanced-fields > :not(summary) {
-  margin-top: 16px;
 }
 
 .access-section > .settings-note {

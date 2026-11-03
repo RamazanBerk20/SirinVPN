@@ -5,8 +5,8 @@
 
 .route-list-field small {
   color: var(--quiet);
-  font-size: 0.75rem;
-  line-height: 1.45;
+  font-size: var(--text-helper);
+  line-height: 1.5;
 }
 
 .route-list-field {

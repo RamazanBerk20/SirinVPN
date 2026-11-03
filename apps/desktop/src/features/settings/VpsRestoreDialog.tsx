@@ -21,6 +21,7 @@ import { Field, InlineError } from "../../components/ui";
 import { errorMessage } from "../../lib/errors";
 import { t } from "../../i18n";
 import { Rich } from "../../i18n/Rich";
+import { SettingsDisclosure } from "./SettingsParts";
 
 /** The backend's wording for a wrong backup password; only then is the entered password cleared. */
 const WRONG_PASSWORD = /password is incorrect/i;
@@ -311,9 +312,9 @@ export function VpsRestoreDialog({
                 {onMoveDevices && <button type="button" className="secondary-button" onClick={() => { changeOpen(false); onMoveDevices(); }}>{t("vps.restore.moveDevices")}</button>}
               </div>}
               {result.network_preflight && <ServerNetworkPreflight report={result.network_preflight} />}
-              <details className="result-disclosure"><summary>{t("vps.common.softwareDetails")}</summary>
+              <SettingsDisclosure className="result-disclosure" summary={t("vps.common.softwareDetails")}>
                 <HashValue label={t("vps.common.softwareHash")} value={result.artifact_sha256} />
-              </details>
+              </SettingsDisclosure>
             </OperationResult>
           ) : null}
         </DialogContent>

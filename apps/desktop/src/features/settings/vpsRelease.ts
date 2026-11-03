@@ -49,13 +49,38 @@ export function validReleaseSource(source: string) {
   } catch { return false; }
 }
 
+/** Adds the trailing "/" a release folder needs, when that is all that is missing. */
+export function completeReleaseSource(source: string) {
+  const trimmed = source.trim();
+  return trimmed && !trimmed.endsWith("/") && validReleaseSource(`${trimmed}/`) ? `${trimmed}/` : trimmed;
+}
+
 // Current download preference only. This never stores or supplies signing trust.
-const sourceKey = (serverId: string) => `sirinvpn.vps-update-source.${serverId}`;
+const VPS_SOURCE_PREFIX = "sirinvpn.vps-update-source.";
+const APP_SOURCE_KEY = "sirinvpn.app-update-source";
+const sourceKey = (serverId: string) => `${VPS_SOURCE_PREFIX}${serverId}`;
+const stored = (key: string | null) => {
+  const value = key ? window.localStorage.getItem(key) ?? "" : "";
+  return validReleaseSource(value) ? value : "";
+};
+// One release folder holds the app and the server packages, so each can start from the other's source.
+const anyVpsSource = () => {
+  for (let index = 0; index < window.localStorage.length; index += 1) {
+    const key = window.localStorage.key(index);
+    const value = key?.startsWith(VPS_SOURCE_PREFIX) ? stored(key) : "";
+    if (value) return value;
+  }
+  return "";
+};
 export function rememberedReleaseSource(serverId: string): string {
-  try {
-    const value = window.localStorage.getItem(sourceKey(serverId)) ?? "";
-    return validReleaseSource(value) ? value : "";
-  } catch { return ""; }
+  try { return stored(sourceKey(serverId)) || stored(APP_SOURCE_KEY); } catch { return ""; }
+}
+export function rememberedAppReleaseSource(): string {
+  try { return stored(APP_SOURCE_KEY) || anyVpsSource(); } catch { return ""; }
+}
+export function rememberAppReleaseSource(source: string) {
+  if (!validReleaseSource(source)) return;
+  try { window.localStorage.setItem(APP_SOURCE_KEY, source); } catch { /* Optional local preference. */ }
 }
 export function rememberReleaseSource(serverId: string, source: string) {
   if (!validReleaseSource(source)) return;

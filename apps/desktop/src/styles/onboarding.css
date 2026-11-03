@@ -164,22 +164,9 @@
   grid-template-columns: minmax(0, 1.25fr) minmax(170px, 0.75fr);
 }
 
-/* Setup flow: one label and one helper size, steps, back control, outcomes. */
-.setup-form .field > span {
-  font-size: 0.8125rem;
-}
-.setup-form .field > small {
-  font-size: 0.8125rem;
-  line-height: 1.5;
-}
+/* Setup flow: steps, back control, outcomes. */
 .setup-fields {
   display: contents;
-}
-.setup-form .setup-advanced > summary {
-  color: var(--text);
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
 }
 
 .flow-back {
@@ -608,10 +595,6 @@
   color: var(--accent-strong);
   text-decoration: underline;
   text-underline-offset: 3px;
-}
-.android .setup-form .setup-advanced > summary {
-  padding-block: 14px;
-  font-size: var(--fs-body);
 }
 .android .hetzner-danger-zone > .secondary-button {
   justify-self: stretch;

@@ -49,15 +49,7 @@
   margin-top: 0;
 }
 
-.member-policy-disclosure > summary {
-  min-height: 48px;
-  font-weight: 650;
-}
 
-.member-policy-disclosure > .member-policy-fields {
-  padding: 16px 17px 17px;
-  border-top: 1px solid var(--line);
-}
 
 .policy-form-fields {
   min-width: 0;
@@ -420,12 +412,7 @@
 .invitation-review > .invitation-identity {
   margin-top: 0;
 }
-.invitation-identity-body {
-  display: grid;
-  gap: 8px;
-  padding: 0 17px 14px;
-}
-.invitation-identity-body code {
+.invitation-identity code {
   font-family: var(--font-mono);
   overflow-wrap: anywhere;
 }
@@ -447,10 +434,6 @@
 .android .weekly-interval-heading .icon-button {
   width: 44px;
   height: 44px;
-}
-.android .member-policy-disclosure > summary,
-.android .invitation-identity > summary {
-  min-height: 48px;
 }
 .android .dialog-commit > button {
   flex: 1 1 100%;

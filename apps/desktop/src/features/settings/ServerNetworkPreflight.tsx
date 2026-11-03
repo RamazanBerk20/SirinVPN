@@ -1,6 +1,7 @@
 import type { NetworkPreflight } from "../../types";
 import { t, type MessageKey } from "../../i18n";
 import { Rich } from "../../i18n/Rich";
+import { SettingsDisclosure } from "./SettingsParts";
 
 const exposureLabels: Record<NetworkPreflight["exposure"], MessageKey> = {
   public_interface: "ssh.network.exposure.publicInterface",
@@ -21,9 +22,9 @@ export function ServerNetworkPreflight({ report }: { report: NetworkPreflight })
     {conflicts.length > 0 && <ul className="network-conflicts">{conflicts.map((issue, index) => <li key={`${issue.code}:${index}`}>
       {issue.message}
     </li>)}</ul>}
-    {notes.length > 0 && <details><summary>{t("ssh.network.otherNotes")}</summary><ul className="network-notes">{notes.map((issue, index) => <li key={`${issue.code}:${index}`}>{issue.message}</li>)}</ul></details>}
-    <details><summary>{t("ssh.network.addresses")}</summary><ul className="network-address-list">{report.assigned_addresses.map((entry) => <li key={`${entry.interface}:${entry.address}`}>
+    {notes.length > 0 && <SettingsDisclosure summary={t("ssh.network.otherNotes")}><ul className="network-notes">{notes.map((issue, index) => <li key={`${issue.code}:${index}`}>{issue.message}</li>)}</ul></SettingsDisclosure>}
+    <SettingsDisclosure summary={t("ssh.network.addresses")}><ul className="network-address-list">{report.assigned_addresses.map((entry) => <li key={`${entry.interface}:${entry.address}`}>
       <Rich id="ssh.network.address" params={{ address: entry.address, prefix: entry.prefix_length, interface: entry.interface }} tags={{ code: (content) => <code>{content}</code> }} />
-    </li>)}</ul></details>
+    </li>)}</ul></SettingsDisclosure>
   </section>;
 }

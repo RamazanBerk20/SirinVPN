@@ -77,9 +77,7 @@ html[data-window-chrome="custom"] .dialog-content.dialog-layout {
 }
 .dialog-layout .segmented-control button,
 .dialog-layout .replacement-option strong,
-.dialog-layout .preference-checkbox,
-.dialog-layout .field > span,
-.dialog-layout .field small {
+.dialog-layout .preference-checkbox {
   font-size: var(--text-secondary);
   line-height: 1.5;
 }
@@ -149,19 +147,6 @@ html[data-window-chrome="custom"] .dialog-content.dialog-layout {
   display: grid;
   gap: 8px;
   min-width: 0;
-}
-.result-disclosure {
-  border-top: 1px solid var(--line);
-  padding-top: 16px;
-}
-.result-disclosure > summary,
-.network-preflight summary {
-  cursor: pointer;
-  font-size: var(--text-secondary);
-}
-.result-disclosure[open] > summary,
-.network-preflight details[open] > summary {
-  margin-bottom: 16px;
 }
 .result-next-step {
   color: var(--muted);
@@ -409,7 +394,6 @@ html[data-window-chrome="custom"] .dialog-content.dialog-layout {
 .update-section .preference-row > span { display: grid; gap: 4px; }
 .update-workflow > .text-button,
 .update-section > button { justify-self: start; }
-.result-disclosure > :not(summary) + :not(summary) { margin-top: 12px; }
 /* `.field small` is muted; a field's error must still read as an error. */
 .field small.field-error { color: color-mix(in srgb, var(--danger) 70%, var(--text)); }
 .update-saved { display: flex; align-items: center; gap: 6px; color: var(--success); font-size: var(--text-secondary); }

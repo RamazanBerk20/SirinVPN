@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, CaretDown, Timer } from "@phosphor-icons/react";
+import { ArrowDown, ArrowUp, Timer } from "@phosphor-icons/react";
 import { protectionEvidence } from "./protectionEvidence";
 import { CopyValue } from "../../components/CopyValue";
 import { Metric } from "../../components/ui";
@@ -15,6 +15,7 @@ import { currentQualitySample } from "./TransportQuality";
 import { useTrafficStore, type TrafficStore } from "../../hooks/trafficStore";
 import { InfoHint } from "../../components/InfoHint";
 import { formatNumber, t } from "../../i18n";
+import { SettingsDisclosure } from "../settings/SettingsParts";
 export function DeviceTraffic({
   local: fallback,
   source,
@@ -153,11 +154,7 @@ export function DeviceTrafficDetails({
     format: (n: number) => string,
   ) => (connected && value !== undefined ? format(value) : t("format.unavailable"));
   return (
-    <details className="metrics-details">
-      <summary>
-        {t("home.device.summary")}{" "}
-        <CaretDown className="disclosure-chevron" size={17} />
-      </summary>
+    <SettingsDisclosure className="metrics-details" summary={t("home.device.summary")}>
       <dl>
         <div>
           <dt>{t("home.device.receivedPackets")}</dt>
@@ -210,6 +207,6 @@ export function DeviceTrafficDetails({
         })()}
       </dl>
       <p className="settings-note">{t("home.device.countersNote")}</p>
-    </details>
+    </SettingsDisclosure>
   );
 }

@@ -445,11 +445,6 @@ select {
   color: var(--cyan);
 }
 
-.routing-settings .route-list-field small {
-  font-size: 0.875rem;
-  line-height: 1.6;
-}
-
 .routing-settings .route-list-field textarea {
   font-size: 0.9375rem;
 }
@@ -589,6 +584,17 @@ select {
   display: grid;
   gap: 12px;
   padding-bottom: 12px;
+}
+/* Standing alone in a form, the disclosure is its own card. */
+.settings-disclosure.boxed {
+  margin-top: 0;
+  padding: 0 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+}
+.settings-disclosure.boxed[open] > .settings-disclosure-body {
+  padding-bottom: 16px;
 }
 .settings-sections > .settings-disclosure {
   margin-top: 0;

@@ -17,7 +17,8 @@ import { formatBytes, formatTarget } from "../../format";
 import { Field, InlineError } from "../../components/ui";
 import { errorMessage } from "../../lib/errors";
 import { ReleaseRecovery } from "./ReleaseRecovery";
-import { validReleaseSource } from "./vpsRelease";
+import { completeReleaseSource, rememberAppReleaseSource, validReleaseSource } from "./vpsRelease";
+import { SettingsDisclosure } from "./SettingsParts";
 import { t } from "../../i18n";
 
 export function ReleaseUpdateDialog({
@@ -47,7 +48,7 @@ export function ReleaseUpdateDialog({
     || candidate.appimage_install_available || candidate.android_install_available));
   const installConfirmation = android ? t("release.candidate.confirmAndroid") : windows ? t("release.candidate.confirmWindows")
     : appimage ? t("release.candidate.confirmAppImage") : t("release.candidate.confirmDebian");
-  const releaseSource = source.trim();
+  const releaseSource = completeReleaseSource(source);
   const sourceValid = validReleaseSource(releaseSource);
 
   useEffect(() => {
@@ -88,6 +89,8 @@ export function ReleaseUpdateDialog({
     setError(null);
     try {
       setCandidate(await api.checkReleaseUpdate(releaseSource, channel));
+      // Only an address that served a signed release is worth offering next time.
+      rememberAppReleaseSource(releaseSource);
     } catch (reason) {
       // The footer's Check release button is the retry.
       setError({ message: errorMessage(reason, t("release.error.check")) });
@@ -297,6 +300,7 @@ export function ReleaseUpdateDialog({
                   type="url"
                   value={source}
                   onChange={(event) => setSource(event.target.value)}
+                  onBlur={() => setSource(releaseSource)}
                   autoComplete="off"
                   autoCapitalize="none"
                   autoCorrect="off"
@@ -305,6 +309,7 @@ export function ReleaseUpdateDialog({
                   required
                 />
               </Field>
+              <SettingsDisclosure summary={t("release.form.sourceInfoLabel")}><p>{t("release.form.sourceInfo")}</p></SettingsDisclosure>
               <div className="release-download-notice">
                 <DownloadSimple size={20} />
                 <p>

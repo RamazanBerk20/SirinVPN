@@ -4,6 +4,7 @@ import { formatDnsPolicy } from "../../format";
 import { t } from "../../i18n";
 import type { RepairResult, ServerProfile } from "../../types";
 import { ServerNetworkPreflight } from "./ServerNetworkPreflight";
+import { SettingsDisclosure } from "./SettingsParts";
 
 export function RepairSummary({ profile, result, dnsPreserved, recordsPreserved }: {
   profile: ServerProfile;
@@ -34,15 +35,13 @@ export function RepairSummary({ profile, result, dnsPreserved, recordsPreserved 
       {fingerprint ? <HashValue label={t("vps.summary.fingerprint")} value={fingerprint} />
         : <div className="result-identity"><span>{t("vps.summary.fingerprint")}</span><span className="settings-note">{t("vps.summary.fingerprintSaved")}</span></div>}
     </section>
-    {result.network_preflight && <details className="result-disclosure">
-      <summary>{t("vps.summary.network")}</summary>
+    {result.network_preflight && <SettingsDisclosure className="result-disclosure" summary={t("vps.summary.network")}>
       <p className="settings-note">{t("vps.summary.networkNote")}</p>
       <ServerNetworkPreflight report={result.network_preflight} />
-    </details>}
-    <details className="result-disclosure">
-      <summary>{t("vps.common.softwareDetails")}</summary>
+    </SettingsDisclosure>}
+    <SettingsDisclosure className="result-disclosure" summary={t("vps.common.softwareDetails")}>
       <HashValue label={t("vps.common.softwareHash")} value={result.artifact_sha256} />
-    </details>
+    </SettingsDisclosure>
     <p className="result-next-step">{t("vps.summary.next")}</p>
   </div>;
 }
