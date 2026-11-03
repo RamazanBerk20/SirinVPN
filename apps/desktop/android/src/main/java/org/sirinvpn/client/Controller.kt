@@ -270,6 +270,8 @@ object Controller {
     fun execute(command: String, arguments: String, requestId: String, expected: Long, callback: IResult,
                 retry: Boolean = false) {
         if (arguments.length > 131072 || requestId.length > 80) { callback.complete(failure(R.string.error_request_too_large)); return }
+        // A cancel must not queue behind the reader that runs the speed test.
+        if (command == "cancel_speed_test") { callback.complete(Native.call(command, arguments, -1)); return }
         if (command in setOf("get_app_preferences", "set_app_preferences")) {
             try {
                 val prefs = context.getSharedPreferences("application-preferences", 0)

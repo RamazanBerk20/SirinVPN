@@ -15,9 +15,12 @@
     "bodyVerified": "You can now check for newer releases.",
     "bodyAndroid": "Approve the installation in Android’s prompt. The VPN may disconnect briefly.",
     "bodyWindows": "Finish the Windows installer, then reopen SirinVPN.",
-    "bodyAppImage": "Close and reopen the AppImage to use the new version. The previous version is kept for rollback.",
-    "bodyDebian": "Close and reopen SirinVPN to use the new version.",
+    "bodyAppImage": "Restart SirinVPN to use the new version. Restarting doesn’t disconnect the VPN. The previous version is kept for rollback.",
+    "bodyDebian": "Restart SirinVPN to use the new version.",
     "closeLater": "Restart later",
+    "restartNow": "Restart now",
+    "restarting": "Restarting…",
+    "restartFailed": "SirinVPN couldn’t restart. Close it and open it again to use the new version.",
     "checkNewer": "Check for a newer release"
   },
   "progress": {

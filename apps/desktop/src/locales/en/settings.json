@@ -342,7 +342,9 @@
       "upload": "Measuring upload",
       "finishing": "Finishing"
     },
-    "left": "{{phase}} · about {{seconds}} s left. It can’t be stopped once started.",
-    "finishingLine": "{{phase}}… It can’t be stopped once started."
+    "left": "{{phase}} · about {{seconds}} s left.",
+    "finishingLine": "{{phase}}…",
+    "cancel": "Cancel speed test",
+    "cancelled": "Speed test cancelled."
   }
 }

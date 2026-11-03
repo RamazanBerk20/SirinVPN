@@ -106,6 +106,7 @@ use zeroize::{Zeroize, Zeroizing};
 
 struct AppState {
     paths: ClientPaths,
+    speed_test: sirinvpn_core::diagnostics::SpeedTestSlot,
 }
 
 #[tauri::command]
@@ -156,7 +157,10 @@ fn run_inner() -> tauri::Result<()> {
             }
         })
         .manage(connection_notifications::ConnectionNotifications::default())
-        .manage(AppState { paths })
+        .manage(AppState {
+            paths,
+            speed_test: Default::default(),
+        })
         .manage(server_status_stream::StatusSubscriptions::default())
         .manage(release_update::ReleaseUpdateRuntime::default())
         .manage(vps_baseline::BaselineRuntime::default())
@@ -180,6 +184,9 @@ fn run_inner() -> tauri::Result<()> {
             check_release_update,
             install_release_update,
             discard_release_update,
+            // Windows closes the app to run its installer, which leaves nothing to restart.
+            #[cfg(not(windows))]
+            release_update::restart_app,
             list_servers,
             update_server_presentation,
             probe_host_key,
@@ -235,6 +242,7 @@ fn run_inner() -> tauri::Result<()> {
             server_configuration,
             run_diagnostics,
             run_speed_test,
+            cancel_speed_test,
             membership,
             create_invitation,
             create_wireguard_device,

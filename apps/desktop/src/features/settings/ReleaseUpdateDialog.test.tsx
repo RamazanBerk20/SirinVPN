@@ -8,7 +8,7 @@ import { t } from "../../i18n";
 
 vi.mock("../../api", () => ({ api: {
   checkReleaseUpdate: vi.fn(), installReleaseUpdate: vi.fn(), discardReleaseUpdate: vi.fn(),
-  releaseUpdateStatus: vi.fn(), rollbackReleaseUpdate: vi.fn(),
+  releaseUpdateStatus: vi.fn(), rollbackReleaseUpdate: vi.fn(), restartApp: vi.fn(),
 } }));
 const candidate: ReleaseUpdateCandidate = {
   current_version: "0.1.0", release_version: "0.2.0", release_sequence: "2", channel: "stable",
@@ -40,6 +40,30 @@ describe("portable app updates", () => {
     fireEvent.click(button);
     await waitFor(() => expect(api.installReleaseUpdate).toHaveBeenCalledWith(true));
     expect(await screen.findByText(t("release.done.bodyAppImage"))).toBeTruthy();
+  });
+  it("offers Restart now after an update and stays busy until the app exits", async () => {
+    vi.mocked(api.restartApp).mockReturnValue(new Promise(() => {}));
+    render(<ReleaseUpdateDialog open onOpenChange={vi.fn()} installationReady={false} />);
+    await check();
+    fireEvent.click(screen.getByRole("checkbox", { name: startsWith(t("release.candidate.confirmAppImage")) }));
+    fireEvent.click(screen.getByRole("button", { name: t("release.candidate.install") }));
+    const restart = await screen.findByRole("button", { name: t("release.done.restartNow") });
+    expect(restart.className).toBe("primary-button");
+    expect(screen.getByRole("button", { name: t("release.done.closeLater") }).className).toBe("secondary-button");
+    fireEvent.click(restart);
+    expect(api.restartApp).toHaveBeenCalledOnce();
+    expect(await screen.findByText(t("release.done.restarting"))).toBeTruthy();
+    expect(screen.getByRole("button", { name: t("release.done.closeLater") }).matches(":disabled")).toBe(true);
+  });
+  it("says to reopen the app when it can't restart", async () => {
+    vi.mocked(api.restartApp).mockRejectedValue(new Error("Wait for the current update to finish."));
+    render(<ReleaseUpdateDialog open onOpenChange={vi.fn()} installationReady={false} />);
+    await check();
+    fireEvent.click(screen.getByRole("checkbox", { name: startsWith(t("release.candidate.confirmAppImage")) }));
+    fireEvent.click(screen.getByRole("button", { name: t("release.candidate.install") }));
+    fireEvent.click(await screen.findByRole("button", { name: t("release.done.restartNow") }));
+    expect((await screen.findByRole("alert")).textContent).toContain(t("release.done.restartFailed"));
+    expect(screen.getByRole("button", { name: t("release.done.restartNow") }).matches(":disabled")).toBe(false);
   });
   it("binds the same-version signed baseline only after its own confirmation", async () => {
     vi.mocked(api.checkReleaseUpdate).mockResolvedValue({ ...candidate, release_version: "0.1.0", newer_than_running: false, baseline_bind_available: true });

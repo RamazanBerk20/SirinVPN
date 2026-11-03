@@ -11,30 +11,44 @@ pub(super) async fn run_diagnostics(
     crate::diagnostics::run(app, server_id).await
 }
 
-/// Tunnel-to-VPS throughput; the result is returned to this window and kept nowhere.
+/// Tunnel-to-VPS throughput; the result is returned to this window and kept nowhere. `None` when
+/// the test was cancelled.
 #[tauri::command]
 pub(super) async fn run_speed_test(
     app: tauri::AppHandle,
     server_id: String,
-) -> Result<sirinvpn_core::diagnostics::SpeedTestResult, String> {
-    let paths = app.state::<crate::AppState>().paths.clone();
-    let (profile, secret) = tauri::async_runtime::spawn_blocking(move || {
-        let profile = crate::identity::find_profile(&paths, &server_id)?;
-        let status = crate::helper::invoke_helper("status", None).map_err(safe_error)?;
-        if status.server_id != Some(profile.id) || status.state != ConnectionState::Connected {
-            return Err("Connect to this server before running the speed test.".to_owned());
-        }
-        let secret = paths
-            .secret_store()
-            .get(&profile.identity_reference)
-            .map_err(safe_error)?;
-        Ok((profile, secret))
+) -> Result<Option<sirinvpn_core::diagnostics::SpeedTestResult>, String> {
+    let state = app.state::<crate::AppState>();
+    // Claimed before the connection check, so a cancel during the check also counts.
+    let run = state.speed_test.start().map_err(safe_error)?;
+    let paths = state.paths.clone();
+    run.or_cancel(async move {
+        let (profile, secret) = tauri::async_runtime::spawn_blocking(move || {
+            let profile = crate::identity::find_profile(&paths, &server_id)?;
+            let status = crate::helper::invoke_helper("status", None).map_err(safe_error)?;
+            if status.server_id != Some(profile.id) || status.state != ConnectionState::Connected
+            {
+                return Err("Connect to this server before running the speed test.".to_owned());
+            }
+            let secret = paths
+                .secret_store()
+                .get(&profile.identity_reference)
+                .map_err(safe_error)?;
+            Ok((profile, secret))
+        })
+        .await
+        .map_err(|_| "The speed test was interrupted. Try again.".to_owned())??;
+        sirinvpn_core::diagnostics::speed_test(&profile, &secret)
+            .await
+            .map_err(safe_error)
     })
     .await
-    .map_err(|_| "The speed test was interrupted. Try again.".to_owned())??;
-    sirinvpn_core::diagnostics::speed_test(&profile, &secret)
-        .await
-        .map_err(safe_error)
+    .transpose()
+}
+
+#[tauri::command]
+pub(super) fn cancel_speed_test(state: tauri::State<'_, crate::AppState>) {
+    state.speed_test.cancel();
 }
 
 #[tauri::command]

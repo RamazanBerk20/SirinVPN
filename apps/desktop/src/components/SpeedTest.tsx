@@ -10,7 +10,7 @@ const rate = (bits: number) => t("maintenance.speedTest.rate", { value: formatNu
 const latency = (micros: number | null) => micros === null ? t("maintenance.speedTest.notMeasured")
   : t("maintenance.speedTest.latency", { value: formatNumber(micros / 1000, { maximumFractionDigits: 1 }) });
 
-// The native test reports no progress and can't be cancelled, so the phase comes from its fixed timing
+// The native test reports no progress, so the phase comes from its fixed timing
 // (crates/core/src/diagnostics/speed.rs): about 2 s of idle latency, then 8 s each of download and upload.
 const TOTAL_SECONDS = 20;
 export const speedTestPhase = (elapsed: number) => elapsed < 2 ? "idle" : elapsed < 10 ? "download" : elapsed < 18 ? "upload" : "finishing";
@@ -20,6 +20,7 @@ export function SpeedTest({ serverId }: { serverId: string }) {
   const [running, setRunning] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [result, setResult] = useState<SpeedTestResult | null>(null);
+  const [cancelled, setCancelled] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const section = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -29,11 +30,16 @@ export function SpeedTest({ serverId }: { serverId: string }) {
     const started = Date.now();
     setElapsed(0);
     const timer = setInterval(() => setElapsed(Math.floor((Date.now() - started) / 1000)), 500);
-    return () => clearInterval(timer);
+    // Closing the dialog mid-test stops it, since its result would be lost; after a finished test this does nothing.
+    return () => { clearInterval(timer); void api.cancelSpeedTest(); };
   }, [running]);
   const run = async () => {
-    setRunning(true); setResult(null); setError(null);
-    try { setResult(await api.speedTest(serverId)); }
+    setRunning(true); setResult(null); setCancelled(false); setError(null);
+    try {
+      const outcome = await api.speedTest(serverId);
+      setResult(outcome);
+      setCancelled(!outcome);
+    }
     catch (reason) { setError(errorMessage(reason, t("maintenance.speedTest.failed"))); }
     finally { setRunning(false); }
   };
@@ -49,14 +55,20 @@ export function SpeedTest({ serverId }: { serverId: string }) {
       <div><dt>{t("maintenance.speedTest.downloadLatency")}</dt><dd>{latency(result.download_latency_micros)}</dd></div>
       <div><dt>{t("maintenance.speedTest.uploadLatency")}</dt><dd>{latency(result.upload_latency_micros)}</dd></div>
     </dl>}
-    {running ? <div className="speed-test-progress" role="status">
-      <strong><ArrowClockwise className="spin" size={18} />{t("maintenance.speedTest.running")}</strong>
-      <progress max={TOTAL_SECONDS} value={Math.min(elapsed, TOTAL_SECONDS)} aria-label={phaseText} />
-      <p>{phase === "finishing" ? t("settings.speedTest.finishingLine", { phase: phaseText })
-        : t("settings.speedTest.left", { phase: phaseText, seconds: formatNumber(TOTAL_SECONDS - elapsed) })}</p>
-    </div> : error ? <InlineError message={error} onRetry={() => void run()} />
-      : <button className="secondary-button" type="button" onClick={() => void run()}>
-        <Gauge />{result ? t("maintenance.speedTest.again") : t("maintenance.speedTest.run")}
-      </button>}
+    {running ? <>
+      <div className="speed-test-progress" role="status">
+        <strong><ArrowClockwise className="spin" size={18} />{t("maintenance.speedTest.running")}</strong>
+        <progress max={TOTAL_SECONDS} value={Math.min(elapsed, TOTAL_SECONDS)} aria-label={phaseText} />
+        <p>{phase === "finishing" ? t("settings.speedTest.finishingLine", { phase: phaseText })
+          : t("settings.speedTest.left", { phase: phaseText, seconds: formatNumber(TOTAL_SECONDS - elapsed) })}</p>
+      </div>
+      <button className="secondary-button" type="button" onClick={() => void api.cancelSpeedTest()}>{t("settings.speedTest.cancel")}</button>
+    </> : error ? <InlineError message={error} onRetry={() => void run()} />
+      : <>
+        {cancelled && <p className="settings-note" role="status">{t("settings.speedTest.cancelled")}</p>}
+        <button className="secondary-button" type="button" onClick={() => void run()}>
+          <Gauge />{result ? t("maintenance.speedTest.again") : t("maintenance.speedTest.run")}
+        </button>
+      </>}
   </section>;
 }

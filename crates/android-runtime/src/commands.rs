@@ -99,6 +99,10 @@ pub async fn dispatch(
     match command {
         "android_measure_quality" => return crate::quality::measure(runtime, generation).await,
         "client_platform" => return Ok(json!("android")),
+        "cancel_speed_test" => {
+            runtime.speed_test.cancel();
+            return Ok(Value::Null);
+        }
         "android_set_quick_profile" => {
             profile(runtime, text(&args, "serverId")?)?;
             return Ok(Value::Null);
@@ -379,7 +383,11 @@ pub async fn dispatch(
             report.checks.extend(leaks);
             encode(report)
         }
-        "run_speed_test" => encode(sirinvpn_core::diagnostics::speed_test(&p, &secret).await?),
+        "run_speed_test" => {
+            let run = runtime.speed_test.start()?;
+            let test = sirinvpn_core::diagnostics::speed_test(&p, &secret);
+            encode(run.or_cancel(test).await.transpose()?)
+        }
         "dns_blocklist_settings" => encode(client.dns_blocklist().await?),
         "update_dns_blocklist" => encode(
             client

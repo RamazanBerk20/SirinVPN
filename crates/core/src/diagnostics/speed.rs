@@ -6,10 +6,11 @@ use sirinvpn_protocol::{ErrorCode, SPEED_TEST_MAX_BYTES, SPEED_TEST_SECONDS, Ser
 use std::{
     convert::Infallible,
     pin::Pin,
-    sync::{Arc, OnceLock},
+    sync::{Arc, Mutex, MutexGuard, OnceLock, PoisonError},
     task::{Context, Poll},
     time::{Duration, Instant},
 };
+use tokio::sync::Notify;
 
 const PHASE: Duration = Duration::from_secs(SPEED_TEST_SECONDS);
 const IDLE_SAMPLES: usize = 5;
@@ -31,6 +32,59 @@ pub struct SpeedTestResult {
 #[derive(Debug, thiserror::Error)]
 #[error("{0}")]
 pub struct SpeedTestFailure(String);
+
+/// The one speed test this device runs at a time. Cancelling drops the test's requests, which
+/// closes their connections: the VPS stops sending and frees its transfer slot.
+#[derive(Default)]
+pub struct SpeedTestSlot(Mutex<Option<Arc<Notify>>>);
+
+/// The running test's claim on the slot; dropping it frees the slot however the test ends.
+pub struct SpeedTestRun<'a> {
+    slot: &'a SpeedTestSlot,
+    // A fresh signal per run, so a cancel that races the end of one run can't stop the next.
+    cancel: Arc<Notify>,
+}
+
+impl SpeedTestSlot {
+    pub fn start(&self) -> Result<SpeedTestRun<'_>, SpeedTestFailure> {
+        let mut running = self.lock();
+        if running.is_some() {
+            return Err(SpeedTestFailure(
+                "A speed test is already running. Wait for it to finish or cancel it.".into(),
+            ));
+        }
+        let cancel = Arc::new(Notify::new());
+        *running = Some(cancel.clone());
+        Ok(SpeedTestRun { slot: self, cancel })
+    }
+
+    /// Stops the running test, if any. A cancel before the test starts waiting still counts.
+    pub fn cancel(&self) {
+        if let Some(cancel) = &*self.lock() {
+            cancel.notify_one();
+        }
+    }
+
+    fn lock(&self) -> MutexGuard<'_, Option<Arc<Notify>>> {
+        self.0.lock().unwrap_or_else(PoisonError::into_inner)
+    }
+}
+
+impl SpeedTestRun<'_> {
+    /// `None` when the test was cancelled; `test` is dropped at once, with its requests.
+    pub async fn or_cancel<T>(&self, test: impl Future<Output = T>) -> Option<T> {
+        tokio::select! {
+            result = test => Some(result),
+            () = self.cancel.notified() => None,
+        }
+    }
+}
+
+impl Drop for SpeedTestRun<'_> {
+    fn drop(&mut self) {
+        *self.slot.lock() = None;
+    }
+}
 
 pub async fn speed_test(
     profile: &ServerProfile,
@@ -227,6 +281,32 @@ mod tests {
             Pin::new(&mut body).poll_frame(&mut context),
             Poll::Ready(None)
         ));
+    }
+
+    #[tokio::test]
+    async fn one_test_runs_at_a_time_and_a_cancel_ends_only_that_run() {
+        let slot = SpeedTestSlot::default();
+        // Nothing runs, so a cancel is a no-op.
+        slot.cancel();
+        let run = slot.start().unwrap();
+        assert!(
+            slot.start()
+                .err()
+                .unwrap()
+                .to_string()
+                .contains("already running")
+        );
+        // A cancel that arrives before the test waits still stops it.
+        slot.cancel();
+        assert_eq!(run.or_cancel(std::future::pending::<()>()).await, None);
+        drop(run);
+        let run = slot.start().unwrap();
+        assert_eq!(run.or_cancel(async { 7 }).await, Some(7));
+        // A cancel that races the end of a run can't stop the next one.
+        slot.cancel();
+        drop(run);
+        let run = slot.start().unwrap();
+        assert_eq!(run.or_cancel(async { 8 }).await, Some(8));
     }
 
     #[test]
