@@ -325,7 +325,7 @@ export function ReleaseUpdateDialog({
                   required
                 />
               </Field>
-              <SettingsDisclosure summary={t("release.form.sourceInfoLabel")}><p className="settings-note">{t("release.form.sourceInfo")}</p></SettingsDisclosure>
+              <SettingsDisclosure boxed summary={t("release.form.sourceInfoLabel")}><p className="settings-note">{t("release.form.sourceInfo")}</p></SettingsDisclosure>
               <div className="release-download-notice">
                 <DownloadSimple size={20} />
                 <p>

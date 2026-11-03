@@ -589,16 +589,24 @@ select {
 .settings-disclosure + .settings-disclosure {
   margin-top: 0;
 }
-/* Standing alone in a form, the disclosure is its own card. */
+/* Standing alone in a form, the disclosure is its own card: tinted and borderless, so it never reads as a field. */
 .settings-disclosure.boxed {
   margin-top: 0;
   padding: 0 16px;
-  border: 1px solid var(--line);
+  border: 0;
   border-radius: 10px;
-  background: var(--surface);
+  background: color-mix(in srgb, var(--surface-2) 80%, transparent);
+}
+.settings-disclosure.boxed[open] > summary {
+  border-bottom: 1px solid var(--line);
 }
 .settings-disclosure.boxed[open] > .settings-disclosure-body {
-  padding-bottom: 16px;
+  padding: 14px 0 16px;
+}
+/* A disclosure inside another reads one step quieter than its parent. */
+.settings-disclosure-body .settings-disclosure > summary {
+  font-size: var(--text-secondary);
+  font-weight: 600;
 }
 .settings-sections > .settings-disclosure {
   margin-top: 0;

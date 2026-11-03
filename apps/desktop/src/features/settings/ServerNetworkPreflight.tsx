@@ -23,8 +23,8 @@ export function ServerNetworkPreflight({ report }: { report: NetworkPreflight })
       {issue.message}
     </li>)}</ul>}
     {notes.length > 0 && <SettingsDisclosure summary={t("ssh.network.otherNotes")}><ul className="network-notes">{notes.map((issue, index) => <li key={`${issue.code}:${index}`}>{issue.message}</li>)}</ul></SettingsDisclosure>}
-    <SettingsDisclosure summary={t("ssh.network.addresses")}><ul className="network-address-list">{report.assigned_addresses.map((entry) => <li key={`${entry.interface}:${entry.address}`}>
+    {report.assigned_addresses.length > 0 && <SettingsDisclosure summary={t("ssh.network.addresses")}><ul className="network-address-list">{report.assigned_addresses.map((entry) => <li key={`${entry.interface}:${entry.address}`}>
       <Rich id="ssh.network.address" params={{ address: entry.address, prefix: entry.prefix_length, interface: entry.interface }} tags={{ code: (content) => <code>{content}</code> }} />
-    </li>)}</ul></SettingsDisclosure>
+    </li>)}</ul></SettingsDisclosure>}
   </section>;
 }
