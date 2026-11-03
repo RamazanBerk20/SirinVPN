@@ -65,17 +65,14 @@ export function addDeviceState(member: MemberSummary, props: Pick<MemberActionPr
 }
 
 /** Everything that changes the member as a whole, so it never hides behind one device's menu. */
-export function memberActions(member: MemberSummary, props: MemberActionProps, includeAddDevice: boolean): MenuAction[] {
+export function memberActions(member: MemberSummary, props: MemberActionProps): MenuAction[] {
   const group = t("devices.menu.group.member");
   const manageable = canManageMember(props.accessLevel, member);
   const hasInvitation = props.snapshot.active_invitations.some((invitation) => invitation.target_member_id === member.id);
   const actions: MenuAction[] = [];
   const add = addDeviceState(member, props);
-  if (includeAddDevice && add.allowed)
+  if (add.allowed)
     actions.push({ group, label: t("devices.menu.addDeviceFor", { name: member.name }), disabled: add.disabled, reason: add.reason, run: () => props.onInvite(member) });
-  if (props.onWireGuard && manageable)
-    actions.push({ group, label: t("devices.menu.addWireguardFor", { name: member.name }), disabled: member.suspended || props.memberBusy != null,
-      reason: member.suspended ? t("devices.menu.reactivateFirst") : undefined, run: () => props.onWireGuard?.(member) });
   if (props.onPolicy && member.role !== "owner" && manageable)
     actions.push({ group, label: t("devices.menu.accessPolicy"), run: () => props.onPolicy?.(member) });
   if (props.accessLevel === "owner" && member.role === "member")
@@ -102,5 +99,9 @@ export function memberActions(member: MemberSummary, props: MemberActionProps, i
       run: () => void props.onTransfer(member),
     });
   }
+  // Last, under Advanced: a configuration for the WireGuard app, not a SirinVPN device.
+  if (props.onWireGuard && manageable)
+    actions.push({ group: t("devices.menu.group.advanced"), label: t("devices.menu.addWireguardFor", { name: member.name }), disabled: member.suspended || props.memberBusy != null,
+      reason: member.suspended ? t("devices.menu.reactivateFirst") : undefined, run: () => props.onWireGuard?.(member) });
   return actions;
 }

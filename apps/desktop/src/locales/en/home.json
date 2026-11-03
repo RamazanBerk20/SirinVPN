@@ -10,7 +10,6 @@
     "interrupted": "Connection interrupted",
     "disconnected": "Disconnected",
     "changing": "Changing connection…",
-    "connectedTo": "Connected to {{name}}",
     "checking": "Checking VPN status…",
     "connectingTo": "Connecting to {{name}}…",
     "disconnecting": "Disconnecting…"

@@ -1,11 +1,10 @@
-import { Clock, MagnifyingGlass, Plus, Prohibit } from "@phosphor-icons/react";
+import { Clock, MagnifyingGlass, Prohibit } from "@phosphor-icons/react";
 import { useId } from "react";
-import { isAndroid } from "../../platform";
 import { ActionMenu } from "../../components/ActionMenu";
 import { memberAccessLabel, memberAccessLevel } from "../../access";
 import { formatDateTime, t } from "../../i18n";
 import { DeviceRow, type DeviceRowProps } from "./DeviceRow";
-import { addDeviceState, memberActions } from "./memberLifecycleActions";
+import { memberActions } from "./memberLifecycleActions";
 import type { MemberSummary } from "../../types";
 
 type Props = DeviceRowProps & {
@@ -34,9 +33,8 @@ function policyChips(member: MemberSummary) {
 function MemberGroup({ member, visible, ...props }: Props & { member: MemberSummary; visible: MemberSummary["devices"] }) {
   const heading = useId();
   const level = memberAccessLevel(member);
-  const add = addDeviceState(member, props);
-  // Android has no room in the header for a button, so adding a device is the first menu item there.
-  const actions = memberActions(member, props, isAndroid);
+  // One menu per member: adding a device for them is its first item, so the card has no second add button.
+  const actions = memberActions(member, props);
   const limit = member.policy?.device_limit;
   return (
     <section className="member-group" aria-labelledby={heading} data-suspended={Boolean(member.suspended)}>
@@ -56,17 +54,9 @@ function MemberGroup({ member, visible, ...props }: Props & { member: MemberSumm
           </p>
         </div>
         <div className="member-group-actions">
-          {!isAndroid && add.allowed && (
-            <button className="secondary-button compact-button" aria-label={t("devices.menu.addDeviceFor", { name: member.name })}
-              disabled={add.disabled} title={add.reason}
-              onClick={() => props.onInvite(member)}>
-              <Plus size={15} weight="bold" /> {t("devices.menu.addDevice")}
-            </button>
-          )}
           {actions.length > 0 && <ActionMenu label={t("devices.menu.memberActions", { name: member.name })} title={member.name} actions={actions} />}
         </div>
       </header>
-      {!isAndroid && add.allowed && add.reason && member.devices.length > 0 && <p className="member-group-reason">{add.reason}</p>}
       {member.devices.length === 0 ? (
         <p className="member-group-empty">{t(member.suspended ? "devices.member.noDevicesSuspended" : "devices.member.noDevices")}</p>
       ) : (

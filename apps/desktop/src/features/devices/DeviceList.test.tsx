@@ -1,5 +1,5 @@
 import { afterEach, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { DeviceList } from "./DeviceList";
 import { t } from "../../i18n";
 import type { MembershipSnapshot } from "../../types";
@@ -77,6 +77,7 @@ function memberMenu(name: string) {
   fireEvent.click(screen.getByRole("button", { name: t("devices.menu.memberActions", { name }) }));
 }
 const item = (name: string) => screen.getByRole("menuitem", { name }) as HTMLButtonElement;
+const items = () => screen.getAllByRole("menuitem").map((element) => element.textContent);
 const closeMenu = () => fireEvent.keyDown(screen.getByRole("menu"), { key: "Escape" });
 
 it.each([
@@ -97,8 +98,6 @@ it.each([
       } : member),
     },
   });
-  const row = screen.getByRole("button", { name: /^Owner device/ });
-  fireEvent.click(row);
   expect(screen.getAllByText("Owner device", { exact: true })).toHaveLength(1);
   expect(screen.queryByText("My computer")).toBeNull();
   expect(screen.queryByText("My Android device")).toBeNull();
@@ -116,7 +115,7 @@ it("groups devices under their member, with the role, limits and address", () =>
   expect(within(family).getByText(t("devices.member.devicesOfLimit", { count: 1, limit: 2 }))).toBeTruthy();
   expect(within(family).getByText(t("devices.member.limitedHours"))).toBeTruthy();
   expect(within(family).getByText(t("devices.member.canInvite"))).toBeTruthy();
-  const phone = within(family).getByRole("button", { name: /^Android phone/ }).querySelector("small")!;
+  const phone = within(family).getByText("Android phone").closest(".device-item")!.querySelector("small")!;
   expect(phone.textContent).toBe("10.77.0.3");
   expect(within(screen.getByRole("region", { name: "Owner" })).queryByText(t("devices.member.limitedHours"))).toBeNull();
 });
@@ -130,7 +129,8 @@ it("keeps device actions on the device and member actions on the member", () => 
   fireEvent.click(item(t("devices.menu.rename")));
   menu("Android phone");
   fireEvent.click(item(t("devices.menu.allowMutual")));
-  fireEvent.click(screen.getByRole("button", { name: t("devices.menu.addDeviceFor", { name: "Family" }) }));
+  memberMenu("Family");
+  fireEvent.click(item(t("devices.menu.addDeviceFor", { name: "Family" })));
   memberMenu("Family");
   fireEvent.click(item(t("devices.menu.makeAdmin")));
   expect(props.onRename).toHaveBeenCalledWith("phone", "Android phone");
@@ -184,15 +184,21 @@ it("limits Admin controls and states unknown activity directly in the row", () =
     accessLevel: "admin",
     currentDeviceId: "admin-device",
   });
-  expect(screen.queryByRole("button", { name: t("devices.menu.deviceActions", { name: "My desktop" }) })).toBeNull();
-  expect(screen.queryByRole("button", { name: t("devices.menu.deviceActions", { name: "Admin laptop" }) })).toBeNull();
-  expect(screen.queryByRole("button", { name: t("devices.menu.addDeviceFor", { name: "Owner" }) })).toBeNull();
+  // Rows the Admin can't manage still open their details, and nothing else.
+  for (const name of ["My desktop", "Admin laptop"]) {
+    menu(name);
+    expect(items()).toEqual([t("devices.menu.details")]);
+    closeMenu();
+  }
+  expect(screen.queryByRole("button", { name: t("devices.menu.memberActions", { name: "Owner" }) })).toBeNull();
   expect(screen.getByText(t("devices.row.activity.unknown"))).toBeTruthy();
   expect(screen.getByText(t("devices.row.activity.recent"))).toBeTruthy();
   menu("Android phone");
   fireEvent.click(item(t("devices.menu.revoke", { name: "Android phone" })));
   expect(props.onRevoke).toHaveBeenCalledWith("phone", "Android phone");
-  expect(screen.queryByRole("button", { name: t("devices.menu.memberActions", { name: "Family" }) })).toBeNull();
+  // An Admin may add a Member's devices, and nothing more without lifecycle support.
+  memberMenu("Family");
+  expect(items()).toEqual([t("devices.menu.addDeviceFor", { name: "Family" })]);
 });
 
 it("offers member actions only with server support and never on the Owner", () => {
@@ -201,7 +207,10 @@ it("offers member actions only with server support and never on the Owner", () =
     onMemberSuspension: vi.fn(),
     onRevokeMemberDevices: vi.fn(),
   });
-  expect(screen.queryByRole("button", { name: t("devices.menu.memberActions", { name: "Owner" }) })).toBeNull();
+  // The Owner's own menu only adds devices: no suspension or revocation.
+  memberMenu("Owner");
+  expect(items()).toEqual([t("devices.menu.addDeviceFor", { name: "Owner" })]);
+  closeMenu();
   memberMenu("Family");
   fireEvent.click(item(t("devices.menu.suspend")));
   expect(props.onMemberSuspension).toHaveBeenCalledWith(snapshot.members[1]);
@@ -224,56 +233,32 @@ it("marks a suspended member and prevents enrollment and ownership transfer", ()
   const family = screen.getByRole("region", { name: "Family" });
   expect(within(family).getAllByText(t("devices.member.suspended")).length).toBe(2);
   expect(screen.queryByText(t("devices.row.activity.recent"))).toBeNull();
-  expect((screen.getByRole("button", { name: t("devices.menu.addDeviceFor", { name: "Family" }) }) as HTMLButtonElement).disabled).toBe(true);
   memberMenu("Family");
+  expect(item(t("devices.menu.addDeviceFor", { name: "Family" })).disabled).toBe(true);
   expect(item(t("devices.menu.transfer")).disabled).toBe(true);
   fireEvent.click(item(t("devices.menu.reactivate")));
   expect(props.onMemberSuspension).toHaveBeenCalledWith(suspended);
 });
 
-it("explains a reached device limit next to the disabled Add device", () => {
+it("explains a reached device limit on the disabled Add device", () => {
   const full = { ...snapshot.members[1], policy: { device_limit: 1, expires_at_unix: null, weekly_access: [], invite_members: false,
     add_own_devices: true, manage_own_peer_communication: false, manage_own_port_forwards: false } };
   setup({ snapshot: { ...snapshot, members: [snapshot.members[0], full] } });
-  const add = screen.getByRole("button", { name: t("devices.menu.addDeviceFor", { name: "Family" }) }) as HTMLButtonElement;
-  expect(add.disabled).toBe(true);
+  memberMenu("Family");
+  expect(item(t("devices.menu.addDeviceFor", { name: "Family" })).disabled).toBe(true);
   expect(screen.getByText(t("devices.menu.limitReached", { count: 1 }))).toBeTruthy();
 });
 
-it("restores expanded details in the same update that dismisses the menu", async () => {
+it("opens a device's details from its one menu and returns focus to it", async () => {
   setup();
-  const summary = screen.getByRole("button", { name: /^My desktop/ });
-  fireEvent.click(summary);
   menu("My desktop");
-  const details = document.getElementById(summary.getAttribute("aria-controls")!)!;
-  expect(details.hasAttribute("inert")).toBe(true);
-  // Dispatch outside act() so React schedules the dismissal as in a browser,
-  // and record the details' state when the menu first leaves the DOM.
-  const env = globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean };
-  const actEnvironment = env.IS_REACT_ACT_ENVIRONMENT;
-  env.IS_REACT_ACT_ENVIRONMENT = false;
-  let inertWhenClosed: boolean;
-  try {
-    inertWhenClosed = await new Promise<boolean>((resolve) => {
-      const observer = new MutationObserver(() => {
-        if (document.querySelector('[role="menu"]')) return;
-        observer.disconnect();
-        resolve(details.hasAttribute("inert"));
-      });
-      observer.observe(document.body, { childList: true, subtree: true });
-      document
-        .querySelector(".action-menu-backdrop")!
-        .dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, cancelable: true }));
-    });
-    await new Promise((resolve) => setTimeout(resolve));
-  } finally {
-    env.IS_REACT_ACT_ENVIRONMENT = actEnvironment;
-  }
-  expect(inertWhenClosed).toBe(false);
-  expect(details.hasAttribute("inert")).toBe(false);
-  expect(document.activeElement).toBe(
-    screen.getByRole("button", { name: "Actions for My desktop" }),
-  );
+  fireEvent.click(item(t("devices.menu.details")));
+  const dialog = screen.getByRole("dialog", { name: "My desktop" });
+  expect(within(dialog).getByText(t("devices.row.network.isolated"))).toBeTruthy();
+  expect(within(dialog).getByText(t("devices.row.lastOwnerDevice"))).toBeTruthy();
+  fireEvent.keyDown(dialog, { key: "Escape" });
+  expect(screen.queryByRole("dialog")).toBeNull();
+  await waitFor(() => expect(document.activeElement).toBe(screen.getByRole("button", { name: t("devices.menu.deviceActions", { name: "My desktop" }) })));
 });
 
 it("never counts a WireGuard-only phone as a device that can keep or receive ownership", () => {
@@ -298,5 +283,5 @@ it("never counts a WireGuard-only phone as a device that can keep or receive own
   expect(item(t("devices.menu.transfer")).disabled).toBe(true);
   expect(screen.getByText(t("devices.menu.needsManagedDevice"))).toBeTruthy();
   closeMenu();
-  expect(screen.getAllByText(t("devices.row.wireguardOnly"))).toHaveLength(2);
+  expect(screen.getAllByText(t("devices.row.wireguardShort"))).toHaveLength(2);
 });

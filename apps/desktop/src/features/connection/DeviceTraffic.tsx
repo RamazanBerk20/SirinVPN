@@ -137,13 +137,13 @@ export function DeviceTrafficDetails({
   source,
   serverId,
   address,
-
+  serverAddress,
 }: {
   local: LocalTunnelStatus;
   source?: TrafficStore<LocalTunnelStatus>;
   serverId: string;
   address?: string;
-
+  serverAddress?: string;
 }) {
   const sample = useTrafficStore(source);
   const local = sample?.counter_epoch === fallback.counter_epoch && sample?.server_id === fallback.server_id && fallback.state === sample?.state ? sample : fallback;
@@ -164,6 +164,10 @@ export function DeviceTrafficDetails({
           <dt>{t("home.device.sentPackets")}</dt>
           <dd>{available(local.tx_packets, formatCount)}</dd>
         </div>
+        {serverAddress && <div>
+          <dt>{t("home.details.serverAddress")}</dt>
+          <dd><CopyValue value={serverAddress} label={t("home.details.serverAddress")} /></dd>
+        </div>}
         {address && (
           <div>
             <dt>{t("home.details.vpnAddress")}</dt>

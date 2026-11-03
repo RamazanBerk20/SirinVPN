@@ -29,8 +29,6 @@
     "title": "Choose a server",
     "manage": "Manage servers"
   },
-  "showOnHome": "Show on Home",
-  "onHome": "On Home",
   "renamed": "Renamed to “{{name}}”.",
   "favorited": "{{name}} added to favorites",
   "unfavorited": "{{name}} removed from favorites"

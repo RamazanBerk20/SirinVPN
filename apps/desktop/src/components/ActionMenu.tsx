@@ -1,5 +1,5 @@
 import { DotsThree, DotsThreeVertical } from "@phosphor-icons/react";
-import { Fragment, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { DialogContent } from "./DialogContent";
 import { isAndroid } from "../platform";
@@ -26,6 +26,7 @@ export function ActionMenu({
   title,
   actions,
   onOpenChange,
+  trigger,
 }: {
   /** Accessible name of the trigger, e.g. “Actions for Android phone”. */
   label: string;
@@ -33,11 +34,13 @@ export function ActionMenu({
   title?: string;
   actions: MenuAction[];
   onOpenChange?: (open: boolean) => void;
+  /** A visible button in place of the ⋯ icon, for a menu that is a page's main action; its text is its name. */
+  trigger?: { content: ReactNode; className: string; disabled?: boolean };
 }) {
   const [open, setOpen] = useState(false);
   const [placement, setPlacement] = useState({ above: false, height: 400 });
   const root = useRef<HTMLDivElement>(null);
-  const trigger = useRef<HTMLButtonElement>(null);
+  const triggerButton = useRef<HTMLButtonElement>(null);
   const id = useId();
   // A layout effect applies the owner's update in the same commit, so content it
   // made inert never outlives the menu.
@@ -47,7 +50,7 @@ export function ActionMenu({
   }, [open, onOpenChange]);
   const close = (focus = true) => {
     setOpen(false);
-    if (focus) trigger.current?.focus();
+    if (focus) triggerButton.current?.focus();
   };
   useLayoutEffect(() => {
     if (isAndroid || !open || !root.current) return;
@@ -78,7 +81,7 @@ export function ActionMenu({
     document.addEventListener("pointerdown", outside);
     const resize = () => {
       setOpen(false);
-      trigger.current?.focus({ preventScroll: true });
+      triggerButton.current?.focus({ preventScroll: true });
     };
     window.addEventListener("resize", resize);
     root.current
@@ -90,7 +93,9 @@ export function ActionMenu({
     };
   }, [open]);
   if (isAndroid) return <Dialog.Root open={open} onOpenChange={setOpen}>
-    <Dialog.Trigger asChild><button className="icon-button overflow-button" aria-label={label}><DotsThreeVertical size={24} weight="bold" /></button></Dialog.Trigger>
+    <Dialog.Trigger asChild>{trigger
+      ? <button className={trigger.className} disabled={trigger.disabled}>{trigger.content}</button>
+      : <button className="icon-button overflow-button" aria-label={label}><DotsThreeVertical size={24} weight="bold" /></button>}</Dialog.Trigger>
     <Dialog.Portal><Dialog.Overlay className="dialog-overlay" />
       <DialogContent className="dialog-content mobile-action-sheet" heading={title ?? label} aria-describedby={undefined}>
         {sheetGroups(actions).map(([group, items]) => <Fragment key={group}>
@@ -111,9 +116,10 @@ export function ActionMenu({
       }}
     >
       <button
-        ref={trigger}
-        className="icon-button"
-        aria-label={label}
+        ref={triggerButton}
+        className={trigger?.className ?? "icon-button"}
+        disabled={trigger?.disabled}
+        aria-label={trigger ? undefined : label}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={open ? id : undefined}
@@ -125,7 +131,7 @@ export function ActionMenu({
           }
         }}
       >
-        <DotsThree size={25} weight="bold" />
+        {trigger ? trigger.content : <DotsThree size={25} weight="bold" />}
       </button>
       {open && (
         <div

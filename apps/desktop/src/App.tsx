@@ -323,6 +323,11 @@ function AppContent() {
         <Navigation page={page} onChange={setPage} />
         <div className="sidebar-heading">
           <span>{t("app.sidebar.servers")}</span>
+          {/* The list below switches servers; renaming, favourites and maintenance live on the Servers page. */}
+          <button className="text-button sidebar-manage" type="button" aria-label={t("app.sidebar.manageLabel")}
+            aria-current={page === "servers" ? "page" : undefined} onClick={() => setPage("servers")}>
+            {t("app.sidebar.manage")}
+          </button>
           <Dialog.Root open={addOpen} onOpenChange={(open) => { if (open || confirmNavigation()) setAddOpen(open); }}>
             <Dialog.Trigger asChild>
               <button

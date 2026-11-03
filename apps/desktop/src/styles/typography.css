@@ -91,13 +91,11 @@ h2,
   white-space: normal;
 }
 .mono,
-code,
-.endpoint .mono {
+code {
   font-family: var(--font-mono);
   font-size: var(--text-secondary);
   letter-spacing: normal;
 }
-.endpoint,
 .connection-facts {
   font-family: var(--font-ui);
   letter-spacing: normal;

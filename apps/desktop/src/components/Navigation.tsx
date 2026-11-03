@@ -23,7 +23,8 @@ export function Navigation({
       className={mobile ? "bottom-navigation" : "primary-navigation"}
       aria-label={mobile ? t("app.nav.mobileLabel") : t("app.nav.label")}
     >
-      {pages.map(({ id, icon: Icon }) => (
+      {/* The desktop sidebar lists the servers itself; its Manage button opens the Servers page. */}
+      {pages.filter(({ id }) => mobile || id !== "servers").map(({ id, icon: Icon }) => (
         <button
           key={id}
           type="button"

@@ -215,11 +215,6 @@ details[open] > summary > .disclosure-chevron {
 .devices-next-step p {
   margin: 4px 0 0;
 }
-.devices-next-step-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
 
 /* A member and their devices */
 .member-groups {
@@ -280,11 +275,6 @@ details[open] > summary > .disclosure-chevron {
   align-items: center;
   gap: 6px;
 }
-.compact-button {
-  min-height: 34px;
-  padding: 6px 12px;
-}
-.member-group-reason,
 .member-group-empty {
   margin: 0;
   padding: 0 16px 14px 70px;
@@ -312,29 +302,13 @@ details[open] > summary > .disclosure-chevron {
 }
 .device-item-summary {
   display: grid;
-  grid-template-columns: 36px minmax(0, 1fr) auto 18px;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
   align-items: center;
   flex: 1;
   gap: 14px;
   min-width: 0;
   min-height: 64px;
   padding: 10px 8px 10px 18px;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-.device-item-summary:hover {
-  background: color-mix(in srgb, var(--surface-3) 44%, transparent);
-}
-.device-item-summary:focus-visible {
-  outline: 2px solid var(--cyan);
-  outline-offset: -2px;
-}
-.device-item[data-expanded="true"] .device-item-summary > .disclosure-chevron {
-  transform: rotate(180deg);
 }
 .device-tile {
   position: relative;
@@ -397,9 +371,6 @@ details[open] > summary > .disclosure-chevron {
 }
 .device-status.suspended {
   color: color-mix(in srgb, var(--danger) 70%, var(--text));
-}
-.device-item-details {
-  padding: 2px 18px 16px 68px;
 }
 .device-fact-list {
   display: grid;
@@ -722,7 +693,6 @@ details[open] > summary > .disclosure-chevron {
     width: 36px;
     height: 36px;
   }
-  .member-group-reason,
   .member-group-empty {
     padding: 0 12px 12px;
   }
@@ -737,12 +707,6 @@ details[open] > summary > .disclosure-chevron {
   .device-item-summary .device-status {
     grid-column: 2;
     white-space: normal;
-  }
-  .device-item-summary > .disclosure-chevron {
-    display: none;
-  }
-  .device-item-details {
-    padding: 2px 12px 14px;
   }
   .device-fact-list > div {
     grid-template-columns: minmax(0, 1fr);
@@ -772,8 +736,7 @@ details[open] > summary > .disclosure-chevron {
 .android .member-group-meta,
 .android .device-item-copy small,
 .android .device-status,
-.android .member-group-empty,
-.android .member-group-reason {
+.android .member-group-empty {
   font-size: var(--fs-small);
 }
 .android .device-item-summary {
@@ -798,9 +761,6 @@ details[open] > summary > .disclosure-chevron {
 .android .device-item-summary .device-status {
   grid-column: 2;
   text-align: left;
-}
-.android .device-item-summary > .disclosure-chevron {
-  display: none;
 }
 .android .member-avatar {
   width: var(--tile-size);
@@ -837,11 +797,7 @@ details[open] > summary > .disclosure-chevron {
   padding-left: 0;
 }
 .android .pair-form .primary-button,
-.android .devices-next-step-actions > button {
-  width: 100%;
-}
-.android .ports-form-footer > .primary-button,
-.android .devices-next-step-actions {
+.android .ports-form-footer > .primary-button {
   width: 100%;
 }
 .android .command-block .icon-button {

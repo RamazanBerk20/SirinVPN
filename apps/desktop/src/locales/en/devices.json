@@ -27,10 +27,11 @@
     },
     "addWireguard": "Add WireGuard device",
     "aloneTitle": "Only this device so far",
-    "aloneBody": "Add your phone or another computer, or invite someone to use your VPN.",
-    "aloneBodyOwn": "Add your phone or another computer to use your VPN there too.",
-    "addOwnDevice": "Add a device",
-    "connect": "Connect"
+    "aloneBody": "Use Add device to add your phone or another computer, or to invite someone to use your VPN.",
+    "aloneBodyOwn": "Use Add device to add your phone or another computer.",
+    "connect": "Connect",
+    "add": "Add device",
+    "addMine": "One of my devices"
   },
   "member": {
     "suspended": "Suspended",
@@ -74,17 +75,18 @@
     "lastOwnerHelp": "Add another Owner device first, or transfer ownership from another member’s menu.",
     "addOwnerDevice": "Add Owner device",
     "wireguardShort": "WireGuard app",
-    "wireguardOnly": "WireGuard app or router, Direct UDP only"
+    "wireguardOnly": "WireGuard app or router, Direct UDP only",
+    "detailsDescription": "{{member}} · {{address}} · {{activity}}"
   },
   "menu": {
     "deviceActions": "Actions for {{name}}",
     "memberActions": "Member actions for {{name}}",
     "group": {
       "member": "Member",
-      "ownership": "Ownership"
+      "ownership": "Ownership",
+      "advanced": "Advanced"
     },
     "rename": "Rename device",
-    "addDevice": "Add device",
     "addDeviceFor": "Add device for {{name}}",
     "accessPolicy": "Access policy",
     "allowMutual": "Allow mutual access",
@@ -103,7 +105,8 @@
     "needsManagedDevice": "Needs a device running SirinVPN, not only WireGuard.",
     "addWireguardFor": "Add WireGuard device for {{name}}",
     "localNetworks": "Local networks",
-    "pairs": "Device pairs"
+    "pairs": "Device pairs",
+    "details": "Details"
   },
   "invitations": {
     "title": "Pending invitations",

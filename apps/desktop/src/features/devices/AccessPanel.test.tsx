@@ -23,11 +23,15 @@ it("hides Invite member from a member who may never invite, and shows it once al
   vi.mocked(api.membership).mockResolvedValue(own("member"));
   show("member");
   await screen.findByText("Laptop");
-  expect(screen.queryByRole("button", { name: t("devices.panel.invite") })).toBeNull();
+  // With only their own devices to add, the one Add device button does that directly.
+  expect(screen.getByRole("button", { name: t("devices.panel.add") }).getAttribute("aria-haspopup")).toBeNull();
   cleanup(); clearMembershipCache();
   vi.mocked(api.membership).mockResolvedValue(own("member", true));
   show("member");
-  await waitFor(() => expect((screen.getAllByRole("button", { name: t("devices.panel.invite") })[0] as HTMLButtonElement).disabled).toBe(false));
+  const add = await screen.findByRole("button", { name: t("devices.panel.add") });
+  await waitFor(() => expect((add as HTMLButtonElement).disabled).toBe(false));
+  fireEvent.click(add);
+  expect(screen.getAllByRole("menuitem").map((item) => item.textContent)).toEqual([t("devices.panel.addMine"), t("devices.panel.invite")]);
 });
 
 it("offers a next step when this is the only device, and retries a failed load in place", async () => {

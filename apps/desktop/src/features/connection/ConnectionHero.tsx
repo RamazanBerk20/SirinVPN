@@ -71,7 +71,6 @@ export function ConnectionHero({
     : operation === "connecting" ? t("home.status.connectingTo", { name: profile.name })
     : operation === "disconnecting" ? t("home.status.disconnecting")
     : busy ? t("home.status.changing")
-    : state.connected && !state.recoveringAuthorization && !isAndroid ? t("home.status.connectedTo", { name: profile.name })
     : state.status;
   const summary = loading ? "" : operation === "connecting" ? t("home.summary.connecting")
     : operation === "disconnecting" ? t("home.summary.disconnecting") : state.summary;

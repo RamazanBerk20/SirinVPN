@@ -11,6 +11,8 @@
   "sidebar": {
     "servers": "My servers",
     "serverList": "Saved servers",
+    "manage": "Manage",
+    "manageLabel": "Manage servers",
     "privacy": "No account · No telemetry"
   },
   "addServer": {

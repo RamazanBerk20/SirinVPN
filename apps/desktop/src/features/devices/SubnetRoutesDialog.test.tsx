@@ -56,9 +56,10 @@ it("offers local networks only to the Owner, on the Owner's own devices", () => 
   open("Phone");
   expect(screen.queryByRole("menuitem", { name: t("devices.menu.localNetworks") })).toBeNull();
   cleanup();
-  // An Admin cannot manage the Owner's devices at all, so the row has no actions.
+  // An Admin cannot manage the Owner's devices at all, so the row's menu only shows its details.
   render(<DeviceList {...base} accessLevel="admin" />);
-  expect(screen.queryByRole("button", { name: t("devices.menu.deviceActions", { name: "Home server" }) })).toBeNull();
+  open("Home server");
+  expect(screen.getAllByRole("menuitem").map((item) => item.textContent)).toEqual([t("devices.menu.details")]);
 });
 
 it("shows the ranges the VPS cannot route right now", () => {
@@ -68,6 +69,8 @@ it("shows the ranges the VPS cannot route right now", () => {
   ] };
   render(<DeviceList snapshot={snapshot} query="" accessBusy={null} peerBusy={null} onInvite={vi.fn()} onAccess={vi.fn()}
     onTransfer={vi.fn()} onRename={vi.fn()} onRevoke={vi.fn()} onPeer={vi.fn()} onSubnetRoutes={vi.fn()} accessLevel="owner" />);
+  fireEvent.click(screen.getByRole("button", { name: t("devices.menu.deviceActions", { name: "Home server" }) }));
+  fireEvent.click(screen.getByRole("menuitem", { name: t("devices.menu.details") }));
   const label = screen.getByText(t("devices.row.facts.localNetworks"));
   expect(label.nextElementSibling?.querySelector("li")?.textContent).toBe(`192.168.1.0/24${t("devices.row.networkInactive")}`);
   expect(screen.getByText(t("devices.row.networkInactiveHint"))).toBeTruthy();

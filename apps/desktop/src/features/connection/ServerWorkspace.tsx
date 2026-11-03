@@ -15,7 +15,6 @@ const SystemHealth = lazy(() => import("./SystemHealth").then(m => ({ default: m
 const MaintenanceTools = lazy(() => import("./MaintenanceTools").then(m => ({ default: m.MaintenanceTools })));
 const WorkspaceDialogs = lazy(() => import("./WorkspaceDialogs").then(m => ({ default: m.WorkspaceDialogs })));
 const Troubleshooter = lazy(() => import("./Troubleshooter").then(m => ({ default: m.Troubleshooter })));
-import { CopyValue } from "../../components/CopyValue";
 import type { Page } from "../../components/Navigation";
 const AccessPanel = lazy(() => import("../devices/AccessPanel").then(m => ({ default: m.AccessPanel })));
 const VpsAlertSettings = lazy(() => import("../settings/VpsAlertSettings").then(m => ({ default: m.VpsAlertSettings })));
@@ -128,19 +127,12 @@ export function ServerWorkspace(
                 ? t("app.nav.devices")
                 : profile.name}
           </h1>
+          {/* Home names only the server: its address is in Device details, the sidebar already shows it is selected. */}
           {view === "settings" ? (
             !isAndroid && <p>{scope}</p>
           ) : view === "devices" ? (
             <p>{t("common.separator.pair", { first: profile.name, second: t(`common.role.${accessLevel}`) })}</p>
-          ) : (
-            <div className="endpoint">
-              <span>{t("home.details.serverAddress")}</span>
-              <CopyValue
-                value={`${profile.endpoint.host}:${profile.endpoint.wireguard_port}`}
-                label={t("home.details.serverAddress")}
-              />
-            </div>
-          )}
+          ) : null}
         </div>
       </header>}
       <Suspense fallback={<p role="status">{t("common.state.loading")}</p>}>
@@ -176,6 +168,7 @@ export function ServerWorkspace(
             local={model.localStatus}
             serverId={profile.id}
             address={profile.client_tunnel_address}
+            serverAddress={`${profile.endpoint.host}:${profile.endpoint.wireguard_port}`}
           /></>}
         </>
       )}

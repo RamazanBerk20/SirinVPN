@@ -9,6 +9,8 @@ import { WireGuardDeviceDialog } from "./WireGuardDeviceDialog";
 import { SubnetRoutesDialog } from "./SubnetRoutesDialog";
 import { DevicePairsDialog } from "./DevicePairsDialog";
 import { RenameDeviceDialog } from "./RenameDeviceDialog";
+import { addDeviceState } from "./memberLifecycleActions";
+import { ActionMenu, type MenuAction } from "../../components/ActionMenu";
 import { canManagePeerCommunication, memberAccessLevel } from "../../access";
 import { isAndroid } from "../../platform";
 import { useState } from "react";
@@ -42,6 +44,14 @@ export function AccessPanel(
   const wireguardAvailable = controller.wireguardDevicesAvailable && !isAndroid;
   const searching = query.trim() !== "";
   const lonely = snapshot && !searching && snapshot.members.length === 1 && deviceCount <= 1;
+  // The page's one add action: this member's next device, a new member, or (Advanced) a WireGuard configuration.
+  const own = self && addDeviceState(self, { accessLevel, memberBusy: controller.memberBusy });
+  const addActions: MenuAction[] = [
+    ...(self && own?.allowed ? [{ label: t("devices.panel.addMine"), disabled: own.disabled, reason: own.reason, run: () => controller.openInvitation(self) }] : []),
+    ...(canInvite ? [{ label: t("devices.panel.invite"), run: () => controller.openInvitation(null) }] : []),
+    ...(wireguardAvailable && canInvite ? [{ group: t("devices.menu.group.advanced"), label: t("devices.panel.addWireguard"), run: () => setWireguardTarget("new") }] : []),
+  ];
+  const addLabel = <><Plus size={16} weight="bold" /> {t("devices.panel.add")}</>;
   return (
     <section className="access-section devices-page">
       <div className="devices-heading">
@@ -51,16 +61,10 @@ export function AccessPanel(
             title={t(loading ? "devices.panel.refreshing" : "devices.panel.refresh")} onClick={() => void refresh()}>
             <ArrowClockwise size={17} className={loading && snapshot ? "spin" : undefined} />
           </button>
-          {wireguardAvailable && canInvite && (
-            <button className="secondary-button" disabled={!verified} onClick={() => setWireguardTarget("new")}>
-              <Plus size={16} weight="bold" /> {t("devices.panel.addWireguard")}
-            </button>
-          )}
-          {canInvite && (
-            <button className="primary-button" disabled={!verified} onClick={() => controller.openInvitation(null)}>
-              <Plus size={16} weight="bold" /> {t("devices.panel.invite")}
-            </button>
-          )}
+          {addActions.length === 1 && !addActions[0].disabled
+            ? <button className="primary-button" disabled={!verified} onClick={addActions[0].run}>{addLabel}</button>
+            : addActions.length > 0 && <ActionMenu label={t("devices.panel.add")} actions={addActions}
+              trigger={{ content: addLabel, className: "primary-button", disabled: !verified }} />}
         </div>
       </div>
       {!connected ? (
@@ -136,10 +140,6 @@ export function AccessPanel(
                   <div>
                     <strong>{t("devices.panel.aloneTitle")}</strong>
                     <p>{t(canInvite ? "devices.panel.aloneBody" : "devices.panel.aloneBodyOwn")}</p>
-                  </div>
-                  <div className="devices-next-step-actions">
-                    <button className="secondary-button" disabled={self.suspended} onClick={() => controller.openInvitation(self)}>{t("devices.panel.addOwnDevice")}</button>
-                    {canInvite && <button className="secondary-button" onClick={() => controller.openInvitation(null)}>{t("devices.panel.invite")}</button>}
                   </div>
                 </div>
               )}

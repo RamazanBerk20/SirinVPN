@@ -81,6 +81,19 @@
   width: 32px;
   height: 32px;
 }
+.sidebar-heading > span {
+  margin-right: auto;
+}
+.sidebar-heading .sidebar-manage {
+  min-height: 32px;
+  padding: 0 8px;
+  font-size: 0.8125rem;
+  letter-spacing: normal;
+  text-transform: none;
+}
+.sidebar-heading .sidebar-manage[aria-current="page"] {
+  color: var(--text);
+}
 .server-list {
   flex: 1;
   min-height: 0;

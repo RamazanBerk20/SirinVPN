@@ -62,14 +62,17 @@ it("offers pairs with the switch permission and lists them in the device facts",
   fireEvent.click(screen.getByRole("button", { name: t("devices.menu.deviceActions", { name: "Laptop" }) }));
   fireEvent.click(screen.getByRole("menuitem", { name: t("devices.menu.pairs") }));
   expect(onPairs).toHaveBeenCalledWith(laptop);
+  fireEvent.click(screen.getByRole("button", { name: t("devices.menu.deviceActions", { name: "Laptop" }) }));
+  fireEvent.click(screen.getByRole("menuitem", { name: t("devices.menu.details") }));
   const label = screen.getAllByText(t("devices.row.facts.pairs"))[0];
   expect(label.nextElementSibling?.textContent).toBe(
     `${t("devices.pairs.bothWays", { first: "Laptop", second: "Phone" })}; ${t("devices.pairs.oneWay", { from: t("devices.pairs.otherDevice"), to: "Laptop" })}`,
   );
-  expect(screen.getAllByText(t("devices.row.network.paired"))).toHaveLength(2);
+  expect(screen.getByText(t("devices.row.network.paired"))).toBeTruthy();
   cleanup();
-  // Without the permission a member has no device actions at all.
+  // Without the permission a member's device menu only shows its details.
   const restricted = { ...snapshot, members: [{ ...snapshot.members[0], policy: undefined }] };
   render(<DeviceList {...base} snapshot={restricted} accessLevel="member" />);
-  expect(screen.queryByRole("button", { name: t("devices.menu.deviceActions", { name: "Laptop" }) })).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: t("devices.menu.deviceActions", { name: "Laptop" }) }));
+  expect(screen.getAllByRole("menuitem").map((item) => item.textContent)).toEqual([t("devices.menu.details")]);
 });

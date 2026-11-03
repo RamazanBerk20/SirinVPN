@@ -84,7 +84,6 @@ export function ServerCollection({
             <article
               key={server.id}
               className="collection-row"
-              data-selected={selectedId === server.id}
             >
               {isAndroid ? <button className="mobile-server-open" onClick={() => onOpen(server.id)} aria-label={t("servers.open", { name: server.name })} aria-current={selectedId === server.id || undefined}>
                 <span className={`mobile-row-icon ${state.connected ? "online" : ""}`}><Database size={22} /></span>
@@ -112,13 +111,7 @@ export function ServerCollection({
                     label={t("servers.addressOf", { name: server.name })}
                   />
                 </div>
-              </div>
-              {selectedId === server.id ? <span className="status-chip">{t("servers.onHome")}</span> : <button
-                className="secondary-button"
-                onClick={() => onOpen(server.id)}
-              >
-                {t("servers.showOnHome")}
-              </button>}</>}
+              </div></>}
               <ActionMenu
                 label={t("servers.actions.label", { name: server.name })}
                 title={server.name}
