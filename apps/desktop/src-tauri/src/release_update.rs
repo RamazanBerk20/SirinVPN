@@ -139,6 +139,7 @@ pub(crate) struct ReleaseUpdateCandidate {
     artifact_target: String,
     artifact_size_bytes: u64,
     artifact_sha256: String,
+    release_notes: Option<String>,
     newer_than_running: bool,
     debian_install_available: bool,
     appimage_install_available: bool,
@@ -157,6 +158,7 @@ struct FetchOutput {
     trust_policy_sequence: u64,
     root_key_id_sha256: String,
     release_key_id_sha256: String,
+    release_notes: Option<String>,
     artifact: FetchArtifact,
     bundle_directory: PathBuf,
     artifact_directory: PathBuf,
@@ -581,6 +583,7 @@ fn candidate_summary(fetched: &FetchOutput) -> Result<ReleaseUpdateCandidate, St
         artifact_target: fetched.artifact.target.clone(),
         artifact_size_bytes: fetched.artifact.size_bytes,
         artifact_sha256: fetched.artifact.sha256.clone(),
+        release_notes: fetched.release_notes.clone(),
         newer_than_running: candidate > current,
         debian_install_available: installed_debian_release_coordinator().is_ok(),
         appimage_install_available: false,
@@ -747,6 +750,7 @@ mod tests {
             "trust_policy_sequence": 3,
             "root_key_id_sha256": "a".repeat(64),
             "release_key_id_sha256": "b".repeat(64),
+            "release_notes": "Reconnects faster after sleep.",
             "artifact": {
                 "kind": "linux_deb",
                 "target": "x86_64-unknown-linux-gnu",
@@ -774,6 +778,10 @@ mod tests {
         assert_eq!(summary.trust_policy_sequence, "3");
         assert_eq!(summary.artifact_target, "x86_64-unknown-linux-gnu");
         assert_eq!(summary.root_key_id_sha256, "a".repeat(64));
+        assert_eq!(
+            summary.release_notes.as_deref(),
+            Some("Reconnects faster after sleep.")
+        );
         assert!(summary.newer_than_running);
         assert!(!summary.debian_install_available);
     }

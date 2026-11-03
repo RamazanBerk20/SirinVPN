@@ -61,6 +61,7 @@ pub(crate) struct ReleaseUpdateCandidate {
     artifact_target: String,
     artifact_size_bytes: u64,
     artifact_sha256: String,
+    release_notes: Option<String>,
     newer_than_running: bool,
     debian_install_available: bool,
     windows_install_available: bool,
@@ -209,6 +210,7 @@ fn summary(fetched: &FetchedRelease) -> Result<ReleaseUpdateCandidate, String> {
         artifact_target: fetched.artifact.target.clone(),
         artifact_size_bytes: fetched.artifact.size_bytes,
         artifact_sha256: fetched.artifact.sha256.clone(),
+        release_notes: fetched.release_notes.clone(),
         newer_than_running: candidate > current,
         debian_install_available: false,
         windows_install_available: sirinvpn_windows_service::update::coordinator_available()

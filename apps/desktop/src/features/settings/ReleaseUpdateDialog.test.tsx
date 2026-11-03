@@ -41,6 +41,18 @@ describe("portable app updates", () => {
     await waitFor(() => expect(api.installReleaseUpdate).toHaveBeenCalledWith(true));
     expect(await screen.findByText(t("release.done.bodyAppImage"))).toBeTruthy();
   });
+  it("shows a release's signed summary as plain text and nothing when it has none", async () => {
+    const notes = "Reconnects faster after sleep. <b>not markup</b>";
+    vi.mocked(api.checkReleaseUpdate).mockResolvedValueOnce({ ...candidate, release_notes: notes });
+    const view = render(<ReleaseUpdateDialog open onOpenChange={vi.fn()} installationReady={false} />);
+    await check();
+    expect(screen.getByText(t("release.candidate.whatsNew")).parentElement?.textContent).toBe(`${t("release.candidate.whatsNew")} ${notes}`);
+    expect(view.container.querySelector("b")).toBeNull();
+    view.unmount();
+    render(<ReleaseUpdateDialog open onOpenChange={vi.fn()} installationReady={false} />);
+    await check();
+    expect(screen.queryByText(t("release.candidate.whatsNew"))).toBeNull();
+  });
   it("binds the same-version signed baseline only after its own confirmation", async () => {
     vi.mocked(api.checkReleaseUpdate).mockResolvedValue({ ...candidate, release_version: "0.1.0", newer_than_running: false, baseline_bind_available: true });
     vi.mocked(api.installReleaseUpdate).mockResolvedValue({ ...candidate, release_version: "0.1.0", baseline_bound: true });

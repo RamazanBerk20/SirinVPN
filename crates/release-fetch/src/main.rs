@@ -11,7 +11,7 @@ use std::path::PathBuf;
     about = "Fetch one root-authorized SirinVPN release artifact over bounded HTTPS"
 )]
 struct Cli {
-    /// HTTPS directory containing the four fixed metadata files and signed artifacts.
+    /// HTTPS directory containing the four fixed metadata files, optional signed notes and artifacts.
     #[arg(long)]
     source: String,
     #[arg(long, default_value = "stable")]

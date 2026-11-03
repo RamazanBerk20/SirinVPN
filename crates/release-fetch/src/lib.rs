@@ -9,9 +9,10 @@ use reqwest::{
 };
 use serde::Serialize;
 use sirinvpn_release::{
-    ArtifactKind, BUNDLED_RELEASE_TRUST_ROOT_PEM, MAX_MANIFEST_BYTES, MAX_SIGNATURE_BYTES,
-    MAX_TRUST_POLICY_BYTES, MAX_TRUST_SIGNATURE_BYTES, ReleaseArtifact, ReleaseChannel,
-    ReleaseError, verify_manifest_with_trust_policy, verify_release_artifact_with_trust_policy,
+    ArtifactKind, BUNDLED_RELEASE_TRUST_ROOT_PEM, MAX_MANIFEST_BYTES, MAX_RELEASE_NOTES_BYTES,
+    MAX_SIGNATURE_BYTES, MAX_TRUST_POLICY_BYTES, MAX_TRUST_SIGNATURE_BYTES, ReleaseArtifact,
+    ReleaseChannel, ReleaseError, verify_manifest_with_trust_policy,
+    verify_release_artifact_with_trust_policy, verify_release_notes_with_trust_policy,
     verify_trust_policy,
 };
 use std::{
@@ -27,6 +28,8 @@ pub const RELEASE_MANIFEST_FILE_NAME: &str = "sirinvpn-release.json";
 pub const RELEASE_SIGNATURE_FILE_NAME: &str = "sirinvpn-release.sig.json";
 pub const TRUST_POLICY_FILE_NAME: &str = "sirinvpn-release-trust.json";
 pub const TRUST_SIGNATURE_FILE_NAME: &str = "sirinvpn-release-trust.sig.json";
+/// Optional; older releases have none and older clients never request it.
+pub const RELEASE_NOTES_FILE_NAME: &str = "sirinvpn-release-notes.json";
 pub const ARTIFACT_DIRECTORY_NAME: &str = "artifact";
 
 const MAX_SOURCE_URL_BYTES: usize = 2 * 1024;
@@ -54,6 +57,8 @@ pub struct FetchedRelease {
     pub trust_policy_sequence: u64,
     pub root_key_id_sha256: String,
     pub release_key_id_sha256: String,
+    /// The verified one-line summary, when the source publishes valid notes.
+    pub release_notes: Option<String>,
     pub artifact: ReleaseArtifact,
     pub bundle_directory: PathBuf,
     pub artifact_directory: PathBuf,
@@ -219,6 +224,20 @@ async fn fetch_release_with_client_and_root(
             kind: request.artifact_kind,
             target: request.artifact_target.clone(),
         })?;
+    // Cosmetic: missing, unreachable, oversized or unverified notes are dropped, never shown.
+    let notes = fetch_bounded(
+        client,
+        source_file_url(&source, RELEASE_NOTES_FILE_NAME)?,
+        RELEASE_NOTES_FILE_NAME,
+        MAX_RELEASE_NOTES_BYTES,
+    )
+    .await
+    .ok()
+    .and_then(|bytes| {
+        verify_release_notes_with_trust_policy(&bytes, &manifest, &release_signature, &trust)
+            .ok()
+            .map(|summary| (bytes, summary))
+    });
 
     write_private_file(&staging.path().join(TRUST_POLICY_FILE_NAME), &policy)?;
     write_private_file(
@@ -230,6 +249,9 @@ async fn fetch_release_with_client_and_root(
         &staging.path().join(RELEASE_SIGNATURE_FILE_NAME),
         &release_signature,
     )?;
+    if let Some((bytes, _)) = &notes {
+        write_private_file(&staging.path().join(RELEASE_NOTES_FILE_NAME), bytes)?;
+    }
 
     let artifact_directory = staging.path().join(ARTIFACT_DIRECTORY_NAME);
     sirinvpn_platform::files::create_private_directory(&artifact_directory)?;
@@ -263,6 +285,7 @@ async fn fetch_release_with_client_and_root(
         trust_policy_sequence: trust.policy.sequence,
         root_key_id_sha256: trust.root_key_id_sha256,
         release_key_id_sha256: verified.key_id_sha256,
+        release_notes: notes.map(|(_, summary)| summary),
         artifact: verified.artifact,
         artifact_directory: destination.join(ARTIFACT_DIRECTORY_NAME),
         bundle_directory: destination,

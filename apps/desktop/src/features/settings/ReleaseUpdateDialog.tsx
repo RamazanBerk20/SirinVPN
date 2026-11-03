@@ -216,6 +216,8 @@ export function ReleaseUpdateDialog({
                 </p>
                 {candidate.channel === "preview" && <p className="release-preview-note">{t("release.form.previewHint")}</p>}
               </div>
+              {/* Signed notes are plain text; React renders them without markup. */}
+              {candidate.release_notes && <p><strong>{t("release.candidate.whatsNew")}</strong> {candidate.release_notes}</p>}
               <p>{t("release.candidate.package", { size: formatBytes(candidate.artifact_size_bytes) })}</p>
               <p className="settings-note">{t("release.candidate.source", { source })}</p>
 

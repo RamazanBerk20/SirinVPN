@@ -3,7 +3,8 @@ use rcgen::{CertifiedKey, generate_simple_self_signed};
 use rustls::{ServerConfig, ServerConnection, StreamOwned, pki_types::PrivatePkcs8KeyDer};
 use sirinvpn_release::{
     SchemaRange, StateCompatibility, build_manifest, build_trust_policy, encode_manifest,
-    encode_trust_policy, generate_signing_keypair, sign_manifest, sign_trust_policy,
+    encode_trust_policy, generate_signing_keypair, sign_manifest, sign_release_notes,
+    sign_trust_policy,
 };
 use std::{
     collections::HashMap,
@@ -17,6 +18,7 @@ use std::{
 
 const TEST_TARGET: &str = "x86_64-unknown-linux-gnu";
 const TEST_ARTIFACT_NAME: &str = "SirinVPN_test_amd64.deb";
+const TEST_SUMMARY: &str = "Reconnects faster after sleep.";
 
 struct SignedFixture {
     root_public_key: String,
@@ -24,6 +26,7 @@ struct SignedFixture {
     trust_signature: Vec<u8>,
     manifest: Vec<u8>,
     release_signature: Vec<u8>,
+    notes: Vec<u8>,
     artifact: Vec<u8>,
 }
 
@@ -58,6 +61,7 @@ impl SignedFixture {
         let manifest = encode_manifest(&manifest).unwrap();
         let (release_private_key, release_public_key) = generate_signing_keypair().unwrap();
         let release_signature = sign_manifest(&manifest, &release_private_key).unwrap();
+        let notes = sign_release_notes(&manifest, TEST_SUMMARY, &release_private_key).unwrap();
         let (root_private_key, root_public_key) = generate_signing_keypair().unwrap();
         let policy = build_trust_policy(3, vec![release_public_key], Vec::new()).unwrap();
         let policy = encode_trust_policy(&policy).unwrap();
@@ -68,6 +72,7 @@ impl SignedFixture {
             trust_signature,
             manifest,
             release_signature,
+            notes,
             artifact,
         }
     }
@@ -89,6 +94,10 @@ impl SignedFixture {
             (
                 stable_path(RELEASE_SIGNATURE_FILE_NAME),
                 TestResponse::ok(self.release_signature.clone()),
+            ),
+            (
+                stable_path(RELEASE_NOTES_FILE_NAME),
+                TestResponse::ok(self.notes.clone()),
             ),
             (
                 stable_path(TEST_ARTIFACT_NAME),
@@ -266,7 +275,7 @@ fn assert_no_staging_directory(parent: &Path) {
 #[tokio::test]
 async fn verified_https_bundle_is_published_atomically_and_privately() {
     let fixture = SignedFixture::new(ReleaseChannel::Stable);
-    let server = TestHttpsServer::start(fixture.routes(), 5);
+    let server = TestHttpsServer::start(fixture.routes(), 6);
     let parent = tempfile::tempdir().unwrap();
     let destination = parent.path().join("candidate");
     let fetched = fetch_release_with_client_and_root(
@@ -281,6 +290,11 @@ async fn verified_https_bundle_is_published_atomically_and_privately() {
     assert_eq!(fetched.release_sequence, 2);
     assert_eq!(fetched.trust_policy_sequence, 3);
     assert!(fetched.security_update);
+    assert_eq!(fetched.release_notes.as_deref(), Some(TEST_SUMMARY));
+    assert_eq!(
+        fs::read(destination.join(RELEASE_NOTES_FILE_NAME)).unwrap(),
+        fixture.notes
+    );
     assert_eq!(fetched.bundle_directory, destination);
     assert_eq!(
         fs::read(
@@ -331,6 +345,7 @@ async fn verified_https_bundle_is_published_atomically_and_privately() {
             format!("GET {} HTTP/1.1", stable_path(TRUST_SIGNATURE_FILE_NAME)),
             format!("GET {} HTTP/1.1", stable_path(RELEASE_MANIFEST_FILE_NAME)),
             format!("GET {} HTTP/1.1", stable_path(RELEASE_SIGNATURE_FILE_NAME)),
+            format!("GET {} HTTP/1.1", stable_path(RELEASE_NOTES_FILE_NAME)),
             format!("GET {} HTTP/1.1", stable_path(TEST_ARTIFACT_NAME)),
         ]
     );
@@ -349,7 +364,7 @@ async fn artifact_tampering_fails_and_leaves_no_destination() {
     let mut tampered = fixture.artifact.clone();
     tampered[0] ^= 1;
     routes.insert(stable_path(TEST_ARTIFACT_NAME), TestResponse::ok(tampered));
-    let server = TestHttpsServer::start(routes, 5);
+    let server = TestHttpsServer::start(routes, 6);
     let parent = tempfile::tempdir().unwrap();
     let destination = parent.path().join("candidate");
     let result = fetch_release_with_client_and_root(
@@ -364,7 +379,42 @@ async fn artifact_tampering_fails_and_leaves_no_destination() {
     ));
     assert!(!destination.exists());
     assert_no_staging_directory(parent.path());
-    assert_eq!(server.finish().len(), 5);
+    assert_eq!(server.finish().len(), 6);
+}
+
+#[tokio::test]
+async fn missing_or_unverified_notes_are_dropped_without_failing_the_fetch() {
+    let fixture = SignedFixture::new(ReleaseChannel::Stable);
+    let replayed = SignedFixture::new(ReleaseChannel::Stable).notes;
+    let mut tampered = fixture.notes.clone();
+    let position = tampered
+        .windows(b"faster".len())
+        .position(|window| window == b"faster")
+        .unwrap();
+    tampered[position] = b'F';
+    for notes in [None, Some(tampered), Some(replayed)] {
+        let mut routes = fixture.routes();
+        match notes {
+            Some(notes) => routes.insert(
+                stable_path(RELEASE_NOTES_FILE_NAME),
+                TestResponse::ok(notes),
+            ),
+            None => routes.remove(&stable_path(RELEASE_NOTES_FILE_NAME)),
+        };
+        let server = TestHttpsServer::start(routes, 6);
+        let parent = tempfile::tempdir().unwrap();
+        let destination = parent.path().join("candidate");
+        let fetched = fetch_release_with_client_and_root(
+            request(server.source(), destination.clone()),
+            &server.client(),
+            &fixture.root_public_key,
+        )
+        .await
+        .unwrap();
+        assert_eq!(fetched.release_notes, None);
+        assert!(!destination.join(RELEASE_NOTES_FILE_NAME).exists());
+        assert_eq!(server.finish().len(), 6);
+    }
 }
 
 #[tokio::test]

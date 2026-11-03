@@ -11,6 +11,7 @@ export interface VpsReleaseInput { server_id: string; ssh: SshLoginInput; operat
 export interface VpsBaselineAccess { server_id: string; ssh: SshLoginInput }
 export interface VpsBaselineCandidate {
   release_version: string; release_sequence: string; channel: string; security_update: boolean; manifest_sha256: string;
+  release_notes?: string | null;
   artifact: { sha256: string; target: string; size_bytes: number };
 }
 export interface VpsSecurityPolicy { schema_version: number; enabled: boolean; source: string | null; channel: "stable" }
@@ -36,6 +37,8 @@ export interface VpsReleaseCandidate {
   artifact_sha256: string;
   artifact_target: string;
   artifact_size_bytes: number;
+  /** Signed one-line summary; older servers and releases without verified notes omit it. */
+  release_notes?: string | null;
   action: "initialize" | "upgrade" | "rollback" | "rebind" | "already_bound";
   can_install: boolean;
   baseline_required: boolean;

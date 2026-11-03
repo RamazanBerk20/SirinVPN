@@ -277,6 +277,16 @@ pub fn verify_release_artifact_with_trust_policy(
     )
 }
 
+pub fn verify_release_notes_with_trust_policy(
+    notes_bytes: &[u8],
+    manifest_bytes: &[u8],
+    signature_bytes: &[u8],
+    trust: &VerifiedReleaseTrustPolicy,
+) -> Result<String, ReleaseError> {
+    let public_key = trusted_release_public_key(signature_bytes, trust)?;
+    crate::verify_release_notes(notes_bytes, manifest_bytes, signature_bytes, public_key)
+}
+
 fn trusted_release_public_key<'a>(
     signature_bytes: &[u8],
     trust: &'a VerifiedReleaseTrustPolicy,

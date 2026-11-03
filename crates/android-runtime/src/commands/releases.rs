@@ -75,7 +75,7 @@ pub async fn dispatch(runtime: &Runtime, command: &str, input: &Value) -> Result
                 "channel":fetched.channel,"security_update":fetched.security_update,"trust_policy_sequence":fetched.trust_policy_sequence.to_string(),
                 "root_key_id_sha256":fetched.root_key_id_sha256,"release_key_id_sha256":fetched.release_key_id_sha256,
                 "artifact_file_name":fetched.artifact.file_name,"artifact_target":fetched.artifact.target,"artifact_size_bytes":fetched.artifact.size_bytes,
-                "artifact_sha256":fetched.artifact.sha256,"newer_than_running":semver::Version::parse(&fetched.release_version)? > semver::Version::parse(current)?,
+                "artifact_sha256":fetched.artifact.sha256,"release_notes":fetched.release_notes,"newer_than_running":semver::Version::parse(&fetched.release_version)? > semver::Version::parse(current)?,
                 "debian_install_available":false,"appimage_install_available":false,"android_install_available":true,
                 "baseline_bind_available":baseline && current==fetched.release_version,"baseline_bound":false,"installer_kind":"android"});
             *CANDIDATE

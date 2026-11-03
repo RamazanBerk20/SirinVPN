@@ -73,6 +73,24 @@ it("checks without installing or enabling a schedule and binds installation to t
   await waitFor(() => expect(completed).toHaveBeenCalledOnce());
 });
 
+it("shows a signed summary under the release heading and nothing for a release without one", async () => {
+  const notes = "Restarts services faster after an update.";
+  const original = vi.mocked(api.manageVpsRelease).getMockImplementation()!;
+  const review = async () => {
+    fireEvent.click(screen.getByRole("button", { name: t("vps.update.action.check") }));
+    return screen.findByRole("heading", { name: t("vps.update.review.title", { version: "1.0.2" }) });
+  };
+  vi.mocked(api.manageVpsRelease).mockImplementation(async (input) =>
+    input.operation.action === "check" ? { ...candidate, release_notes: notes } : original(input));
+  await setup();
+  expect((await review()).nextElementSibling?.textContent).toBe(`${t("release.candidate.whatsNew")} ${notes}`);
+  cleanup();
+  vi.mocked(api.manageVpsRelease).mockImplementation(original);
+  await setup();
+  await review();
+  expect(screen.queryByText(t("release.candidate.whatsNew"))).toBeNull();
+});
+
 it("clears a reviewed candidate when the release source changes and rejects private URL parameters", async () => {
   await setup(); fireEvent.click(screen.getByRole("button", { name: t("vps.update.action.check") }));
   await screen.findByRole("button", { name: t("vps.update.action.install", { version: "1.0.2" }) });
