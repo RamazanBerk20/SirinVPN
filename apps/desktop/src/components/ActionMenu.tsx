@@ -105,8 +105,10 @@ export function ActionMenu({
       : <button className="icon-button overflow-button" aria-label={label}><DotsThreeVertical size={24} weight="bold" /></button>}</Dialog.Trigger>
     <Dialog.Portal><Dialog.Overlay className="dialog-overlay" />
       <DialogContent className="dialog-content mobile-action-sheet" heading={title ?? label} aria-describedby={undefined}>
-        {sheetGroups(actions).map(({ key, label: group, items }) => <Fragment key={key}>
+        {sheetGroups(actions).map(({ key, label: group, items }, index) => <Fragment key={key}>
           {group && <h3 className="sheet-group-label">{group}</h3>}
+          {/* An untitled group after a titled one (a trailing Revoke) still needs a visible break from it. */}
+          {!group && index > 0 && <hr className="sheet-group-separator" />}
           {items.map(action => <button key={action.label} className={`mobile-sheet-action ${action.danger ? "danger-text" : ""}`} disabled={action.disabled} onClick={() => { setOpen(false); action.run(); }}>
             <span>{action.label}</span>{action.reason && <small>{action.reason}</small>}
           </button>)}

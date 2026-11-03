@@ -9,7 +9,7 @@
     "settings": "Settings"
   },
   "sidebar": {
-    "servers": "My servers",
+    "servers": "Servers",
     "serverList": "Saved servers",
     "manage": "Manage",
     "manageLabel": "Manage servers",

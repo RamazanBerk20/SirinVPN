@@ -11,7 +11,7 @@ use. This replaced a layout that showed every feature at the same level (2026-11
 | Job | Desktop | Android |
 | --- | --- | --- |
 | Connect and see the state | Home: the status card is the focus | Home |
-| Switch servers | the sidebar's **My servers** list, with a search field from six servers | Home: the **Server** row opens a sheet |
+| Switch servers | the sidebar's **Servers** list, with a search field from six servers | Home: the **Server** row opens a sheet |
 | Manage servers (rename, favorites, maintenance, add) | sidebar → **Manage** (the Servers page) | the **Servers** tab, or the sheet's **Manage servers** |
 | Add a device or invite someone | Devices → **Add device** | Devices → **Add device** |
 | A device's details and actions | the device's ⋯ menu → **Details** | the device's ⋮ sheet |

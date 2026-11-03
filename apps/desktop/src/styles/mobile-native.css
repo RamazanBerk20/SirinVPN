@@ -290,7 +290,8 @@ html.android[data-theme="light"] {
 .android .sheet-group-label { margin: 16px 4px 4px; font-size: var(--fs-caption); font-weight: 500; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
 .android .sheet-group-label:first-child { margin-top: 0; }
 .android .mobile-sheet-action { display: flex; flex-direction: column; justify-content: center; gap: 4px; width: 100%; padding: 14px 4px; min-height: 52px; text-align: left; background: transparent; border: 0; border-bottom: 1px solid var(--line); font-size: var(--fs-row); color: var(--text); }
-.android .mobile-sheet-action:last-child, .android .mobile-sheet-action:has(+ .sheet-group-label) { border-bottom: 0; }
+.android .mobile-sheet-action:last-child, .android .mobile-sheet-action:has(+ .sheet-group-label), .android .mobile-sheet-action:has(+ .sheet-group-separator) { border-bottom: 0; }
+.android .sheet-group-separator { margin: 8px 0; border: 0; border-top: 1px solid var(--line-strong); }
 .android .mobile-sheet-action small { display: block; font-size: var(--fs-small); color: var(--muted); }
 .android .mobile-sheet-action:disabled { opacity: .5; }
 .android .sheet-list { border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--surface); overflow: hidden; }
