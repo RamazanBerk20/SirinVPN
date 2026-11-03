@@ -19,7 +19,6 @@ pub(super) fn add_owner_device(state: &mut AuthorizationDocument) -> DeviceId {
         peer_communication_enabled: true,
         preshared_key: None,
         subnet_routes: Vec::new(),
-        platform: None,
     });
     id
 }

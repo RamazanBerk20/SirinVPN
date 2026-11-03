@@ -297,11 +297,6 @@ pub(super) async fn enrollment_handler(
         peer_communication_enabled: false,
         preshared_key: request.device_preshared_key.clone(),
         subnet_routes: Vec::new(),
-        // A platform from a newer app is left unknown rather than failing the enrollment.
-        platform: request
-            .platform
-            .clone()
-            .filter(|platform| DEVICE_PLATFORMS.contains(&platform.as_str())),
     });
     next.enrollment_receipts.push(EnrollmentReceipt {
         invitation_id: invitation.claims.invitation_id,
@@ -321,6 +316,10 @@ pub(super) async fn enrollment_handler(
         expires_at_unix: now + ENROLLMENT_HANDOFF_SECONDS,
     });
     commit_authorization(&state, &mut current, next).await?;
+    // Display only and outside the commit; unknown values and failures are ignored.
+    if let Some(platform) = &request.platform {
+        let _ = current.record_device_platform(&state.paths.authorization, device_id, platform);
+    }
     clear_redemption_failures(&state, rate_key);
     Ok(Json(ApiEnvelope::new(result)))
 }

@@ -220,12 +220,15 @@ async fn kernel_reusable_enrollment_quarantines_bootstrap_and_enforces_limits_at
             .name,
         "My phone"
     );
-    let platform = |id| {
-        let device = stored_names.devices.iter().find(|d| d.id == id).unwrap();
-        device.platform.clone()
-    };
-    assert_eq!(platform(first_result.device_id).as_deref(), Some("android"));
-    assert_eq!(platform(second_result.device_id), None);
+    // Recorded beside the document after the commit, and loaded back with it.
+    let reloaded = load_authorization(&state.paths.authorization).unwrap();
+    for platforms in [&stored_names.device_platforms, &reloaded.device_platforms] {
+        assert_eq!(
+            platforms.get(&first_result.device_id).map(String::as_str),
+            Some("android")
+        );
+        assert_eq!(platforms.get(&second_result.device_id), None);
+    }
     // Display names do not merge members or authorize additional access.
     assert_ne!(first_result.member_id, second_result.member_id);
     assert_ne!(first_result.device_id, second_result.device_id);

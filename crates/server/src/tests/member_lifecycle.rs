@@ -58,7 +58,6 @@ fn fixture() -> (tempfile::TempDir, AppState) {
                 peer_communication_enabled: true,
                 preshared_key: None,
                 subnet_routes: Vec::new(),
-                platform: None,
             });
         }
     }

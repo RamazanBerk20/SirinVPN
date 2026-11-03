@@ -68,15 +68,20 @@ that ignores its marker is an unsupported rollback target on every platform.
 
 ## Device platform migration
 
-A device record can carry the platform its app reported (`linux`, `windows`
-or `android`), used only for its icon. The field is optional and older
-readers drop it, so `server_authorization` keeps its schema and ranges. A
-rollback loses the platforms; after the next upgrade each app reports its own
-again the first time it reads the device list. The endpoint authorization
-fingerprint leaves the platform out, so reporting one never makes a restored
-VPS look different from its source. Older apps ignore the snapshot field and
-the status's `dns_blocklist_enabled`, and newer apps send the report only
-when `/v1/configuration` advertises `device_platforms_enabled`.
+Device platforms (`linux`, `windows` or `android`, used only for icons) are
+kept in `/etc/sirinvpn/authorization/device-platforms.json`, outside the
+authorization document, so `server_authorization` and its endpoint
+fingerprint are unchanged. The file is display-only cache and is not a
+declared state family: older servers never read it, and every reader treats
+a missing, unreadable or newer file as no platforms. Repair keeps it with the
+rest of the authorization directory. A rollback leaves it in place, unread;
+after a later upgrade it is read again and entries for devices removed in
+between are ignored. VPS backups carry only the authorization document, so a
+restored VPS, including the destination of an endpoint handoff, starts with
+no platforms: icons fall back to the name until each app reports again on its
+next run. Older apps ignore the snapshot field and the status's
+`dns_blocklist_enabled`, and newer apps send the report only when
+`/v1/configuration` advertises `device_platforms_enabled`.
 
 ## Device pair migration
 

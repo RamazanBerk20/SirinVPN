@@ -1,4 +1,5 @@
 mod device_pairs;
+mod device_platforms;
 mod enrollment_receipts;
 mod enrollment_state;
 mod member_lifecycle;
@@ -26,7 +27,7 @@ use sirinvpn_protocol::{
 #[cfg(test)]
 use std::os::unix::fs::PermissionsExt;
 use std::{
-    collections::{BTreeMap, HashSet},
+    collections::{BTreeMap, HashMap, HashSet},
     fs,
     net::{IpAddr, Ipv4Addr},
     path::Path,
@@ -73,6 +74,9 @@ pub(crate) struct AuthorizationDocument {
     // Leases disappear on restart; sync removes their kernel peers before serving.
     #[serde(skip)]
     pub measurement_leases: Vec<crate::measurement::Lease>,
+    // Display only, kept in its own file beside this one; see device_platforms.rs.
+    #[serde(skip)]
+    pub device_platforms: HashMap<DeviceId, String>,
     pub schema_version: u16,
     pub server_id: ServerId,
     pub members: Vec<MemberRecord>,
@@ -153,9 +157,6 @@ pub(crate) struct DeviceRecord {
     /// Owner-assigned LAN ranges this Owner device forwards for peers that may reach it.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub subnet_routes: Vec<String>,
-    /// Display only. Older readers drop it and the device's app reports it again.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub platform: Option<String>,
 }
 
 impl DeviceRecord {
@@ -239,6 +240,7 @@ impl AuthorizationDocument {
         let member_id = MemberId::new();
         Ok(Self {
             measurement_leases: Vec::new(),
+            device_platforms: HashMap::new(),
             schema_version: AUTHORIZATION_SCHEMA_VERSION,
             server_id,
             members: vec![MemberRecord {
@@ -260,7 +262,6 @@ impl AuthorizationDocument {
                 peer_communication_enabled: false,
                 preshared_key: None,
                 subnet_routes: Vec::new(),
-                platform: None,
             }],
             invitations: Vec::new(),
             enrollment_receipts: Vec::new(),
@@ -503,14 +504,12 @@ impl AuthorizationDocument {
 
     pub(crate) fn endpoint_authorization_fingerprint(&self) -> Result<String> {
         // Signed endpoint transitions reach every device; they bind identities, not secrets.
-        // The platform is display only and may be reported after a backup, so it is not bound.
         let devices: Vec<_> = self
             .devices
             .iter()
             .cloned()
             .map(|device| DeviceRecord {
                 preshared_key: None,
-                platform: None,
                 ..device
             })
             .collect();

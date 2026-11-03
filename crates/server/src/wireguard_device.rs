@@ -120,7 +120,6 @@ pub(super) async fn create_wireguard_device_handler(
         peer_communication_enabled: false,
         preshared_key: Some(request.preshared_key),
         subnet_routes: Vec::new(),
-        platform: None,
     });
     next.schema_version = next.required_schema_version();
     next.validate()

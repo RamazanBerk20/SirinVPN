@@ -46,7 +46,6 @@ fn add_member(
         peer_communication_enabled: false,
         preshared_key: None,
         subnet_routes: Vec::new(),
-        platform: None,
     });
     (member_id, identity)
 }

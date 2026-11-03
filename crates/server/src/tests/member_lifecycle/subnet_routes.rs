@@ -170,7 +170,6 @@ async fn kernel_subnet_routes_reach_a_router_lan_only_from_peer_enabled_devices(
             peer_communication_enabled: true,
             preshared_key: None,
             subnet_routes: Vec::new(),
-            platform: None,
         });
         document.devices[4].peer_communication_enabled = false;
         write_authorization(&state.paths.authorization, &document).unwrap();

@@ -313,30 +313,27 @@ async fn scripted_vps(
 }
 
 #[tokio::test]
-async fn a_missing_own_platform_is_reported_only_to_a_vps_that_stores_platforms() {
-    let (own, other, member) = (DeviceId::new(), DeviceId::new(), MemberId::new());
+async fn a_missing_own_platform_is_reported_once_and_only_to_a_vps_that_stores_platforms() {
+    let member = MemberId::new();
     let envelope = |payload| serde_json::to_string(&ApiEnvelope::new(payload)).unwrap();
     let device = |id, platform: Option<&str>| {
         serde_json::json!({"id": id, "member_id": member, "name": "Renamed device",
             "client_tunnel_address": "10.77.0.2", "platform": platform})
     };
+    const MEMBERSHIP: &str = "GET /v1/membership";
+    const CONFIGURATION: &str = "GET /v1/configuration";
+    const REPORT: &str = "PUT /v1/device-platform";
+    // Each case polls twice; the second poll in the same app run never asks again.
     for (stored, supported, requests) in [
-        (
-            None,
-            false,
-            &["GET /v1/membership", "GET /v1/configuration"][..],
-        ),
+        (None, false, &[MEMBERSHIP, CONFIGURATION, MEMBERSHIP][..]),
         (
             None,
             true,
-            &[
-                "GET /v1/membership",
-                "GET /v1/configuration",
-                "PUT /v1/device-platform",
-            ][..],
+            &[MEMBERSHIP, CONFIGURATION, REPORT, MEMBERSHIP][..],
         ),
-        (Some("windows"), true, &["GET /v1/membership"][..]),
+        (Some("windows"), true, &[MEMBERSHIP, MEMBERSHIP][..]),
     ] {
+        let (own, other) = (DeviceId::new(), DeviceId::new());
         let membership = serde_json::json!({"active_invitations": [], "members": [{
             "id": member, "name": "Owner", "role": "owner",
             "devices": [device(own, stored), device(other, None)]}]});
@@ -347,13 +344,17 @@ async fn a_missing_own_platform_is_reported_only_to_a_vps_that_stores_platforms(
         let (cert, key) = certificate();
         let mut client = client(&cert.pem());
         let routes = vec![
-            ("GET /v1/membership", envelope(membership)),
-            ("GET /v1/configuration", envelope(configuration)),
-            ("PUT /v1/device-platform", envelope(serde_json::Value::Null)),
+            (MEMBERSHIP, envelope(membership)),
+            (CONFIGURATION, envelope(configuration)),
+            (REPORT, envelope(serde_json::Value::Null)),
         ];
         let (url, seen) = scripted_vps(cert, key, routes).await;
         client.base_url = url;
         let snapshot = client
+            .membership_with_own_platform(Some(own))
+            .await
+            .unwrap();
+        client
             .membership_with_own_platform(Some(own))
             .await
             .unwrap();

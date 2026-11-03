@@ -99,7 +99,6 @@ async fn kernel_offline_recovery_consumes_authority_and_revokes_all_previous_own
         peer_communication_enabled: true,
         preshared_key: None,
         subnet_routes: Vec::new(),
-        platform: None,
     });
     write_authorization(&state.paths.authorization, &document).unwrap();
     *state.authorization.as_ref().unwrap().write().await = document.clone();

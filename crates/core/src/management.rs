@@ -32,6 +32,8 @@ pub const DEVICE_PLATFORM: Option<&str> = if cfg!(target_os = "android") {
 } else {
     None
 };
+/// Own devices whose platform report this process already tried, whatever the outcome.
+static PLATFORM_REPORTS_TRIED: std::sync::Mutex<Vec<DeviceId>> = std::sync::Mutex::new(Vec::new());
 
 #[derive(Debug, Error)]
 pub enum ManagementError {
@@ -468,6 +470,7 @@ impl ManagementClient {
 
     /// The directory, after reporting this device's platform when the VPS stores platforms
     /// but has none for it yet. A VPS without the capability never receives the report.
+    /// Each own device is tried once per app run, so an older VPS costs one configuration read.
     pub async fn membership_with_own_platform(
         &self,
         own_device: Option<DeviceId>,
@@ -483,6 +486,15 @@ impl ManagementClient {
         ) else {
             return Ok(snapshot);
         };
+        {
+            let mut tried = PLATFORM_REPORTS_TRIED
+                .lock()
+                .unwrap_or_else(|error| error.into_inner());
+            if tried.contains(&device.id) {
+                return Ok(snapshot);
+            }
+            tried.push(device.id);
+        }
         let report = async {
             let response = self
                 .client

@@ -332,6 +332,7 @@ pub(super) async fn rename_device_handler(
 }
 
 /// Each device reports its own platform for its icon; the request cannot name another device.
+/// It is stored beside the authorization document, never through an authorization commit.
 pub(super) async fn update_device_platform_handler(
     State(state): State<AppState>,
     Extension(caller): Extension<CallerIdentity>,
@@ -342,18 +343,18 @@ pub(super) async fn update_device_platform_handler(
     }
     let authorization = require_authorization(&state)?;
     let mut current = authorization.write().await;
-    let caller = authorize_current(&current, &caller, false)?;
-    let mut next = current.clone();
-    let device = next
-        .devices
-        .iter_mut()
-        .find(|device| Some(device.id) == caller.device_id)
+    let device = authorize_current(&current, &caller, false)?
+        .device_id
         .ok_or_else(ApiError::forbidden)?;
-    if device.platform.as_ref() != Some(&request.platform) {
-        ensure_active_endpoint_authority(&current)?;
-        device.platform = Some(request.platform);
-        commit_authorization(&state, &mut current, next).await?;
-    }
+    current
+        .record_device_platform(&state.paths.authorization, device, &request.platform)
+        .map_err(|_| {
+            ApiError::new(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                ErrorCode::InstallationFailed,
+                "the device platform could not be saved",
+            )
+        })?;
     Ok(Json(ApiEnvelope::new(())))
 }
 
