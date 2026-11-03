@@ -6,6 +6,7 @@ import {
   WifiHigh,
   ArrowLeft,
   CaretRight,
+  Toolbox,
 } from "@phosphor-icons/react";
 import { useId, useRef, type ReactNode } from "react";
 import { usePageTransition } from "../../hooks/usePageTransition";
@@ -15,13 +16,15 @@ import { t } from "../../i18n";
 import { dpadOnly } from "../../platform";
 
 export type SettingsCategory =
-  "general" | "connection" | "network" | "recovery" | "maintenance";
+  "general" | "connection" | "network" | "recovery" | "maintenance" | "advanced";
 const categories = [
   { id: "general", label: "settings.category.general.label", hint: "settings.category.general.hint", icon: GearSix },
   { id: "connection", label: "settings.category.connection.label", hint: "settings.category.connection.hint", icon: WifiHigh },
   { id: "network", label: "settings.category.network.label", hint: "settings.category.network.hint", icon: GlobeHemisphereWest },
   { id: "recovery", label: "settings.category.recovery.label", hint: "settings.category.recovery.hint", icon: Key },
   { id: "maintenance", label: "settings.category.maintenance.label", hint: "settings.category.maintenance.hint", icon: SlidersHorizontal },
+  // Owner power features and rarely needed device tools, out of the way of the everyday pages.
+  { id: "advanced", label: "settings.category.advanced.label", hint: "settings.category.advanced.hint", icon: Toolbox },
 ] as const;
 
 export function SettingsLayout({

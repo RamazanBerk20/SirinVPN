@@ -9,8 +9,13 @@ afterEach(cleanup);
 it("starts on the described options and returns to them from a flow", () => {
   render(<AddServerFlow onAdded={vi.fn()} />);
   const options = screen.getByRole("group", { name: t("onboarding.choice.listLabel") });
-  for (const choice of ["join", "provision", "hetzner", "backup", "recovery"] as const)
+  for (const choice of ["join", "provision", "backup", "recovery"] as const)
     expect(options.textContent).toContain(t(`onboarding.choice.${choice}.title`));
+  // Creating a Hetzner server needs a paid account, so it waits under Advanced.
+  expect(options.textContent).not.toContain(t("onboarding.choice.hetzner.title"));
+  const advanced = screen.getByText(t("onboarding.choice.advanced")).closest("details")!;
+  expect(advanced.open).toBe(false);
+  expect(advanced.textContent).toContain(t("onboarding.choice.hetzner.title"));
 
   fireEvent.click(screen.getByRole("button", { name: new RegExp(t("onboarding.choice.provision.title")) }));
   expect(screen.queryByRole("group", { name: t("onboarding.choice.listLabel") })).toBeNull();

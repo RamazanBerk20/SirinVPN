@@ -22,7 +22,7 @@ export function MaintenanceTools({
   onRestoreDevice,
 }: {
   model: ServerWorkspaceModel;
-  category: "recovery" | "maintenance";
+  category: "recovery" | "maintenance" | "advanced";
   onRestoreDevice: () => void;
 }) {
   const { rotationPending, connected, anotherConnected, profile, localKnown } =
@@ -31,6 +31,30 @@ export function MaintenanceTools({
   const blockedRotation = rotationPending
     ? t("maintenance.tools.finishRotationFirst")
     : undefined;
+  const rotateKeys = {
+    id: "rotate-keys",
+    label: rotationPending
+      ? t("maintenance.tools.rotateKeys.resumeLabel")
+      : t("maintenance.tools.rotateKeys.label"),
+    description: rotationPending
+      ? t("maintenance.tools.rotateKeys.resumeSummary")
+      : connected
+        ? t("maintenance.tools.rotateKeys.summary")
+        : t("maintenance.tools.rotateKeys.needsConnection"),
+    icon: Key,
+    disabled:
+      !localKnown ||
+      !canRotateDeviceKeys(connected, rotationPending, anotherConnected),
+    run: () => model.setRotationOpen(true),
+  };
+  const backupSchedules = {
+    id: "schedule-vps-backups",
+    label: t("vps.schedule.action"),
+    description: blockedRotation ?? scheduleSummary(backupSchedule),
+    icon: ClockCounterClockwise,
+    disabled: false,
+    run: () => model.setVpsBackupScheduleOpen(true),
+  };
   const deviceActions = [
     {
       id: "export-backup",
@@ -50,22 +74,8 @@ export function MaintenanceTools({
       disabled: false,
       run: onRestoreDevice,
     },
-    {
-      id: "rotate-keys",
-      label: rotationPending
-        ? t("maintenance.tools.rotateKeys.resumeLabel")
-        : t("maintenance.tools.rotateKeys.label"),
-      description: rotationPending
-        ? t("maintenance.tools.rotateKeys.resumeSummary")
-        : connected
-          ? t("maintenance.tools.rotateKeys.summary")
-          : t("maintenance.tools.rotateKeys.needsConnection"),
-      icon: Key,
-      disabled:
-        !localKnown ||
-        !canRotateDeviceKeys(connected, rotationPending, anotherConnected),
-      run: () => model.setRotationOpen(true),
-    },
+    // Rotation lives under Advanced; an unfinished one stays here, where recovery is.
+    ...(rotationPending ? [rotateKeys] : []),
   ];
   const serverRecovery =
     profile.role === "owner"
@@ -79,14 +89,6 @@ export function MaintenanceTools({
             icon: HardDrives,
             disabled: false,
             run: () => model.setMaintenanceReview("backup"),
-          },
-          {
-            id: "schedule-vps-backups",
-            label: t("vps.schedule.action"),
-            description: blockedRotation ?? scheduleSummary(backupSchedule),
-            icon: ClockCounterClockwise,
-            disabled: false,
-            run: () => model.setVpsBackupScheduleOpen(true),
           },
           {
             id: "restore-vps",
@@ -161,7 +163,14 @@ export function MaintenanceTools({
             ? [{ id: "vps", title: t("maintenance.tools.vpsTitle"), actions: serverRecovery }]
             : []),
         ]
-      : [{ id: "maintenance", title: t("maintenance.tools.serverTitle", { name: profile.name }), actions: maintenance }];
+      : category === "advanced"
+        ? [
+            { id: "device", title: t("maintenance.tools.deviceKeysTitle"), actions: [rotateKeys] },
+            ...(profile.role === "owner"
+              ? [{ id: "vps", title: t("maintenance.tools.vpsScheduleTitle"), actions: [backupSchedules] }]
+              : []),
+          ]
+        : [{ id: "maintenance", title: t("maintenance.tools.serverTitle", { name: profile.name }), actions: maintenance }];
   return (
     <div className="settings-sections">
       {category === "recovery" && model.accessLevel !== "member" && <RecoveryKeys key={profile.id} profile={profile} connected={connected} owner={model.accessLevel === "owner"}

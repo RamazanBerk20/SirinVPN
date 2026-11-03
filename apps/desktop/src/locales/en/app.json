@@ -29,9 +29,10 @@
   "settingsScope": {
     "general": "Preferences for this device",
     "connection": "{{name}} · on this device",
-    "network": "{{name}} · routing, DNS and ports",
+    "network": "{{name}} · routing and DNS",
     "recovery": "{{name}} · keys and backups",
-    "maintenance": "{{name}} · server maintenance"
+    "maintenance": "{{name}} · server maintenance",
+    "advanced": "{{name}} · advanced features"
   },
   "network": {
     "dnsTitle": "DNS",
@@ -134,5 +135,10 @@
     "recoveryKeySaved": "Offline recovery key saved",
     "recoveryKeyMissing": "No offline recovery key yet",
     "serverFault": "Needs attention: the server reports a fault"
+  },
+  "advanced": {
+    "devicesTitle": "Device network features",
+    "devicesSummary": "WireGuard configurations, device pairs, local networks and mutual access are in each device’s menu on Devices, under Advanced.",
+    "openDevices": "Open Devices"
   }
 }

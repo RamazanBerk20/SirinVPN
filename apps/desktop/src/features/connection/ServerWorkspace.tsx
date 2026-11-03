@@ -158,11 +158,12 @@ export function ServerWorkspace(
             <ListRow icon={<SlidersHorizontal size={22} />} title={t("app.home.connectionTitle")} subtitle={t("app.home.connectionSummary", { method: model.selectedTransport === "automatic" ? t("app.home.automatic") : formatTransport(model.selectedTransport) })} trailing={<CaretRight size={18} />} onClick={() => props.onNavigate("home", "connection")} />
             <ListRow icon={<Info size={22} />} title={t("app.home.detailsTitle")} subtitle={t("app.home.detailsSummary")} trailing={<CaretRight size={18} />} onClick={() => props.onNavigate("home", "details")} />
           </div>}
-          {!isAndroid && <><ServerMetrics
+          {/* VPS resources are for those who manage the server: a Member can't act on them. */}
+          {!isAndroid && <>{accessLevel !== "member" && <ServerMetrics
             model={model}
             onReviewActivity={reviewActivity}
             onReviewUpdate={profile.role === "owner" ? () => { props.onOpenSettings("maintenance"); model.setMaintenanceReview("update"); } : undefined}
-          />
+          />}
           <DeviceTrafficDetails
             source={props.trafficUpdates}
             local={model.localStatus}
@@ -218,15 +219,6 @@ export function ServerWorkspace(
                 )}
               </section>
               <DnsBlocklistSettings profile={profile} connected={connected} canManage={model.canManageAccess} blocking={model.serverStatus?.dns_blocklist_enabled} onConnect={connectHere} onRepair={reviewUpdate} />
-              {(
-                <PortForwardSettings
-                  onManageDevices={() => props.onNavigate("devices")}
-                  profile={profile}
-                  connected={connected}
-                  accessLevel={accessLevel}
-                  onAccessChanged={onAccessChanged}
-                />
-              )}
             </div>
           )}
           {category === "recovery" && (
@@ -241,10 +233,30 @@ export function ServerWorkspace(
               <SystemHealth
                 model={model}
               />
-              <VpsAlertSettings profile={profile} connected={connected} onConnect={connectHere} onRepair={reviewUpdate} />
               <MaintenanceTools
                 model={model}
                 category="maintenance"
+                onRestoreDevice={props.onRestoreDevice}
+              />
+            </div>
+          )}
+          {category === "advanced" && (
+            <div className="settings-sections">
+              <PortForwardSettings
+                onManageDevices={() => props.onNavigate("devices")}
+                profile={profile}
+                connected={connected}
+                accessLevel={accessLevel}
+                onAccessChanged={onAccessChanged}
+              />
+              {accessLevel !== "member" && <section className="settings-card settings-action-row">
+                <div><h2>{t("app.advanced.devicesTitle")}</h2><p>{t("app.advanced.devicesSummary")}</p></div>
+                <button className="secondary-button" onClick={() => props.onNavigate("devices")}>{t("app.advanced.openDevices")}</button>
+              </section>}
+              <VpsAlertSettings profile={profile} connected={connected} onConnect={connectHere} onRepair={reviewUpdate} />
+              <MaintenanceTools
+                model={model}
+                category="advanced"
                 onRestoreDevice={props.onRestoreDevice}
               />
             </div>
@@ -266,7 +278,7 @@ export function ServerWorkspace(
             // Connecting shows its progress on Home, so the button goes there too.
             onConnect={connectHere && (() => { props.onNavigate("home"); connectHere(); })}
             onNetwork={() => {
-              props.onOpenSettings("network");
+              props.onOpenSettings("advanced");
             }}
           />
         )}

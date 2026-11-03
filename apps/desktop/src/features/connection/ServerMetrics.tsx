@@ -1,11 +1,4 @@
 import {
-  Cpu,
-  HardDrives,
-  Pulse,
-  Devices,
-} from "@phosphor-icons/react";
-import type { ReactElement } from "react";
-import {
   formatBytes,
   formatCount,
   formatCpuUsage,
@@ -14,7 +7,6 @@ import {
   formatUptime,
 } from "../../format";
 import { InfoHint } from "../../components/InfoHint";
-import { Metric } from "../../components/ui";
 import { formatNumber, t } from "../../i18n";
 import type { ServerStatus } from "../../types";
 import type { ServerWorkspaceModel } from "./useServerWorkspace";
@@ -32,8 +24,8 @@ export function serverFreshness(connected: boolean, status: ServerStatus | null,
 const usage = (used?: number, total?: number) =>
   used !== undefined && total !== undefined && total > 0 ? Math.min(100, (used / total) * 100) : undefined;
 
-/** The five server resource readings, shared by the desktop tiles and the Android detail rows. */
-export function serverMetrics(status: ServerStatus): { id: string; label: string; value: string; detail?: string; percent?: number; measured: boolean; icon: ReactElement }[] {
+/** The five server resource readings, shared by the desktop health row and the Android detail rows. */
+export function serverMetrics(status: ServerStatus): { id: string; label: string; value: string; detail?: string; percent?: number; measured: boolean }[] {
   const resource = (used?: number, total?: number) => {
     const percent = usage(used, total);
     return {
@@ -46,15 +38,14 @@ export function serverMetrics(status: ServerStatus): { id: string; label: string
   const activity = status.recently_active_peer_count;
   return [
     { id: "cpu", label: t("home.server.cpu"), value: status.cpu_usage_basis_points === undefined ? t("format.unavailable") : formatCpuUsage(status.cpu_usage_basis_points),
-      // A detail line like memory and storage have keeps the three usage bars aligned.
       detail: t(status.cpu_usage_basis_points === undefined ? "home.server.noMeasurement" : "home.server.cpuDetail"),
-      percent: status.cpu_usage_basis_points === undefined ? undefined : status.cpu_usage_basis_points / 100, measured: status.cpu_usage_basis_points !== undefined, icon: <Cpu /> },
-    { id: "memory", label: t("home.server.memory"), ...resource(status.memory_used_bytes, status.memory_total_bytes), icon: <HardDrives /> },
-    { id: "storage", label: t("home.server.storage"), ...resource(status.disk_used_bytes, status.disk_total_bytes), icon: <HardDrives /> },
-    { id: "uptime", label: t("home.server.uptime"), value: formatUptime(status.uptime_seconds), measured: Number.isFinite(status.uptime_seconds), icon: <Pulse /> },
+      percent: status.cpu_usage_basis_points === undefined ? undefined : status.cpu_usage_basis_points / 100, measured: status.cpu_usage_basis_points !== undefined },
+    { id: "memory", label: t("home.server.memory"), ...resource(status.memory_used_bytes, status.memory_total_bytes) },
+    { id: "storage", label: t("home.server.storage"), ...resource(status.disk_used_bytes, status.disk_total_bytes) },
+    { id: "uptime", label: t("home.server.uptime"), value: formatUptime(status.uptime_seconds), measured: Number.isFinite(status.uptime_seconds) },
     { id: "devices", label: t("home.server.devices"),
       value: activity === undefined ? t("home.server.devicesAuthorized", { count: status.peer_count }) : t("home.server.devicesActive", { active: activity, total: status.peer_count }),
-      detail: activity === undefined ? t("home.server.activityUnavailable") : t("home.server.devicesActiveDetail"), measured: activity !== undefined, icon: <Devices /> },
+      detail: activity === undefined ? t("home.server.activityUnavailable") : undefined, measured: activity !== undefined },
   ];
 }
 
@@ -95,19 +86,20 @@ export function ServerMetrics({
               {onReviewUpdate && <button className="text-button" onClick={onReviewUpdate}>{t("home.server.reviewUpdate")}</button>}
             </div>
           )}
-          <div className="resource-grid">
+          {/* One compact row under the status card; the amounts behind each reading are in Server details. */}
+          <dl className="server-health">
             {serverMetrics(status).map(metric => (
-              <Metric
-                key={metric.id}
-                label={metric.label}
-                value={metric.value}
-                detail={metric.detail}
-                icon={metric.icon}
-                percent={metric.percent}
-                kind={metric.measured ? "measurement" : "state"}
-              />
+              <div key={metric.id} data-measured={metric.measured}>
+                <dt>{metric.label}</dt>
+                <dd>
+                  {metric.value}
+                  {/* Same thresholds as the usage tiles: amber from 85%, red from 95%. */}
+                  {metric.percent !== undefined && Number.isFinite(metric.percent) && <meter min={0} max={100} low={85} high={95} optimum={0}
+                    value={Math.max(0, Math.min(100, metric.percent))} aria-label={t("app.metric.usage", { label: metric.label })} />}
+                </dd>
+              </div>
             ))}
-          </div>
+          </dl>
           {status.recently_active_peer_count === undefined && (
             <div className="measurement-update">
               <p>{t(status.peer_activity_supported ? "home.server.activityUnreadable" : "home.server.activityUnsupported")}</p>
@@ -118,6 +110,12 @@ export function ServerMetrics({
           )}
           <SettingsDisclosure className="metrics-details" summary={t("home.server.detailsSummary")}>
             <dl>
+              {serverMetrics(status).filter(metric => metric.id === "memory" || metric.id === "storage").map(metric => (
+                <div key={metric.id}>
+                  <dt>{metric.label}</dt>
+                  <dd>{metric.detail}</dd>
+                </div>
+              ))}
               <div>
                 <dt>{t("home.server.inbound")}</dt>
                 <dd>{formatRate(status.rx_bytes_per_second)}</dd>

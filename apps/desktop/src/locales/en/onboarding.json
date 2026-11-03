@@ -22,7 +22,8 @@
     "hetzner": {
       "title": "Create a Hetzner server",
       "summary": "Rent a new VPS that sets itself up"
-    }
+    },
+    "advanced": "Advanced"
   },
   "backup": {
     "title": "Restore this device",

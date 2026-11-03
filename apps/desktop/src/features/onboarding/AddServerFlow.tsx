@@ -10,15 +10,17 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { DialogContent } from "../../components/DialogContent";
 import { QrCode, Database, Lifebuoy, Archive, ArrowLeft, CaretRight, ShieldCheck, CloudArrowUp } from "@phosphor-icons/react";
 import { ListRow } from "../../components/ListRow";
+import { SettingsDisclosure } from "../settings/SettingsParts";
 import { confirmNavigation } from "../../lib/navigationGuard";
 import { t } from "../../i18n";
 
 const choices = [
   { id: "join", label: "onboarding.choice.join.title", hint: "onboarding.choice.join.summary", icon: QrCode },
   { id: "provision", label: "onboarding.choice.provision.title", hint: "onboarding.choice.provision.summary", icon: Database },
-  { id: "hetzner", label: "onboarding.choice.hetzner.title", hint: "onboarding.choice.hetzner.summary", icon: CloudArrowUp },
   { id: "backup", label: "onboarding.choice.backup.title", hint: "onboarding.choice.backup.summary", icon: Archive },
   { id: "recovery", label: "onboarding.choice.recovery.title", hint: "onboarding.choice.recovery.summary", icon: Lifebuoy },
+  // Needs a paid Hetzner account and an API token, so it waits under Advanced.
+  { id: "hetzner", label: "onboarding.choice.hetzner.title", hint: "onboarding.choice.hetzner.summary", icon: CloudArrowUp, advanced: true },
 ] as const;
 type Mode = (typeof choices)[number]["id"];
 
@@ -44,10 +46,15 @@ export function AddServerFlow({
     : mode === "recovery" ? <RecoverAccessFlow onComplete={onAdded} compact={compact} />
     : mode === "backup" ? <ImportBackupFlow onComplete={onAdded} compact={compact} /> : null;
   const current = choices.find(choice => choice.id === mode);
-  const list = <div className="mobile-choice-list" role="group" aria-label={t("onboarding.choice.listLabel")}>
-    {choices.map(({ id, label, hint, icon: Icon }) => <ListRow key={id} className={id === "join" ? "invitation-choice" : ""}
-      icon={<Icon size={24} />} title={t(label)} subtitle={t(hint)} trailing={<CaretRight size={18} />} onClick={() => choose(id)} />)}
-  </div>;
+  const rows = (advanced: boolean) => choices.filter((choice) => ("advanced" in choice) === advanced).map(({ id, label, hint, icon: Icon }) =>
+    <ListRow key={id} className={id === "join" ? "invitation-choice" : ""}
+      icon={<Icon size={24} />} title={t(label)} subtitle={t(hint)} trailing={<CaretRight size={18} />} onClick={() => choose(id)} />);
+  const list = <>
+    <div className="mobile-choice-list" role="group" aria-label={t("onboarding.choice.listLabel")}>{rows(false)}</div>
+    <SettingsDisclosure className="add-server-advanced" summary={t("onboarding.choice.advanced")}>
+      <div className="mobile-choice-list">{rows(true)}</div>
+    </SettingsDisclosure>
+  </>;
   if (isAndroid) return <div className="mobile-add-server">
     {list}
     <p className="mobile-privacy"><ShieldCheck size={17} /> {t("onboarding.choice.privacy")}</p>

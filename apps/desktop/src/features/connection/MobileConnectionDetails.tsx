@@ -69,7 +69,8 @@ export function MobileConnectionDetails({ model, source, onReviewActivity }: {
       </> : <Row label={t("home.details.status")} value={t("common.state.notConnected")} />}
     </Group>
     {connected && local.mtu && <section className="detail-group"><div className="detail-group-heading"><h2>{t("home.details.mtu")}</h2></div><MtuDetails mtu={local.mtu} /></section>}
-    <Group title={t("home.server.title")} meta={<span className={`section-meta metrics-stream-state${freshnessState === "live" ? " is-live" : ""}`} role="status">{t(`home.server.freshness.${freshnessState}`)}</span>}>
+    {/* VPS resources are for those who manage the server: a Member can't act on them. */}
+    {model.accessLevel !== "member" && <><Group title={t("home.server.title")} meta={<span className={`section-meta metrics-stream-state${freshnessState === "live" ? " is-live" : ""}`} role="status">{t(`home.server.freshness.${freshnessState}`)}</span>}>
       {server ? <>
         {serverMetrics(server).map(metric => <Row key={metric.id} label={metric.label} value={metric.value} note={metric.detail} />)}
         <Row label={t("home.server.dns")} value={t(server.dns_healthy ? "home.server.dnsRunning" : "home.server.dnsDown")} />
@@ -82,6 +83,6 @@ export function MobileConnectionDetails({ model, source, onReviewActivity }: {
     {server && server.recently_active_peer_count === undefined && <div className="measurement-update">
       <p>{t(server.peer_activity_supported ? "home.server.activityUnreadable" : "home.server.activityUnsupported")}</p>
       <button className="text-button" onClick={onReviewActivity}>{t(server.peer_activity_supported ? "home.server.reviewHealth" : "home.server.reviewUpdate")}</button>
-    </div>}
+    </div>}</>}
   </div>;
 }

@@ -1,6 +1,6 @@
 {
   "tools": {
-    "deviceTitle": "Device keys and backup",
+    "deviceTitle": "Device backup",
     "vpsTitle": "VPS backup and recovery",
     "serverTitle": "{{name}} maintenance",
     "finishRotationFirst": "Finish key rotation first",
@@ -29,7 +29,9 @@
     "remove": {
       "label": "Remove or uninstall",
       "summary": "Forget on this device or uninstall from the VPS"
-    }
+    },
+    "deviceKeysTitle": "Device keys",
+    "vpsScheduleTitle": "Automatic VPS backups"
   },
   "operation": {
     "interruption": "Services restart, so other devices may briefly disconnect.",

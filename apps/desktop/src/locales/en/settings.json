@@ -13,7 +13,7 @@
     },
     "network": {
       "label": "Network",
-      "hint": "App routing, DNS, ports"
+      "hint": "App routing, DNS, blocking"
     },
     "recovery": {
       "label": "Keys & recovery",
@@ -23,6 +23,10 @@
       "label": "VPS maintenance",
       "shortLabel": "Diagnostics",
       "hint": "Health, diagnostics, updates"
+    },
+    "advanced": {
+      "label": "Advanced",
+      "hint": "Ports, key rotation, alerts, schedules"
     }
   },
   "general": {
