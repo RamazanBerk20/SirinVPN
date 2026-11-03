@@ -398,8 +398,6 @@ html[data-window-chrome="custom"] .dialog-content.dialog-layout {
 .field small.field-error { color: color-mix(in srgb, var(--danger) 70%, var(--text)); }
 .update-saved { display: flex; align-items: center; gap: 6px; color: var(--success); font-size: var(--text-secondary); }
 .release-preview-note { margin: 0; color: color-mix(in srgb, var(--warning) 60%, var(--text)); font-size: var(--text-secondary); }
-.release-verification-details[open] { display: grid; gap: 14px; }
-.release-verification-details > summary { cursor: pointer; }
 
 /* The endpoint tabs pick a task, so they look like tabs, not like two primary buttons. */
 .dialog-layout .endpoint-update-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0 0 20px; }

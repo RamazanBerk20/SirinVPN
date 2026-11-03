@@ -16,6 +16,7 @@ import { SshLoginFields } from "./SshLoginFields";
 import { SshHostVerification } from "./SshHostVerification";
 import type { ServerProfile } from "../../types";
 import { completeReleaseSource, rememberedReleaseSource, rememberReleaseSource, validReleaseSource, type VpsBaselineCandidate, type VpsReleaseCandidate, type VpsReleaseOperation, type VpsReleaseStatus } from "./vpsRelease";
+import { SettingsDisclosure } from "./SettingsParts";
 
 type Failure = { message: string; retry?: () => void };
 
@@ -315,10 +316,10 @@ export function VpsUpdateDialog({ profile, open, onOpenChange, disconnected, onC
             <dl className="result-facts"><div><dt>{t("vps.update.review.verification")}</dt><dd>{t("vps.update.review.verified")}</dd></div>
               <div><dt>{t("vps.update.review.compatibility")}</dt><dd>{baseline || candidate?.can_install || candidate?.action === "already_bound" ? t("vps.update.review.compatible") : t("vps.update.review.incompatible")}</dd></div>
               <div><dt>{t("vps.update.review.type")}</dt><dd>{(baseline?.security_update ?? candidate?.security_update) ? t("vps.update.review.security") : t("vps.update.review.standard")}</dd></div></dl>
-            <details className="result-disclosure"><summary>{t("vps.common.softwareDetails")}</summary>
+            <SettingsDisclosure className="result-disclosure" summary={t("vps.common.softwareDetails")}>
               <p>{t("common.separator.pair", { first: formatTarget(baseline?.artifact.target ?? candidate?.artifact_target ?? ""), second: formatBytes(baseline?.artifact.size_bytes ?? candidate?.artifact_size_bytes ?? 0) })}</p>
               <HashValue label={t("vps.common.softwareHash")} value={baseline?.artifact.sha256 ?? candidate?.artifact_sha256 ?? ""} />
-            </details>
+            </SettingsDisclosure>
           </section>}
           <fieldset className="ssh-operation-fields" disabled={Boolean(busy)}>
             <section className="update-section">
@@ -349,7 +350,7 @@ export function VpsUpdateDialog({ profile, open, onOpenChange, disconnected, onC
               <button type="button" className="secondary-button" disabled={!disconnected} onClick={() => void rollback(status.release.rollback_version!)}>{t("vps.update.rollback.action", { version: status.release.rollback_version })}</button>
             </section>}
           </fieldset>
-          <details className="result-disclosure"><summary>{t("vps.update.privacy.summary")}</summary><p>{t("vps.update.privacy.identifiers")}</p><p>{t("vps.update.privacy.signing")}</p></details>
+          <SettingsDisclosure className="result-disclosure" summary={t("vps.update.privacy.summary")}><p>{t("vps.update.privacy.identifiers")}</p><p>{t("vps.update.privacy.signing")}</p></SettingsDisclosure>
           <button type="button" className="text-button" disabled={Boolean(busy)} onClick={() => setStep("login")}>{t("vps.update.action.changeLogin")}</button>
         </div>}
       </DialogContent>

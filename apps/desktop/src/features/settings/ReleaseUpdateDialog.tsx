@@ -268,7 +268,7 @@ export function ReleaseUpdateDialog({
                 <strong>{binding ? t("release.candidate.confirmVerify") : installConfirmation}</strong>
                 <small>{t("release.candidate.confirmNote")}</small>
               </ConfirmationRow>}
-              <details className="release-verification-details"><summary>{t("release.candidate.details")}</summary>
+              <SettingsDisclosure className="release-verification-details" summary={t("release.candidate.details")}>
                 <dl className="result-facts">
                   <div><dt>{t("release.candidate.detailPackage")}</dt><dd className="mono">{candidate.artifact_file_name}</dd></div>
                   <div><dt>{t("release.candidate.detailSize")}</dt><dd>{formatBytes(candidate.artifact_size_bytes)}</dd></div>
@@ -279,7 +279,7 @@ export function ReleaseUpdateDialog({
                 <HashValue label={t("release.candidate.digest")} value={candidate.artifact_sha256} />
                 <HashValue label={t("release.candidate.detailRoot")} value={candidate.root_key_id_sha256} />
                 <HashValue label={t("release.candidate.detailSigner")} value={candidate.release_key_id_sha256} />
-              </details>
+              </SettingsDisclosure>
               <p className="form-footnote">
                 <LockKey size={15} /> {t("release.candidate.footnote")}
               </p>
