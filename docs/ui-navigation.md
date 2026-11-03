@@ -103,4 +103,32 @@ accent fill. Within each platform, every primary button looks the same:
 ## Checking it
 
 `tests/ui/catalog/full_capture.py` reaches the moved controls through their new
-paths ([UI state catalog](testing.md#ui-state-catalog)).
+paths ([UI state catalog](testing.md#ui-state-catalog)). Both runs below used the
+same harness, on desktop (1280×860) and Android (412×915) in dark and light. The
+original UI was served from `main` with `tests/ui/catalog/serve_ui.sh`.
+
+| | Before (`main`) | After |
+|---|---|---|
+| Scenarios | 670 | 676 |
+| States captured | 2,302 of 2,302 | 2,324 of 2,324 |
+| Audit findings (contrast, text under 12px, small targets, clipping, names) | 0 | 0 |
+| English UI messages shown by some state | 1,604 of 2,157 | 1,649 of 2,195 |
+
+The new states are the Advanced settings page for each role, the Add device
+menu, a member's menu and Android's Connection details for a Member; the
+expanded-device-rows state went away with the expandable rows. Four reviewers
+compared every changed family before and after; their findings were fixed
+before the final run.
+
+In each image the top row is before and the bottom row is after; desktop dark
+comes first in each row, then Android dark.
+
+| | |
+|---|---|
+| Home: the status card leads; this device and the server are one strip each | ![](images/ui-navigation-2026-11-03/home-connected-home.webp) |
+| Home for a Member: no VPS resource stats | ![](images/ui-navigation-2026-11-03/home-member-connected-home.webp) |
+| Devices: one Add device button and one menu per row | ![](images/ui-navigation-2026-11-03/devices-owner-device-list.webp) |
+| A device's Details dialog, from its menu | ![](images/ui-navigation-2026-11-03/devices-details-android-phone.webp) |
+| Servers page: managing only; the sidebar switches | ![](images/ui-navigation-2026-11-03/servers-saved-server-list.webp) |
+| Diagnostics while it runs | ![](images/ui-navigation-2026-11-03/diagnostics-run-diagnostics-in-progress.webp) |
+| Install while it runs | ![](images/ui-navigation-2026-11-03/provisioning-password-install-in-progress.webp) |
