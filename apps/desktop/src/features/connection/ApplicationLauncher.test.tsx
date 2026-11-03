@@ -29,7 +29,7 @@ describe("application routing launcher", () => {
     fireEvent.change(screen.getByLabelText(t("connection.launcher.arguments.label")), { target: { value: "--profile\na directory with spaces\n$(literal)" } });
     fireEvent.click(screen.getByRole("button", { name: t("connection.launcher.launch") }));
     await waitFor(() => expect(api.launchVpnApplication).toHaveBeenCalledWith("server", "/usr/bin/example", ["--profile", "a directory with spaces", "$(literal)"]));
-    expect((await screen.findByRole("status")).textContent).toBe(t("connection.launcher.exited", { name: "example" }));
+    expect((await screen.findByRole("status")).textContent).toBe(t("connection.launcher.exited", { name: "Example" }));
   });
   it("discards launch details and late results when another server is selected", async () => {
     let resolve!: (value: { process_id: number; completed: boolean }) => void;
@@ -53,6 +53,6 @@ describe("application routing launcher", () => {
     await waitFor(() => expect((screen.getByLabelText(t("connection.launcher.executable")) as HTMLInputElement).value).toBe("C:\\Apps\\client.exe"));
     expect(open).toHaveBeenCalledWith(expect.objectContaining({ filters: [{ name: t("connection.launcher.dialogFilter"), extensions: ["exe"] }] }));
     fireEvent.click(screen.getByRole("button", { name: t("connection.launcher.launch") }));
-    expect((await screen.findByRole("status")).textContent).toBe(t("connection.launcher.launched", { name: "client" }));
+    expect((await screen.findByRole("status")).textContent).toBe(t("connection.launcher.launched", { name: "Client" }));
   });
 });

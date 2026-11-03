@@ -123,7 +123,7 @@ export function DnsBlocklistSettings({ profile, connected, canManage, onConnect,
           onSave={() => void save()} onDiscard={() => { show(settings); setError(null); }}>
           <button className="secondary-button" onClick={() => void refresh()} disabled={busy}>{t("dns.blocklist.refresh")}</button>
         </CardSaveRow>
-        {error && <InlineError message={error} onRetry={dirty && !problem ? () => void save() : undefined} retryDisabled={busy} />}
+        {error && <InlineError message={error} />}
       </> : loadFailed ? <InlineError message={error ?? ""} onRetry={() => void refresh()} />
       : <p role="status">{t("common.state.loading")}</p>}
   </section>;

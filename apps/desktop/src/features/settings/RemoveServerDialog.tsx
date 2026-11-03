@@ -219,7 +219,7 @@ export function RemoveServerDialog({
                 void inspect();
               }}
             >
-              {error ? <InlineError message={error} onRetry={() => void inspect()} retryDisabled={busy || !sshValid} /> : null}
+              {error ? <InlineError message={error} /> : null}
               <fieldset disabled={busy} className="ssh-operation-fields">
                 <div className="uninstall-target">
                   <GlobeHemisphereWest size={16} />

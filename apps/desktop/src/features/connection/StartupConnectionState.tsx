@@ -32,7 +32,10 @@ export function StartupConnectionState({
     model.localStatus.startup_service_enabled === false;
   return (
     <div className="startup-connection-state">
-      <p>{describeStartup(model.localStatus, model.profile.id)}</p>
+      <p>{describeStartup(model.localStatus, model.profile.id)}
+        {/* The instruction names only a button that is on screen. */}
+        {model.localStatus.startup_service_enabled === false && model.localStatus.state !== "unknown" && !model.anotherConnected
+          && <> {t(canActivate ? "connection.startup.activateHint" : "connection.startup.nextConnection")}</>}</p>
       {canActivate && (
         <button
           className="secondary-button"
@@ -44,7 +47,7 @@ export function StartupConnectionState({
           {t("connection.startup.activate")}
         </button>
       )}
-      {model.error && <InlineError message={model.error} onRetry={canActivate ? () => void model.toggle() : undefined} retryDisabled={model.busy} />}
+      {model.error && <InlineError message={model.error} />}
     </div>
   );
 }

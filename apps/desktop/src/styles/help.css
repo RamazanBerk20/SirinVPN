@@ -26,6 +26,8 @@ html.android:has(.demo-banner) .workspace { padding-bottom: 184px; }
 .troubleshoot-step { display: grid; gap: 12px; }
 .troubleshoot-step .settings-action-row { margin-top: 14px; padding: 0; border: 0; }
 /* Troubleshooter: every step at a glance beside the current one. */
+/* The step list takes a column, so the dialog is wider than Diagnostics to leave the detail room to read. */
+.diagnostics-dialog.troubleshooter { width: min(820px, calc(100vw - 32px)); }
 .troubleshoot-layout {
   display: grid;
   grid-template-columns: minmax(12rem, 15rem) minmax(0, 1fr);

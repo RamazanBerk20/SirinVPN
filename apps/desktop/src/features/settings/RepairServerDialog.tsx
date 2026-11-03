@@ -253,7 +253,7 @@ export function RepairServerDialog({
               }}
             >
               {/* The failure leads the form, where it is seen without scrolling. */}
-              {error ? <InlineError message={error} onRetry={() => void inspect()} retryDisabled={busy || !sshValid} /> : null}
+              {error ? <InlineError message={error} /> : null}
               <fieldset disabled={busy} className="ssh-operation-fields">
                 <div className="uninstall-target">
                   <GlobeHemisphereWest size={16} />

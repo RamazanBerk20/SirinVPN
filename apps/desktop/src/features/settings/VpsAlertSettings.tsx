@@ -125,9 +125,9 @@ export function VpsAlertSettings({ profile, connected, onConnect, onRepair }: {
             ? <button className="secondary-button" onClick={() => void test()} disabled={Boolean(busy)}>{busy === "test" ? t("settings.alerts.testing") : t("vps.alerts.test")}</button>
             : <small>{t("settings.alerts.testNeedsAddress")}</small>}
         </CardSaveRow>
-        {saveResult?.error && <InlineError message={saveResult.error} onRetry={() => void save()} retryDisabled={Boolean(busy)} />}
+        {saveResult?.error && <InlineError message={saveResult.error} />}
         {testResult?.notice && <p className="card-result" role="status">{testResult.notice}</p>}
-        {testResult?.error && <InlineError message={testResult.error} onRetry={() => void test()} retryDisabled={Boolean(busy)} />}
+        {testResult?.error && <InlineError message={testResult.error} />}
       </> : loadError ? <InlineError message={loadError} onRetry={() => void refresh()} />
       : <p role="status">{t("common.state.loading")}</p>}
   </section>;

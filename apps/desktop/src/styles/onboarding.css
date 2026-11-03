@@ -554,7 +554,8 @@
   background: color-mix(in srgb, var(--danger) 80%, var(--surface));
   color: var(--text);
 }
-.dns-change-review dd.danger-note {
+/* Red text, not a boxed callout: a box here read as a destructive button. */
+.dns-change-review dd.danger-value {
   color: color-mix(in srgb, var(--danger) 55%, var(--text));
   font-weight: 600;
 }

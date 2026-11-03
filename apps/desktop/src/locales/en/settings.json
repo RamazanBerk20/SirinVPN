@@ -137,7 +137,8 @@
     },
     "access": {
       "unidentified": "This Wi-Fi can’t be identified reliably, so it can’t be trusted.",
-      "changed": "The network changed. Check its name before trusting it."
+      "changed": "The network changed. Check its name before trusting it.",
+      "changedUnnamed": "The network changed, and this device doesn’t report its name. Check in your system’s Wi-Fi settings which network you’re on before trusting it."
     },
     "trust": {
       "label": "Label (optional)",

@@ -89,7 +89,8 @@
 .preference-row .theme-choice {
   flex: 0 0 min(240px, 55%);
 }
-.wifi-settings > .preference-row + .field {
+/* The status line between the switch and the server field must not touch the field's label. */
+.wifi-settings > :is(.preference-row, .settings-note, .wifi-paused) + .field {
   margin-top: 12px;
 }
 .wifi-settings .settings-note,
@@ -703,6 +704,10 @@ select {
   margin: 0;
   color: var(--success);
 }
+/* The app quit at once: that needs a second look, not a green tick. */
+.settings-card .launcher-actions > p.launch-exited {
+  color: var(--warning);
+}
 .application-launcher small,
 .application-launcher .field-hint {
   color: var(--muted);
@@ -710,6 +715,10 @@ select {
 }
 .android-apps .preference-row {
   border-bottom: 0;
+}
+.android-apps .preference-row > button {
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 /* Wi-Fi: the current network with its refresh, the trust form, then the trusted list. */

@@ -44,7 +44,8 @@ export function EndpointUpdateDialog({
   const [busy, setBusy] = useState<Task>(null);
   const [published, setPublished] = useState(false);
   const [applied, setApplied] = useState(false);
-  const [error, setError] = useState<{ message: string; retry: () => void } | null>(null);
+  // No Try again: each action's own button stays on screen and is the retry.
+  const [error, setError] = useState<{ message: string } | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
@@ -65,14 +66,14 @@ export function EndpointUpdateDialog({
     onOpenChange(next);
   };
 
-  const run = async (kind: Exclude<Task, null>, action: () => Promise<void>, fallback: string, retry: () => void) => {
+  const run = async (kind: Exclude<Task, null>, action: () => Promise<void>, fallback: string) => {
     setBusy(kind);
     setError(null);
     setNotice(null);
     try {
       await action();
     } catch (reason) {
-      setError({ message: errorMessage(reason, fallback), retry });
+      setError({ message: errorMessage(reason, fallback) });
     } finally {
       setBusy(null);
     }
@@ -83,7 +84,7 @@ export function EndpointUpdateDialog({
     setUpdate(result);
     setCode(result.code);
     await onCompleted();
-  }, t("vps.endpoint.error.create"), () => void createOrRetrieve());
+  }, t("vps.endpoint.error.create"));
 
   const checkCurrent = () => run("retrieve", async () => {
     const result = await api.availableEndpointUpdate(profile.id);
@@ -91,20 +92,20 @@ export function EndpointUpdateDialog({
     if (!result) { setNotice(t("vps.endpoint.none")); return; }
     setUpdate(result);
     setCode(result.code);
-  }, t("vps.endpoint.error.retrieve"), () => void checkCurrent());
+  }, t("vps.endpoint.error.retrieve"));
 
   // Publish exactly the signed code shown in this tab, not the apply tab's draft.
   const publish = () => update?.code.trim() ? run("publish", async () => {
     await api.publishEndpointUpdate(profile.id, update.code.trim());
     setPublished(true);
     await onCompleted();
-  }, t("vps.endpoint.error.publish"), () => void publish()) : Promise.resolve();
+  }, t("vps.endpoint.error.publish")) : Promise.resolve();
 
   const apply = () => code.trim() ? run("apply", async () => {
     await api.applyEndpointUpdate(profile.id, code.trim());
     setApplied(true);
     await onCompleted();
-  }, t("vps.endpoint.error.apply"), () => void apply()) : Promise.resolve();
+  }, t("vps.endpoint.error.apply")) : Promise.resolve();
 
   const transition = (value: EndpointUpdateCodeResult) => <div className="endpoint-transition-summary">
     <code>{endpointLabel(value.previous_endpoint)}</code>
@@ -113,7 +114,7 @@ export function EndpointUpdateDialog({
     <span>{t("vps.endpoint.number", { number: value.generation })}</span>
   </div>;
 
-  const failure = error && <InlineError message={error.message} onRetry={error.retry} retryDisabled={Boolean(busy)} />;
+  const failure = error && <InlineError message={error.message} />;
   const footer = mode === "share"
     ? !update
       ? <button className="primary-button" type="button" disabled={!connected || Boolean(busy)} onClick={() => void createOrRetrieve()}>
@@ -229,6 +230,7 @@ export function EndpointUpdateDialog({
                       className="secret-code-output mono"
                       value={code}
                       onChange={(event) => { setCode(event.target.value); setNotice(null); }}
+                      readOnly={Boolean(busy)}
                       placeholder={CODE_PLACEHOLDER}
                       spellCheck={false}
                     />

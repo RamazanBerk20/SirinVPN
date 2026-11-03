@@ -208,7 +208,7 @@ export function VpsRestoreDialog({
                 void inspect();
               }}
             >
-              {error ? <InlineError message={error} onRetry={() => void inspect()} retryDisabled={busy || !valid} /> : null}
+              {error ? <InlineError message={error} /> : null}
               <fieldset disabled={busy} className="ssh-operation-fields">
                 <div className="sensitive-backup-warning">
                   <Warning size={19} weight="fill" />

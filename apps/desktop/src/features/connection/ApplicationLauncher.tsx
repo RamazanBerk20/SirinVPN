@@ -10,6 +10,8 @@ import { SettingsDisclosure, SettingsNotice } from "../settings/SettingsParts";
 
 /** The file name of a program path, for "Firefox started in the VPN." */
 const programName = (path: string) => path.trim().split(/[\\/]/).filter(Boolean).pop()?.replace(/\.exe$/i, "") ?? path;
+// The name starts a sentence: "Firefox started in the VPN."
+const sentenceName = (path: string) => { const name = programName(path); return name.charAt(0).toUpperCase() + name.slice(1); };
 
 export function ApplicationLauncher({ serverId, local, busy, onConnect }: {
   serverId: string;
@@ -21,7 +23,7 @@ export function ApplicationLauncher({ serverId, local, busy, onConnect }: {
   const [executable, setExecutable] = useState("");
   const [argumentsText, setArgumentsText] = useState("");
   const [launching, setLaunching] = useState(false);
-  const [notice, setNotice] = useState("");
+  const [notice, setNotice] = useState<{ text: string; exited: boolean } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const generation = useRef(0);
   const argumentsHelpId = useId();
@@ -35,7 +37,7 @@ export function ApplicationLauncher({ serverId, local, busy, onConnect }: {
     ++generation.current;
     setExecutable("");
     setArgumentsText("");
-    setNotice("");
+    setNotice(null);
     setError(null);
     return () => { ++generation.current; };
   }, [serverId]);
@@ -56,15 +58,15 @@ export function ApplicationLauncher({ serverId, local, busy, onConnect }: {
   const launch = async () => {
     if (!ready || busy || launching || !executable.trim()) return;
     const current = generation.current;
-    const name = programName(executable);
+    const name = sentenceName(executable);
     setLaunching(true);
-    setNotice("");
+    setNotice(null);
     setError(null);
     try {
       const result = await api.launchVpnApplication(serverId, executable.trim(), argumentsText.split("\n").filter((arg) => arg.length > 0));
-      if (current === generation.current) setNotice(result.completed
+      if (current === generation.current) setNotice({ exited: result.completed, text: result.completed
         ? t("connection.launcher.exited", { name })
-        : t("connection.launcher.launched", { name }));
+        : t("connection.launcher.launched", { name }) });
     } catch (reason) {
       if (current === generation.current) setError(errorMessage(reason, t("connection.launcher.launchError")));
     } finally {
@@ -97,9 +99,9 @@ export function ApplicationLauncher({ serverId, local, busy, onConnect }: {
       <div className="launcher-actions">
         <button type="button" className="primary-button" onClick={() => void launch()} disabled={!ready || editing || !executable.trim()}>{launching ? t("connection.launcher.launching") : t("connection.launcher.launch")}</button>
         {ready && !executable.trim() && <small>{t("connection.launcher.needsProgram")}</small>}
-        {notice && <p role="status">{notice}</p>}
+        {notice && <p role="status" className={notice.exited ? "launch-exited" : undefined}>{notice.text}</p>}
       </div>
-      {error && <InlineError message={error} onRetry={executable.trim() && ready ? () => void launch() : undefined} retryDisabled={editing} />}
+      {error && <InlineError message={error} />}
     </fieldset>
   );
 }

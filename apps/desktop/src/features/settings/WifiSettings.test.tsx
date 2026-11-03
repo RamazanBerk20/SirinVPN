@@ -91,7 +91,7 @@ it("follows a network change on its own and says so before trusting", async () =
   expect(screen.getByText(t("settings.wifi.status.paused"))).toBeTruthy();
   // The label typed for the old network is cleared, and the change is announced.
   expect((screen.getByLabelText(t("settings.wifi.trust.label")) as HTMLInputElement).value).toBe("");
-  expect(screen.getByText(t("settings.wifi.access.changed"))).toBeTruthy();
+  expect(screen.getByText(t("settings.wifi.access.changedUnnamed"))).toBeTruthy();
   expect(mocks.trustCurrentWifi).not.toHaveBeenCalled();
   await act(async () => { fireEvent.click(screen.getByRole("button", { name: t("settings.wifi.trust.action") })); });
   expect(mocks.trustCurrentWifi).toHaveBeenCalledWith("network-two", "Wi-Fi exception");
@@ -112,7 +112,7 @@ it("pauses hidden network reads and refreshes on return without trusting a chang
   await act(async () => { hidden = false; document.dispatchEvent(new Event("visibilitychange")); });
   expect(mocks.getWifiPolicy).toHaveBeenCalledTimes(initialReads + 1);
   expect(mocks.listServers).toHaveBeenCalledOnce();
-  expect(screen.getByText(t("settings.wifi.access.changed"))).toBeTruthy();
+  expect(screen.getByText(t("settings.wifi.access.changedUnnamed"))).toBeTruthy();
   expect(mocks.trustCurrentWifi).not.toHaveBeenCalled();
 });
 

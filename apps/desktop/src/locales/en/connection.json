@@ -221,7 +221,9 @@
     "unknown": "Couldn’t check the startup connection.",
     "otherServer": "Saved, but another server is connected now. Connect to this server to use it at startup.",
     "serviceUnknown": "Saved. Startup service status unavailable.",
-    "inactive": "Saved, but not active yet. Select Connect and activate to turn it on.",
+    "inactive": "Saved, but not active yet.",
+    "activateHint": "Select Connect and activate to turn it on.",
+    "nextConnection": "It turns on the next time you connect to this server.",
     "active": "Connects to this server when this device starts.",
     "unconfirmed": "The startup service is on, but it isn’t set to this server yet.",
     "activate": "Connect and activate"

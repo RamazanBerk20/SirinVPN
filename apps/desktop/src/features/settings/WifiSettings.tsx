@@ -184,7 +184,7 @@ export function WifiSettings() {
           <button type="button" className="icon-button" aria-label={t("settings.wifi.refresh")} title={t("settings.wifi.refresh")} disabled={Boolean(busy)}
             onClick={() => void action("refresh", async () => {})}><ArrowClockwise size={18} className={busy === "refresh" ? "spin" : undefined} /></button>
         </div>
-        {networkChanged && snapshot.current_network === "untrusted_wifi" && <p className="settings-note" role="status">{t("settings.wifi.access.changed")}</p>}
+        {networkChanged && snapshot.current_network === "untrusted_wifi" && <p className="settings-note" role="status">{t(currentName ? "settings.wifi.access.changed" : "settings.wifi.access.changedUnnamed")}</p>}
         {snapshot.current_network === "untrusted_wifi" && (trustBlocked
           ? <p className="settings-note">{t("settings.wifi.access.unidentified")}</p>
           : <div className="wifi-trust-form">

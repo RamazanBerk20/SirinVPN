@@ -141,7 +141,7 @@ describe("Desktop release update boundary", () => {
     expect(
       await screen.findByRole("heading", { name: t("release.candidate.title", { version: "0.2.0" }) }),
     ).toBeTruthy();
-    expect(screen.getByText("x86_64-unknown-linux-gnu")).toBeTruthy();
+    expect(screen.getByText("Linux, 64-bit x86 (x86_64-unknown-linux-gnu)")).toBeTruthy();
     // Keys are shown whole, labelled, with Copy, rather than truncated behind a tooltip.
     expect(screen.getByText("a".repeat(64))).toBeTruthy();
     const install = screen.getByRole("button", {

@@ -50,7 +50,7 @@ export function PreferenceSaveBar({
           {t("connection.saveBar.save")}
         </button>
       </div>}
-      {preferences.error && <InlineError message={preferences.error} onRetry={preferences.dirty && !invalid ? () => void preferences.save() : undefined} retryDisabled={preferences.saving} />}
+      {preferences.error && <InlineError message={preferences.error} />}
       {/* Saved-but-not-live differences wait until the floating unsaved bar is gone, so it stays one line tall. */}
       {pending.length > 0 && !preferences.dirty && (
         <p className="pending-preferences" role="status">

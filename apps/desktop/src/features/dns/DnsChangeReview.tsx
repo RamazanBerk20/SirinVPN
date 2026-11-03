@@ -19,7 +19,7 @@ export function DnsChangeReview({ choice, endpoints, privateChoice, records, spl
         ? t("common.separator.triple", { first: endpoint.address, second: endpoint.authenticationName, third: endpoint.path })
         : t("common.separator.pair", { first: endpoint.address, second: endpoint.authenticationName })}</div>)}</dd></>}
       {choice !== "preserve" && <><dt>{t("dns.review.split.term")}</dt><dd>{splitDns.trim() ? <pre>{splitDns}</pre> : t("dns.review.split.none")}</dd></>}
-      <dt>{t("dns.review.records.term")}</dt><dd className={privateChoice === "clear" ? "danger-note" : undefined}>{privateChoice === "preserve" ? t("dns.review.records.preserve") : privateChoice === "clear" ? t("dns.review.records.clear") : <>{t("dns.review.records.replace")}<pre>{records}</pre></>}</dd>
+      <dt>{t("dns.review.records.term")}</dt><dd className={privateChoice === "clear" ? "danger-value" : undefined}>{privateChoice === "preserve" ? t("dns.review.records.preserve") : privateChoice === "clear" ? t("dns.review.records.clear") : <>{t("dns.review.records.replace")}<pre>{records}</pre></>}</dd>
     </dl>
     <p>{t("dns.review.impact")}</p>
   </section>;
