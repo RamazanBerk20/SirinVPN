@@ -140,6 +140,7 @@ pub(crate) async fn prepare_vps_baseline(
             .map_err(|error| error.to_string())?
             .to_owned(),
         destination: destination.clone(),
+        release_notes: true,
     })
     .await
     .map_err(|error| error.to_string())?;

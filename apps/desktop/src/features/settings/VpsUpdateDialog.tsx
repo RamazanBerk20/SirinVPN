@@ -15,7 +15,7 @@ import { useSshHostTrust, type InspectedSshHost } from "../../hooks/useSshHostTr
 import { SshLoginFields } from "./SshLoginFields";
 import { SshHostVerification } from "./SshHostVerification";
 import type { ServerProfile } from "../../types";
-import { completeReleaseSource, rememberedReleaseSource, rememberReleaseSource, validReleaseSource, type VpsBaselineCandidate, type VpsReleaseCandidate, type VpsReleaseOperation, type VpsReleaseStatus } from "./vpsRelease";
+import { completeReleaseSource, rememberAppReleaseSource, rememberedReleaseSource, rememberReleaseSource, validReleaseSource, type VpsBaselineCandidate, type VpsReleaseCandidate, type VpsReleaseOperation, type VpsReleaseStatus } from "./vpsRelease";
 import { SettingsDisclosure } from "./SettingsParts";
 
 type Failure = { message: string; retry?: () => void };
@@ -39,6 +39,8 @@ export function VpsUpdateDialog({ profile, open, onOpenChange, disconnected, onC
   const [candidate, setCandidate] = useState<VpsReleaseCandidate | null>(null);
   const [baseline, setBaseline] = useState<VpsBaselineCandidate | null>(null);
   const [sourceText, setSource] = useState("");
+  // Only an address typed here may become the app's own source; one the VPS reported may not.
+  const typedSource = useRef(false);
   // A folder address typed without its trailing "/" still counts; the field shows it once left.
   const source = completeReleaseSource(sourceText);
   const [editingSource, setEditingSource] = useState(false);
@@ -65,7 +67,7 @@ export function VpsUpdateDialog({ profile, open, onOpenChange, disconnected, onC
 
   useEffect(() => {
       login.clearSecrets(); trust.reset(); setStep("login"); setFingerprint(null);
-      setConfirmedHost(false); setStatus(null); setCandidate(null); setBaseline(null); setSource(rememberedReleaseSource(profile.id));
+      setConfirmedHost(false); setStatus(null); setCandidate(null); setBaseline(null); setSource(rememberedReleaseSource(profile.id)); typedSource.current = false;
       void api.discardVpsBaseline(profile.id).catch(() => {});
       setChannel("stable"); setAutomatic(false); setVerifying(false);
       setBusy(null); setError(null); setMessage(null);
@@ -135,7 +137,7 @@ export function VpsUpdateDialog({ profile, open, onOpenChange, disconnected, onC
       // A different first release needs the separately reviewed guarded installer.
       if (!configured && !checked.can_install && checked.action !== "already_bound") {
         await prepareBaseline();
-      } else { setCandidate(checked); rememberReleaseSource(profile.id, source); }
+      } else { setCandidate(checked); rememberVerifiedSource(); }
     }
     catch (reason) { fail(epoch, reason, t("vps.update.error.check"), () => void check()); }
     finally { if (isCurrent(epoch)) { setBusy(null); setVerifying(false); } }
@@ -212,7 +214,7 @@ export function VpsUpdateDialog({ profile, open, onOpenChange, disconnected, onC
     setBusy(t("vps.update.busy.verifying")); setVerifying(true); setError(null); setMessage(null); setBaseline(null); setCandidate(null);
     try {
       const prepared = await api.prepareVpsBaseline({ ...await baselineAccess(), source, channel });
-      if (isCurrent(epoch)) { setBaseline(prepared); rememberReleaseSource(profile.id, source); }
+      if (isCurrent(epoch)) { setBaseline(prepared); rememberVerifiedSource(); }
     }
     catch (reason) { fail(epoch, reason, t("vps.update.error.check"), () => void prepareBaseline()); }
     finally { if (isCurrent(epoch)) { setBusy(null); setVerifying(false); } }
@@ -240,6 +242,10 @@ export function VpsUpdateDialog({ profile, open, onOpenChange, disconnected, onC
   const sourceValid = validReleaseSource(source);
   const sourceError = source && !sourceValid ? t("vps.update.source.invalid") : undefined;
   const clearReview = () => { setCandidate(null); setBaseline(null); setMessage(null); setScheduleMessage(null); };
+  const rememberVerifiedSource = () => {
+    rememberReleaseSource(profile.id, source);
+    if (typedSource.current) rememberAppReleaseSource(source);
+  };
   const finish = () => baseline ? installBaseline() : candidate ? perform(
     // Finishing setup on the release already installed is not an update install.
     { action: "install", manifest_sha256: candidate.manifest_sha256 },
@@ -311,7 +317,7 @@ export function VpsUpdateDialog({ profile, open, onOpenChange, disconnected, onC
           </dl>}
           {(candidate || baseline) && <section className="update-review" aria-label={t("vps.update.review.label")}>
             <h3>{t("vps.update.review.title", { version: verifiedVersion ?? "" })}</h3>
-            {releaseNotes && <p><strong>{t(baseline || candidate?.action === "already_bound" ? "release.candidate.notes" : "release.candidate.whatsNew")}</strong> {releaseNotes}</p>}
+            {releaseNotes && <p className="release-notes"><strong>{t(baseline || candidate?.action === "already_bound" ? "release.candidate.notes" : "release.candidate.whatsNew")}</strong> {releaseNotes}</p>}
             <p>{candidate?.action === "already_bound" ? t("vps.update.review.alreadyInstalled") : baseline ? t("vps.update.review.baseline") : candidate?.baseline_required ? t("vps.update.review.register") : t("vps.update.review.upgrade")}</p>
             <dl className="result-facts"><div><dt>{t("vps.update.review.verification")}</dt><dd>{t("vps.update.review.verified")}</dd></div>
               <div><dt>{t("vps.update.review.compatibility")}</dt><dd>{baseline || candidate?.can_install || candidate?.action === "already_bound" ? t("vps.update.review.compatible") : t("vps.update.review.incompatible")}</dd></div>
@@ -325,7 +331,7 @@ export function VpsUpdateDialog({ profile, open, onOpenChange, disconnected, onC
             <section className="update-section">
               {!configured || editingSource || !source ? <>
                 <Field label={t("vps.update.source.label")} hint={t("vps.update.source.help")} error={sourceError}>
-                  <input type="url" value={sourceText} placeholder={t("vps.update.source.placeholder")} autoCapitalize="none" spellCheck={false} onChange={(event) => { setSource(event.target.value); clearReview(); }} onBlur={() => setSource(source)} />
+                  <input type="url" value={sourceText} placeholder={t("vps.update.source.placeholder")} autoCapitalize="none" spellCheck={false} onChange={(event) => { setSource(event.target.value); typedSource.current = true; clearReview(); }} onBlur={() => setSource(source)} />
                 </Field>
               </> : <div className="update-source-saved"><span>{t("vps.update.source.label")}</span><p>{source}</p><button type="button" className="text-button" onClick={() => setEditingSource(true)}>{t("vps.update.source.change")}</button></div>}
               <Field label={t("vps.update.channel.label")} hint={channel === "preview" ? t("vps.update.channel.previewHint") : undefined}>

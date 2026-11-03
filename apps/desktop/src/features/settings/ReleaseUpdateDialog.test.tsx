@@ -30,7 +30,20 @@ describe("portable app updates", () => {
     vi.mocked(api.checkReleaseUpdate).mockResolvedValue(candidate);
     vi.mocked(api.installReleaseUpdate).mockResolvedValue(candidate);
   });
-  afterEach(cleanup);
+  afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
+  it("keeps the remembered source after a downloaded release is discarded", async () => {
+    const values = new Map<string, string>();
+    vi.stubGlobal("localStorage", {
+      get length() { return values.size; }, key: (index: number) => [...values.keys()][index] ?? null,
+      getItem: (key: string) => values.get(key) ?? null, setItem: (key: string, value: string) => { values.set(key, value); },
+      removeItem: (key: string) => { values.delete(key); }, clear: () => values.clear(),
+    });
+    render(<ReleaseUpdateDialog open onOpenChange={vi.fn()} installationReady={false} />);
+    await check();
+    fireEvent.click(screen.getByRole("button", { name: t("release.candidate.discard") }));
+    const field = await screen.findByLabelText(t("release.form.source"), { exact: false }) as HTMLInputElement;
+    expect(field.value).toBe(["https", "://release.example/stable/"].join(""));
+  });
   it("allows confirmed AppImage replacement while the service is connected", async () => {
     render(<ReleaseUpdateDialog open onOpenChange={vi.fn()} installationReady={false} />);
     await check();

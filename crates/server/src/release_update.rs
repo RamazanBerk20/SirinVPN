@@ -123,6 +123,7 @@ pub async fn run(
                 artifact_kind: ArtifactKind::ServerElf,
                 artifact_target: target()?.to_owned(),
                 destination,
+                release_notes: true,
             })
             .await?;
         return Ok(serde_json::to_value(fetched)?);

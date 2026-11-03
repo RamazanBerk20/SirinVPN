@@ -16,6 +16,15 @@ pub struct VerifiedReleaseBundle {
 
 impl VerifiedReleaseBundle {
     pub fn open(directory: &Path, kind: ArtifactKind, target: &str) -> Result<Self, FetchError> {
+        Self::open_with_root(directory, kind, target, BUNDLED_RELEASE_TRUST_ROOT_PEM)
+    }
+
+    pub(crate) fn open_with_root(
+        directory: &Path,
+        kind: ArtifactKind,
+        target: &str,
+        root_public_key_pem: &str,
+    ) -> Result<Self, FetchError> {
         let manifest_bytes =
             read_bounded(directory, RELEASE_MANIFEST_FILE_NAME, MAX_MANIFEST_BYTES)?;
         let signature_bytes =
@@ -30,7 +39,7 @@ impl VerifiedReleaseBundle {
         let trust = verify_trust_policy(
             &trust_policy_bytes,
             &trust_signature_bytes,
-            BUNDLED_RELEASE_TRUST_ROOT_PEM,
+            root_public_key_pem,
         )?;
         let artifact_directory = directory.join(ARTIFACT_DIRECTORY_NAME);
         if !fs::symlink_metadata(&artifact_directory)?

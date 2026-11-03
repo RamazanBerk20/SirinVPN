@@ -13,6 +13,8 @@ const latency = (micros: number | null) => micros === null ? t("maintenance.spee
 // The native test reports no progress, so the phase comes from its fixed timing
 // (crates/core/src/diagnostics/speed.rs): about 2 s of idle latency, then 8 s each of download and upload.
 const TOTAL_SECONDS = 20;
+// The VPS allows one test a minute from when a test starts, cancelled or not (COOLDOWN in crates/server/src/speed_test.rs).
+const COOLDOWN_MS = 60_000;
 export const speedTestPhase = (elapsed: number) => elapsed < 2 ? "idle" : elapsed < 10 ? "download" : elapsed < 18 ? "upload" : "finishing";
 
 /** Tunnel-to-VPS throughput, measured on request. The result lives only in this component. */
@@ -23,6 +25,19 @@ export function SpeedTest({ serverId }: { serverId: string }) {
   const [cancelled, setCancelled] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const section = useRef<HTMLElement>(null);
+  const startedAt = useRef(0);
+  // After a cancel, when the VPS will take the next test; the Run button waits for it instead of failing.
+  const [readyAt, setReadyAt] = useState<number | null>(null);
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (readyAt === null) return;
+    const timer = setInterval(() => {
+      const current = Date.now();
+      setNow(current);
+      if (current >= readyAt) setReadyAt(null);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [readyAt]);
   useEffect(() => {
     if (!running) return;
     // The progress replaces the button: keep it in view, since the test slows the VPN while it runs.
@@ -34,11 +49,13 @@ export function SpeedTest({ serverId }: { serverId: string }) {
     return () => { clearInterval(timer); void api.cancelSpeedTest(); };
   }, [running]);
   const run = async () => {
-    setRunning(true); setResult(null); setCancelled(false); setError(null);
+    setRunning(true); setResult(null); setCancelled(false); setError(null); setReadyAt(null);
+    startedAt.current = Date.now();
     try {
       const outcome = await api.speedTest(serverId);
       setResult(outcome);
       setCancelled(!outcome);
+      if (!outcome) { setNow(Date.now()); setReadyAt(startedAt.current + COOLDOWN_MS); }
     }
     catch (reason) { setError(errorMessage(reason, t("maintenance.speedTest.failed"))); }
     finally { setRunning(false); }
@@ -65,8 +82,9 @@ export function SpeedTest({ serverId }: { serverId: string }) {
       <button className="secondary-button" type="button" onClick={() => void api.cancelSpeedTest()}>{t("settings.speedTest.cancel")}</button>
     </> : error ? <InlineError message={error} onRetry={() => void run()} />
       : <>
-        {cancelled && <p className="settings-note" role="status">{t("settings.speedTest.cancelled")}</p>}
-        <button className="secondary-button" type="button" onClick={() => void run()}>
+        {cancelled && <p className="settings-note" role="status">{readyAt === null ? t("settings.speedTest.cancelled")
+          : t("settings.speedTest.cancelledWait", { seconds: formatNumber(Math.max(1, Math.ceil((readyAt - now) / 1000))) })}</p>}
+        <button className="secondary-button" type="button" disabled={readyAt !== null} onClick={() => void run()}>
           <Gauge />{result ? t("maintenance.speedTest.again") : t("maintenance.speedTest.run")}
         </button>
       </>}

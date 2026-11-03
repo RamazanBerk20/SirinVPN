@@ -345,6 +345,7 @@
     "left": "{{phase}} · about {{seconds}} s left.",
     "finishingLine": "{{phase}}…",
     "cancel": "Cancel speed test",
-    "cancelled": "Speed test cancelled."
+    "cancelled": "Speed test cancelled.",
+    "cancelledWait": "Speed test cancelled. The VPS takes the next test in {{seconds}} s."
   }
 }

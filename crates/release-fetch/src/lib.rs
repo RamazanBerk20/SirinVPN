@@ -46,6 +46,10 @@ pub struct ReleaseFetchRequest {
     pub artifact_kind: ArtifactKind,
     pub artifact_target: String,
     pub destination: PathBuf,
+    /// Also request the optional signed notes. The CLI asks only on `--release-notes`, so an
+    /// older app still running after an in-place upgrade never meets a field or request it
+    /// doesn't know.
+    pub release_notes: bool,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize)]
@@ -58,6 +62,7 @@ pub struct FetchedRelease {
     pub root_key_id_sha256: String,
     pub release_key_id_sha256: String,
     /// The verified one-line summary, when the source publishes valid notes.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub release_notes: Option<String>,
     pub artifact: ReleaseArtifact,
     pub bundle_directory: PathBuf,
@@ -225,19 +230,23 @@ async fn fetch_release_with_client_and_root(
             target: request.artifact_target.clone(),
         })?;
     // Cosmetic: missing, unreachable, oversized or unverified notes are dropped, never shown.
-    let notes = fetch_bounded(
-        client,
-        source_file_url(&source, RELEASE_NOTES_FILE_NAME)?,
-        RELEASE_NOTES_FILE_NAME,
-        MAX_RELEASE_NOTES_BYTES,
-    )
-    .await
-    .ok()
-    .and_then(|bytes| {
-        verify_release_notes_with_trust_policy(&bytes, &manifest, &release_signature, &trust)
-            .ok()
-            .map(|summary| (bytes, summary))
-    });
+    let notes = if request.release_notes {
+        fetch_bounded(
+            client,
+            source_file_url(&source, RELEASE_NOTES_FILE_NAME)?,
+            RELEASE_NOTES_FILE_NAME,
+            MAX_RELEASE_NOTES_BYTES,
+        )
+        .await
+        .ok()
+        .and_then(|bytes| {
+            verify_release_notes_with_trust_policy(&bytes, &manifest, &release_signature, &trust)
+                .ok()
+                .map(|summary| (bytes, summary))
+        })
+    } else {
+        None
+    };
 
     write_private_file(&staging.path().join(TRUST_POLICY_FILE_NAME), &policy)?;
     write_private_file(

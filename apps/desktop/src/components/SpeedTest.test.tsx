@@ -48,14 +48,21 @@ it("cancels on request and shows a neutral note with the Run button back", async
   let finish!: (result: null) => void;
   vi.mocked(api.speedTest).mockReturnValue(new Promise((done) => { finish = done; }));
   vi.mocked(api.cancelSpeedTest).mockImplementation(async () => finish(null));
+  vi.useFakeTimers({ shouldAdvanceTime: true });
   render(<SpeedTest serverId="server" />);
   fireEvent.click(screen.getByRole("button", { name: t("maintenance.speedTest.run") }));
   fireEvent.click(screen.getByRole("button", { name: t("settings.speedTest.cancel") }));
-  expect(await screen.findByText(t("settings.speedTest.cancelled"))).toBeTruthy();
+  // The VPS's one-minute limit counts from the cancelled start: say so instead of failing a rerun.
+  expect(await screen.findByText(t("settings.speedTest.cancelledWait", { seconds: "60" }))).toBeTruthy();
   expect(api.cancelSpeedTest).toHaveBeenCalled();
   expect(screen.queryByRole("alert")).toBeNull();
-  expect(screen.getByRole("button", { name: t("maintenance.speedTest.run") })).toBeTruthy();
+  const again = screen.getByRole("button", { name: t("maintenance.speedTest.run") });
+  expect(again.matches(":disabled")).toBe(true);
   expect(screen.queryByRole("button", { name: t("settings.speedTest.cancel") })).toBeNull();
+  await act(async () => { await vi.advanceTimersByTimeAsync(61_000); });
+  expect(screen.getByText(t("settings.speedTest.cancelled"))).toBeTruthy();
+  expect(again.matches(":disabled")).toBe(false);
+  vi.useRealTimers();
 });
 
 it("stops a running test when the dialog closes", () => {

@@ -344,9 +344,18 @@ pub async fn dispatch(
         };
         return encode(result);
     }
+    // Claimed before the active-connection check and the secret read, as on desktop, so a
+    // Cancel tapped at once is kept and ends the run as soon as it starts.
+    let speed_run = (command == "run_speed_test")
+        .then(|| runtime.speed_test.start())
+        .transpose()?;
     runtime.platform.require_active(id)?;
     let secret = runtime.paths.secret_store().get(&p.identity_reference)?;
     let client = ManagementClient::new(&p, &secret)?;
+    if let Some(run) = speed_run {
+        let test = sirinvpn_core::diagnostics::speed_test(&p, &secret);
+        return encode(run.or_cancel(test).await.transpose()?);
+    }
     match command {
         "server_status" => {
             let status = client.status().await?;
@@ -382,11 +391,6 @@ pub async fn dispatch(
             let mut report = report?;
             report.checks.extend(leaks);
             encode(report)
-        }
-        "run_speed_test" => {
-            let run = runtime.speed_test.start()?;
-            let test = sirinvpn_core::diagnostics::speed_test(&p, &secret);
-            encode(run.or_cancel(test).await.transpose()?)
         }
         "dns_blocklist_settings" => encode(client.dns_blocklist().await?),
         "update_dns_blocklist" => encode(

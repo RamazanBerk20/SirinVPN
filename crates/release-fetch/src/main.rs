@@ -25,6 +25,9 @@ struct Cli {
     output: PathBuf,
     #[arg(long)]
     json: bool,
+    /// Also fetch the optional signed notes and print them; older callers don't pass this.
+    #[arg(long)]
+    release_notes: bool,
 }
 
 #[tokio::main]
@@ -43,6 +46,7 @@ async fn run() -> Result<()> {
         artifact_kind: cli.artifact_kind,
         artifact_target: cli.artifact_target,
         destination: cli.output,
+        release_notes: cli.release_notes,
     })
     .await?;
     if cli.json {

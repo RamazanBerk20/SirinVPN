@@ -64,3 +64,27 @@ fn platforms_live_beside_the_document_and_never_change_it() {
             .is_empty()
     );
 }
+
+#[test]
+fn a_device_platform_is_set_once() {
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("authorization.json");
+    let mut state = state();
+    state.schema_version = state.required_schema_version();
+    write_authorization(&path, &state).unwrap();
+    let owner = state.devices[0].id;
+    let platforms = path.with_file_name("device-platforms.json");
+
+    state.record_device_platform(&path, owner, "linux").unwrap();
+    let written = fs::read(&platforms).unwrap();
+    // A later, different report is accepted but changes nothing and writes nothing.
+    fs::remove_file(&platforms).unwrap();
+    for platform in ["windows", "android", "linux"] {
+        state
+            .record_device_platform(&path, owner, platform)
+            .unwrap();
+    }
+    assert!(!platforms.exists());
+    assert_eq!(state.device_platforms[&owner], "linux");
+    assert!(!written.is_empty());
+}

@@ -104,6 +104,7 @@ pub(crate) async fn check_release_update(
             artifact_kind: ArtifactKind::WindowsInstaller,
             artifact_target: sirinvpn_windows_service::update::artifact_target().into(),
             destination: temporary.path().join("bundle"),
+            release_notes: true,
         })
         .await
         .map_err(|_| {

@@ -259,6 +259,7 @@ fn request(source: String, destination: PathBuf) -> ReleaseFetchRequest {
         artifact_kind: ArtifactKind::LinuxDeb,
         artifact_target: TEST_TARGET.to_owned(),
         destination,
+        release_notes: true,
     }
 }
 
@@ -415,6 +416,71 @@ async fn missing_or_unverified_notes_are_dropped_without_failing_the_fetch() {
         assert!(!destination.join(RELEASE_NOTES_FILE_NAME).exists());
         assert_eq!(server.finish().len(), 6);
     }
+}
+
+#[tokio::test]
+async fn a_bundle_with_tampered_notes_on_disk_opens_without_them() {
+    let fixture = SignedFixture::new(ReleaseChannel::Stable);
+    let server = TestHttpsServer::start(fixture.routes(), 6);
+    let parent = tempfile::tempdir().unwrap();
+    let destination = parent.path().join("candidate");
+    fetch_release_with_client_and_root(
+        request(server.source(), destination.clone()),
+        &server.client(),
+        &fixture.root_public_key,
+    )
+    .await
+    .unwrap();
+    server.finish();
+    let open = || {
+        VerifiedReleaseBundle::open_with_root(
+            &destination,
+            ArtifactKind::LinuxDeb,
+            TEST_TARGET,
+            &fixture.root_public_key,
+        )
+        .unwrap()
+    };
+    assert_eq!(open().release_notes.unwrap().1, TEST_SUMMARY);
+    // The staging area is writable by the downloader: edited notes are dropped, the release isn't.
+    let path = destination.join(RELEASE_NOTES_FILE_NAME);
+    let edited = String::from_utf8(fs::read(&path).unwrap())
+        .unwrap()
+        .replace("faster", "Faster");
+    fs::write(&path, edited).unwrap();
+    assert!(open().release_notes.is_none());
+}
+
+#[tokio::test]
+async fn a_caller_that_does_not_ask_for_notes_never_meets_them() {
+    let fixture = SignedFixture::new(ReleaseChannel::Stable);
+    let server = TestHttpsServer::start(fixture.routes(), 5);
+    let parent = tempfile::tempdir().unwrap();
+    let destination = parent.path().join("candidate");
+    let mut without_notes = request(server.source(), destination.clone());
+    without_notes.release_notes = false;
+    let fetched = fetch_release_with_client_and_root(
+        without_notes,
+        &server.client(),
+        &fixture.root_public_key,
+    )
+    .await
+    .unwrap();
+    assert_eq!(fetched.release_notes, None);
+    assert!(!destination.join(RELEASE_NOTES_FILE_NAME).exists());
+    // The same five requests as before notes existed, and no field an older parser rejects.
+    let requests = server.finish();
+    assert_eq!(requests.len(), 5);
+    assert!(
+        !requests
+            .iter()
+            .any(|path| path.contains(RELEASE_NOTES_FILE_NAME))
+    );
+    assert!(
+        !serde_json::to_string(&fetched)
+            .unwrap()
+            .contains("release_notes")
+    );
 }
 
 #[tokio::test]

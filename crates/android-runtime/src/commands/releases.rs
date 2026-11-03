@@ -67,6 +67,7 @@ pub async fn dispatch(runtime: &Runtime, command: &str, input: &Value) -> Result
                 artifact_kind: ArtifactKind::AndroidApk,
                 artifact_target: arch().to_owned(),
                 destination: directory,
+                release_notes: true,
             })
             .await?;
             let current = env!("CARGO_PKG_VERSION");
@@ -153,6 +154,7 @@ pub async fn dispatch(runtime: &Runtime, command: &str, input: &Value) -> Result
                 artifact_target: sirinvpn_installer::release_target(&discovery.architecture)?
                     .to_owned(),
                 destination: destination.clone(),
+                release_notes: true,
             })
             .await?;
             // The APK update store is this app's own authenticated state.

@@ -27,7 +27,9 @@ pub(super) fn load(authorization: &Path) -> HashMap<DeviceId, String> {
 
 impl AuthorizationDocument {
     /// Writes the platforms file, keeping only current devices, then updates memory.
-    /// Nothing else in the document changes and nothing reaches the network.
+    /// Nothing else in the document changes and nothing reaches the network. A device's
+    /// platform is set once: a client flipping between values would otherwise make every
+    /// report a synced write under the authorization lock that status and enrollment wait on.
     pub(crate) fn record_device_platform(
         &mut self,
         authorization: &Path,
@@ -37,7 +39,7 @@ impl AuthorizationDocument {
         if !DEVICE_PLATFORMS.contains(&platform) || !self.devices.iter().any(|d| d.id == device) {
             bail!("the device platform is not supported");
         }
-        if self.device_platforms.get(&device).map(String::as_str) == Some(platform) {
+        if self.device_platforms.contains_key(&device) {
             return Ok(());
         }
         let mut platforms = self.device_platforms.clone();

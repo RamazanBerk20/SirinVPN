@@ -220,6 +220,8 @@ html[data-window-chrome="custom"] .dialog-content.dialog-layout {
 .update-source-saved { display: grid; gap: 8px; justify-items: start; min-width: 0; }
 .update-source-saved > span { color: color-mix(in srgb, var(--accent) 10%, var(--text)); font-size: var(--text-label); font-weight: 650; }
 .update-source-saved p { overflow-wrap: anywhere; }
+/* Signed notes may be one unbroken 280-character word; it wraps instead of widening the dialog. */
+.release-notes { overflow-wrap: anywhere; }
 .update-review, .update-section { display: grid; gap: 14px; min-width: 0; border-top: 1px solid var(--line); padding-top: 22px; }
 .update-review h3, .update-section h3 { margin: 0; }
 .dialog-layout .diagnostic-summary { margin-top: 0; }

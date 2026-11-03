@@ -17,7 +17,7 @@ import { formatBytes, formatTarget } from "../../format";
 import { Field, InlineError } from "../../components/ui";
 import { errorMessage } from "../../lib/errors";
 import { ReleaseRecovery } from "./ReleaseRecovery";
-import { completeReleaseSource, rememberAppReleaseSource, validReleaseSource } from "./vpsRelease";
+import { completeReleaseSource, rememberAppReleaseSource, rememberedAppReleaseSource, validReleaseSource } from "./vpsRelease";
 import { SettingsDisclosure } from "./SettingsParts";
 import { t } from "../../i18n";
 
@@ -56,7 +56,8 @@ export function ReleaseUpdateDialog({
   }, [ready]);
 
   const reset = () => {
-    setSource("");
+    // Back to the remembered address, not an empty field: discarding a download isn't forgetting the source.
+    setSource(rememberedAppReleaseSource());
     setChannel("stable");
     setCandidate(null);
     setConfirmed(false);
@@ -234,7 +235,7 @@ export function ReleaseUpdateDialog({
               </div>
               {/* Signed notes are plain text; React renders them without markup. */}
               {/* "What's new" only for a release that would be installed; a verify or the current version just has notes. */}
-              {candidate.release_notes && <p><strong>{t(installable && !binding ? "release.candidate.whatsNew" : "release.candidate.notes")}</strong> {candidate.release_notes}</p>}
+              {candidate.release_notes && <p className="release-notes"><strong>{t(installable && !binding ? "release.candidate.whatsNew" : "release.candidate.notes")}</strong> {candidate.release_notes}</p>}
               <p>{t("release.candidate.package", { size: formatBytes(candidate.artifact_size_bytes) })}</p>
               <p className="settings-note">{t("release.candidate.source", { source })}</p>
 

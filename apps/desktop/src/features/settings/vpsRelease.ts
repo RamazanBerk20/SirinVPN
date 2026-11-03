@@ -66,20 +66,16 @@ const stored = (key: string | null) => {
   const value = key ? window.localStorage.getItem(key) ?? "" : "";
   return validReleaseSource(value) ? value : "";
 };
-// One release folder holds the app and the server packages, so each can start from the other's source.
-const anyVpsSource = () => {
-  for (let index = 0; index < window.localStorage.length; index += 1) {
-    const key = window.localStorage.key(index);
-    const value = key?.startsWith(VPS_SOURCE_PREFIX) ? stored(key) : "";
-    if (value) return value;
-  }
-  return "";
-};
 export function rememberedReleaseSource(serverId: string): string {
   try { return stored(sourceKey(serverId)) || stored(APP_SOURCE_KEY); } catch { return ""; }
 }
+/**
+ * The app's own source. It holds only addresses typed on this device that then served a signed
+ * release (in the app or the VPS dialog), never one a VPS reported: this device contacts no
+ * address its user didn't give it. One release folder holds the app and server packages.
+ */
 export function rememberedAppReleaseSource(): string {
-  try { return stored(APP_SOURCE_KEY) || anyVpsSource(); } catch { return ""; }
+  try { return stored(APP_SOURCE_KEY); } catch { return ""; }
 }
 export function rememberAppReleaseSource(source: string) {
   if (!validReleaseSource(source)) return;

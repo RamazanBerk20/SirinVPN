@@ -4,7 +4,7 @@ import { api } from "../../api";
 import type { ServerProfile } from "../../types";
 import { VpsUpdateDialog } from "./VpsUpdateDialog";
 import { t } from "../../i18n";
-import type { VpsReleaseCandidate, VpsReleaseStatus } from "./vpsRelease";
+import { rememberedAppReleaseSource, type VpsReleaseCandidate, type VpsReleaseStatus } from "./vpsRelease";
 
 vi.mock("../../api", () => ({ api: {
   getSshLogin: vi.fn(), saveSshLogin: vi.fn(), forgetSshLogin: vi.fn(), inspectSshHost: vi.fn(), trustSshHost: vi.fn(),
@@ -26,10 +26,14 @@ const candidate: VpsReleaseCandidate = { release_version: "1.0.2", release_seque
 beforeEach(() => {
   vi.resetAllMocks();
   const values = new Map<string, string>();
+  // A complete Storage, so code that walks keys sees what the dialog stored.
   vi.stubGlobal("localStorage", {
+    get length() { return values.size; },
+    key: (index: number) => [...values.keys()][index] ?? null,
     getItem: (key: string) => values.get(key) ?? null,
     setItem: (key: string, value: string) => { values.set(key, value); },
     removeItem: (key: string) => { values.delete(key); },
+    clear: () => values.clear(),
   });
   vi.mocked(api.getSshLogin).mockResolvedValue(null);
   vi.mocked(api.saveSshLogin).mockResolvedValue({ username: "root", ssh_port: 22, authentication: "agent", private_key_path: null });
@@ -296,4 +300,23 @@ it("does not claim installation when the VPS cannot confirm the reviewed version
   await screen.findByText(t("vps.update.error.notConfirmed"), { exact: false });
   expect(screen.queryByText(t("vps.update.done.installed", { version: "1.0.2" }))).toBeNull();
   expect(completed).not.toHaveBeenCalled();
+});
+
+it("gives the app's own source only an address typed here, never the one the VPS reported", async () => {
+  await setup();
+  fireEvent.click(screen.getByRole("button", { name: t("vps.update.action.check") }));
+  await screen.findByRole("button", { name: t("vps.update.action.install", { version: "1.0.2" }) });
+  expect(rememberedAppReleaseSource()).toBe("");
+  cleanup();
+  vi.mocked(api.manageVpsRelease).mockImplementation(async ({ operation }) => operation.action === "check" ? candidate
+    : { ...status, security_updates: { ...status.security_updates, source: null } });
+  await setup();
+  fireEvent.click(screen.getByRole("button", { name: t("vps.update.source.change") }));
+  const input = screen.getByRole("textbox", { name: new RegExp(`^${t("vps.update.source.label")}`) });
+  // Another folder than the VPS's, typed without its trailing "/".
+  const typed = source.replace("releases.", "mirror.").slice(0, -1);
+  fireEvent.change(input, { target: { value: typed } });
+  fireEvent.click(screen.getByRole("button", { name: t("vps.update.action.check") }));
+  await screen.findByRole("button", { name: t("vps.update.action.install", { version: "1.0.2" }) });
+  expect(rememberedAppReleaseSource()).toBe(`${typed}/`);
 });

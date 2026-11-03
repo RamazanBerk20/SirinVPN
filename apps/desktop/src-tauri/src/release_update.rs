@@ -300,13 +300,13 @@ pub(crate) fn restart_app(
     app: tauri::AppHandle,
     runtime: State<'_, ReleaseUpdateRuntime>,
 ) -> Result<(), String> {
-    if runtime.lock()?.busy {
-        return Err("Wait for the current update to finish.".to_owned());
-    }
+    runtime.ensure_idle()?;
     // Tauri exits even if starting the new process fails, so check the file it will run first.
     if !tauri::process::current_binary(&app.env()).is_ok_and(|path| executable(&path)) {
         return Err("SirinVPN couldn’t restart. Close it and open it again.".to_owned());
     }
+    // Best effort: without the marker the relaunch only follows the usual start-minimized setting.
+    let _ = fs::write(crate::desktop_lifecycle::restart_marker(&app), b"");
     app.request_restart();
     Ok(())
 }
@@ -317,6 +317,14 @@ fn executable(path: &Path) -> bool {
 }
 
 impl ReleaseUpdateRuntime {
+    /// A restart while a check or an install holds the runtime would cut it off half-done.
+    fn ensure_idle(&self) -> Result<(), String> {
+        if self.lock()?.busy {
+            return Err("Wait for the current update to finish.".to_owned());
+        }
+        Ok(())
+    }
+
     fn begin_check(&self) -> Result<Option<PendingReleaseUpdate>, String> {
         let mut state = self.lock()?;
         if state.busy {
@@ -432,6 +440,7 @@ fn fetch_candidate(
     let mut command = Command::new(fetcher);
     command
         .arg("--json")
+        .arg("--release-notes")
         .arg("--source")
         .arg(source)
         .arg("--channel")
@@ -850,6 +859,16 @@ mod tests {
         assert!(runtime.discard().is_err());
         runtime.complete_check(None).unwrap();
         assert!(runtime.discard().unwrap().is_none());
+    }
+
+    #[test]
+    fn restart_waits_for_a_running_check_or_install() {
+        let runtime = ReleaseUpdateRuntime::default();
+        assert!(runtime.ensure_idle().is_ok());
+        let pending = runtime.begin_check().unwrap();
+        assert!(runtime.ensure_idle().is_err());
+        runtime.complete_check(pending).unwrap();
+        assert!(runtime.ensure_idle().is_ok());
     }
 
     #[test]
