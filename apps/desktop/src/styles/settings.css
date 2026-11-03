@@ -683,12 +683,6 @@ select {
 .condition-choices.method-choices {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
 }
-.theme-choice button[aria-pressed="true"] {
-  background: var(--surface-3);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cyan) 55%, var(--surface-3));
-  color: var(--cyan);
-}
-
 /* App launcher: the path field with Browse beside it. */
 .field-with-button {
   display: flex;
