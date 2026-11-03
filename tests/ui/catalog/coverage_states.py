@@ -89,20 +89,21 @@ def coverage_states(cases):
         add('settings', 'general-settings-' + role, settings('', 'general'), {'role': role})
         add('settings', 'connection-settings-' + role, settings('', 'connection'), {'role': role})
 
+    maintenance = settings('', 'maintenance')
     # VPS alerts (Owner, Advanced settings).
-    maintenance = settings('', 'advanced')
+    advanced = settings('', 'advanced')
     saved = {'alerts': {'policy': {'format': 'ntfy', 'alert_url': NTFY}}}
-    add('vps-alerts', 'alerts-address-entered', maintenance + [fill('Alert address', NTFY)])
-    add('vps-alerts', 'alerts-address-invalid', maintenance + [fill('Alert address', 'http://user@alerts.example/topic'), fill('Heartbeat address', 'not an address')])
-    add('vps-alerts', 'alerts-webhook-format', maintenance + [check('Webhook')])
-    outcomes('vps-alerts', 'save-alerts', maintenance + [fill('Alert address', NTFY)], click('Save alerts'), 'updateAlerts')
-    add('vps-alerts', 'alerts-test-sent', maintenance + [click('Send test alert')], saved, required=['sendTestAlert'])
-    add('vps-alerts', 'alerts-test-rejected', maintenance + [click('Send test alert')], {**saved, 'alertTest': {'failure': 'rejected', 'http_status': 403}}, required=['sendTestAlert'])
-    add('vps-alerts', 'alerts-delivery-failing', maintenance, {'alerts': {'policy': {'format': 'webhook', 'alert_url': NTFY, 'heartbeat_url': NTFY + '/beat'}, 'status': {'checked_at_unix': 1900000000, 'alert_failure': 'connection', 'heartbeat_failure': 'address'}}})
-    add('vps-alerts', 'alerts-healthy', maintenance, {'alerts': {'policy': {'format': 'ntfy', 'alert_url': NTFY, 'heartbeat_url': NTFY + '/beat'}, 'status': {'checked_at_unix': 1900000000, 'alert_sent_at_unix': 1899990000, 'heartbeat_sent_at_unix': 1900000000}}})
-    add('vps-alerts', 'alerts-unsupported-vps', maintenance, {'configuration': {'alerts_enabled': False}})
-    add('vps-alerts', 'alerts-load-failed', maintenance, {'errors': {'alertSettings': ERROR}})
-    add('vps-alerts', 'alerts-loading', maintenance, {'holds': ['alertSettings']})
+    add('vps-alerts', 'alerts-address-entered', advanced + [fill('Alert address', NTFY)])
+    add('vps-alerts', 'alerts-address-invalid', advanced + [fill('Alert address', 'http://user@alerts.example/topic'), fill('Heartbeat address', 'not an address')])
+    add('vps-alerts', 'alerts-webhook-format', advanced + [check('Webhook')])
+    outcomes('vps-alerts', 'save-alerts', advanced + [fill('Alert address', NTFY)], click('Save alerts'), 'updateAlerts')
+    add('vps-alerts', 'alerts-test-sent', advanced + [click('Send test alert')], saved, required=['sendTestAlert'])
+    add('vps-alerts', 'alerts-test-rejected', advanced + [click('Send test alert')], {**saved, 'alertTest': {'failure': 'rejected', 'http_status': 403}}, required=['sendTestAlert'])
+    add('vps-alerts', 'alerts-delivery-failing', advanced, {'alerts': {'policy': {'format': 'webhook', 'alert_url': NTFY, 'heartbeat_url': NTFY + '/beat'}, 'status': {'checked_at_unix': 1900000000, 'alert_failure': 'connection', 'heartbeat_failure': 'address'}}})
+    add('vps-alerts', 'alerts-healthy', advanced, {'alerts': {'policy': {'format': 'ntfy', 'alert_url': NTFY, 'heartbeat_url': NTFY + '/beat'}, 'status': {'checked_at_unix': 1900000000, 'alert_sent_at_unix': 1899990000, 'heartbeat_sent_at_unix': 1900000000}}})
+    add('vps-alerts', 'alerts-unsupported-vps', advanced, {'configuration': {'alerts_enabled': False}})
+    add('vps-alerts', 'alerts-load-failed', advanced, {'errors': {'alertSettings': ERROR}})
+    add('vps-alerts', 'alerts-loading', advanced, {'holds': ['alertSettings']})
 
     # DNS blocking (network settings).
     network = settings('', 'network')

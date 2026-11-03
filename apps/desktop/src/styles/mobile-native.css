@@ -82,7 +82,8 @@ html.android[data-theme="light"] {
 .android .primary-button { background: var(--accent-fill); border-color: var(--accent-line); }
 /* Android's primary is flat: no desktop gradient on a selected segment, or on a button a tap leaves in :hover. */
 .android .primary-button:not(.danger-action):hover:not(:disabled) { background: var(--accent-fill); border-color: var(--accent-line); box-shadow: none; filter: none; }
-.android .segmented-control button[aria-pressed="true"] { background: var(--accent-fill); box-shadow: none; }
+/* Endpoint tabs look like tabs and a destructive choice stays red, as on the desktop. */
+.android .segmented-control:not(.endpoint-update-tabs) button:not(.danger-choice)[aria-pressed="true"] { background: var(--accent-fill); color: var(--accent-ink); box-shadow: none; }
 .android .primary-button:disabled { background: var(--tile); border-color: var(--tile); color: var(--quiet); }
 .android .secondary-button { background: var(--control); border-color: var(--control-line); }
 .android .text-button { min-height: 48px; font-size: var(--fs-small); }
