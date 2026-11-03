@@ -394,7 +394,7 @@
     }
   },
   "notice": {
-    "renamed": "Renamed to {{name}}.",
+    "renamed": "Renamed to “{{name}}”.",
     "revoked": "{{name}} was revoked.",
     "mutualAllowed": "{{name}} now allows mutual access.",
     "isolated": "{{name}} is isolated.",

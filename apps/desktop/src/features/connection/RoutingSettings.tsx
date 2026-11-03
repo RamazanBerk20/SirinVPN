@@ -6,7 +6,7 @@ import { invoke, isAndroid } from "../../platform";
 import { useState } from "react";
 import { InlineError } from "../../components/ui";
 import { errorMessage } from "../../lib/errors";
-import { canonicalIpv4 } from "../../lib/cidr";
+import { hostBitFix, invalidRoutes } from "../../lib/cidr";
 import { formatNumber, t } from "../../i18n";
 import { SettingsNotice } from "../settings/SettingsParts";
 
@@ -26,6 +26,7 @@ export function RoutingSettings({ model, onCheckUpdates }: { model: ServerWorksp
   const disabled =
     model.busy || model.preferences.saving || !model.preferences.ready;
   const windows = model.localStatus.application_routing_backend === "windows_bind_redirect";
+  const routeFix = hostBitFix(model.preferences.badRoutes, (route) => invalidRoutes([route]).length === 0);
   const androidApps = model.preferences.draft.android_applications;
   const androidAppsSummary = !androidApps
     ? t("connection.routing.android.none")
@@ -116,7 +117,7 @@ export function RoutingSettings({ model, onCheckUpdates }: { model: ServerWorksp
           <small>{t("connection.routing.routes.hint", { max: formatNumber(MAX_INCLUDED_ROUTES) })}</small>
           {model.preferences.badRoutes.length > 0 && <small className="field-error" role="alert">
             {model.preferences.badRoutes[0] === "" ? t("connection.routing.routes.empty")
-              : canonicalIpv4(model.preferences.badRoutes[0]) ? t("connection.routing.routes.hostBits", { route: model.preferences.badRoutes[0], network: canonicalIpv4(model.preferences.badRoutes[0])! })
+              : routeFix ? t("connection.routing.routes.hostBits", { route: routeFix.entry, network: routeFix.network })
               : t("connection.routing.routes.invalid", { routes: model.preferences.badRoutes.join(", ") })}
           </small>}
         </label>

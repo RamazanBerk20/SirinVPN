@@ -7,7 +7,11 @@ import { errorMessage } from "../../lib/errors";
 import type { ReleaseUpdateStatus } from "../../types";
 import { t } from "../../i18n";
 
-export function ReleaseRecovery({ busy, setBusy, onRestored }: { busy: boolean; setBusy: (value: boolean) => void; onRestored?: () => void }) {
+export function ReleaseRecovery({ busy, setBusy, onRestored, onRestart, restarting = false }: {
+  busy: boolean; setBusy: (value: boolean) => void; onRestored?: () => void;
+  /** Relaunches into the restored AppImage, as after an update. */
+  onRestart?: () => void; restarting?: boolean;
+}) {
   const [status, setStatus] = useState<ReleaseUpdateStatus | null>(null);
   const [confirmed, setConfirmed] = useState(false);
   const [done, setDone] = useState(false), [restoring, setRestoring] = useState(false);
@@ -43,7 +47,11 @@ export function ReleaseRecovery({ busy, setBusy, onRestored }: { busy: boolean; 
     </div>}
     {status?.baseline_required && <p className="settings-note">{t("release.recovery.baselineRequired")}</p>}
     {status?.installer_kind === "appimage" && status.rollback_version && <div className="release-recovery">
-      {done ? <OperationResult title={t("release.recovery.restored", { version: status.rollback_version })} /> : <>
+      {done ? <OperationResult title={t("release.recovery.restored", { version: status.rollback_version })}>
+        {onRestart && <button className="primary-button" type="button" disabled={restarting} onClick={onRestart}>
+          {restarting ? <Busy label={t("release.done.restarting")} /> : t("release.done.restartNow")}
+        </button>}
+      </OperationResult> : <>
         <ConfirmationRow checked={confirmed} disabled={busy} onChange={setConfirmed}>
           <strong>{t("release.recovery.restoreConfirm", { version: status.rollback_version })}</strong><small>{t("release.recovery.restoreNote")}</small>
         </ConfirmationRow>

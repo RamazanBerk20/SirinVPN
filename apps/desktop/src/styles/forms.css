@@ -60,7 +60,7 @@
 .auth-method legend {
   margin-bottom: 8px;
   color: color-mix(in srgb, var(--line-strong) 20%, var(--text));
-  font-size: 12px;
+  font-size: var(--text-label);
   font-weight: 650;
 }
 
@@ -192,7 +192,7 @@ input[type="checkbox"]:not([role="switch"]):disabled {
 .dns-policy-note {
   margin: 0;
   color: var(--quiet);
-  font-size: 0.75rem;
+  font-size: var(--text-helper);
   line-height: 1.5;
 }
 

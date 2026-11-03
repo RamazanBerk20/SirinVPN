@@ -67,6 +67,7 @@
     "info": "Private-IP resolvers are trusted without DNSSEC. IP#TLS-name uses DNS over TLS with DNSSEC. Separate backup resolvers with commas; zones never fall back to the main resolver.",
     "invalid": "List each domain once, with at most 16 zones.",
     "invalidLine": "“{{line}}” isn’t a zone. Write domain=IP with a private resolver address, or IP#TLS-name.",
+    "localSuffix": "{{zone}} ends in .local, which belongs to devices on your own network. Use another name for this zone.",
     "publicResolver": "{{resolver}} is a public address. A zone can use it only over TLS: write {{resolver}}#its-TLS-name."
   },
   "review": {

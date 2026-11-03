@@ -126,7 +126,7 @@
       "label": "IP ranges (CIDR), one per line",
       "hint": "Up to {{max}} ranges. System DNS always uses the VPN.",
       "empty": "Add at least one range. With none, no traffic would use the VPN.",
-      "invalid": "Not a network in CIDR form, such as 198.51.100.0/24: {{routes}}",
+      "invalid": "{{routes}}: not a network in CIDR form. Write ranges like 198.51.100.0/24.",
       "hostBits": "{{route}} isn’t the start of its network. Use {{network}}.",
       "placeholder": "For example, {{example}}"
     },

@@ -7,7 +7,8 @@ import { DialogContent } from "../../components/DialogContent";
 import { notify } from "../../components/Toasts";
 import { Field, InlineError } from "../../components/ui";
 import { errorMessage } from "../../lib/errors";
-import { canonicalIpv4, invalidLocalNetworks } from "../../lib/cidr";
+import { hostBitFix, invalidLocalNetworks } from "../../lib/cidr";
+import { SettingsDisclosure } from "../settings/SettingsParts";
 import type { DeviceSummary } from "../../types";
 import { t } from "../../i18n";
 
@@ -19,12 +20,12 @@ const FORWARDING_COMMAND = "sudo sysctl -w net.ipv4.ip_forward=1";
 export function SubnetRoutesDialog({ serverId, device, onClose, onSaved }: {
   serverId: string; device: DeviceSummary; onClose: () => void; onSaved: () => Promise<void>;
 }) {
-  const form = useId(), reach = useId();
+  const form = useId();
   const [draft, setDraft] = useState(() => (device.subnet_routes ?? []).join("\n"));
-  const [explained, setExplained] = useState(false);
   const [busy, setBusy] = useState(false), [error, setError] = useState<string | null>(null);
   // Lines as typed, so "not a network" is reported once rather than word by word.
   const invalid = draft.split("\n").map((line) => line.trim()).filter((line) => line && invalidLocalNetworks(parseRoutes(line)).length > 0);
+  const fix = hostBitFix(invalid, (network) => invalidLocalNetworks([network]).length === 0);
   const save = async () => {
     if (invalid.length || busy) return;
     setBusy(true); setError(null);
@@ -47,14 +48,11 @@ export function SubnetRoutesDialog({ serverId, device, onClose, onSaved }: {
             </button>
           </div>}>
       <form id={form} className="invite-form" onSubmit={(event) => { event.preventDefault(); void save(); }}>
-        <div className="reach-explainer">
-          <button type="button" className="text-button" aria-expanded={explained} aria-controls={reach} onClick={() => setExplained(!explained)}>
-            {t("devices.localNetworks.whoCanReach")}
-          </button>
-          <p id={reach} hidden={!explained}>{t("devices.localNetworks.reach", { name: device.name })}</p>
-        </div>
+        <SettingsDisclosure boxed className="reach-explainer" summary={t("devices.localNetworks.whoCanReach")}>
+          <p className="settings-note">{t("devices.localNetworks.reach", { name: device.name })}</p>
+        </SettingsDisclosure>
         <Field label={t("devices.localNetworks.label")} hint={t("devices.localNetworks.hint")}
-          error={!invalid.length ? undefined : canonicalIpv4(invalid[0]) ? t("devices.localNetworks.hostBits", { network: invalid[0], canonical: canonicalIpv4(invalid[0])! })
+          error={!invalid.length ? undefined : fix ? t("devices.localNetworks.hostBits", { network: fix.entry, canonical: fix.network })
             : t("devices.localNetworks.invalid", { networks: invalid.join(", ") })}>
           <textarea value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="192.168.1.0/24" rows={3} disabled={busy} spellCheck={false} />
         </Field>

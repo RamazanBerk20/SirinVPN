@@ -583,7 +583,11 @@ select {
 .settings-disclosure-body {
   display: grid;
   gap: 12px;
-  padding-bottom: 12px;
+  padding: 4px 0 12px;
+}
+/* Stacked disclosures read as one list, not as separate blocks with gaps. */
+.settings-disclosure + .settings-disclosure {
+  margin-top: 0;
 }
 /* Standing alone in a form, the disclosure is its own card. */
 .settings-disclosure.boxed {

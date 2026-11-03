@@ -37,3 +37,7 @@ it("names a public plain resolver as the problem, not the zone", () => {
   expect(splitDnsError("not a zone")).toBe(t("dns.split.invalidLine", { line: "not a zone" }));
   expect(splitDnsError("corp.example=10.0.0.53")).toBeUndefined();
 });
+
+it("says why a .local zone is refused before judging its resolver", () => {
+  expect(splitDnsError("office.local=8.8.8.8")).toBe(t("dns.split.localSuffix", { zone: "office.local" }));
+});

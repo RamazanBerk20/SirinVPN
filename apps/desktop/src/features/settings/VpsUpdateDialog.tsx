@@ -311,7 +311,7 @@ export function VpsUpdateDialog({ profile, open, onOpenChange, disconnected, onC
           </dl>}
           {(candidate || baseline) && <section className="update-review" aria-label={t("vps.update.review.label")}>
             <h3>{t("vps.update.review.title", { version: verifiedVersion ?? "" })}</h3>
-            {releaseNotes && <p><strong>{t("release.candidate.whatsNew")}</strong> {releaseNotes}</p>}
+            {releaseNotes && <p><strong>{t(baseline || candidate?.action === "already_bound" ? "release.candidate.notes" : "release.candidate.whatsNew")}</strong> {releaseNotes}</p>}
             <p>{candidate?.action === "already_bound" ? t("vps.update.review.alreadyInstalled") : baseline ? t("vps.update.review.baseline") : candidate?.baseline_required ? t("vps.update.review.register") : t("vps.update.review.upgrade")}</p>
             <dl className="result-facts"><div><dt>{t("vps.update.review.verification")}</dt><dd>{t("vps.update.review.verified")}</dd></div>
               <div><dt>{t("vps.update.review.compatibility")}</dt><dd>{baseline || candidate?.can_install || candidate?.action === "already_bound" ? t("vps.update.review.compatible") : t("vps.update.review.incompatible")}</dd></div>

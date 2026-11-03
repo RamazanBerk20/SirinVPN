@@ -66,9 +66,9 @@
     "source": {
       "label": "Release source",
       "placeholder": "HTTPS folder URL",
-      "help": "An HTTPS address ending in /, from whoever installed this server",
+      "help": "The HTTPS folder your releases are published in, from whoever installed this server",
       "change": "Change source",
-      "invalid": "Use an HTTPS address that ends in / and has no user name, ? or #."
+      "invalid": "Use an HTTPS address with no user name, ? or #."
     },
     "channel": {
       "label": "Release channel",

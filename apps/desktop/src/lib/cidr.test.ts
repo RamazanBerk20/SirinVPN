@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { canonicalIpv4, invalidLocalNetworks, invalidRoutes, parseIpv4Cidr } from "./cidr";
+import { canonicalIpv4, hostBitFix, invalidLocalNetworks, invalidRoutes, parseIpv4Cidr } from "./cidr";
 
 it("parses IPv4 networks and rejects malformed ones", () => {
   expect(parseIpv4Cidr("198.51.100.0/24")).toEqual({ address: 0xc6336400, prefix: 24 });
@@ -22,4 +22,11 @@ it("suggests the network a range with host bits belongs to", () => {
   expect(canonicalIpv4("10.1.2.3/8")).toBe("10.0.0.0/8");
   expect(canonicalIpv4("198.51.100.0/24")).toBeNull();
   expect(canonicalIpv4("not a range")).toBeNull();
+});
+
+it("offers a network only for a single bad entry whose network is itself valid", () => {
+  const local = (route: string) => invalidLocalNetworks([route]).length === 0;
+  expect(hostBitFix(["192.168.1.7/24"], local)).toEqual({ entry: "192.168.1.7/24", network: "192.168.1.0/24" });
+  expect(hostBitFix(["192.168.0.0/8"], local)).toBeNull();
+  expect(hostBitFix(["192.168.1.7/24", "not a network"], local)).toBeNull();
 });

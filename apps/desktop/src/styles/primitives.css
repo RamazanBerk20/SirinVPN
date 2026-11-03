@@ -61,6 +61,7 @@ p, small, .inline-error, .warning-note {
 .android .inline-error.with-retry > button { flex-basis: 100%; min-height: 44px; }
 /* Stack rhythm: a message and the control or form that follows it never touch. */
 :is(.inline-error, .settings-notice, .warning-note, .danger-callout) + :is(button, form, .field, .card-save-row, .preference-actions) { margin-top: 12px; }
+:is(.launcher-actions, .preference-actions, .card-save-row) + .inline-error { margin-top: 12px; }
 /* Sticky dialog and save bars must not cover an error that scrolled itself into view. */
 .inline-error { scroll-margin: 16px 0 120px; }
 

@@ -233,7 +233,8 @@ export function ReleaseUpdateDialog({
                 {candidate.channel === "preview" && <p className="release-preview-note">{t("release.form.previewHint")}</p>}
               </div>
               {/* Signed notes are plain text; React renders them without markup. */}
-              {candidate.release_notes && <p><strong>{t("release.candidate.whatsNew")}</strong> {candidate.release_notes}</p>}
+              {/* "What's new" only for a release that would be installed; a verify or the current version just has notes. */}
+              {candidate.release_notes && <p><strong>{t(installable && !binding ? "release.candidate.whatsNew" : "release.candidate.notes")}</strong> {candidate.release_notes}</p>}
               <p>{t("release.candidate.package", { size: formatBytes(candidate.artifact_size_bytes) })}</p>
               <p className="settings-note">{t("release.candidate.source", { source })}</p>
 
@@ -324,7 +325,7 @@ export function ReleaseUpdateDialog({
                   required
                 />
               </Field>
-              <SettingsDisclosure summary={t("release.form.sourceInfoLabel")}><p>{t("release.form.sourceInfo")}</p></SettingsDisclosure>
+              <SettingsDisclosure summary={t("release.form.sourceInfoLabel")}><p className="settings-note">{t("release.form.sourceInfo")}</p></SettingsDisclosure>
               <div className="release-download-notice">
                 <DownloadSimple size={20} />
                 <p>
@@ -335,7 +336,8 @@ export function ReleaseUpdateDialog({
               <p className="form-footnote">
                 <GlobeHemisphereWest size={15} /> {t("release.form.privacy")}
               </p>
-              <ReleaseRecovery busy={Boolean(busy) || recoveryBusy} setBusy={setRecoveryBusy} onRestored={() => setRestored(true)} />
+              <ReleaseRecovery busy={Boolean(busy) || recoveryBusy} setBusy={setRecoveryBusy} onRestored={() => setRestored(true)}
+                onRestart={() => void restart()} restarting={busy === "restarting"} />
             </form>
           )}
         </DialogContent>

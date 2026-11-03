@@ -668,20 +668,8 @@ details[open] > summary > .disclosure-chevron {
   margin: 0;
   font-size: var(--text-section);
 }
-.pair-form .primary-button {
-  justify-self: start;
-}
 
 /* Local networks */
-.reach-explainer .text-button {
-  padding-left: 0;
-  color: var(--cyan);
-}
-.reach-explainer p {
-  margin: 4px 0 0;
-  color: var(--muted);
-  line-height: 1.6;
-}
 .command-note {
   display: grid;
   /* The unwrapped command scrolls inside its block instead of widening the form. */

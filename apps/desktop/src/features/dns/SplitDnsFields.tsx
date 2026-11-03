@@ -44,8 +44,9 @@ export function splitDnsError(value: string): string | undefined {
   if (splitDnsDraftIsValid(value)) return undefined;
   const line = value.split(/\r?\n/).map((item) => item.trim()).filter(Boolean).find((item) => !splitDnsDraftIsValid(item));
   if (!line) return t("dns.split.invalid");
-  // A well-formed zone whose plain resolver is public: name the resolver, not the zone, as the problem.
   const [name, resolvers = ""] = line.split("=");
+  if (name.trim().toLowerCase().replace(/\.$/, "").endsWith(".local")) return t("dns.split.localSuffix", { zone: name.trim() });
+  // A well-formed zone whose plain resolver is public: name the resolver, not the zone, as the problem.
   const publicResolver = !resolvers.includes("#") && splitDnsDraftIsValid(`${name}=10.0.0.1`)
     ? resolvers.split(",").map((entry) => entry.trim()).find((entry) => dnsEndpointAddressIsUsable(entry) && !privateResolverAddressIsUsable(entry))
     : undefined;

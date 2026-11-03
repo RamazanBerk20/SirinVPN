@@ -25,6 +25,12 @@ export function canonicalIpv4(text: string): string | null {
   return `${[24, 16, 8, 0].map((shift) => (network >>> shift) & 0xff).join(".")}/${parsed.prefix}`;
 }
 
+/** A "Use …" fix for the only bad entry, when it just has host bits set and its network is itself valid. */
+export function hostBitFix(invalid: string[], valid: (route: string) => boolean): { entry: string; network: string } | null {
+  const network = invalid.length === 1 ? canonicalIpv4(invalid[0]) : null;
+  return network && valid(network) ? { entry: invalid[0], network } : null;
+}
+
 /** IPv6 "x:x::x/n" by shape only (hex groups, at most one "::", prefix up to 128). */
 function ipv6Cidr(text: string) {
   const match = /^([0-9a-f:]+)\/(\d{1,3})$/i.exec(text.trim());
