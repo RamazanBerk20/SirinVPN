@@ -275,7 +275,10 @@
     "signIn": "Sign in to the VPS",
     "progressDns": "Applying DNS settings and checking the server…",
     "blocked": {
-      "settings": "Check the server settings above."
+      "dns": "Fix the DNS resolver above.",
+      "split": "Fix the split DNS zones above.",
+      "records": "Fix the private DNS records above.",
+      "nat64": "Fix the NAT64 prefix above."
     }
   },
   "summary": {

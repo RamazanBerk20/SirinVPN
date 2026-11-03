@@ -16,6 +16,15 @@ function canonical({ address, prefix }: { address: number; prefix: number }) {
   return ((address & host) >>> 0) === 0;
 }
 
+/** The network an IPv4 range with host bits set belongs to ("198.51.100.7/24" → "198.51.100.0/24"), or null. */
+export function canonicalIpv4(text: string): string | null {
+  const parsed = parseIpv4Cidr(text);
+  if (!parsed || canonical(parsed)) return null;
+  const mask = parsed.prefix === 0 ? 0 : (0xffffffff << (32 - parsed.prefix)) >>> 0;
+  const network = (parsed.address & mask) >>> 0;
+  return `${[24, 16, 8, 0].map((shift) => (network >>> shift) & 0xff).join(".")}/${parsed.prefix}`;
+}
+
 /** IPv6 "x:x::x/n" by shape only (hex groups, at most one "::", prefix up to 128). */
 function ipv6Cidr(text: string) {
   const match = /^([0-9a-f:]+)\/(\d{1,3})$/i.exec(text.trim());

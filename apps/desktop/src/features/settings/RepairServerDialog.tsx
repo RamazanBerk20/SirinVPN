@@ -109,17 +109,17 @@ export function RepairServerDialog({
   };
 
   const transportValid = dns || transportDraftIsValid(transport);
-  const settingsValid =
-    dnsDraftIsValid(dnsChoice, dnsEndpoints) &&
-    (dnsChoice === "preserve" || splitDnsDraftIsValid(splitDns)) &&
-    (privateDnsChoice !== "replace" ||
-      privateDnsDraftIsValid(privateDnsRecords, false)) &&
-    (nat64Choice !== "replace" || nat64PrefixIsValid(nat64Prefix));
+  // The first server setting that needs fixing, named so the footer can point at it.
+  const invalidSetting = !dnsDraftIsValid(dnsChoice, dnsEndpoints) ? "dns"
+    : dnsChoice !== "preserve" && !splitDnsDraftIsValid(splitDns) ? "split"
+    : privateDnsChoice === "replace" && !privateDnsDraftIsValid(privateDnsRecords, false) ? "records"
+    : nat64Choice === "replace" && !nat64PrefixIsValid(nat64Prefix) ? "nat64" : null;
+  const settingsValid = invalidSetting === null;
   const sshValid = disconnected && login.valid && transportValid && settingsValid;
   // Why the primary action is unavailable, most important first.
   const blocker = !disconnected ? t("vps.common.disconnectFirst")
     : !transportValid ? t("ssh.transport.invalid")
-    : !settingsValid ? t("vps.repair.blocked.settings")
+    : invalidSetting ? t(`vps.repair.blocked.${invalidSetting}`)
     : login.missing ?? (step === "fingerprint" && !confirmed ? t("ssh.verify.confirmFirst") : null);
 
   const updateDnsEndpoint = (

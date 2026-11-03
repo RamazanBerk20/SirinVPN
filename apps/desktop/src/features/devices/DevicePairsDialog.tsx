@@ -36,7 +36,7 @@ export function DevicePairsDialog({ serverId, device, snapshot, candidates, onCl
   candidates: DeviceSummary[];
   onClose: () => void; onSaved: () => Promise<void>;
 }) {
-  const heading = useId();
+  const heading = useId(), formId = useId();
   const pairs = pairSummaries(snapshot, device.id);
   const paired = new Set(pairs.map((pair) => pair.peer));
   // A new pair starts with a device that has none yet; picking a paired one replaces its direction.
@@ -77,7 +77,10 @@ export function DevicePairsDialog({ serverId, device, snapshot, candidates, onCl
     <Dialog.Portal><Dialog.Overlay className="dialog-overlay" /><DialogContent className="dialog-content invitation-dialog"
           heading={<>{t("devices.pairs.title", { name: device.name })}</>}
           description={<>{t("devices.pairs.description")}</>}
-          closeDisabled={busy !== null} closeLabel={t("common.action.close")}>
+          closeDisabled={busy !== null} closeLabel={t("common.action.close")}
+          footer={candidates.length > 0 && <button className="primary-button" type="submit" form={formId} disabled={busy !== null || !peer}>
+            {busy === "add" && <ArrowClockwise className="spin" size={17} />}{busy === "add" ? t("common.state.saving") : t("devices.pairs.save")}
+          </button>}>
       {pairs.length === 0 ? <p className="pair-list-empty">{t("devices.pairs.none")}</p> : <ul className="pair-list">
         {pairs.map(({ pair, peer: peerId, text }) => {
           const key = `${pair.device_id}:${pair.peer_device_id}`;
@@ -89,7 +92,7 @@ export function DevicePairsDialog({ serverId, device, snapshot, candidates, onCl
           </li>;
         })}
       </ul>}
-      {candidates.length > 0 && <form className="pair-form" aria-labelledby={heading} onSubmit={(event) => { event.preventDefault(); void add(); }}>
+      {candidates.length > 0 && <form className="pair-form" id={formId} aria-labelledby={heading} onSubmit={(event) => { event.preventDefault(); void add(); }}>
         <h3 id={heading}>{t("devices.pairs.addHeading")}</h3>
         <Field label={t("devices.pairs.peer")}>
           <select value={peer} onChange={(event) => setPeer(event.target.value)} disabled={busy !== null}>
@@ -107,9 +110,6 @@ export function DevicePairsDialog({ serverId, device, snapshot, candidates, onCl
         </Field>
         {paired.has(peer) && <p className="settings-note">{t("devices.pairs.replaces", { name: peerName })}</p>}
         {error && <InlineError message={error} />}
-        <button className="primary-button" type="submit" disabled={busy !== null || !peer}>
-          {busy === "add" && <ArrowClockwise className="spin" size={17} />}{busy === "add" ? t("common.state.saving") : t("devices.pairs.save")}
-        </button>
       </form>}
       {candidates.length === 0 && error && <InlineError message={error} />}
     </DialogContent></Dialog.Portal>

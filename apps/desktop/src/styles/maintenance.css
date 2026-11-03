@@ -65,18 +65,6 @@
   margin-top: 24px;
 }
 
-.fingerprint-heading {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.fingerprint-heading h2 {
-  margin: 0;
-}
-.fingerprint-heading > svg {
-  flex-shrink: 0;
-  color: var(--accent-strong);
-}
 .fingerprint-step > .ssh-verification-steps {
   margin-top: 16px;
 }

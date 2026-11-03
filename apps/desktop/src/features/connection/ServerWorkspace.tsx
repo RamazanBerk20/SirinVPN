@@ -31,11 +31,12 @@ import { formatTransport } from "../../format";
 import { ListRow } from "../../components/ListRow";
 import { t } from "../../i18n";
 import type { ServerProfile } from "../../types";
+import { api } from "../../api";
 import { ServerPicker } from "../servers/ServerPicker";
 import { MobileConnectionDetails } from "./MobileConnectionDetails";
 
 /** What each Android settings page is set to now, so the index answers before it is opened. */
-function settingsSummaries(model: ReturnType<typeof useServerWorkspace>): Partial<Record<SettingsCategory, string>> {
+function settingsSummaries(model: ReturnType<typeof useServerWorkspace>, recoveryKey: boolean | null): Partial<Record<SettingsCategory, string>> {
   const saved = model.preferences.saved;
   const routing = saved?.routing.mode;
   // The server only reports through the tunnel; a status from an earlier connection may be stale.
@@ -46,6 +47,7 @@ function settingsSummaries(model: ReturnType<typeof useServerWorkspace>): Partia
       first: saved.transport === "automatic" ? t("app.settingsIndex.automaticMethod") : formatTransport(saved.transport),
       second: t(saved.policy.automatic_reconnect ? "app.settingsIndex.reconnectOn" : "app.settingsIndex.reconnectOff"),
     }) : undefined,
+    recovery: recoveryKey === null ? undefined : t(recoveryKey ? "app.settingsIndex.recoveryKeySaved" : "app.settingsIndex.recoveryKeyMissing"),
     network: routing ? t(routing === "selected_routes" ? "home.routing.selectedRoutes" : routing === "selected_applications" ? "home.routing.selectedApps" : "home.routing.fullTunnel") : undefined,
     maintenance: model.rotationPendingConfirmed ? t("app.settingsIndex.attention")
       : server ? t(server.interface_up && server.dns_healthy ? "app.settingsIndex.serverHealthy" : "app.settingsIndex.serverFault") : undefined,
@@ -72,6 +74,16 @@ export function ServerWorkspace(
 ) {
   const model = useServerWorkspace(props);
   const [componentUpdateOpen, setComponentUpdateOpen] = useState(false);
+  // The Android settings index says whether an offline recovery key exists; the server answers only while connected.
+  const [recoveryKey, setRecoveryKey] = useState<boolean | null>(null);
+  const indexShown = isAndroid && props.view === "settings" && model.connected;
+  useEffect(() => {
+    setRecoveryKey(null);
+    if (!indexShown) return;
+    let current = true;
+    api.recoverySettings(props.profile.id).then((settings) => { if (current) setRecoveryKey(settings.key !== null); }, () => {});
+    return () => { current = false; };
+  }, [indexShown, props.profile.id]);
   const handledTrayRequest = useRef<number | null>(null);
   // Runs outside the lazy boundary and before the tray effect, so a tray request that changes the view keeps its dialog open.
   const { setDiagnosticsOpen } = model;
@@ -169,7 +181,7 @@ export function ServerWorkspace(
       )}
       {view === "settings" && (
         <SettingsLayout category={category} onChange={onCategoryChange} mobile={isAndroid} detail={Boolean(props.detail)} onBack={props.onBack}
-          serverName={profile.name} summaries={isAndroid ? settingsSummaries(model) : undefined}>
+          serverName={profile.name} summaries={isAndroid ? settingsSummaries(model, recoveryKey) : undefined}>
           {category === "general" && (
             <GeneralSettings
               platform={isAndroid ? "android" : "desktop"}

@@ -1,6 +1,6 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import { ArrowClockwise, Key, Warning } from "@phosphor-icons/react";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { api } from "../../api";
 import { DialogContent } from "../../components/DialogContent";
 import { Field, InlineError } from "../../components/ui";
@@ -32,6 +32,7 @@ export function WireGuardDeviceDialog({ serverId, target, delegatedPolicy, onClo
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const ready = Boolean(deviceName.trim() && (target || memberName.trim()));
+  const formId = useId();
 
   const chooseFile = async () => {
     try {
@@ -76,7 +77,13 @@ export function WireGuardDeviceDialog({ serverId, target, delegatedPolicy, onClo
             ? t("devices.wireguard.titleReady")
             : target ? t("devices.wireguard.titleForMember", { name: target.name }) : t("devices.wireguard.title")}</>}
           description={<>{created ? t("devices.wireguard.descriptionReady") : t("devices.wireguard.description")}</>}
-          closeDisabled={busy} closeLabel={t("common.action.close")}>
+          closeDisabled={busy} closeLabel={t("common.action.close")}
+          footerNote={!created && !busy && !ready ? t("devices.wireguard.readyFirst") : null}
+          // The commit action sits in the footer, as in every other Devices dialog.
+          footer={created ? undefined : <button className="primary-button" type="submit" form={formId} disabled={busy || !ready}>
+            {busy ? <ArrowClockwise className="spin" size={18} /> : <Key size={18} />}
+            {busy ? t("devices.wireguard.creating") : t("devices.wireguard.create")}
+          </button>}>
           {created ? (
             <div className="invitation-result">
               <div className="warning-note">
@@ -90,7 +97,7 @@ export function WireGuardDeviceDialog({ serverId, target, delegatedPolicy, onClo
               <p className="settings-note">{t("devices.wireguard.revokeHint")}</p>
             </div>
           ) : (
-            <form className="invite-form" onSubmit={(event) => { event.preventDefault(); void create(); }}>
+            <form className="invite-form" id={formId} onSubmit={(event) => { event.preventDefault(); void create(); }}>
               {!target && <Field label={t("devices.wireguard.memberName")}>
                 <input value={memberName} maxLength={64} required autoComplete="off" onChange={(event) => setMemberName(event.target.value)} />
               </Field>}
@@ -106,10 +113,6 @@ export function WireGuardDeviceDialog({ serverId, target, delegatedPolicy, onClo
                 </div>
               </Field>
               {error && <InlineError message={error} />}
-              <button className="primary-button" type="submit" disabled={busy || !ready}>
-                {busy ? <ArrowClockwise className="spin" size={18} /> : <Key size={18} />}
-                {busy ? t("devices.wireguard.creating") : t("devices.wireguard.create")}
-              </button>
             </form>
           )}
         </DialogContent>

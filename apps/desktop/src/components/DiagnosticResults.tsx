@@ -36,7 +36,7 @@ function DiagnosticRows({ checks, fixes = {} }: { checks: DiagnosticCheck[]; fix
   })}</div>;
 }
 
-export function DiagnosticResults({ report, onRunAgain, fixes }: { report: DiagnosticReport; onRunAgain?: () => void; fixes?: DiagnosticFixes }) {
+export function DiagnosticResults({ report, onRunAgain, onConnect, fixes }: { report: DiagnosticReport; onRunAgain?: () => void; onConnect?: () => void; fixes?: DiagnosticFixes }) {
   const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
   const generation = useRef(0);
   useEffect(() => {
@@ -48,7 +48,9 @@ export function DiagnosticResults({ report, onRunAgain, fixes }: { report: Diagn
   if (report.checks.length === 1 && report.checks[0].code === RUN_FAILED)
     return <InlineError message={report.checks[0].message} onRetry={onRunAgain} retryLabel={t("settings.diagnostics.runAgain")} />;
   if (!report.checks.length)
-    return <SettingsNotice action={onRunAgain && { label: t("settings.diagnostics.runAgain"), onClick: onRunAgain }}>{t("settings.diagnostics.empty")}</SettingsNotice>;
+    // Nothing ran because nothing is connected: the next step is connecting, not another run.
+    return <SettingsNotice action={onConnect ? { label: t("settings.parts.connect"), onClick: onConnect }
+      : onRunAgain && { label: t("settings.diagnostics.runAgain"), onClick: onRunAgain }}>{t("settings.diagnostics.empty")}</SettingsNotice>;
   const copy = async () => {
     const request = generation.current;
     try {

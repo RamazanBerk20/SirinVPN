@@ -78,7 +78,8 @@ export function WorkspaceDialogs({
               </div>
             ) : (
               <>
-                <DiagnosticResults report={diagnostics} onRunAgain={() => void model.runDiagnostics()} fixes={onOpenSettings && diagnosticFixes((category) => { setDiagnosticsOpen(false); onOpenSettings(category); })} />
+                <DiagnosticResults report={diagnostics} onRunAgain={() => void model.runDiagnostics()}
+                  onConnect={model.localKnown && model.localStatus.state === "disconnected" && !model.anotherConnected ? () => { setDiagnosticsOpen(false); void model.toggle(); } : undefined} fixes={onOpenSettings && diagnosticFixes((category) => { setDiagnosticsOpen(false); onOpenSettings(category); })} />
                 {model.canManageAccess && <SpeedTest serverId={profile.id} />}
               </>
             )}

@@ -20,7 +20,9 @@ export function MemberPolicyFields({ draft, onChange, delegated = false, creatin
 }) {
   const errors = policyFieldErrors(draft);
   const expires = draft.expires && !errors.expires ? expiryUnix(draft.expires) : null;
-  const utc = expires === null ? null : formatDateTime(new Date(expires * 1000), { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" });
+  // The field already shows the date in the system's format; repeat it in UTC only when the day differs.
+  const sameDay = expires !== null && new Date(expires * 1000).toISOString().slice(0, 10) === draft.expires.slice(0, 10);
+  const utc = expires === null ? null : formatDateTime(new Date(expires * 1000), sameDay ? { timeStyle: "short", timeZone: "UTC" } : { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" });
   return <div className="member-policy-fields">
     <fieldset className="policy-group">
       <legend>{t("devices.policy.limits")}</legend>

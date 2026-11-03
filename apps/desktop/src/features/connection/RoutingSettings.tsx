@@ -6,6 +6,7 @@ import { invoke, isAndroid } from "../../platform";
 import { useState } from "react";
 import { InlineError } from "../../components/ui";
 import { errorMessage } from "../../lib/errors";
+import { canonicalIpv4 } from "../../lib/cidr";
 import { formatNumber, t } from "../../i18n";
 import { SettingsNotice } from "../settings/SettingsParts";
 
@@ -114,7 +115,9 @@ export function RoutingSettings({ model, onCheckUpdates }: { model: ServerWorksp
           />
           <small>{t("connection.routing.routes.hint", { max: formatNumber(MAX_INCLUDED_ROUTES) })}</small>
           {model.preferences.badRoutes.length > 0 && <small className="field-error" role="alert">
-            {model.preferences.badRoutes[0] === "" ? t("connection.routing.routes.empty") : t("connection.routing.routes.invalid", { routes: model.preferences.badRoutes.join(", ") })}
+            {model.preferences.badRoutes[0] === "" ? t("connection.routing.routes.empty")
+              : canonicalIpv4(model.preferences.badRoutes[0]) ? t("connection.routing.routes.hostBits", { route: model.preferences.badRoutes[0], network: canonicalIpv4(model.preferences.badRoutes[0])! })
+              : t("connection.routing.routes.invalid", { routes: model.preferences.badRoutes.join(", ") })}
           </small>}
         </label>
       )}

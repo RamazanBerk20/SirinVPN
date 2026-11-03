@@ -195,6 +195,8 @@ html.android[data-theme="light"] {
 .android .code-ready { color: var(--positive); }
 .android .native-code-input > small[role=alert] { color: var(--attention); }
 .android .mobile-enrollment .form-heading > span, .android .mobile-enrollment .form-heading h2 { display: none; }
+/* The app bar names the flow, not the step: later steps keep their own title. */
+.android .mobile-enrollment .fingerprint-heading h2 { display: block; }
 .android .mobile-enrollment .form-heading { margin: 0 0 8px; padding: 0; border: 0; background: transparent; }
 .android .mobile-enrollment .form-heading p { margin: 0; font-size: var(--fs-body); line-height: 1.6; }
 .android .setup-form { width: 100%; min-width: 0; padding: 0; background: transparent; box-shadow: none; border: 0; gap: 20px; }

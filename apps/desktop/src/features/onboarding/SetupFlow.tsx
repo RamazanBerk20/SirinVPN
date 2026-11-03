@@ -264,11 +264,14 @@ export function SetupFlow({
       <div className="fingerprint-step">
         <StepBack onClick={() => setStep("details")} disabled={busy} />
         {!created && <SetupProgress current={1} />}
-        <div className="fingerprint-heading">
-          <Key size={28} weight="duotone" aria-hidden="true" />
-          <h2>{t(created ? "onboarding.setup.fingerprint.pinnedTitle" : "onboarding.setup.fingerprint.title")}</h2>
+        {/* The same heading as step 1, so the steps read as one flow. */}
+        <div className="form-heading fingerprint-heading">
+          <span><Key size={20} aria-hidden="true" /></span>
+          <div>
+            <h2>{t(created ? "onboarding.setup.fingerprint.pinnedTitle" : "onboarding.setup.fingerprint.title")}</h2>
+            <p>{t(created ? "onboarding.setup.fingerprint.pinned" : "onboarding.setup.fingerprint.summary")}</p>
+          </div>
         </div>
-        <p>{t(created ? "onboarding.setup.fingerprint.pinned" : "onboarding.setup.fingerprint.summary")}</p>
         <FingerprintValue value={fingerprint} />
         {!created && !confirmed && <SshVerificationGuide confirmation="button" />}
         {!created && !confirmed && <div className="warning-note">

@@ -7,7 +7,7 @@ import { DialogContent } from "../../components/DialogContent";
 import { notify } from "../../components/Toasts";
 import { Field, InlineError } from "../../components/ui";
 import { errorMessage } from "../../lib/errors";
-import { invalidLocalNetworks } from "../../lib/cidr";
+import { canonicalIpv4, invalidLocalNetworks } from "../../lib/cidr";
 import type { DeviceSummary } from "../../types";
 import { t } from "../../i18n";
 
@@ -54,7 +54,8 @@ export function SubnetRoutesDialog({ serverId, device, onClose, onSaved }: {
           <p id={reach} hidden={!explained}>{t("devices.localNetworks.reach", { name: device.name })}</p>
         </div>
         <Field label={t("devices.localNetworks.label")} hint={t("devices.localNetworks.hint")}
-          error={invalid.length ? t("devices.localNetworks.invalid", { networks: invalid.join(", ") }) : undefined}>
+          error={!invalid.length ? undefined : canonicalIpv4(invalid[0]) ? t("devices.localNetworks.hostBits", { network: invalid[0], canonical: canonicalIpv4(invalid[0])! })
+            : t("devices.localNetworks.invalid", { networks: invalid.join(", ") })}>
           <textarea value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="192.168.1.0/24" rows={3} disabled={busy} spellCheck={false} />
         </Field>
         <div className="command-note">

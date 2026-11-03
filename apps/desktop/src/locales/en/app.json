@@ -129,6 +129,8 @@
     "reconnectOff": "Doesn’t reconnect automatically",
     "attention": "Needs attention: a key rotation didn’t finish",
     "serverHealthy": "Server running normally",
+    "recoveryKeySaved": "Offline recovery key saved",
+    "recoveryKeyMissing": "No offline recovery key yet",
     "serverFault": "Needs attention: the server reports a fault"
   }
 }

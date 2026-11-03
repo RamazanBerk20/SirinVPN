@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { t } from "../../i18n";
-import { SplitDnsFields, splitDnsDraftIsValid, withSplitDns } from "./SplitDnsFields";
+import { SplitDnsFields, splitDnsDraftIsValid, splitDnsError, withSplitDns } from "./SplitDnsFields";
 
 afterEach(cleanup);
 
@@ -26,8 +26,14 @@ it("keeps the zone details behind an info button and flags invalid zones", () =>
   expect(details.hidden).toBe(false);
   expect(screen.queryByText(t("dns.split.invalid"))).toBeNull();
   rerender(<SplitDnsFields value="office.home=1.1.1.1" onChange={vi.fn()} />);
-  expect(screen.getByRole("alert").textContent).toBe(t("dns.split.invalidLine", { line: "office.home=1.1.1.1" }));
+  expect(screen.getByRole("alert").textContent).toBe(t("dns.split.publicResolver", { resolver: "1.1.1.1" }));
   expect(screen.getByRole("textbox", { name: t("dns.split.label") }).getAttribute("aria-invalid")).toBe("true");
   rerender(<SplitDnsFields value={"office.home=10.20.0.1\noffice.home=10.20.0.2"} onChange={vi.fn()} />);
   expect(screen.getByRole("alert").textContent).toBe(t("dns.split.invalid"));
+});
+
+it("names a public plain resolver as the problem, not the zone", () => {
+  expect(splitDnsError("corp.example=8.8.8.8")).toBe(t("dns.split.publicResolver", { resolver: "8.8.8.8" }));
+  expect(splitDnsError("not a zone")).toBe(t("dns.split.invalidLine", { line: "not a zone" }));
+  expect(splitDnsError("corp.example=10.0.0.53")).toBeUndefined();
 });
