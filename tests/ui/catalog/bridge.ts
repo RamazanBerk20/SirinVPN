@@ -21,9 +21,13 @@ export class CatalogBridge {
     if (/listServers|ListProfiles|SecurityStatus|IdentityStatus/.test(name)) return 'Protected local storage could not be opened. Unlock this device and retry.';
     if (/import|recover.*package/i.test(name)) return 'The encrypted file could not be opened. Check its password and file integrity.';
     if (/export|chooseSaveFile/i.test(name)) return 'The selected local destination could not be written. Choose another destination.';
-    if (/Preferences|Presentation|Metadata/.test(name)) return 'Local preferences could not be saved. Check storage access and retry.';
-    if (/Release|Baseline/.test(name)) return 'The requested package could not be verified. Check the release source and signature.';
-    return 'The requested VPS operation could not complete. Check the connection and current server state before retrying.';
+    // Each cause must read naturally after the action's own summary, e.g. "Couldn't install the update. <cause>"
+    if (/Preferences|Presentation|Metadata/.test(name)) return /^(get|load|read)/.test(name) ? 'The settings file could not be read.' : 'The settings file could not be written.';
+    if (/^(install|discard|rollback)Release/.test(name)) return 'The installer stopped before it finished.';
+    if (/Release|Baseline/.test(name)) return 'The release source did not answer.';
+    if (/LocalVpnComponent|localComponent/i.test(name)) return 'The VPN service did not answer.';
+    if (/launchVpnApplication/.test(name)) return 'The program could not be started.';
+    return 'The server did not answer in time.';
   }
   async native(command:string,args:any){
     if(command==='plugin:event|listen')return 1;
