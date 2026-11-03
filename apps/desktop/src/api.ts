@@ -106,6 +106,8 @@ export const api = {
       input: { confirmed, ...(isAndroid ? { baseline_only: baselineOnly } : {}) },
     }),
   discardReleaseUpdate: () => invoke<void>("discard_release_update"),
+  /** Desktop only, after installing an update; the app exits once this returns. */
+  restartApp: () => invoke<void>("restart_app"),
   releaseUpdateStatus: () => invoke<ReleaseUpdateStatus>("get_release_update_status"),
   rollbackReleaseUpdate: (expectedVersion: string) => invoke<void>("rollback_release_update", {
     input: { confirmed: true, expected_version: expectedVersion },
@@ -259,7 +261,9 @@ export const api = {
     invoke<CurrentConfiguration>("server_configuration", { serverId }),
   diagnostics: (serverId: string) =>
     invoke<DiagnosticReport>("run_diagnostics", { serverId }),
-  speedTest: (serverId: string) => invoke<import("./types").SpeedTestResult>("run_speed_test", { serverId }),
+  /** `null` when the test was cancelled. */
+  speedTest: (serverId: string) => invoke<import("./types").SpeedTestResult | null>("run_speed_test", { serverId }),
+  cancelSpeedTest: () => invoke<void>("cancel_speed_test"),
   membership: (serverId: string) =>
     invoke<MembershipSnapshot>("membership", { serverId }),
   dnsBlocklistSettings: (serverId: string) => invoke<import("./types").DnsBlocklistSettings>("dns_blocklist_settings", { serverId }),

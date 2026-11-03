@@ -4,7 +4,7 @@ full_capture.py's message-coverage report lists the UI strings no state shows; e
 A case may carry `forms`: the original scenarios that drive desktop-only controls are limited to the desktop.
 """
 from scenarios import click, fill, css, settings, patch, mutate, DID, ERROR
-from workflows import check
+from workflows import check, SOURCE
 
 NTFY = 'https://ntfy.example/sirin-alerts'
 BOTH = ('desktop', 'mobile')
@@ -108,6 +108,13 @@ def coverage_states(cases):
     # Speed test inside the diagnostics dialog.
     diagnostics = maintenance + [click('Run diagnostics')]
     outcomes('speed-test', 'speed-test', diagnostics, click('Run speed test'), 'speedTest')
+    add('speed-test', 'speed-test-cancelled', diagnostics + [click('Run speed test')], {'responses': {'speedTest': None}}, required=['speedTest'])
+
+    # Restarting after a desktop app update (the Windows installer closes the app itself).
+    installed = settings('', 'general') + [click('Check for updates'), fill('Release source', SOURCE), click('Check release'), check('I confirm installing'), click('Install update')]
+    add('app-updates', 'restart-ready', installed, {'connected': False}, ('desktop',), required=['installReleaseUpdate'])
+    add('app-updates', 'restart-in-progress', installed + [click('Restart now')], {'connected': False}, ('desktop',), required=['restartApp'])
+    add('app-updates', 'restart-failed', installed + [patch(errors={'restartApp': ERROR}), click('Restart now')], {'connected': False}, ('desktop',), required=['restartApp'])
 
     # Troubleshooter ("Can't connect?").
     # The hero offers the guide after a failed connection or while the tunnel is degraded.

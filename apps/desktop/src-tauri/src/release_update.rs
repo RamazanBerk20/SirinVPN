@@ -288,6 +288,32 @@ pub(crate) fn discard_release_update(
     Ok(())
 }
 
+/// Opens the installed version. The VPN runs in its own service, so only the window restarts.
+/// `request_restart` runs the exit events before Tauri starts the new process, and the
+/// single-instance plugin releases its D-Bus name on exit, so the new process doesn't hand its
+/// launch to this one and quit. Tauri runs `$APPIMAGE` for an AppImage, not the mounted binary,
+/// and otherwise the binary this process started from, which a Debian upgrade replaced in place.
+#[tauri::command]
+pub(crate) fn restart_app(
+    app: tauri::AppHandle,
+    runtime: State<'_, ReleaseUpdateRuntime>,
+) -> Result<(), String> {
+    if runtime.lock()?.busy {
+        return Err("Wait for the current update to finish.".to_owned());
+    }
+    // Tauri exits even if starting the new process fails, so check the file it will run first.
+    if !tauri::process::current_binary(&app.env()).is_ok_and(|path| executable(&path)) {
+        return Err("SirinVPN couldn’t restart. Close it and open it again.".to_owned());
+    }
+    app.request_restart();
+    Ok(())
+}
+
+fn executable(path: &Path) -> bool {
+    fs::metadata(path)
+        .is_ok_and(|metadata| metadata.is_file() && metadata.permissions().mode() & 0o111 != 0)
+}
+
 impl ReleaseUpdateRuntime {
     fn begin_check(&self) -> Result<Option<PendingReleaseUpdate>, String> {
         let mut state = self.lock()?;
@@ -816,6 +842,18 @@ mod tests {
         assert!(runtime.discard().is_err());
         runtime.complete_check(None).unwrap();
         assert!(runtime.discard().unwrap().is_none());
+    }
+
+    #[test]
+    fn restart_runs_only_an_executable_file() {
+        let directory = tempfile::tempdir().unwrap();
+        let file = directory.path().join("SirinVPN.AppImage");
+        assert!(!executable(&file));
+        private_file(&file, b"app");
+        assert!(!executable(&file));
+        fs::set_permissions(&file, fs::Permissions::from_mode(0o755)).unwrap();
+        assert!(executable(&file));
+        assert!(!executable(directory.path()));
     }
 
     #[test]

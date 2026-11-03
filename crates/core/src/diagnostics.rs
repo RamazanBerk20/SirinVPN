@@ -14,7 +14,7 @@ pub use dns::{PrivateDnsOutcome, private_dns_check, probe_private_dns};
 /// For a platform that runs only the remote checks itself (Android).
 pub use leak::checks as leak_checks;
 pub(crate) use remote::sanitize;
-pub use speed::{SpeedTestFailure, SpeedTestResult, speed_test};
+pub use speed::{SpeedTestFailure, SpeedTestResult, SpeedTestRun, SpeedTestSlot, speed_test};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Protection {

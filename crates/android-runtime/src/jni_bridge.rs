@@ -19,6 +19,7 @@ pub struct Runtime {
     pub relay: Mutex<Option<tokio::task::JoinHandle<Result<(), sirinvpn_transport::RelayError>>>>,
     pub measurement: tokio::sync::Mutex<()>,
     pub generation: std::sync::atomic::AtomicI64,
+    pub speed_test: sirinvpn_core::diagnostics::SpeedTestSlot,
 }
 static RUNTIME: OnceLock<Runtime> = OnceLock::new();
 pub fn runtime() -> Result<&'static Runtime> {
@@ -518,6 +519,7 @@ pub extern "system" fn Java_org_sirinvpn_client_Native_initialize(
                 relay: Mutex::new(None),
                 measurement: tokio::sync::Mutex::new(()),
                 generation: std::sync::atomic::AtomicI64::new(0),
+                speed_test: Default::default(),
             })
             .map_err(|_| anyhow::anyhow!("Already initialized"))?;
         Ok(())

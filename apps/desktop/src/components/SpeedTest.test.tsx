@@ -4,9 +4,9 @@ import { api } from "../api";
 import { t } from "../i18n";
 import { SpeedTest, speedTestPhase } from "./SpeedTest";
 
-vi.mock("../api", () => ({ api: { speedTest: vi.fn() } }));
+vi.mock("../api", () => ({ api: { speedTest: vi.fn(), cancelSpeedTest: vi.fn() } }));
 
-afterEach(() => { cleanup(); vi.mocked(api.speedTest).mockReset(); });
+afterEach(() => { cleanup(); vi.mocked(api.speedTest).mockReset(); vi.mocked(api.cancelSpeedTest).mockReset(); });
 
 it("runs only on request and labels the result as tunnel-to-VPS throughput", async () => {
   vi.mocked(api.speedTest).mockResolvedValue({
@@ -32,14 +32,37 @@ it("shows the native explanation when the VPS refuses", async () => {
   expect((await screen.findByRole("alert")).textContent).toContain("Only the Owner or an Admin can run the speed test.");
 });
 
-it("shows the phase and time left while it runs, since it can't be cancelled", async () => {
+it("shows the phase and time left while it runs", async () => {
   vi.useFakeTimers();
   vi.mocked(api.speedTest).mockReturnValue(new Promise(() => {}));
   render(<SpeedTest serverId="server" />);
   fireEvent.click(screen.getByRole("button", { name: t("maintenance.speedTest.run") }));
-  expect(screen.queryByRole("button")).toBeNull();
+  expect(screen.queryByRole("button", { name: t("maintenance.speedTest.run") })).toBeNull();
   await act(async () => { await vi.advanceTimersByTimeAsync(4000); });
   expect(screen.getByText(t("settings.speedTest.left", { phase: t("settings.speedTest.phase.download"), seconds: "16" }))).toBeTruthy();
   expect([0, 1.9, 2, 9.9, 10, 17.9, 18, 40].map(speedTestPhase)).toEqual(["idle", "idle", "download", "download", "upload", "upload", "finishing", "finishing"]);
   vi.useRealTimers();
+});
+
+it("cancels on request and shows a neutral note with the Run button back", async () => {
+  let finish!: (result: null) => void;
+  vi.mocked(api.speedTest).mockReturnValue(new Promise((done) => { finish = done; }));
+  vi.mocked(api.cancelSpeedTest).mockImplementation(async () => finish(null));
+  render(<SpeedTest serverId="server" />);
+  fireEvent.click(screen.getByRole("button", { name: t("maintenance.speedTest.run") }));
+  fireEvent.click(screen.getByRole("button", { name: t("settings.speedTest.cancel") }));
+  expect(await screen.findByText(t("settings.speedTest.cancelled"))).toBeTruthy();
+  expect(api.cancelSpeedTest).toHaveBeenCalled();
+  expect(screen.queryByRole("alert")).toBeNull();
+  expect(screen.getByRole("button", { name: t("maintenance.speedTest.run") })).toBeTruthy();
+  expect(screen.queryByRole("button", { name: t("settings.speedTest.cancel") })).toBeNull();
+});
+
+it("stops a running test when the dialog closes", () => {
+  vi.mocked(api.speedTest).mockReturnValue(new Promise(() => {}));
+  const view = render(<SpeedTest serverId="server" />);
+  fireEvent.click(screen.getByRole("button", { name: t("maintenance.speedTest.run") }));
+  expect(api.cancelSpeedTest).not.toHaveBeenCalled();
+  view.unmount();
+  expect(api.cancelSpeedTest).toHaveBeenCalledOnce();
 });

@@ -34,7 +34,7 @@ export function ReleaseUpdateDialog({
   const formId = useId();
   const { source, setSource, channel, setChannel, candidate, setCandidate, installed, setInstalled } = useReleaseUpdateSession();
   const [confirmed, setConfirmed] = useState(false);
-  const [busy, setBusy] = useState<"checking" | "installing" | "disconnecting" | null>(null);
+  const [busy, setBusy] = useState<"checking" | "installing" | "disconnecting" | "restarting" | null>(null);
   const [error, setError] = useState<{ message: string; retry?: () => void } | null>(null);
   const [recoveryBusy, setRecoveryBusy] = useState(false);
   const [restored, setRestored] = useState(false);
@@ -134,6 +134,14 @@ export function ReleaseUpdateDialog({
     finally { setBusy(null); }
   };
 
+  // The VPN runs in its own service, so only the window restarts. On success the app exits and stays busy until then.
+  const restart = async () => {
+    setBusy("restarting");
+    setError(null);
+    try { await api.restartApp(); }
+    catch { setBusy(null); setError({ message: t("release.done.restartFailed") }); }
+  };
+
   const installable = Boolean((candidate?.newer_than_running || binding) && nativeAvailable);
   const installAvailable = installable && ready;
   const failure = error ? <InlineError message={error.message} onRetry={error.retry} retryDisabled={Boolean(busy)} /> : null;
@@ -146,9 +154,14 @@ export function ReleaseUpdateDialog({
             {busy === "checking" ? <Busy label={t("release.form.checking")} /> : t("release.done.checkNewer")}
           </button>
         </>
-      : <button className="primary-button" type="button" onClick={() => changeOpen(false)}>
-          {android || windows ? t("common.action.close") : t("release.done.closeLater")}
-        </button>
+      : android || windows
+        ? <button className="primary-button" type="button" onClick={() => changeOpen(false)}>{t("common.action.close")}</button>
+        : <>
+            <button className="secondary-button" type="button" disabled={Boolean(busy)} onClick={() => changeOpen(false)}>{t("release.done.closeLater")}</button>
+            <button className="primary-button" type="button" disabled={Boolean(busy)} onClick={() => void restart()}>
+              {busy === "restarting" ? <Busy label={t("release.done.restarting")} /> : t("release.done.restartNow")}
+            </button>
+          </>
     : busy === "installing" ? null
     : candidate
       ? <>

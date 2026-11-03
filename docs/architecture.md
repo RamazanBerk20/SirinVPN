@@ -355,7 +355,9 @@ speed, and no third-party server is involved.
   connection is ready; the upload rate uses the byte count the VPS returns. A
   second management connection times small requests every 250 ms during each
   transfer, so the medians show latency under load. The result is returned to the
-  caller and kept nowhere.
+  caller and kept nowhere. The desktop and Android apps run one test at a time
+  and can cancel it: the requests are dropped, which closes their connections, so
+  the VPS ends the transfer and frees its slot. The 60-second wait still applies.
 - **VPS.** All three routes sit on the private, pinned-mTLS management listener
   and require a manager. One transfer runs at a time on the VPS; a device may
   replace its own, because its download connection can outlive the switch to

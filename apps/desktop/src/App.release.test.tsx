@@ -198,6 +198,8 @@ describe("Desktop release update boundary", () => {
     fireEvent.click(screen.getByRole("button", { name: t("release.candidate.install") }));
     expect(await screen.findByText(t("release.done.titleWindows"))).toBeTruthy();
     expect(screen.queryByRole("heading", { name: /is installed/ })).toBeNull();
+    // The Windows installer closes the app, so there is nothing to restart.
+    expect(screen.queryByRole("button", { name: t("release.done.restartNow") })).toBeNull();
     expect(apiMocks.installReleaseUpdate).toHaveBeenCalledWith(true);
   });
 

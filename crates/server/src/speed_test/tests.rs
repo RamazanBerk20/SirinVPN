@@ -161,8 +161,9 @@ async fn uploads_are_counted_and_cut_off_at_the_caps() {
     assert_eq!(envelope.payload.received_bytes, ZEROS.len() as u64);
 }
 
-/// Both directions through the real pinned-TLS management server. The upload is far above the
-/// router's 64 KiB body limit, which must not apply to the streamed speed-test body.
+/// Both directions through the real pinned-TLS management server, then a client that drops each
+/// connection mid-transfer. The upload is far above the router's 64 KiB body limit, which must not
+/// apply to the streamed speed-test body.
 #[tokio::test]
 async fn transfers_run_through_the_management_server() {
     let directory = tempfile::tempdir().unwrap();
@@ -212,7 +213,43 @@ async fn transfers_run_through_the_management_server() {
     let head = String::from_utf8_lossy(&received[..256]);
     assert!(head.starts_with("HTTP/1.1 200"), "{head}");
     assert!(head.contains("application/octet-stream"));
+
+    // A cancelled client only drops its connections. The VPS then ends each transfer and frees
+    // the slot; after a download the device keeps it for the handoff.
+    let handoff = |limiter: &Limiter| {
+        limiter
+            .running
+            .as_ref()
+            .is_some_and(|running| running.until <= Instant::now() + HANDOFF)
+    };
+    drop(tls);
+    assert!(settled(&state, handoff).await);
+    state.speed_test.lock().unwrap().started.clear();
+    let mut tls = connect().await;
+    tls.write_all(b"POST /v1/speed-test/upload HTTP/1.1\r\nHost: sirinvpn.local\r\nTransfer-Encoding: chunked\r\n\r\n").await.unwrap();
+    tls.write_all(format!("{:x}\r\n", ZEROS.len()).as_bytes())
+        .await
+        .unwrap();
+    tls.write_all(&ZEROS).await.unwrap();
+    assert!(
+        settled(&state, |limiter| limiter.running.is_some()
+            && !handoff(limiter))
+        .await
+    );
+    drop(tls);
+    assert!(settled(&state, |limiter| limiter.running.is_none()).await);
     server.abort();
+}
+
+/// Waits up to five seconds for the limiter to reach a state.
+async fn settled(state: &AppState, done: impl Fn(&Limiter) -> bool) -> bool {
+    for _ in 0..250 {
+        if done(&state.speed_test.lock().unwrap()) {
+            return true;
+        }
+        tokio::time::sleep(Duration::from_millis(20)).await;
+    }
+    false
 }
 
 /// The real client from the full-tunnel `member0` namespace, over real WireGuard, to the real

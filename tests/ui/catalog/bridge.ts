@@ -145,6 +145,8 @@ export class CatalogBridge {
       case 'importRecoveryPackage':return this.call('createRecoveryKey',[]);
       case 'diagnostics':return D.clone(s.diagnostics);
       case 'discardVpsBaseline':case 'discardReleaseUpdate':return;
+      // The real app exits here; the fixture stays on the restarting screen.
+      case 'restartApp':return;
       case 'releaseUpdateStatus':return{installer_kind:s.releaseCandidate.installer_kind,rollback_version:s.releaseConfigured?'1.0.0':null,baseline_required:!s.releaseConfigured};
       case 'checkReleaseUpdate':return D.clone(s.releaseCandidate);
       case 'installReleaseUpdate':s.releaseConfigured=true;return {...D.clone(s.releaseCandidate),baseline_bound:!!s.releaseCandidate.baseline_bind_available};
@@ -166,6 +168,7 @@ export class CatalogBridge {
       case 'dnsBlocklistSettings':return D.clone(s.blocklist);
       case 'updateDnsBlocklist':s.blocklist.policy=args[1];s.blocklist.status={active:args[1].enabled,domain_count:args[1].enabled?184_312:0,updated_at_unix:args[1].enabled?1_900_000_000:null,failure:null};return D.clone(s.blocklist);
       case 'speedTest':return D.clone(s.speed);
+      case 'cancelSpeedTest':return;
       case 'setDevicePair':s.members.device_pairs=[...(s.members.device_pairs??[]).filter((p:any)=>!(p.device_id===args[1]&&p.peer_device_id===args[2])),{device_id:args[1],peer_device_id:args[2],one_way:args[3]}];return D.clone(s.members);
       case 'removeDevicePair':s.members.device_pairs=(s.members.device_pairs??[]).filter((p:any)=>!(p.device_id===args[1]&&p.peer_device_id===args[2]));return D.clone(s.members);
       case 'updateDeviceSubnetRoutes':for(const m of s.members.members)for(const d of m.devices)if(d.id===args[1])d.subnet_routes=args[2];return D.clone(s.members);
