@@ -145,6 +145,7 @@
   "advanced": {
     "devicesTitle": "Device network features",
     "devicesSummary": "WireGuard configurations, device pairs, local networks and mutual access are in each device’s menu on Devices, under Advanced.",
-    "openDevices": "Open Devices"
+    "openDevices": "Open Devices",
+    "devicesSummaryAndroid": "Device pairs, local networks and mutual access are in each device’s menu on Devices, under Advanced."
   }
 }

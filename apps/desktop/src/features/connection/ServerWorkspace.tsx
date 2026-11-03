@@ -249,7 +249,7 @@ export function ServerWorkspace(
                 onRestoreDevice={props.onRestoreDevice}
               />
               {accessLevel !== "member" && <section className="settings-card settings-action-row">
-                <div><h2>{t("app.advanced.devicesTitle")}</h2><p>{t("app.advanced.devicesSummary")}</p></div>
+                <div><h2>{t("app.advanced.devicesTitle")}</h2><p>{t(isAndroid ? "app.advanced.devicesSummaryAndroid" : "app.advanced.devicesSummary")}</p></div>
                 <button className="secondary-button" onClick={() => props.onNavigate("devices")}>{t("app.advanced.openDevices")}</button>
               </section>}
               <PortForwardSettings

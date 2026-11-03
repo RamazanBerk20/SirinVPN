@@ -2,9 +2,12 @@ import { InlineError } from "../../components/ui";
 import { useAccessController, type AccessProps } from "./useAccessController";
 import { PortForwardPanel } from "./PortForwardPanel";
 import { t } from "../../i18n";
+import { canManagePortForwards } from "../../access";
 export function PortForwardSettings(props: AccessProps & { onManageDevices?: () => void }) {
   const m = useAccessController(props);
   const retry = m.loadError ? <InlineError message={m.loadError} onRetry={() => void m.refresh()} retryDisabled={m.loading} /> : null;
+  // A Member whose policy doesn't allow forwarding gets no card: there is nothing on it they could use.
+  if (props.accessLevel === "member" && !m.snapshot?.members.some((member) => canManagePortForwards("member", member))) return null;
   return (
     <section className="settings-card" aria-label={t("devices.ports.title")}>
       {!props.connected ? (
