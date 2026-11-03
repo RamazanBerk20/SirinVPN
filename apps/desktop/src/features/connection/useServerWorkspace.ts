@@ -25,6 +25,7 @@ export function useServerWorkspace({
   onRefresh,
   onAccessChanged,
   onRemoved,
+  onConnectionOperation,
 }: {
   profile: ServerProfile;
   localStatus: LocalTunnelStatus;
@@ -34,11 +35,17 @@ export function useServerWorkspace({
   onRefresh: (status?: LocalTunnelStatus) => Promise<void>;
   onAccessChanged: () => Promise<void>;
   onRemoved: () => Promise<void>;
+  /** Lets the sidebar name a connect or disconnect before the tunnel reports it. */
+  onConnectionOperation?: (operation: "connecting" | "disconnecting" | null) => void;
 }) {
   const [busy, setBusy] = useState(false);
   const [connectionOperation, setConnectionOperation] = useState<"connecting" | "disconnecting" | null>(null);
   const connectionGeneration = useRef(0);
   useEffect(() => () => { ++connectionGeneration.current; }, []);
+  useEffect(() => {
+    onConnectionOperation?.(connectionOperation);
+    return () => onConnectionOperation?.(null);
+  }, [connectionOperation, onConnectionOperation]);
   const [maintenanceReview, setMaintenanceReview] =
     useState<MaintenanceOperation | null>(null);
   const [error, setError] = useState<string | null>(null);

@@ -61,6 +61,7 @@ function AppContent() {
   const pageContent = usePageTransition<HTMLDivElement>(page);
   const [servers, setServers] = useState<ServerProfile[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [connectionOperation, setConnectionOperation] = useState<"connecting" | "disconnecting" | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [settingsCategory, setSettingsCategory] =
@@ -366,7 +367,9 @@ function AppContent() {
                 <span>
                   <strong>{server.name}</strong>
                   <small>
-                    {describeConnection(localStatus, server.id, null).status}
+                    {selected?.id === server.id && connectionOperation
+                      ? t(connectionOperation === "connecting" ? "home.status.connecting" : "home.status.disconnecting")
+                      : describeConnection(localStatus, server.id, null).status}
                   </small>
                 </span>
               </button>
@@ -435,6 +438,7 @@ function AppContent() {
                 await refreshStatus();
               }}
               onRemoved={loadServers}
+              onConnectionOperation={setConnectionOperation}
               servers={servers}
               onSelectServer={setSelectedId}
               onAddServer={() => {

@@ -196,3 +196,15 @@ describe("independent desktop policy", () => {
     expect(api.connectWithPolicy).not.toHaveBeenCalled();
   });
 });
+
+it("tells the sidebar a connect is in progress until the request settles", async () => {
+  let finish!: (status: LocalTunnelStatus) => void;
+  vi.mocked(api.connectWithPolicy).mockReturnValue(new Promise((resolve) => { finish = resolve; }));
+  const onConnectionOperation = vi.fn();
+  const { result } = renderHook(() => useServerWorkspace({ ...input(), onConnectionOperation }));
+  await waitFor(() => expect(result.current.preferences.ready).toBe(true));
+  act(() => { void result.current.toggle(); });
+  await waitFor(() => expect(onConnectionOperation).toHaveBeenLastCalledWith("connecting"));
+  await act(async () => finish(emptyLocalStatus));
+  await waitFor(() => expect(onConnectionOperation).toHaveBeenLastCalledWith(null));
+});
