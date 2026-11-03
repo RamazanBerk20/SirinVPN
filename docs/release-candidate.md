@@ -66,6 +66,18 @@ does not qualify that migration. Do not remove the old app before validating
 the backup/recovery path. Once a deletion has been recorded, an older binary
 that ignores its marker is an unsupported rollback target on every platform.
 
+## Device platform migration
+
+A device record can carry the platform its app reported (`linux`, `windows`
+or `android`), used only for its icon. The field is optional and older
+readers drop it, so `server_authorization` keeps its schema and ranges. A
+rollback loses the platforms; after the next upgrade each app reports its own
+again the first time it reads the device list. The endpoint authorization
+fingerprint leaves the platform out, so reporting one never makes a restored
+VPS look different from its source. Older apps ignore the snapshot field and
+the status's `dns_blocklist_enabled`, and newer apps send the report only
+when `/v1/configuration` advertises `device_platforms_enabled`.
+
 ## Device pair migration
 
 Device pairs are new in `server_authorization`. A schema-8 reader would ignore

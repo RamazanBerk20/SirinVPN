@@ -1,6 +1,7 @@
 use super::*;
 mod alerts;
 mod device_pairs;
+mod device_platforms;
 mod dns_blocklist;
 mod policy_enrollment;
 mod recovery;
@@ -57,6 +58,7 @@ fn fixture() -> (tempfile::TempDir, AppState) {
                 peer_communication_enabled: true,
                 preshared_key: None,
                 subnet_routes: Vec::new(),
+                platform: None,
             });
         }
     }

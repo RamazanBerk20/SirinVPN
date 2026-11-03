@@ -257,3 +257,122 @@ fn by_name(url: &str) -> String {
     let port = url.rsplit(':').next().unwrap();
     format!("{}:{port}", sirinvpn_protocol::MANAGEMENT_SERVER_NAME)
 }
+
+/// Answers each request with the body routed to its "METHOD path" and records the requests.
+async fn scripted_vps(
+    cert: rcgen::Certificate,
+    key: KeyPair,
+    routes: Vec<(&'static str, String)>,
+) -> (String, Arc<std::sync::Mutex<Vec<String>>>) {
+    use tokio::io::{AsyncBufReadExt, BufReader};
+    let acceptor = tls_acceptor(cert, key);
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let address = listener.local_addr().unwrap();
+    let url = format!("https://{address}");
+    let seen = Arc::new(std::sync::Mutex::new(Vec::new()));
+    let log = seen.clone();
+    tokio::spawn(async move {
+        while let Ok((stream, _)) = listener.accept().await {
+            let (acceptor, routes, log) = (acceptor.clone(), routes.clone(), log.clone());
+            tokio::spawn(async move {
+                let Ok(tls) = acceptor.accept(stream).await else {
+                    return;
+                };
+                let mut tls = BufReader::new(tls);
+                loop {
+                    let (mut request, mut line, mut length) = (String::new(), String::new(), 0);
+                    if tls.read_line(&mut request).await.unwrap_or(0) == 0 {
+                        return;
+                    }
+                    while tls.read_line(&mut line).await.unwrap_or(0) > 0 && line != "\r\n" {
+                        let header = line.to_ascii_lowercase();
+                        if let Some(value) = header.strip_prefix("content-length:") {
+                            length = value.trim().parse().unwrap();
+                        }
+                        line.clear();
+                    }
+                    tls.read_exact(&mut vec![0; length]).await.unwrap();
+                    let request = request.rsplit_once(' ').unwrap().0.to_owned();
+                    let reply = routes
+                        .iter()
+                        .find(|(route, _)| *route == request)
+                        .map_or("", |(_, reply)| reply.as_str());
+                    log.lock().unwrap().push(request);
+                    let response = format!(
+                        "HTTP/1.1 200 OK\r\nContent-Length: {}\r\n\r\n{reply}",
+                        reply.len()
+                    );
+                    if tls.get_mut().write_all(response.as_bytes()).await.is_err() {
+                        return;
+                    }
+                }
+            });
+        }
+    });
+    (url, seen)
+}
+
+#[tokio::test]
+async fn a_missing_own_platform_is_reported_only_to_a_vps_that_stores_platforms() {
+    let (own, other, member) = (DeviceId::new(), DeviceId::new(), MemberId::new());
+    let envelope = |payload| serde_json::to_string(&ApiEnvelope::new(payload)).unwrap();
+    let device = |id, platform: Option<&str>| {
+        serde_json::json!({"id": id, "member_id": member, "name": "Renamed device",
+            "client_tunnel_address": "10.77.0.2", "platform": platform})
+    };
+    for (stored, supported, requests) in [
+        (
+            None,
+            false,
+            &["GET /v1/membership", "GET /v1/configuration"][..],
+        ),
+        (
+            None,
+            true,
+            &[
+                "GET /v1/membership",
+                "GET /v1/configuration",
+                "PUT /v1/device-platform",
+            ][..],
+        ),
+        (Some("windows"), true, &["GET /v1/membership"][..]),
+    ] {
+        let membership = serde_json::json!({"active_invitations": [], "members": [{
+            "id": member, "name": "Owner", "role": "owner",
+            "devices": [device(own, stored), device(other, None)]}]});
+        let configuration = serde_json::json!({
+            "api_version": "v1", "interface_name": "sirinvpn0", "tunnel_cidr": "10.77.0.0/24",
+            "dns_address": "10.77.0.1", "wireguard_port": 51820, "management_port": 8443,
+            "ipv6_tunnel_enabled": false, "device_platforms_enabled": supported});
+        let (cert, key) = certificate();
+        let mut client = client(&cert.pem());
+        let routes = vec![
+            ("GET /v1/membership", envelope(membership)),
+            ("GET /v1/configuration", envelope(configuration)),
+            ("PUT /v1/device-platform", envelope(serde_json::Value::Null)),
+        ];
+        let (url, seen) = scripted_vps(cert, key, routes).await;
+        client.base_url = url;
+        let snapshot = client
+            .membership_with_own_platform(Some(own))
+            .await
+            .unwrap();
+        assert_eq!(*seen.lock().unwrap(), requests);
+        let platform = |id| {
+            let devices = &snapshot.members[0].devices;
+            devices
+                .iter()
+                .find(|d| d.id == id)
+                .unwrap()
+                .platform
+                .clone()
+        };
+        let expected = if stored.is_none() && supported {
+            DEVICE_PLATFORM
+        } else {
+            stored
+        };
+        assert_eq!(platform(own).as_deref(), expected);
+        assert_eq!(platform(other), None);
+    }
+}

@@ -56,7 +56,7 @@ pub use key_rotation::{
     preshared_key_rotation_recommended, rotate_current_device_keys,
     rotate_current_device_keys_with_policy,
 };
-pub use management::{ManagementClient, ManagementError, ManagementStatusStream};
+pub use management::{DEVICE_PLATFORM, ManagementClient, ManagementError, ManagementStatusStream};
 pub use network_policy::{
     NetworkContext, NetworkPolicyError, NetworkPolicyStore, TrustedWifiNetwork,
     WifiAutomationPolicy, WifiNetworkStatus, WifiPolicySnapshot,

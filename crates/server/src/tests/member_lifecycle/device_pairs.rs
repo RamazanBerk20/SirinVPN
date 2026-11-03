@@ -290,6 +290,7 @@ async fn kernel_device_pairs_admit_paired_devices_and_one_way_answers() {
             peer_communication_enabled: false,
             preshared_key: None,
             subnet_routes: vec!["192.168.1.0/24".into()],
+            platform: None,
         });
         for device in &mut document.devices {
             device.peer_communication_enabled = false;

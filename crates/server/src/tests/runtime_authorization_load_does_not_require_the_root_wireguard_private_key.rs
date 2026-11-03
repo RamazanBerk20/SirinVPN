@@ -184,6 +184,7 @@ fn initialization_accepts_only_the_current_transferred_owner() {
         peer_communication_enabled: false,
         preshared_key: None,
         subnet_routes: Vec::new(),
+        platform: None,
     });
     authorization
         .transfer_ownership(destination_device_id)

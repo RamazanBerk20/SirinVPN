@@ -64,6 +64,7 @@ fn device_pairs_need_schema_nine_known_devices_and_one_pair_per_two_devices() {
             peer_communication_enabled: false,
             preshared_key: Some(STANDARD.encode([index + 1; 32])),
             subnet_routes: Vec::new(),
+            platform: None,
         });
     }
     let ids: Vec<_> = state.devices.iter().map(|device| device.id).collect();

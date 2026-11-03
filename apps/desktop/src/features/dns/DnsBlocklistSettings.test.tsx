@@ -29,6 +29,16 @@ it("is hidden from members and never reads the manager-only settings", () => {
   expect(api.dnsBlocklistSettings).not.toHaveBeenCalled();
 });
 
+it("shows members only whether blocking is on, read-only", () => {
+  const view = render(<DnsBlocklistSettings profile={{ id: "fixture" }} connected canManage={false} blocking />);
+  expect(screen.getByText(t("dns.blocklist.member.on"))).toBeTruthy();
+  expect(screen.queryByRole("switch")).toBeNull();
+  view.rerender(<DnsBlocklistSettings profile={{ id: "fixture" }} connected canManage={false} blocking={false} />);
+  expect(screen.getByText(t("dns.blocklist.member.off"))).toBeTruthy();
+  expect(api.serverConfiguration).not.toHaveBeenCalled();
+  expect(api.dnsBlocklistSettings).not.toHaveBeenCalled();
+});
+
 it("saves the chosen lists and normalized allowed domains for every device", async () => {
   vi.mocked(api.updateDnsBlocklist).mockResolvedValue(settings({
     policy: { enabled: true, sources: [light.url, "https://own.example/list.txt"], allowlist: ["cdn.example.com"] },

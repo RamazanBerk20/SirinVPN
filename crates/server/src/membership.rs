@@ -331,6 +331,32 @@ pub(super) async fn rename_device_handler(
     Ok(Json(ApiEnvelope::new(snapshot)))
 }
 
+/// Each device reports its own platform for its icon; the request cannot name another device.
+pub(super) async fn update_device_platform_handler(
+    State(state): State<AppState>,
+    Extension(caller): Extension<CallerIdentity>,
+    Json(request): Json<DevicePlatformUpdateRequest>,
+) -> Result<Json<ApiEnvelope<()>>, ApiError> {
+    if !DEVICE_PLATFORMS.contains(&request.platform.as_str()) {
+        return Err(ApiError::invalid("the device platform is not supported"));
+    }
+    let authorization = require_authorization(&state)?;
+    let mut current = authorization.write().await;
+    let caller = authorize_current(&current, &caller, false)?;
+    let mut next = current.clone();
+    let device = next
+        .devices
+        .iter_mut()
+        .find(|device| Some(device.id) == caller.device_id)
+        .ok_or_else(ApiError::forbidden)?;
+    if device.platform.as_ref() != Some(&request.platform) {
+        ensure_active_endpoint_authority(&current)?;
+        device.platform = Some(request.platform);
+        commit_authorization(&state, &mut current, next).await?;
+    }
+    Ok(Json(ApiEnvelope::new(())))
+}
+
 pub(super) async fn revoke_device_handler(
     State(state): State<AppState>,
     Extension(caller): Extension<CallerIdentity>,

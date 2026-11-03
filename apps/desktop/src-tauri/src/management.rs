@@ -43,7 +43,9 @@ pub(super) async fn membership(
     server_id: String,
 ) -> Result<MembershipSnapshot, String> {
     let session = crate::management_session::connected_read(&app, &server_id).await?;
-    session.read(session.membership()).await
+    session
+        .read(session.membership_with_own_platform(session.profile.device_id))
+        .await
 }
 
 #[tauri::command]

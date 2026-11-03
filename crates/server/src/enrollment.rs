@@ -297,6 +297,11 @@ pub(super) async fn enrollment_handler(
         peer_communication_enabled: false,
         preshared_key: request.device_preshared_key.clone(),
         subnet_routes: Vec::new(),
+        // A platform from a newer app is left unknown rather than failing the enrollment.
+        platform: request
+            .platform
+            .clone()
+            .filter(|platform| DEVICE_PLATFORMS.contains(&platform.as_str())),
     });
     next.enrollment_receipts.push(EnrollmentReceipt {
         invitation_id: invitation.claims.invitation_id,

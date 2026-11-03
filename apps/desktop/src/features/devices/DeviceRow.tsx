@@ -21,9 +21,12 @@ export type DeviceRowProps = MemberActionProps & {
   onPeer: (deviceId: string, name: string, enabled: boolean) => Promise<void>;
 };
 
-// Older profiles have no platform metadata. Use recognizable display names;
+// The platform the device reported wins, so a rename keeps the icon. Older servers,
+// WireGuard-only devices and devices that haven't reported yet fall back to the name;
 // an ambiguous name keeps the generic device icon rather than inventing an OS.
-function deviceIcon(name: string, current: boolean) {
+export function deviceIcon({ name, platform }: Pick<DeviceSummary, "name" | "platform">, current: boolean) {
+  if (platform === "android") return DeviceMobile;
+  if (platform === "linux" || platform === "windows") return Desktop;
   if (current) return isAndroid ? DeviceMobile : Desktop;
   if (/android|iphone|ipad|phone|mobile|pixel|galaxy|tablet/i.test(name)) return DeviceMobile;
   if (/linux|desktop|laptop|windows|macbook|computer|\bpc\b/i.test(name)) return Desktop;
@@ -36,7 +39,7 @@ export function DeviceRow({ device, member, ...props }: DeviceRowProps & { devic
   const [menuOpen, setMenuOpen] = useState(false);
   const id = useId();
   const current = device.id === props.currentDeviceId;
-  const Icon = deviceIcon(device.name, current);
+  const Icon = deviceIcon(device, current);
   const state = member.suspended ? "suspended" : current || device.recent_handshake === true ? "active" : device.recent_handshake === false ? "idle" : "unknown";
   const activity = member.suspended
     ? t("devices.row.activity.suspended")

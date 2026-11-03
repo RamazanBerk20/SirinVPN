@@ -517,6 +517,7 @@ impl DecodedInvitation {
             device_wireguard_public_key: permanent.public.wireguard_public_key.clone(),
             device_management_certificate_pem: permanent.public.management_certificate_pem.clone(),
             device_preshared_key: permanent.secret.wireguard_preshared_key.clone(),
+            platform: crate::DEVICE_PLATFORM.map(str::to_owned),
         }
     }
 

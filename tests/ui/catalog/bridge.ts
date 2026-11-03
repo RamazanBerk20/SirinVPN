@@ -164,7 +164,7 @@ export class CatalogBridge {
       case 'updateAlerts':s.alerts.policy=args[1];s.alerts.status.checked_at_unix=1_900_000_000;return D.clone(s.alerts);
       case 'sendTestAlert':return s.alertTest??{failure:null,http_status:200};
       case 'dnsBlocklistSettings':return D.clone(s.blocklist);
-      case 'updateDnsBlocklist':s.blocklist.policy=args[1];s.blocklist.status={active:args[1].enabled,domain_count:args[1].enabled?184_312:0,updated_at_unix:args[1].enabled?1_900_000_000:null,failure:null};return D.clone(s.blocklist);
+      case 'updateDnsBlocklist':s.blocklist.policy=args[1];s.remote.dns_blocklist_enabled=args[1].enabled;s.blocklist.status={active:args[1].enabled,domain_count:args[1].enabled?184_312:0,updated_at_unix:args[1].enabled?1_900_000_000:null,failure:null};return D.clone(s.blocklist);
       case 'speedTest':return D.clone(s.speed);
       case 'setDevicePair':s.members.device_pairs=[...(s.members.device_pairs??[]).filter((p:any)=>!(p.device_id===args[1]&&p.peer_device_id===args[2])),{device_id:args[1],peer_device_id:args[2],one_way:args[3]}];return D.clone(s.members);
       case 'removeDevicePair':s.members.device_pairs=(s.members.device_pairs??[]).filter((p:any)=>!(p.device_id===args[1]&&p.peer_device_id===args[2]));return D.clone(s.members);

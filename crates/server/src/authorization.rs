@@ -153,6 +153,9 @@ pub(crate) struct DeviceRecord {
     /// Owner-assigned LAN ranges this Owner device forwards for peers that may reach it.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub subnet_routes: Vec<String>,
+    /// Display only. Older readers drop it and the device's app reports it again.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub platform: Option<String>,
 }
 
 impl DeviceRecord {
@@ -257,6 +260,7 @@ impl AuthorizationDocument {
                 peer_communication_enabled: false,
                 preshared_key: None,
                 subnet_routes: Vec::new(),
+                platform: None,
             }],
             invitations: Vec::new(),
             enrollment_receipts: Vec::new(),
@@ -499,12 +503,14 @@ impl AuthorizationDocument {
 
     pub(crate) fn endpoint_authorization_fingerprint(&self) -> Result<String> {
         // Signed endpoint transitions reach every device; they bind identities, not secrets.
+        // The platform is display only and may be reported after a backup, so it is not bound.
         let devices: Vec<_> = self
             .devices
             .iter()
             .cloned()
             .map(|device| DeviceRecord {
                 preshared_key: None,
+                platform: None,
                 ..device
             })
             .collect();

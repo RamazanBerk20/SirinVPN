@@ -205,6 +205,7 @@ impl AuthorizationDocument {
                             .filter(|route| inactive.contains(*route))
                             .cloned()
                             .collect(),
+                        platform: device.platform.clone(),
                     })
                     .collect();
                 devices.sort_by(|left, right| left.name.cmp(&right.name));
