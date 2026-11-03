@@ -102,7 +102,7 @@ it("keeps access failures visible through polling retries until membership is ve
   const { result } = renderHook(useAccessController, { initialProps: confirmationProps() });
   await act(async () => {});
   expect(result.current.verified).toBe(true);
-  const failure = "the private management connection failed";
+  const failure = "The private management connection failed";
   vi.mocked(api.membership).mockRejectedValue(new Error(failure));
   await act(async () => { await vi.advanceTimersByTimeAsync(10_000); });
   expect(result.current.loadError).toContain(failure);

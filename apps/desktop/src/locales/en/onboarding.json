@@ -170,8 +170,7 @@
         "connect": "Signing in to the server",
         "check": "Checking the server",
         "upload": "Uploading SirinVPN",
-        "configure": "Configuring the server",
-        "unknown": "Not reported"
+        "configure": "Configuring the server"
       },
       "change": {
         "unchanged": "Nothing on the server was changed.",

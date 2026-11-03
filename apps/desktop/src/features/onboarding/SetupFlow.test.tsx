@@ -135,10 +135,10 @@ it("retries a failed install in place", async () => {
 });
 
 it("labels the network retry and leads a port conflict back to the port field", async () => {
-  vi.mocked(api.inspectServerNetwork).mockRejectedValueOnce(new Error("timed out"));
+  vi.mocked(api.inspectServerNetwork).mockRejectedValueOnce(new Error("Timed out"));
   fireEvent.click(await verifyHost());
   const again = await screen.findByRole("button", { name: t("onboarding.setup.fingerprint.checkAgain") });
-  expect(screen.getByRole("alert").textContent).toContain("timed out");
+  expect(screen.getByRole("alert").textContent).toContain("Timed out");
   vi.mocked(api.inspectServerNetwork).mockResolvedValueOnce({ ...report, issues: [{ code: "port_conflict", blocking: true, message: "UDP port 51820 is already owned by another service." }] });
   fireEvent.click(again);
   fireEvent.click(await screen.findByRole("button", { name: t("onboarding.setup.fingerprint.changePort") }));

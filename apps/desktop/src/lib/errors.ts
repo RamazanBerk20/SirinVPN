@@ -10,7 +10,8 @@ export function errorMessage(reason: unknown, fallback: string): string {
   if (!detail || getLocale() !== sourceLocale) return fallback;
   // Only the first sentence names the action; any advice after it would repeat the cause's own.
   const summary = fallback.trim().match(/^.*?[.!?](?=\s|$)/)?.[0] ?? fallback.trim();
-  return detail.includes(summary) ? detail : `${summary} ${detail}`;
+  // Backend causes often start lower-case; after a full stop they start a new sentence.
+  return detail.includes(summary) ? detail : `${summary} ${detail[0].toUpperCase()}${detail.slice(1)}`;
 }
 
 export function formatExpiry(unixSeconds: number): string {

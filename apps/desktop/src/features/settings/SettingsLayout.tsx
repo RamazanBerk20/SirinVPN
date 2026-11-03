@@ -51,6 +51,7 @@ export function SettingsLayout({
   const current = categories.find(item => item.id === category);
   if (mobile) return detail ? <div className="mobile-settings-detail">
     <header className="mobile-page-header"><button className="icon-button" autoFocus={dpadOnly} aria-label={t("common.action.back")} onClick={onBack}><ArrowLeft size={24} /></button><h1>{current && t(current.label)}</h1></header>
+    {category !== "general" && serverName && <p className="settings-index-note">{t("app.settingsIndex.scope", { name: serverName })}</p>}
     <div className="settings-panel">{children}</div>
   </div> : <div className="settings-index" aria-label={t("settings.layout.categories")}>
     {/* App-wide preferences first, then the pages that only change the selected server. */}

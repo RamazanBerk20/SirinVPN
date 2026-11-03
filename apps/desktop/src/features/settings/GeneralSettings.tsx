@@ -151,8 +151,9 @@ export function GeneralSettings({
               >
                 {changedKey === "test" && saving ? t("settings.general.notifications.testing") : t("settings.general.notifications.test")}
               </button>
-              {android && !denied && <button className="secondary-button" onClick={() => void invoke("android_notification_settings")}>{t("settings.general.notifications.androidSettings")}</button>}
+              {/* The reason sits right under the button it disables. */}
               {!snapshot.preferences.notifications && <small>{t("settings.general.notifications.testNeedsNotifications")}</small>}
+              {android && !denied && <button className="secondary-button" onClick={() => void invoke("android_notification_settings")}>{t("settings.general.notifications.androidSettings")}</button>}
               {changedKey === "test" && !saving && feedback("test")}
             </div>
           </>,

@@ -165,7 +165,7 @@ export function ConnectionOptions({ model }: { model: ServerWorkspaceModel }) {
           <span>
             <strong>{t("connection.options.android.label")}</strong>
             <small>{t("connection.options.android.summary")}</small>
-            <small className="preference-value">{androidBlocking(model.localStatus)}</small>
+            <small className="preference-value">{t("connection.options.android.status", { value: androidBlocking(model.localStatus) })}</small>
           </span>
           <button className="secondary-button" onClick={() => void invoke("android_vpn_settings")}>{t("connection.options.android.open")}</button>
         </div>}

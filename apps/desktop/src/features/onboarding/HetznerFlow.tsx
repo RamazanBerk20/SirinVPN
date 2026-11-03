@@ -44,7 +44,7 @@ export function HetznerFlow({ onComplete, onDone, onStepChange, compact = false 
   const [busy, setBusy] = useState<"" | "plans" | "delete">("");
   const [error, setError] = useState("");
   // Which request a "Try again" repeats; resolved at render so it uses the current token.
-  const [retry, setRetry] = useState<"" | "plans" | "create" | "delete">("");
+  const [retry, setRetry] = useState<"" | "delete">("");
 
   const plans = useMemo(() => catalog ? plansFor(catalog, location) : [], [catalog, location]);
   const plan = plans.find(type => type.name === serverType);
@@ -54,7 +54,9 @@ export function HetznerFlow({ onComplete, onDone, onStepChange, compact = false 
   // Until it is installed or deleted, the server bills the Owner: leaving needs a decision.
   // While the create request runs, the server may exist before its name is known.
   const unresolved = (phase === "creating" || server !== undefined) && !["kept", "deleted"].includes(phase) && setupStep !== "success";
-  useEffect(() => onStepChange?.(setupStep), [setupStep, onStepChange]);
+  // While the server is being created the flow can't be left, so the parent hides its back link.
+  const reportedStep = phase === "creating" || phase === "waiting" ? "installing" : setupStep;
+  useEffect(() => onStepChange?.(reportedStep), [reportedStep, onStepChange]);
   useEffect(() => {
     if (!unresolved) return;
     return registerNavigationGuard(() => phase !== "creating" && phase !== "waiting" && setupStep !== "installing"
@@ -80,7 +82,8 @@ export function HetznerFlow({ onComplete, onDone, onStepChange, compact = false 
       setLocation(first);
       setServerType(plansFor(loaded, first)[0]?.name ?? "");
     } catch (reason) {
-      fail(errorMessage(reason, t("onboarding.hetzner.error.catalog")), "plans");
+      // The form's Show prices button is the retry.
+      fail(errorMessage(reason, t("onboarding.hetzner.error.catalog")));
     } finally { setBusy(""); }
   };
 
@@ -116,7 +119,8 @@ export function HetznerFlow({ onComplete, onDone, onStepChange, compact = false 
       setCreated(result);
       await wait(result);
     } catch (reason) {
-      fail(errorMessage(reason, t("onboarding.hetzner.error.create")), "create");
+      // No bare Try again: retrying a paid create stays on the button that shows the price.
+      fail(errorMessage(reason, t("onboarding.hetzner.error.create")));
       setPhase("plan");
     }
   };
@@ -138,7 +142,7 @@ export function HetznerFlow({ onComplete, onDone, onStepChange, compact = false 
   };
 
   const startOver = () => { setCreated(null); setReady(null); setSetupStep("details"); fail(""); setPhase("plan"); };
-  const again = { "": undefined, plans: loadPlans, create, delete: remove }[retry];
+  const again = retry === "delete" ? remove : undefined;
   const errorBox = error && <InlineError message={error} onRetry={again && (() => void again())} retryDisabled={busy !== "" || !token} />;
   const tokenField = <Field label={t("onboarding.hetzner.token")} hint={t("onboarding.hetzner.tokenHint")}>
     <SecretInput type="password" value={token} disabled={busy !== ""} autoComplete="off" spellCheck={false}

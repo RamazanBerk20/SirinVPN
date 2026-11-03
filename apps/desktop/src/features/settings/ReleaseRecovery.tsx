@@ -1,15 +1,16 @@
 import { useEffect, useState } from "react";
 import { api } from "../../api";
 import { ConfirmationRow } from "../../components/ConfirmationRow";
+import { Busy, OperationResult } from "../../components/OperationResult";
 import { InlineError } from "../../components/ui";
 import { errorMessage } from "../../lib/errors";
 import type { ReleaseUpdateStatus } from "../../types";
 import { t } from "../../i18n";
 
-export function ReleaseRecovery({ busy, setBusy }: { busy: boolean; setBusy: (value: boolean) => void }) {
+export function ReleaseRecovery({ busy, setBusy, onRestored }: { busy: boolean; setBusy: (value: boolean) => void; onRestored?: () => void }) {
   const [status, setStatus] = useState<ReleaseUpdateStatus | null>(null);
   const [confirmed, setConfirmed] = useState(false);
-  const [done, setDone] = useState(false);
+  const [done, setDone] = useState(false), [restoring, setRestoring] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [statusFailed, setStatusFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
@@ -21,11 +22,11 @@ export function ReleaseRecovery({ busy, setBusy }: { busy: boolean; setBusy: (va
   }, [attempt]);
   const rollback = async () => {
     if (!confirmed || !status?.rollback_version || busy) return;
-    setBusy(true);
+    setBusy(true); setRestoring(true);
     setError(null);
-    try { await api.rollbackReleaseUpdate(status.rollback_version); setDone(true); }
+    try { await api.rollbackReleaseUpdate(status.rollback_version); setDone(true); onRestored?.(); }
     catch (reason) { setError(errorMessage(reason, t("release.recovery.errorRestore"))); }
-    finally { setConfirmed(false); setBusy(false); }
+    finally { setConfirmed(false); setBusy(false); setRestoring(false); }
   };
   const cancelAndroid = async () => {
     if(busy) return;
@@ -42,11 +43,11 @@ export function ReleaseRecovery({ busy, setBusy }: { busy: boolean; setBusy: (va
     </div>}
     {status?.baseline_required && <p className="settings-note">{t("release.recovery.baselineRequired")}</p>}
     {status?.installer_kind === "appimage" && status.rollback_version && <div className="release-recovery">
-      {done ? <p>{t("release.recovery.restored", { version: status.rollback_version })}</p> : <>
+      {done ? <OperationResult title={t("release.recovery.restored", { version: status.rollback_version })} /> : <>
         <ConfirmationRow checked={confirmed} disabled={busy} onChange={setConfirmed}>
           <strong>{t("release.recovery.restoreConfirm", { version: status.rollback_version })}</strong><small>{t("release.recovery.restoreNote")}</small>
         </ConfirmationRow>
-        <button className="secondary-button" type="button" disabled={!confirmed || busy} onClick={() => void rollback()}>{t("release.recovery.restore")}</button>
+        <button className="secondary-button" type="button" disabled={!confirmed || busy} onClick={() => void rollback()}>{restoring ? <Busy label={t("release.recovery.restoring")} /> : t("release.recovery.restore")}</button>
       </>}
     </div>}
     {error && <InlineError message={error} onRetry={statusFailed ? () => setAttempt((value) => value + 1) : undefined} />}

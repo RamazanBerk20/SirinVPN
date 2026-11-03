@@ -90,12 +90,14 @@ it("creates, waits for the pinned key and installs from a ready step with one bu
   expect(await screen.findByText(t("onboarding.setup.success.title"))).toBeTruthy();
 });
 
-it("offers Try again when prices can't be loaded", async () => {
+it("retries loading prices from the same button, with no second Try again", async () => {
   vi.mocked(api.hetznerCatalog).mockRejectedValueOnce(new Error("rate limited"));
   render(<HetznerFlow onComplete={vi.fn()} />);
   fireEvent.change(screen.getByLabelText(t("onboarding.hetzner.token")), { target: { value: token } });
   fireEvent.click(screen.getByRole("button", { name: t("onboarding.hetzner.loadPlans") }));
-  fireEvent.click(await screen.findByRole("button", { name: t("common.action.retry") }));
+  expect(await screen.findByRole("alert")).toBeTruthy();
+  expect(screen.queryByRole("button", { name: t("common.action.retry") })).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: t("onboarding.hetzner.loadPlans") }));
   expect(await screen.findByRole("button", { name: t("onboarding.hetzner.create", { total: "5.11", currency: "EUR" }) })).toBeTruthy();
   expect(api.hetznerCatalog).toHaveBeenCalledTimes(2);
 });

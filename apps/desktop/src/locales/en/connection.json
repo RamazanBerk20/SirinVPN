@@ -68,7 +68,8 @@
       "open": "Open VPN settings",
       "on": "On in Android",
       "off": "Off in Android",
-      "unknown": "Not reported by Android"
+      "unknown": "Not reported by Android",
+      "status": "Status: {{value}}"
     },
     "notes": {
       "selectedRoutes": "Only your selected routes and system DNS use the VPN.",

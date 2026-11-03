@@ -238,8 +238,12 @@
   color: var(--success);
 }
 .install-state .setup-steps,
-.install-failure .setup-steps {
+.install-failure .setup-steps,
+.fingerprint-step .setup-steps {
   margin-bottom: 28px;
+}
+.fingerprint-step > .inline-error {
+  margin-top: 16px;
 }
 
 .fingerprint-confirmed {
@@ -268,7 +272,7 @@
   color: var(--danger);
 }
 .change-port {
-  align-self: flex-start;
+  align-self: stretch;
   margin-top: 12px;
   min-height: 40px;
   padding: 0 16px;
@@ -276,6 +280,9 @@
 
 .install-keep-open {
   font-weight: 600;
+}
+.install-state > .secondary-button {
+  margin-top: 20px;
 }
 
 .install-failure {
@@ -356,7 +363,7 @@
   min-height: 42px;
   padding: 0 20px;
 }
-.install-success .install-success-actions .primary-button {
+:is(.install-success, .success-state) .install-success-actions .primary-button {
   margin-top: 0;
 }
 
@@ -371,6 +378,10 @@
   border-radius: 10px;
   background: color-mix(in srgb, var(--warning) 7%, transparent);
   text-align: left;
+}
+/* The centred success column would shrink the network check to its content and indent it. */
+.install-success .network-preflight {
+  align-self: stretch;
 }
 .recovery-prompt > svg {
   flex-shrink: 0;

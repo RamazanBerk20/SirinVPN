@@ -99,6 +99,8 @@
   color: var(--muted);
   cursor: pointer;
 }
+/* While a task runs the dialog can't close; the X says so instead of looking clickable. */
+.dialog-close:disabled { opacity: .4; cursor: not-allowed; }
 
 .setup-dialog {
   width: min(680px, calc(100vw - 32px));

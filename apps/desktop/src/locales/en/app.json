@@ -122,6 +122,7 @@
     "app": "This app",
     "server": "This server",
     "serverNote": "These settings apply only to this server.",
+    "scope": "These settings apply only to {{name}}.",
     "general": "Theme, notifications, Quick Settings",
     "automaticMethod": "Automatic method",
     "reconnectOn": "Reconnects automatically",

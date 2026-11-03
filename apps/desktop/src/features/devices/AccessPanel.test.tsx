@@ -32,9 +32,9 @@ it("hides Invite member from a member who may never invite, and shows it once al
 
 it("offers a next step when this is the only device, and retries a failed load in place", async () => {
   vi.mocked(api.serverConfiguration).mockResolvedValue({});
-  vi.mocked(api.membership).mockRejectedValueOnce(new Error("connection reset")).mockResolvedValue(own("owner"));
+  vi.mocked(api.membership).mockRejectedValueOnce(new Error("Connection reset")).mockResolvedValue(own("owner"));
   show("owner");
-  expect((await screen.findByRole("alert")).textContent).toContain("connection reset");
+  expect((await screen.findByRole("alert")).textContent).toContain("Connection reset");
   fireEvent.click(screen.getByRole("button", { name: t("common.action.retry") }));
   expect(await screen.findByText(t("devices.panel.aloneTitle"))).toBeTruthy();
   // One device: no search field to filter it.

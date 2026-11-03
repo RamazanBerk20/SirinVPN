@@ -88,7 +88,8 @@
     "check": "Couldn’t find a signed release for this device at this source. Check the address and channel.",
     "installWindows": "The Windows update didn’t finish. Try again; recovery data is kept.",
     "installAppImage": "Couldn’t confirm the AppImage was replaced. Reopen App updates to check it.",
-    "installDebian": "The update didn’t finish and was rolled back where possible. Try again."
+    "installDebian": "The update didn’t finish and was rolled back where possible. Try again.",
+    "bind": "Couldn’t verify the installed version. Nothing was changed. Try again."
   },
   "recovery": {
     "androidNote": "Android asks you to approve installs and may block downgrades.",
@@ -99,6 +100,7 @@
     "restoreConfirm": "Restore AppImage {{version}}",
     "restoreNote": "Keeps your settings. Works only if that version is still trusted.",
     "restore": "Roll back",
+    "restoring": "Restoring…",
     "errorStatus": "Couldn’t load the update status.",
     "errorRestore": "Couldn’t restore the previous AppImage. Try again.",
     "errorCancel": "Couldn’t cancel the pending install. Try again."

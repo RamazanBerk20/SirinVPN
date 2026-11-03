@@ -72,7 +72,7 @@ export function InstallFailure({ error, fingerprint, steps, canRetry, onRetry, o
     <span className="install-failure-icon"><Warning size={28} weight="fill" /></span>
     <h2>{t("onboarding.setup.failed.title")}</h2>
     <dl className="install-failure-facts">
-      <div><dt>{t("onboarding.setup.failed.stage")}</dt><dd>{t(stage ? `onboarding.setup.failed.stages.${stage}` : "onboarding.setup.failed.stages.unknown")}</dd></div>
+      {stage && <div><dt>{t("onboarding.setup.failed.stage")}</dt><dd>{t(`onboarding.setup.failed.stages.${stage}`)}</dd></div>}
       <div><dt>{t("onboarding.setup.failed.server")}</dt><dd>{t(`onboarding.setup.failed.change.${change}`)}</dd></div>
       <div><dt>{t("onboarding.setup.failed.fingerprint")}</dt><dd><code>{fingerprint}</code></dd></div>
     </dl>

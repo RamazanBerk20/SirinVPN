@@ -37,6 +37,7 @@ export function ReleaseUpdateDialog({
   const [busy, setBusy] = useState<"checking" | "installing" | "disconnecting" | null>(null);
   const [error, setError] = useState<{ message: string; retry?: () => void } | null>(null);
   const [recoveryBusy, setRecoveryBusy] = useState(false);
+  const [restored, setRestored] = useState(false);
   const android = candidate?.installer_kind === "android";
   const windows = candidate?.installer_kind === "windows";
   const appimage = candidate?.installer_kind === "appimage";
@@ -88,7 +89,8 @@ export function ReleaseUpdateDialog({
     try {
       setCandidate(await api.checkReleaseUpdate(releaseSource, channel));
     } catch (reason) {
-      setError({ message: errorMessage(reason, t("release.error.check")), retry: () => void check() });
+      // The footer's Check release button is the retry.
+      setError({ message: errorMessage(reason, t("release.error.check")) });
     } finally {
       setBusy(null);
     }
@@ -113,7 +115,8 @@ export function ReleaseUpdateDialog({
       setConfirmed(false);
       setError({ message: errorMessage(
         reason,
-        windows ? t("release.error.installWindows")
+        binding ? t("release.error.bind")
+          : windows ? t("release.error.installWindows")
           : appimage ? t("release.error.installAppImage")
           : t("release.error.installDebian"),
       ) });
@@ -157,9 +160,9 @@ export function ReleaseUpdateDialog({
       : <button className="primary-button release-check-button" type="submit" form={formId} disabled={!sourceValid || Boolean(busy) || recoveryBusy}>
           {busy === "checking" ? <Busy label={t("release.form.checking")} /> : <><ShieldCheck size={18} />{t("release.form.check")}</>}
         </button>;
-  const footerNote = busy || installed ? null
+  const footerNote = busy || installed || recoveryBusy || restored ? null
     : candidate ? installable ? !ready ? t("release.candidate.readyFirst") : !confirmed ? t("release.candidate.confirmFirst") : null : null
-    : sourceValid ? null : t("release.form.sourceFirst");
+    : releaseSource ? null : t("release.form.sourceFirst");
 
   return (
     <Dialog.Root open={open} onOpenChange={changeOpen}>
@@ -198,7 +201,8 @@ export function ReleaseUpdateDialog({
                 <span className="release-authenticated">
                   <ShieldCheck size={16} weight="fill" /> {t("release.candidate.verified")}
                 </span>
-                {candidate.security_update ? (
+                {/* A security label only matters on a release that would be installed. */}
+                {candidate.security_update && (candidate.newer_than_running || binding) ? (
                   <span className="release-security-label">
                     {t("release.candidate.security")}
                   </span>
@@ -311,7 +315,7 @@ export function ReleaseUpdateDialog({
               <p className="form-footnote">
                 <GlobeHemisphereWest size={15} /> {t("release.form.privacy")}
               </p>
-              <ReleaseRecovery busy={Boolean(busy) || recoveryBusy} setBusy={setRecoveryBusy} />
+              <ReleaseRecovery busy={Boolean(busy) || recoveryBusy} setBusy={setRecoveryBusy} onRestored={() => setRestored(true)} />
             </form>
           )}
         </DialogContent>

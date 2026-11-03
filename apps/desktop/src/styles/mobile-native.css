@@ -117,6 +117,8 @@ html.android[data-theme="light"] {
 .android .command-block code { white-space: pre-wrap; overflow-wrap: anywhere; }
 .android .favorite-star { flex-shrink: 0; color: var(--warning); }
 .android :is(.mobile-list-row, .mobile-server-open) small:has(> .favorite-star) { display: flex; align-items: center; gap: 4px; }
+/* The step back sits under the app bar's arrow, which leaves the whole flow: a full touch target tells them apart. */
+.android .flow-back { min-height: 48px; }
 .android .mobile-demo { display: grid; justify-items: center; gap: 0; margin: 4px 0 0; text-align: center; }
 .android .mobile-demo > p { margin: 0; color: var(--muted); font-size: var(--fs-small); }
 .android .mobile-demo > .text-button { color: var(--tile-ink); font-size: var(--fs-body); text-decoration: underline; text-underline-offset: 3px; }

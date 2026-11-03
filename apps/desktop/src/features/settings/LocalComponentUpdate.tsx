@@ -24,7 +24,7 @@ export function LocalComponentUpdate({
   const [status, setStatus] = useState<{ install_available: boolean; update_required: boolean } | null>(null);
   const [loading, setLoading] = useState(false);
   const [installing, setInstalling] = useState(false);
-  const [error, setError] = useState<{ message: string; retry: () => void } | null>(null);
+  const [error, setError] = useState<{ message: string; retry?: () => void } | null>(null);
   const [updated, setUpdated] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [bundledHint, bundledPanel] = useInfoHint(t("release.component.bundledInfo"), t("release.component.bundledInfoLabel"));
@@ -48,7 +48,8 @@ export function LocalComponentUpdate({
       setUpdated(true);
       await onUpdated();
     } catch (reason) {
-      setError({ message: errorMessage(reason, t("release.component.errorInstall")), retry: () => void install() });
+      // The footer's Update button is the retry.
+      setError({ message: errorMessage(reason, t("release.component.errorInstall")) });
     } finally { setInstalling(false); }
   }
   const updatable = Boolean(status?.install_available && status.update_required);
