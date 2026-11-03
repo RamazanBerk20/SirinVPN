@@ -4,7 +4,8 @@ import { ActionMenu } from "../../components/ActionMenu";
 import { memberAccessLabel, memberAccessLevel } from "../../access";
 import { formatDateTime, t } from "../../i18n";
 import { DeviceRow, type DeviceRowProps } from "./DeviceRow";
-import { memberActions } from "./memberLifecycleActions";
+import { addDeviceState, memberActions } from "./memberLifecycleActions";
+import { isAndroid } from "../../platform";
 import type { MemberSummary } from "../../types";
 
 type Props = DeviceRowProps & {
@@ -35,6 +36,7 @@ function MemberGroup({ member, visible, ...props }: Props & { member: MemberSumm
   const level = memberAccessLevel(member);
   // One menu per member: adding a device for them is its first item, so the card has no second add button.
   const actions = memberActions(member, props);
+  const add = addDeviceState(member, props);
   const limit = member.policy?.device_limit;
   return (
     <section className="member-group" aria-labelledby={heading} data-suspended={Boolean(member.suspended)}>
@@ -57,6 +59,8 @@ function MemberGroup({ member, visible, ...props }: Props & { member: MemberSumm
           {actions.length > 0 && <ActionMenu label={t("devices.menu.memberActions", { name: member.name })} title={member.name} actions={actions} />}
         </div>
       </header>
+      {/* Why Add device is unavailable stays readable on the card, not only inside the menu (Android's sheet shows it). */}
+      {!isAndroid && add.allowed && add.reason && member.devices.length > 0 && <p className="member-group-reason">{add.reason}</p>}
       {member.devices.length === 0 ? (
         <p className="member-group-empty">{t(member.suspended ? "devices.member.noDevicesSuspended" : "devices.member.noDevices")}</p>
       ) : (

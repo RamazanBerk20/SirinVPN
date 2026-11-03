@@ -11,7 +11,7 @@ use. This replaced a layout that showed every feature at the same level (2026-11
 | Job | Desktop | Android |
 | --- | --- | --- |
 | Connect and see the state | Home: the status card is the focus | Home |
-| Switch servers | the sidebar's **My servers** list | Home: the **Server** row opens a sheet |
+| Switch servers | the sidebar's **My servers** list, with a search field from six servers | Home: the **Server** row opens a sheet |
 | Manage servers (rename, favorites, maintenance, add) | sidebar → **Manage** (the Servers page) | the **Servers** tab, or the sheet's **Manage servers** |
 | Add a device or invite someone | Devices → **Add device** | Devices → **Add device** |
 | A device's details and actions | the device's ⋯ menu → **Details** | the device's ⋮ sheet |
@@ -22,7 +22,9 @@ use. This replaced a layout that showed every feature at the same level (2026-11
 
 The desktop's primary navigation is Home, Devices and Settings: the sidebar's
 server list already is the servers section, so a Servers item beside it only
-repeated it. Home names the server once, in its title. The server address moved
+repeated it. The Servers page outlines the selected server and says that switching
+happens in the sidebar; on that page the sidebar's **Manage** button is marked as
+the current place. Home names the server once, in its title. The server address moved
 to Device details, and the status card says "Connected" without repeating the
 name. Android keeps its four tabs: a phone has no sidebar.
 
@@ -36,8 +38,9 @@ name. Android keeps its four tabs: a phone has no sidebar.
 | Device key rotation | Settings → Advanced. An unfinished rotation also stays in Keys & recovery and on Home. |
 | WireGuard configurations | Devices → Add device → Advanced; a member's menu → Advanced (desktop) |
 | Mutual access, device pairs, local networks | a device's menu → Advanced |
-| Creating a Hetzner server | Add a server → Advanced |
+| Creating a Hetzner server | Add a server → Advanced (the row says it holds Hetzner Cloud) |
 
+On Android's settings index the Advanced row lists what that role finds there.
 Settings → Advanced also points Owners and Admins to the Advanced group of
 each device's menu. Release sources stay in the update dialogs: SirinVPN ships
 no built-in address, so the first check needs one, and a saved source shows as
@@ -57,11 +60,15 @@ one line with **Change**.
 
 The page has one add action. **Add device** opens a menu when there is a choice
 (**One of my devices**, **Invite member**, and under Advanced **Add WireGuard
-device**). When there is only one choice, it does that directly. Member cards
-have no add button of their own: **Add device for …** is the first item of the
-member's menu. Device rows have no expand chevron: **Details** is the first item
-of the row's menu and opens a dialog. Every control is a named button or menu
-item, and closing a dialog returns focus to the menu that opened it.
+device**). When there is only one choice, the button does it directly and is
+named for it (**Invite member** when inviting is all the caller may do). Member
+cards have no add button of their own: **Add device for …** is the first item of
+the member's menu, and when it is unavailable the reason also shows on the card.
+Device rows have no expand chevron: **Details** is the first item of the row's
+menu and opens a dialog; **Revoke** ends the menu, after the Advanced group.
+Every control is a named button or menu item, a disabled item's reason is its
+description for screen readers, and closing a dialog returns focus to the menu
+that opened it.
 
 ## Long operations
 

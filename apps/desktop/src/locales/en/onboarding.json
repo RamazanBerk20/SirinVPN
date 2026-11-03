@@ -23,7 +23,8 @@
       "title": "Create a Hetzner server",
       "summary": "Rent a new VPS that sets itself up"
     },
-    "advanced": "Advanced"
+    "advanced": "Advanced",
+    "advancedHint": "Create a server with a Hetzner Cloud account"
   },
   "backup": {
     "title": "Restore this device",

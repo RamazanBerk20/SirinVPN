@@ -48,6 +48,8 @@ function settingsSummaries(model: ReturnType<typeof useServerWorkspace>, recover
     }) : undefined,
     recovery: recoveryKey === null ? undefined : t(recoveryKey ? "app.settingsIndex.recoveryKeySaved" : "app.settingsIndex.recoveryKeyMissing"),
     network: routing ? t(routing === "selected_routes" ? "home.routing.selectedRoutes" : routing === "selected_applications" ? "home.routing.selectedApps" : "home.routing.fullTunnel") : undefined,
+    // Only the Owner has alerts and schedules there; the static hint lists them.
+    advanced: model.accessLevel === "owner" ? undefined : t(model.accessLevel === "admin" ? "app.settingsIndex.advancedAdmin" : "app.settingsIndex.advancedMember"),
     maintenance: model.rotationPendingConfirmed ? t("app.settingsIndex.attention")
       : server ? t(server.interface_up && server.dns_healthy ? "app.settingsIndex.serverHealthy" : "app.settingsIndex.serverFault") : undefined,
   };
@@ -222,11 +224,13 @@ export function ServerWorkspace(
             </div>
           )}
           {category === "recovery" && (
-            <MaintenanceTools
-              model={model}
-              category="recovery"
-              onRestoreDevice={props.onRestoreDevice}
-            />
+            <div className="settings-sections">
+              <MaintenanceTools
+                model={model}
+                category="recovery"
+                onRestoreDevice={props.onRestoreDevice}
+              />
+            </div>
           )}
           {category === "maintenance" && (
             <div className="settings-sections">

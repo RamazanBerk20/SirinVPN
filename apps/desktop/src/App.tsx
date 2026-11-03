@@ -4,7 +4,7 @@ import { ToastRegion } from "./components/Toasts";
 import { useAndroidBack } from "./hooks/useAndroidBack";
 import { describeConnection } from "./features/connection/connectionState";
 import { DesktopTitleBar } from "./components/DesktopTitleBar";
-import { ServerCollection } from "./features/servers/ServerCollection";
+import { SEARCH_THRESHOLD, ServerCollection } from "./features/servers/ServerCollection";
 import type { SettingsCategory } from "./features/settings/SettingsLayout";
 import type { SetupNext } from "./features/onboarding/SetupFlow";
 import { DialogContent } from "./components/DialogContent";
@@ -73,6 +73,7 @@ function AppContent() {
     null,
   );
   const [releaseUpdateOpen, setReleaseUpdateOpen] = useState(false);
+  const [serverQuery, setServerQuery] = useState("");
   const { localStatus, serverStatus, refreshStatus, freshness, trafficUpdates } =
     useDesktopStatus(clientPlatform, setServers);
 
@@ -312,6 +313,8 @@ function AppContent() {
     );
   }
 
+  const listedServers = servers.length < SEARCH_THRESHOLD ? servers
+    : servers.filter((server) => `${server.name} ${server.endpoint.host}`.toLocaleLowerCase().includes(serverQuery.trim().toLocaleLowerCase()));
   return (
     <div className="app-shell">
       {clientPlatform === "desktop" && <DesktopTitleBar />}
@@ -350,8 +353,11 @@ function AppContent() {
             </Dialog.Portal>
           </Dialog.Root>
         </div>
+        {/* The sidebar is the one switcher, so a long list gets the same search as the Servers page. */}
+        {servers.length >= SEARCH_THRESHOLD && <input className="sidebar-search" type="search" value={serverQuery}
+          aria-label={t("servers.search.label")} placeholder={t("servers.search.placeholder")} onChange={(event) => setServerQuery(event.target.value)} />}
         <nav className="server-list" aria-label={t("app.sidebar.serverList")}>
-          {servers.map((server) => {
+          {listedServers.map((server) => {
             const connected =
               localStatus.server_id === server.id &&
               localStatus.state === "connected";
@@ -380,6 +386,7 @@ function AppContent() {
               </button>
             );
           })}
+          {!listedServers.length && <p className="sidebar-empty" role="status">{t("servers.search.empty")}</p>}
         </nav>
         <div className="sidebar-foot">
           <ShieldCheck size={17} weight="duotone" />

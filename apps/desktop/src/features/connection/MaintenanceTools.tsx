@@ -171,8 +171,9 @@ export function MaintenanceTools({
               : []),
           ]
         : [{ id: "maintenance", title: t("maintenance.tools.serverTitle", { name: profile.name }), actions: maintenance }];
+  // The page's own .settings-sections holds these cards, so Android's dividers see them as siblings.
   return (
-    <div className="settings-sections">
+    <>
       {category === "recovery" && model.accessLevel !== "member" && <RecoveryKeys key={profile.id} profile={profile} connected={connected} owner={model.accessLevel === "owner"}
         onConnect={model.localKnown && model.localStatus.state === "disconnected" ? () => void model.toggle() : undefined}
         onUpdate={profile.role === "owner" ? () => model.setMaintenanceReview("update") : undefined} />}
@@ -207,6 +208,6 @@ export function MaintenanceTools({
           </div>
         </section>
       ))}
-    </div>
+    </>
   );
 }

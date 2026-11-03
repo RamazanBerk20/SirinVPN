@@ -26,9 +26,11 @@
   animation: quiet-pulse 1.8s ease-in-out infinite;
 }
 
+/* A centred block of left-aligned steps, so it sits under the centred title on a phone too. */
 .install-state .operation-steps {
-  width: min(420px, 100%);
-  margin: 24px 0 16px;
+  width: fit-content;
+  max-width: min(420px, 100%);
+  margin: 24px auto 16px;
   text-align: left;
 }
 

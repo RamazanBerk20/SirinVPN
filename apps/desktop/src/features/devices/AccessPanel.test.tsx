@@ -32,6 +32,13 @@ it("hides Invite member from a member who may never invite, and shows it once al
   await waitFor(() => expect((add as HTMLButtonElement).disabled).toBe(false));
   fireEvent.click(add);
   expect(screen.getAllByRole("menuitem").map((item) => item.textContent)).toEqual([t("devices.panel.addMine"), t("devices.panel.invite")]);
+  cleanup(); clearMembershipCache();
+  // When inviting is the only choice, the one button says so instead of "Add device".
+  vi.mocked(api.membership).mockResolvedValue({ ...own("member", true), members: [{ ...own("member", true).members[0], policy: { ...policy(true), add_own_devices: false } }] });
+  show("member");
+  const invite = await screen.findByRole("button", { name: t("devices.panel.invite") });
+  expect(invite.getAttribute("aria-haspopup")).toBeNull();
+  expect(screen.queryByRole("button", { name: t("devices.panel.add") })).toBeNull();
 });
 
 it("offers a next step when this is the only device, and retries a failed load in place", async () => {

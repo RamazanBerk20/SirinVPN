@@ -87,13 +87,29 @@
 }
 .sidebar-heading .sidebar-manage {
   min-height: 32px;
-  padding: 0 8px;
+  margin-right: 6px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
   font-size: 0.8125rem;
   letter-spacing: normal;
   text-transform: none;
 }
+/* On the Servers page Manage is the "you are here" mark, as the selected navigation item is elsewhere. */
 .sidebar-heading .sidebar-manage[aria-current="page"] {
+  border-color: color-mix(in srgb, var(--cyan) 45%, var(--line));
+  background: var(--surface-3);
   color: var(--text);
+}
+.sidebar-search {
+  margin: 0 2px 8px;
+  min-height: 36px;
+  font-size: 0.875rem;
+}
+.sidebar-empty {
+  margin: 4px 10px;
+  color: var(--muted);
+  font-size: var(--text-secondary);
 }
 .server-list {
   flex: 1;
@@ -103,6 +119,9 @@
   gap: 4px;
   padding: 0 2px;
   overflow-y: auto;
+  /* A visible thumb says the list goes on below the window. */
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
 }
 .server-row {
   min-width: 0;

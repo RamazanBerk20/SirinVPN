@@ -51,8 +51,9 @@ export function AddServerFlow({
       icon={<Icon size={24} />} title={t(label)} subtitle={t(hint)} trailing={<CaretRight size={18} />} onClick={() => choose(id)} />);
   const list = <>
     <div className="mobile-choice-list" role="group" aria-label={t("onboarding.choice.listLabel")}>{rows(false)}</div>
-    <SettingsDisclosure className="add-server-advanced" summary={t("onboarding.choice.advanced")}>
-      <div className="mobile-choice-list">{rows(true)}</div>
+    <SettingsDisclosure className="add-server-advanced"
+      summary={<span className="add-server-advanced-label"><span>{t("onboarding.choice.advanced")}</span><small>{t("onboarding.choice.advancedHint")}</small></span>}>
+      <div className="mobile-choice-list" role="group" aria-label={t("onboarding.choice.advanced")}>{rows(true)}</div>
     </SettingsDisclosure>
   </>;
   if (isAndroid) return <div className="mobile-add-server">

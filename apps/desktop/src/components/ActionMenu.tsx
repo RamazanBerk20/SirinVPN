@@ -12,13 +12,20 @@ export interface MenuAction {
   danger?: boolean;
 }
 
-/** Groups keep their first-seen order; destructive actions move to the end of their group. */
-function sheetGroups(actions: MenuAction[]): [string, MenuAction[]][] {
+/**
+ * Groups keep their first-seen order; destructive actions move to the end of their group, and
+ * ungrouped destructive ones to the end of the whole menu, after any titled group.
+ */
+export function sheetGroups(actions: MenuAction[]): { key: string; label: string; items: MenuAction[] }[] {
   const groups = new Map<string, MenuAction[]>();
   for (const action of actions) groups.set(action.group ?? "", [...(groups.get(action.group ?? "") ?? []), action]);
   // Ungrouped actions come first, so they never read as part of a titled group.
-  return [...groups].sort(([a], [b]) => Number(Boolean(a)) - Number(Boolean(b)))
-    .map(([group, items]) => [group, [...items.filter(item => !item.danger), ...items.filter(item => item.danger)]]);
+  const ordered = [...groups].sort(([a], [b]) => Number(Boolean(a)) - Number(Boolean(b)))
+    .map(([label, items]) => ({ key: label, label, items: [...items.filter(item => !item.danger), ...items.filter(item => item.danger)] }));
+  const loose = ordered[0]?.label === "" && ordered.length > 1 ? ordered[0].items.filter(item => item.danger) : [];
+  if (!loose.length) return ordered;
+  return [{ ...ordered[0], items: ordered[0].items.filter(item => !item.danger) }, ...ordered.slice(1), { key: "\u0000danger", label: "", items: loose }]
+    .filter(group => group.items.length > 0);
 }
 
 export function ActionMenu({
@@ -98,7 +105,7 @@ export function ActionMenu({
       : <button className="icon-button overflow-button" aria-label={label}><DotsThreeVertical size={24} weight="bold" /></button>}</Dialog.Trigger>
     <Dialog.Portal><Dialog.Overlay className="dialog-overlay" />
       <DialogContent className="dialog-content mobile-action-sheet" heading={title ?? label} aria-describedby={undefined}>
-        {sheetGroups(actions).map(([group, items]) => <Fragment key={group}>
+        {sheetGroups(actions).map(({ key, label: group, items }) => <Fragment key={key}>
           {group && <h3 className="sheet-group-label">{group}</h3>}
           {items.map(action => <button key={action.label} className={`mobile-sheet-action ${action.danger ? "danger-text" : ""}`} disabled={action.disabled} onClick={() => { setOpen(false); action.run(); }}>
             <span>{action.label}</span>{action.reason && <small>{action.reason}</small>}
@@ -187,15 +194,17 @@ export function ActionMenu({
           }}
         >
           {/* One heading per group, as on Android, instead of a scope caption on every item. */}
-          {sheetGroups(actions).map(([group, items]) => <div role="group" aria-label={group || undefined} key={group}>
+          {sheetGroups(actions).map(({ key, label: group, items }, groupIndex) => <div role="group" aria-label={group || undefined} key={key}>
             {group && <p className="menu-group-label" aria-hidden="true">{group}</p>}
-            {items.map((action) => (
+            {items.map((action, index) => (
               <button
                 role="menuitem"
                 key={action.label}
                 className={action.danger ? "danger-text" : ""}
                 disabled={action.disabled}
                 aria-label={action.label}
+                // The name stays the action; why it is unavailable is read as its description.
+                aria-describedby={action.reason ? `${id}-${groupIndex}-${index}-reason` : undefined}
                 onClick={() => {
                   if (action.disabled) return;
                   close();
@@ -203,7 +212,7 @@ export function ActionMenu({
                 }}
               >
                 <span>{action.label}</span>
-                {action.reason && <small>{action.reason}</small>}
+                {action.reason && <small id={`${id}-${groupIndex}-${index}-reason`}>{action.reason}</small>}
               </button>
             ))}
           </div>)}

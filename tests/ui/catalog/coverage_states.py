@@ -51,8 +51,8 @@ def navigation(actions):
     for index in range(len(actions) - 1, -1, -1):
         action = actions[index]
         if action.get('text') in ('Invite member', 'Add WireGuard device') and action.get('exact', True) and not (index and actions[index - 1].get('text') == 'Add device'):
-            actions.insert(index, {'text': 'Add device'})
-            action.setdefault('optional', action['text'] == 'Invite member')
+            # Skipped where Invite member is the only choice and so the header button itself.
+            actions.insert(index, {'text': 'Add device', 'optional': True})
         if action.get('text') == 'Servers' and 'or' not in action:
             action['or'] = {'text': 'Manage servers'}
     return actions
@@ -156,14 +156,17 @@ def coverage_states(cases):
     add('local-networks', 'local-networks-entered', routes + [fill('Networks', '192.168.1.0/24\n10.20.0.0/24')])
     add('local-networks', 'local-networks-invalid', routes + [fill('Networks', '192.168.0.0/8\nnot a network')])
     outcomes('local-networks', 'save-local-networks', routes + [fill('Networks', '192.168.1.0/24')], click('Save networks'), 'updateDeviceSubnetRoutes')
-    add('local-networks', 'shared-networks-on-device-list', [mutate(ROUTES)] + devices + [click('My Linux desktop', False)])
+    add('local-networks', 'shared-networks-on-device-list', [mutate(ROUTES)] + devices + [click('Actions for My Linux desktop'), click('Details')])
+    # The one Add device menu and a member's menu, with its Advanced group.
+    add('devices', 'add-device-menu', devices + [click('Add device')])
+    add('devices', 'member-menu-family', devices + [click('Member actions for Family')])
     # Icons come from the platform each device reported, so a renamed phone keeps its phone icon.
     rename = devices + [click('Actions for Android phone'), click('Rename device'), fill('Device name', 'Renamed device'), click('Rename')]
     add('devices', 'platform-icons-after-rename', rename, required=['renameDevice'])
 
     # Hetzner VPS creation.
     for where, base, state in [('first-launch', [], {'empty': True}), ('add-server', [click('Servers'), click('Add server')], {})]:
-        hetzner = base + [click('Advanced'), click('New Hetzner VPS', **{'or': click('Create a Hetzner server', False)})]
+        hetzner = base + [click('Advanced', False), click('New Hetzner VPS', **{'or': click('Create a Hetzner server', False)})]
         add('hetzner', where + '-hetzner-token', hetzner, state)
         plans = hetzner + [fill('Hetzner Cloud API token', 'example-hetzner-token'), click('Show prices')]
         if where == 'add-server':
@@ -202,6 +205,7 @@ def coverage_states(cases):
     add('android', 'connection-subpage', [click('Connection Method', False)], forms=mobile)
     add('android', 'connection-subpage-disconnected', [click('Connection Method', False)], {'connected': False}, forms=mobile)
     add('android', 'details-subpage', [click('Connection details', False)], forms=mobile)
+    add('android', 'details-subpage-member', [click('Connection details', False)], {'role': 'member'}, forms=mobile)
     add('android', 'details-subpage-disconnected', [click('Connection details', False)], {'connected': False}, forms=mobile)
     add('android', 'server-picker', [click('Server: My private VPS. Change server')], {'profileCount': 4}, forms=mobile)
     add('android', 'server-picker-long-names', [click('Server: ', False)], {'profileCount': 12, 'longNames': True}, forms=mobile)
@@ -241,7 +245,7 @@ def coverage_states(cases):
 
     # Data extremes.
     add('extremes', 'many-members-and-devices', [mutate(MANY_DEVICES)] + devices)
-    add('extremes', 'many-devices-expanded', [mutate(MANY_DEVICES)] + devices + [mutate("document.querySelectorAll('.device-item-summary').forEach(el=>el.click())")])
+    add('extremes', 'many-devices-expanded', [mutate(MANY_DEVICES)] + devices + [click('Actions for Device 1 with an unusually long descriptive name'), click('Details')])
     add('extremes', 'only-own-device', [mutate("const s=window.__catalog.state;s.members.members=s.members.members.slice(0,1);")] + devices)
     add('extremes', 'long-names-home', [], {'longNames': True})
     add('extremes', 'long-names-settings', settings('', 'maintenance'), {'longNames': True})

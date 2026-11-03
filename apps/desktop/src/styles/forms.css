@@ -245,6 +245,16 @@ input[type="checkbox"]:not([role="switch"]):disabled {
   display: grid;
   gap: 12px;
 }
+/* The Advanced row says what it holds, so nobody has to open it to find out. */
+.add-server-advanced-label {
+  display: grid;
+  gap: 2px;
+}
+.add-server-advanced-label small {
+  color: var(--muted);
+  font-size: var(--text-secondary);
+  font-weight: var(--weight-regular);
+}
 
 /* Described choice rows (ways to add a server, the Android server picker); mobile-native.css sets Android metrics. */
 .mobile-choice-list {

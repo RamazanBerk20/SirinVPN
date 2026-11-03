@@ -110,7 +110,7 @@ export function ServerMetrics({
           )}
           <SettingsDisclosure className="metrics-details" summary={t("home.server.detailsSummary")}>
             <dl>
-              {serverMetrics(status).filter(metric => metric.id === "memory" || metric.id === "storage").map(metric => (
+              {serverMetrics(status).filter(metric => ["cpu", "memory", "storage"].includes(metric.id)).map(metric => (
                 <div key={metric.id}>
                   <dt>{metric.label}</dt>
                   <dd>{metric.detail}</dd>

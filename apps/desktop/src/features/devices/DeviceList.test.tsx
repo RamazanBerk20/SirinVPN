@@ -240,13 +240,24 @@ it("marks a suspended member and prevents enrollment and ownership transfer", ()
   expect(props.onMemberSuspension).toHaveBeenCalledWith(suspended);
 });
 
-it("explains a reached device limit on the disabled Add device", () => {
+it("explains a reached device limit on the card and on the disabled Add device", () => {
   const full = { ...snapshot.members[1], policy: { device_limit: 1, expires_at_unix: null, weekly_access: [], invite_members: false,
     add_own_devices: true, manage_own_peer_communication: false, manage_own_port_forwards: false } };
   setup({ snapshot: { ...snapshot, members: [snapshot.members[0], full] } });
+  const reason = t("devices.menu.limitReached", { count: 1 });
+  expect(within(screen.getByRole("region", { name: "Family" })).getByText(reason)).toBeTruthy();
   memberMenu("Family");
-  expect(item(t("devices.menu.addDeviceFor", { name: "Family" })).disabled).toBe(true);
-  expect(screen.getByText(t("devices.menu.limitReached", { count: 1 }))).toBeTruthy();
+  const add = item(t("devices.menu.addDeviceFor", { name: "Family" }));
+  expect(add.disabled).toBe(true);
+  // Screen readers get the reason as the item's description.
+  expect(document.getElementById(add.getAttribute("aria-describedby")!)?.textContent).toBe(reason);
+});
+
+it("ends a device's menu with Revoke, after its Advanced group", () => {
+  setup();
+  menu("Android phone");
+  expect(items().at(-1)).toBe(t("devices.menu.revoke", { name: "Android phone" }));
+  expect(items()[0]).toBe(t("devices.menu.details"));
 });
 
 it("opens a device's details from its one menu and returns focus to it", async () => {

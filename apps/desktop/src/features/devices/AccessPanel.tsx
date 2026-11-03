@@ -46,12 +46,15 @@ export function AccessPanel(
   const lonely = snapshot && !searching && snapshot.members.length === 1 && deviceCount <= 1;
   // The page's one add action: this member's next device, a new member, or (Advanced) a WireGuard configuration.
   const own = self && addDeviceState(self, { accessLevel, memberBusy: controller.memberBusy });
+  const invite: MenuAction | null = canInvite ? { label: t("devices.panel.invite"), run: () => controller.openInvitation(null) } : null;
   const addActions: MenuAction[] = [
     ...(self && own?.allowed ? [{ label: t("devices.panel.addMine"), disabled: own.disabled, reason: own.reason, run: () => controller.openInvitation(self) }] : []),
-    ...(canInvite ? [{ label: t("devices.panel.invite"), run: () => controller.openInvitation(null) }] : []),
+    ...(invite ? [invite] : []),
     ...(wireguardAvailable && canInvite ? [{ group: t("devices.menu.group.advanced"), label: t("devices.panel.addWireguard"), run: () => setWireguardTarget("new") }] : []),
   ];
-  const addLabel = <><Plus size={16} weight="bold" /> {t("devices.panel.add")}</>;
+  // A single choice is a plain button named for what it does: an invitation isn't "Add device".
+  const direct = addActions.length === 1 && !addActions[0].disabled ? addActions[0] : null;
+  const addLabel = <><Plus size={16} weight="bold" /> {t(direct && direct === invite ? "devices.panel.invite" : "devices.panel.add")}</>;
   return (
     <section className="access-section devices-page">
       <div className="devices-heading">
@@ -61,8 +64,8 @@ export function AccessPanel(
             title={t(loading ? "devices.panel.refreshing" : "devices.panel.refresh")} onClick={() => void refresh()}>
             <ArrowClockwise size={17} className={loading && snapshot ? "spin" : undefined} />
           </button>
-          {addActions.length === 1 && !addActions[0].disabled
-            ? <button className="primary-button" disabled={!verified} onClick={addActions[0].run}>{addLabel}</button>
+          {direct
+            ? <button className="primary-button" disabled={!verified} onClick={direct.run}>{addLabel}</button>
             : addActions.length > 0 && <ActionMenu label={t("devices.panel.add")} actions={addActions}
               trigger={{ content: addLabel, className: "primary-button", disabled: !verified }} />}
         </div>

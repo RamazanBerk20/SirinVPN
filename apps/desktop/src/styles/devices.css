@@ -275,6 +275,7 @@ details[open] > summary > .disclosure-chevron {
   align-items: center;
   gap: 6px;
 }
+.member-group-reason,
 .member-group-empty {
   margin: 0;
   padding: 0 16px 14px 70px;
@@ -693,6 +694,7 @@ details[open] > summary > .disclosure-chevron {
     width: 36px;
     height: 36px;
   }
+  .member-group-reason,
   .member-group-empty {
     padding: 0 12px 12px;
   }

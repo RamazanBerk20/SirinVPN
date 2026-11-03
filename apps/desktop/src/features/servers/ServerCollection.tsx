@@ -14,7 +14,7 @@ import { DialogContent } from "../../components/DialogContent";
 import { t } from "../../i18n";
 
 /** Search appears once a collection is long enough to need it. */
-const SEARCH_THRESHOLD = 6;
+export const SEARCH_THRESHOLD = 6;
 function roleLabel(server: ServerProfile): string {
   return t(server.role === "owner" ? "common.role.owner" : server.administrator ? "common.role.admin" : "common.role.member");
 }
@@ -86,6 +86,7 @@ export function ServerCollection({
             <article
               key={server.id}
               className="collection-row"
+              data-selected={selectedId === server.id}
             >
               {isAndroid ? <button className="mobile-server-open" onClick={() => onOpen(server.id)} aria-label={t("servers.open", { name: server.name })} aria-current={selectedId === server.id || undefined}>
                 <span className={`mobile-row-icon ${state.connected ? "online" : ""}`}><Database size={22} /></span>

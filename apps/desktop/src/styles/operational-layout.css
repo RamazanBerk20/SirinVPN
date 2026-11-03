@@ -92,6 +92,10 @@
   background: var(--surface-2);
   border: 1px solid var(--line);
 }
+/* The server the sidebar has selected, without a second switch control. */
+.collection-row[data-selected="true"] {
+  border-color: color-mix(in srgb, var(--line-strong) 90%, var(--text));
+}
 .collection-row .server-card-icon {
   color: var(--muted);
 }
