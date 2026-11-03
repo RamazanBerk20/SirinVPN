@@ -347,14 +347,17 @@ button.mobile-list-row:hover {
   box-shadow: 0 0 24px color-mix(in srgb, color-mix(in srgb, var(--cyan) 50%, var(--accent)) 18%, transparent);
 }
 
-/* Disabled is an empty outline in both themes: a faded gradient read as "almost ready",
-   and a filled chip looked more active than the outlined secondary beside it. */
-.primary-button:disabled {
+/* Disabled is one flat neutral fill on every desktop screen, dialogs and danger actions included:
+   a faded gradient read as "almost ready". Android's flat buttons have their own in mobile-native.css. */
+.primary-button:disabled,
+.primary-button.danger-action:disabled {
   cursor: not-allowed;
   border-color: var(--line);
-  background: transparent;
-  color: color-mix(in srgb, var(--muted) 80%, var(--surface-3));
+  background: var(--surface-3);
+  color: var(--muted);
   box-shadow: none;
+  filter: none;
+  opacity: 1;
 }
 
 .form-footnote {

@@ -263,16 +263,6 @@ html[data-window-chrome="custom"] .dialog-content.dialog-layout {
 .dialog-back { min-height: 40px; padding-inline: 12px; }
 .dialog-footer .text-button.dialog-back { margin-right: auto; }
 .dialog-body > .inline-error { margin-bottom: 16px; }
-/* A disabled action reads as unavailable, not as a faded version of the live one. */
-.dialog-layout .primary-button:disabled,
-.dialog-layout .primary-button.danger-action:disabled {
-  border-color: var(--line);
-  background: var(--surface-3);
-  color: var(--muted);
-  box-shadow: none;
-  filter: none;
-  opacity: 1;
-}
 .dialog-layout button .spin { flex: 0 0 auto; }
 
 /* One result and one progress layout for every maintenance task. */
