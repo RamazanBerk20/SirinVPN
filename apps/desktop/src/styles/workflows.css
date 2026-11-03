@@ -245,6 +245,7 @@ html[data-window-chrome="custom"] .dialog-content.dialog-layout {
 .diagnostic-row strong { font-size: var(--text-body); line-height: 1.45; }
 .diagnostic-row p { font-size: var(--text-secondary); margin-top: 6px; line-height: 1.55; }
 .diagnostic-evidence { display: inline-block; color: var(--muted); font-size: var(--text-secondary); margin-top: 10px; }
+.diagnostic-fix { display: flex; margin-top: 12px; min-height: 36px; }
 .diagnostic-row.unavailable > span { color: var(--muted); background: color-mix(in srgb, var(--quiet) 8%, transparent); }
 .diagnostic-row.fail > span { color: var(--danger); background: color-mix(in srgb, var(--danger) 9%, transparent); }
 .diagnostic-passed > summary { cursor: pointer; padding: 14px 0; font-size: var(--text-body); }

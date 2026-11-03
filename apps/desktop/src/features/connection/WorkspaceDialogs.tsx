@@ -14,17 +14,27 @@ import { VpsBackupScheduleDialog } from "../settings/VpsBackupScheduleDialog";
 import { ExportBackupDialog } from "../settings/ExportBackupDialog";
 import { RemoveServerDialog } from "../settings/RemoveServerDialog";
 import { t } from "../../i18n";
+import type { SettingsCategory } from "../settings/SettingsLayout";
 
 import type { ServerWorkspaceModel } from "./useServerWorkspace";
+
+/** Checks whose advice names a settings page get a button that opens it. */
+function diagnosticFixes(open: (category: SettingsCategory) => void) {
+  const connection = { label: t("help.troubleshoot.connectionSettings"), run: () => open("connection") };
+  const network = { label: t("maintenance.diagnostics.openNetwork"), run: () => open("network") };
+  return { local_protection: connection, local_transport: connection, local_mtu: connection, local_routes: network, local_ipv6: network, local_dns: network, dns_blocklist: network };
+}
 
 export function WorkspaceDialogs({
   model,
   onReturnHome,
   onReviewAccess,
+  onOpenSettings,
 }: {
   model: ServerWorkspaceModel;
   onReturnHome?: () => void;
   onReviewAccess?: () => void;
+  onOpenSettings?: (category: SettingsCategory) => void;
 }) {
   const {
     diagnostics,
@@ -68,7 +78,7 @@ export function WorkspaceDialogs({
               </div>
             ) : (
               <>
-                <DiagnosticResults report={diagnostics} onRunAgain={() => void model.runDiagnostics()} />
+                <DiagnosticResults report={diagnostics} onRunAgain={() => void model.runDiagnostics()} fixes={onOpenSettings && diagnosticFixes((category) => { setDiagnosticsOpen(false); onOpenSettings(category); })} />
                 {model.canManageAccess && <SpeedTest serverId={profile.id} />}
               </>
             )}

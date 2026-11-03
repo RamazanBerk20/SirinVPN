@@ -1,6 +1,7 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { t } from "../i18n";
+import type { DiagnosticReport } from "../types";
 import { DiagnosticResults } from "./DiagnosticResults";
 
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
@@ -83,4 +84,16 @@ it("shows a failed or empty run as such, with Run again, and headlines an all-pa
   expect(screen.getByText(t("settings.diagnostics.empty"))).toBeTruthy();
   view.rerender(<DiagnosticResults report={{ api_version: "v1", checks: [{ code: "local_backend", label: "Service", level: "pass" as const, message: "Running." }] }} />);
   expect(screen.getByText(t("settings.diagnostics.allPassed", { count: 1 }))).toBeTruthy();
+});
+
+it("offers a check's fix only while the check needs attention", () => {
+  const run = vi.fn();
+  const report = { api_version: "v1", checks: [
+    { code: "local_protection", label: "Protection", level: "warning", message: "The kill switch is off." },
+    { code: "local_mtu", label: "MTU", level: "pass", message: "Fine." },
+  ] } as DiagnosticReport;
+  render(<DiagnosticResults report={report} fixes={{ local_protection: { label: "Fix protection", run }, local_mtu: { label: "Fix MTU", run } }} />);
+  fireEvent.click(screen.getByRole("button", { name: "Fix protection" }));
+  expect(run).toHaveBeenCalledOnce();
+  expect(screen.queryByRole("button", { name: "Fix MTU" })).toBeNull();
 });

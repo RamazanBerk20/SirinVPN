@@ -19,19 +19,24 @@ export function diagnosticText(report: DiagnosticReport): string {
     ].join("\n"))].join("\n\n");
 }
 
-function DiagnosticRows({ checks }: { checks: DiagnosticCheck[] }) {
+/** An in-app fix for a check that didn't pass, keyed by the check's code. */
+export type DiagnosticFixes = Partial<Record<string, { label: string; run: () => void }>>;
+
+function DiagnosticRows({ checks, fixes = {} }: { checks: DiagnosticCheck[]; fixes?: DiagnosticFixes }) {
   return <div className="diagnostic-list">{checks.map((check) => {
     const group = diagnosticGroup(check);
+    const fix = group !== "passed" ? fixes[check.code] : undefined;
     return <div key={check.code} className={`diagnostic-row ${check.level} ${group}`}>
       <span aria-label={t(`maintenance.diagnostics.group.${group}`)}>
         {group === "passed" ? <Check weight="bold" /> : group === "unavailable" ? <Info /> : <Warning weight="fill" />}
       </span>
-      <div><strong>{check.label}</strong><p>{check.message}</p><span className="diagnostic-evidence">{evidenceLabel(check)}</span></div>
+      <div><strong>{check.label}</strong><p>{check.message}</p><span className="diagnostic-evidence">{evidenceLabel(check)}</span>
+        {fix && <button type="button" className="secondary-button diagnostic-fix" onClick={fix.run}>{fix.label}</button>}</div>
     </div>;
   })}</div>;
 }
 
-export function DiagnosticResults({ report, onRunAgain }: { report: DiagnosticReport; onRunAgain?: () => void }) {
+export function DiagnosticResults({ report, onRunAgain, fixes }: { report: DiagnosticReport; onRunAgain?: () => void; fixes?: DiagnosticFixes }) {
   const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
   const generation = useRef(0);
   useEffect(() => {
@@ -72,7 +77,7 @@ export function DiagnosticResults({ report, onRunAgain }: { report: DiagnosticRe
     <div className="diagnostic-groups">
       {(["attention", "review", "unavailable"] as const).map((group) => groups[group].length > 0 && <section key={group} className="diagnostic-group">
         <h3>{t(`maintenance.diagnostics.group.${group}`)}</h3>
-        <DiagnosticRows checks={groups[group]} />
+        <DiagnosticRows checks={groups[group]} fixes={fixes} />
       </section>)}
       {groups.passed.length > 0 && <SettingsDisclosure className="diagnostic-passed" summary={t("maintenance.diagnostics.passedChecks", { count: groups.passed.length })}>
         <p className="settings-note">{t("maintenance.diagnostics.passedNote")}</p>

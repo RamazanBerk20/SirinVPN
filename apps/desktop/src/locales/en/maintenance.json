@@ -111,6 +111,7 @@
     "description": "Current state of this device and server. Results aren’t saved.",
     "checking": "Checking this device and server…",
     "copy": "Copy report",
+    "openNetwork": "Open network settings",
     "copied": "Report copied. It stays in your clipboard until replaced.",
     "copyFailed": "Couldn’t copy the report. Check clipboard access and try again.",
     "summary": {

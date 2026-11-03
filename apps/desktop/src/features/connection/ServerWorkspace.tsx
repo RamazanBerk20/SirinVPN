@@ -272,7 +272,7 @@ export function ServerWorkspace(
         disconnected={model.localKnown && model.localStatus.state === "disconnected" && model.localStatus.server_id === null && model.localStatus.kill_switch_state === "off"}
         onUpdated={async () => { model.clearConnectionError(); await model.onRefresh(); }}
       />}
-      <WorkspaceDialogs onReviewAccess={() => props.onNavigate("devices")} model={model} onReturnHome={() => props.onNavigate("home")} />
+      <WorkspaceDialogs onReviewAccess={() => props.onNavigate("devices")} model={model} onReturnHome={() => props.onNavigate("home")} onOpenSettings={props.onOpenSettings} />
       <Troubleshooter model={model} onOpenSettings={props.onOpenSettings} onRestoreDevice={props.onRestoreDevice} />
       </Suspense>
     </div>
