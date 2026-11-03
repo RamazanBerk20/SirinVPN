@@ -8,6 +8,8 @@ pub struct VerifiedReleaseBundle {
     pub signature_bytes: Vec<u8>,
     pub trust_policy_bytes: Vec<u8>,
     pub trust_signature_bytes: Vec<u8>,
+    /// Verified notes file and its summary; absent or invalid notes are `None`.
+    pub release_notes: Option<(Vec<u8>, String)>,
     pub verified: sirinvpn_release::VerifiedArtifactRelease,
     pub artifact_directory: PathBuf,
 }
@@ -45,11 +47,25 @@ impl VerifiedReleaseBundle {
             kind,
             target,
         )?;
+        let release_notes =
+            read_bounded(directory, RELEASE_NOTES_FILE_NAME, MAX_RELEASE_NOTES_BYTES)
+                .ok()
+                .and_then(|bytes| {
+                    verify_release_notes_with_trust_policy(
+                        &bytes,
+                        &manifest_bytes,
+                        &signature_bytes,
+                        &trust,
+                    )
+                    .ok()
+                    .map(|summary| (bytes, summary))
+                });
         Ok(Self {
             manifest_bytes,
             signature_bytes,
             trust_policy_bytes,
             trust_signature_bytes,
+            release_notes,
             verified,
             artifact_directory,
         })

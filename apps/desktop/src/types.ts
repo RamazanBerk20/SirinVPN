@@ -21,6 +21,8 @@ export interface ReleaseUpdateCandidate {
   artifact_target: string;
   artifact_size_bytes: number;
   artifact_sha256: string;
+  /** Signed one-line summary; absent for releases without verified notes. */
+  release_notes?: string | null;
   newer_than_running: boolean;
   debian_install_available: boolean;
   windows_install_available?: boolean;

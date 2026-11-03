@@ -20,6 +20,9 @@ use std::{
 };
 use zeroize::Zeroizing;
 
+#[path = "main_notes.rs"]
+mod notes;
+
 #[derive(Parser)]
 #[command(
     name = "sirinvpn-release",
@@ -40,6 +43,8 @@ enum Command {
     Verify(VerifyArguments),
     VerifyTrusted(VerifyTrustedArguments),
     Plan(PlanArguments),
+    /// Sign an optional one-line summary for an existing signed release.
+    Notes(notes::NotesArguments),
     Trust(TrustArguments),
     State(StateArguments),
 }
@@ -311,6 +316,7 @@ fn run() -> Result<()> {
         Command::Verify(arguments) => verify(arguments, cli.json),
         Command::VerifyTrusted(arguments) => verify_trusted(arguments, cli.json),
         Command::Plan(arguments) => plan(arguments, cli.json),
+        Command::Notes(arguments) => notes::notes(arguments, cli.json),
         Command::Trust(arguments) => trust(arguments, cli.json),
         Command::State(arguments) => state(arguments, cli.json),
     }

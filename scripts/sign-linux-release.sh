@@ -15,6 +15,7 @@ RELEASE_CLASS=${5:-normal}
 COMPATIBILITY="$PROJECT_ROOT/release/state-compatibility.json"
 TRUST_POLICY=${SIRINVPN_RELEASE_TRUST_POLICY:-}
 TRUST_SIGNATURE=${SIRINVPN_RELEASE_TRUST_SIGNATURE:-}
+RELEASE_NOTES=${SIRINVPN_RELEASE_NOTES:-}
 
 case "$RELEASE_SEQUENCE" in
   ''|*[!0-9]*|0) echo "release sequence must be a positive integer" >&2; exit 2 ;;
@@ -29,6 +30,7 @@ case "$RELEASE_CLASS" in
 esac
 [ -f "$PRIVATE_KEY" ] || { echo "release private key is unavailable" >&2; exit 1; }
 [ -f "$COMPATIBILITY" ] || { echo "release compatibility contract is unavailable" >&2; exit 1; }
+[ -z "$RELEASE_NOTES" ] || [ -f "$RELEASE_NOTES" ] || { echo "release notes summary is unavailable" >&2; exit 1; }
 if [ -n "$TRUST_POLICY" ] || [ -n "$TRUST_SIGNATURE" ]; then
   if [ -z "$TRUST_POLICY" ] || [ -z "$TRUST_SIGNATURE" ]; then
     echo "both SIRINVPN_RELEASE_TRUST_POLICY and SIRINVPN_RELEASE_TRUST_SIGNATURE are required" >&2
@@ -112,6 +114,16 @@ cargo run --manifest-path "$PROJECT_ROOT/Cargo.toml" --locked --quiet \
   --artifact "linux_deb,$RUST_TARGET,$STAGING/$DEB_NAME" \
   --manifest "$STAGING/sirinvpn-release.json" \
   --signature "$STAGING/sirinvpn-release.sig.json"
+
+if [ -n "$RELEASE_NOTES" ]; then
+  cargo run --manifest-path "$PROJECT_ROOT/Cargo.toml" --locked --quiet \
+    -p sirinvpn-release -- notes \
+    --manifest "$STAGING/sirinvpn-release.json" \
+    --signature "$STAGING/sirinvpn-release.sig.json" \
+    --summary "$RELEASE_NOTES" \
+    --private-key "$PRIVATE_KEY" \
+    --output "$STAGING/sirinvpn-release-notes.json" >/dev/null
+fi
 
 if [ -n "$TRUST_POLICY" ]; then
   cargo run --manifest-path "$PROJECT_ROOT/Cargo.toml" --locked --quiet \

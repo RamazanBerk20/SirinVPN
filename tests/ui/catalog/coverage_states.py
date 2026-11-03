@@ -209,6 +209,16 @@ def coverage_states(cases):
     add('wireguard-devices', 'wireguard-device-filled', filled)
     outcomes('wireguard-devices', 'create-wireguard-device', filled, click('Create configuration'), 'createWireGuardDevice')
 
+    # Signed release notes: a "What’s new" line in both update reviews, and none for a release without notes.
+    app_review = settings('', 'general') + [click('Check for updates'), fill('Release source', SOURCE), click('Check release')]
+    vps_review = maintenance + [click('Update VPS software', False), click('Continue'), click('SSH agent'), click('Continue'), click('Check for updates')]
+    configured = {'connected': False, 'sshInspection': {'status': 'trusted'}, 'releaseConfigured': True, 'releaseSource': SOURCE}
+    desktop = ('desktop',)
+    add('app-updates', 'app-release-with-notes', app_review, forms=desktop, required=['checkReleaseUpdate'])
+    add('app-updates', 'app-release-without-notes', app_review, {'releaseCandidate': {'release_notes': None}}, desktop, ['checkReleaseUpdate'])
+    add('vps-updates', 'vps-release-with-notes', vps_review, configured, desktop, ['manageVpsRelease'])
+    add('vps-updates', 'vps-release-without-notes', vps_review, {**configured, 'vpsRelease': {'release_notes': None}}, desktop, ['manageVpsRelease'])
+
     # Data extremes.
     add('extremes', 'many-members-and-devices', [mutate(MANY_DEVICES)] + devices)
     add('extremes', 'many-devices-expanded', [mutate(MANY_DEVICES)] + devices + [mutate("document.querySelectorAll('.device-item-summary').forEach(el=>el.click())")])

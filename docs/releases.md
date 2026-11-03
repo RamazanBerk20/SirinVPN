@@ -76,6 +76,23 @@ The sequence is a positive, globally monotonic number for that channel. Mark a r
 
 The signing script refuses an existing destination, copies exactly one `.deb` and one AppImage into a staging directory, hashes their complete bytes, and creates `sirinvpn-release.json` plus `sirinvpn-release.sig.json`. When both public trust-policy environment paths are set, it also stages them under their canonical names and proves the bundled root authenticates the policy and that the policy authorizes the release signer. Supplying only one path fails. It does not copy or print either private key. Omitting both trust paths retains the legacy externally pinned engineering bundle format; do not publish that form as a production update.
 
+## Add release notes
+
+A release can carry an optional one-line summary that the app and VPS update reviews show as "What’s new". Write a sentence or two to a UTF-8 plain-text file and set `SIRINVPN_RELEASE_NOTES` to its path when running `sign-linux-release.sh`; the script then signs `sirinvpn-release-notes.json` with the same release key. To add notes to a release that is already signed, or to a server release, run the command directly with the key that signed its manifest:
+
+```sh
+cargo run --locked -p sirinvpn-release -- notes \
+  --manifest target/signed/0.1.0/sirinvpn-release.json \
+  --signature target/signed/0.1.0/sirinvpn-release.sig.json \
+  --summary release-summary.txt \
+  --private-key /secure/path/sirinvpn-release-key/private.pem \
+  --output target/signed/0.1.0/sirinvpn-release-notes.json
+```
+
+Surrounding whitespace in the text file is ignored. The summary must be one line of at most 280 characters, with no control or invisible formatting characters, no `<` or `>` and no `://` links; the command refuses anything else, and refuses a key other than the manifest's signer. Publish the file next to the manifest.
+
+The notes are not part of the manifest, whose strict format every installed release enforces, so a release root with notes stays valid for older apps and servers, which never request the file. The canonical JSON holds the summary, the manifest's SHA-256 and release sequence, and an Ed25519 signature under a notes-specific domain, so notes cannot be moved to another release. Clients fetch the file after verifying the manifest and show the summary only when it verifies with the manifest's signing key and is still authorized by the trust policy. A missing, unreachable, oversized, malformed or wrongly signed file shows nothing and never fails the update check. Reviews render the summary as plain text.
+
 ## Verify a release
 
 Verify a production-form directory through the root-signed policy it carries:
@@ -93,7 +110,7 @@ Verification first authenticates the policy with the compiled root, rejects a re
 
 ## Fetch a candidate over HTTPS
 
-Linux packages include `/usr/lib/sirinvpn/sirinvpn-release-fetch` as a separate unprivileged process. SirinVPN has no compiled default update host: provide an explicit HTTPS directory that represents the desired channel and contains the four canonical metadata files plus every artifact named by its manifest. The URL must end in `/` and cannot contain credentials, a query, or a fragment:
+Linux packages include `/usr/lib/sirinvpn/sirinvpn-release-fetch` as a separate unprivileged process. SirinVPN has no compiled default update host: provide an explicit HTTPS directory that represents the desired channel and contains the four canonical metadata files, optional signed notes, and every artifact named by its manifest. The URL must end in `/` and cannot contain credentials, a query, or a fragment:
 
 ```sh
 /usr/lib/sirinvpn/sirinvpn-release-fetch --json \
@@ -111,12 +128,13 @@ sirinvpn-release-trust.json
 sirinvpn-release-trust.sig.json
 sirinvpn-release.json
 sirinvpn-release.sig.json
+sirinvpn-release-notes.json (optional)
 <the selected signed artifact filename>
 ```
 
-It authenticates the first pair with the bundled root and the second pair with an active, non-revoked policy key before requesting the artifact. It also requires the requested channel and exact artifact kind/target. The client uses native CA verification, direct HTTPS with no environment/system proxy, no redirects or referer, identity response encoding, a 10-second connect timeout, 30-second per-read timeout, and 15-minute total timeout per request. Metadata retains its existing 256 KiB/128 KiB/8 KiB limits; an artifact cannot exceed the signed length or the global 1 GiB release limit. HTTP status other than 200 fails.
+It authenticates the first pair with the bundled root and the second pair with an active, non-revoked policy key before requesting the artifact. It also requires the requested channel and exact artifact kind/target. The client uses native CA verification, direct HTTPS with no environment/system proxy, no redirects or referer, identity response encoding, a 10-second connect timeout, 30-second per-read timeout, and 15-minute total timeout per request. Metadata retains its existing 256 KiB/128 KiB/8 KiB limits and notes are limited to 4 KiB; an artifact cannot exceed the signed length or the global 1 GiB release limit. HTTP status other than 200 fails.
 
-`--output` must be a normalized absolute path below an existing real directory and must not exist. Bytes first enter a random private sibling staging directory. Only after the selected artifact's signed size and SHA-256 pass are every file and directory synced and the complete tree atomically renamed without replacement. The resulting bundle directory and its `artifact/` child have mode `0700`; all four metadata files and the artifact have mode `0600`. Ordinary errors remove staging and never expose the requested output. Forced process or machine termination may leave only a mode-`0700` `.sirinvpn-release-fetch.*` staging directory in that parent; it is not a valid candidate and may be removed after confirming no fetch process owns it.
+`--output` must be a normalized absolute path below an existing real directory and must not exist. Bytes first enter a random private sibling staging directory. Only after the selected artifact's signed size and SHA-256 pass are every file and directory synced and the complete tree atomically renamed without replacement. The resulting bundle directory and its `artifact/` child have mode `0700`; all four metadata files, verified notes and the artifact have mode `0600`. Ordinary errors remove staging and never expose the requested output. Forced process or machine termination may leave only a mode-`0700` `.sirinvpn-release-fetch.*` staging directory in that parent; it is not a valid candidate and may be removed after confirming no fetch process owns it.
 
 The returned bundle is not installed and does not modify `/var/lib/sirinvpn-release`. Feed its two trust files to `state apply-trust`, then use its manifest/signature and `artifact/` directory with `state plan` or `state install-debian`. Those root-owned commands independently revalidate the complete chain and enforce installed policy and release high watermarks. A source can therefore withhold a release or replay older authentic bytes, but cannot make the installed path accept a forged or rolled-back release.
 

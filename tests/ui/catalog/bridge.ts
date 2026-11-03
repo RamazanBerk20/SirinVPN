@@ -151,11 +151,11 @@ export class CatalogBridge {
       case 'checkReleaseUpdate':return D.clone(s.releaseCandidate);
       case 'installReleaseUpdate':s.releaseConfigured=true;return {...D.clone(s.releaseCandidate),baseline_bound:!!s.releaseCandidate.baseline_bind_available};
       case 'rollbackReleaseUpdate':return;
-      case 'prepareVpsBaseline':return{...D.clone(D.release),artifact:{sha256:D.release.artifact_sha256,target:D.release.artifact_target,size_bytes:D.release.artifact_size_bytes}};
+      case 'prepareVpsBaseline':return{...D.clone(D.release),...s.vpsRelease,artifact:{sha256:D.release.artifact_sha256,target:D.release.artifact_target,size_bytes:D.release.artifact_size_bytes}};
       case 'installVpsBaseline':s.releaseConfigured=true;s.releaseVersion='1.0.2';return;
       case 'manageVpsRelease':{
         const op=args[0].operation;
-        if(op.action==='check')return{...D.clone(D.release),baseline_required:!s.releaseConfigured,action:s.releaseConfigured?'upgrade':'initialize'};
+        if(op.action==='check')return{...D.clone(D.release),...s.vpsRelease,baseline_required:!s.releaseConfigured,action:s.releaseConfigured?'upgrade':'initialize'};
         if(op.action==='install'){s.releaseConfigured=true;s.releaseVersion='1.0.2';}
         if(op.action==='configure'){s.releaseAutomatic=op.enabled;s.releaseSource=op.source??'';}
         if(op.action==='recover')s.releasePending=false;

@@ -34,6 +34,7 @@ pub struct SignedBaselineCandidate {
     pub channel: String,
     pub security_update: bool,
     pub manifest_sha256: String,
+    pub release_notes: Option<String>,
     pub artifact: ReleaseArtifact,
 }
 
@@ -111,6 +112,7 @@ impl SignedServerBundle {
             channel: manifest.channel.to_string(),
             security_update: manifest.security_update,
             manifest_sha256: bundle.verified.manifest_sha256,
+            release_notes: bundle.release_notes.map(|(_, summary)| summary),
             artifact: bundle.verified.artifact,
         };
         Ok(Self {

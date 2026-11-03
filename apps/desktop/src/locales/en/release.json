@@ -37,6 +37,7 @@
     "security": "Security update",
     "title": "SirinVPN {{version}}",
     "meta": "{{channel}} · installed {{current}}",
+    "whatsNew": "What’s new:",
     "package": "Package for this device · {{size}}",
     "source": "Source: {{source}}",
     "details": "Verification details",

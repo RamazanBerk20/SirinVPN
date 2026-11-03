@@ -97,6 +97,7 @@ pub struct VpsReleaseCandidate {
     pub artifact_sha256: String,
     pub artifact_target: String,
     pub artifact_size_bytes: u64,
+    pub release_notes: Option<String>,
     pub action: InstallationDecisionKind,
     pub can_install: bool,
     pub baseline_required: bool,
@@ -271,6 +272,10 @@ fn inspect_candidate(
         artifact_sha256: bundle.verified.artifact.sha256.clone(),
         artifact_target: bundle.verified.artifact.target.clone(),
         artifact_size_bytes: bundle.verified.artifact.size_bytes,
+        release_notes: bundle
+            .release_notes
+            .as_ref()
+            .map(|(_, summary)| summary.clone()),
         action: plan.action,
         can_install,
         baseline_required,

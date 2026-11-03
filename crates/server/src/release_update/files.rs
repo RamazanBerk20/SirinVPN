@@ -2,8 +2,8 @@ use super::*;
 use fs2::FileExt;
 use serde::de::DeserializeOwned;
 use sirinvpn_release_fetch::{
-    ARTIFACT_DIRECTORY_NAME, RELEASE_MANIFEST_FILE_NAME, RELEASE_SIGNATURE_FILE_NAME,
-    TRUST_POLICY_FILE_NAME, TRUST_SIGNATURE_FILE_NAME,
+    ARTIFACT_DIRECTORY_NAME, RELEASE_MANIFEST_FILE_NAME, RELEASE_NOTES_FILE_NAME,
+    RELEASE_SIGNATURE_FILE_NAME, TRUST_POLICY_FILE_NAME, TRUST_SIGNATURE_FILE_NAME,
 };
 use std::{
     fs::{self, File, OpenOptions},
@@ -153,7 +153,14 @@ pub fn import_bundle(verified: &VerifiedReleaseBundle) -> anyhow::Result<tempfil
         (RELEASE_SIGNATURE_FILE_NAME, &verified.signature_bytes),
         (TRUST_POLICY_FILE_NAME, &verified.trust_policy_bytes),
         (TRUST_SIGNATURE_FILE_NAME, &verified.trust_signature_bytes),
-    ] {
+    ]
+    .into_iter()
+    .chain(
+        verified
+            .release_notes
+            .as_ref()
+            .map(|(notes, _)| (RELEASE_NOTES_FILE_NAME, notes)),
+    ) {
         let mut file = OpenOptions::new()
             .write(true)
             .create_new(true)
