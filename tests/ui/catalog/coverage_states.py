@@ -103,7 +103,9 @@ def coverage_states(cases):
         add('dns-blocking', 'blocking-failure-' + failure.replace('_', '-'), network, {'blocklist': {**active, 'status': {**active['status'], 'failure': failure}}})
     add('dns-blocking', 'blocking-unsupported-vps', network, {'configuration': {'dns_blocklist_management_enabled': False}})
     add('dns-blocking', 'blocking-load-failed', network, {'errors': {'dnsBlocklistSettings': ERROR}})
-    add('dns-blocking', 'blocking-member-view', network, {'role': 'member', 'blocklist': active})
+    # Members read only the on/off flag from the server status, never the lists.
+    add('dns-blocking', 'blocking-member-view', network, {'role': 'member', 'blocklist': active, 'remote': {'dns_blocklist_enabled': True}})
+    add('dns-blocking', 'blocking-member-view-off', network, {'role': 'member'})
 
     # Speed test inside the diagnostics dialog.
     diagnostics = maintenance + [click('Run diagnostics')]
@@ -140,6 +142,9 @@ def coverage_states(cases):
     add('local-networks', 'local-networks-invalid', routes + [fill('Networks', '192.168.0.0/8\nnot a network')])
     outcomes('local-networks', 'save-local-networks', routes + [fill('Networks', '192.168.1.0/24')], click('Save networks'), 'updateDeviceSubnetRoutes')
     add('local-networks', 'shared-networks-on-device-list', [mutate(ROUTES)] + devices + [click('My Linux desktop', False)])
+    # Icons come from the platform each device reported, so a renamed phone keeps its phone icon.
+    rename = devices + [click('Actions for Android phone'), click('Rename device'), fill('Device name', 'Renamed device'), click('Rename')]
+    add('devices', 'platform-icons-after-rename', rename, required=['renameDevice'])
 
     # Hetzner VPS creation.
     for where, base, state in [('first-launch', [], {'empty': True}), ('add-server', [click('Servers'), click('Add server')], {})]:

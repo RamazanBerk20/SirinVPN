@@ -144,6 +144,10 @@ pub(super) fn management_router(state: AppState) -> Router {
             patch(rename_device_handler).delete(revoke_device_handler),
         )
         .route(
+            "/v1/device-platform",
+            axum::routing::put(update_device_platform_handler),
+        )
+        .route(
             "/v1/devices/{device_id}/peer-communication",
             patch(update_device_peer_communication_handler),
         )
@@ -254,6 +258,8 @@ pub(super) async fn caller_status(
     status.caller_identity_fingerprint = caller_identity.certificate_fingerprint.clone();
     if let Some(authorization) = &state.authorization {
         let current = authorization.read().await;
+        // Every role may know whether blocking is on; its lists stay manager-only.
+        status.dns_blocklist_enabled = Some(current.dns_blocklist.enabled);
         if let Some(device) = current
             .devices
             .iter()
@@ -327,5 +333,6 @@ pub(super) async fn configuration_handler(
         subnet_routes_enabled: state.authorization.is_some(),
         device_pairs_enabled: state.authorization.is_some(),
         alerts_enabled: super::alerts::management_available(&state),
+        device_platforms_enabled: state.authorization.is_some(),
     })))
 }

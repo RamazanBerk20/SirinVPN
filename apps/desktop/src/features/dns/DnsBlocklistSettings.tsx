@@ -14,10 +14,12 @@ const httpsList = (url: string) => /^https:\/\/[^\s/@#]+(\/[^\s#]*)?$/.test(url)
 const sameList = (a: string[], b: string[]) => a.length === b.length && [...a].sort().join("\n") === [...b].sort().join("\n");
 
 /** Owner and Admin control of the VPS-wide blocklist. The VPS keeps no query history. */
-export function DnsBlocklistSettings({ profile, connected, canManage, onConnect, onRepair }: {
+export function DnsBlocklistSettings({ profile, connected, canManage, blocking, onConnect, onRepair }: {
   profile: Pick<ServerProfile, "id">;
   connected: boolean;
   canManage: boolean;
+  /** Whether blocking is on, from the status every role reads; members see only this. */
+  blocking?: boolean;
   /** Connects to this server in place; without it the card only says to connect. */
   onConnect?: () => void;
   /** Opens Repair VPS for a server too old for blocking (Owner only). */
@@ -55,7 +57,10 @@ export function DnsBlocklistSettings({ profile, connected, canManage, onConnect,
     }
   }, [profile.id, connected, canManage, show]);
   useEffect(() => { void refresh(); }, [refresh]);
-  if (!canManage) return null;
+  if (!canManage) return blocking === undefined ? null : <section className="settings-card" aria-label={t("dns.blocklist.title")}>
+    <h2>{t("dns.blocklist.title")}</h2>
+    <p>{t(blocking ? "dns.blocklist.member.on" : "dns.blocklist.member.off")}</p>
+  </section>;
 
   const customLines = lines(custom);
   const sources = [...presets, ...customLines.filter((url) => !presets.includes(url))];

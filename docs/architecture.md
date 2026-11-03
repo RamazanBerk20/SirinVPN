@@ -170,6 +170,10 @@ The Owner can assign up to 16 canonical private IPv4 ranges of at most a `/20`, 
 
 Pairs let two devices reach each other beyond the mutual-access switch, both ways or one way where the second only answers (`PUT /v1/device-pairs`, `DELETE /v1/device-pairs/{a}/{b}`). They live in `device_pairs` of the authorization document and move it to schema 9. Creating or removing one needs the switch authority over both devices. The VPS admits paired flows, and one-way answers only as established/related, in the runtime `port_forward` chain; a pair that lets a device start connections to a router also admits that device to the router's ranges. See [Device pairs](device-pairs.md).
 
+## Device platforms
+
+The VPS keeps the platform each app device runs on (`linux`, `windows` or `android`), only for its icon in the device list, so a rename keeps it. The platforms live in `device-platforms.json` beside the authorization document, not in it, so recording one is a single atomic file write under the authorization lock: no authorization commit, containment, WireGuard change or recovery state. Every load of the document reads the file back; a missing, unreadable or oversized file, unknown values and entries for removed devices only lose icons, and each write keeps only current devices. An invitation enrollment sends the platform, and the VPS records it after the enrollment commit, ignoring any failure; an older VPS ignores the field. SSH provisioning and Owner recovery do not send it (older servers reject unknown recovery fields). Instead, when the app reads the device list and its own device has no platform, it reports one with `PUT /v1/device-platform` if `/v1/configuration` advertises `device_platforms_enabled`, at most once per device per app run. The request names no device: the VPS records the caller's own and accepts only the three known values. WireGuard-only devices have none and keep the name-based icon. See [the migration note](release-candidate.md#device-platform-migration).
+
 ## Data plane and protection
 
 The VPS uses `sirinvpn0` and `10.77.0.1/24`; the first Owner uses

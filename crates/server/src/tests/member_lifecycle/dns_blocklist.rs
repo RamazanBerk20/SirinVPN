@@ -1,6 +1,40 @@
 use super::*;
+use crate::api::status_handler;
 use crate::dns_blocklist::{settings_handler, update_handler};
 use sirinvpn_protocol::DnsBlocklistPolicy;
+
+#[tokio::test]
+async fn every_role_reads_whether_blocking_is_on_but_only_managers_read_the_lists() {
+    let (_directory, state) = fixture();
+    let devices = state
+        .authorization
+        .as_ref()
+        .unwrap()
+        .read()
+        .await
+        .devices
+        .clone();
+    let caller = |index: usize| Extension(identity(&devices[index]));
+    for enabled in [false, true] {
+        state
+            .authorization
+            .as_ref()
+            .unwrap()
+            .write()
+            .await
+            .dns_blocklist
+            .enabled = enabled;
+        for index in [0, 1, 2, 4] {
+            let status = status_handler(State(state.clone()), caller(index)).await;
+            assert_eq!(
+                status.unwrap().0.payload.dns_blocklist_enabled,
+                Some(enabled)
+            );
+        }
+    }
+    let member = settings_handler(State(state.clone()), caller(2)).await;
+    assert_eq!(member.err().unwrap().status, StatusCode::FORBIDDEN);
+}
 
 #[tokio::test]
 async fn blocklist_settings_are_manager_only_and_validated_before_any_change() {

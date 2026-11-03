@@ -114,6 +114,10 @@
       "pending": "Waiting for the server to apply the latest change.",
       "active": "Blocking {{count}} domains. List updated {{time}}."
     },
+    "member": {
+      "on": "On. Only the Owner or an Admin can change it.",
+      "off": "Off. Only the Owner or an Admin can change it."
+    },
     "failure": {
       "download": "A blocklist could not be downloaded. The last good list stays in effect.",
       "format": "A blocklist is not in hosts or domain-list format. The last good list stays in effect.",

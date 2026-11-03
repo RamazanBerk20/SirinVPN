@@ -369,7 +369,7 @@ pub async fn dispatch(
                 &client.configuration().await?,
             ))
         }
-        "membership" => encode(client.membership().await?),
+        "membership" => encode(client.membership_with_own_platform(p.device_id).await?),
         "run_diagnostics" => {
             let current = crate::routes::leak_connection(
                 p.ipv6_tunnel_enabled,

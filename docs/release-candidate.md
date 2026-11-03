@@ -66,6 +66,23 @@ does not qualify that migration. Do not remove the old app before validating
 the backup/recovery path. Once a deletion has been recorded, an older binary
 that ignores its marker is an unsupported rollback target on every platform.
 
+## Device platform migration
+
+Device platforms (`linux`, `windows` or `android`, used only for icons) are
+kept in `/etc/sirinvpn/authorization/device-platforms.json`, outside the
+authorization document, so `server_authorization` and its endpoint
+fingerprint are unchanged. The file is display-only cache and is not a
+declared state family: older servers never read it, and every reader treats
+a missing, unreadable or newer file as no platforms. Repair keeps it with the
+rest of the authorization directory. A rollback leaves it in place, unread;
+after a later upgrade it is read again and entries for devices removed in
+between are ignored. VPS backups carry only the authorization document, so a
+restored VPS, including the destination of an endpoint handoff, starts with
+no platforms: icons fall back to the name until each app reports again on its
+next run. Older apps ignore the snapshot field and the status's
+`dns_blocklist_enabled`, and newer apps send the report only when
+`/v1/configuration` advertises `device_platforms_enabled`.
+
 ## Device pair migration
 
 Device pairs are new in `server_authorization`. A schema-8 reader would ignore

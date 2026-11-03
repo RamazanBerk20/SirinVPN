@@ -248,6 +248,8 @@ export interface ServerStatus {
   caller_administrator?: boolean;
   caller_device_id?: string;
   caller_identity_fingerprint?: string;
+  /** Whether ad and tracker blocking is on; absent on older servers. */
+  dns_blocklist_enabled?: boolean;
 }
 
 export type ServerStatusEvent =
@@ -450,6 +452,8 @@ export interface DeviceSummary {
   subnet_routes?: string[];
   /** Shared networks the VPS cannot route now because another of its interfaces routes them. */
   inactive_subnet_routes?: string[];
+  /** "linux", "windows" or "android" as the device reported it; absent on older servers. */
+  platform?: string;
 }
 
 export interface MemberSummary {

@@ -1,4 +1,5 @@
 mod device_pairs;
+mod device_platforms;
 mod enrollment_receipts;
 mod enrollment_state;
 mod member_lifecycle;
@@ -26,7 +27,7 @@ use sirinvpn_protocol::{
 #[cfg(test)]
 use std::os::unix::fs::PermissionsExt;
 use std::{
-    collections::{BTreeMap, HashSet},
+    collections::{BTreeMap, HashMap, HashSet},
     fs,
     net::{IpAddr, Ipv4Addr},
     path::Path,
@@ -73,6 +74,9 @@ pub(crate) struct AuthorizationDocument {
     // Leases disappear on restart; sync removes their kernel peers before serving.
     #[serde(skip)]
     pub measurement_leases: Vec<crate::measurement::Lease>,
+    // Display only, kept in its own file beside this one; see device_platforms.rs.
+    #[serde(skip)]
+    pub device_platforms: HashMap<DeviceId, String>,
     pub schema_version: u16,
     pub server_id: ServerId,
     pub members: Vec<MemberRecord>,
@@ -236,6 +240,7 @@ impl AuthorizationDocument {
         let member_id = MemberId::new();
         Ok(Self {
             measurement_leases: Vec::new(),
+            device_platforms: HashMap::new(),
             schema_version: AUTHORIZATION_SCHEMA_VERSION,
             server_id,
             members: vec![MemberRecord {

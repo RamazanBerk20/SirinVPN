@@ -65,6 +65,7 @@ fn redemption(grant: &InvitationCreateResponse, permanent: &LocalIdentity) -> En
         device_wireguard_public_key: permanent.public.wireguard_public_key.clone(),
         device_management_certificate_pem: permanent.public.management_certificate_pem.clone(),
         device_preshared_key: None,
+        platform: Some("android".into()),
     }
 }
 
@@ -168,6 +169,9 @@ async fn kernel_reusable_enrollment_quarantines_bootstrap_and_enforces_limits_at
         .await
         .is_err()
     );
+    let mut second_request = redemption(&grant, &second);
+    // A platform this server does not know stays unknown instead of failing the enrollment.
+    second_request.platform = Some("macos".into());
     let (first_result, second_result) = tokio::join!(
         enrollment_handler(
             State(state.clone()),
@@ -177,7 +181,7 @@ async fn kernel_reusable_enrollment_quarantines_bootstrap_and_enforces_limits_at
         enrollment_handler(
             State(state.clone()),
             Extension(caller.clone()),
-            Json(redemption(&grant, &second))
+            Json(second_request)
         ),
     );
     let first_result = first_result.unwrap().0.payload;
@@ -216,6 +220,15 @@ async fn kernel_reusable_enrollment_quarantines_bootstrap_and_enforces_limits_at
             .name,
         "My phone"
     );
+    // Recorded beside the document after the commit, and loaded back with it.
+    let reloaded = load_authorization(&state.paths.authorization).unwrap();
+    for platforms in [&stored_names.device_platforms, &reloaded.device_platforms] {
+        assert_eq!(
+            platforms.get(&first_result.device_id).map(String::as_str),
+            Some("android")
+        );
+        assert_eq!(platforms.get(&second_result.device_id), None);
+    }
     // Display names do not merge members or authorize additional access.
     assert_ne!(first_result.member_id, second_result.member_id);
     assert_ne!(first_result.device_id, second_result.device_id);

@@ -16,8 +16,10 @@ sirinvpn server dns-blocking disable <server>
 ```
 
 SirinVPN has no per-admin permission flags, so every Admin can change it, the
-same as port forwards and member access. Members cannot see or change it. The
-API is `GET`/`PUT /v1/dns-blocklist` on the private management endpoint.
+same as port forwards and member access. Members cannot see or change the
+lists; they see only whether blocking is on, as a read-only line in the same
+place, from `dns_blocklist_enabled` in `/v1/status`. The API is
+`GET`/`PUT /v1/dns-blocklist` on the private management endpoint.
 
 A manager picks up to eight lists. The built-in choices are:
 

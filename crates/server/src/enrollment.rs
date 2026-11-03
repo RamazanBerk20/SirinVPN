@@ -316,6 +316,10 @@ pub(super) async fn enrollment_handler(
         expires_at_unix: now + ENROLLMENT_HANDOFF_SECONDS,
     });
     commit_authorization(&state, &mut current, next).await?;
+    // Display only and outside the commit; unknown values and failures are ignored.
+    if let Some(platform) = &request.platform {
+        let _ = current.record_device_platform(&state.paths.authorization, device_id, platform);
+    }
     clear_redemption_failures(&state, rate_key);
     Ok(Json(ApiEnvelope::new(result)))
 }

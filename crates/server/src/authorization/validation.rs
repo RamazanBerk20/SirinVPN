@@ -9,9 +9,10 @@ const MAX_SUBMITTED_CERTIFICATE_PEM_BYTES: usize = 4096;
 pub(crate) fn load_authorization(path: &Path) -> Result<AuthorizationDocument> {
     let bytes = sirinvpn_platform::files::read_bounded(path, MAX_AUTHORIZATION_BYTES)
         .context("authorization state is unavailable")?;
-    let document: AuthorizationDocument =
+    let mut document: AuthorizationDocument =
         serde_json::from_slice(&bytes).context("authorization state is invalid")?;
     document.validate()?;
+    document.device_platforms = super::device_platforms::load(path);
     Ok(document)
 }
 

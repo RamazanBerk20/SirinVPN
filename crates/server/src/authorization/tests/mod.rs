@@ -51,6 +51,7 @@ fn add_member(
 }
 
 mod device_pairs;
+mod device_platforms;
 mod member_lifecycle;
 mod member_policy;
 mod owner_state_is_valid_and_uses_the_legacy_address;

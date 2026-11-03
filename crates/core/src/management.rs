@@ -3,14 +3,14 @@ use reqwest::{Certificate, Client, Identity};
 use sirinvpn_protocol::DiagnosticReport;
 use sirinvpn_protocol::{
     API_VERSION, ApiEnvelope, ApiErrorBody, CurrentConfiguration, DeviceId, DevicePair,
-    DevicePeerCommunicationUpdateRequest, EndpointTransitionCreateRequest,
-    EndpointTransitionResponse, EnrollmentRequest, EnrollmentResult, ErrorCode,
-    InvitationCreateRequest, InvitationCreateResponse, InvitationId, KeyRotationCommitResponse,
-    KeyRotationId, KeyRotationPrepareRequest, KeyRotationPrepareResponse, LeakTestObservation,
-    MANAGEMENT_SERVER_NAME, MemberAccessUpdateRequest, MemberDevicesRevokeRequest, MemberId,
-    MemberSuspensionUpdateRequest, MembershipSnapshot, OwnershipTransferRequest,
-    PortForwardCreateRequest, PortForwardProtocol, RenameDeviceRequest, SPEED_TEST_SECONDS,
-    ServerProfile, ServerStatus, SpeedTestUpload,
+    DevicePeerCommunicationUpdateRequest, DevicePlatformUpdateRequest,
+    EndpointTransitionCreateRequest, EndpointTransitionResponse, EnrollmentRequest,
+    EnrollmentResult, ErrorCode, InvitationCreateRequest, InvitationCreateResponse, InvitationId,
+    KeyRotationCommitResponse, KeyRotationId, KeyRotationPrepareRequest,
+    KeyRotationPrepareResponse, LeakTestObservation, MANAGEMENT_SERVER_NAME,
+    MemberAccessUpdateRequest, MemberDevicesRevokeRequest, MemberId, MemberSuspensionUpdateRequest,
+    MembershipSnapshot, OwnershipTransferRequest, PortForwardCreateRequest, PortForwardProtocol,
+    RenameDeviceRequest, SPEED_TEST_SECONDS, ServerProfile, ServerStatus, SpeedTestUpload,
 };
 use std::{
     net::{IpAddr, SocketAddr},
@@ -21,6 +21,19 @@ use zeroize::Zeroizing;
 
 mod status_stream;
 pub use status_stream::ManagementStatusStream;
+
+/// The platform this build reports for its device's icon, one of `DEVICE_PLATFORMS`.
+pub const DEVICE_PLATFORM: Option<&str> = if cfg!(target_os = "android") {
+    Some("android")
+} else if cfg!(windows) {
+    Some("windows")
+} else if cfg!(target_os = "linux") {
+    Some("linux")
+} else {
+    None
+};
+/// Own devices whose platform report this process already tried, whatever the outcome.
+static PLATFORM_REPORTS_TRIED: std::sync::Mutex<Vec<DeviceId>> = std::sync::Mutex::new(Vec::new());
 
 #[derive(Debug, Error)]
 pub enum ManagementError {
@@ -453,6 +466,57 @@ impl ManagementClient {
 
     pub async fn membership(&self) -> Result<MembershipSnapshot, ManagementError> {
         self.get("/v1/membership").await
+    }
+
+    /// The directory, after reporting this device's platform when the VPS stores platforms
+    /// but has none for it yet. A VPS without the capability never receives the report.
+    /// Each own device is tried once per app run, so an older VPS costs one configuration read.
+    pub async fn membership_with_own_platform(
+        &self,
+        own_device: Option<DeviceId>,
+    ) -> Result<MembershipSnapshot, ManagementError> {
+        let mut snapshot = self.membership().await?;
+        let (Some(platform), Some(device)) = (
+            DEVICE_PLATFORM,
+            snapshot
+                .members
+                .iter_mut()
+                .flat_map(|member| &mut member.devices)
+                .find(|device| Some(device.id) == own_device && device.platform.is_none()),
+        ) else {
+            return Ok(snapshot);
+        };
+        {
+            let mut tried = PLATFORM_REPORTS_TRIED
+                .lock()
+                .unwrap_or_else(|error| error.into_inner());
+            if tried.contains(&device.id) {
+                return Ok(snapshot);
+            }
+            tried.push(device.id);
+        }
+        let report = async {
+            let response = self
+                .client
+                .put(format!("{}/v1/device-platform", self.base_url))
+                .json(&DevicePlatformUpdateRequest {
+                    platform: platform.to_owned(),
+                })
+                .send()
+                .await
+                .map_err(|_| ManagementError::ConnectionFailed)?;
+            self.decode::<()>(response).await
+        };
+        // Only the icon depends on it, so a failed report leaves the directory as read.
+        if self
+            .configuration()
+            .await
+            .is_ok_and(|configuration| configuration.device_platforms_enabled)
+            && report.await.is_ok()
+        {
+            device.platform = Some(platform.to_owned());
+        }
+        Ok(snapshot)
     }
 
     pub async fn rename_device(

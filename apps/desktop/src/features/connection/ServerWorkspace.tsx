@@ -224,7 +224,7 @@ export function ServerWorkspace(
                   </div>
                 )}
               </section>
-              <DnsBlocklistSettings profile={profile} connected={connected} canManage={model.canManageAccess} onConnect={connectHere} onRepair={reviewUpdate} />
+              <DnsBlocklistSettings profile={profile} connected={connected} canManage={model.canManageAccess} blocking={model.serverStatus?.dns_blocklist_enabled} onConnect={connectHere} onRepair={reviewUpdate} />
               {(
                 <PortForwardSettings
                   onManageDevices={() => props.onNavigate("devices")}

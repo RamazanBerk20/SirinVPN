@@ -53,16 +53,17 @@ pub use recovery::{
 };
 
 pub use management::{
-    ActiveInvitationSummary, ApiEnvelope, ApiErrorBody, CurrentConfiguration, DevicePair,
-    DevicePeerCommunicationUpdateRequest, DeviceSubnetRoutesUpdateRequest, DeviceSummary,
-    DiagnosticCheck, DiagnosticLevel, DiagnosticReport, EndpointTransitionClaims,
-    EndpointTransitionCreateRequest, EndpointTransitionResponse, EnrollmentNames,
-    EnrollmentRequest, EnrollmentResult, InvitationClaims, InvitationCreateRequest,
-    InvitationCreateResponse, KeyRotationCommitResponse, KeyRotationPrepareRequest,
-    KeyRotationPrepareResponse, LeakTestObservation, MemberAccessUpdateRequest,
-    MemberDevicesRevokeRequest, MemberSummary, MemberSuspensionUpdateRequest, MembershipSnapshot,
-    OwnershipTransferRequest, PortForward, PortForwardCreateRequest, PortForwardProtocol,
-    RenameDeviceRequest, SpeedTestUpload, WireGuardDeviceCreateRequest,
+    ActiveInvitationSummary, ApiEnvelope, ApiErrorBody, CurrentConfiguration, DEVICE_PLATFORMS,
+    DevicePair, DevicePeerCommunicationUpdateRequest, DevicePlatformUpdateRequest,
+    DeviceSubnetRoutesUpdateRequest, DeviceSummary, DiagnosticCheck, DiagnosticLevel,
+    DiagnosticReport, EndpointTransitionClaims, EndpointTransitionCreateRequest,
+    EndpointTransitionResponse, EnrollmentNames, EnrollmentRequest, EnrollmentResult,
+    InvitationClaims, InvitationCreateRequest, InvitationCreateResponse, KeyRotationCommitResponse,
+    KeyRotationPrepareRequest, KeyRotationPrepareResponse, LeakTestObservation,
+    MemberAccessUpdateRequest, MemberDevicesRevokeRequest, MemberSummary,
+    MemberSuspensionUpdateRequest, MembershipSnapshot, OwnershipTransferRequest, PortForward,
+    PortForwardCreateRequest, PortForwardProtocol, RenameDeviceRequest, SpeedTestUpload,
+    WireGuardDeviceCreateRequest,
 };
 
 use serde::{Deserialize, Serialize};
@@ -457,6 +458,9 @@ pub struct ServerStatus {
     pub caller_identity_fingerprint: String,
     #[serde(default, skip_serializing_if = "DeviceSubnetRoutes::is_empty")]
     pub caller_subnet_routes: DeviceSubnetRoutes,
+    /// Whether ad and tracker blocking is on, for every role; its settings stay manager-only.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dns_blocklist_enabled: Option<bool>,
 }
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]

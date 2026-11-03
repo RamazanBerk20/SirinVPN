@@ -89,6 +89,9 @@ pub struct CurrentConfiguration {
     /// The Owner can set VPS alerts; the server has the alert timer installed.
     #[serde(default, skip_serializing_if = "is_false")]
     pub alerts_enabled: bool,
+    /// A device can report its own platform with `PUT /v1/device-platform`.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub device_platforms_enabled: bool,
 }
 
 /// The source address of the one request that asked; the VPS keeps nothing.
@@ -263,6 +266,9 @@ pub struct EnrollmentRequest {
     /// Older servers ignore this field; `EnrollmentResult::preshared_key` confirms storage.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub device_preshared_key: Option<String>,
+    /// One of `DEVICE_PLATFORMS`; older servers ignore it and newer values are not stored.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub platform: Option<String>,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
@@ -321,6 +327,20 @@ pub struct DeviceSummary {
     /// Ranges the VPS cannot route right now because another of its interfaces routes them.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub inactive_subnet_routes: Vec<String>,
+    /// The operating system the device reported, only for its icon. Kept as text so a
+    /// platform added later reaches older apps as unknown instead of failing the snapshot.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub platform: Option<String>,
+}
+
+/// Platforms the apps report. The server stores no other value.
+pub const DEVICE_PLATFORMS: [&str; 3] = ["linux", "windows", "android"];
+
+/// `PUT /v1/device-platform`: the calling device's own platform; it names no device.
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct DevicePlatformUpdateRequest {
+    pub platform: String,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
