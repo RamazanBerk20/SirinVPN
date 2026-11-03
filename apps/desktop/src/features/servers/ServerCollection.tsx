@@ -69,6 +69,8 @@ export function ServerCollection({
         <div>
           <h1>{t("app.nav.servers")}</h1>
           <p>{t("servers.count", { count: servers.length })}</p>
+          {/* The desktop sidebar is the switcher; this page only manages. */}
+          {!isAndroid && <p>{t("servers.manageHint")}</p>}
         </div>
         <button className="primary-button" onClick={onAdd}>
           <Plus size={18} /> {t("servers.add")}

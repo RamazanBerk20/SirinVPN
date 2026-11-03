@@ -156,7 +156,7 @@ export function ServerWorkspace(
           />}
           {isAndroid && !mobileSubpage && <div className="mobile-choice-list home-links">
             <ListRow icon={<SlidersHorizontal size={22} />} title={t("app.home.connectionTitle")} subtitle={t("app.home.connectionSummary", { method: model.selectedTransport === "automatic" ? t("app.home.automatic") : formatTransport(model.selectedTransport) })} trailing={<CaretRight size={18} />} onClick={() => props.onNavigate("home", "connection")} />
-            <ListRow icon={<Info size={22} />} title={t("app.home.detailsTitle")} subtitle={t("app.home.detailsSummary")} trailing={<CaretRight size={18} />} onClick={() => props.onNavigate("home", "details")} />
+            <ListRow icon={<Info size={22} />} title={t("app.home.detailsTitle")} subtitle={t(accessLevel === "member" ? "app.home.detailsSummaryMember" : "app.home.detailsSummary")} trailing={<CaretRight size={18} />} onClick={() => props.onNavigate("home", "details")} />
           </div>}
           {/* VPS resources are for those who manage the server: a Member can't act on them. */}
           {!isAndroid && <>{accessLevel !== "member" && <ServerMetrics
@@ -240,8 +240,18 @@ export function ServerWorkspace(
               />
             </div>
           )}
+          {/* Short entries first, then the two long forms. */}
           {category === "advanced" && (
             <div className="settings-sections">
+              <MaintenanceTools
+                model={model}
+                category="advanced"
+                onRestoreDevice={props.onRestoreDevice}
+              />
+              {accessLevel !== "member" && <section className="settings-card settings-action-row">
+                <div><h2>{t("app.advanced.devicesTitle")}</h2><p>{t("app.advanced.devicesSummary")}</p></div>
+                <button className="secondary-button" onClick={() => props.onNavigate("devices")}>{t("app.advanced.openDevices")}</button>
+              </section>}
               <PortForwardSettings
                 onManageDevices={() => props.onNavigate("devices")}
                 profile={profile}
@@ -249,16 +259,7 @@ export function ServerWorkspace(
                 accessLevel={accessLevel}
                 onAccessChanged={onAccessChanged}
               />
-              {accessLevel !== "member" && <section className="settings-card settings-action-row">
-                <div><h2>{t("app.advanced.devicesTitle")}</h2><p>{t("app.advanced.devicesSummary")}</p></div>
-                <button className="secondary-button" onClick={() => props.onNavigate("devices")}>{t("app.advanced.openDevices")}</button>
-              </section>}
               <VpsAlertSettings profile={profile} connected={connected} onConnect={connectHere} onRepair={reviewUpdate} />
-              <MaintenanceTools
-                model={model}
-                category="advanced"
-                onRestoreDevice={props.onRestoreDevice}
-              />
             </div>
           )}
           {(category === "connection" || category === "network") && <PreferenceSaveBar

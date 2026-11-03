@@ -22,7 +22,7 @@ def extra_states(p, add):
         add('protection', 'kill-switch-' + result, [], {'local': {'kill_switch_enabled': True, 'kill_switch_state': result}}, True)
     add('protection', 'recovery-waiting-for-user', [], {'local': {'state': 'degraded', 'waiting_for_user': True, 'kill_switch_enabled': True, 'kill_switch_state': 'blocking'}}, True)
     add('protection', 'startup-connection-active', connection, {'local': {'startup_service_enabled': True, 'connect_on_startup': True}, 'preferences': {'policy': {'connect_on_startup': True}}}, True)
-    ports = network
+    ports = settings('desktop', 'advanced')
     for kind, state in [('unsupported-vps', {'configuration': {'port_forwarding_enabled': False}}), ('no-authorized-devices', {'members': {'members': []}}), ('existing-port-forward', {'members': {'port_forwards': [{'protocol': 'tcp', 'public_port': 48080, 'device_id': DID, 'device_port': 8080}]}})]:
         add('port-forwarding', kind, ports, state, True)
     for public, device, name in [('48080', '8080', 'valid-tcp-rule'), ('53', '8080', 'reserved-public-port'), ('70000', '8080', 'public-port-out-of-range'), ('48080', '0', 'invalid-target-port')]:

@@ -97,7 +97,7 @@ def workflows(p, add):
     add('device-backups', 'device-export-ready', filled, expand=True)
     add('device-backups', 'device-export-password-mismatch', export + [click('Choose file'), fill('Password', PASS), fill('Repeat password', 'different-password')], expand=True)
     outcome('device-backups', 'device-export', filled + [click('Create backup')], 'exportServerBackup')
-    rotation = recovery + [click('Rotate device keys', False), check('I understand the VPN will reconnect briefly')]
+    rotation = settings('desktop', 'advanced') + [click('Rotate device keys', False), check('I understand the VPN will reconnect briefly')]
     outcome('key-rotation', 'rotate-desktop-device-keys', rotation + [click('Rotate keys')], 'rotateDeviceKeys')
     add('key-rotation', 'resume-interrupted-key-rotation', recovery + [click('Resume key rotation', False)], {'pendingRotation': True}, True)
     endpoint = maintenance + [click('Move to a new address', False)]

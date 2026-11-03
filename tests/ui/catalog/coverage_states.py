@@ -42,6 +42,20 @@ def adapt(case):
         first = 2 if actions[0].get('text') == 'Servers' else 0
         if len(actions) > first and actions[first].get('text') not in ('App settings', 'Check for updates'):
             actions.insert(first, dict(SET_UP))
+    navigation(actions)
+
+
+def navigation(actions):
+    """Devices has one Add device button: a menu when there is a choice, the invitation itself when there isn't.
+    The desktop sidebar opens the Servers page with Manage servers; Android keeps its Servers tab."""
+    for index in range(len(actions) - 1, -1, -1):
+        action = actions[index]
+        if action.get('text') in ('Invite member', 'Add WireGuard device') and action.get('exact', True) and not (index and actions[index - 1].get('text') == 'Add device'):
+            actions.insert(index, {'text': 'Add device'})
+            action.setdefault('optional', action['text'] == 'Invite member')
+        if action.get('text') == 'Servers' and 'or' not in action:
+            action['or'] = {'text': 'Manage servers'}
+    return actions
 MANY_DEVICES = """const s=window.__catalog.state;s.members.members.push(...Array.from({length:6},(_,m)=>({id:'bulk-'+m,name:['Grandparents','Studio','Office','Lake house','Garage','Guest room'][m]+' — a long member name that wraps',role:'member',administrator:m===0,policy:s.members.members[2].policy,devices:Array.from({length:5},(_,d)=>({id:'bulk-'+m+'-'+d,name:'Device '+(d+1)+' with an unusually long descriptive name',client_tunnel_address:'10.77.'+(m+1)+'.'+(d+10),identity_fingerprint:s.members.members[0].devices[0].identity_fingerprint,recent_handshake:d%2===0,wireguard_only:d===4}))})));"""
 ROUTES = """const d=window.__catalog.state.members.members[0].devices[0];d.subnet_routes=['192.168.1.0/24','10.20.0.0/24'];d.inactive_subnet_routes=['10.20.0.0/24'];"""
 PAIRS = "window.__catalog.state.members.device_pairs=[{device_id:'phone-device',peer_device_id:'admin-device'},{device_id:'phone-device',peer_device_id:'" + DID + "',one_way:true},{device_id:'laptop-device',peer_device_id:'phone-device',one_way:true}];"
@@ -56,7 +70,7 @@ def coverage_states(cases):
                 assertion['selector'] = '[role=menu],[role=dialog]'
 
     def add(family, name, actions=(), state=None, forms=BOTH, required=()):
-        case = {'family': family, 'id': name, 'description': name.replace('-', ' ').capitalize(), 'actions': [*actions],
+        case = {'family': family, 'id': name, 'description': name.replace('-', ' ').capitalize(), 'actions': navigation([*actions]),
                 'state': state or {}, 'expand': True, 'forms': forms}
         if required:
             case['required_calls'] = list(required)
@@ -75,8 +89,8 @@ def coverage_states(cases):
         add('settings', 'general-settings-' + role, settings('', 'general'), {'role': role})
         add('settings', 'connection-settings-' + role, settings('', 'connection'), {'role': role})
 
-    # VPS alerts (Owner, maintenance settings).
-    maintenance = settings('', 'maintenance')
+    # VPS alerts (Owner, Advanced settings).
+    maintenance = settings('', 'advanced')
     saved = {'alerts': {'policy': {'format': 'ntfy', 'alert_url': NTFY}}}
     add('vps-alerts', 'alerts-address-entered', maintenance + [fill('Alert address', NTFY)])
     add('vps-alerts', 'alerts-address-invalid', maintenance + [fill('Alert address', 'http://user@alerts.example/topic'), fill('Heartbeat address', 'not an address')])
@@ -148,7 +162,7 @@ def coverage_states(cases):
 
     # Hetzner VPS creation.
     for where, base, state in [('first-launch', [], {'empty': True}), ('add-server', [click('Servers'), click('Add server')], {})]:
-        hetzner = base + [click('New Hetzner VPS', **{'or': click('Create a Hetzner server', False)})]
+        hetzner = base + [click('Advanced'), click('New Hetzner VPS', **{'or': click('Create a Hetzner server', False)})]
         add('hetzner', where + '-hetzner-token', hetzner, state)
         plans = hetzner + [fill('Hetzner Cloud API token', 'example-hetzner-token'), click('Show prices')]
         if where == 'add-server':
@@ -192,8 +206,8 @@ def coverage_states(cases):
     add('android', 'server-picker-long-names', [click('Server: ', False)], {'profileCount': 12, 'longNames': True}, forms=mobile)
     add('android', 'home-long-server-name', [], {'longNames': True}, forms=mobile)
 
-    # Scheduled VPS backups (Owner, Keys & recovery).
-    schedule = settings('', 'recovery') + [click('Scheduled backups', False)]
+    # Scheduled VPS backups (Owner, Advanced settings).
+    schedule = settings('', 'advanced') + [click('Scheduled backups', False)]
     planned = {'server_id': '123e4567-e89b-42d3-a456-426614174000', 'folder': '/home/demo/Backups/SirinVPN', 'keep': 7, 'interval_days': 7, 'enabled_at': 1899000000,
                'last_success': None, 'last_failure': None, 'due': True, 'stale': False}
     add('vps-schedule', 'schedule-off', schedule)

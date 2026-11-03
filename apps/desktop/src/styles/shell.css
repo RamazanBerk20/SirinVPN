@@ -83,6 +83,7 @@
 }
 .sidebar-heading > span {
   margin-right: auto;
+  white-space: nowrap;
 }
 .sidebar-heading .sidebar-manage {
   min-height: 32px;

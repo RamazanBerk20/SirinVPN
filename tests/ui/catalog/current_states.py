@@ -92,7 +92,7 @@ def current_states(add):
         ('cancelInvitation', 'Cancel', {'activeInvitation': 'reusable'}),
         ('removePortForward', 'Close TCP port 48080', {'members': {'port_forwards': [{'protocol': 'tcp', 'public_port': 48080, 'device_id': DID, 'device_port': 8080}]}}),
     ]:
-        base = devices + [{'details': 'open'}] if method == 'cancelInvitation' else network
+        base = devices + [{'details': 'open'}] if method == 'cancelInvitation' else settings('desktop', 'advanced')
         outcomes('invitations' if method == 'cancelInvitation' else 'port-forwarding', method, base + [click(label, False)], method, state)
     inv = devices + [click('Invite member')]
     case('invitations', 'invitation-access-policy-expanded', inv + [click('Permissions and schedule'), click('Add interval')])

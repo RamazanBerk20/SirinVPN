@@ -24,7 +24,8 @@
     "connectionSummary": "Method: {{method}}",
     "automatic": "Automatic",
     "detailsTitle": "Connection details",
-    "detailsSummary": "Status, addresses and server stats"
+    "detailsSummary": "Status, addresses and server stats",
+    "detailsSummaryMember": "Status and addresses"
   },
   "settingsScope": {
     "general": "Preferences for this device",

@@ -17,7 +17,7 @@ def css(selector, **kw):
     return {'css': selector, **kw}
 
 def settings(p, category):
-    names = {'general': 'General', 'connection': 'Connection', 'network': 'Network', 'recovery': 'Keys & recovery', 'maintenance': 'VPS maintenance'}
+    names = {'general': 'General', 'connection': 'Connection', 'network': 'Network', 'recovery': 'Keys & recovery', 'maintenance': 'VPS maintenance', 'advanced': 'Advanced'}
     return [click('Settings'), click(names[category])]
 
 def mutate(expression):
@@ -57,14 +57,14 @@ def scenarios(p):
     for method in ['clientPlatform', 'listServers']:
         add('startup', 'loading-' + method.lower(), state={'holds': [method]})
         add('startup', 'error-' + method.lower(), state={'errors': {method: ERROR}})
-    cats = ['general', 'connection', 'network', 'recovery', 'maintenance']
+    cats = ['general', 'connection', 'network', 'recovery', 'maintenance', 'advanced']
     for cat in cats:
         base = [click('Settings')] if cat == 'index' else settings('desktop', cat)
         add('settings', cat + '-settings', base, expand=True)
         if cat not in ['general', 'index']:
             add('settings', cat + '-settings-disconnected', base, {'connected': False}, True)
     for role in ['admin', 'member']:
-        for cat in ['network', 'recovery', 'maintenance']:
+        for cat in ['network', 'recovery', 'maintenance', 'advanced']:
             add('settings', cat + '-settings-' + role, settings('desktop', cat), {'role': role}, True)
     general = settings('desktop', 'general')
     # Scenario IDs keep their original names; the switch labels are the current interface text.
@@ -108,9 +108,8 @@ def scenarios(p):
     for value, name in [('Android', 'search-matching-device'), ('10.77.0.3', 'search-tunnel-address'), ('No matching device', 'search-no-results')]:
         add('devices', name, devices + [css('input[type="search"]', fill=value)])
     for name in ['My Linux desktop', 'Morgan’s laptop', 'Android phone', 'Work laptop']:
-        add('devices', 'details-' + name.lower().replace(' ', '-').replace('’', ''), devices + [click(name, False)], expand=True)
+        add('devices', 'details-' + name.lower().replace(' ', '-').replace('’', ''), devices + [click('Actions for ' + name), click('Details')], expand=True)
         add('devices', 'menu-' + name.lower().replace(' ', '-').replace('’', ''), devices + [click('Actions for ' + name)])
-    add('devices', 'all-device-details-expanded', devices + [mutate("document.querySelectorAll('.device-item-summary').forEach(el=>el.click())")], expand=True)
     add('devices', 'older-vps-device-capabilities', devices, {'configuration': {'member_lifecycle_enabled': False, 'member_policies_enabled': False, 'reusable_invitations_enabled': False}}, True)
     inv = devices + [click('Invite member')]
     add('invitations', 'new-member-invitation', inv, expand=True)
@@ -127,9 +126,9 @@ def scenarios(p):
     add('invitations', 'invitation-created-qr-and-code', result, expand=True)
     add('invitations', 'invitation-enlarged-qr', result + [click('Enlarge invitation QR code')])
     add('invitations', 'reusable-invitation-created', inv + [fill('Number of uses', '10'), click('Create reusable code')], expand=True)
-    # Scenario IDs keep the device names; Add device sits on the member's header (in its menu on Android).
+    # Scenario IDs keep the device names; Add device is the first item of the member's menu.
     for target, member in [('My Linux desktop', 'You'), ('Morgan’s laptop', 'Morgan'), ('Android phone', 'Family')]:
-        add('invitations', 'add-device-' + target.lower().replace(' ', '-').replace('’', ''), devices + [click('Member actions for ' + member, android=True), click('Add device for ' + member)], expand=True)
+        add('invitations', 'add-device-' + target.lower().replace(' ', '-').replace('’', ''), devices + [click('Member actions for ' + member), click('Add device for ' + member)], expand=True)
     empty = {'empty': True}
     for mode in ['My VPS', 'Invitation', 'Backup', 'Recovery key']:
         add('onboarding', 'first-launch-' + mode.lower().replace(' ', '-'), [click(mode)] if mode != 'My VPS' else [], empty, True)
@@ -137,7 +136,7 @@ def scenarios(p):
     recovery = settings('desktop', 'recovery')
     maintenance = settings('desktop', 'maintenance')
     dialog_labels = {'Move devices to a new VPS address': 'Move to a new address', 'Remove saved server or uninstall SirinVPN': 'Remove or uninstall'}
-    for name, base in [('Export device backup', recovery), ('Rotate device keys', recovery), ('Move devices to a new VPS address', maintenance), ('Remove saved server or uninstall SirinVPN', maintenance)]:
+    for name, base in [('Export device backup', recovery), ('Rotate device keys', settings('desktop', 'advanced')), ('Move devices to a new VPS address', maintenance), ('Remove saved server or uninstall SirinVPN', maintenance)]:
         add('dialogs', name.lower().replace(' ', '-'), base + [click(dialog_labels.get(name, name), False)], expand=True)
     for name, base in [('Back up VPS', recovery), ('Restore or migrate VPS', recovery), ('Update VPS software', maintenance), ('Repair VPS configuration', maintenance)]:
         family = {'Back up VPS': 'vps-backup', 'Restore or migrate VPS': 'vps-restore', 'Update VPS software': 'vps-updates', 'Repair VPS configuration': 'vps-repair'}[name]
