@@ -8,8 +8,8 @@ folder they pick; SirinVPN uploads them nowhere.
 
 ## Setting it up
 
-- **Desktop and Android:** **Settings → Keys & recovery → VPS backup and
-  recovery → Scheduled backups**. Choose a folder, how often (daily, weekly or
+- **Desktop and Android:** **Settings → Advanced → Automatic VPS backups →
+  Scheduled backups**. Choose a folder, how often (daily, weekly or
   every 30 days), how many backups to keep (1–30) and a backup password of at
   least 12 characters.
 - The schedule uses the VPS's **saved SSH login** and its pinned host key. Run

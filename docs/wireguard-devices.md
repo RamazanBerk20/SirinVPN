@@ -10,8 +10,9 @@ The same people who can invite: the Owner, an Admin (for ordinary Members), and
 a Member whose policy allows inviting members (new members, with at most the
 Member's own policy) or adding their own devices (to their own member).
 
-- **Desktop:** **Devices → Add WireGuard device** creates a new member;
-  **Add WireGuard device for …** in a device's menu adds one to that member.
+- **Desktop:** **Devices → Add device → Add WireGuard device** (under Advanced)
+  creates a new member; **Add WireGuard device for …** under Advanced in a
+  member's menu adds one to that member.
   Choosing a file is optional; the QR code is always shown. The desktop shows
   the action only when the VPS advertises `wireguard_devices_enabled`.
 - **CLI:**

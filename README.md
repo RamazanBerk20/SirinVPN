@@ -106,28 +106,29 @@ servers or a VPN subscription.
    Android), enter the server address and an SSH login, and select **Verify server**.
    Compare the fingerprint with your hosting provider's web console or another
    trusted channel before you select **Fingerprint matches**. After the network
-   check, select **Install SirinVPN**. With a Hetzner Cloud account you can choose
-   **New Hetzner VPS** (**Create a Hetzner server** on Android) instead: paste an API
+   check, select **Install SirinVPN**. With a Hetzner Cloud account you can open
+   **Advanced** and choose **New Hetzner VPS** (**Create a Hetzner server** on Android) instead: paste an API
    token, confirm the plan and price, and SirinVPN creates the server and fills in
    its address, login and pinned key ([details](docs/hetzner-vps-creation.md)).
 3. **Connect** from Home, accepting the operating system's VPN or administrator
    prompt when needed. Run desktop clients as your ordinary user; the native
    service handles privileged networking.
-4. **Add other devices.** On a device that is already set up, open **Devices** and
-   select **Invite member**, or **Add device** in a member's menu. On the new
+4. **Add other devices.** On a device that is already set up, open **Devices**,
+   select **Add device** and choose **One of my devices** or **Invite member**, or use
+   **Add device for …** in a member's menu. On the new
    device, choose **Invitation** (**Use an invitation** on Android) and scan the QR
    code or enter the code. For an iPhone, iPad, Mac or router with the official
-   WireGuard app, select **Add WireGuard device** instead and scan its QR code in
-   that app ([details](docs/wireguard-devices.md)).
+   WireGuard app, choose **Add WireGuard device** under Advanced in the same menu
+   and scan its QR code in that app ([details](docs/wireguard-devices.md)).
 
 ### Finding your way around
 
 | Page | What it holds |
 | --- | --- |
-| **Home** | Connect and disconnect, the active server, and this device's traffic and connection time. The desktop layout also shows live server stats; on Android, **Connection** opens the method, kill switch, and reconnect options, and **Connection details** shows status, addresses, and server stats. |
-| **Servers** | Your saved servers: search, switch, rename, mark favorites, add a server, and open maintenance. |
-| **Devices** | Members and devices on the selected server: invitations, roles, access policies, port forwarding, and revocation. |
-| **Settings** | **General** (Wi-Fi auto-connect on desktop, startup, notifications, app updates, credential storage), **Connection** (method, kill switch, reconnect), **Network** (app routing, DNS, ports), **Keys & recovery** (keys, backups, recovery keys), and **VPS maintenance** (health, diagnostics, updates; **Diagnostics** on Android). |
+| **Home** | Connect and disconnect, the active server, and this device's traffic and connection time. For Owners and Admins the desktop layout also shows one row of live server stats; on Android, **Connection** opens the method, kill switch, and reconnect options, and **Connection details** shows status, addresses, and (for Owners and Admins) server stats. |
+| **Servers** | Your saved servers: search, rename, mark favorites, add a server, and open maintenance. On the desktop the sidebar's server list switches servers and its **Manage** button opens this page; on Android it is a tab, and the server row on Home switches. |
+| **Devices** | Members and devices on the selected server: **Add device**, roles, access policies, and revocation. Each device has one menu: **Details**, then its actions, with mutual access, pairs, local networks and port forwarding under **Advanced**. |
+| **Settings** | **General** (Wi-Fi auto-connect on desktop, startup, notifications, app updates, credential storage), **Connection** (method, kill switch, reconnect), **Network** (app routing, DNS, blocking), **Keys & recovery** (recovery keys, device and VPS backups), **VPS maintenance** (health, diagnostics, updates; **Diagnostics** on Android), and **Advanced** (port forwarding, key rotation, VPS alerts, scheduled backups). [How the app is organised](docs/ui-navigation.md). |
 
 On Android, notification permission enables app notifications. The Android app has
 no Wi-Fi auto-connect and does not request location permission.

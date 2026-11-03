@@ -6,7 +6,7 @@ default and stay off until the Owner adds an address.
 
 ## Who controls it
 
-Only the Owner, in **Settings → Maintenance → VPS alerts**, or with the CLI:
+Only the Owner, in **Settings → Advanced → VPS alerts**, or with the CLI:
 
 ```sh
 sirinvpn server alerts status <server>

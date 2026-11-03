@@ -12,8 +12,8 @@ Only Hetzner Cloud is supported. The provider code is one module,
 
 ## Where to find it
 
-- **Desktop (Linux, Windows):** add a server → **New Hetzner VPS**.
-- **Android:** add a server → **Create a Hetzner server**.
+- **Desktop (Linux, Windows):** add a server → **Advanced** → **New Hetzner VPS**.
+- **Android:** add a server → **Advanced** → **Create a Hetzner server**.
 - **CLI:**
 
   ```sh

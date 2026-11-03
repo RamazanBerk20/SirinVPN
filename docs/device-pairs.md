@@ -28,7 +28,7 @@ every answer that carries the snapshot) see the pairs that involve their own
 devices, including pairs with devices they cannot otherwise see
 (shown as "another member's device"), so they know who may reach them.
 
-- **Desktop and Android:** **Devices → the device's menu → Device pairs**. The
+- **Desktop and Android:** **Devices → the device's menu → Advanced → Device pairs**. The
   dialog lists the device's pairs, removes those the caller manages and adds a
   pair with one of the caller's manageable devices in a chosen direction. The
   device details list its pairs. The action appears when the VPS advertises
