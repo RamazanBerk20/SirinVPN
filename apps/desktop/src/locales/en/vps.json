@@ -14,7 +14,11 @@
       "unreachable": "Couldn’t reach the VPS over SSH. Check the login, then try again."
     },
     "previousStep": "Previous step",
-    "passwordsMatch": "Passwords match."
+    "passwordsMatch": "Passwords match.",
+    "step": {
+      "identity": "Confirm the VPS identity",
+      "refresh": "Refresh this server’s status"
+    }
   },
   "update": {
     "title": "Update {{name}}",
@@ -155,7 +159,8 @@
       "file": "Choose where to save the backup.",
       "password": "Enter a backup password of at least 12 characters.",
       "repeat": "Repeat the same password."
-    }
+    },
+    "step": "Sign in and export the encrypted backup"
   },
   "schedule": {
     "action": "Scheduled backups",
@@ -245,7 +250,8 @@
       "install": "SirinVPN is installed on this VPS from the backup.",
       "access": "Members and devices you removed after this backup was made get access again.",
       "device": "This device switches to {{host}}. Services restart briefly."
-    }
+    },
+    "step": "Sign in, restore and verify the VPS"
   },
   "repair": {
     "title": "Repair {{name}}",
@@ -279,7 +285,9 @@
       "split": "Fix the split DNS zones above.",
       "records": "Fix the private DNS records above.",
       "nat64": "Fix the NAT64 prefix above."
-    }
+    },
+    "step": "Sign in, update and check the VPS",
+    "stepDns": "Sign in and apply the DNS settings"
   },
   "summary": {
     "title": "{{name}} is ready to reconnect",
@@ -331,7 +339,9 @@
       "confirm": "Uninstall",
       "progress": "Cleaning up the VPS…",
       "error": "Uninstall didn’t finish. The VPS rolls back partial changes and this device keeps the server.",
-      "done": "SirinVPN was uninstalled from {{host}}."
+      "done": "SirinVPN was uninstalled from {{host}}.",
+      "step": "Sign in and remove SirinVPN from the VPS",
+      "stepLocal": "Remove the server from this device"
     }
   },
   "endpoint": {

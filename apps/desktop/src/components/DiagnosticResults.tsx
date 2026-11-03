@@ -5,6 +5,7 @@ import { t } from "../i18n";
 import { diagnosticEvidence, diagnosticGroup, groupDiagnostics } from "./diagnosticEvidence";
 import { InlineError } from "./ui";
 import { SettingsDisclosure, SettingsNotice } from "../features/settings/SettingsParts";
+import { OperationProgress } from "./OperationResult";
 
 const evidenceLabel = (check: DiagnosticCheck) => t(`maintenance.diagnostics.evidence.${diagnosticEvidence(check)}`);
 /** The workspace reports a run that never produced a report as this single synthetic check. */
@@ -17,6 +18,16 @@ export function diagnosticText(report: DiagnosticReport): string {
       t("maintenance.diagnostics.report.evidence", { evidence: evidenceLabel(check) }),
       check.message,
     ].join("\n"))].join("\n\n");
+}
+
+/**
+ * What a run checks while it runs. The VPS checks and leak tests only run while connected to this
+ * server; all the checks run together and report at once, so every group spins until the report.
+ */
+export function DiagnosticProgress({ title, connected }: { title: string; connected: boolean }) {
+  const groups = connected ? ["device", "identity", "server", "leaks"] as const : ["device", "identity"] as const;
+  return <OperationProgress title={title} note={connected ? null : t("maintenance.diagnostics.progress.disconnected")}
+    steps={groups.map((group) => ({ label: t(`maintenance.diagnostics.progress.${group}.label`), detail: t(`maintenance.diagnostics.progress.${group}.detail`), state: "running" }))} />;
 }
 
 /** An in-app fix for a check that didn't pass, keyed by the check's code. */

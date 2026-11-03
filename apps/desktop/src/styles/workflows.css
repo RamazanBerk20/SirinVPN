@@ -225,7 +225,7 @@ html[data-window-chrome="custom"] .dialog-content.dialog-layout {
 .update-review, .update-section { display: grid; gap: 14px; min-width: 0; border-top: 1px solid var(--line); padding-top: 22px; }
 .update-review h3, .update-section h3 { margin: 0; }
 .dialog-layout .diagnostic-summary { margin-top: 0; }
-.diagnostic-summary > p, .diagnostic-loading { font-size: var(--text-secondary); }
+.diagnostic-summary > p { font-size: var(--text-secondary); }
 .diagnostic-groups { display: grid; gap: 24px; }
 .diagnostic-group h3 { display: flex; align-items: baseline; gap: 10px; font-size: var(--text-section); margin: 0 0 12px; }
 .diagnostic-group h3 > span { color: var(--muted); font-size: var(--text-secondary); font-weight: 400; }
@@ -315,6 +315,15 @@ html[data-window-chrome="custom"] .dialog-content.dialog-layout {
 .operation-progress > svg { color: var(--cyan); }
 .operation-progress strong { color: var(--text); font-size: var(--text-section); }
 .operation-progress p { max-width: 44ch; margin: 0; font-size: var(--text-secondary); line-height: 1.55; }
+/* With steps the list is the progress: left-aligned, each step marked done, running or waiting. */
+.operation-progress.with-steps { min-height: 0; align-items: stretch; justify-content: flex-start; padding: 8px 0; text-align: left; }
+.operation-steps { display: grid; gap: 12px; margin: 4px 0; padding: 0; list-style: none; }
+.operation-steps li { display: grid; grid-template-columns: 24px minmax(0, 1fr); align-items: start; gap: 12px; color: var(--muted); font-size: var(--text-body); line-height: 1.5; }
+.operation-steps li[data-state="running"] { color: var(--text); font-weight: var(--weight-semibold); }
+.operation-steps small { display: block; margin-top: 2px; color: var(--muted); font-size: var(--text-secondary); font-weight: var(--weight-regular); }
+.operation-step-mark { display: grid; place-items: center; width: 24px; height: 24px; border: 1px solid var(--line-strong); border-radius: 50%; }
+.operation-steps [data-state="done"] .operation-step-mark { border-color: var(--success); background: color-mix(in srgb, var(--success) 14%, transparent); color: var(--success); }
+.operation-steps [data-state="running"] .operation-step-mark { border-color: var(--cyan); color: var(--cyan); }
 
 /* Keys, hashes and fingerprints: labelled, whole and wrapping, with Copy. */
 .hash-value { display: grid; gap: 6px; min-width: 0; }

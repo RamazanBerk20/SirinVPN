@@ -1,9 +1,8 @@
 import { DialogContent } from "../../components/DialogContent";
-import { DiagnosticResults } from "../../components/DiagnosticResults";
+import { DiagnosticProgress, DiagnosticResults } from "../../components/DiagnosticResults";
 import { SpeedTest } from "../../components/SpeedTest";
 import { MaintenanceReview } from "./MaintenanceReview";
 import * as Dialog from "@radix-ui/react-dialog";
-import { ArrowClockwise } from "@phosphor-icons/react";
 import { EndpointUpdateDialog } from "../settings/EndpointUpdateDialog";
 import { KeyRotationDialog } from "../settings/KeyRotationDialog";
 import { RepairServerDialog } from "../settings/RepairServerDialog";
@@ -73,9 +72,7 @@ export function WorkspaceDialogs({
           <DialogContent className="dialog-content diagnostics-dialog" heading={t("maintenance.diagnostics.title")}
             description={t("maintenance.diagnostics.description")}>
             {!diagnostics ? (
-              <div className="diagnostic-loading">
-                <ArrowClockwise className="spin" /> {t("maintenance.diagnostics.checking")}
-              </div>
+              <DiagnosticProgress title={t("maintenance.diagnostics.checking")} connected={connected} />
             ) : (
               <>
                 <DiagnosticResults report={diagnostics} onRunAgain={() => void model.runDiagnostics()}

@@ -26,23 +26,10 @@
   animation: quiet-pulse 1.8s ease-in-out infinite;
 }
 
-.install-track {
-  width: min(370px, 84%);
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 7px;
-  margin: 29px 0 16px;
-}
-
-.install-track span {
-  height: 3px;
-  border-radius: 2px;
-  background: var(--line);
-}
-
-.install-track span.active {
-  background: var(--accent);
-  animation: track-pulse 1.4s ease-in-out infinite;
+.install-state .operation-steps {
+  width: min(420px, 100%);
+  margin: 24px 0 16px;
+  text-align: left;
 }
 
 .install-state small {
@@ -294,15 +281,6 @@
 
 .diagnostics-dialog {
   width: min(610px, calc(100vw - 32px));
-}
-
-.diagnostic-loading {
-  min-height: 190px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  color: var(--muted);
 }
 
 .diagnostic-list {

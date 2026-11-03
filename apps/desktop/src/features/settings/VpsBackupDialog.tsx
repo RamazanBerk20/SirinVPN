@@ -4,7 +4,7 @@ import { useSshLogin } from "../../hooks/useSshLogin";
 import { SshLoginFields } from "./SshLoginFields";
 import { DialogBack, DialogContent } from "../../components/DialogContent";
 import { HashValue } from "../../components/CopyValue";
-import { Busy, OperationProgress, OperationResult } from "../../components/OperationResult";
+import { Busy, OperationProgress, OperationResult, stepsAt } from "../../components/OperationResult";
 import * as Dialog from "@radix-ui/react-dialog";
 import { save } from "../../lib/nativeDialog";
 import { GlobeHemisphereWest, Warning } from "@phosphor-icons/react";
@@ -38,6 +38,8 @@ export function VpsBackupDialog({
   const [step, setStep] = useState<
     "details" | "fingerprint" | "exporting" | "success"
   >("details");
+  // Which step of the running task is under way, for its progress list.
+  const [phase, setPhase] = useState(0);
   const login = useSshLogin(profile.endpoint.host, dialogOpen);
   const { port } = login;
   const [path, setPath] = useState("");
@@ -143,10 +145,12 @@ export function VpsBackupDialog({
     if (!checked || !valid || (checked.status !== "trusted" && !confirmed))
       return;
     setStep("exporting");
+    setPhase(0);
     setBusy(true);
     setError(null);
     try {
       const fingerprint = await trust.accept(checked, confirmed);
+      setPhase(1);
       const completed = await api.exportVpsBackup({
         server_id: profile.id,
         path,
@@ -270,7 +274,8 @@ export function VpsBackupDialog({
             />
           ) : null}
 
-          {step === "exporting" ? <OperationProgress title={t("vps.backup.progress")} /> : null}
+          {step === "exporting" ? <OperationProgress title={t("vps.backup.progress")}
+            steps={stepsAt([t("vps.common.step.identity"), t("vps.backup.step")], phase)} /> : null}
 
           {step === "success" && result ? (
             <OperationResult title={t("vps.backup.done")}>

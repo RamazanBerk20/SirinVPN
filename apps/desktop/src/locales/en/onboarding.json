@@ -137,8 +137,10 @@
     "installing": {
       "title": "Setting up your server",
       "summary": "Installing SirinVPN on {{host}}. This usually takes a few minutes.",
-      "progress": "Installation progress",
-      "keepOpen": "Keep SirinVPN open until this finishes."
+      "keepOpen": "Keep SirinVPN open until this finishes.",
+      "stepChecked": "Confirm the VPS identity and network",
+      "stepInstall": "Install SirinVPN on the VPS",
+      "stepInstallDetail": "Connects, checks the server, uploads and verifies the software, then configures the VPN"
     },
     "success": {
       "title": "Your VPN is ready",

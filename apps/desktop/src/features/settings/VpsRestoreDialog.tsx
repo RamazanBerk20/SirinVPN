@@ -4,7 +4,7 @@ import { SshLoginFields } from "./SshLoginFields";
 import { ServerNetworkPreflight } from "./ServerNetworkPreflight";
 import { DialogBack, DialogContent } from "../../components/DialogContent";
 import { HashValue } from "../../components/CopyValue";
-import { Busy, OperationProgress, OperationResult } from "../../components/OperationResult";
+import { Busy, OperationProgress, OperationResult, stepsAt } from "../../components/OperationResult";
 import * as Dialog from "@radix-ui/react-dialog";
 import { open } from "../../lib/nativeDialog";
 import { Warning } from "@phosphor-icons/react";
@@ -47,6 +47,8 @@ export function VpsRestoreDialog({
   const [step, setStep] = useState<
     "details" | "fingerprint" | "review" | "restoring" | "success"
   >("details");
+  // Which step of the running task is under way, for its progress list.
+  const [phase, setPhase] = useState(0);
   const [host, setHost] = useState(profile.endpoint.host);
   const login = useSshLogin(host, dialogOpen);
   const { port } = login;
@@ -150,10 +152,12 @@ export function VpsRestoreDialog({
     if (!checked || !valid || (checked.status !== "trusted" && !confirmed))
       return;
     setStep("restoring");
+    setPhase(0);
     setBusy(true);
     setError(null);
     try {
       const fingerprint = await trust.accept(checked, confirmed);
+      setPhase(1);
       const completed = await api.restoreVpsBackup({
         server_id: profile.id,
         path,
@@ -165,6 +169,7 @@ export function VpsRestoreDialog({
       });
       clearSecrets();
       setResult(completed);
+      setPhase(2);
       await onCompleted();
       setStep("success");
     } catch (reason) {
@@ -302,7 +307,8 @@ export function VpsRestoreDialog({
             </section>
           ) : null}
 
-          {step === "restoring" ? <OperationProgress title={t("vps.restore.progress")} /> : null}
+          {step === "restoring" ? <OperationProgress title={t("vps.restore.progress")}
+            steps={stepsAt([t("vps.common.step.identity"), t("vps.restore.step"), t("vps.common.step.refresh")], phase)} /> : null}
 
           {step === "success" && result ? (
             <OperationResult title={t("vps.restore.done")}>

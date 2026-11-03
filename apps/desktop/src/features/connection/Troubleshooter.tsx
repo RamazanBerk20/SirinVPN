@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
-import { ArrowClockwise, Check, Info, Warning } from "@phosphor-icons/react";
+import { Check, Info, Warning } from "@phosphor-icons/react";
 import { DialogContent } from "../../components/DialogContent";
+import { DiagnosticProgress } from "../../components/DiagnosticResults";
 import { api } from "../../api";
 import { t } from "../../i18n";
 import type { DiagnosticReport } from "../../types";
@@ -57,7 +58,7 @@ export function Troubleshooter({ model, onOpenSettings, onRestoreDevice }: {
               : <Dialog.Close asChild><button type="button" className="primary-button">{t("common.action.done")}</button></Dialog.Close>}
           </>}>
           {!steps || !step ? (
-            <div className="diagnostic-loading" role="status"><ArrowClockwise className="spin" /> {t("help.troubleshoot.checking")}</div>
+            <DiagnosticProgress title={t("help.troubleshoot.checking")} connected={model.connected} />
           ) : (
             <div className="troubleshoot-layout">
               {/* Every step at a glance, so opening at a later step never hides what looked fine. */}

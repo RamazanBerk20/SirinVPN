@@ -148,6 +148,25 @@
       "title": "SirinVPN diagnostics",
       "scope": "Current state only. No activity history.",
       "evidence": "Evidence: {{evidence}}"
+    },
+    "progress": {
+      "device": {
+        "label": "This device",
+        "detail": "VPN service, tunnel, kill switch, routing and MTU"
+      },
+      "identity": {
+        "label": "Saved server identity",
+        "detail": "Server pin and this device’s certificate"
+      },
+      "server": {
+        "label": "VPS",
+        "detail": "Sign-in, DNS, networking, firewall and resources"
+      },
+      "leaks": {
+        "label": "Leak tests",
+        "detail": "IPv4, IPv6 and DNS"
+      },
+      "disconnected": "Connect to this server to also check the VPS and test for leaks."
     }
   },
   "speedTest": {

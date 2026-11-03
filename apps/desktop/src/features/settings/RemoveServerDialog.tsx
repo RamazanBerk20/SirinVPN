@@ -2,7 +2,7 @@ import { confirmAction } from "../../lib/confirmAction";
 import { useSshLogin } from "../../hooks/useSshLogin";
 import { SshLoginFields } from "./SshLoginFields";
 import { DialogBack, DialogContent } from "../../components/DialogContent";
-import { Busy, OperationProgress } from "../../components/OperationResult";
+import { Busy, OperationProgress, stepsAt } from "../../components/OperationResult";
 import { notify } from "../../components/Toasts";
 import { forgetReleaseSource } from "./vpsRelease";
 import * as Dialog from "@radix-ui/react-dialog";
@@ -41,6 +41,8 @@ export function RemoveServerDialog({
   const [step, setStep] = useState<
     "choice" | "details" | "fingerprint" | "uninstalling"
   >("choice");
+  // Which step of the running task is under way, for its progress list.
+  const [phase, setPhase] = useState(0);
   const login = useSshLogin(
     profile.endpoint.host,
     open && owner && step !== "choice",
@@ -132,16 +134,19 @@ export function RemoveServerDialog({
     )
       return;
     setStep("uninstalling");
+    setPhase(0);
     setBusy(true);
     setError(null);
     try {
       const fingerprint = await trust.accept(checked, confirmed);
+      setPhase(1);
       await api.uninstallServer({
         server_id: profile.id,
         ...(await login.prepare(fingerprint)),
       });
       forgetReleaseSource(profile.id);
       clearSecrets();
+      setPhase(2);
       await onRemoved();
       onOpenChange(false);
       notify(t("vps.remove.uninstall.done", { host: profile.endpoint.host }));
@@ -245,7 +250,8 @@ export function RemoveServerDialog({
             </div>
           ) : null}
 
-          {step === "uninstalling" ? <OperationProgress title={t("vps.remove.uninstall.progress")} /> : null}
+          {step === "uninstalling" ? <OperationProgress title={t("vps.remove.uninstall.progress")}
+            steps={stepsAt([t("vps.common.step.identity"), t("vps.remove.uninstall.step"), t("vps.remove.uninstall.stepLocal")], phase)} /> : null}
         </DialogContent>
       </Dialog.Portal>
     </Dialog.Root>

@@ -1,5 +1,6 @@
 import { ArrowLeft, ArrowClockwise, Check, Key, ShieldCheck, Warning } from "@phosphor-icons/react";
 import { CopyButton } from "../../components/CopyButton";
+import { OperationSteps } from "../../components/OperationResult";
 import { InlineError } from "../../components/ui";
 import { t } from "../../i18n";
 import { isAndroid } from "../../platform";
@@ -55,9 +56,11 @@ export function InstallProgress({ host, steps }: { host: string; steps: boolean 
     <div className="install-orbit"><ShieldCheck size={32} weight="duotone" /></div>
     <h2>{t("onboarding.setup.installing.title")}</h2>
     <p>{t("onboarding.setup.installing.summary", { host })}</p>
-    <div className="install-track" role="progressbar" aria-label={t("onboarding.setup.installing.progress")}>
-      <span className="active" /><span /><span /><span /><span />
-    </div>
+    {/* The installer reports no stages while it runs, so its stages are one running step. */}
+    <OperationSteps steps={[
+      { label: t("onboarding.setup.installing.stepChecked"), state: "done" },
+      { label: t("onboarding.setup.installing.stepInstall"), detail: t("onboarding.setup.installing.stepInstallDetail"), state: "running" },
+    ]} />
     <p className="install-keep-open">{t("onboarding.setup.installing.keepOpen")}</p>
   </div>;
 }

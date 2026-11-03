@@ -4,7 +4,7 @@ import { useSshLogin } from "../../hooks/useSshLogin";
 import { SshLoginFields } from "./SshLoginFields";
 import { RepairSummary } from "./RepairSummary";
 import { DialogBack, DialogContent } from "../../components/DialogContent";
-import { Busy, OperationProgress } from "../../components/OperationResult";
+import { Busy, OperationProgress, stepsAt } from "../../components/OperationResult";
 import * as Dialog from "@radix-ui/react-dialog";
 import { GlobeHemisphereWest } from "@phosphor-icons/react";
 import { useEffect, useId, useState } from "react";
@@ -57,6 +57,8 @@ export function RepairServerDialog({
   const [step, setStep] = useState<
     "details" | "fingerprint" | "review" | "repairing" | "success"
   >("details");
+  // Which step of the running task is under way, for its progress list.
+  const [phase, setPhase] = useState(0);
   const login = useSshLogin(profile.endpoint.host, open);
   const { port } = login;
   const trust = useSshHostTrust(profile.endpoint.host, Number(port), open);
@@ -161,10 +163,12 @@ export function RepairServerDialog({
     if (!checked || !sshValid || (checked.status !== "trusted" && !confirmed))
       return;
     setStep("repairing");
+    setPhase(0);
     setBusy(true);
     setError(null);
     try {
       const fingerprint = await trust.accept(checked, confirmed);
+      setPhase(1);
       const repaired = await api.repairServer({
         server_id: profile.id,
         ...(await login.prepare(fingerprint)),
@@ -187,6 +191,7 @@ export function RepairServerDialog({
         }),
       });
       clearSecrets();
+      setPhase(2);
       await onCompleted();
       setResult(repaired);
       setStep("success");
@@ -294,7 +299,8 @@ export function RepairServerDialog({
           </div>}
 
           {step === "repairing" ? (
-            <OperationProgress title={dns ? t("vps.repair.progressDns") : t("vps.repair.progress")} />
+            <OperationProgress title={dns ? t("vps.repair.progressDns") : t("vps.repair.progress")}
+              steps={stepsAt([t("vps.common.step.identity"), t(dns ? "vps.repair.stepDns" : "vps.repair.step"), t("vps.common.step.refresh")], phase)} />
           ) : null}
 
           {step === "success" && result ? (

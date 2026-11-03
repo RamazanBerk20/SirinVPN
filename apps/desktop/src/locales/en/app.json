@@ -78,7 +78,12 @@
     "completed": "The task finished. Reopen its page to see the result.",
     "interrupted": "The task didn’t finish. Check the server or file before trying again.",
     "dismiss": "Dismiss",
-    "dismissFailed": "Couldn’t dismiss this notice. Try again."
+    "dismissFailed": "Couldn’t dismiss this notice. Try again.",
+    "step": {
+      "done": "Done",
+      "running": "In progress",
+      "todo": "Not started"
+    }
   },
   "copy": {
     "label": "Copy {{label}}",
