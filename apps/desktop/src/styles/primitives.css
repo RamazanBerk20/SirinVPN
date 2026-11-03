@@ -55,6 +55,10 @@ p, small, .inline-error, .warning-note {
 .inline-error > span { flex: 1 1 auto; min-width: 0; }
 .inline-error.with-retry { align-items: center; }
 .inline-error > button { flex: 0 0 auto; min-height: 32px; padding: 0 12px; }
+/* A phone has no room for the message beside its button, so Try again gets its own row. */
+.android .inline-error.with-retry { flex-wrap: wrap; }
+.android .inline-error.with-retry > span { flex-basis: 0; flex-grow: 1; }
+.android .inline-error.with-retry > button { flex-basis: 100%; min-height: 44px; }
 /* Sticky dialog and save bars must not cover an error that scrolled itself into view. */
 .inline-error { scroll-margin: 16px 0 120px; }
 

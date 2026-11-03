@@ -84,7 +84,8 @@
     },
     "protection": {
       "title": "Protection",
-      "titleAndroid": "Reconnect and blocking"
+      "titleAndroid": "Reconnect and blocking",
+      "note": "The kill switch and automatic reconnect apply from your next connection."
     }
   },
   "routing": {

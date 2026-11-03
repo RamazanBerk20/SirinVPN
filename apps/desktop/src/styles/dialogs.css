@@ -205,7 +205,6 @@
 }
 
 .release-candidate .warning-note.replacement-warning,
-.release-install-confirmation,
 .release-candidate .form-footnote {
   margin: 0;
 }
@@ -305,4 +304,3 @@
 .saved-ssh-login strong { font-size: 0.9375rem; }
 .saved-ssh-login p { margin: 4px 0 0; color: var(--muted); font-size: 0.875rem; }
 .saved-ssh-actions { display: flex; flex-wrap: wrap; gap: 12px; }
-.ssh-remember-option { margin: 0; }

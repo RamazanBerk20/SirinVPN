@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../../api";
+import { ConfirmationRow } from "../../components/ConfirmationRow";
 import { InlineError } from "../../components/ui";
 import { errorMessage } from "../../lib/errors";
 import type { ReleaseUpdateStatus } from "../../types";
@@ -42,10 +43,9 @@ export function ReleaseRecovery({ busy, setBusy }: { busy: boolean; setBusy: (va
     {status?.baseline_required && <p className="settings-note">{t("release.recovery.baselineRequired")}</p>}
     {status?.installer_kind === "appimage" && status.rollback_version && <div className="release-recovery">
       {done ? <p>{t("release.recovery.restored", { version: status.rollback_version })}</p> : <>
-        <label className="replacement-option">
-          <input type="checkbox" checked={confirmed} disabled={busy} onChange={(event) => setConfirmed(event.target.checked)} />
-          <span><strong>{t("release.recovery.restoreConfirm", { version: status.rollback_version })}</strong><small>{t("release.recovery.restoreNote")}</small></span>
-        </label>
+        <ConfirmationRow checked={confirmed} disabled={busy} onChange={setConfirmed}>
+          <strong>{t("release.recovery.restoreConfirm", { version: status.rollback_version })}</strong><small>{t("release.recovery.restoreNote")}</small>
+        </ConfirmationRow>
         <button className="secondary-button" type="button" disabled={!confirmed || busy} onClick={() => void rollback()}>{t("release.recovery.restore")}</button>
       </>}
     </div>}

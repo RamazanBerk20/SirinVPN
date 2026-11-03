@@ -21,7 +21,9 @@
       "members_one": "{{count}} member",
       "members_other": "{{count}} members",
       "devices_one": "{{count}} device",
-      "devices_other": "{{count}} devices"
+      "devices_other": "{{count}} devices",
+      "invitations_one": "{{count}} open invitation",
+      "invitations_other": "{{count}} open invitations"
     },
     "addWireguard": "Add WireGuard device",
     "aloneTitle": "Only this device so far",

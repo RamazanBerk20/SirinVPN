@@ -131,7 +131,7 @@ export function ConnectionOptions({ model }: { model: ServerWorkspaceModel }) {
       </section>
       <section className="settings-card">
         <h2>{t(isAndroid ? "connection.options.protection.titleAndroid" : "connection.options.protection.title")}</h2>
-        {!isAndroid && <p>{t("connection.nextConnection")}</p>}
+        {!isAndroid && <p>{t("connection.options.protection.note")}</p>}
         {policies.filter((key) => !isAndroid || key === "automatic_reconnect").map((key) => {
           const label = t(`connection.options.policy.${key}.label`);
           const androidReconnect = isAndroid && key === "automatic_reconnect";

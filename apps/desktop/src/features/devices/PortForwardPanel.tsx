@@ -1,6 +1,7 @@
 import { ArrowClockwise, ArrowRight, Plus, Warning, Wrench } from "@phosphor-icons/react";
 import { type FormEvent } from "react";
 import { canManagePortForwards } from "../../access";
+import { Busy } from "../../components/OperationResult";
 import { Field } from "../../components/ui";
 import { type MembershipSnapshot, type PortForwardProtocol } from "../../types";
 import { t } from "../../i18n";
@@ -168,7 +169,7 @@ export function PortForwardPanel({
                         disabled={busy !== null}
                         onClick={() => void onRemove(forward.protocol, forward.public_port)}
                       >
-                        {busy === key ? t("devices.ports.closing") : t("devices.ports.close")}
+                        {busy === key ? <Busy label={t("devices.ports.closing")} /> : t("devices.ports.close")}
                       </button>
                     ) : (
                       <span className="ports-managed">{t("devices.ports.ownerManaged")}</span>

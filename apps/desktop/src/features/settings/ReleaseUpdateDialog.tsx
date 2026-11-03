@@ -1,5 +1,6 @@
 import { useReleaseUpdateSession } from "./ReleaseUpdateSession";
 import { DialogContent } from "../../components/DialogContent";
+import { ConfirmationRow } from "../../components/ConfirmationRow";
 import { HashValue } from "../../components/CopyValue";
 import { Busy, OperationProgress, OperationResult } from "../../components/OperationResult";
 import * as Dialog from "@radix-ui/react-dialog";
@@ -241,22 +242,10 @@ export function ReleaseUpdateDialog({
                   </div>
                 </div>
               </div>}
-              {installable && <label
-                className={`replacement-option release-install-confirmation ${confirmed ? "selected" : ""}`}
-              >
-                <input
-                  type="checkbox"
-                  checked={confirmed}
-                  disabled={!installAvailable}
-                  onChange={(event) => setConfirmed(event.target.checked)}
-                />
-                <span>
-                  <strong>
-                    {binding ? t("release.candidate.confirmVerify") : installConfirmation}
-                  </strong>
-                  <small>{t("release.candidate.confirmNote")}</small>
-                </span>
-              </label>}
+              {installable && <ConfirmationRow checked={confirmed} disabled={!installAvailable} onChange={setConfirmed}>
+                <strong>{binding ? t("release.candidate.confirmVerify") : installConfirmation}</strong>
+                <small>{t("release.candidate.confirmNote")}</small>
+              </ConfirmationRow>}
               <details className="release-verification-details"><summary>{t("release.candidate.details")}</summary>
                 <dl className="result-facts">
                   <div><dt>{t("release.candidate.detailPackage")}</dt><dd className="mono">{candidate.artifact_file_name}</dd></div>

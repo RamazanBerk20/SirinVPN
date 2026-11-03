@@ -78,8 +78,8 @@ export function DevicePairsDialog({ serverId, device, snapshot, candidates, onCl
           heading={<>{t("devices.pairs.title", { name: device.name })}</>}
           description={<>{t("devices.pairs.description")}</>}
           closeDisabled={busy !== null} closeLabel={t("common.action.close")}>
-      <ul className="pair-list">
-        {pairs.length === 0 ? <li className="pair-list-empty">{t("devices.pairs.none")}</li> : pairs.map(({ pair, peer: peerId, text }) => {
+      {pairs.length === 0 ? <p className="pair-list-empty">{t("devices.pairs.none")}</p> : <ul className="pair-list">
+        {pairs.map(({ pair, peer: peerId, text }) => {
           const key = `${pair.device_id}:${pair.peer_device_id}`;
           return <li className="pair-row" key={key}>
             <span>{text}</span>
@@ -88,7 +88,7 @@ export function DevicePairsDialog({ serverId, device, snapshot, candidates, onCl
             </button>}
           </li>;
         })}
-      </ul>
+      </ul>}
       {candidates.length > 0 && <form className="pair-form" aria-labelledby={heading} onSubmit={(event) => { event.preventDefault(); void add(); }}>
         <h3 id={heading}>{t("devices.pairs.addHeading")}</h3>
         <Field label={t("devices.pairs.peer")}>

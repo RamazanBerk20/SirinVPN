@@ -267,6 +267,8 @@ html[data-window-chrome="custom"] .dialog-content.dialog-layout {
   font-size: var(--text-secondary);
   line-height: 1.45;
 }
+/* Three actions leave the note no room beside them, so it takes its own row. */
+.dialog-footer:has(> button:nth-of-type(3)) .dialog-footer-note { flex-basis: 100%; order: -2; }
 .dialog-footer .dialog-back { order: -1; }
 .dialog-back { min-height: 40px; padding-inline: 12px; }
 .dialog-footer .text-button.dialog-back { margin-right: auto; }
@@ -365,7 +367,9 @@ html[data-window-chrome="custom"] .dialog-content.dialog-layout {
   background: color-mix(in srgb, var(--danger) 7%, transparent);
 }
 
-.ssh-login-error { display: grid; gap: 8px; justify-items: start; }
+.ssh-login-error { display: grid; gap: 8px; }
+/* Under Try again, the other way out of the same error. */
+.ssh-login-error > .text-button { justify-self: end; }
 .ssh-host-verification { display: grid; gap: 16px; min-width: 0; }
 .ssh-host-verification > p { margin: 0; }
 .ssh-verification-heading { display: flex; align-items: center; gap: 10px; }

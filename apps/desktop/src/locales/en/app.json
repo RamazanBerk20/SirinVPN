@@ -126,6 +126,8 @@
     "automaticMethod": "Automatic method",
     "reconnectOn": "Reconnects automatically",
     "reconnectOff": "Doesn’t reconnect automatically",
-    "attention": "Needs attention: a key rotation didn’t finish"
+    "attention": "Needs attention: a key rotation didn’t finish",
+    "serverHealthy": "Server running normally",
+    "serverFault": "Needs attention: the server reports a fault"
   }
 }

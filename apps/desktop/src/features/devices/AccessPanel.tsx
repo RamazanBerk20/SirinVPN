@@ -99,6 +99,7 @@ export function AccessPanel(
                 {t("devices.panel.summary.members", { count: snapshot.members.length })}
                 {" · "}
                 {t("devices.panel.summary.devices", { count: deviceCount })}
+                {snapshot.active_invitations.length > 0 && <>{" · "}{t("devices.panel.summary.invitations", { count: snapshot.active_invitations.length })}</>}
               </p>
             </div>
           )}

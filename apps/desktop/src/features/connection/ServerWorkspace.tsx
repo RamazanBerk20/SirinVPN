@@ -38,6 +38,8 @@ import { MobileConnectionDetails } from "./MobileConnectionDetails";
 function settingsSummaries(model: ReturnType<typeof useServerWorkspace>): Partial<Record<SettingsCategory, string>> {
   const saved = model.preferences.saved;
   const routing = saved?.routing.mode;
+  // The server only reports through the tunnel; a status from an earlier connection may be stale.
+  const server = model.connected ? model.serverStatus : null;
   return {
     general: t("app.settingsIndex.general"),
     connection: saved ? t("common.separator.pair", {
@@ -45,7 +47,8 @@ function settingsSummaries(model: ReturnType<typeof useServerWorkspace>): Partia
       second: t(saved.policy.automatic_reconnect ? "app.settingsIndex.reconnectOn" : "app.settingsIndex.reconnectOff"),
     }) : undefined,
     network: routing ? t(routing === "selected_routes" ? "home.routing.selectedRoutes" : routing === "selected_applications" ? "home.routing.selectedApps" : "home.routing.fullTunnel") : undefined,
-    maintenance: model.rotationPendingConfirmed ? t("app.settingsIndex.attention") : undefined,
+    maintenance: model.rotationPendingConfirmed ? t("app.settingsIndex.attention")
+      : server ? t(server.interface_up && server.dns_healthy ? "app.settingsIndex.serverHealthy" : "app.settingsIndex.serverFault") : undefined,
   };
 }
 

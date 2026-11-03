@@ -1,5 +1,6 @@
 import { isAndroid } from "../../platform";
 import { open } from "../../lib/nativeDialog";
+import { ConfirmationRow } from "../../components/ConfirmationRow";
 import { SecretInput } from "../../components/SecretInput";
 import { Field, InlineError } from "../../components/ui";
 import type { useSshLogin } from "../../hooks/useSshLogin";
@@ -127,17 +128,10 @@ export function SshLoginFields({
               />
             </Field>
           )}
-          <label className="replacement-option ssh-remember-option">
-            <input
-              type="checkbox"
-              checked={login.remember}
-              onChange={(e) => login.setRemember(e.target.checked)}
-            />
-            <span>
-              <strong>{t("ssh.login.remember")}</strong>
-              <small>{t("ssh.login.rememberNote")}</small>
-            </span>
-          </label>
+          <ConfirmationRow checked={login.remember} onChange={login.setRemember}>
+            <strong>{t("ssh.login.remember")}</strong>
+            <small>{t("ssh.login.rememberNote")}</small>
+          </ConfirmationRow>
           {login.saved && (
             <button type="button" className="text-button" onClick={login.reuse}>
               {t("ssh.login.useSaved")}

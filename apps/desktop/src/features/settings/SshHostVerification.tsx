@@ -1,5 +1,6 @@
 import { SshVerificationGuide } from "./SshVerificationGuide";
 import { Key, Warning } from "@phosphor-icons/react";
+import { ConfirmationRow } from "../../components/ConfirmationRow";
 import { HashValue } from "../../components/CopyValue";
 import type { InspectedSshHost } from "../../hooks/useSshHostTrust";
 import { t } from "../../i18n";
@@ -30,21 +31,10 @@ export function SshHostVerification({
       <p>{changed ? t("ssh.verify.bodyChanged") : t("ssh.verify.body")}</p>
       <HashValue label={t("ssh.verify.fingerprintLabel", { host: `${inspection.host}:${inspection.port}` })} value={inspection.fingerprint} />
       <SshVerificationGuide />
-      <label className={`replacement-option ${confirmed ? "selected" : ""}`}>
-        <input
-          type="checkbox"
-          checked={confirmed}
-          onChange={(event) => onConfirmed(event.target.checked)}
-        />
-        <span>
-          <strong>
-            {changed ? t("ssh.verify.confirmChanged") : t("ssh.verify.confirm")}
-          </strong>
-          <small>
-            {changed ? t("ssh.verify.confirmChangedNote") : t("ssh.verify.confirmNote")}
-          </small>
-        </span>
-      </label>
+      <ConfirmationRow checked={confirmed} onChange={onConfirmed} danger={changed}>
+        <strong>{changed ? t("ssh.verify.confirmChanged") : t("ssh.verify.confirm")}</strong>
+        <small>{changed ? t("ssh.verify.confirmChangedNote") : t("ssh.verify.confirmNote")}</small>
+      </ConfirmationRow>
     </div>
   );
 }

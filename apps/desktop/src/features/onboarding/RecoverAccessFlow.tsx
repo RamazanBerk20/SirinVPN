@@ -89,7 +89,7 @@ export function RecoverAccessFlow({ onComplete, compact = false }: { onComplete:
         </div>
         <Field label={t("onboarding.recover.deviceName")}><input maxLength={64} value={deviceName} onChange={(event) => setDeviceName(event.target.value)} /></Field>
         <ConfirmationRow checked={confirmed} onChange={setConfirmed} danger>{t("onboarding.recover.confirmRevoke")}</ConfirmationRow>
-        {preview.existing_profile && <label className="preference-checkbox"><input type="checkbox" checked={replace} onChange={(event) => setReplace(event.target.checked)} /><span>{t("onboarding.recover.replaceProfile", { name: preview.preview.server_name })}</span></label>}
+        {preview.existing_profile && <ConfirmationRow checked={replace} onChange={setReplace}>{t("onboarding.recover.replaceProfile", { name: preview.preview.server_name })}</ConfirmationRow>}
       </>}
     </fieldset>
     {error && <InlineError message={error} />}
