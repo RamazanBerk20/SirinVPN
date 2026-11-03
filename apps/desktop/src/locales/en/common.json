@@ -37,6 +37,7 @@
     "pair": "{{first}} · {{second}}",
     "triple": "{{first}} · {{second}} · {{third}}"
   },
+  "target": "{{os}}, {{arch}} ({{target}})",
   "error": {
     "needsConnection": "Connect to this server first.",
     "localSave": "Couldn’t save on this device. Try again.",

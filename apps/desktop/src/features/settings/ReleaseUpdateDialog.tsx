@@ -13,7 +13,7 @@ import {
 } from "@phosphor-icons/react";
 import { useEffect, useId, useState } from "react";
 import { api } from "../../api";
-import { formatBytes } from "../../format";
+import { formatBytes, formatTarget } from "../../format";
 import { Field, InlineError } from "../../components/ui";
 import { errorMessage } from "../../lib/errors";
 import { ReleaseRecovery } from "./ReleaseRecovery";
@@ -254,7 +254,7 @@ export function ReleaseUpdateDialog({
                 <dl className="result-facts">
                   <div><dt>{t("release.candidate.detailPackage")}</dt><dd className="mono">{candidate.artifact_file_name}</dd></div>
                   <div><dt>{t("release.candidate.detailSize")}</dt><dd>{formatBytes(candidate.artifact_size_bytes)}</dd></div>
-                  <div><dt>{t("release.candidate.detailTarget")}</dt><dd className="mono">{candidate.artifact_target}</dd></div>
+                  <div><dt>{t("release.candidate.detailTarget")}</dt><dd>{formatTarget(candidate.artifact_target)}</dd></div>
                   <div><dt>{t("release.candidate.detailRelease")}</dt><dd>{candidate.release_sequence}</dd></div>
                   <div><dt>{t("release.candidate.detailPolicy")}</dt><dd>{t("release.candidate.detailPolicyValue", { sequence: candidate.trust_policy_sequence })}</dd></div>
                 </dl>

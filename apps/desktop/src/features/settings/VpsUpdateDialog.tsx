@@ -9,7 +9,7 @@ import { api } from "../../api";
 import { errorMessage } from "../../lib/errors";
 import { confirmAction } from "../../lib/confirmAction";
 import { t } from "../../i18n";
-import { formatBytes } from "../../format";
+import { formatBytes, formatTarget } from "../../format";
 import { useSshLogin } from "../../hooks/useSshLogin";
 import { useSshHostTrust, type InspectedSshHost } from "../../hooks/useSshHostTrust";
 import { SshLoginFields } from "./SshLoginFields";
@@ -312,7 +312,7 @@ export function VpsUpdateDialog({ profile, open, onOpenChange, disconnected, onC
               <div><dt>{t("vps.update.review.compatibility")}</dt><dd>{baseline || candidate?.can_install || candidate?.action === "already_bound" ? t("vps.update.review.compatible") : t("vps.update.review.incompatible")}</dd></div>
               <div><dt>{t("vps.update.review.type")}</dt><dd>{(baseline?.security_update ?? candidate?.security_update) ? t("vps.update.review.security") : t("vps.update.review.standard")}</dd></div></dl>
             <details className="result-disclosure"><summary>{t("vps.common.softwareDetails")}</summary>
-              <p>{t("common.separator.pair", { first: baseline?.artifact.target ?? candidate?.artifact_target ?? "", second: formatBytes(baseline?.artifact.size_bytes ?? candidate?.artifact_size_bytes ?? 0) })}</p>
+              <p>{t("common.separator.pair", { first: formatTarget(baseline?.artifact.target ?? candidate?.artifact_target ?? ""), second: formatBytes(baseline?.artifact.size_bytes ?? candidate?.artifact_size_bytes ?? 0) })}</p>
               <HashValue label={t("vps.common.softwareHash")} value={baseline?.artifact.sha256 ?? candidate?.artifact_sha256 ?? ""} />
             </details>
           </section>}

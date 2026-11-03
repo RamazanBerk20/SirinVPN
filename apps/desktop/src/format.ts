@@ -1,6 +1,13 @@
 import type { DnsUpstream, TransportKind } from "./types";
 import { formatNumber, t } from "./i18n";
 
+/** A release target triple in words, keeping the exact triple for checking against a manifest. */
+export function formatTarget(target: string): string {
+  const os = /android/.test(target) ? "Android" : /windows/.test(target) ? "Windows" : /linux/.test(target) ? "Linux" : "";
+  const arch = target.startsWith("x86_64") ? "64-bit x86" : target.startsWith("aarch64") ? "64-bit ARM" : "";
+  return os && arch ? t("common.target", { os, arch, target }) : target;
+}
+
 export function formatBytes(value: number): string {
   if (!Number.isFinite(value) || value <= 0) return "0 B";
   const units = ["B", "KB", "MB", "GB", "TB"];

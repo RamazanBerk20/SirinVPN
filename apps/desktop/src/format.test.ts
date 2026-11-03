@@ -6,6 +6,7 @@ import {
   formatLatency,
   formatMemoryUsage,
   formatRate,
+  formatTarget,
   formatTransport,
   formatUptime,
   validateHost,
@@ -66,4 +67,10 @@ describe("desktop formatting", () => {
       }],
     })).toBe("DNS over HTTPS · 1 server");
   });
+});
+
+it("names a release target in words and keeps the exact triple", () => {
+  expect(formatTarget("x86_64-unknown-linux-gnu")).toBe("Linux, 64-bit x86 (x86_64-unknown-linux-gnu)");
+  expect(formatTarget("aarch64-linux-android")).toBe("Android, 64-bit ARM (aarch64-linux-android)");
+  expect(formatTarget("riscv64gc-unknown-linux-gnu")).toBe("riscv64gc-unknown-linux-gnu");
 });
