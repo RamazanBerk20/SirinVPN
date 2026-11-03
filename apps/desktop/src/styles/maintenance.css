@@ -1,6 +1,5 @@
 .install-state h2,
-.success-state h2,
-.fingerprint-step h2 {
+.success-state h2 {
   margin: 20px 0 0;
   font-size: 25px;
   letter-spacing: -0.04em;
