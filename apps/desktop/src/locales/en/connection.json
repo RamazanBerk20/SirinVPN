@@ -179,6 +179,7 @@
     },
     "notConnected": "Connect to measure the packet size.",
     "unsupported": "Packet size can’t be measured until this device’s VPN component is updated. Review it in General settings under Local VPN component.",
+    "unsupportedAction": "Packet size can’t be measured until this device’s VPN component is updated.",
     "details": {
       "current": "Current MTU",
       "recommended": "Recommended",

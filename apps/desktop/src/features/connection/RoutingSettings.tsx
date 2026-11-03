@@ -11,7 +11,7 @@ import { SettingsNotice } from "../settings/SettingsParts";
 
 const MAX_INCLUDED_ROUTES = 32;
 
-export function RoutingSettings({ model }: { model: ServerWorkspaceModel }) {
+export function RoutingSettings({ model, onCheckUpdates }: { model: ServerWorkspaceModel; onCheckUpdates?: () => void }) {
   const {
     routingMode,
     setRoutingMode,
@@ -46,7 +46,8 @@ export function RoutingSettings({ model }: { model: ServerWorkspaceModel }) {
     <section className="settings-card routing-settings">
       <h2>{t("connection.routing.title")}</h2>
       <p>{t("connection.nextConnection")}</p>
-      {model.localStatus.application_routing_supported !== true && <SettingsNotice tone={windows ? "warning" : "info"}>{windows
+      {model.localStatus.application_routing_supported !== true && <SettingsNotice tone={windows ? "warning" : "info"}
+        action={windows && onCheckUpdates ? { label: t("app.onboarding.checkUpdates"), onClick: onCheckUpdates } : undefined}>{windows
         ? t("connection.routing.unsupportedWindows")
         : t("connection.routing.unsupported")}</SettingsNotice>}
       <fieldset className="choice-fieldset">

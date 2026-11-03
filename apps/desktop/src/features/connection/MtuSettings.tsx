@@ -20,7 +20,7 @@ export function mtuDescription(mtu: NonNullable<LocalTunnelStatus["mtu"]>): stri
 /** Measurements that didn't work read as warnings, not as ordinary notes. */
 const failedOutcomes = new Set(["icmp_unavailable", "no_usable_mtu", "apply_failed"]);
 
-export function MtuSettings({ model }: { model: ServerWorkspaceModel }) {
+export function MtuSettings({ model, onReviewComponentUpdate }: { model: ServerWorkspaceModel; onReviewComponentUpdate?: () => void }) {
   const manual = model.preferences.draft.manual_mtu ?? null;
   // An empty field is an edit in progress, not a request for automatic MTU.
   const [manualText, setManualText] = useState(manual === null ? "" : String(manual));
@@ -38,7 +38,9 @@ export function MtuSettings({ model }: { model: ServerWorkspaceModel }) {
   return <section className="settings-card" aria-label={t("connection.mtu.title")}>
     <h2>{t("connection.mtu.title")}</h2>
     <p>{t("connection.nextConnection")}</p>
-    {unsupported && <SettingsNotice tone="warning">{t("connection.mtu.unsupported")}</SettingsNotice>}
+    {unsupported && <SettingsNotice tone="warning" action={onReviewComponentUpdate && { label: t("settings.general.component.review"), onClick: onReviewComponentUpdate }}>
+      {t(onReviewComponentUpdate ? "connection.mtu.unsupportedAction" : "connection.mtu.unsupported")}
+    </SettingsNotice>}
     <label className="preference-row"><span><strong>{t("connection.mtu.automatic.label")}</strong><small>{t("connection.mtu.automatic.summary")}</small></span>
       <input type="checkbox" role="switch" aria-label={t("connection.mtu.automatic.label")} checked={manual === null} disabled={disabled}
         onChange={(event) => model.preferences.change({ manual_mtu: event.target.checked ? null : mtu?.configured ?? MAX_MTU })} />

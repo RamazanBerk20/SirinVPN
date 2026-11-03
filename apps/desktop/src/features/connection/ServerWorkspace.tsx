@@ -177,10 +177,10 @@ export function ServerWorkspace(
               onReviewComponentUpdate={() => setComponentUpdateOpen(true)}
             />
           )}
-          {category === "connection" && <ConnectionOptions model={model} />}
+          {category === "connection" && <ConnectionOptions model={model} onReviewComponentUpdate={isAndroid ? undefined : () => setComponentUpdateOpen(true)} />}
           {category === "network" && (
             <div className="settings-sections">
-              <RoutingSettings model={model} />
+              <RoutingSettings model={model} onCheckUpdates={isAndroid ? undefined : props.onCheckUpdates} />
               <section className="settings-card">
                 <h2>{t("app.network.dnsTitle")}</h2>
                 <p>

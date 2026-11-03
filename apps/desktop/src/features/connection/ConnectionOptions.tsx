@@ -19,7 +19,7 @@ export function androidBlocking(local: LocalTunnelStatus): string {
     : local.lockdown ? "connection.options.android.on" : "connection.options.android.off");
 }
 
-export function ConnectionOptions({ model }: { model: ServerWorkspaceModel }) {
+export function ConnectionOptions({ model, onReviewComponentUpdate }: { model: ServerWorkspaceModel; onReviewComponentUpdate?: () => void }) {
   const {
     selectedTransport,
     setSelectedTransport,
@@ -176,7 +176,7 @@ export function ConnectionOptions({ model }: { model: ServerWorkspaceModel }) {
           ? t("connection.options.notes.windowsApps")
           : t("connection.options.notes.launchedApps")}</p>}
       </section>
-      <MtuSettings model={model} />
+      <MtuSettings model={model} onReviewComponentUpdate={onReviewComponentUpdate} />
       <SettingsDisclosure summary={t("connection.options.status.title")}>
         <dl className="status-facts">
           <div>
