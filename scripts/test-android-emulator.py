@@ -2,7 +2,7 @@
 """Run native tests in a fresh, owned AVD; never attach to an existing device.
 
 Run under the documented 8 GiB systemd resource scope. Requires installed SDK
-tools and google_apis/x86_64 image for --api, plus current debug/test APKs.
+tools and the x86_64 image for --api (AOSP default on 31, google_apis on 36), plus current debug/test APKs.
 """
 import argparse
 import hashlib
@@ -144,7 +144,8 @@ def main():
         return {"checks": checks, "network": "emulator AndroidWifi (open); unreachable loopback server"}
     try:
         run([str(sdk / "cmdline-tools/latest/bin/avdmanager"), "create", "avd", "--name", "sirin-remediation",
-             "--path", str(output / "avd"), "--package", f"system-images;android-{args.api};google_apis;x86_64"], input=b"no\n")
+             # API 31's google_apis image is under the SDK Preview licence; its AOSP image under the standard one.
+             "--path", str(output / "avd"), "--package", f"system-images;android-{args.api};{'default' if args.api == 31 else 'google_apis'};x86_64"], input=b"no\n")
         run([*adb[:-2], "start-server"])
         with (output / "emulator.log").open("wb") as log:
             child = subprocess.Popen([str(sdk / "emulator/emulator"), "-avd", "sirin-remediation",

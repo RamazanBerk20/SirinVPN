@@ -62,7 +62,7 @@ jobs:
           echo "$PWD/.cache/ci-tools/node_modules/.bin" >> "$GITHUB_PATH"
           echo "GO_BIN=$(command -v go)" >> "$GITHUB_ENV"
           echo "NDK_HOME=$ANDROID_HOME/ndk/30.0.16248370" >> "$GITHUB_ENV"
-          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'platforms;android-36' 'build-tools;36.0.0' 'ndk;30.0.16248370' 'system-images;android-31;google_apis;x86_64' 'system-images;android-36;google_apis;x86_64' emulator
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'platforms;android-36' 'build-tools;36.0.0' 'ndk;30.0.16248370' 'system-images;android-31;default;x86_64' 'system-images;android-36;google_apis;x86_64' emulator
           rustup target add x86_64-linux-android aarch64-linux-android
       - run: pnpm --dir apps/desktop install --frozen-lockfile
       - name: Build current VPS payloads

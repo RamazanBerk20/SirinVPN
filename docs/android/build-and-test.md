@@ -17,7 +17,9 @@ systemd-run --user --scope --quiet \
 ```
 
 Repeat with `--api 36` and a new output directory. The required system image
-must already be installed. Build both APKs first; instrumentation is a separate
+must already be installed: `system-images;android-31;default;x86_64` (the AOSP
+image; API 31's `google_apis` image is under the SDK Preview licence) and
+`system-images;android-36;google_apis;x86_64`. Build both APKs first; instrumentation is a separate
 test package. These native checks do not qualify established-tunnel continuity,
 physical devices, OEM battery policy or production signing.
 The harness grants VPN consent only inside its fresh AVD to exercise the
