@@ -31,6 +31,34 @@ the app launched successfully. Physical QR retesting remains pending.
 This is a **debug-signed, debuggable development build**, not a production release.
 Existing desktop changes and the existing signing identity were retained.
 
+## Wi-Fi auto-connect returns, 4 November
+
+Wi-Fi auto-connect is back on Android with the desktop's rule and store; the
+design is in [security and platform](security-and-platform.md#wi-fi-auto-connect).
+It differs from the attempt removed on 29 October in four ways:
+
+- **No permanent notification.** Off Wi-Fi nothing runs: a one-shot
+  `PendingIntent` network callback wakes the app when Wi-Fi joins. Only on Wi-Fi
+  with the VPN off does a watcher run, with its own silent channel.
+- **A stable identity.** Trust is keyed on the name and security class, not
+  `WifiInfo.networkId`, which Android renumbers at every boot.
+- **An explicit fail-safe.** A hidden name counts as untrusted, and Settings
+  names the missing access with one button that fixes it.
+- **Restarts are tested.** Boot and update re-arm the watch; force stop is
+  honoured.
+
+AOSP sends a `PendingIntent` network callback once, immediately when a match
+exists, and releases it 5 s after delivery, so the watch is re-armed with a new
+URI and never while any Wi-Fi is up. An unvalidated Wi-Fi beside validated
+mobile data would otherwise re-arm it in a loop; the rule watches it instead.
+
+Validation: 7 JVM rule tests, 4 new Vitest cases (Android notices, TV), a Rust
+store test, the API 36 emulator's `WifiAutoConnectTest` plus 10 host-driven
+checks (pause, Wi-Fi off, kill then untrusted join, trusted, reboot, kill then
+trusted join, update, force stop), 138 captured Wi-Fi states with no audit
+findings, and the TV D-pad run. The 32 `wifi` scenarios are now `adapted`. The
+physical-phone check is recorded separately.
+
 ## Widget, automation intents and Android TV, 1 November
 
 - **Home-screen widget.** The VPN process redraws it when the state, server,

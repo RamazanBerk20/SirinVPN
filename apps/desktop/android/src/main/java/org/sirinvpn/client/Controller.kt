@@ -78,6 +78,7 @@ object Controller {
     @Synchronized fun initialize(application: Context) {
         if (initialized) return
         context = application.applicationContext
+        WifiAutomation.initialize(context)
         check(Native.initialize(context.noBackupFilesDir.absolutePath, NativePlatform(context)))
         paused = preferences.getBoolean("paused", false)
         val appPrefs = context.getSharedPreferences("application-preferences", 0)
@@ -103,6 +104,12 @@ object Controller {
                 android.app.ApplicationExitInfo.REASON_LOW_MEMORY,android.app.ApplicationExitInfo.REASON_SIGNALED)
         }
         val manager = context.getSystemService(ConnectivityManager::class.java)
+        // Know the current underlay now: a Wi-Fi wake or boot check must not see "no network" before callbacks arrive.
+        @Suppress("DEPRECATION") for (value in manager.allNetworks) manager.getNetworkCapabilities(value)?.let {
+            if (it.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) && it.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN) &&
+                it.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_RESTRICTED) && it.hasCapability(NetworkCapabilities.NET_CAPABILITY_TRUSTED)) networks[value]=it
+        }
+        selectNetwork()
         manager.registerNetworkCallback(NetworkRequest.Builder()
             .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
             .addCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN).build(), object : ConnectivityManager.NetworkCallback() {
@@ -120,6 +127,8 @@ object Controller {
             try {context.startForegroundService(Intent(context,SirinVpnService::class.java).setAction("org.sirinvpn.RECOVER"))}
             catch (_:Exception) {error=context.getString(R.string.error_vpn_recovery_deferred)}
         }
+        // Desktop's rule also acts when the app starts, not only on a change.
+        WifiAutomation.changed()
     }
 
     private fun selectNetwork() {
@@ -170,6 +179,10 @@ object Controller {
     @Synchronized private fun startSampling() {
         if (sampling == null && !paused && preferences.getBoolean("requested",false)) sampling = monitor.scheduleWithFixedDelay({ sample() }, 1, 1, TimeUnit.SECONDS)
     }
+    @Synchronized fun sessionActive() = handle>=0 || preferences.getBoolean("requested",false)
+    @Synchronized fun busy() = operation || settingsUpdating
+    @Synchronized fun failed() = phase=="failed"
+    @Synchronized fun wifiPresent() = networks.values.any { it.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) }
     fun current(generation: Long) = epoch.get() == generation
     fun generation() = epoch.get()
     @Synchronized fun needsReconstruction() = initialized && phase=="disconnected" && handle<0 && !operation && !paused && preferences.getBoolean("requested",false)
@@ -245,7 +258,7 @@ object Controller {
     @Synchronized fun serviceDestroyed() {
         if(handle>=0) Native.generation(epoch.incrementAndGet())
         stopEngine()
-        if (initialized) publish()
+        if (initialized) { publish(); WifiAutomation.changed() }
     }
     @Synchronized fun subscribe(listener: IStatus) { listeners.register(listener); listener.changed(snapshot().toString()) }
     fun unsubscribe(listener: IStatus) { listeners.unregister(listener) }
@@ -340,8 +353,9 @@ object Controller {
         val connection = transition || command in setOf("connect_server", "connect_server_with_policy", "connect_saved", "reconnect_server", "resume_server", "join_server", "recover_owner_access")
         val maintenance = transition || command in setOf("provision_server","repair_server","uninstall_server","export_server_backup","import_server_backup","export_vps_backup","restore_vps_backup","export_recovery_package","import_recovery_package","inspect_server_network","check_release_update","install_release_update","prepare_vps_baseline","install_vps_baseline","manage_vps_release","save_ssh_login","create_hetzner_server","wait_hetzner_server","delete_hetzner_server","run_scheduled_vps_backup")
         // The speed test changes nothing on this device, so Disconnect and reconnects need not wait for it.
-        val readOnly = command in setOf("list_servers", "get_connection_preferences", "key_rotation_pending", "preshared_key_rotation_recommended", "server_status", "server_configuration", "membership", "get_ssh_login", "recovery_settings", "dns_blocklist_settings", "alert_settings", "available_endpoint_update", "local_component_update_status", "current_network_profile", "cancel_hetzner_wait", "vps_backup_schedules", "run_speed_test")
-        val setting = command in setOf("set_connection_preferences", "android_set_reconnect")
+        val readOnly = command in setOf("list_servers", "get_connection_preferences", "key_rotation_pending", "preshared_key_rotation_recommended", "server_status", "server_configuration", "membership", "get_ssh_login", "recovery_settings", "dns_blocklist_settings", "alert_settings", "available_endpoint_update", "local_component_update_status", "current_network_profile", "cancel_hetzner_wait", "vps_backup_schedules", "run_speed_test", "get_wifi_policy")
+        val wifiSetting = command in setOf("set_wifi_policy", "trust_current_wifi", "forget_trusted_wifi")
+        val setting = wifiSetting || command in setOf("set_connection_preferences", "android_set_reconnect")
         var previousHandle=-1
         var previousPhase="unknown"
         var handoff=false
@@ -409,9 +423,11 @@ object Controller {
                     "connect_saved"
                 } else command
                 var response = Native.call(effective, args.toString(), generation)
-                if (setting && JSONObject(response).has("ok")) synchronized(this) {
+                if (wifiSetting || command=="remove_server") { if (JSONObject(response).has("ok")) WifiAutomation.policyChanged() }
+                else if (setting && JSONObject(response).has("ok")) synchronized(this) {
                     applyReconnectPreference(args.getString("serverId"), JSONObject(response).getJSONObject("ok").getJSONObject("policy").getBoolean("automatic_reconnect"))
                 }
+                if(command=="get_wifi_policy") response=WifiAutomation.decorate(response)
                 if(command=="android_set_quick_profile" && JSONObject(response).has("ok")) preferences.edit().putString("profile",args.getString("serverId")).commit()
                 if(command=="remove_server" && JSONObject(response).has("ok")) {
                     val removed=args.getString("serverId")
@@ -489,6 +505,8 @@ object Controller {
                 publish()
                 finishIfIdle()
             }
+            // A finished session, task or save can leave Wi-Fi without a VPN; checks during it saw the controller busy.
+            if (!readOnly) WifiAutomation.changed()
             try { callback.complete(result) } catch (_: Exception) { /* UI lifetime does not own this operation. */ }
         } } catch (_:java.util.concurrent.RejectedExecutionException) {
             synchronized(this) {
@@ -549,6 +567,7 @@ object Controller {
         VpnNotifications.clearFailure(context)
         publish()
         finishIfIdle()
+        WifiAutomation.changed()
     }
     @Synchronized fun restart(systemStart:Boolean=false) {
         // Android 10's isAlwaysOn() is false until the caller has established a
@@ -583,6 +602,7 @@ object Controller {
             }
             publish()
         }
+        WifiAutomation.changed()
     }
     @Synchronized private fun refreshStatistics() {
         if (handle < 0) {

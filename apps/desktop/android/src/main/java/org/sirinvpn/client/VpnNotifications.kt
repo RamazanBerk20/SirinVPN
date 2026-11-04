@@ -15,6 +15,8 @@ object VpnNotifications {
     const val CHANNEL = "vpn_v2"
     const val MAINTENANCE_CHANNEL = "maintenance_v2"
     const val UPDATE_CHANNEL = "updates_v2"
+    // The _v2 suffix is the channel migration's convention; there was never an unsuffixed Wi-Fi channel.
+    const val WIFI_CHANNEL = "wifi_v2"
     private var lastState=""
     private var lastRx=0L
     private var lastTx=0L
@@ -32,6 +34,11 @@ object VpnNotifications {
             },
             NotificationChannel(UPDATE_CHANNEL, context.getString(R.string.notification_channel_updates), NotificationManager.IMPORTANCE_DEFAULT).apply {
                 description = context.getString(R.string.notification_channel_updates_description)
+            },
+            // Minimum importance: no status bar icon or sound while auto-connect waits on Wi-Fi with the VPN off.
+            NotificationChannel(WIFI_CHANNEL, context.getString(R.string.notification_channel_wifi), NotificationManager.IMPORTANCE_MIN).apply {
+                description = context.getString(R.string.notification_channel_wifi_description); setSound(null, null); enableVibration(false)
+                lockscreenVisibility = Notification.VISIBILITY_PRIVATE
             })
         for (channel in channels) {
             val oldId = channel.id.removeSuffix("_v2")

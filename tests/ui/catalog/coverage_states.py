@@ -8,9 +8,10 @@ from workflows import check, SOURCE
 
 NTFY = 'https://ntfy.example/sirin-alerts'
 BOTH = ('desktop', 'mobile')
-# Startup, tray, window, Wi-Fi, SSH agent, app launching and desktop installers exist only on the desktop.
-DESKTOP_ONLY = {'launch-minimized-enabled', 'start-on-system-startup-enabled', 'close-to-tray-enabled', 'startup-service-status-unavailable'}
-DESKTOP_FAMILIES = {'wifi'}
+# Startup, tray, window, SSH agent, app launching and desktop installers exist only on the desktop,
+# and so do OS names for trusted Wi-Fi that isn't the current network (Android shows only the current one).
+DESKTOP_ONLY = {'launch-minimized-enabled', 'start-on-system-startup-enabled', 'close-to-tray-enabled', 'startup-service-status-unavailable',
+                'os-wifi-names-existing-trust-records', 'os-wifi-names-unavailable'}
 DESKTOP_CONTROLS = {'SSH agent', 'Review component', 'Program', 'Launch arguments', 'Restore AppImage', 'Connect and activate', 'Check for updates', 'Copy VPN address', 'Kill switch', 'Enlarge invitation QR code', 'Enlarge recovery key QR code'}
 # The first-launch choices: the original desktop segmented labels, and the list titles both layouts now share.
 MODES = {'My VPS': 'Set up my VPS', 'Invitation': 'Use an invitation', 'Backup': 'Restore a backup', 'Recovery key': 'Use a recovery key'}
@@ -24,7 +25,7 @@ def mentions(action, names):
 def adapt(case):
     """Make an original desktop scenario drive the Android layout too, or limit it to the desktop."""
     actions = case['actions']
-    if case['id'] in DESKTOP_ONLY or case['family'] in DESKTOP_FAMILIES or any(mentions(a, DESKTOP_CONTROLS) for a in actions):
+    if case['id'] in DESKTOP_ONLY or any(mentions(a, DESKTOP_CONTROLS) for a in actions):
         case['forms'] = ('desktop',)
     onboarding = case['state'].get('empty') or any(a.get('text') == 'Add server' for a in actions)
     for index, action in enumerate(actions):
@@ -211,6 +212,23 @@ def coverage_states(cases):
     add('android', 'server-picker', [click('Server: My private VPS. Change server')], {'profileCount': 4}, forms=mobile)
     add('android', 'server-picker-long-names', [click('Server: ', False)], {'profileCount': 12, 'longNames': True}, forms=mobile)
     add('android', 'home-long-server-name', [], {'longNames': True}, forms=mobile)
+    # Wi-Fi auto-connect on Android: what the system withholds, and the one action that fixes each.
+    general = settings('', 'general')
+    granted = {'location': 'always', 'location_enabled': True, 'background_restricted': False}
+    hidden = {'can_trust_current': False, 'network_names': None}
+    on = {'policy': {'enabled': True, 'server_id': DID}, 'automation_status': 'trusted', 'current_network': 'trusted_wifi',
+          'trusted_networks': [{'id': 'screenshot-network', 'label': 'Home'}, {'id': 'office-network', 'label': 'Wi-Fi exception'}]}
+    for name, wifi in [
+        ('location-denied', {**hidden, 'android_access': {**granted, 'location': 'denied'}}),
+        ('location-off', {**hidden, 'android_access': {**granted, 'location_enabled': False}}),
+        ('location-while-in-use', {**on, 'android_access': {**granted, 'location': 'while_in_use'}}),
+        ('battery-restricted', {**on, 'android_access': {**granted, 'background_restricted': True}}),
+        ('all-allowed-trusted', {**on, 'android_access': granted}),
+        ('watching-paused', {**on, 'current_network': 'untrusted_wifi', 'automation_status': 'waiting_for_network_change', 'android_access': granted}),
+    ]:
+        add('wifi', 'android-' + name, general, {'wifi': wifi}, forms=mobile)
+    add('wifi', 'android-location-allowed', general + [click('Allow location')], {'wifi': {**hidden, 'android_access': {**granted, 'location': 'denied'}}},
+        forms=mobile, required=['android_wifi_permission'])
 
     # The smallest desktop window (760 px, Tauri's minimum width) hides the sidebar: the Servers tab switches servers.
     narrow = ('desktop-narrow',)

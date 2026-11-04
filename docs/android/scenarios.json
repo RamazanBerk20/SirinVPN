@@ -14194,19 +14194,25 @@
       },
       "roles": "Catalog role: owner; backend authorization remains authoritative. Owner/Admin/Member capability and older-server branches are retained.",
       "source": [
-        "apps/desktop/src/api.ts",
-        "crates/android-runtime/src/commands.rs",
-        "apps/desktop/src/features/settings/",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
-        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiAutomation.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiRule.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiWatchService.kt",
+        "apps/desktop/src/api.ts",
+        "apps/desktop/src/features/settings/",
+        "apps/desktop/src/features/settings/WifiSettings.tsx",
+        "crates/android-runtime/src/commands.rs"
       ],
-      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
-      "status": "platform_restriction",
+      "android_approach": "Shared Wi-Fi settings and the desktop rule on the shared network policy store. Android identifies Wi-Fi by name plus security class, needs precise and \"all the time\" location to see it, and fails safe (untrusted) without; a notice names the missing access. A one-shot Wi-Fi callback wakes the app off Wi-Fi, a silent watcher runs on Wi-Fi with the VPN off. Hidden on Android TV.",
+      "status": "adapted",
       "evidence": [
-        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "apps/desktop/android/src/test/java/org/sirinvpn/client/WifiRuleTest.kt",
+        "apps/desktop/android/src/androidTest/java/org/sirinvpn/client/WifiAutoConnectTest.kt",
+        "apps/desktop/src/features/settings/WifiSettings.test.tsx",
         "docs/android/security-and-platform.md"
       ],
-      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
+      "verification_scope": "Rule, identity and status in JVM tests; settings states in Vitest and the Android catalog capture; API 36 emulator Wi-Fi off/on, trust, Disconnect pause, Location off, app killed, reboot, update and force stop. Physical-phone roaming and OEM battery policies are checked separately.",
       "related_runtime_evidence": []
     },
     "wifi/other-network": {
@@ -14237,19 +14243,25 @@
       },
       "roles": "Catalog role: owner; backend authorization remains authoritative. Owner/Admin/Member capability and older-server branches are retained.",
       "source": [
-        "apps/desktop/src/api.ts",
-        "crates/android-runtime/src/commands.rs",
-        "apps/desktop/src/features/settings/",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
-        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiAutomation.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiRule.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiWatchService.kt",
+        "apps/desktop/src/api.ts",
+        "apps/desktop/src/features/settings/",
+        "apps/desktop/src/features/settings/WifiSettings.tsx",
+        "crates/android-runtime/src/commands.rs"
       ],
-      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
-      "status": "platform_restriction",
+      "android_approach": "Shared Wi-Fi settings and the desktop rule on the shared network policy store. Android identifies Wi-Fi by name plus security class, needs precise and \"all the time\" location to see it, and fails safe (untrusted) without; a notice names the missing access. A one-shot Wi-Fi callback wakes the app off Wi-Fi, a silent watcher runs on Wi-Fi with the VPN off. Hidden on Android TV.",
+      "status": "adapted",
       "evidence": [
-        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "apps/desktop/android/src/test/java/org/sirinvpn/client/WifiRuleTest.kt",
+        "apps/desktop/android/src/androidTest/java/org/sirinvpn/client/WifiAutoConnectTest.kt",
+        "apps/desktop/src/features/settings/WifiSettings.test.tsx",
         "docs/android/security-and-platform.md"
       ],
-      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
+      "verification_scope": "Rule, identity and status in JVM tests; settings states in Vitest and the Android catalog capture; API 36 emulator Wi-Fi off/on, trust, Disconnect pause, Location off, app killed, reboot, update and force stop. Physical-phone roaming and OEM battery policies are checked separately.",
       "related_runtime_evidence": []
     },
     "wifi/wifi-unavailable": {
@@ -14280,19 +14292,25 @@
       },
       "roles": "Catalog role: owner; backend authorization remains authoritative. Owner/Admin/Member capability and older-server branches are retained.",
       "source": [
-        "apps/desktop/src/api.ts",
-        "crates/android-runtime/src/commands.rs",
-        "apps/desktop/src/features/settings/",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
-        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiAutomation.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiRule.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiWatchService.kt",
+        "apps/desktop/src/api.ts",
+        "apps/desktop/src/features/settings/",
+        "apps/desktop/src/features/settings/WifiSettings.tsx",
+        "crates/android-runtime/src/commands.rs"
       ],
-      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
-      "status": "platform_restriction",
+      "android_approach": "Shared Wi-Fi settings and the desktop rule on the shared network policy store. Android identifies Wi-Fi by name plus security class, needs precise and \"all the time\" location to see it, and fails safe (untrusted) without; a notice names the missing access. A one-shot Wi-Fi callback wakes the app off Wi-Fi, a silent watcher runs on Wi-Fi with the VPN off. Hidden on Android TV.",
+      "status": "adapted",
       "evidence": [
-        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "apps/desktop/android/src/test/java/org/sirinvpn/client/WifiRuleTest.kt",
+        "apps/desktop/android/src/androidTest/java/org/sirinvpn/client/WifiAutoConnectTest.kt",
+        "apps/desktop/src/features/settings/WifiSettings.test.tsx",
         "docs/android/security-and-platform.md"
       ],
-      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
+      "verification_scope": "Rule, identity and status in JVM tests; settings states in Vitest and the Android catalog capture; API 36 emulator Wi-Fi off/on, trust, Disconnect pause, Location off, app killed, reboot, update and force stop. Physical-phone roaming and OEM battery policies are checked separately.",
       "related_runtime_evidence": []
     },
     "wifi/recognition-allowed": {
@@ -14323,19 +14341,25 @@
       },
       "roles": "Catalog role: owner; backend authorization remains authoritative. Owner/Admin/Member capability and older-server branches are retained.",
       "source": [
-        "apps/desktop/src/api.ts",
-        "crates/android-runtime/src/commands.rs",
-        "apps/desktop/src/features/settings/",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
-        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiAutomation.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiRule.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiWatchService.kt",
+        "apps/desktop/src/api.ts",
+        "apps/desktop/src/features/settings/",
+        "apps/desktop/src/features/settings/WifiSettings.tsx",
+        "crates/android-runtime/src/commands.rs"
       ],
-      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
-      "status": "platform_restriction",
+      "android_approach": "Shared Wi-Fi settings and the desktop rule on the shared network policy store. Android identifies Wi-Fi by name plus security class, needs precise and \"all the time\" location to see it, and fails safe (untrusted) without; a notice names the missing access. A one-shot Wi-Fi callback wakes the app off Wi-Fi, a silent watcher runs on Wi-Fi with the VPN off. Hidden on Android TV.",
+      "status": "adapted",
       "evidence": [
-        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "apps/desktop/android/src/test/java/org/sirinvpn/client/WifiRuleTest.kt",
+        "apps/desktop/android/src/androidTest/java/org/sirinvpn/client/WifiAutoConnectTest.kt",
+        "apps/desktop/src/features/settings/WifiSettings.test.tsx",
         "docs/android/security-and-platform.md"
       ],
-      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
+      "verification_scope": "Rule, identity and status in JVM tests; settings states in Vitest and the Android catalog capture; API 36 emulator Wi-Fi off/on, trust, Disconnect pause, Location off, app killed, reboot, update and force stop. Physical-phone roaming and OEM battery policies are checked separately.",
       "related_runtime_evidence": []
     },
     "wifi/automation-armed": {
@@ -14370,19 +14394,25 @@
       },
       "roles": "Catalog role: owner; backend authorization remains authoritative. Owner/Admin/Member capability and older-server branches are retained.",
       "source": [
-        "apps/desktop/src/api.ts",
-        "crates/android-runtime/src/commands.rs",
-        "apps/desktop/src/features/settings/",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
-        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiAutomation.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiRule.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiWatchService.kt",
+        "apps/desktop/src/api.ts",
+        "apps/desktop/src/features/settings/",
+        "apps/desktop/src/features/settings/WifiSettings.tsx",
+        "crates/android-runtime/src/commands.rs"
       ],
-      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
-      "status": "platform_restriction",
+      "android_approach": "Shared Wi-Fi settings and the desktop rule on the shared network policy store. Android identifies Wi-Fi by name plus security class, needs precise and \"all the time\" location to see it, and fails safe (untrusted) without; a notice names the missing access. A one-shot Wi-Fi callback wakes the app off Wi-Fi, a silent watcher runs on Wi-Fi with the VPN off. Hidden on Android TV.",
+      "status": "adapted",
       "evidence": [
-        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "apps/desktop/android/src/test/java/org/sirinvpn/client/WifiRuleTest.kt",
+        "apps/desktop/android/src/androidTest/java/org/sirinvpn/client/WifiAutoConnectTest.kt",
+        "apps/desktop/src/features/settings/WifiSettings.test.tsx",
         "docs/android/security-and-platform.md"
       ],
-      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
+      "verification_scope": "Rule, identity and status in JVM tests; settings states in Vitest and the Android catalog capture; API 36 emulator Wi-Fi off/on, trust, Disconnect pause, Location off, app killed, reboot, update and force stop. Physical-phone roaming and OEM battery policies are checked separately.",
       "related_runtime_evidence": []
     },
     "wifi/automation-paused": {
@@ -14418,19 +14448,25 @@
       },
       "roles": "Catalog role: owner; backend authorization remains authoritative. Owner/Admin/Member capability and older-server branches are retained.",
       "source": [
-        "apps/desktop/src/api.ts",
-        "crates/android-runtime/src/commands.rs",
-        "apps/desktop/src/features/settings/",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
-        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiAutomation.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiRule.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiWatchService.kt",
+        "apps/desktop/src/api.ts",
+        "apps/desktop/src/features/settings/",
+        "apps/desktop/src/features/settings/WifiSettings.tsx",
+        "crates/android-runtime/src/commands.rs"
       ],
-      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
-      "status": "platform_restriction",
+      "android_approach": "Shared Wi-Fi settings and the desktop rule on the shared network policy store. Android identifies Wi-Fi by name plus security class, needs precise and \"all the time\" location to see it, and fails safe (untrusted) without; a notice names the missing access. A one-shot Wi-Fi callback wakes the app off Wi-Fi, a silent watcher runs on Wi-Fi with the VPN off. Hidden on Android TV.",
+      "status": "adapted",
       "evidence": [
-        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "apps/desktop/android/src/test/java/org/sirinvpn/client/WifiRuleTest.kt",
+        "apps/desktop/android/src/androidTest/java/org/sirinvpn/client/WifiAutoConnectTest.kt",
+        "apps/desktop/src/features/settings/WifiSettings.test.tsx",
         "docs/android/security-and-platform.md"
       ],
-      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
+      "verification_scope": "Rule, identity and status in JVM tests; settings states in Vitest and the Android catalog capture; API 36 emulator Wi-Fi off/on, trust, Disconnect pause, Location off, app killed, reboot, update and force stop. Physical-phone roaming and OEM battery policies are checked separately.",
       "related_runtime_evidence": []
     },
     "wifi/recognition-unsupported": {
@@ -14459,19 +14495,25 @@
       },
       "roles": "Catalog role: owner; backend authorization remains authoritative. Owner/Admin/Member capability and older-server branches are retained.",
       "source": [
-        "apps/desktop/src/api.ts",
-        "crates/android-runtime/src/commands.rs",
-        "apps/desktop/src/features/settings/",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
-        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiAutomation.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiRule.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiWatchService.kt",
+        "apps/desktop/src/api.ts",
+        "apps/desktop/src/features/settings/",
+        "apps/desktop/src/features/settings/WifiSettings.tsx",
+        "crates/android-runtime/src/commands.rs"
       ],
-      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
-      "status": "platform_restriction",
+      "android_approach": "Shared Wi-Fi settings and the desktop rule on the shared network policy store. Android identifies Wi-Fi by name plus security class, needs precise and \"all the time\" location to see it, and fails safe (untrusted) without; a notice names the missing access. A one-shot Wi-Fi callback wakes the app off Wi-Fi, a silent watcher runs on Wi-Fi with the VPN off. Hidden on Android TV.",
+      "status": "adapted",
       "evidence": [
-        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "apps/desktop/android/src/test/java/org/sirinvpn/client/WifiRuleTest.kt",
+        "apps/desktop/android/src/androidTest/java/org/sirinvpn/client/WifiAutoConnectTest.kt",
+        "apps/desktop/src/features/settings/WifiSettings.test.tsx",
         "docs/android/security-and-platform.md"
       ],
-      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
+      "verification_scope": "Rule, identity and status in JVM tests; settings states in Vitest and the Android catalog capture; API 36 emulator Wi-Fi off/on, trust, Disconnect pause, Location off, app killed, reboot, update and force stop. Physical-phone roaming and OEM battery policies are checked separately.",
       "related_runtime_evidence": []
     },
     "wifi/refresh-network-in-progress": {
@@ -14496,19 +14538,25 @@
       "fixture_state": {},
       "roles": "Catalog role: owner; backend authorization remains authoritative. Owner/Admin/Member capability and older-server branches are retained.",
       "source": [
-        "apps/desktop/src/api.ts",
-        "crates/android-runtime/src/commands.rs",
-        "apps/desktop/src/features/settings/",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
-        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiAutomation.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiRule.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiWatchService.kt",
+        "apps/desktop/src/api.ts",
+        "apps/desktop/src/features/settings/",
+        "apps/desktop/src/features/settings/WifiSettings.tsx",
+        "crates/android-runtime/src/commands.rs"
       ],
-      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
-      "status": "platform_restriction",
+      "android_approach": "Shared Wi-Fi settings and the desktop rule on the shared network policy store. Android identifies Wi-Fi by name plus security class, needs precise and \"all the time\" location to see it, and fails safe (untrusted) without; a notice names the missing access. A one-shot Wi-Fi callback wakes the app off Wi-Fi, a silent watcher runs on Wi-Fi with the VPN off. Hidden on Android TV.",
+      "status": "adapted",
       "evidence": [
-        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "apps/desktop/android/src/test/java/org/sirinvpn/client/WifiRuleTest.kt",
+        "apps/desktop/android/src/androidTest/java/org/sirinvpn/client/WifiAutoConnectTest.kt",
+        "apps/desktop/src/features/settings/WifiSettings.test.tsx",
         "docs/android/security-and-platform.md"
       ],
-      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
+      "verification_scope": "Rule, identity and status in JVM tests; settings states in Vitest and the Android catalog capture; API 36 emulator Wi-Fi off/on, trust, Disconnect pause, Location off, app killed, reboot, update and force stop. Physical-phone roaming and OEM battery policies are checked separately.",
       "related_runtime_evidence": []
     },
     "wifi/refresh-network-failed": {
@@ -14533,19 +14581,25 @@
       "fixture_state": {},
       "roles": "Catalog role: owner; backend authorization remains authoritative. Owner/Admin/Member capability and older-server branches are retained.",
       "source": [
-        "apps/desktop/src/api.ts",
-        "crates/android-runtime/src/commands.rs",
-        "apps/desktop/src/features/settings/",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
-        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiAutomation.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiRule.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiWatchService.kt",
+        "apps/desktop/src/api.ts",
+        "apps/desktop/src/features/settings/",
+        "apps/desktop/src/features/settings/WifiSettings.tsx",
+        "crates/android-runtime/src/commands.rs"
       ],
-      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
-      "status": "platform_restriction",
+      "android_approach": "Shared Wi-Fi settings and the desktop rule on the shared network policy store. Android identifies Wi-Fi by name plus security class, needs precise and \"all the time\" location to see it, and fails safe (untrusted) without; a notice names the missing access. A one-shot Wi-Fi callback wakes the app off Wi-Fi, a silent watcher runs on Wi-Fi with the VPN off. Hidden on Android TV.",
+      "status": "adapted",
       "evidence": [
-        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "apps/desktop/android/src/test/java/org/sirinvpn/client/WifiRuleTest.kt",
+        "apps/desktop/android/src/androidTest/java/org/sirinvpn/client/WifiAutoConnectTest.kt",
+        "apps/desktop/src/features/settings/WifiSettings.test.tsx",
         "docs/android/security-and-platform.md"
       ],
-      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
+      "verification_scope": "Rule, identity and status in JVM tests; settings states in Vitest and the Android catalog capture; API 36 emulator Wi-Fi off/on, trust, Disconnect pause, Location off, app killed, reboot, update and force stop. Physical-phone roaming and OEM battery policies are checked separately.",
       "related_runtime_evidence": []
     },
     "wifi/refresh-network-completed": {
@@ -14570,19 +14624,25 @@
       "fixture_state": {},
       "roles": "Catalog role: owner; backend authorization remains authoritative. Owner/Admin/Member capability and older-server branches are retained.",
       "source": [
-        "apps/desktop/src/api.ts",
-        "crates/android-runtime/src/commands.rs",
-        "apps/desktop/src/features/settings/",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
-        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiAutomation.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiRule.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiWatchService.kt",
+        "apps/desktop/src/api.ts",
+        "apps/desktop/src/features/settings/",
+        "apps/desktop/src/features/settings/WifiSettings.tsx",
+        "crates/android-runtime/src/commands.rs"
       ],
-      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
-      "status": "platform_restriction",
+      "android_approach": "Shared Wi-Fi settings and the desktop rule on the shared network policy store. Android identifies Wi-Fi by name plus security class, needs precise and \"all the time\" location to see it, and fails safe (untrusted) without; a notice names the missing access. A one-shot Wi-Fi callback wakes the app off Wi-Fi, a silent watcher runs on Wi-Fi with the VPN off. Hidden on Android TV.",
+      "status": "adapted",
       "evidence": [
-        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "apps/desktop/android/src/test/java/org/sirinvpn/client/WifiRuleTest.kt",
+        "apps/desktop/android/src/androidTest/java/org/sirinvpn/client/WifiAutoConnectTest.kt",
+        "apps/desktop/src/features/settings/WifiSettings.test.tsx",
         "docs/android/security-and-platform.md"
       ],
-      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
+      "verification_scope": "Rule, identity and status in JVM tests; settings states in Vitest and the Android catalog capture; API 36 emulator Wi-Fi off/on, trust, Disconnect pause, Location off, app killed, reboot, update and force stop. Physical-phone roaming and OEM battery policies are checked separately.",
       "related_runtime_evidence": []
     },
     "join/invitation-code-entered": {
@@ -31043,19 +31103,25 @@
       },
       "roles": "Catalog role: owner; backend authorization remains authoritative. Owner/Admin/Member capability and older-server branches are retained.",
       "source": [
-        "apps/desktop/src/api.ts",
-        "crates/android-runtime/src/commands.rs",
-        "apps/desktop/src/features/settings/",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
-        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiAutomation.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiRule.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiWatchService.kt",
+        "apps/desktop/src/api.ts",
+        "apps/desktop/src/features/settings/",
+        "apps/desktop/src/features/settings/WifiSettings.tsx",
+        "crates/android-runtime/src/commands.rs"
       ],
-      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
-      "status": "platform_restriction",
+      "android_approach": "Shared Wi-Fi settings and the desktop rule on the shared network policy store. Android identifies Wi-Fi by name plus security class, needs precise and \"all the time\" location to see it, and fails safe (untrusted) without; a notice names the missing access. A one-shot Wi-Fi callback wakes the app off Wi-Fi, a silent watcher runs on Wi-Fi with the VPN off. Hidden on Android TV.",
+      "status": "adapted",
       "evidence": [
-        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "apps/desktop/android/src/test/java/org/sirinvpn/client/WifiRuleTest.kt",
+        "apps/desktop/android/src/androidTest/java/org/sirinvpn/client/WifiAutoConnectTest.kt",
+        "apps/desktop/src/features/settings/WifiSettings.test.tsx",
         "docs/android/security-and-platform.md"
       ],
-      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
+      "verification_scope": "Rule, identity and status in JVM tests; settings states in Vitest and the Android catalog capture; API 36 emulator Wi-Fi off/on, trust, Disconnect pause, Location off, app killed, reboot, update and force stop. Physical-phone roaming and OEM battery policies are checked separately.",
       "related_runtime_evidence": []
     },
     "wifi/automation-connecting": {
@@ -31088,19 +31154,25 @@
       },
       "roles": "Catalog role: owner; backend authorization remains authoritative. Owner/Admin/Member capability and older-server branches are retained.",
       "source": [
-        "apps/desktop/src/api.ts",
-        "crates/android-runtime/src/commands.rs",
-        "apps/desktop/src/features/settings/",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
-        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiAutomation.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiRule.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiWatchService.kt",
+        "apps/desktop/src/api.ts",
+        "apps/desktop/src/features/settings/",
+        "apps/desktop/src/features/settings/WifiSettings.tsx",
+        "crates/android-runtime/src/commands.rs"
       ],
-      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
-      "status": "platform_restriction",
+      "android_approach": "Shared Wi-Fi settings and the desktop rule on the shared network policy store. Android identifies Wi-Fi by name plus security class, needs precise and \"all the time\" location to see it, and fails safe (untrusted) without; a notice names the missing access. A one-shot Wi-Fi callback wakes the app off Wi-Fi, a silent watcher runs on Wi-Fi with the VPN off. Hidden on Android TV.",
+      "status": "adapted",
       "evidence": [
-        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "apps/desktop/android/src/test/java/org/sirinvpn/client/WifiRuleTest.kt",
+        "apps/desktop/android/src/androidTest/java/org/sirinvpn/client/WifiAutoConnectTest.kt",
+        "apps/desktop/src/features/settings/WifiSettings.test.tsx",
         "docs/android/security-and-platform.md"
       ],
-      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
+      "verification_scope": "Rule, identity and status in JVM tests; settings states in Vitest and the Android catalog capture; API 36 emulator Wi-Fi off/on, trust, Disconnect pause, Location off, app killed, reboot, update and force stop. Physical-phone roaming and OEM battery policies are checked separately.",
       "related_runtime_evidence": []
     },
     "wifi/automation-session-active": {
@@ -31133,19 +31205,25 @@
       },
       "roles": "Catalog role: owner; backend authorization remains authoritative. Owner/Admin/Member capability and older-server branches are retained.",
       "source": [
-        "apps/desktop/src/api.ts",
-        "crates/android-runtime/src/commands.rs",
-        "apps/desktop/src/features/settings/",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
-        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiAutomation.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiRule.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiWatchService.kt",
+        "apps/desktop/src/api.ts",
+        "apps/desktop/src/features/settings/",
+        "apps/desktop/src/features/settings/WifiSettings.tsx",
+        "crates/android-runtime/src/commands.rs"
       ],
-      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
-      "status": "platform_restriction",
+      "android_approach": "Shared Wi-Fi settings and the desktop rule on the shared network policy store. Android identifies Wi-Fi by name plus security class, needs precise and \"all the time\" location to see it, and fails safe (untrusted) without; a notice names the missing access. A one-shot Wi-Fi callback wakes the app off Wi-Fi, a silent watcher runs on Wi-Fi with the VPN off. Hidden on Android TV.",
+      "status": "adapted",
       "evidence": [
-        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "apps/desktop/android/src/test/java/org/sirinvpn/client/WifiRuleTest.kt",
+        "apps/desktop/android/src/androidTest/java/org/sirinvpn/client/WifiAutoConnectTest.kt",
+        "apps/desktop/src/features/settings/WifiSettings.test.tsx",
         "docs/android/security-and-platform.md"
       ],
-      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
+      "verification_scope": "Rule, identity and status in JVM tests; settings states in Vitest and the Android catalog capture; API 36 emulator Wi-Fi off/on, trust, Disconnect pause, Location off, app killed, reboot, update and force stop. Physical-phone roaming and OEM battery policies are checked separately.",
       "related_runtime_evidence": []
     },
     "wifi/automation-needs-attention": {
@@ -31178,19 +31256,25 @@
       },
       "roles": "Catalog role: owner; backend authorization remains authoritative. Owner/Admin/Member capability and older-server branches are retained.",
       "source": [
-        "apps/desktop/src/api.ts",
-        "crates/android-runtime/src/commands.rs",
-        "apps/desktop/src/features/settings/",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
-        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiAutomation.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiRule.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiWatchService.kt",
+        "apps/desktop/src/api.ts",
+        "apps/desktop/src/features/settings/",
+        "apps/desktop/src/features/settings/WifiSettings.tsx",
+        "crates/android-runtime/src/commands.rs"
       ],
-      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
-      "status": "platform_restriction",
+      "android_approach": "Shared Wi-Fi settings and the desktop rule on the shared network policy store. Android identifies Wi-Fi by name plus security class, needs precise and \"all the time\" location to see it, and fails safe (untrusted) without; a notice names the missing access. A one-shot Wi-Fi callback wakes the app off Wi-Fi, a silent watcher runs on Wi-Fi with the VPN off. Hidden on Android TV.",
+      "status": "adapted",
       "evidence": [
-        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "apps/desktop/android/src/test/java/org/sirinvpn/client/WifiRuleTest.kt",
+        "apps/desktop/android/src/androidTest/java/org/sirinvpn/client/WifiAutoConnectTest.kt",
+        "apps/desktop/src/features/settings/WifiSettings.test.tsx",
         "docs/android/security-and-platform.md"
       ],
-      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
+      "verification_scope": "Rule, identity and status in JVM tests; settings states in Vitest and the Android catalog capture; API 36 emulator Wi-Fi off/on, trust, Disconnect pause, Location off, app killed, reboot, update and force stop. Physical-phone roaming and OEM battery policies are checked separately.",
       "related_runtime_evidence": []
     },
     "wifi/automation-needs-authorization": {
@@ -31223,19 +31307,25 @@
       },
       "roles": "Catalog role: owner; backend authorization remains authoritative. Owner/Admin/Member capability and older-server branches are retained.",
       "source": [
-        "apps/desktop/src/api.ts",
-        "crates/android-runtime/src/commands.rs",
-        "apps/desktop/src/features/settings/",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
-        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiAutomation.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiRule.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiWatchService.kt",
+        "apps/desktop/src/api.ts",
+        "apps/desktop/src/features/settings/",
+        "apps/desktop/src/features/settings/WifiSettings.tsx",
+        "crates/android-runtime/src/commands.rs"
       ],
-      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
-      "status": "platform_restriction",
+      "android_approach": "Shared Wi-Fi settings and the desktop rule on the shared network policy store. Android identifies Wi-Fi by name plus security class, needs precise and \"all the time\" location to see it, and fails safe (untrusted) without; a notice names the missing access. A one-shot Wi-Fi callback wakes the app off Wi-Fi, a silent watcher runs on Wi-Fi with the VPN off. Hidden on Android TV.",
+      "status": "adapted",
       "evidence": [
-        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "apps/desktop/android/src/test/java/org/sirinvpn/client/WifiRuleTest.kt",
+        "apps/desktop/android/src/androidTest/java/org/sirinvpn/client/WifiAutoConnectTest.kt",
+        "apps/desktop/src/features/settings/WifiSettings.test.tsx",
         "docs/android/security-and-platform.md"
       ],
-      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
+      "verification_scope": "Rule, identity and status in JVM tests; settings states in Vitest and the Android catalog capture; API 36 emulator Wi-Fi off/on, trust, Disconnect pause, Location off, app killed, reboot, update and force stop. Physical-phone roaming and OEM battery policies are checked separately.",
       "related_runtime_evidence": []
     },
     "wifi/network-identity-unavailable": {
@@ -31265,19 +31355,25 @@
       },
       "roles": "Catalog role: owner; backend authorization remains authoritative. Owner/Admin/Member capability and older-server branches are retained.",
       "source": [
-        "apps/desktop/src/api.ts",
-        "crates/android-runtime/src/commands.rs",
-        "apps/desktop/src/features/settings/",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
-        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiAutomation.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiRule.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiWatchService.kt",
+        "apps/desktop/src/api.ts",
+        "apps/desktop/src/features/settings/",
+        "apps/desktop/src/features/settings/WifiSettings.tsx",
+        "crates/android-runtime/src/commands.rs"
       ],
-      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
-      "status": "platform_restriction",
+      "android_approach": "Shared Wi-Fi settings and the desktop rule on the shared network policy store. Android identifies Wi-Fi by name plus security class, needs precise and \"all the time\" location to see it, and fails safe (untrusted) without; a notice names the missing access. A one-shot Wi-Fi callback wakes the app off Wi-Fi, a silent watcher runs on Wi-Fi with the VPN off. Hidden on Android TV.",
+      "status": "adapted",
       "evidence": [
-        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "apps/desktop/android/src/test/java/org/sirinvpn/client/WifiRuleTest.kt",
+        "apps/desktop/android/src/androidTest/java/org/sirinvpn/client/WifiAutoConnectTest.kt",
+        "apps/desktop/src/features/settings/WifiSettings.test.tsx",
         "docs/android/security-and-platform.md"
       ],
-      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
+      "verification_scope": "Rule, identity and status in JVM tests; settings states in Vitest and the Android catalog capture; API 36 emulator Wi-Fi off/on, trust, Disconnect pause, Location off, app killed, reboot, update and force stop. Physical-phone roaming and OEM battery policies are checked separately.",
       "related_runtime_evidence": []
     },
     "wifi/network-changed-before-trust": {
@@ -31303,19 +31399,25 @@
       "fixture_state": {},
       "roles": "Catalog role: owner; backend authorization remains authoritative. Owner/Admin/Member capability and older-server branches are retained.",
       "source": [
-        "apps/desktop/src/api.ts",
-        "crates/android-runtime/src/commands.rs",
-        "apps/desktop/src/features/settings/",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
-        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiAutomation.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiRule.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiWatchService.kt",
+        "apps/desktop/src/api.ts",
+        "apps/desktop/src/features/settings/",
+        "apps/desktop/src/features/settings/WifiSettings.tsx",
+        "crates/android-runtime/src/commands.rs"
       ],
-      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
-      "status": "platform_restriction",
+      "android_approach": "Shared Wi-Fi settings and the desktop rule on the shared network policy store. Android identifies Wi-Fi by name plus security class, needs precise and \"all the time\" location to see it, and fails safe (untrusted) without; a notice names the missing access. A one-shot Wi-Fi callback wakes the app off Wi-Fi, a silent watcher runs on Wi-Fi with the VPN off. Hidden on Android TV.",
+      "status": "adapted",
       "evidence": [
-        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "apps/desktop/android/src/test/java/org/sirinvpn/client/WifiRuleTest.kt",
+        "apps/desktop/android/src/androidTest/java/org/sirinvpn/client/WifiAutoConnectTest.kt",
+        "apps/desktop/src/features/settings/WifiSettings.test.tsx",
         "docs/android/security-and-platform.md"
       ],
-      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
+      "verification_scope": "Rule, identity and status in JVM tests; settings states in Vitest and the Android catalog capture; API 36 emulator Wi-Fi off/on, trust, Disconnect pause, Location off, app killed, reboot, update and force stop. Physical-phone roaming and OEM battery policies are checked separately.",
       "related_runtime_evidence": []
     },
     "wifi/enable-wifi-automation-in-progress": {
@@ -31341,19 +31443,25 @@
       "fixture_state": {},
       "roles": "Catalog role: owner; backend authorization remains authoritative. Owner/Admin/Member capability and older-server branches are retained.",
       "source": [
-        "apps/desktop/src/api.ts",
-        "crates/android-runtime/src/commands.rs",
-        "apps/desktop/src/features/settings/",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
-        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiAutomation.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiRule.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiWatchService.kt",
+        "apps/desktop/src/api.ts",
+        "apps/desktop/src/features/settings/",
+        "apps/desktop/src/features/settings/WifiSettings.tsx",
+        "crates/android-runtime/src/commands.rs"
       ],
-      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
-      "status": "platform_restriction",
+      "android_approach": "Shared Wi-Fi settings and the desktop rule on the shared network policy store. Android identifies Wi-Fi by name plus security class, needs precise and \"all the time\" location to see it, and fails safe (untrusted) without; a notice names the missing access. A one-shot Wi-Fi callback wakes the app off Wi-Fi, a silent watcher runs on Wi-Fi with the VPN off. Hidden on Android TV.",
+      "status": "adapted",
       "evidence": [
-        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "apps/desktop/android/src/test/java/org/sirinvpn/client/WifiRuleTest.kt",
+        "apps/desktop/android/src/androidTest/java/org/sirinvpn/client/WifiAutoConnectTest.kt",
+        "apps/desktop/src/features/settings/WifiSettings.test.tsx",
         "docs/android/security-and-platform.md"
       ],
-      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
+      "verification_scope": "Rule, identity and status in JVM tests; settings states in Vitest and the Android catalog capture; API 36 emulator Wi-Fi off/on, trust, Disconnect pause, Location off, app killed, reboot, update and force stop. Physical-phone roaming and OEM battery policies are checked separately.",
       "related_runtime_evidence": []
     },
     "wifi/enable-wifi-automation-failed": {
@@ -31379,19 +31487,25 @@
       "fixture_state": {},
       "roles": "Catalog role: owner; backend authorization remains authoritative. Owner/Admin/Member capability and older-server branches are retained.",
       "source": [
-        "apps/desktop/src/api.ts",
-        "crates/android-runtime/src/commands.rs",
-        "apps/desktop/src/features/settings/",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
-        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiAutomation.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiRule.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiWatchService.kt",
+        "apps/desktop/src/api.ts",
+        "apps/desktop/src/features/settings/",
+        "apps/desktop/src/features/settings/WifiSettings.tsx",
+        "crates/android-runtime/src/commands.rs"
       ],
-      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
-      "status": "platform_restriction",
+      "android_approach": "Shared Wi-Fi settings and the desktop rule on the shared network policy store. Android identifies Wi-Fi by name plus security class, needs precise and \"all the time\" location to see it, and fails safe (untrusted) without; a notice names the missing access. A one-shot Wi-Fi callback wakes the app off Wi-Fi, a silent watcher runs on Wi-Fi with the VPN off. Hidden on Android TV.",
+      "status": "adapted",
       "evidence": [
-        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "apps/desktop/android/src/test/java/org/sirinvpn/client/WifiRuleTest.kt",
+        "apps/desktop/android/src/androidTest/java/org/sirinvpn/client/WifiAutoConnectTest.kt",
+        "apps/desktop/src/features/settings/WifiSettings.test.tsx",
         "docs/android/security-and-platform.md"
       ],
-      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
+      "verification_scope": "Rule, identity and status in JVM tests; settings states in Vitest and the Android catalog capture; API 36 emulator Wi-Fi off/on, trust, Disconnect pause, Location off, app killed, reboot, update and force stop. Physical-phone roaming and OEM battery policies are checked separately.",
       "related_runtime_evidence": []
     },
     "wifi/enable-wifi-automation-completed": {
@@ -31417,19 +31531,25 @@
       "fixture_state": {},
       "roles": "Catalog role: owner; backend authorization remains authoritative. Owner/Admin/Member capability and older-server branches are retained.",
       "source": [
-        "apps/desktop/src/api.ts",
-        "crates/android-runtime/src/commands.rs",
-        "apps/desktop/src/features/settings/",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
-        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiAutomation.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiRule.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiWatchService.kt",
+        "apps/desktop/src/api.ts",
+        "apps/desktop/src/features/settings/",
+        "apps/desktop/src/features/settings/WifiSettings.tsx",
+        "crates/android-runtime/src/commands.rs"
       ],
-      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
-      "status": "platform_restriction",
+      "android_approach": "Shared Wi-Fi settings and the desktop rule on the shared network policy store. Android identifies Wi-Fi by name plus security class, needs precise and \"all the time\" location to see it, and fails safe (untrusted) without; a notice names the missing access. A one-shot Wi-Fi callback wakes the app off Wi-Fi, a silent watcher runs on Wi-Fi with the VPN off. Hidden on Android TV.",
+      "status": "adapted",
       "evidence": [
-        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "apps/desktop/android/src/test/java/org/sirinvpn/client/WifiRuleTest.kt",
+        "apps/desktop/android/src/androidTest/java/org/sirinvpn/client/WifiAutoConnectTest.kt",
+        "apps/desktop/src/features/settings/WifiSettings.test.tsx",
         "docs/android/security-and-platform.md"
       ],
-      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
+      "verification_scope": "Rule, identity and status in JVM tests; settings states in Vitest and the Android catalog capture; API 36 emulator Wi-Fi off/on, trust, Disconnect pause, Location off, app killed, reboot, update and force stop. Physical-phone roaming and OEM battery policies are checked separately.",
       "related_runtime_evidence": []
     },
     "wifi/trust-current-network-in-progress": {
@@ -31455,19 +31575,25 @@
       "fixture_state": {},
       "roles": "Catalog role: owner; backend authorization remains authoritative. Owner/Admin/Member capability and older-server branches are retained.",
       "source": [
-        "apps/desktop/src/api.ts",
-        "crates/android-runtime/src/commands.rs",
-        "apps/desktop/src/features/settings/",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
-        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiAutomation.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiRule.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiWatchService.kt",
+        "apps/desktop/src/api.ts",
+        "apps/desktop/src/features/settings/",
+        "apps/desktop/src/features/settings/WifiSettings.tsx",
+        "crates/android-runtime/src/commands.rs"
       ],
-      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
-      "status": "platform_restriction",
+      "android_approach": "Shared Wi-Fi settings and the desktop rule on the shared network policy store. Android identifies Wi-Fi by name plus security class, needs precise and \"all the time\" location to see it, and fails safe (untrusted) without; a notice names the missing access. A one-shot Wi-Fi callback wakes the app off Wi-Fi, a silent watcher runs on Wi-Fi with the VPN off. Hidden on Android TV.",
+      "status": "adapted",
       "evidence": [
-        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "apps/desktop/android/src/test/java/org/sirinvpn/client/WifiRuleTest.kt",
+        "apps/desktop/android/src/androidTest/java/org/sirinvpn/client/WifiAutoConnectTest.kt",
+        "apps/desktop/src/features/settings/WifiSettings.test.tsx",
         "docs/android/security-and-platform.md"
       ],
-      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
+      "verification_scope": "Rule, identity and status in JVM tests; settings states in Vitest and the Android catalog capture; API 36 emulator Wi-Fi off/on, trust, Disconnect pause, Location off, app killed, reboot, update and force stop. Physical-phone roaming and OEM battery policies are checked separately.",
       "related_runtime_evidence": []
     },
     "wifi/trust-current-network-failed": {
@@ -31493,19 +31619,25 @@
       "fixture_state": {},
       "roles": "Catalog role: owner; backend authorization remains authoritative. Owner/Admin/Member capability and older-server branches are retained.",
       "source": [
-        "apps/desktop/src/api.ts",
-        "crates/android-runtime/src/commands.rs",
-        "apps/desktop/src/features/settings/",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
-        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiAutomation.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiRule.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiWatchService.kt",
+        "apps/desktop/src/api.ts",
+        "apps/desktop/src/features/settings/",
+        "apps/desktop/src/features/settings/WifiSettings.tsx",
+        "crates/android-runtime/src/commands.rs"
       ],
-      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
-      "status": "platform_restriction",
+      "android_approach": "Shared Wi-Fi settings and the desktop rule on the shared network policy store. Android identifies Wi-Fi by name plus security class, needs precise and \"all the time\" location to see it, and fails safe (untrusted) without; a notice names the missing access. A one-shot Wi-Fi callback wakes the app off Wi-Fi, a silent watcher runs on Wi-Fi with the VPN off. Hidden on Android TV.",
+      "status": "adapted",
       "evidence": [
-        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "apps/desktop/android/src/test/java/org/sirinvpn/client/WifiRuleTest.kt",
+        "apps/desktop/android/src/androidTest/java/org/sirinvpn/client/WifiAutoConnectTest.kt",
+        "apps/desktop/src/features/settings/WifiSettings.test.tsx",
         "docs/android/security-and-platform.md"
       ],
-      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
+      "verification_scope": "Rule, identity and status in JVM tests; settings states in Vitest and the Android catalog capture; API 36 emulator Wi-Fi off/on, trust, Disconnect pause, Location off, app killed, reboot, update and force stop. Physical-phone roaming and OEM battery policies are checked separately.",
       "related_runtime_evidence": []
     },
     "wifi/trust-current-network-completed": {
@@ -31531,19 +31663,25 @@
       "fixture_state": {},
       "roles": "Catalog role: owner; backend authorization remains authoritative. Owner/Admin/Member capability and older-server branches are retained.",
       "source": [
-        "apps/desktop/src/api.ts",
-        "crates/android-runtime/src/commands.rs",
-        "apps/desktop/src/features/settings/",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
-        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiAutomation.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiRule.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiWatchService.kt",
+        "apps/desktop/src/api.ts",
+        "apps/desktop/src/features/settings/",
+        "apps/desktop/src/features/settings/WifiSettings.tsx",
+        "crates/android-runtime/src/commands.rs"
       ],
-      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
-      "status": "platform_restriction",
+      "android_approach": "Shared Wi-Fi settings and the desktop rule on the shared network policy store. Android identifies Wi-Fi by name plus security class, needs precise and \"all the time\" location to see it, and fails safe (untrusted) without; a notice names the missing access. A one-shot Wi-Fi callback wakes the app off Wi-Fi, a silent watcher runs on Wi-Fi with the VPN off. Hidden on Android TV.",
+      "status": "adapted",
       "evidence": [
-        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "apps/desktop/android/src/test/java/org/sirinvpn/client/WifiRuleTest.kt",
+        "apps/desktop/android/src/androidTest/java/org/sirinvpn/client/WifiAutoConnectTest.kt",
+        "apps/desktop/src/features/settings/WifiSettings.test.tsx",
         "docs/android/security-and-platform.md"
       ],
-      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
+      "verification_scope": "Rule, identity and status in JVM tests; settings states in Vitest and the Android catalog capture; API 36 emulator Wi-Fi off/on, trust, Disconnect pause, Location off, app killed, reboot, update and force stop. Physical-phone roaming and OEM battery policies are checked separately.",
       "related_runtime_evidence": []
     },
     "wifi/remove-trusted-network-in-progress": {
@@ -31578,19 +31716,25 @@
       },
       "roles": "Catalog role: owner; backend authorization remains authoritative. Owner/Admin/Member capability and older-server branches are retained.",
       "source": [
-        "apps/desktop/src/api.ts",
-        "crates/android-runtime/src/commands.rs",
-        "apps/desktop/src/features/settings/",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
-        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiAutomation.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiRule.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiWatchService.kt",
+        "apps/desktop/src/api.ts",
+        "apps/desktop/src/features/settings/",
+        "apps/desktop/src/features/settings/WifiSettings.tsx",
+        "crates/android-runtime/src/commands.rs"
       ],
-      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
-      "status": "platform_restriction",
+      "android_approach": "Shared Wi-Fi settings and the desktop rule on the shared network policy store. Android identifies Wi-Fi by name plus security class, needs precise and \"all the time\" location to see it, and fails safe (untrusted) without; a notice names the missing access. A one-shot Wi-Fi callback wakes the app off Wi-Fi, a silent watcher runs on Wi-Fi with the VPN off. Hidden on Android TV.",
+      "status": "adapted",
       "evidence": [
-        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "apps/desktop/android/src/test/java/org/sirinvpn/client/WifiRuleTest.kt",
+        "apps/desktop/android/src/androidTest/java/org/sirinvpn/client/WifiAutoConnectTest.kt",
+        "apps/desktop/src/features/settings/WifiSettings.test.tsx",
         "docs/android/security-and-platform.md"
       ],
-      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
+      "verification_scope": "Rule, identity and status in JVM tests; settings states in Vitest and the Android catalog capture; API 36 emulator Wi-Fi off/on, trust, Disconnect pause, Location off, app killed, reboot, update and force stop. Physical-phone roaming and OEM battery policies are checked separately.",
       "related_runtime_evidence": []
     },
     "wifi/remove-trusted-network-failed": {
@@ -31625,19 +31769,25 @@
       },
       "roles": "Catalog role: owner; backend authorization remains authoritative. Owner/Admin/Member capability and older-server branches are retained.",
       "source": [
-        "apps/desktop/src/api.ts",
-        "crates/android-runtime/src/commands.rs",
-        "apps/desktop/src/features/settings/",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
-        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiAutomation.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiRule.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiWatchService.kt",
+        "apps/desktop/src/api.ts",
+        "apps/desktop/src/features/settings/",
+        "apps/desktop/src/features/settings/WifiSettings.tsx",
+        "crates/android-runtime/src/commands.rs"
       ],
-      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
-      "status": "platform_restriction",
+      "android_approach": "Shared Wi-Fi settings and the desktop rule on the shared network policy store. Android identifies Wi-Fi by name plus security class, needs precise and \"all the time\" location to see it, and fails safe (untrusted) without; a notice names the missing access. A one-shot Wi-Fi callback wakes the app off Wi-Fi, a silent watcher runs on Wi-Fi with the VPN off. Hidden on Android TV.",
+      "status": "adapted",
       "evidence": [
-        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "apps/desktop/android/src/test/java/org/sirinvpn/client/WifiRuleTest.kt",
+        "apps/desktop/android/src/androidTest/java/org/sirinvpn/client/WifiAutoConnectTest.kt",
+        "apps/desktop/src/features/settings/WifiSettings.test.tsx",
         "docs/android/security-and-platform.md"
       ],
-      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
+      "verification_scope": "Rule, identity and status in JVM tests; settings states in Vitest and the Android catalog capture; API 36 emulator Wi-Fi off/on, trust, Disconnect pause, Location off, app killed, reboot, update and force stop. Physical-phone roaming and OEM battery policies are checked separately.",
       "related_runtime_evidence": []
     },
     "wifi/remove-trusted-network-completed": {
@@ -31672,19 +31822,25 @@
       },
       "roles": "Catalog role: owner; backend authorization remains authoritative. Owner/Admin/Member capability and older-server branches are retained.",
       "source": [
-        "apps/desktop/src/api.ts",
-        "crates/android-runtime/src/commands.rs",
-        "apps/desktop/src/features/settings/",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
-        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiAutomation.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiRule.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiWatchService.kt",
+        "apps/desktop/src/api.ts",
+        "apps/desktop/src/features/settings/",
+        "apps/desktop/src/features/settings/WifiSettings.tsx",
+        "crates/android-runtime/src/commands.rs"
       ],
-      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
-      "status": "platform_restriction",
+      "android_approach": "Shared Wi-Fi settings and the desktop rule on the shared network policy store. Android identifies Wi-Fi by name plus security class, needs precise and \"all the time\" location to see it, and fails safe (untrusted) without; a notice names the missing access. A one-shot Wi-Fi callback wakes the app off Wi-Fi, a silent watcher runs on Wi-Fi with the VPN off. Hidden on Android TV.",
+      "status": "adapted",
       "evidence": [
-        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "apps/desktop/android/src/test/java/org/sirinvpn/client/WifiRuleTest.kt",
+        "apps/desktop/android/src/androidTest/java/org/sirinvpn/client/WifiAutoConnectTest.kt",
+        "apps/desktop/src/features/settings/WifiSettings.test.tsx",
         "docs/android/security-and-platform.md"
       ],
-      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
+      "verification_scope": "Rule, identity and status in JVM tests; settings states in Vitest and the Android catalog capture; API 36 emulator Wi-Fi off/on, trust, Disconnect pause, Location off, app killed, reboot, update and force stop. Physical-phone roaming and OEM battery policies are checked separately.",
       "related_runtime_evidence": []
     },
     "wifi/os-wifi-names-existing-trust-records": {
@@ -31728,19 +31884,25 @@
       },
       "roles": "Catalog role: owner; backend authorization remains authoritative. Owner/Admin/Member capability and older-server branches are retained.",
       "source": [
-        "apps/desktop/src/api.ts",
-        "crates/android-runtime/src/commands.rs",
-        "apps/desktop/src/features/settings/",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
-        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiAutomation.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiRule.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiWatchService.kt",
+        "apps/desktop/src/api.ts",
+        "apps/desktop/src/features/settings/",
+        "apps/desktop/src/features/settings/WifiSettings.tsx",
+        "crates/android-runtime/src/commands.rs"
       ],
-      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
-      "status": "platform_restriction",
+      "android_approach": "Shared Wi-Fi settings and the desktop rule on the shared network policy store. Android identifies Wi-Fi by name plus security class, needs precise and \"all the time\" location to see it, and fails safe (untrusted) without; a notice names the missing access. A one-shot Wi-Fi callback wakes the app off Wi-Fi, a silent watcher runs on Wi-Fi with the VPN off. Hidden on Android TV.",
+      "status": "adapted",
       "evidence": [
-        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "apps/desktop/android/src/test/java/org/sirinvpn/client/WifiRuleTest.kt",
+        "apps/desktop/android/src/androidTest/java/org/sirinvpn/client/WifiAutoConnectTest.kt",
+        "apps/desktop/src/features/settings/WifiSettings.test.tsx",
         "docs/android/security-and-platform.md"
       ],
-      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
+      "verification_scope": "Rule, identity and status in JVM tests; settings states in Vitest and the Android catalog capture; API 36 emulator Wi-Fi off/on, trust, Disconnect pause, Location off, app killed, reboot, update and force stop. Physical-phone roaming and OEM battery policies are checked separately.",
       "related_runtime_evidence": []
     },
     "wifi/os-wifi-names-custom-labels": {
@@ -31784,19 +31946,25 @@
       },
       "roles": "Catalog role: owner; backend authorization remains authoritative. Owner/Admin/Member capability and older-server branches are retained.",
       "source": [
-        "apps/desktop/src/api.ts",
-        "crates/android-runtime/src/commands.rs",
-        "apps/desktop/src/features/settings/",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
-        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiAutomation.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiRule.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiWatchService.kt",
+        "apps/desktop/src/api.ts",
+        "apps/desktop/src/features/settings/",
+        "apps/desktop/src/features/settings/WifiSettings.tsx",
+        "crates/android-runtime/src/commands.rs"
       ],
-      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
-      "status": "platform_restriction",
+      "android_approach": "Shared Wi-Fi settings and the desktop rule on the shared network policy store. Android identifies Wi-Fi by name plus security class, needs precise and \"all the time\" location to see it, and fails safe (untrusted) without; a notice names the missing access. A one-shot Wi-Fi callback wakes the app off Wi-Fi, a silent watcher runs on Wi-Fi with the VPN off. Hidden on Android TV.",
+      "status": "adapted",
       "evidence": [
-        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "apps/desktop/android/src/test/java/org/sirinvpn/client/WifiRuleTest.kt",
+        "apps/desktop/android/src/androidTest/java/org/sirinvpn/client/WifiAutoConnectTest.kt",
+        "apps/desktop/src/features/settings/WifiSettings.test.tsx",
         "docs/android/security-and-platform.md"
       ],
-      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
+      "verification_scope": "Rule, identity and status in JVM tests; settings states in Vitest and the Android catalog capture; API 36 emulator Wi-Fi off/on, trust, Disconnect pause, Location off, app killed, reboot, update and force stop. Physical-phone roaming and OEM battery policies are checked separately.",
       "related_runtime_evidence": []
     },
     "wifi/os-wifi-names-unavailable": {
@@ -31837,19 +32005,25 @@
       },
       "roles": "Catalog role: owner; backend authorization remains authoritative. Owner/Admin/Member capability and older-server branches are retained.",
       "source": [
-        "apps/desktop/src/api.ts",
-        "crates/android-runtime/src/commands.rs",
-        "apps/desktop/src/features/settings/",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
-        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiAutomation.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiRule.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiWatchService.kt",
+        "apps/desktop/src/api.ts",
+        "apps/desktop/src/features/settings/",
+        "apps/desktop/src/features/settings/WifiSettings.tsx",
+        "crates/android-runtime/src/commands.rs"
       ],
-      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
-      "status": "platform_restriction",
+      "android_approach": "Shared Wi-Fi settings and the desktop rule on the shared network policy store. Android identifies Wi-Fi by name plus security class, needs precise and \"all the time\" location to see it, and fails safe (untrusted) without; a notice names the missing access. A one-shot Wi-Fi callback wakes the app off Wi-Fi, a silent watcher runs on Wi-Fi with the VPN off. Hidden on Android TV.",
+      "status": "adapted",
       "evidence": [
-        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "apps/desktop/android/src/test/java/org/sirinvpn/client/WifiRuleTest.kt",
+        "apps/desktop/android/src/androidTest/java/org/sirinvpn/client/WifiAutoConnectTest.kt",
+        "apps/desktop/src/features/settings/WifiSettings.test.tsx",
         "docs/android/security-and-platform.md"
       ],
-      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
+      "verification_scope": "Rule, identity and status in JVM tests; settings states in Vitest and the Android catalog capture; API 36 emulator Wi-Fi off/on, trust, Disconnect pause, Location off, app killed, reboot, update and force stop. Physical-phone roaming and OEM battery policies are checked separately.",
       "related_runtime_evidence": []
     },
     "wifi/os-wifi-names-long-and-unicode": {
@@ -31893,19 +32067,25 @@
       },
       "roles": "Catalog role: owner; backend authorization remains authoritative. Owner/Admin/Member capability and older-server branches are retained.",
       "source": [
-        "apps/desktop/src/api.ts",
-        "crates/android-runtime/src/commands.rs",
-        "apps/desktop/src/features/settings/",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
-        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiAutomation.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiRule.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiWatchService.kt",
+        "apps/desktop/src/api.ts",
+        "apps/desktop/src/features/settings/",
+        "apps/desktop/src/features/settings/WifiSettings.tsx",
+        "crates/android-runtime/src/commands.rs"
       ],
-      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
-      "status": "platform_restriction",
+      "android_approach": "Shared Wi-Fi settings and the desktop rule on the shared network policy store. Android identifies Wi-Fi by name plus security class, needs precise and \"all the time\" location to see it, and fails safe (untrusted) without; a notice names the missing access. A one-shot Wi-Fi callback wakes the app off Wi-Fi, a silent watcher runs on Wi-Fi with the VPN off. Hidden on Android TV.",
+      "status": "adapted",
       "evidence": [
-        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "apps/desktop/android/src/test/java/org/sirinvpn/client/WifiRuleTest.kt",
+        "apps/desktop/android/src/androidTest/java/org/sirinvpn/client/WifiAutoConnectTest.kt",
+        "apps/desktop/src/features/settings/WifiSettings.test.tsx",
         "docs/android/security-and-platform.md"
       ],
-      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
+      "verification_scope": "Rule, identity and status in JVM tests; settings states in Vitest and the Android catalog capture; API 36 emulator Wi-Fi off/on, trust, Disconnect pause, Location off, app killed, reboot, update and force stop. Physical-phone roaming and OEM battery policies are checked separately.",
       "related_runtime_evidence": []
     },
     "wifi/os-wifi-names-unbroken": {
@@ -31949,19 +32129,25 @@
       },
       "roles": "Catalog role: owner; backend authorization remains authoritative. Owner/Admin/Member capability and older-server branches are retained.",
       "source": [
-        "apps/desktop/src/api.ts",
-        "crates/android-runtime/src/commands.rs",
-        "apps/desktop/src/features/settings/",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
-        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiAutomation.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiRule.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiWatchService.kt",
+        "apps/desktop/src/api.ts",
+        "apps/desktop/src/features/settings/",
+        "apps/desktop/src/features/settings/WifiSettings.tsx",
+        "crates/android-runtime/src/commands.rs"
       ],
-      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
-      "status": "platform_restriction",
+      "android_approach": "Shared Wi-Fi settings and the desktop rule on the shared network policy store. Android identifies Wi-Fi by name plus security class, needs precise and \"all the time\" location to see it, and fails safe (untrusted) without; a notice names the missing access. A one-shot Wi-Fi callback wakes the app off Wi-Fi, a silent watcher runs on Wi-Fi with the VPN off. Hidden on Android TV.",
+      "status": "adapted",
       "evidence": [
-        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "apps/desktop/android/src/test/java/org/sirinvpn/client/WifiRuleTest.kt",
+        "apps/desktop/android/src/androidTest/java/org/sirinvpn/client/WifiAutoConnectTest.kt",
+        "apps/desktop/src/features/settings/WifiSettings.test.tsx",
         "docs/android/security-and-platform.md"
       ],
-      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
+      "verification_scope": "Rule, identity and status in JVM tests; settings states in Vitest and the Android catalog capture; API 36 emulator Wi-Fi off/on, trust, Disconnect pause, Location off, app killed, reboot, update and force stop. Physical-phone roaming and OEM battery policies are checked separately.",
       "related_runtime_evidence": []
     },
     "wifi/os-wifi-name-network-change": {
@@ -31986,19 +32172,25 @@
       "fixture_state": {},
       "roles": "Catalog role: owner; backend authorization remains authoritative. Owner/Admin/Member capability and older-server branches are retained.",
       "source": [
-        "apps/desktop/src/api.ts",
-        "crates/android-runtime/src/commands.rs",
-        "apps/desktop/src/features/settings/",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt",
         "apps/desktop/android/src/main/java/org/sirinvpn/client/SirinPlugin.kt",
-        "apps/desktop/android/src/main/java/org/sirinvpn/client/Controller.kt"
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiAutomation.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiRule.kt",
+        "apps/desktop/android/src/main/java/org/sirinvpn/client/WifiWatchService.kt",
+        "apps/desktop/src/api.ts",
+        "apps/desktop/src/features/settings/",
+        "apps/desktop/src/features/settings/WifiSettings.tsx",
+        "crates/android-runtime/src/commands.rs"
       ],
-      "android_approach": "Desktop-only. Android cannot watch for a new Wi-Fi connection without a running service and its notification, so the Android app omits Wi-Fi auto-connect.",
-      "status": "platform_restriction",
+      "android_approach": "Shared Wi-Fi settings and the desktop rule on the shared network policy store. Android identifies Wi-Fi by name plus security class, needs precise and \"all the time\" location to see it, and fails safe (untrusted) without; a notice names the missing access. A one-shot Wi-Fi callback wakes the app off Wi-Fi, a silent watcher runs on Wi-Fi with the VPN off. Hidden on Android TV.",
+      "status": "adapted",
       "evidence": [
-        "apps/desktop/src/features/settings/GeneralSettings.tsx",
+        "apps/desktop/android/src/test/java/org/sirinvpn/client/WifiRuleTest.kt",
+        "apps/desktop/android/src/androidTest/java/org/sirinvpn/client/WifiAutoConnectTest.kt",
+        "apps/desktop/src/features/settings/WifiSettings.test.tsx",
         "docs/android/security-and-platform.md"
       ],
-      "verification_scope": "The Wi-Fi settings section renders only on desktop; the Android controller, runtime and manifest contain no Wi-Fi automation or location permission.",
+      "verification_scope": "Rule, identity and status in JVM tests; settings states in Vitest and the Android catalog capture; API 36 emulator Wi-Fi off/on, trust, Disconnect pause, Location off, app killed, reboot, update and force stop. Physical-phone roaming and OEM battery policies are checked separately.",
       "related_runtime_evidence": []
     },
     "connection/startup-status-unknown": {

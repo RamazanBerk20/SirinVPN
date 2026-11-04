@@ -2,6 +2,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Wi-Fi auto-connect only: Android shows Wi-Fi names to apps with precise location ("all the time" for the
+         background). SirinVPN never requests coordinates. Android 10 and 11 read the name through WifiManager. -->
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <!-- Direct APK distribution: enumerate packages only in the explicit VPN routing picker. -->
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" tools:ignore="QueryAllPackagesPermission" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
@@ -16,6 +23,9 @@
     <!-- CAMERA implies autofocus. Android TV has neither a camera nor a touchscreen. -->
     <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
     <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
+    <!-- Location permission implies GPS; Wi-Fi names need none, and Android TV has no GPS. -->
+    <uses-feature android:name="android.hardware.location" android:required="false" />
+    <uses-feature android:name="android.hardware.location.gps" android:required="false" />
     <uses-feature android:name="android.software.leanback" android:required="false" />
     <!-- Granted by the user to an automation app; see docs/android/automation.md. -->
     <permission android:name="org.sirinvpn.permission.CONTROL_VPN" android:protectionLevel="dangerous"
@@ -34,6 +44,9 @@
         <activity android:name=".ControlActionActivity" android:exported="false" android:excludeFromRecents="true" />
         <service android:name=".ControlService" android:process=":vpn" android:exported="false" />
         <service android:name=".MaintenanceService" android:process=":vpn" android:exported="false" android:stopWithTask="false" android:foregroundServiceType="dataSync" />
+        <!-- Same authorized-VPN exemption as SirinVpnService; runs only on Wi-Fi with the VPN off. -->
+        <service android:name=".WifiWatchService" android:process=":vpn" android:exported="false" android:stopWithTask="false"
+            android:foregroundServiceType="systemExempted" tools:ignore="ForegroundServicePermission" />
         <service android:name=".SirinVpnService" android:process=":vpn" android:exported="true"
             android:permission="android.permission.BIND_VPN_SERVICE" android:stopWithTask="false"
             android:foregroundServiceType="systemExempted" tools:ignore="ForegroundServicePermission">
@@ -61,7 +74,8 @@
         </receiver>
         <receiver android:name=".ApkInstallResult" android:exported="false" android:process=":vpn" />
         <receiver android:name=".ReplacementReceiver" android:exported="false" android:process=":vpn">
-            <intent-filter><action android:name="android.intent.action.MY_PACKAGE_REPLACED" /></intent-filter>
+            <!-- WifiAutomation's own PendingIntent reaches it explicitly; no filter needed. -->
+            <intent-filter><action android:name="android.intent.action.MY_PACKAGE_REPLACED" /><action android:name="android.intent.action.BOOT_COMPLETED" /></intent-filter>
         </receiver>
         <activity android:name="com.journeyapps.barcodescanner.CaptureActivity" tools:node="remove" />
     </application>

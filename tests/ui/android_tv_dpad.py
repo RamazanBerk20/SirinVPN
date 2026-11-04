@@ -7,7 +7,8 @@ fictional Android catalog first (fixtures only, no VPN or network access):
     pnpm --dir apps/desktop exec vite build --config ../../tests/android/catalog.config.ts
 
 Requires Python Playwright + Chromium. Covers connect/disconnect, server choice,
-connection status, the destinations and the Devices action sheets, and checks that
+connection status, the destinations, the Devices action sheets and General without
+Wi-Fi auto-connect (left out on TV), and checks that
 every focused control shows a ring that is on screen and not clipped. This is
 Chromium, not a TV.
 """
@@ -120,6 +121,10 @@ with sync_playwright() as pw:
     page.keyboard.press('Enter')
     page.get_by_role('dialog', name='My Linux desktop').wait_for()
     press('Escape', until='Actions for My Linux desktop')
+    # A TV leaves Wi-Fi auto-connect out: General goes straight on to the Android controls, with no location prompt.
+    page.evaluate("history.pushState(null, '', '#settings/general'); dispatchEvent(new PopStateEvent('popstate'))")
+    press('ArrowDown', until='Android VPN settings')
+    assert not any(text in page.inner_text('body') for text in ('Wi-Fi auto-connect', 'Allow location')), 'Wi-Fi auto-connect shown on TV'
     assert not errors, errors
     browser.close()
 print('PASS D-pad:', ' → '.join(steps))

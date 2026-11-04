@@ -83,6 +83,15 @@ impl NetworkContext {
         Some(context)
     }
 
+    /// Android reports the identity itself (SSID and security class, `WifiRule.kt`); only the
+    /// salted fingerprint is ever saved.
+    pub fn android(identifier: String, wifi: bool, trustable: bool) -> Option<Self> {
+        let mut context = Self::from_stable_identifier(identifier)?;
+        context.wifi = wifi;
+        context.trustable = wifi && trustable;
+        Some(context)
+    }
+
     pub fn is_wifi(&self) -> bool {
         self.wifi
     }

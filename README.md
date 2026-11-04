@@ -129,10 +129,11 @@ servers or a VPN subscription.
 | **Home** | Connect and disconnect, the active server, and this device's traffic and connection time. For Owners and Admins the desktop layout also shows one row of live server stats; on Android, **Connection** opens the method, kill switch, and reconnect options, and **Connection details** shows status, addresses, and (for Owners and Admins) server stats. |
 | **Servers** | Your saved servers: search, rename, mark favorites, add a server, and open maintenance. On the desktop the sidebar's server list switches servers and its **Manage** button opens this page; on Android it is a tab, and the server row on Home switches. |
 | **Devices** | Members and devices on the selected server: **Add device**, roles, access policies, and revocation. Each device has one menu: **Details**, then its actions, with mutual access, pairs, local networks and port forwarding under **Advanced**. |
-| **Settings** | **General** (Wi-Fi auto-connect on desktop, startup, notifications, app updates, credential storage), **Connection** (method, kill switch, reconnect), **Network** (app routing, DNS, blocking), **Keys & recovery** (recovery keys, device and VPS backups), **VPS maintenance** (health, diagnostics, updates; **Diagnostics** on Android), and **Advanced** (port forwarding, key rotation, VPS alerts, scheduled backups). [How the app is organised](docs/ui-navigation.md). |
+| **Settings** | **General** (Wi-Fi auto-connect, startup, notifications, app updates, credential storage), **Connection** (method, kill switch, reconnect), **Network** (app routing, DNS, blocking), **Keys & recovery** (recovery keys, device and VPS backups), **VPS maintenance** (health, diagnostics, updates; **Diagnostics** on Android), and **Advanced** (port forwarding, key rotation, VPS alerts, scheduled backups). [How the app is organised](docs/ui-navigation.md). |
 
-On Android, notification permission enables app notifications. The Android app has
-no Wi-Fi auto-connect and does not request location permission.
+On Android, notification permission enables app notifications. Wi-Fi auto-connect
+asks for location permission only because Android hides Wi-Fi names without it;
+SirinVPN never reads where you are. Android TV doesn't show the option.
 
 If a connection fails, **Can’t connect? Find out why** on Home (or **Troubleshoot**
 in **VPS maintenance**) goes through the usual causes one at a time, from the

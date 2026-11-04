@@ -69,6 +69,79 @@ def main():
     def run(command, **kwargs):
         timeout = kwargs.pop("timeout", 120)
         return subprocess.run(command, env=env, check=True, timeout=timeout, capture_output=True, **kwargs)
+    def reboot():
+        run([*adb, "reboot"])
+        run([*adb, "wait-for-device"], timeout=180)
+        deadline = time.monotonic() + 360
+        while time.monotonic() < deadline:
+            if run([*adb, "shell", "getprop", "sys.boot_completed"]).stdout.strip() == b"1": return
+            time.sleep(2)
+        raise TimeoutError("Emulator reboot timed out")
+    def wifi_lifecycle():
+        """Wi-Fi auto-connect without opening the app: after a kill, a reboot and an update; never after force-stop."""
+        package = "org.sirinvpn.client"
+        def step(method):
+            # Finishing ordinary instrumentation force-stops the app; attach to a running one instead.
+            run([*adb, "shell", "am", "start", "-W", "-n", package + "/.MainActivity"], timeout=60)
+            result = run([*adb, "shell", "am", "instrument", "-w", "-r", "--no-restart", "-e", "class",
+                "org.sirinvpn.client.WifiAutoConnectTest#" + method, package + ".test/androidx.test.runner.AndroidJUnitRunner"], timeout=300)
+            (output / ("wifi-" + method + ".log")).write_bytes(result.stdout + result.stderr)
+            assert b"OK (1 test)" in result.stdout and b"FAILURES" not in result.stdout, "Wi-Fi step failed: " + method
+            run([*adb, "shell", "input", "keyevent", "KEYCODE_HOME"])
+        def wifi(on):
+            run([*adb, "shell", "svc", "wifi", "enable" if on else "disable"])
+            if not on: return
+            run([*adb, "shell", "cmd", "wifi", "connect-network", "AndroidWifi", "open"], timeout=60)
+            # A "nothing started" check means something only once the Wi-Fi is really back.
+            deadline = time.monotonic() + 90
+            while b"Wifi is connected to" not in run([*adb, "shell", "cmd", "wifi", "status"], timeout=30).stdout:
+                if time.monotonic() > deadline: raise TimeoutError("AndroidWifi did not reconnect")
+                time.sleep(2)
+        def services(expected, after):
+            """expected: the one service running in the foreground, or None."""
+            names = [".SirinVpnService", ".WifiWatchService"]
+            deadline = time.monotonic() + 90
+            while True:
+                dump = run([*adb, "shell", "dumpsys", "activity", "services", package], timeout=30).stdout
+                running = [name for name in names if name.encode() in dump]
+                if running == ([expected] if expected else []) or time.monotonic() > deadline: break
+                time.sleep(1)
+            time.sleep(5)  # A start that is undone at once must not count.
+            dump = run([*adb, "shell", "dumpsys", "activity", "services", package], timeout=30).stdout
+            (output / ("wifi-services-" + after.replace(" ", "-") + ".log")).write_bytes(dump)
+            running = [name for name in names if name.encode() in dump]
+            assert running == ([expected] if expected else []) and (not expected or b"isForeground=true" in dump), \
+                f"After {after}: expected {expected or 'nothing'}, found {running or 'nothing'}"
+            return after
+        def killed():
+            # A low-memory style kill, not a force stop: Android keeps the app's network callback.
+            run([*adb, "shell", "am", "kill", package])
+            time.sleep(2)
+            alive = subprocess.run([*adb, "shell", "pidof", package + ":vpn"], env=env, capture_output=True, timeout=30)
+            assert not alive.stdout.strip(), ":vpn survived am kill"
+        def booted():
+            reboot()
+            deadline = time.monotonic() + 180
+            while b"act=android.intent.action.BOOT_COMPLETED" not in run([*adb, "shell", "dumpsys", "activity", "broadcasts", "history"], timeout=60).stdout:
+                if time.monotonic() > deadline: raise TimeoutError("BOOT_COMPLETED was not sent")
+                time.sleep(2)
+        checks = []
+        step("seedPausedOnUntrustedWifi")
+        checks.append(services(".WifiWatchService", "pause on untrusted wifi"))
+        wifi(False); checks.append(services(None, "wifi off"))
+        killed(); wifi(True)
+        checks.append(services(".SirinVpnService", "app killed then untrusted wifi joined"))
+        step("verifyAutoConnectedThenTrust")
+        checks.append(services(".WifiWatchService", "trusted wifi"))
+        booted(); checks.append(services(".WifiWatchService", "reboot on trusted wifi"))
+        wifi(False); checks.append(services(None, "wifi off after reboot"))
+        killed(); wifi(True); checks.append(services(".WifiWatchService", "app killed then trusted wifi joined"))
+        run([*adb, "install", "--no-streaming", "--no-incremental", "-r", "-t", str(args.apk.resolve())], timeout=300)
+        checks.append(services(".WifiWatchService", "update on trusted wifi"))
+        run([*adb, "shell", "am", "force-stop", package]); checks.append(services(None, "force stop"))
+        wifi(False); wifi(True); checks.append(services(None, "force stop then wifi rejoined"))
+        step("cleanupWifiAutoConnect")
+        return {"checks": checks, "network": "emulator AndroidWifi (open); unreachable loopback server"}
     try:
         run([str(sdk / "cmdline-tools/latest/bin/avdmanager"), "create", "avd", "--name", "sirin-remediation",
              "--path", str(output / "avd"), "--package", f"system-images;android-{args.api};google_apis;x86_64"], input=b"no\n")
@@ -117,13 +190,7 @@ def main():
             written=run([*adb,"shell","pm","install-write",session,"base","/data/local/tmp/sirin-upgrade.apk"]).stdout
             assert b"Success" in written
             # Interrupt an actual staged but uncommitted PackageInstaller update.
-            run([*adb,"reboot"])
-            run([*adb,"wait-for-device"],timeout=180)
-            deadline=time.monotonic()+360
-            while time.monotonic()<deadline:
-                if run([*adb,"shell","getprop","sys.boot_completed"]).stdout.strip()==b"1": break
-                time.sleep(2)
-            else: raise TimeoutError("Emulator reboot timed out")
+            reboot()
             if args.api == 36:
                 barrier = run([*adb, "shell", "am", "wait-for-broadcast-barrier"], timeout=180)
                 (output / "post-reboot-broadcast-barrier.log").write_bytes(barrier.stdout+barrier.stderr)
@@ -162,15 +229,23 @@ def main():
                 raise TimeoutError("Synthetic AndroidWifi fixture did not connect")
             state = run([*adb, "shell", "dumpsys", "connectivity"], timeout=30)
             (output / "network-before-native.log").write_bytes(state.stdout+state.stderr)
+            # Wi-Fi auto-connect reads the network name, which Android shows only with precise
+            # location, from the background only with "all the time", and only with Location on.
+            for permission in ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION", "ACCESS_BACKGROUND_LOCATION"]:
+                run([*adb, "shell", "pm", "grant", "org.sirinvpn.client", "android.permission." + permission])
+            run([*adb, "shell", "cmd", "location", "set-location-enabled", "true"])
         cases = ["VaultAcceptanceTest", "NotificationTrafficTest", "QrScannerTest", "NetworkRecoveryTest",
                  "OptionHandlingTest#packageReplacementUsesOrdinaryRecovery",
-                 "OptionHandlingTest#optionsControlTheRunningService", "ExternalControlsTest"]
+                 "OptionHandlingTest#optionsControlTheRunningService", "ExternalControlsTest",
+                 *(["WifiAutoConnectTest#ruleFollowsTheNetworkLikeDesktop"] if args.api == 36 else [])]
         result = run([*adb, "shell", "am", "instrument", "-w", "-r", "-e", "class",
             ",".join("org.sirinvpn.client." + case for case in cases),
             "org.sirinvpn.client.test/androidx.test.runner.AndroidJUnitRunner"], timeout=300)
         (output / "instrumentation.log").write_bytes(result.stdout + result.stderr)
         match = re.search(rb"OK \((\d+) tests?\)", result.stdout)
         assert match and b"FAILURES" not in result.stdout, "Instrumentation assertions failed"
+        if args.api == 36:
+            report["wifi_auto_connect"] = wifi_lifecycle()
         report.update(result="passed", tests=int(match[1]), cases=cases)
         return 0
     except Exception as error:

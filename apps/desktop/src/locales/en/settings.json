@@ -111,6 +111,7 @@
     "title": "Wi-Fi auto-connect",
     "infoLabel": "About Wi-Fi auto-connect",
     "infoDesktop": "Trusted Wi-Fi is an exception to auto-connect, not a safety rating. Wi-Fi names are only displayed, never saved or sent. Auto-connect runs while the app is in the tray and stops when you quit.",
+    "infoAndroid": "Trusted Wi-Fi is an exception to auto-connect, not a safety rating. Wi-Fi names are only displayed, never saved or sent. Android shows them only to apps with precise location; SirinVPN never reads where you are. While you’re on Wi-Fi with the VPN off, a silent notification shows that auto-connect is watching.",
     "toggle": {
       "label": "Auto-connect on Wi-Fi",
       "summary": "Uses the server below, except on trusted Wi-Fi"
@@ -141,6 +142,14 @@
     },
     "access": {
       "unidentified": "This Wi-Fi can’t be identified reliably, so it can’t be trusted.",
+      "permission": "Android hides Wi-Fi names unless SirinVPN has precise location, so every Wi-Fi counts as untrusted and auto-connect connects on all of them.",
+      "locationOff": "Location is off, so Android hides Wi-Fi names and every Wi-Fi counts as untrusted.",
+      "background": "Trusted Wi-Fi works only while SirinVPN is open. When it’s closed, Android hides the Wi-Fi name, so auto-connect connects on every Wi-Fi.",
+      "restricted": "Battery use for SirinVPN is set to Restricted, so auto-connect can’t start the VPN while the app is closed.",
+      "allow": "Allow location",
+      "allowAlways": "Allow all the time",
+      "locationSettings": "Turn on Location",
+      "appSettings": "App settings",
       "changed": "The network changed. Check its name before trusting it.",
       "changedUnnamed": "The network changed, and this device doesn’t report its name. Check in your system’s Wi-Fi settings which network you’re on before trusting it."
     },
@@ -157,6 +166,7 @@
       "current": "Current network",
       "saved": "Saved",
       "namesHidden": "This device didn’t share Wi-Fi names. On Windows, turning on location access shows them.",
+      "namesHiddenAndroid": "Android shows only the current Wi-Fi’s name. Give a network a label when you trust it to recognize it here.",
       "remove": "Remove trust",
       "removing": "Removing…",
       "removeLabel": "Remove trust for {{name}}",

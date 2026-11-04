@@ -1,6 +1,6 @@
 import { WifiSettings } from "./WifiSettings";
 import { CredentialStorage } from "./CredentialStorage";
-import { invoke } from "../../platform";
+import { dpadOnly, invoke } from "../../platform";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { api } from "../../api";
 import type { ServerProfile } from "../../types";
@@ -114,7 +114,8 @@ export function GeneralSettings({
           <p className="settings-note">{t("settings.general.startup.note")}</p>
         </section>
       )}
-      {platform === "desktop" && <WifiSettings />}
+      {/* A TV never changes Wi-Fi and usually has no location provider to reveal its name. */}
+      {!dpadOnly && <WifiSettings />}
       {platform === "desktop" && <CredentialStorage />}
       {android && <section className="settings-card">
         <h2>{t("settings.general.android.title")}</h2>

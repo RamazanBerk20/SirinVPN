@@ -24,6 +24,8 @@
     <string name="notification_channel_maintenance_description">Progress of server tasks you start</string>
     <string name="notification_channel_updates">App updates</string>
     <string name="notification_channel_updates_description">Requests to approve SirinVPN updates</string>
+    <string name="notification_channel_wifi">Wi-Fi auto-connect</string>
+    <string name="notification_channel_wifi_description">Shown while auto-connect watches for untrusted Wi-Fi with the VPN off</string>
 
     <!-- Ongoing VPN notification. %1$s is the download rate and %2$s the upload rate. -->
     <string name="notification_status_connected_traffic">Connected · ↓ %1$s · ↑ %2$s</string>
@@ -44,6 +46,7 @@
     <string name="notification_failure_text">Couldn’t connect. Open SirinVPN to see why.</string>
     <string name="notification_maintenance_title">Server task in progress</string>
     <string name="notification_maintenance_text">Reopen SirinVPN to see the result.</string>
+    <string name="notification_wifi_watch_text">Auto-connect is watching for untrusted Wi-Fi</string>
     <string name="notification_update_title">Approve SirinVPN update</string>
     <string name="notification_update_text">Tap to review and install the verified update.</string>
     <string name="notification_test_text">Notifications are working.</string>

@@ -27,6 +27,7 @@ class NativePlatform(private val context: Context) {
             }
         }
     }
+    fun wifi(): String = WifiAutomation.identity()
     fun installedApk(): String = context.applicationInfo.sourceDir
     fun installApk(path: String) = ApkInstaller.install(context,path)
     fun abandonApk() = ApkInstaller.abandon(context)

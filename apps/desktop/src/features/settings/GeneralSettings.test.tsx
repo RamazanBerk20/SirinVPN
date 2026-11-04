@@ -21,9 +21,10 @@ const mocks = vi.hoisted(() => ({
   testNotification: vi.fn(),
   invoke: vi.fn(),
   android: false,
+  tv: false,
 }));
 vi.mock("../../api", () => ({ api: mocks }));
-vi.mock("../../platform", () => ({ get isAndroid() { return mocks.android; }, invoke: mocks.invoke }));
+vi.mock("../../platform", () => ({ get isAndroid() { return mocks.android; }, get dpadOnly() { return mocks.tv; }, invoke: mocks.invoke }));
 const initial: PreferencesSnapshot = {
   preferences: {
     start_on_login: false,
@@ -39,7 +40,7 @@ const initial: PreferencesSnapshot = {
 };
 beforeEach(() => {
   vi.resetAllMocks();
-  mocks.android = false;
+  mocks.android = false; mocks.tv = false;
   mocks.listServers.mockResolvedValue([]);
   mocks.getWifiPolicy.mockResolvedValue({ policy: { enabled: false, server_id: null }, trusted_networks: [], current_network: "unavailable", can_trust_current: false, current_network_token: null, automation_status: "disabled" });
   mocks.getAppPreferences.mockResolvedValue(structuredClone(initial));
@@ -68,6 +69,15 @@ it("shows Android policy controls, denied-notification guidance and the older ti
   expect(screen.queryByText(t("settings.general.component.title"))).toBeNull();
   fireEvent.click(screen.getByRole("button", { name: t("settings.general.android.addTile") }));
   expect(await screen.findByText("Native tile instructions")).toBeTruthy();
+  expect(screen.getByRole("region", { name: t("settings.wifi.title") })).toBeTruthy();
+});
+it("leaves Wi-Fi auto-connect out on Android TV", async () => {
+  mocks.android = true; mocks.tv = true;
+  mocks.invoke.mockResolvedValue({ quick_profile: null });
+  setup("android");
+  expect(await screen.findByText(t("settings.general.android.title"))).toBeTruthy();
+  expect(screen.queryByRole("region", { name: t("settings.wifi.title") })).toBeNull();
+  expect(mocks.getWifiPolicy).not.toHaveBeenCalled();
 });
 it("shows notifications off when Android permission is missing even if the saved preference is on", async () => {
   mocks.getAppPreferences.mockResolvedValue({ ...initial, preferences: { ...initial.preferences, notifications: true }, notification_permission: "denied" });

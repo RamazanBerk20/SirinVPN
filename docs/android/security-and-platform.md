@@ -59,8 +59,7 @@ Reconnect changes update both saved preferences and the live retry state before
 the app confirms the save. Turning reconnect off cancels pending attempts.
 An established VPN stays connected until Disconnect. Pending retries and network
 reads cannot restore settings or connection intent superseded by a newer command.
-Wi-Fi auto-connect is desktop-only: Android cannot watch for new Wi-Fi without a
-running service and its notification, so the Android app omits it.
+Wi-Fi auto-connect follows the desktop rule; see [below](#wi-fi-auto-connect).
 
 Home, Back, UI process loss and task removal do not stop an active service.
 Actual VPN-process loss, reboot and package replacement interrupt traffic;
@@ -72,11 +71,62 @@ battery policies remain separate verification requirements.
 Full routing includes IPv6 containment for an IPv4-only profile; configured
 split routes and app exclusions are represented explicitly. An observed
 containment route is not an external IPv6 leak test. Per-app exclusions remain
-subject to system lockdown. The app reads no Wi-Fi identity and requests no
-location permission.
+subject to system lockdown.
 Notification and animation preferences have one owner in the VPN process, with
 a one-time migration from the older UI preferences. Connection failure alerts
 honor the notification switch; Android still controls the foreground VPN notice.
+
+## Wi-Fi auto-connect
+
+The rule is the desktop's (`src-tauri/src/wifi_automation.rs`, `WifiRule.kt`):
+on Wi-Fi that isn't trusted it connects to the chosen server once per network
+entry. An entry is one Android `Network` in one boot, so rejoining, even the same
+network, is a new entry; a policy, server or trust change is one too. A session
+already running owns the entry, so a later Disconnect is never undone on that
+network. Trusted Wi-Fi, mobile data and Ethernet never connect, and nothing ever
+disconnects. The rule also runs when the VPN process starts, as desktop's does at
+launch. The trusted list and the server live in the shared network policy store
+(`network.json`), the same code as the desktop's.
+
+Trust is keyed on the network name plus its security class (open, password or
+enterprise), the parts of Android's own saved-network key an app can read. The
+desktop keys on the OS saved profile; Android has no stable profile ID for apps
+(the old `networkId` is renumbered at every boot). Only a salted hash is saved,
+never the name.
+
+Android shows the Wi-Fi name only with precise location, with Location on, and
+from a closed app only with location "Allow all the time". When the name is
+hidden, the network is unidentified and therefore untrusted: auto-connect fails
+safe and connects. Settings → General then says what is missing and offers one
+button: **Allow location**, **Allow all the time** (Android 11+ grants it on its
+own settings page), or **Turn on Location**. Battery use set to Restricted also
+gets a notice, since Android then refuses background starts. SirinVPN never
+requests coordinates; Android 10 and 11 read the name through `WifiManager`, 12+
+through a network callback with `FLAG_INCLUDE_LOCATION_INFO`.
+
+What sees the next network while the app is closed:
+
+| State | Watcher | Notification |
+| --- | --- | --- |
+| VPN on | the VPN process's own network callback | the VPN's |
+| Off Wi-Fi (mobile data, none), VPN off | a `PendingIntent` network callback for Wi-Fi | none |
+| On Wi-Fi, VPN off (trusted, or paused after Disconnect) | `WifiWatchService` | a silent, minimum-priority "Wi-Fi auto-connect" notice |
+
+Android sends a `PendingIntent` network callback once, at once if a matching
+network already exists, and releases it 5 s after delivery (AOSP
+`ConnectivityService`), so it can't watch for a different Wi-Fi while one is
+connected; no public request can exclude the current network. That is the only
+case with a running service. Its channel can be turned off in Android's
+notification settings; on Android 13+ the service keeps running without it.
+Boot and package replacement re-arm the watch without opening the app. A force
+stop cancels it until the app is opened again, as Android intends. Background
+starts of the VPN and of the watcher use the authorized-VPN exemption
+(`OP_ACTIVATE_VPN`), so VPN consent must already be granted: turning
+auto-connect on asks for it. With Android's own Always-on VPN the VPN is always
+up and the rule only reports it. An OEM that freezes background apps (Samsung's
+sleeping apps) can still block the wake-up; set battery use to Unrestricted
+there. Android TV doesn't show the feature: a TV doesn't change Wi-Fi, and many
+have no location provider, so the name would stay hidden.
 
 ## Components, permissions and dependencies
 

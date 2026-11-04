@@ -19,6 +19,14 @@ use. This replaced a layout that showed every feature at the same level (2026-11
 | Protection: method, kill switch, reconnect | Settings → Connection | Settings → Connection |
 | Recovery: recovery key, device and VPS backups | Settings → Keys & recovery | Settings → Keys & recovery |
 | Health, diagnostics, VPS update and repair, remove | Settings → VPS maintenance | Settings → Diagnostics |
+| Auto-connect on untrusted Wi-Fi, trusted networks | Settings → General → Wi-Fi auto-connect | Settings → General → Wi-Fi auto-connect (not on Android TV) |
+
+Wi-Fi auto-connect behaves the same on both: it connects once per Wi-Fi network
+that isn't trusted, never disconnects, and after a Disconnect waits until the
+network changes. Android adds a notice in that card when Location, precise or
+"all the time" location access, or battery use stops it from recognising trusted
+Wi-Fi, with the one button that fixes it. See
+[Android Wi-Fi auto-connect](android/security-and-platform.md#wi-fi-auto-connect).
 
 The desktop's primary navigation is Home, Devices and Settings: the sidebar's
 server list already is the servers section, so a Servers item beside it only

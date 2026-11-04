@@ -26,7 +26,9 @@ import app.tauri.plugin.JSObject
 import org.json.JSONObject
 import java.util.UUID
 
-@TauriPlugin(permissions=[Permission(alias="camera",strings=[Manifest.permission.CAMERA]),Permission(alias="notifications",strings=[Manifest.permission.POST_NOTIFICATIONS])])
+@TauriPlugin(permissions=[Permission(alias="camera",strings=[Manifest.permission.CAMERA]),Permission(alias="notifications",strings=[Manifest.permission.POST_NOTIFICATIONS]),
+    Permission(alias="location",strings=[Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION]),
+    Permission(alias="backgroundLocation",strings=[Manifest.permission.ACCESS_BACKGROUND_LOCATION])])
 class SirinPlugin(private val activity: Activity) : Plugin(activity) {
     private var link: ServiceLink? = null
     private var scanner: CodeScanner? = null
@@ -78,6 +80,23 @@ class SirinPlugin(private val activity: Activity) : Plugin(activity) {
         }
         if(command=="android_scan_code") {
             requestPermissionForAlias("camera",invoke,"scanGranted");return
+        }
+        if(command=="android_wifi_permission") {
+            // Precise first; Android 11+ grants "all the time" only on its own settings page, which the second request opens.
+            val fine=activity.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)==PackageManager.PERMISSION_GRANTED
+            val permission=if(fine) Manifest.permission.ACCESS_BACKGROUND_LOCATION else Manifest.permission.ACCESS_FINE_LOCATION
+            val asked=activity.getSharedPreferences("presentation",0)
+            // After "Don't allow" twice Android ignores requests silently; App info is then the only way.
+            if(asked.getBoolean("asked_$permission",false) && !activity.shouldShowRequestPermissionRationale(permission)) {
+                activity.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,android.net.Uri.parse("package:${activity.packageName}")));locationGranted(invoke);return
+            }
+            asked.edit().putBoolean("asked_$permission",true).apply()
+            requestPermissionForAlias(if(fine) "backgroundLocation" else "location",invoke,"locationGranted")
+            return
+        }
+        if(command=="android_location_settings") {activity.startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));resolve(invoke);return}
+        if(command=="android_app_settings") {
+            activity.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,android.net.Uri.parse("package:${activity.packageName}")));resolve(invoke);return
         }
         if (command == "install_release_update" && args.optJSONObject("input")?.optBoolean("baseline_only")!=true && !activity.packageManager.canRequestPackageInstalls()) {
             activity.startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,android.net.Uri.parse("package:${activity.packageName}")))
@@ -193,6 +212,10 @@ class SirinPlugin(private val activity: Activity) : Plugin(activity) {
         else {val request=invoke.getArgs();send(invoke,request.getString("command")!!,request.optJSONObject("args") ?: JSONObject())}
     }
     @PermissionCallback private fun connectionNotificationsGranted(invoke:Invoke) { prepareVpnCommand(invoke) }
+    @PermissionCallback private fun locationGranted(invoke:Invoke) {
+        fun granted(permission:String)=activity.checkSelfPermission(permission)==PackageManager.PERMISSION_GRANTED
+        resolve(invoke,if(granted(Manifest.permission.ACCESS_BACKGROUND_LOCATION)) "always" else if(granted(Manifest.permission.ACCESS_FINE_LOCATION)) "while_in_use" else "denied")
+    }
     @PermissionCallback private fun notificationsGranted(invoke:Invoke) {
         if(invoke.getArgs().getString("command")=="test_notification") testNotification(invoke)
         else resolve(invoke,notificationPermission())

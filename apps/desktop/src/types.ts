@@ -150,6 +150,8 @@ export interface WifiPolicySnapshot {
   current_network_token: string | null;
   network_names?: Record<string, string>;
   automation_status: "disabled" | "waiting_for_wifi" | "trusted" | "connecting" | "session_active" | "waiting_for_network_change" | "needs_attention" | "needs_authorization";
+  /** Android only: what the system still withholds from auto-connect. */
+  android_access?: { location: "always" | "while_in_use" | "denied"; location_enabled: boolean; background_restricted: boolean };
 }
 
 export interface LocalTunnelStatus {

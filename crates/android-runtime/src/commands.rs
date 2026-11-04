@@ -56,6 +56,63 @@ fn encode(value: impl serde::Serialize) -> Result<Value> {
     Ok(serde_json::to_value(value)?)
 }
 
+/// The desktop store and its rules; WifiAutomation.kt adds the automation status and Android access.
+fn wifi(runtime: &Runtime, command: &str, args: &Value) -> Result<Value> {
+    let store = runtime.paths.network_policy_store();
+    store.initialize_wifi_settings()?;
+    // Android records each Wi-Fi name read as a location access: the rule reads none while it is off.
+    if args["automation"] == true && !store.wifi_snapshot(None)?.policy.enabled {
+        return encode(store.wifi_snapshot(None)?);
+    }
+    let native = runtime.platform.wifi()?;
+    let network = native["identifier"].as_str().and_then(|id| {
+        sirinvpn_core::NetworkContext::android(
+            id.to_owned(),
+            native["wifi"] == true,
+            native["trustable"] == true,
+        )
+    });
+    match command {
+        "set_wifi_policy" => {
+            let policy: sirinvpn_core::WifiAutomationPolicy =
+                serde_json::from_value(args["policy"].clone())?;
+            if let Some(id) = policy.server_id {
+                profile(runtime, &id.to_string())?;
+            }
+            store.set_wifi_automation(policy)?;
+            return Ok(Value::Null);
+        }
+        "trust_current_wifi" => {
+            let snapshot = store.wifi_snapshot(network.as_ref())?;
+            ensure!(
+                snapshot.current_network_token.as_deref()
+                    == Some(text(args, "expectedNetworkToken")?),
+                "The network changed. Refresh before marking it trusted."
+            );
+            store.trust_wifi(
+                network
+                    .as_ref()
+                    .context("This device isn’t connected to Wi-Fi.")?,
+                text(args, "label")?.to_owned(),
+            )?;
+            return Ok(Value::Null);
+        }
+        "forget_trusted_wifi" => {
+            store.forget_trusted_wifi(text(args, "id")?)?;
+            return Ok(Value::Null);
+        }
+        _ => {}
+    }
+    let snapshot = store.wifi_snapshot(network.as_ref())?;
+    let mut value = encode(&snapshot)?;
+    // Only the current network's name is known; it is shown, never saved.
+    value["network_names"] = match (snapshot.current_network_token, native["name"].as_str()) {
+        (Some(token), Some(name)) => json!({ token: name }),
+        _ => json!({}),
+    };
+    Ok(value)
+}
+
 pub async fn dispatch(
     runtime: &Runtime,
     command: &str,
@@ -98,6 +155,9 @@ pub async fn dispatch(
     }
     match command {
         "android_measure_quality" => return crate::quality::measure(runtime, generation).await,
+        "get_wifi_policy" | "set_wifi_policy" | "trust_current_wifi" | "forget_trusted_wifi" => {
+            return wifi(runtime, command, &args);
+        }
         "client_platform" => return Ok(json!("android")),
         "cancel_speed_test" => {
             runtime.speed_test.cancel();

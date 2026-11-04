@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowClockwise } from "@phosphor-icons/react";
 import { api } from "../../api";
+import { invoke, isAndroid } from "../../platform";
+import { SettingsNotice } from "./SettingsParts";
 import { InlineError } from "../../components/ui";
 import { notify } from "../../components/Toasts";
 import { errorMessage } from "../../lib/errors";
@@ -27,6 +29,12 @@ const statusLabels: Record<WifiPolicySnapshot["automation_status"], MessageKey> 
   needs_attention: "settings.wifi.status.needsAttention",
   needs_authorization: "settings.wifi.status.needsAuthorization",
 };
+/** Android withholds the Wi-Fi name: each case's explanation and the one action that fixes it. */
+const accessNotes = {
+  locationOff: { text: "settings.wifi.access.locationOff", action: "settings.wifi.access.locationSettings", command: "android_location_settings" },
+  permission: { text: "settings.wifi.access.permission", action: "settings.wifi.access.allow", command: "android_wifi_permission" },
+  background: { text: "settings.wifi.access.background", action: "settings.wifi.access.allowAlways", command: "android_wifi_permission" },
+} satisfies Record<string, { text: MessageKey; action: MessageKey; command: string }>;
 
 export function WifiSettings() {
   const [snapshot, setSnapshot] = useState<WifiPolicySnapshot | null>(null);
@@ -46,7 +54,7 @@ export function WifiSettings() {
   const seenToken = useRef<string | null>(null);
   // A later successful poll clears only errors that polling itself reported.
   const pollFailed = useRef(false);
-  const [info, infoPanel] = useInfoHint(t("settings.wifi.infoDesktop"), t("settings.wifi.infoLabel"));
+  const [info, infoPanel] = useInfoHint(t(isAndroid ? "settings.wifi.infoAndroid" : "settings.wifi.infoDesktop"), t("settings.wifi.infoLabel"));
   const applySnapshot = (next: WifiPolicySnapshot, profiles?: ServerProfile[]) => {
     setSnapshot(next);
     if (profiles) setServers(profiles);
@@ -155,6 +163,12 @@ export function WifiSettings() {
     const friendly = network.label !== UNNAMED_NETWORK_LABEL ? network.label : "";
     return { network, osName, friendly, name: osName || friendly || t("settings.wifi.trusted.unnamed", { number: index + 1 }) };
   });
+  const access = snapshot?.android_access;
+  const onWifi = snapshot?.current_network === "trusted_wifi" || snapshot?.current_network === "untrusted_wifi";
+  // Without the name every Wi-Fi counts as untrusted, so auto-connect fails safe; say what is missing where it matters.
+  const missing = !access ? null : !access.location_enabled ? "locationOff" : access.location === "denied" ? "permission"
+    : access.location === "while_in_use" ? "background" : null;
+  const note = missing && (enabled || onWifi || trusted.length > 0) ? accessNotes[missing] : null;
   return <section className="settings-card wifi-settings" aria-label={t("settings.wifi.title")} aria-busy={Boolean(busy)}>
     <div className="settings-section-heading"><h2>{t("settings.wifi.title")}</h2>{info}</div>
     {infoPanel}
@@ -167,6 +181,8 @@ export function WifiSettings() {
       </label>
       {/* Just after turning it on, the native status can still read "disabled": say it is starting instead of "off". */}
       {snapshot && enabled && <p className={snapshot.automation_status === "waiting_for_network_change" ? "wifi-paused" : "settings-note"} role="status">{t(snapshot.automation_status === "disabled" ? "settings.wifi.status.starting" : statusLabels[snapshot.automation_status])}</p>}
+      {enabled && access?.background_restricted && <SettingsNotice tone="warning"
+        action={{ label: t("settings.wifi.access.appSettings"), onClick: () => void invoke("android_app_settings") }}>{t("settings.wifi.access.restricted")}</SettingsNotice>}
       <label className="field"><span>{t("settings.wifi.server.label")}</span>
         <select aria-label={t("settings.wifi.server.label")} value={selected} disabled={Boolean(busy) || !snapshot || !servers.length || !enabled}
           onChange={(e) => { const id = e.target.value; setSelected(id); void action("server", () => api.setWifiPolicy({ enabled, server_id: id })); }}>
@@ -185,8 +201,10 @@ export function WifiSettings() {
             onClick={() => void action("refresh", async () => {})}><ArrowClockwise size={18} className={busy === "refresh" ? "spin" : undefined} /></button>
         </div>
         {networkChanged && snapshot.current_network === "untrusted_wifi" && <p className="settings-note" role="status">{t(currentName ? "settings.wifi.access.changed" : "settings.wifi.access.changedUnnamed")}</p>}
+        {note && <SettingsNotice tone="warning" action={{ label: t(note.action), disabled: Boolean(busy),
+          onClick: () => void action("access", () => invoke(note.command)) }}>{t(note.text)}</SettingsNotice>}
         {snapshot.current_network === "untrusted_wifi" && (trustBlocked
-          ? <p className="settings-note">{t("settings.wifi.access.unidentified")}</p>
+          ? !note && <p className="settings-note">{t("settings.wifi.access.unidentified")}</p>
           : <div className="wifi-trust-form">
             <label className="field"><span>{t("settings.wifi.trust.label")}</span><input value={label} maxLength={80} placeholder={t("settings.wifi.trust.placeholder")} onChange={(e) => setLabel(e.target.value)} disabled={Boolean(busy)} /></label>
             <button className="secondary-button" disabled={Boolean(busy)}
@@ -208,7 +226,7 @@ export function WifiSettings() {
             onClick={() => void action(network.id, () => api.forgetTrustedWifi(network.id), () => notify(t("settings.wifi.trusted.removed", { name })))}>
             {busy === network.id ? t("settings.wifi.trusted.removing") : t("settings.wifi.trusted.remove")}</button>
         </li>)}</ul>
-        {trusted.some((item) => !item.osName) && <p className="settings-note">{t("settings.wifi.trusted.namesHidden")}</p>}
+        {trusted.some((item) => !item.osName) && <p className="settings-note">{t(isAndroid ? "settings.wifi.trusted.namesHiddenAndroid" : "settings.wifi.trusted.namesHidden")}</p>}
       </div>}
       <InlineError message={error} onRetry={loaded ? () => void action("refresh", async () => {}) : undefined} retryDisabled={Boolean(busy)} />
     </>}

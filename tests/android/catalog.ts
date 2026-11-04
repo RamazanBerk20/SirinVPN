@@ -26,7 +26,14 @@ catalog.native=async(command:string,args:any={})=>{
   }
   if(command==='android_choose_applications') return {mode:'include',packages:['com.example.mail']};
   if(command==='android_add_tile') {catalog.prompts.push({kind:command,fixture:true});return 'Open Quick Settings, tap Edit and add SirinVPN.';}
-  if(command==='android_vpn_settings' || command==='android_notification_settings') {catalog.prompts.push({kind:command,fixture:true});return null;}
+  if(command==='android_vpn_settings' || command==='android_notification_settings' || command==='android_location_settings' || command==='android_app_settings') {catalog.prompts.push({kind:command,fixture:true});return null;}
+  if(command==='android_wifi_permission') {
+    // Precise location reveals the current network's name; "all the time" is the next step.
+    const wifi=catalog.state.wifi;catalog.state.calls.push({name:command,args:[]});
+    wifi.android_access.location=wifi.android_access.location==='denied'?'while_in_use':'always';
+    Object.assign(wifi,{can_trust_current:true,network_names:{[wifi.current_network_token]:'Home hotspot'}});
+    return wifi.android_access.location;
+  }
   return native(command,args);
 };
 const act=catalog.act.bind(catalog);

@@ -22,7 +22,14 @@ test package. These native checks do not qualify established-tunnel continuity,
 physical devices, OEM battery policy or production signing.
 The harness grants VPN consent only inside its fresh AVD to exercise the
 existing native reconnect/package-replacement tests. It does not qualify the OS
-consent dialog.
+consent dialog. On API 36 it also grants precise and background location and
+turns Location on, for `WifiAutoConnectTest` against the open `AndroidWifi`
+network and an unreachable loopback server (no coordinates are read). After the
+instrumentation batch it drives Wi-Fi auto-connect without opening the app:
+paused on untrusted Wi-Fi (watcher only), Wi-Fi off (nothing running), `am kill`
+then Wi-Fi back (the one-shot callback starts the VPN), trusted Wi-Fi, a reboot,
+`am kill` again, an update and a force stop, checking each time which foreground
+service runs (`wifi-services-*.log`).
 Use the same scope for `--api 36`. Under the earlier 4 GiB cap that image
 peaked at the limit with sustained reclaim, and lower soft limits caused
 service startup timeouts, so the scope has no `MemoryHigh`. Keep no swap and

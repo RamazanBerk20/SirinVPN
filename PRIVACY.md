@@ -74,7 +74,7 @@ Current client transport-quality probes send eight small ICMP echo requests to t
 private VPS tunnel address at a bounded interval. Only the current comparison and
 counter baseline are retained in volatile runtime state. No public speed-test
 service, destination traffic capture, or measurement history is used. Optional
-desktop Wi-Fi automation stores the chosen server and an explicit list of trusted labels
+Wi-Fi automation stores the chosen server and an explicit list of trusted labels
 and salted platform network fingerprints. It does not store raw network IDs,
 SSIDs, BSSIDs, discovered-network history, or network-entry times. The list is user
 configuration; discovery alone does not add entries.
@@ -85,6 +85,9 @@ the saved NetworkManager profile's SSID; Windows uses its saved network name.
 These display names remain in memory only: they are not logged, stored in
 SirinVPN state, included in diagnostics/backups, or transmitted to the VPS or
 any other service. User-entered friendly labels remain explicit local settings.
+Android reads only the current network's name and security type, and only to
+compare its salted fingerprint with the trusted list and to show the name in
+Settings.
 
 The desktop remembers explicitly verified SSH host-key fingerprints in a
 private local `ssh-host-keys.json` file, scoped to the host address and SSH port.
@@ -120,8 +123,11 @@ AppImage updates use the same explicit source and root-authorized public release
 On Android, credentials and sensitive operation checkpoints are encrypted with
 Android Keystore in app-private storage excluded from automatic backup and device
 transfer. The app stores current configuration and unfinished operations, not
-traffic samples or connection history. The Android app has no Wi-Fi automation
-and requests no location permission. The home-screen widget shows the
+traffic samples or connection history. Android shows Wi-Fi names only to apps
+with location permission, so Wi-Fi auto-connect asks for precise location and,
+to recognise trusted Wi-Fi while the app is closed, "Allow all the time". The
+app never requests GPS coordinates or a location fix, and works without the
+permission: every Wi-Fi then counts as untrusted. The home-screen widget shows the
 connection state and the server's name, never its address, and is not offered on
 the lock screen. Apps you grant the SirinVPN control permission can connect,
 disconnect and choose the server; SirinVPN sends them no data. See [Android

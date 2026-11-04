@@ -296,6 +296,46 @@ mod tests {
     }
 
     #[test]
+    fn android_trust_matches_only_the_same_name_and_security_and_never_a_hidden_one() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("network.json");
+        let store = NetworkPolicyStore::new(path.clone());
+        let android =
+            |id: &str, trustable| NetworkContext::android(id.into(), true, trustable).unwrap();
+        let home = android("android-wifi:v2:personal:\"Home\"", true);
+        store.trust_wifi(&home, "Home".into()).unwrap();
+        assert_eq!(
+            store.wifi_snapshot(Some(&home)).unwrap().current_network,
+            WifiNetworkStatus::TrustedWifi
+        );
+        // An open hotspot named like home, or the same name read without location access.
+        for other in [
+            android("android-wifi:v2:open:\"Home\"", true),
+            android("android-wifi:v2:personal:\"Home\"", false),
+        ] {
+            assert_eq!(
+                store.wifi_snapshot(Some(&other)).unwrap().current_network,
+                WifiNetworkStatus::UntrustedWifi
+            );
+        }
+        assert!(
+            store
+                .trust_wifi(&android("android-wifi:v2:unknown:101", false), "x".into())
+                .is_err()
+        );
+        let cellular = NetworkContext::android("android-network:v1:7".into(), false, true).unwrap();
+        assert!(!cellular.can_trust());
+        assert_eq!(
+            store
+                .wifi_snapshot(Some(&cellular))
+                .unwrap()
+                .current_network,
+            WifiNetworkStatus::OtherNetwork
+        );
+        assert!(!fs::read_to_string(&path).unwrap().contains("android-wifi"));
+    }
+
+    #[test]
     fn wifi_profile_parser_preserves_names_and_rejects_other_connections() {
         let uuid = "12345678-1234-1234-1234-123456789abc";
         assert_eq!(
