@@ -176,7 +176,8 @@ object Controller {
     @Synchronized private fun startSampling() {
         if (sampling == null && !paused && preferences.getBoolean("requested",false)) sampling = monitor.scheduleWithFixedDelay({ sample() }, 1, 1, TimeUnit.SECONDS)
     }
-    @Synchronized fun sessionActive() = handle>=0 || preferences.getBoolean("requested",false)
+    // Not the saved intent: it outlives a reboot that, without Always-on, never revives the session. Retries keep the service.
+    @Synchronized fun sessionActive() = handle>=0 || SirinVpnService.instance!=null
     @Synchronized fun busy() = operation || settingsUpdating
     @Synchronized fun failed() = phase=="failed"
     @Synchronized fun wifiPresent() = networks.values.any { it.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) }
@@ -567,8 +568,8 @@ object Controller {
         WifiAutomation.changed()
     }
     @Synchronized fun restart(systemStart:Boolean=false) {
-        // Android 10's isAlwaysOn() is false until the caller has established a
-        // TUN. The permission-protected OS start is itself an explicit request.
+        // isAlwaysOn() is false until the caller has established a TUN (Android
+        // answers only for a running VPN). The permission-protected OS start is itself an explicit request.
         // Null sticky restarts still obey the persisted pause/connection intent.
         if(systemStart || SirinVpnService.instance?.isAlwaysOn==true) {
             systemStartRequested=true

@@ -131,6 +131,8 @@ def main():
         wifi(False); checks.append(services(None, "wifi off"))
         killed(); wifi(True)
         checks.append(services(".SirinVpnService", "app killed then untrusted wifi joined"))
+        # A reboot never revives the session itself, but its saved intent must not read as one: a new boot is a new entry.
+        booted(); checks.append(services(".SirinVpnService", "reboot with the auto-connected vpn on untrusted wifi"))
         step("verifyAutoConnectedThenTrust")
         checks.append(services(".WifiWatchService", "trusted wifi"))
         booted(); checks.append(services(".WifiWatchService", "reboot on trusted wifi"))
