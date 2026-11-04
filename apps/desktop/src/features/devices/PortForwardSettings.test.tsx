@@ -30,3 +30,8 @@ it("shows a Member the card only when their policy allows forwarding", async () 
   show();
   expect(await screen.findByRole("region", { name: t("devices.ports.title") })).toBeTruthy();
 });
+
+it("tells a disconnected Member to connect, before their policy is known", () => {
+  render(<PortForwardSettings profile={{ id: "server", name: "VPS", device_id: "this" }} connected={false} accessLevel="member" onAccessChanged={vi.fn()} />);
+  expect(screen.getByText(t("devices.ports.connectFirst", { server: "VPS" }))).toBeTruthy();
+});

@@ -21,7 +21,7 @@ with sync_playwright() as pw:
     expect(page.locator(".connection-facts")).to_contain_text("On")
     expect(page.locator(".device-traffic")).to_contain_text("00:24")
     expect(page.locator(".protection-evidence")).to_have_count(0)
-    assert page.locator(".resource-grid").evaluate("el=>el.getBoundingClientRect().bottom<=innerHeight"), "Connected protection + LAN summary must fit"
+    assert page.locator(".server-health").evaluate("el=>el.getBoundingClientRect().bottom<=innerHeight"), "Connected protection + LAN summary must fit"
     page.screenshot(path=str(OUT / "connected.png"))
     page.get_by_text("Device details", exact=False).click()
     expect(page.get_by_text("Blocked · LAN allowed", exact=True)).to_be_visible()

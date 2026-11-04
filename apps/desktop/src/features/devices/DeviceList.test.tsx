@@ -99,11 +99,16 @@ it.each([
     },
   });
   expect(screen.getAllByText("Owner device", { exact: true })).toHaveLength(1);
+  menu("Owner device");
+  fireEvent.click(item(t("devices.menu.details")));
+  // The details name the device once, in their heading, and never with a fallback or saved name.
+  const dialog = screen.getByRole("dialog", { name: "Owner device" });
+  expect(within(dialog).getAllByText("Owner device", { exact: true })).toHaveLength(1);
   expect(screen.queryByText("My computer")).toBeNull();
   expect(screen.queryByText("My Android device")).toBeNull();
   expect(screen.queryByText("Saved device name")).toBeNull();
   expect(screen.queryByText("Access group")).toBeNull();
-  expect(Boolean(screen.queryByText(t("common.noun.thisDevice")))).toBe(currentDeviceId === "desktop");
+  expect(screen.queryAllByText(t("common.noun.thisDevice")).length > 0).toBe(currentDeviceId === "desktop");
 });
 
 it("groups devices under their member, with the role, limits and address", () => {

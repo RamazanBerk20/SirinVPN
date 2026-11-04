@@ -142,12 +142,13 @@
     "recoveryKeyMissing": "No offline recovery key yet",
     "serverFault": "Needs attention: the server reports a fault",
     "advancedAdmin": "Ports, key rotation",
-    "advancedMember": "Key rotation"
+    "advancedMember": "Key rotation, ports if allowed"
   },
   "advanced": {
     "devicesTitle": "Device network features",
-    "devicesSummary": "WireGuard configurations, device pairs, local networks and mutual access are in each device’s menu on Devices, under Advanced.",
-    "openDevices": "Open Devices",
-    "devicesSummaryAndroid": "Device pairs, local networks and mutual access are in each device’s menu on Devices, under Advanced."
+    "devicesSummaryOwner": "Mutual access and device pairs are under Advanced in a device’s menu on Devices, and local networks too for your own devices.",
+    "devicesSummaryAdmin": "Mutual access and device pairs are under Advanced in a device’s menu on Devices.",
+    "devicesWireguard": "When the server offers WireGuard configurations, they are under Advanced in Add device.",
+    "openDevices": "Open Devices"
   }
 }

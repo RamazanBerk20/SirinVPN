@@ -99,7 +99,7 @@ with tempfile.TemporaryDirectory(prefix="native-layout-", dir=OUTPUT) as directo
                 })""")
 
             mount("connected")
-            wait_for(lambda: inspector.evaluate("document.querySelectorAll('.metric').length === 8"))
+            wait_for(lambda: inspector.evaluate("document.querySelectorAll('.metric, .server-health > div').length === 8"))
             assert inspector.evaluate("!document.querySelector('.connection-options')")
             assert centered_icons()
             screenshot("linux-native-metrics")

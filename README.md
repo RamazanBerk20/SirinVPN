@@ -107,15 +107,16 @@ servers or a VPN subscription.
    Compare the fingerprint with your hosting provider's web console or another
    trusted channel before you select **Fingerprint matches**. After the network
    check, select **Install SirinVPN**. With a Hetzner Cloud account you can open
-   **Advanced** and choose **New Hetzner VPS** (**Create a Hetzner server** on Android) instead: paste an API
+   **Advanced** and choose **Create a Hetzner server** instead: paste an API
    token, confirm the plan and price, and SirinVPN creates the server and fills in
    its address, login and pinned key ([details](docs/hetzner-vps-creation.md)).
 3. **Connect** from Home, accepting the operating system's VPN or administrator
    prompt when needed. Run desktop clients as your ordinary user; the native
    service handles privileged networking.
 4. **Add other devices.** On a device that is already set up, open **Devices**,
-   select **Add device** and choose **One of my devices** or **Invite member**, or use
-   **Add device for …** in a member's menu. On the new
+   select **Add device** and choose **One of my devices** or **Invite member**. With only
+   one choice the button is named for it: an Admin usually sees **Invite member**.
+   **Add device for …** in a member's menu adds a device for that member. On the new
    device, choose **Invitation** (**Use an invitation** on Android) and scan the QR
    code or enter the code. For an iPhone, iPad, Mac or router with the official
    WireGuard app, choose **Add WireGuard device** under Advanced in the same menu

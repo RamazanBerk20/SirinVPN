@@ -19,7 +19,7 @@ with sync_playwright() as pw:
     overview = page.get_by_role("region", name="Server", exact=True)
     expect(overview.get_by_role("status")).to_have_text("Live")
     expect(page.get_by_role("button", name="Refresh current state")).to_have_count(0)
-    cpu = overview.locator(".metric strong").first
+    cpu = overview.locator(".server-health dd").first
     expect(cpu).to_have_text("12.4%")
     page.evaluate("window.__sirinServerOverride={cpu_usage_basis_points:4567}")
     expect(cpu).to_have_text("45.7%")
@@ -36,7 +36,7 @@ with sync_playwright() as pw:
     page.evaluate("window.__sirinRemoteFails=true")
     expect(overview.get_by_role("status")).to_have_text("Reconnecting…")
     expect(page.get_by_role("button", name="Disconnect", exact=True)).to_be_enabled()
-    expect(overview.locator(".resource-grid")).to_have_count(0)
+    expect(overview.locator(".server-health")).to_have_count(0)
     page.evaluate("window.__sirinRemoteFails=false")
     expect(overview.get_by_role("status")).to_have_text("Live")
 
@@ -49,7 +49,7 @@ with sync_playwright() as pw:
     page.get_by_role("button", name="Disconnect", exact=True).click()
     expect(overview.get_by_role("status")).to_have_text("Unavailable")
     page.wait_for_function("window.__sirinCommands.includes('unsubscribe_server_status')")
-    expect(overview.locator(".resource-grid")).to_have_count(0)
+    expect(overview.locator(".server-health")).to_have_count(0)
     assert not errors, errors
     page.close()
     # Both SSH maintenance workflows share the host-key gate: (menu item, submit, proceed, completion heading, command).

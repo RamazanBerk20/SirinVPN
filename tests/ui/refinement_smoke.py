@@ -14,8 +14,8 @@ with sync_playwright() as pw:
     page.goto("http://127.0.0.1:1420", wait_until="networkidle")
     nav = page.get_by_role("navigation", name="Main navigation")
     expect(page.locator(".device-traffic .metric").first.locator("strong")).to_contain_text("KB/s", timeout=10000)
-    assert page.locator(".resource-grid").evaluate("el => el.getBoundingClientRect().bottom <= innerHeight"), "Ordinary summary extends below the window"
-    widths = page.locator(".resource-grid meter").evaluate_all("els => els.map(el => el.getBoundingClientRect().width)")
+    assert page.locator(".server-health").evaluate("el => el.getBoundingClientRect().bottom <= innerHeight"), "Ordinary summary extends below the window"
+    widths = page.locator(".server-health meter").evaluate_all("els => els.map(el => el.getBoundingClientRect().width)")
     assert max(widths) - min(widths) < 1, widths
     # Live streams carry no request timing, so the server response row appears only for polled status.
     expect(page.locator(".connection-facts")).not_to_contain_text("Server response")
@@ -94,7 +94,7 @@ with sync_playwright() as pw:
     checks.append("Connected maintenance opens a read-only plan; only an explicit local disconnect unlocks SSH setup")
     nav.get_by_role("button", name="Home", exact=True).click()
     page.get_by_role("region", name="VPN connection").get_by_role("button", name="Connect", exact=True).click()
-    expect(page.get_by_text("Connected to My private VPS", exact=True)).to_be_visible()
+    expect(page.locator(".connection-state")).to_have_text("Connected")
     # Overrides reach the page through the local status stream, which republishes every second.
     page.evaluate("window.__sirinLocalOverride = {traffic_metrics_supported:false,counter_epoch:undefined,tunnel_uptime_seconds:undefined}")
     expect(page.locator(".device-traffic .metric").first.locator("strong")).to_have_text("Unavailable")

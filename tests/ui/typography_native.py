@@ -80,7 +80,7 @@ with tempfile.TemporaryDirectory(prefix="font-", dir=OUT) as directory, tempfile
             })()""".replace("API_MODULE", json.dumps(api_module)).replace("MODULES", json.dumps(modules))
             promise = inspector.command("Runtime.evaluate", {"expression": expression, "returnByValue": False})
             inspector.command("Runtime.awaitPromise", {"promiseObjectId": promise["objectId"], "returnByValue": True})
-            wait_for(lambda: inspector.evaluate("document.querySelectorAll('.metric').length === 8"))
+            wait_for(lambda: inspector.evaluate("document.querySelectorAll('.metric, .server-health > div').length === 8"))
             inspector.evaluate("""(() => {
               const probe = document.createElement('section'); probe.id='font-probe';
               probe.innerHTML='<h2>Türkçe · English</h2><p>İı Şş Ğğ Çç Öö Üü · Connection preferences</p>' +

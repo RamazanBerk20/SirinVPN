@@ -6,9 +6,9 @@ client. Such a device gets a standard `.conf` instead of an invitation.
 
 ## Who can add one
 
-The same people who can invite: the Owner, an Admin (for ordinary Members), and
-a Member whose policy allows inviting members (new members, with at most the
-Member's own policy) or adding their own devices (to their own member).
+The Owner, an Admin (for ordinary Members), and a Member whose policy allows
+inviting members (a new member, with at most the Member's own policy). A Member
+who may only add their own devices adds them with an invitation instead.
 
 - **Desktop:** **Devices → Add device → Add WireGuard device** (under Advanced)
   creates a new member; **Add WireGuard device for …** under Advanced in a

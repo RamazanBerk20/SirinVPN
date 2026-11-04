@@ -12,8 +12,7 @@ Only Hetzner Cloud is supported. The provider code is one module,
 
 ## Where to find it
 
-- **Desktop (Linux, Windows):** add a server → **Advanced** → **New Hetzner VPS**.
-- **Android:** add a server → **Advanced** → **Create a Hetzner server**.
+- **Desktop (Linux, Windows) and Android:** add a server → **Advanced** → **Create a Hetzner server**.
 - **CLI:**
 
   ```sh
@@ -148,7 +147,7 @@ Use a throwaway Hetzner Cloud project. This creates a billed server for a few
 minutes.
 
 1. In the Hetzner Cloud Console, create a project and a Read & Write API token.
-2. In SirinVPN, add a server → **New Hetzner VPS**, paste the token and select
+2. In SirinVPN, add a server → **Advanced** → **Create a Hetzner server**, paste the token and select
    **Show prices**. Check that the locations and prices match the console's
    **Add Server** page (server price plus Primary IPv4).
 3. Keep the default plan and create it. Within a few minutes the setup screen

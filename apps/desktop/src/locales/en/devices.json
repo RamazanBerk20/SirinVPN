@@ -27,8 +27,10 @@
     },
     "addWireguard": "Add WireGuard device",
     "aloneTitle": "Only this device so far",
-    "aloneBody": "Use Add device to add your phone or another computer, or to invite someone to use your VPN.",
-    "aloneBodyOwn": "Use Add device to add your phone or another computer.",
+    "aloneBody": "Add your phone or another computer, or invite someone to use your VPN.",
+    "aloneBodyOwn": "Add your phone or another computer to use your VPN there too.",
+    "aloneBodyInvite": "Invite someone to use your VPN.",
+    "aloneBodyNone": "Ask the Owner to add your phone or another computer.",
     "connect": "Connect",
     "add": "Add device",
     "addMine": "One of my devices"

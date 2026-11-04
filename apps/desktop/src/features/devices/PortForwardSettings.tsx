@@ -7,7 +7,8 @@ export function PortForwardSettings(props: AccessProps & { onManageDevices?: () 
   const m = useAccessController(props);
   const retry = m.loadError ? <InlineError message={m.loadError} onRetry={() => void m.refresh()} retryDisabled={m.loading} /> : null;
   // A Member whose policy doesn't allow forwarding gets no card: there is nothing on it they could use.
-  if (props.accessLevel === "member" && !m.snapshot?.members.some((member) => canManagePortForwards("member", member))) return null;
+  // Until the policy is known (disconnected, loading, failed), the card says why and offers a retry.
+  if (props.accessLevel === "member" && m.snapshot && !m.snapshot.members.some((member) => canManagePortForwards("member", member))) return null;
   return (
     <section className="settings-card" aria-label={t("devices.ports.title")}>
       {!props.connected ? (

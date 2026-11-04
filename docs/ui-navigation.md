@@ -24,7 +24,9 @@ The desktop's primary navigation is Home, Devices and Settings: the sidebar's
 server list already is the servers section, so a Servers item beside it only
 repeated it. The Servers page outlines the selected server and says that switching
 happens in the sidebar; on that page the sidebar's **Manage** button is marked as
-the current place. Home names the server once, in its title. The server address moved
+the current place. A window 760 px wide or narrower hides the sidebar and shows a
+bottom bar with **Servers**; there each other server's row has **Switch**, and the
+page's hint says so. Home names the server once, in its title. The server address moved
 to Device details, and the status card says "Connected" without repeating the
 name. Android keeps its four tabs: a phone has no sidebar.
 
@@ -48,8 +50,9 @@ one line with **Change**.
 
 ## By role
 
-- **Members** see no VPS resource stats, which they can't act on. Home has no
-  Server row, and Android's Connection details has no Server group. Their
+- **Members** see no VPS resource stats, which they can't act on. The desktop
+  Home has no server health row, and Android's Connection details has no Server
+  group; Android's Home keeps its Server picker row for every role. Their
   Advanced page holds key rotation, plus port forwarding when their policy
   allows it.
 - **Owners and Admins** see one compact server row under Home's status card:
@@ -68,7 +71,8 @@ Device rows have no expand chevron: **Details** is the first item of the row's
 menu and opens a dialog; **Revoke** ends the menu, after the Advanced group.
 Every control is a named button or menu item, a disabled item's reason is its
 description for screen readers, and closing a dialog returns focus to the menu
-that opened it.
+that opened it. On Android a menu is a sheet; with a TV remote the D-pad starts on
+its first item, and an item's dialog returns focus to the ⋮ button when it closes.
 
 ## Long operations
 

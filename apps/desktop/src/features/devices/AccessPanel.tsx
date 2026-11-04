@@ -142,7 +142,8 @@ export function AccessPanel(
                   <DeviceMobile size={24} aria-hidden="true" />
                   <div>
                     <strong>{t("devices.panel.aloneTitle")}</strong>
-                    <p>{t(canInvite ? "devices.panel.aloneBody" : "devices.panel.aloneBodyOwn")}</p>
+                    <p>{t(own?.allowed ? canInvite ? "devices.panel.aloneBody" : "devices.panel.aloneBodyOwn"
+                      : canInvite ? "devices.panel.aloneBodyInvite" : "devices.panel.aloneBodyNone")}</p>
                   </div>
                 </div>
               )}
