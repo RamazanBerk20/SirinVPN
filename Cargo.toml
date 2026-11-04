@@ -85,6 +85,13 @@ debug = "line-tables-only"
 [profile.dev.package."*"]
 debug = false
 
+# Backup tests derive keys with the production Argon2 cost; unoptimized, that took most of the core tests' 41 s.
+[profile.dev.package.argon2]
+opt-level = 3
+
+[profile.dev.package.blake2]
+opt-level = 3
+
 [profile.release]
 codegen-units = 1
 lto = true

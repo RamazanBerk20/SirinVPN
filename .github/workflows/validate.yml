@@ -22,6 +22,11 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      # Cargo rebuilds a path dependency whose files are newer than its build, and a checkout
+      # dates every file now. A fixed date keeps the cached vendored glib and the GTK and WebKit
+      # crates above it valid; vendor/ is part of the cache key, so a real change still rebuilds.
+      - name: Give vendored sources a fixed date
+        run: find vendor -exec touch -h -d 2000-01-01T00:00:00Z {} +
       # Compiled dependencies are reused until the toolchain, profiles or lock file change.
       # Only main pushes and manual runs save; pull requests just restore.
       - id: cargo-cache
@@ -32,7 +37,7 @@ jobs:
             ~/.cargo/registry/cache
             ~/.cargo/git/db
             target
-          key: cargo-linux-${{ hashFiles('rust-toolchain.toml', 'Cargo.toml', 'Cargo.lock') }}
+          key: cargo-linux-${{ hashFiles('rust-toolchain.toml', 'Cargo.toml', 'Cargo.lock', 'vendor/**') }}
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '26'
@@ -71,7 +76,7 @@ jobs:
             ~/.cargo/registry/cache
             ~/.cargo/git/db
             target
-          key: cargo-linux-${{ hashFiles('rust-toolchain.toml', 'Cargo.toml', 'Cargo.lock') }}
+          key: cargo-linux-${{ hashFiles('rust-toolchain.toml', 'Cargo.toml', 'Cargo.lock', 'vendor/**') }}
   windows-build:
     runs-on: windows-2025
     timeout-minutes: 60

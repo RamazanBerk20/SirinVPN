@@ -23,7 +23,7 @@ cargo clippy --workspace --all-targets --locked -- -D warnings
 cargo test --workspace --locked
 
 cd "$DESKTOP_DIR"
-pnpm test
+pnpm test --maxWorkers="$CARGO_BUILD_JOBS"
 pnpm build
 
 cd "$PROJECT_ROOT"
