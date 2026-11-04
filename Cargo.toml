@@ -78,6 +78,13 @@ x509-parser = "0.16"
 zeroize = { version = "1.8", features = ["derive"] }
 windows-sys = "0.61.2"
 
+# Line tables keep backtraces readable; full debug info made a test build's target/ 11 GB.
+[profile.dev]
+debug = "line-tables-only"
+
+[profile.dev.package."*"]
+debug = false
+
 [profile.release]
 codegen-units = 1
 lto = true
