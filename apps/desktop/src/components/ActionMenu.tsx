@@ -2,7 +2,7 @@ import { DotsThree, DotsThreeVertical } from "@phosphor-icons/react";
 import { Fragment, useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { DialogContent } from "./DialogContent";
-import { isAndroid } from "../platform";
+import { dpadOnly, isAndroid } from "../platform";
 export interface MenuAction {
   label: string;
   group?: string;
@@ -48,6 +48,8 @@ export function ActionMenu({
   const [placement, setPlacement] = useState({ above: false, height: 400 });
   const root = useRef<HTMLDivElement>(null);
   const triggerButton = useRef<HTMLButtonElement>(null);
+  // A sheet item's action waits until the sheet has returned focus to its trigger.
+  const pending = useRef<(() => void) | null>(null);
   const id = useId();
   // A layout effect applies the owner's update in the same commit, so content it
   // made inert never outlives the menu.
@@ -101,15 +103,29 @@ export function ActionMenu({
   }, [open]);
   if (isAndroid) return <Dialog.Root open={open} onOpenChange={setOpen}>
     <Dialog.Trigger asChild>{trigger
-      ? <button className={trigger.className} disabled={trigger.disabled}>{trigger.content}</button>
-      : <button className="icon-button overflow-button" aria-label={label}><DotsThreeVertical size={24} weight="bold" /></button>}</Dialog.Trigger>
+      ? <button ref={triggerButton} className={trigger.className} disabled={trigger.disabled}>{trigger.content}</button>
+      : <button ref={triggerButton} className="icon-button overflow-button" aria-label={label}><DotsThreeVertical size={24} weight="bold" /></button>}</Dialog.Trigger>
     <Dialog.Portal><Dialog.Overlay className="dialog-overlay" />
-      <DialogContent className="dialog-content mobile-action-sheet" heading={title ?? label} aria-describedby={undefined}>
+      <DialogContent className="dialog-content mobile-action-sheet" heading={title ?? label} aria-describedby={undefined}
+        onOpenAutoFocus={(event) => {
+          // TV spatial navigation can't leave a focused title when the sheet scrolls, so the D-pad starts on an item.
+          if (!dpadOnly) return;
+          event.preventDefault();
+          (event.target as HTMLElement).querySelector<HTMLButtonElement>(".mobile-sheet-action:not(:disabled)")?.focus();
+        }}
+        onCloseAutoFocus={(event) => {
+          // A dialog the action opens then returns focus to the trigger, not to the item that unmounted.
+          event.preventDefault();
+          triggerButton.current?.focus();
+          const run = pending.current;
+          pending.current = null;
+          run?.();
+        }}>
         {sheetGroups(actions).map(({ key, label: group, items }, index) => <Fragment key={key}>
           {group && <h3 className="sheet-group-label">{group}</h3>}
           {/* An untitled group after a titled one (a trailing Revoke) still needs a visible break from it. */}
           {!group && index > 0 && <hr className="sheet-group-separator" />}
-          {items.map(action => <button key={action.label} className={`mobile-sheet-action ${action.danger ? "danger-text" : ""}`} disabled={action.disabled} onClick={() => { setOpen(false); action.run(); }}>
+          {items.map(action => <button key={action.label} className={`mobile-sheet-action ${action.danger ? "danger-text" : ""}`} disabled={action.disabled} onClick={() => { pending.current = action.run; setOpen(false); }}>
             <span>{action.label}</span>{action.reason && <small>{action.reason}</small>}
           </button>)}
         </Fragment>)}

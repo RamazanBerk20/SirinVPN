@@ -7,8 +7,9 @@ fictional Android catalog first (fixtures only, no VPN or network access):
     pnpm --dir apps/desktop exec vite build --config ../../tests/android/catalog.config.ts
 
 Requires Python Playwright + Chromium. Covers connect/disconnect, server choice,
-connection status and the destinations, and checks that every focused control
-shows a ring that is on screen and not clipped. This is Chromium, not a TV.
+connection status, the destinations and the Devices action sheets, and checks that
+every focused control shows a ring that is on screen and not clipped. This is
+Chromium, not a TV.
 """
 import argparse
 from pathlib import Path
@@ -98,6 +99,27 @@ with sync_playwright() as pw:
     press('Enter', until='Servers')
     assert page.evaluate('location.hash') == '#servers'
     press('ArrowDown', until='Amsterdam VPS')
+    # Action sheets start on their first item: spatial navigation can't leave a focused title when the sheet scrolls.
+    # Devices needs the connection the steps above ended, so mount the connected fixture again.
+    page.evaluate("window.__catalog.mount({platform: 'android', profileCount: 2})")
+    press('', until='Disconnect')
+    press('ArrowUp', until='Servers')
+    press('ArrowRight', until='Devices')
+    press('Enter', until='Devices')
+    assert page.evaluate('location.hash') == '#devices'
+    press('ArrowDown', until='Add device')
+    press('Enter', until='One of my devices')
+    press('ArrowDown', until='Invite member')
+    press('Escape', until='Add device')
+    press('ArrowDown', until='Actions for My Linux desktop')
+    press('Enter', until='Details')
+    press('ArrowDown', until='Port forwarding')  # the end of the sheet's Advanced group
+    press('Escape', until='Actions for My Linux desktop')
+    # A dialog opened from a sheet item returns focus to the ⋮ button, not to the item that closed with the sheet.
+    press('Enter', until='Details')
+    page.keyboard.press('Enter')
+    page.get_by_role('dialog', name='My Linux desktop').wait_for()
+    press('Escape', until='Actions for My Linux desktop')
     assert not errors, errors
     browser.close()
 print('PASS D-pad:', ' → '.join(steps))

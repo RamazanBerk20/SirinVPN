@@ -42,6 +42,7 @@ it("opens Android actions in a dismissible sheet and keeps disabled operations d
   fireEvent.click(screen.getByRole("button", { name: "Unavailable" }));
   expect(run).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole("button", { name: "Rename" }));
-  expect(run).toHaveBeenCalledOnce();
-  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  // The item runs once the closed sheet has returned focus to its trigger.
+  await waitFor(() => expect(run).toHaveBeenCalledOnce());
+  expect(screen.queryByRole("dialog")).toBeNull();
 });
