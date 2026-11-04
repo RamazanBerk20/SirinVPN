@@ -8,7 +8,7 @@
     "conditions": {
       "legend": "Network type",
       "automatic": {
-        "title": "Not sure",
+        "title": "Auto",
         "summary": "Tries each method in turn"
       },
       "normal": {
