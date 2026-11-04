@@ -19,7 +19,7 @@ class WifiWatchService : Service() {
         if (intent?.action == STOP) { stopSelf(startId); return START_NOT_STICKY }
         VpnNotifications.channels(this)
         // Android raises an app's own off or minimum channel to visible for a foreground service; only the user
-        // can turn it off, after which Android 13+ keeps this service running unseen. Hide opens that switch.
+        // can turn it off, after which Android keeps this service running unseen. Hide opens that switch.
         val hide = PendingIntent.getActivity(this, 4, Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS)
             .putExtra(Settings.EXTRA_APP_PACKAGE, packageName).putExtra(Settings.EXTRA_CHANNEL_ID, VpnNotifications.WIFI_CHANNEL),
             PendingIntent.FLAG_IMMUTABLE)

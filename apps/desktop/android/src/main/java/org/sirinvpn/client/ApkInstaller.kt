@@ -15,9 +15,8 @@ object ApkInstaller {
         check(context.packageManager.canRequestPackageInstalls())
         val file=File(path).canonicalFile
         require(file.path.startsWith(context.noBackupFilesDir.canonicalPath+"/") && file.isFile)
-        // Android 10's archive parser only collects certificates when the
-        // legacy flag is also present; still use SigningInfo for lineage checks.
-        @Suppress("DEPRECATION") val flags=PackageManager.GET_SIGNING_CERTIFICATES or PackageManager.GET_SIGNATURES
+        // SigningInfo carries the lineage checks below; Android 12's archive parser fills it from this flag alone.
+        val flags=PackageManager.GET_SIGNING_CERTIFICATES
         val candidate=context.packageManager.getPackageArchiveInfo(file.path,flags) ?: error("Invalid APK")
         val installed=context.packageManager.getPackageInfo(context.packageName,flags)
         require(candidate.packageName==context.packageName && candidate.longVersionCode>installed.longVersionCode)

@@ -119,9 +119,11 @@ connected; no public request can exclude the current network. That is the only
 case with a running service. An app can't hide that notice: Android raises a
 foreground service's off or minimum channel to visible until the user turns it
 off (seen on the API 36 emulator). So the notice has one action, **Hide notice**,
-which opens that channel's switch. Once it's off, Android 13+ keeps the service
-running and lists it only under Quick Settings' active apps; Android 12 may
-show the system's own "running in the background" notice instead.
+which opens that channel's switch. Once it's off, the service keeps running with
+nothing in the shade. Android 13+ lists it under Quick Settings' active apps;
+Android 12 shows nothing at all, since its system "apps running in the
+background" notice is disabled (`SHOW_DUNGEON_NOTIFICATION = false` in AOSP
+`ActiveServices`).
 Boot and package replacement re-arm the watch without opening the app. A force
 stop cancels it until the app is opened again, as Android intends. Background
 starts of the VPN and of the watcher use the authorized-VPN exemption
