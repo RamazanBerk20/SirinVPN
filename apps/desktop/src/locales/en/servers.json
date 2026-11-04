@@ -32,5 +32,8 @@
   "renamed": "Renamed to “{{name}}”.",
   "favorited": "{{name}} added to favorites",
   "unfavorited": "{{name}} removed from favorites",
-  "manageHint": "Switch servers in the sidebar. Rename, favorite or maintain them here."
+  "manageHint": "Switch servers in the sidebar. Rename, favorite or maintain them here.",
+  "manageHintNarrow": "Switch, rename, favorite or maintain your servers here.",
+  "switch": "Switch",
+  "switchTo": "Switch to {{name}}"
 }

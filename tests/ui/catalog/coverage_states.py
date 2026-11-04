@@ -211,6 +211,17 @@ def coverage_states(cases):
     add('android', 'server-picker-long-names', [click('Server: ', False)], {'profileCount': 12, 'longNames': True}, forms=mobile)
     add('android', 'home-long-server-name', [], {'longNames': True}, forms=mobile)
 
+    # The smallest desktop window (760 px, Tauri's minimum width) hides the sidebar: the Servers tab switches servers.
+    narrow = ('desktop-narrow',)
+    add('narrow-window', 'home', [], forms=narrow)
+    add('narrow-window', 'servers', [click('Servers')], {'profileCount': 4}, forms=narrow)
+    cases[-1]['assertions'] = [{'selector': '[aria-label="Switch to Amsterdam VPS"]', 'complete': True}, {'text': 'Switch, rename, favorite or maintain'}]
+    add('narrow-window', 'servers-switched', [click('Servers'), click('Switch to Amsterdam VPS')], {'profileCount': 4}, forms=narrow)
+    # Home again, now titled with the chosen server.
+    cases[-1]['assertions'] = [{'selector': '.connection-console'}, {'text': 'Amsterdam VPS'}]
+    add('narrow-window', 'devices', [click('Devices')], forms=narrow)
+    add('narrow-window', 'settings-advanced', settings('', 'advanced'), forms=narrow)
+
     # Scheduled VPS backups (Owner, Advanced settings).
     schedule = settings('', 'advanced') + [click('Scheduled backups', False)]
     planned = {'server_id': '123e4567-e89b-42d3-a456-426614174000', 'folder': '/home/demo/Backups/SirinVPN', 'keep': 7, 'interval_days': 7, 'enabled_at': 1899000000,

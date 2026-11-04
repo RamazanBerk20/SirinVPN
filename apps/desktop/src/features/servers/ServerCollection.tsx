@@ -69,8 +69,8 @@ export function ServerCollection({
         <div>
           <h1>{t("app.nav.servers")}</h1>
           <p>{t("servers.count", { count: servers.length })}</p>
-          {/* The desktop sidebar is the switcher; this page only manages. */}
-          {!isAndroid && <p>{t("servers.manageHint")}</p>}
+          {/* The desktop sidebar is the switcher; in a narrow window it is hidden and this page switches too. */}
+          {!isAndroid && <><p className="servers-hint-wide">{t("servers.manageHint")}</p><p className="servers-hint-narrow">{t("servers.manageHintNarrow")}</p></>}
         </div>
         <button className="primary-button" onClick={onAdd}>
           <Plus size={18} /> {t("servers.add")}
@@ -87,6 +87,7 @@ export function ServerCollection({
               key={server.id}
               className="collection-row"
               data-selected={selectedId === server.id}
+              aria-current={selectedId === server.id || undefined}
             >
               {isAndroid ? <button className="mobile-server-open" onClick={() => onOpen(server.id)} aria-label={t("servers.open", { name: server.name })} aria-current={selectedId === server.id || undefined}>
                 <span className={`mobile-row-icon ${state.connected ? "online" : ""}`}><Database size={22} /></span>
@@ -114,7 +115,9 @@ export function ServerCollection({
                     label={t("servers.addressOf", { name: server.name })}
                   />
                 </div>
-              </div></>}
+              </div>
+              {selectedId !== server.id && <button className="secondary-button collection-switch" aria-label={t("servers.switchTo", { name: server.name })}
+                onClick={() => onOpen(server.id)}>{t("servers.switch")}</button>}</>}
               <ActionMenu
                 label={t("servers.actions.label", { name: server.name })}
                 title={server.name}

@@ -24,7 +24,10 @@ FORMS = {
     # Galaxy S25-class phone; the Android entry adds mobile-native.css and the `android` class.
     'mobile': {'viewport': {'width': 412, 'height': 915}, 'is_mobile': True, 'has_touch': True,
                'user_agent': 'Mozilla/5.0 (Linux; Android 16; SM-S937B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0 Mobile Safari/537.36 wv'},
+    # The smallest desktop window (Tauri's minWidth), where the sidebar is hidden; only states that name it run here.
+    'desktop-narrow': {'viewport': {'width': 760, 'height': 760}},
 }
+DEFAULT_FORMS = ('desktop', 'mobile')
 AUDIT = (HERE / 'audit.js').read_text()
 FOCUS = (HERE / 'focus.js').read_text()
 
@@ -202,7 +205,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--url', default='http://127.0.0.1:1440')
     parser.add_argument('--output', type=Path, default=ROOT / '.cache' / f'ui-capture-{datetime.date.today()}' / 'run')
-    parser.add_argument('--forms', default='desktop,mobile')
+    parser.add_argument('--forms', default='desktop,mobile,desktop-narrow')
     parser.add_argument('--themes', default='dark,light')
     parser.add_argument('--filter', default='')
     parser.add_argument('--workers', type=int, default=2, help='browser processes per form/theme pair')
@@ -225,7 +228,7 @@ def main():
         jobs = []
         for form in args.forms.split(','):
             for theme in args.themes.split(','):
-                selected = [c for c in cases if form in c.get('forms', FORMS)]
+                selected = [c for c in cases if form in c.get('forms', DEFAULT_FORMS)]
                 for shard in range(args.workers):
                     jobs.append(Process(target=worker, args=(args.url, form, theme, selected[shard::args.workers], out, out / f'results-{form}-{theme}-{shard}.jsonl')))
         for job in jobs:

@@ -121,6 +121,11 @@
   font-size: 0.875rem;
   color: var(--muted);
 }
+/* Switching is the sidebar's job until a narrow window hides it. */
+.collection-row > .collection-switch,
+.servers-hint-narrow {
+  display: none;
+}
 .collection-address {
   display: flex;
   flex-wrap: wrap;
@@ -312,17 +317,21 @@ summary:focus-visible,
     gap: 10px;
     padding: 12px;
   }
-  .collection-row > .secondary-button {
+  .collection-row > .collection-switch {
+    display: inline-flex;
     grid-column: 2;
     grid-row: 2;
     justify-self: start;
   }
+  .servers-hint-narrow {
+    display: block;
+  }
+  .servers-hint-wide {
+    display: none;
+  }
   .collection-row > .action-menu {
     grid-column: 3;
     grid-row: 1;
-  }
-  .collection-address {
-    display: block;
   }
   .access-section .section-heading {
     flex-wrap: wrap;
