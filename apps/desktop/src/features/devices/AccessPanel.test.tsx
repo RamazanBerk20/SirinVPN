@@ -52,6 +52,21 @@ it("offers a next step when this is the only device, and retries a failed load i
   expect(screen.queryByRole("searchbox")).toBeNull();
 });
 
+it.each([
+  [true, true, "devices.panel.aloneBody"],
+  [true, false, "devices.panel.aloneBodyOwn"],
+  [false, true, "devices.panel.aloneBodyInvite"],
+  [false, false, "devices.panel.aloneBodyNone"],
+] as const)("tells a lone Member what they can do next (add own %s, invite %s)", async (addOwn, invite, body) => {
+  vi.mocked(api.serverConfiguration).mockResolvedValue({});
+  const alone = own("member", invite);
+  alone.members[0].policy = { ...policy(invite), add_own_devices: addOwn };
+  vi.mocked(api.membership).mockResolvedValue(alone);
+  show("member");
+  // The card never names a button: it may be missing, or read Invite member.
+  expect(await screen.findByText(t(body))).toBeTruthy();
+});
+
 it("uses the verified list's role right after ownership moved away from this device", async () => {
   vi.mocked(api.serverConfiguration).mockResolvedValue({});
   const transferred = own("member");

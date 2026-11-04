@@ -108,19 +108,24 @@ accent fill. Within each platform, every primary button looks the same:
 
 `tests/ui/catalog/full_capture.py` reaches the moved controls through their new
 paths ([UI state catalog](testing.md#ui-state-catalog)). Both runs below used the
-same harness, on desktop (1280×860) and Android (412×915) in dark and light. The
-original UI was served from `main` with `tests/ui/catalog/serve_ui.sh`.
+same harness, on desktop (1280×860) and Android (412×915) in dark and light; the
+after run also renders a few states in the smallest desktop window (760×760),
+where the sidebar is hidden. The original UI was served from `main` with
+`tests/ui/catalog/serve_ui.sh`.
 
 | | Before (`main`) | After |
 |---|---|---|
-| Scenarios | 670 | 676 |
-| States captured | 2,302 of 2,302 | 2,324 of 2,324 |
+| Scenarios | 670 | 682 |
+| States captured | 2,302 of 2,302 | 2,336 of 2,336 |
 | Audit findings (contrast, text under 12px, small targets, clipping, names) | 0 | 0 |
-| English UI messages shown by some state | 1,604 of 2,157 | 1,649 of 2,195 |
+| English UI messages shown by some state | 1,604 of 2,157 | 1,654 of 2,201 |
 
 The new states are the Advanced settings page for each role, the Add device
-menu, a member's menu and Android's Connection details for a Member; the
-expanded-device-rows state went away with the expandable rows. Four reviewers
+menu, a member's menu, Android's Connection details and settings index for a
+Member, and the 760 px window's Home, Servers (before and after **Switch**),
+Devices and Advanced; the expanded-device-rows state went away with the
+expandable rows. `tests/ui/android_tv_dpad.py` drives the Devices sheets with a
+D-pad. Four reviewers
 compared every changed family before and after; their findings were fixed
 before the final run.
 

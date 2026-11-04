@@ -206,6 +206,7 @@ def coverage_states(cases):
     add('android', 'connection-subpage-disconnected', [click('Connection Method', False)], {'connected': False}, forms=mobile)
     add('android', 'details-subpage', [click('Connection details', False)], forms=mobile)
     add('android', 'details-subpage-member', [click('Connection details', False)], {'role': 'member'}, forms=mobile)
+    add('android', 'settings-index-member', [click('Settings')], {'role': 'member'}, forms=mobile)
     add('android', 'details-subpage-disconnected', [click('Connection details', False)], {'connected': False}, forms=mobile)
     add('android', 'server-picker', [click('Server: My private VPS. Change server')], {'profileCount': 4}, forms=mobile)
     add('android', 'server-picker-long-names', [click('Server: ', False)], {'profileCount': 12, 'longNames': True}, forms=mobile)
