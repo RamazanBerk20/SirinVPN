@@ -134,6 +134,9 @@ class WifiAutoConnectTest {
             until("Trusted Wi-Fi needs the monitor") { watching() }
             SystemClock.sleep(5000)
             assertFalse("Auto-connect connected on trusted Wi-Fi", control.running())
+            // Android keeps this notice visible until the user turns its channel off; its one action does that.
+            val notice = context.getSystemService(NotificationManager::class.java).activeNotifications.first { it.id == 74 }.notification
+            assertEquals(context.getString(R.string.notification_action_hide), notice.actions.single().title.toString())
             state = control.policy()
             assertEquals("trusted_wifi", state.getString("current_network"))
             control.call("forget_trusted_wifi", JSONObject().put("id", state.getJSONArray("trusted_networks").getJSONObject(0).getString("id")))

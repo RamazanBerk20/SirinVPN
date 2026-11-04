@@ -25,7 +25,7 @@
     <string name="notification_channel_updates">App updates</string>
     <string name="notification_channel_updates_description">Requests to approve SirinVPN updates</string>
     <string name="notification_channel_wifi">Wi-Fi auto-connect</string>
-    <string name="notification_channel_wifi_description">Shown while auto-connect watches for untrusted Wi-Fi with the VPN off</string>
+    <string name="notification_channel_wifi_description">Shown while auto-connect watches for untrusted Wi-Fi with the VPN off. Turning it off doesn’t stop auto-connect.</string>
 
     <!-- Ongoing VPN notification. %1$s is the download rate and %2$s the upload rate. -->
     <string name="notification_status_connected_traffic">Connected · ↓ %1$s · ↑ %2$s</string>
@@ -41,6 +41,7 @@
     <string name="notification_action_vpn_settings">VPN settings</string>
     <string name="notification_action_disconnect">Disconnect</string>
     <string name="notification_action_stop_connecting">Stop connecting</string>
+    <string name="notification_action_hide">Hide notice</string>
     <string name="notification_action_retry">Retry</string>
     <!-- Dismissible alert after a connection attempt fails. -->
     <string name="notification_failure_text">Couldn’t connect. Open SirinVPN to see why.</string>

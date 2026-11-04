@@ -39,7 +39,10 @@ It differs from the attempt removed on 29 October in four ways:
 
 - **No permanent notification.** Off Wi-Fi nothing runs: a one-shot
   `PendingIntent` network callback wakes the app when Wi-Fi joins. Only on Wi-Fi
-  with the VPN off does a watcher run, with its own silent channel.
+  with the VPN off does a watcher run, with its own silent channel. Android
+  won't let an app hide a foreground service's notice (it raises an off channel
+  back to visible), so the notice's **Hide notice** button opens the channel's
+  switch; once the user turns it off, the watcher keeps running unseen.
 - **A stable identity.** Trust is keyed on the name and security class, not
   `WifiInfo.networkId`, which Android renumbers at every boot.
 - **An explicit fail-safe.** A hidden name counts as untrusted, and Settings

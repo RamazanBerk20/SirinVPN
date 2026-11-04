@@ -111,7 +111,7 @@
     "title": "Wi-Fi auto-connect",
     "infoLabel": "About Wi-Fi auto-connect",
     "infoDesktop": "Trusted Wi-Fi is an exception to auto-connect, not a safety rating. Wi-Fi names are only displayed, never saved or sent. Auto-connect runs while the app is in the tray and stops when you quit.",
-    "infoAndroid": "Trusted Wi-Fi is an exception to auto-connect, not a safety rating. Wi-Fi names are only displayed, never saved or sent. Android shows them only to apps with precise location; SirinVPN never reads where you are. While you’re on Wi-Fi with the VPN off, a silent notification shows that auto-connect is watching.",
+    "infoAndroid": "Trusted Wi-Fi is an exception to auto-connect, not a safety rating. Wi-Fi names are only displayed, never saved or sent. Android shows them only to apps with precise location; SirinVPN never reads where you are. While you’re on Wi-Fi with the VPN off, Android requires a notice that auto-connect is watching. Its Hide notice button turns it off for good, and auto-connect keeps working.",
     "toggle": {
       "label": "Auto-connect on Wi-Fi",
       "summary": "Uses the server below, except on trusted Wi-Fi"
