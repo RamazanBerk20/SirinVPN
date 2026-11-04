@@ -3,8 +3,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- Wi-Fi auto-connect only: Android shows Wi-Fi names to apps with precise location ("all the time" for the
-         background). SirinVPN never requests coordinates. Android 10 and 11 read the name through WifiManager. -->
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+         background). SirinVPN never requests coordinates. -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />

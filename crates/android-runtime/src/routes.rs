@@ -5,7 +5,7 @@ use sirinvpn_protocol::ServerProfile;
 use sirinvpn_tunnel_model::{ConnectionPreferences, TunnelRoutingMode};
 
 /// Subtract private LAN ranges, retaining exact routes to the private VPS DNS.
-/// Android 10 has no excludeRoute API, so emit the minimal CIDR complement.
+/// Android 12 has no excludeRoute API (added in 13), so emit the minimal CIDR complement.
 #[cfg(target_os = "android")]
 pub fn routes(
     profile: &ServerProfile,

@@ -10,7 +10,7 @@ an existing device. Prefer the fresh-AVD harness:
 systemd-run --user --scope --quiet \
   -p MemoryMax=8G -p MemorySwapMax=0 \
   -p CPUQuota=400% -p TasksMax=512 \
-  python3 scripts/test-android-emulator.py --api 29 \
+  python3 scripts/test-android-emulator.py --api 31 \
     --output .cache/android-remediation-new \
     --apk apps/desktop/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk \
     --tests apps/desktop/src-tauri/gen/android/app/build/outputs/apk/androidTest/universal/debug/app-universal-debug-androidTest.apk
@@ -86,7 +86,7 @@ and physical 16 KB pages remain unqualified.
 Linux x86_64; Node 26.10, pnpm 11.3.0; Rust 1.97.1; Tauri 2.11.5 / JS API
 2.11.1; React 19.2.8; Go 1.27.2; JDK 17; Gradle 8.14.3; AGP 8.11; Kotlin
 compiler 1.9.25 (resolved runtime stdlib 2.0.21); Android SDK 36; NDK
-30.0.16248370. Minimum API 29, target API 36. The universal APK contains
+30.0.16248370. Minimum API 31 (Android 12), target API 36. The universal APK contains
 `arm64-v8a` and `x86_64`; native instrumentation executes on x86_64 emulators,
 with the separately authorized lifecycle run on physical ARM64.
 
@@ -137,11 +137,11 @@ Include both APKs and the separate test APK as immutable evidence inputs.
 This checks one PackageInstaller interruption boundary, not physical-device
 power loss or a change from development to production signing.
 
-Create isolated API 29 and API 36 x86_64 AVDs. The exercised devices are
+Create isolated API 31 and API 36 x86_64 AVDs. The exercised devices are
 `emulator-5562` and `emulator-5560`, respectively. The test scripts reject
 non-emulator serial numbers. Use a current Android System WebView: the pinned
-frontend browser baseline is Chrome 111. The API 29 factory image shipped
-WebView 74; tests installed the signed WebView/Trichrome 133 packages from the
+frontend browser baseline is Chrome 111. The API 31 factory image ships an
+older WebView; tests installed the signed WebView/Trichrome 133 packages from the
 API 36 image. A native explanation handles an older provider.
 
 ```sh
@@ -210,7 +210,7 @@ ANDROID_SERIAL=emulator-5562 node tests/android/resources.mjs
 # Only after all other VPS tests; this destroys the guarded disposable installation:
 ANDROID_SERIAL=emulator-5562 node tests/android/uninstall.mjs .cache/android-vps-new/fixture.json
 
-# API 29 compatibility test temporarily reverts only WebView, then restores 133:
+# API 31 compatibility test temporarily reverts only WebView, then restores 133:
 ANDROID_SERIAL=emulator-5562 node tests/android/webview.mjs
 adb -s emulator-5562 shell am instrument -w \
   -e class org.sirinvpn.client.VaultAcceptanceTest \

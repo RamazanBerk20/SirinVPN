@@ -50,7 +50,7 @@ measurements or prevent the active tunnel from carrying traffic.
 Android's Always-on and “Block connections without VPN” settings are the
 system policy authority. App-only disconnect is rejected while Always-on
 owns an established VPN. Permission-protected system starts are honored even
-on Android 10, where `isAlwaysOn()` is false before the first TUN exists.
+where `isAlwaysOn()` is false before the first TUN exists.
 System-requested reconnection also survives an underlying-network change
 during boot. Ordinary recovery uses bounded retries; an explicit Stop cancels
 pending work and pauses automation.
@@ -98,11 +98,11 @@ Android shows the Wi-Fi name only with precise location, with Location on, and
 from a closed app only with location "Allow all the time". When the name is
 hidden, the network is unidentified and therefore untrusted: auto-connect fails
 safe and connects. Settings → General then says what is missing and offers one
-button: **Allow location**, **Allow all the time** (Android 11+ grants it on its
+button: **Allow location**, **Allow all the time** (Android grants it on its
 own settings page), or **Turn on Location**. Battery use set to Restricted also
 gets a notice, since Android then refuses background starts. SirinVPN never
-requests coordinates; Android 10 and 11 read the name through `WifiManager`, 12+
-through a network callback with `FLAG_INCLUDE_LOCATION_INFO`.
+requests coordinates; it reads the name through a network callback with
+`FLAG_INCLUDE_LOCATION_INFO`.
 
 What sees the next network while the app is closed:
 
@@ -120,7 +120,7 @@ case with a running service. An app can't hide that notice: Android raises a
 foreground service's off or minimum channel to visible until the user turns it
 off (seen on the API 36 emulator). So the notice has one action, **Hide notice**,
 which opens that channel's switch. Once it's off, Android 13+ keeps the service
-running and lists it only under Quick Settings' active apps; Android 10–12 may
+running and lists it only under Quick Settings' active apps; Android 12 may
 show the system's own "running in the background" notice instead.
 Boot and package replacement re-arm the watch without opening the app. A force
 stop cancels it until the app is opened again, as Android intends. Background

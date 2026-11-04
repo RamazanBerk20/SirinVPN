@@ -45,13 +45,6 @@ object WifiRule {
         else -> null
     }
 
-    /** Android 10 and 11 report security only in the access point's scan result, for example "[RSN-PSK+SAE-CCMP]". */
-    fun securityClass(capabilities: String): String = when {
-        Regex("EAP|802\\.1X|SUITE_B|WAPI-CERT|OSEN").containsMatchIn(capabilities) -> "enterprise"
-        Regex("PSK|SAE|WEP|DPP").containsMatchIn(capabilities) -> "personal"
-        else -> "open"
-    }
-
     /** Null when Android hides the name (no precise location, Location off, or in the background without "all the time"). */
     fun identifier(ssid: String?, security: String?): String? =
         if (ssid.isNullOrBlank() || ssid == "<unknown ssid>" || security == null) null else "android-wifi:v2:$security:$ssid"

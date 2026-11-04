@@ -58,8 +58,7 @@ class NotificationTrafficTest {
                 publish()
                 val notice = expectText(expected)
                 assertEquals(disconnect, notice.notification.actions.single().title)
-                // Lookup proves this is the existing broadcast token on API 29 too;
-                // PendingIntent.isBroadcast() was only added in API 31.
+                // Lookup proves this is the existing broadcast token.
                 val broadcast = android.app.PendingIntent.getBroadcast(context, 3,
                     android.content.Intent(context, VpnActionReceiver::class.java)
                         .setAction("org.sirinvpn.STOP")

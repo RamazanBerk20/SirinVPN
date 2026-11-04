@@ -82,7 +82,7 @@ class SirinPlugin(private val activity: Activity) : Plugin(activity) {
             requestPermissionForAlias("camera",invoke,"scanGranted");return
         }
         if(command=="android_wifi_permission") {
-            // Precise first; Android 11+ grants "all the time" only on its own settings page, which the second request opens.
+            // Precise first; Android grants "all the time" only on its own settings page, which the second request opens.
             val fine=activity.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)==PackageManager.PERMISSION_GRANTED
             val permission=if(fine) Manifest.permission.ACCESS_BACKGROUND_LOCATION else Manifest.permission.ACCESS_FINE_LOCATION
             val asked=activity.getSharedPreferences("presentation",0)

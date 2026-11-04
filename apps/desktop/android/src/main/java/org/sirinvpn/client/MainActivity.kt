@@ -20,8 +20,8 @@ class MainActivity : TauriActivity() {
         appWebView?.evaluateJavascript("document.documentElement.dataset.fontScale='$size'",null)
     }
     override fun setContentView(view:android.view.View?) {
-        // Vite's pinned browser baseline is Chrome 111. Old Android 10 factory
-        // images can still ship WebView 74; explain the update instead of a blank UI.
+        // Vite's pinned browser baseline is Chrome 111. Android 12 factory images
+        // ship an older WebView; explain the update instead of a blank UI.
         // Wry installs its WebView asynchronously after onCreate, so intercept
         // that installation rather than displaying a notice it would overwrite.
         val provider=android.webkit.WebView.getCurrentWebViewPackage()

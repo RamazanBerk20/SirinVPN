@@ -19,8 +19,8 @@ See the [build guide](build-and-test.md) to reproduce the APK and evidence.
 - [Architecture/security](security-and-platform.md), [build/test commands](build-and-test.md),
   and [test summary](../../target/android-evidence/summary.json).
 
-The APK supports Android 10/API 29 through target API 36 and contains ARM64 and
-x86_64 libraries. Acceptance tests used isolated x86_64 API 29 and 36 emulators
+The APK supports Android 12/API 31 through target API 36 and contains ARM64 and
+x86_64 libraries (Android 10 and 11 until 4 November 2026). Acceptance tests use isolated x86_64 API 31 and 36 emulators
 with WebView 133. An earlier build was installed and launched on the connected
 ARM64 phone; that does not establish physical-device acceptance coverage.
 The QR fix and mobile redesign were tested on the emulator while the user used
@@ -30,6 +30,15 @@ the app launched successfully. Physical QR retesting remains pending.
 [Installation record](../../target/android-evidence/mobile-redesign/phone-install.json).
 This is a **debug-signed, debuggable development build**, not a production release.
 Existing desktop changes and the existing signing identity were retained.
+
+## Android 12 minimum, 4 November
+
+The minimum is now Android 12 (API 31). Android 10 and 11 lacked parts of the
+app rather than only tests: Wi-Fi identity through a network callback
+(`currentSecurityType`, `FLAG_INCLUDE_LOCATION_INFO`), lock-screen notification
+actions that require unlocking, and installer user-action control. Their code
+paths are gone, and so is `ACCESS_WIFI_STATE`. Android TVs still on 10 or 11
+lose support as well. The older emulator run moved from API 29 to API 31.
 
 ## Wi-Fi auto-connect returns, 4 November
 

@@ -6,7 +6,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.IBinder
-import android.os.Build
 
 /** Finite, explicitly requested file/SSH work; never a VPN keepalive. */
 class MaintenanceService : Service() {
@@ -20,7 +19,7 @@ class MaintenanceService : Service() {
             .setBadgeIconType(Notification.BADGE_ICON_NONE)
             .setContentTitle(getString(R.string.notification_maintenance_title)).setContentText(getString(R.string.notification_maintenance_text))
             .setOngoing(true).setOnlyAlertOnce(true).setContentIntent(VpnNotifications.openApp(this)).build()
-        if(Build.VERSION.SDK_INT>=29) startForeground(72,notification,ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC) else startForeground(72,notification)
+        startForeground(72,notification,ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
         return START_NOT_STICKY
     }
     override fun onBind(intent:Intent):IBinder?=null

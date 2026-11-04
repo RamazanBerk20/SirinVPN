@@ -62,7 +62,7 @@ jobs:
           echo "$PWD/.cache/ci-tools/node_modules/.bin" >> "$GITHUB_PATH"
           echo "GO_BIN=$(command -v go)" >> "$GITHUB_ENV"
           echo "NDK_HOME=$ANDROID_HOME/ndk/30.0.16248370" >> "$GITHUB_ENV"
-          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'platforms;android-36' 'build-tools;36.0.0' 'ndk;30.0.16248370' 'system-images;android-29;google_apis;x86_64' 'system-images;android-36;google_apis;x86_64' emulator
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'platforms;android-36' 'build-tools;36.0.0' 'ndk;30.0.16248370' 'system-images;android-31;google_apis;x86_64' 'system-images;android-36;google_apis;x86_64' emulator
           rustup target add x86_64-linux-android aarch64-linux-android
       - run: pnpm --dir apps/desktop install --frozen-lockfile
       - name: Build current VPS payloads
@@ -82,7 +82,7 @@ jobs:
           '
       - name: Fresh AVD native checks
         run: |
-          for api in 29 36; do
+          for api in 31 36; do
             python3 scripts/record-evidence.py --frozen-source --suite "android-emulator-$api" --output target/remediation-evidence --timeout 1400 --tested-artifact apps/desktop/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk --tested-artifact apps/desktop/src-tauri/gen/android/app/build/outputs/apk/androidTest/universal/debug/app-universal-debug-androidTest.apk --signing-category development -- systemd-run --user --scope --quiet -p MemoryMax=8G -p MemorySwapMax=0 -p CPUQuota=400% -p TasksMax=512 python3 scripts/test-android-emulator.py --api "$api" --output ".cache/android-emulator-$api" --apk apps/desktop/src-tauri/gen/android/app/build/outputs/apk/universal/debug/app-universal-debug.apk --tests apps/desktop/src-tauri/gen/android/app/build/outputs/apk/androidTest/universal/debug/app-universal-debug-androidTest.apk
           done
       - name: Preserve allowlisted summaries
@@ -95,16 +95,16 @@ jobs:
             target/remediation-evidence/android-build.json
             target/remediation-evidence/android-build.log
             target/remediation-evidence/android-package.json
-            target/remediation-evidence/android-emulator-29.json
+            target/remediation-evidence/android-emulator-31.json
             target/remediation-evidence/android-emulator-36.json
-            target/remediation-evidence/android-emulator-29.log
+            target/remediation-evidence/android-emulator-31.log
             target/remediation-evidence/android-emulator-36.log
             apps/desktop/src-tauri/gen/android/app/build/test-results/testUniversalDebugUnitTest/*.xml
-            .cache/android-emulator-29/results.json
+            .cache/android-emulator-31/results.json
             .cache/android-emulator-36/results.json
-            .cache/android-emulator-29/instrumentation.log
+            .cache/android-emulator-31/instrumentation.log
             .cache/android-emulator-36/instrumentation.log
-            .cache/android-emulator-29/emulator.log
+            .cache/android-emulator-31/emulator.log
             .cache/android-emulator-36/emulator.log
             .cache/android-emulator-36/wifi-connect.log
             .cache/android-emulator-36/wifi-before-native.log

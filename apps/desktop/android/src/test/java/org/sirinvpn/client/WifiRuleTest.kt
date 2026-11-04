@@ -53,10 +53,11 @@ class WifiRuleTest {
 
     @Test fun identityIsTheNameAndSecurityClassAndHiddenNamesHaveNone() {
         assertEquals("android-wifi:v2:personal:\"Home\"", WifiRule.identifier("\"Home\"", WifiRule.securityClass(android.net.wifi.WifiInfo.SECURITY_TYPE_SAE)))
-        assertEquals(WifiRule.securityClass(android.net.wifi.WifiInfo.SECURITY_TYPE_PSK), WifiRule.securityClass("[WPA2-PSK-CCMP][RSN-PSK+SAE-CCMP][ESS]"))
-        assertEquals("open", WifiRule.securityClass("[RSN-OWE-CCMP][ESS]"))
-        assertEquals("open", WifiRule.securityClass("[ESS]"))
-        assertEquals("enterprise", WifiRule.securityClass("[WPA2-EAP/SHA1-CCMP][RSN-EAP/SHA1-CCMP][ESS]"))
+        // A WPA2 to WPA3 upgrade keeps the class; an open or enhanced-open hotspot named like home never matches it.
+        assertEquals(WifiRule.securityClass(android.net.wifi.WifiInfo.SECURITY_TYPE_SAE), WifiRule.securityClass(android.net.wifi.WifiInfo.SECURITY_TYPE_PSK))
+        assertEquals("open", WifiRule.securityClass(android.net.wifi.WifiInfo.SECURITY_TYPE_OWE))
+        assertEquals("open", WifiRule.securityClass(android.net.wifi.WifiInfo.SECURITY_TYPE_OPEN))
+        assertEquals("enterprise", WifiRule.securityClass(android.net.wifi.WifiInfo.SECURITY_TYPE_EAP))
         assertEquals("enterprise", WifiRule.securityClass(android.net.wifi.WifiInfo.SECURITY_TYPE_PASSPOINT_R3))
         assertNull(WifiRule.securityClass(android.net.wifi.WifiInfo.SECURITY_TYPE_UNKNOWN))
         for (hidden in listOf(null, "", "<unknown ssid>")) assertNull(WifiRule.identifier(hidden, "personal"))

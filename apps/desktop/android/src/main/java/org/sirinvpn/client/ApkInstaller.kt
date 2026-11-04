@@ -32,14 +32,14 @@ object ApkInstaller {
         check(installer.mySessions.isEmpty()) { "An Android installation is already pending" }
         val parameters=PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL).apply {
             setAppPackageName(context.packageName);setSize(file.length())
-            if(android.os.Build.VERSION.SDK_INT>=31) setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_REQUIRED)
+            setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_REQUIRED)
         }
         val id=installer.createSession(parameters)
         try {
             installer.openSession(id).use { session ->
                 session.openWrite("base.apk",0,file.length()).use { output -> file.inputStream().use { it.copyTo(output) };session.fsync(output) }
                 val result=PendingIntent.getBroadcast(context,id,Intent(context,ApkInstallResult::class.java),
-                    PendingIntent.FLAG_UPDATE_CURRENT or if(android.os.Build.VERSION.SDK_INT>=31) PendingIntent.FLAG_MUTABLE else 0)
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE)
                 session.commit(result.intentSender)
             }
         } catch (error:Exception) { installer.abandonSession(id);throw error }

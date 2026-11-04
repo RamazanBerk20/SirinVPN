@@ -92,17 +92,14 @@ object Controller {
             operationState=JSONObject().put("command",preferences.getString("maintenance","")).put("phase","interrupted")
         }
         initialized = true
-        var interrupted=false
-        if (android.os.Build.VERSION.SDK_INT >= 30) {
-            val last=context.getSystemService(android.app.ActivityManager::class.java).getHistoricalProcessExitReasons(null,0,16)
-                .firstOrNull { it.processName.endsWith(":vpn") }
-            if (last?.reason==android.app.ApplicationExitInfo.REASON_USER_REQUESTED && last.timestamp >= preferences.getLong("request_time_ms",0)) {
-                paused=true;preferences.edit().putBoolean("paused",true).putBoolean("requested",false).commit()
-            }
-            interrupted=last!=null && last.timestamp>=preferences.getLong("request_time_ms",0) && last.reason in setOf(
-                android.app.ApplicationExitInfo.REASON_CRASH,android.app.ApplicationExitInfo.REASON_CRASH_NATIVE,
-                android.app.ApplicationExitInfo.REASON_LOW_MEMORY,android.app.ApplicationExitInfo.REASON_SIGNALED)
+        val last=context.getSystemService(android.app.ActivityManager::class.java).getHistoricalProcessExitReasons(null,0,16)
+            .firstOrNull { it.processName.endsWith(":vpn") }
+        if (last?.reason==android.app.ApplicationExitInfo.REASON_USER_REQUESTED && last.timestamp >= preferences.getLong("request_time_ms",0)) {
+            paused=true;preferences.edit().putBoolean("paused",true).putBoolean("requested",false).commit()
         }
+        val interrupted=last!=null && last.timestamp>=preferences.getLong("request_time_ms",0) && last.reason in setOf(
+            android.app.ApplicationExitInfo.REASON_CRASH,android.app.ApplicationExitInfo.REASON_CRASH_NATIVE,
+            android.app.ApplicationExitInfo.REASON_LOW_MEMORY,android.app.ApplicationExitInfo.REASON_SIGNALED)
         val manager = context.getSystemService(ConnectivityManager::class.java)
         // Know the current underlay now: a Wi-Fi wake or boot check must not see "no network" before callbacks arrive.
         @Suppress("DEPRECATION") for (value in manager.allNetworks) manager.getNetworkCapabilities(value)?.let {

@@ -7,7 +7,6 @@ import android.app.PendingIntent
 import android.app.KeyguardManager
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import org.json.JSONObject
 
 object VpnNotifications {
@@ -83,7 +82,7 @@ object VpnNotifications {
         val builder = Notification.Action.Builder(null, label, intent)
         // Android closes the shade for authentication-required actions even when already unlocked.
         // The receiver rechecks the lock at delivery, including after the notification was built.
-        if (Build.VERSION.SDK_INT >= 31) builder.setAuthenticationRequired(context.getSystemService(KeyguardManager::class.java).isDeviceLocked)
+        builder.setAuthenticationRequired(context.getSystemService(KeyguardManager::class.java).isDeviceLocked)
         return builder.build()
     }
     private val rateUnits = intArrayOf(R.string.notification_rate_bytes, R.string.notification_rate_kilobytes,

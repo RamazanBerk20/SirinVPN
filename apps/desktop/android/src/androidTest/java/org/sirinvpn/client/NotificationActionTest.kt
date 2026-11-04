@@ -57,7 +57,7 @@ class NotificationActionTest {
                 }
                 val action = manager.activeNotifications.single { it.id == VpnNotifications.VPN_ID }.notification.actions.single()
                 assertTrue(action.actionIntent.isBroadcast)
-                if (android.os.Build.VERSION.SDK_INT >= 31) assertFalse(action.isAuthenticationRequired)
+                assertFalse(action.isAuthenticationRequired)
                 stage.writeText(phase)
                 until("Disconnect was not delivered") { snapshot().getLong("generation") > state.getLong("generation") }
                 until("VPN notification was not removed") { manager.activeNotifications.none { it.id == VpnNotifications.VPN_ID } }
@@ -70,7 +70,7 @@ class NotificationActionTest {
             val unlockedAction = manager.activeNotifications.single { it.id == VpnNotifications.VPN_ID }.notification.actions.single()
             VpnNotifications.failed(context, state)
             until("Retry notification was not published") { manager.activeNotifications.any { it.id == 73 } }
-            if (android.os.Build.VERSION.SDK_INT >= 31) assertFalse(manager.activeNotifications.single { it.id == 73 }.notification.actions.single().isAuthenticationRequired)
+            assertFalse(manager.activeNotifications.single { it.id == 73 }.notification.actions.single().isAuthenticationRequired)
             stage.writeText("lock")
             until("Emulator did not lock") { keyguard.isDeviceLocked }
             // An action created before locking must still refuse an unauthenticated stop.
@@ -79,11 +79,9 @@ class NotificationActionTest {
             assertEquals(state.getLong("generation"), snapshot().getLong("generation"))
             VpnNotifications.update(context, state)
             VpnNotifications.failed(context, state)
-            if (android.os.Build.VERSION.SDK_INT >= 31) {
-                for (id in listOf(VpnNotifications.VPN_ID, 73)) {
-                    until("Locked notification must require authentication") {
-                        manager.activeNotifications.single { it.id == id }.notification.actions.single().isAuthenticationRequired
-                    }
+            for (id in listOf(VpnNotifications.VPN_ID, 73)) {
+                until("Locked notification must require authentication") {
+                    manager.activeNotifications.single { it.id == id }.notification.actions.single().isAuthenticationRequired
                 }
             }
         } finally {

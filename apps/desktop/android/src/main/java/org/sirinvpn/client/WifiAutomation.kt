@@ -13,8 +13,6 @@ import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import android.net.VpnService
 import android.net.wifi.WifiInfo
-import android.net.wifi.WifiManager
-import android.os.Build
 import android.provider.Settings
 import org.json.JSONObject
 import java.util.UUID
@@ -92,25 +90,17 @@ object WifiAutomation {
         val manager = context.getSystemService(ConnectivityManager::class.java)
         if (manager.getNetworkCapabilities(network)?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) != true)
             return JSONObject().put("wifi", false).put("trustable", false).put("identifier", "android-network:v1:${network.networkHandle}").toString()
-        var security: String? = null
         // Without precise location Android hides the name anyway; a background read can still be refused.
-        val info = if (context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) null else try {
-            if (Build.VERSION.SDK_INT >= 31) located(manager, network)?.also { security = WifiRule.securityClass(it.currentSecurityType) }
-            else context.getSystemService(WifiManager::class.java).let { wifi ->
-                @Suppress("DEPRECATION") val current = wifi.connectionInfo
-                security = current?.bssid?.let { bssid -> wifi.scanResults.firstOrNull { it.BSSID == bssid } }?.capabilities?.let(WifiRule::securityClass)
-                current
-            }
-        } catch (_: Exception) { null }
-        val identifier = WifiRule.identifier(info?.ssid, security)
+        val info = if (context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) null
+            else try { located(manager, network) } catch (_: Exception) { null }
+        val identifier = WifiRule.identifier(info?.ssid, info?.let { WifiRule.securityClass(it.currentSecurityType) })
         return JSONObject().put("wifi", true).put("trustable", identifier != null)
             // Without a readable name each connection is its own untrusted network: fail safe, connect.
             .put("identifier", identifier ?: "android-wifi:v2:unknown:${network.networkHandle}")
             .put("name", if (identifier != null) info!!.ssid.removeSurrounding("\"") else JSONObject.NULL).toString()
     }
 
-    /** Only a callback asking for location info sees the SSID on Android 12+; getNetworkCapabilities always hides it. */
-    @androidx.annotation.RequiresApi(31)
+    /** Only a callback asking for location info sees the SSID; getNetworkCapabilities always hides it. */
     private fun located(manager: ConnectivityManager, network: Network): WifiInfo? {
         val result = CompletableFuture<WifiInfo?>()
         val callback = object : ConnectivityManager.NetworkCallback(FLAG_INCLUDE_LOCATION_INFO) {

@@ -6,7 +6,10 @@ APKs and generated test evidence are local build outputs, not published releases
 
 ## Fixed decisions
 
-Android 10/API 29 minimum, compile/target API 36, direct APK distribution,
+Android 12/API 31 minimum (since 4 November 2026: Android 10 and 11 lack
+Wi-Fi identity through network callbacks, authenticated lock-screen
+notification actions and installer user-action control; Android TVs still on
+10 or 11 lose support too), compile/target API 36, direct APK distribution,
 ARM64 and x86_64. Shared React UI in Tauri; a separately initialized `:vpn`
 process owns the VPN and native Rust runtime. Binder is the process boundary.
 The UI never owns or tears down an active tunnel. No production signing key is

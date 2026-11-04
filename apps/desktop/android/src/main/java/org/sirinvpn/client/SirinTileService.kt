@@ -84,7 +84,7 @@ class SirinTileService : TileService() {
         })
     }
     private fun openApp() = launch(Intent(this, MainActivity::class.java))
-    // Android 10–13 have no PendingIntent overload; Android 14+ uses it below.
+    // Android 12–13 have no PendingIntent overload; Android 14+ uses it below.
     @android.annotation.SuppressLint("StartActivityAndCollapseDeprecated")
     private fun launch(intent: Intent) {
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)

@@ -49,17 +49,17 @@ with zipfile.ZipFile(args.apk) as archive:
             'libsirinvpn_desktop_lib.so','libsirinvpn_android_runtime.so','libsirin_wireguard.so'}
 subprocess.run([str(build/"zipalign"),"-c","-P","16","4",str(args.apk)],check=True,timeout=60)
 badging=subprocess.check_output([str(build/"aapt2"),"dump","badging",str(args.apk)],timeout=60).decode()
-assert "minSdkVersion:'29'" in badging and "targetSdkVersion:'36'" in badging
+assert "minSdkVersion:'31'" in badging and "targetSdkVersion:'36'" in badging
 # Android TV: a leanback entry with a banner, and no required hardware such as a touchscreen.
 assert "leanback-launchable-activity: name='org.sirinvpn.client.MainActivity'" in badging and "banner='res/" in badging
 assert "uses-feature-not-required: name='android.hardware.touchscreen'" in badging and "\n  uses-feature: " not in badging
 debuggable="application-debuggable" in badging
 certificates=[]
 if not args.unsigned:
-    verified=subprocess.check_output([str(build/"apksigner"),"verify","--print-certs","--min-sdk-version","29",str(args.apk)],timeout=60).decode()
+    verified=subprocess.check_output([str(build/"apksigner"),"verify","--print-certs","--min-sdk-version","31",str(args.apk)],timeout=60).decode()
     certificates=[line.split(': ',1)[1] for line in verified.splitlines() if 'certificate SHA-256 digest:' in line]
     assert certificates, "APK signer certificate digest missing"
 print(json.dumps({"apk":str(args.apk),"sha256":hashlib.file_digest(args.apk.open('rb'),'sha256').hexdigest(),
     "signed":not args.unsigned,"signer_certificate_sha256":certificates,"debuggable":debuggable,
     "signing_category":"development" if debuggable else "non-debuggable-unqualified",
-    "min_sdk":29,"target_sdk":36,"page_alignment":16384,"libraries":libraries,"server_payloads":payloads},indent=2))
+    "min_sdk":31,"target_sdk":36,"page_alignment":16384,"libraries":libraries,"server_payloads":payloads},indent=2))

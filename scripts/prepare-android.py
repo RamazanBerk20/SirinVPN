@@ -26,7 +26,8 @@ for arch in ('x86_64', 'aarch64'):
     digests[arch] = hashlib.sha256(artifact.read_bytes()).hexdigest()
 (payloads / 'sha256.json').write_text(json.dumps(digests))
 gradle = project / 'app/build.gradle.kts'
-text = gradle.read_text().replace('minSdk = 24', 'minSdk = 29').replace('jvmTarget = "1.8"', 'jvmTarget = "17"')
+# Android 12 is the minimum: Wi-Fi identity, locked-notification actions and installer consent need it.
+text = re.sub(r'minSdk = \d+', 'minSdk = 31', gradle.read_text()).replace('jvmTarget = "1.8"', 'jvmTarget = "17"')
 if 'ndkVersion =' not in text:
     text = text.replace('    compileSdk = 36','    compileSdk = 36\n    ndkVersion = "30.0.16248370"')
 # Keep native symbols in target/ for debugging, not in every installed development APK.

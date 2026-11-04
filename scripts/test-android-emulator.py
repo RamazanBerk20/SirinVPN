@@ -28,7 +28,7 @@ def main():
     parser.add_argument("--apk", type=Path, required=True)
     parser.add_argument("--tests", type=Path, required=True)
     parser.add_argument("--upgrade-from", type=Path, help="Older same-signer development APK for interrupted in-place upgrade checks")
-    parser.add_argument("--api", choices=[29, 36], type=int, default=36)
+    parser.add_argument("--api", choices=[31, 36], type=int, default=36)
     args = parser.parse_args()
     output = args.output.resolve()
     output.mkdir(mode=0o700)  # Refuse preexisting fixture state.
@@ -150,7 +150,7 @@ def main():
             child = subprocess.Popen([str(sdk / "emulator/emulator"), "-avd", "sirin-remediation",
                 "-port", str(emulator_port), "-no-window", "-no-audio", "-no-snapshot", "-no-boot-anim",
                 "-no-metrics", "-skin", "320x640", "-dpi-device", "160", "-feature", "-Vulkan",
-                "-memory", "2560" if args.api == 36 else "1024", "-cores", "1", "-gpu", "swiftshader"],
+                "-memory", "2560" if args.api == 36 else "2048", "-cores", "1", "-gpu", "swiftshader"],
                 env=env, stdout=log, stderr=log)
         deadline = time.monotonic() + 360
         while time.monotonic() < deadline:
@@ -215,18 +215,23 @@ def main():
             # Boot completion alone does not mean broadcasts have drained or the
             # synthetic Wi-Fi is the active underlay after an interrupted update.
             run([*adb, "shell", "am", "wait-for-broadcast-barrier"], timeout=180)
-            run([*adb, "shell", "svc", "wifi", "enable"])
-            selected = run([*adb, "shell", "cmd", "wifi", "connect-network", "AndroidWifi", "open"], timeout=60)
-            (output / "wifi-connect.log").write_bytes(selected.stdout+selected.stderr)
-            deadline = time.monotonic() + 90
-            while time.monotonic() < deadline:
-                status = run([*adb, "shell", "cmd", "wifi", "status"], timeout=30)
-                (output / "wifi-before-native.log").write_bytes(status.stdout+status.stderr)
-                if b"Wifi is connected to" in status.stdout and b"AndroidWifi" in status.stdout:
-                    break
-                time.sleep(2)
-            else:
-                raise TimeoutError("Synthetic AndroidWifi fixture did not connect")
+        # API 36 must have the synthetic AndroidWifi; an API 31 image without it only skips the Wi-Fi cases.
+        wifi = False
+        run([*adb, "shell", "svc", "wifi", "enable"])
+        selected = subprocess.run([*adb, "shell", "cmd", "wifi", "connect-network", "AndroidWifi", "open"], env=env, capture_output=True, timeout=60)
+        (output / "wifi-connect.log").write_bytes(selected.stdout+selected.stderr)
+        deadline = time.monotonic() + 90
+        while time.monotonic() < deadline:
+            status = run([*adb, "shell", "cmd", "wifi", "status"], timeout=30)
+            (output / "wifi-before-native.log").write_bytes(status.stdout+status.stderr)
+            if b"Wifi is connected to" in status.stdout and b"AndroidWifi" in status.stdout:
+                wifi = True
+                break
+            time.sleep(2)
+        if not wifi and args.api == 36:
+            raise TimeoutError("Synthetic AndroidWifi fixture did not connect")
+        report["wifi_fixture"] = wifi
+        if wifi:
             state = run([*adb, "shell", "dumpsys", "connectivity"], timeout=30)
             (output / "network-before-native.log").write_bytes(state.stdout+state.stderr)
             # Wi-Fi auto-connect reads the network name, which Android shows only with precise
@@ -237,14 +242,14 @@ def main():
         cases = ["VaultAcceptanceTest", "NotificationTrafficTest", "QrScannerTest", "NetworkRecoveryTest",
                  "OptionHandlingTest#packageReplacementUsesOrdinaryRecovery",
                  "OptionHandlingTest#optionsControlTheRunningService", "ExternalControlsTest",
-                 *(["WifiAutoConnectTest#ruleFollowsTheNetworkLikeDesktop"] if args.api == 36 else [])]
+                 *(["WifiAutoConnectTest#ruleFollowsTheNetworkLikeDesktop"] if wifi else [])]
         result = run([*adb, "shell", "am", "instrument", "-w", "-r", "-e", "class",
             ",".join("org.sirinvpn.client." + case for case in cases),
             "org.sirinvpn.client.test/androidx.test.runner.AndroidJUnitRunner"], timeout=300)
         (output / "instrumentation.log").write_bytes(result.stdout + result.stderr)
         match = re.search(rb"OK \((\d+) tests?\)", result.stdout)
         assert match and b"FAILURES" not in result.stdout, "Instrumentation assertions failed"
-        if args.api == 36:
+        if wifi:
             report["wifi_auto_connect"] = wifi_lifecycle()
         report.update(result="passed", tests=int(match[1]), cases=cases)
         return 0
