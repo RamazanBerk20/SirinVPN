@@ -211,8 +211,9 @@ BEFORE_IDENTITY=$(vm_ssh sudo sha256sum \
 
 vm_ssh sudo rm -f /etc/systemd/system/sirinvpn-firewall.service
 vm_ssh sudo systemctl daemon-reload
-# The Owner's opt-in turns automatic security updates back on over an existing setup that is off.
-vm_ssh "echo 'APT::Periodic::Unattended-Upgrade \"0\";' | sudo tee /etc/apt/apt.conf.d/20auto-upgrades >/dev/null"
+# The Owner's opt-in turns automatic security updates back on over an existing setup that is off,
+# here root-only as earlier installs wrote it under the script's umask.
+vm_ssh "echo 'APT::Periodic::Unattended-Upgrade \"0\";' | sudo install -m 0600 /dev/stdin /etc/apt/apt.conf.d/20auto-upgrades"
 vm_ssh sudo systemctl disable --now apt-daily-upgrade.timer
 
 "$CLI" --json server repair "$PROFILE_ID" \
@@ -224,8 +225,9 @@ vm_ssh sudo systemctl disable --now apt-daily-upgrade.timer
   --passwordless-sudo \
   --enable-security-updates \
   --confirm-repair >"$REPAIR_OUTPUT"
-[ "$(vm_ssh apt-config shell VALUE APT::Periodic::Unattended-Upgrade)" = "VALUE='1'" ]
-vm_ssh systemctl is-enabled --quiet apt-daily-upgrade.timer
+# Read as the server's own check does: unprivileged, as the sirinvpn user.
+[ "$(vm_ssh sudo -u sirinvpn apt-config shell VALUE APT::Periodic::Unattended-Upgrade)" = "VALUE='1'" ]
+vm_ssh sudo -u sirinvpn systemctl is-enabled --quiet apt-daily-upgrade.timer
 
 EXPECTED_ARTIFACT_HASH=$(sha256sum "$SERVER" | awk '{print $1}')
 if command -v jq >/dev/null 2>&1; then

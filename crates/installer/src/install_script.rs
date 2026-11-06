@@ -286,6 +286,9 @@ if [ -n "$ENABLE_SECURITY_UPDATES" ]; then
   systemctl unmask apt-daily.timer apt-daily-upgrade.timer >/dev/null 2>&1 || true
   systemctl enable --now apt-daily.timer apt-daily-upgrade.timer >/dev/null
 fi
+# Debian keeps it world-readable; written under this script's umask it was root-only, which hid the
+# setting from the unprivileged server's check. This also heals files earlier installs wrote.
+[ ! -f /etc/apt/apt.conf.d/20auto-upgrades ] || chmod a+r /etc/apt/apt.conf.d/20auto-upgrades
 
 printf '%s\n' 'SIRINVPN_INSTALL_STEP=ports'
 if ss -H -lnt "sport = :{tcp_fallback_port}" | grep -q .; then

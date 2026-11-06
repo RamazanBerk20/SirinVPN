@@ -83,6 +83,11 @@ fn script_has_scoped_firewall_ownership_and_docker_interop() {
     let enable = script.find("APT::Periodic::Unattended-Upgrade").unwrap();
     assert!(script[..enable].contains("if [ -n \"$ENABLE_SECURITY_UPDATES\" ]; then"));
     assert!(script.contains("\nENABLE_SECURITY_UPDATES=\n"));
+    // The script's umask is 077; the unprivileged server must still read the setting.
+    let readable = script
+        .find("chmod a+r /etc/apt/apt.conf.d/20auto-upgrades")
+        .unwrap();
+    assert!(script.contains("umask 077") && readable > enable);
     let mut asked = request.clone();
     asked.enable_security_updates = true;
     let asked_script = install_script(
