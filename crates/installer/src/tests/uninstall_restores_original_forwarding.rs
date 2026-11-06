@@ -247,6 +247,7 @@ fn install_records_before_applying_and_uninstall_restores_before_removing_the_re
         private_dns_records: Vec::new(),
         nat64_prefix: None,
         replace_existing_installation: false,
+        enable_security_updates: false,
     };
     let discovery = ServerDiscovery {
         os_id: "debian".into(),

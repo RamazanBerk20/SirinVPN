@@ -117,6 +117,28 @@ it("repairs an already trusted VPS directly with the inspected pin", async () =>
   );
   expect(api.trustSshHost).not.toHaveBeenCalled();
   expect(screen.queryByRole("checkbox", { name: new RegExp(t("ssh.verify.confirm")) })).toBeNull();
+  // A plain repair leaves an existing security-update setup alone.
+  expect(api.repairServer).toHaveBeenCalledWith(expect.objectContaining({ enable_security_updates: false }));
+});
+
+it("turns automatic security updates on only when the Owner leaves them selected", async () => {
+  const repairWith = async (untick: boolean) => {
+    vi.mocked(api.repairServer).mockClear();
+    render(<RepairServerDialog profile={profile} open onOpenChange={vi.fn()} disconnected intent="security" onCompleted={vi.fn().mockResolvedValue(undefined)} />);
+    const agent = await screen.findByRole("button", { name: t("ssh.auth.agent") });
+    await waitFor(() => expect(agent.matches(":disabled")).toBe(false));
+    fireEvent.click(agent);
+    const box = screen.getByRole("checkbox", { name: new RegExp(t("vps.repair.securityUpdates")) }) as HTMLInputElement;
+    expect(box.checked).toBe(true);
+    if (untick) fireEvent.click(box);
+    fireEvent.click(screen.getByRole("button", { name: t("vps.repair.action.repair") }));
+    await screen.findByText(t("vps.repair.titleDone"));
+    const request = vi.mocked(api.repairServer).mock.calls[0][0];
+    cleanup();
+    return request;
+  };
+  expect(await repairWith(false)).toEqual(expect.objectContaining({ enable_security_updates: true, transport: expect.anything() }));
+  expect(await repairWith(true)).toEqual(expect.objectContaining({ enable_security_updates: false }));
 });
 
 for (const status of ["unknown", "changed"] as const) {

@@ -162,6 +162,7 @@ fn dns_over_https_uses_a_pinned_loopback_proxy_and_scoped_service() {
         private_dns_records: Vec::new(),
         nat64_prefix: None,
         replace_existing_installation: false,
+        enable_security_updates: false,
     };
     let discovery = ServerDiscovery {
         os_id: "debian".into(),

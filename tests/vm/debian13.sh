@@ -191,10 +191,10 @@ if ! "$CLI" --json server add \
 fi
 
 if command -v jq >/dev/null 2>&1; then
-  jq -e '.role == "owner" and .endpoint.host == "127.0.0.1" and (.ipv6_tunnel_enabled // false) == false and .obfuscated_udp.port == 443 and (.obfuscated_udp.server_public_key | length) == 44 and .tcp_fallback.port == 443 and (.tcp_fallback.server_public_key | length) == 44' "$PROFILE_OUTPUT" >/dev/null
+  jq -e '.role == "owner" and .endpoint.host == "127.0.0.1" and (.ipv6_tunnel_enabled // false) == false and .obfuscated_udp.port == 51821 and (.obfuscated_udp.server_public_key | length) == 44 and .tcp_fallback.port == 443 and (.tcp_fallback.server_public_key | length) == 44' "$PROFILE_OUTPUT" >/dev/null
   PROFILE_ID=$(jq -r '.id' "$PROFILE_OUTPUT")
 else
-  python3 -c 'import json, sys; profile = json.load(open(sys.argv[1], encoding="utf-8")); assert profile["role"] == "owner" and profile["endpoint"]["host"] == "127.0.0.1" and not profile.get("ipv6_tunnel_enabled", False) and profile["obfuscated_udp"]["port"] == 443 and len(profile["obfuscated_udp"]["server_public_key"]) == 44 and profile["tcp_fallback"]["port"] == 443 and len(profile["tcp_fallback"]["server_public_key"]) == 44' "$PROFILE_OUTPUT"
+  python3 -c 'import json, sys; profile = json.load(open(sys.argv[1], encoding="utf-8")); assert profile["role"] == "owner" and profile["endpoint"]["host"] == "127.0.0.1" and not profile.get("ipv6_tunnel_enabled", False) and profile["obfuscated_udp"]["port"] == 51821 and len(profile["obfuscated_udp"]["server_public_key"]) == 44 and profile["tcp_fallback"]["port"] == 443 and len(profile["tcp_fallback"]["server_public_key"]) == 44' "$PROFILE_OUTPUT"
   PROFILE_ID=$(python3 -c 'import json, sys; print(json.load(open(sys.argv[1], encoding="utf-8"))["id"])' "$PROFILE_OUTPUT")
 fi
 
@@ -211,6 +211,9 @@ BEFORE_IDENTITY=$(vm_ssh sudo sha256sum \
 
 vm_ssh sudo rm -f /etc/systemd/system/sirinvpn-firewall.service
 vm_ssh sudo systemctl daemon-reload
+# The Owner's opt-in turns automatic security updates back on over an existing setup that is off.
+vm_ssh "echo 'APT::Periodic::Unattended-Upgrade \"0\";' | sudo tee /etc/apt/apt.conf.d/20auto-upgrades >/dev/null"
+vm_ssh sudo systemctl disable --now apt-daily-upgrade.timer
 
 "$CLI" --json server repair "$PROFILE_ID" \
   --username sirin \
@@ -219,7 +222,10 @@ vm_ssh sudo systemctl daemon-reload
   --host-key "$HOST_KEY" \
   --server-binary "$SERVER" \
   --passwordless-sudo \
+  --enable-security-updates \
   --confirm-repair >"$REPAIR_OUTPUT"
+[ "$(vm_ssh apt-config shell VALUE APT::Periodic::Unattended-Upgrade)" = "VALUE='1'" ]
+vm_ssh systemctl is-enabled --quiet apt-daily-upgrade.timer
 
 EXPECTED_ARTIFACT_HASH=$(sha256sum "$SERVER" | awk '{print $1}')
 if command -v jq >/dev/null 2>&1; then
@@ -284,4 +290,4 @@ if vm_ssh sudo nft list table ip6 sirinvpn_nat6 >/dev/null 2>&1; then
 fi
 
 GUEST_OS=$(vm_ssh grep '^PRETTY_NAME=' /etc/os-release | cut -d= -f2 | tr -d '"')
-echo "Disposable $GUEST_OS VM installation, authenticated UDP/TCP listeners, IPv4-only fallback, identity-preserving repair, and rollback checks passed."
+echo "Disposable $GUEST_OS VM installation, authenticated UDP/TCP listeners, IPv4-only fallback, identity-preserving repair, security-update opt-in, and rollback checks passed."

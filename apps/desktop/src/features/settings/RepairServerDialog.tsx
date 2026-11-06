@@ -2,6 +2,7 @@ import { TransportSetupFields, newTransportDraft, transportDraftIsValid, transpo
 import { DnsChangeReview } from "../dns/DnsChangeReview";
 import { useSshLogin } from "../../hooks/useSshLogin";
 import { SshLoginFields } from "./SshLoginFields";
+import { ConfirmationRow } from "../../components/ConfirmationRow";
 import { RepairSummary } from "./RepairSummary";
 import { DialogBack, DialogContent } from "../../components/DialogContent";
 import { Busy, OperationProgress, stepsAt } from "../../components/OperationResult";
@@ -50,10 +51,12 @@ export function RepairServerDialog({
   disconnected: boolean;
   onCompleted: () => Promise<void>;
   onReturnHome?: () => void;
-  intent?: "repair" | "dns";
+  /** "security" is a plain repair that starts with automatic security updates selected. */
+  intent?: "repair" | "dns" | "security";
 }) {
   const formId = useId();
   const dns = intent === "dns";
+  const [securityUpdates, setSecurityUpdates] = useState(intent === "security");
   const [step, setStep] = useState<
     "details" | "fingerprint" | "review" | "repairing" | "success"
   >("details");
@@ -86,6 +89,7 @@ export function RepairServerDialog({
       // The dialog stays mounted; a restore or endpoint update may have changed
       // the saved transport since the draft was last built.
       setTransport(newTransportDraft(profile));
+      setSecurityUpdates(intent === "security");
     } else {
       clearSecrets();
       setStep("details");
@@ -103,7 +107,7 @@ export function RepairServerDialog({
       setError(null);
       setBusy(false);
     }
-  }, [open]);
+  }, [open, intent]);
 
   const changeOpen = (next: boolean) => {
     if (!next && (busy || step === "repairing")) return;
@@ -189,6 +193,7 @@ export function RepairServerDialog({
         ...(!dns && nat64Choice !== "preserve" && {
           nat64_prefix: nat64Choice === "replace" ? nat64Prefix.trim() : null,
         }),
+        enable_security_updates: !dns && securityUpdates,
       });
       clearSecrets();
       setPhase(2);
@@ -272,6 +277,10 @@ export function RepairServerDialog({
                   <SshLoginFields login={login} />
                 </> : <>
                   <SshLoginFields login={login} />
+                  <ConfirmationRow checked={securityUpdates} onChange={setSecurityUpdates}>
+                    <strong>{t("vps.repair.securityUpdates")}</strong>
+                    <small>{t("vps.repair.securityUpdatesNote")}</small>
+                  </ConfirmationRow>
                   <SettingsDisclosure className="advanced-fields repair-options" summary={t("vps.repair.options")}>
                     <p className="settings-note">{t("vps.repair.optionsNote")}</p>
                     <TransportSetupFields value={transport} onChange={setTransport} existing />

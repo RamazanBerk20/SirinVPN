@@ -127,6 +127,12 @@ def coverage_states(cases):
     diagnostics = maintenance + [click('Run diagnostics')]
     outcomes('speed-test', 'speed-test', diagnostics, click('Run speed test'), 'speedTest')
     add('speed-test', 'speed-test-cancelled', diagnostics + [click('Run speed test')], {'responses': {'speedTest': None}}, required=['speedTest'])
+    # The security-updates warning offers Turn on: the review, then Repair with the opt-in ticked.
+    updates_off = {'connected': False, 'diagnostics': {'api_version': 'v1', 'checks': [{'code': 'os_security_updates', 'label': 'VPS security updates', 'level': 'warning',
+        'message': 'Automatic security updates are off or could not be confirmed. Repair VPS with “Turn on automatic security updates” selected switches them on.'}]}}
+    add('security-updates', 'turn-on-offered', diagnostics, updates_off)
+    add('security-updates', 'turn-on-review', diagnostics + [click('Turn on')], updates_off)
+    add('security-updates', 'turn-on-repair', diagnostics + [click('Turn on'), click('Continue')], updates_off)
 
     # Restarting after a desktop app update (the Windows installer closes the app itself).
     installed = settings('', 'general') + [click('Check for updates'), fill('Release source', SOURCE), click('Check release'), check('I confirm installing'), click('Install update')]

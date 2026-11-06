@@ -36,6 +36,8 @@ pub(super) struct RepairInput {
     pub(super) nat64_prefix: Option<Option<String>>,
     #[serde(default)]
     pub(super) transport: Option<sirinvpn_installer::TransportSetup>,
+    #[serde(default)]
+    pub(super) enable_security_updates: bool,
 }
 
 fn present<'de, D: serde::Deserializer<'de>>(

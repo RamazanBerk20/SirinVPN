@@ -440,6 +440,7 @@ pub async fn dispatch(
                 replace_existing_installation: input["replace_existing_installation"]
                     .as_bool()
                     .unwrap_or(false),
+                enable_security_updates: false,
             };
             runtime
                 .paths
@@ -592,6 +593,7 @@ pub async fn dispatch(
                     .filter(|v| !v.is_null())
                     .map(|v| serde_json::from_value(v.clone()))
                     .transpose()?,
+                enable_security_updates: input["enable_security_updates"] == true,
             })?;
             p.endpoint = result.endpoint;
             p.endpoint_generation = result.endpoint_generation;

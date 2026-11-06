@@ -264,6 +264,8 @@
       "running": "The VPN is briefly unavailable."
     },
     "note": "The VPN is briefly unavailable while the server restarts.",
+    "securityUpdates": "Turn on automatic security updates",
+    "securityUpdatesNote": "The VPS then installs its operating system’s security fixes daily. Left off, Repair turns them on only where they were never installed.",
     "action": {
       "repair": "Repair VPS",
       "review": "Review changes",

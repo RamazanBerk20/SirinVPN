@@ -18,10 +18,11 @@ import type { SettingsCategory } from "../settings/SettingsLayout";
 import type { ServerWorkspaceModel } from "./useServerWorkspace";
 
 /** Checks whose advice names a settings page get a button that opens it. */
-function diagnosticFixes(open: (category: SettingsCategory) => void) {
+export function diagnosticFixes(open: (category: SettingsCategory) => void, turnOnUpdates?: () => void) {
   const connection = { label: t("help.troubleshoot.connectionSettings"), run: () => open("connection") };
   const network = { label: t("maintenance.diagnostics.openNetwork"), run: () => open("network") };
-  return { local_protection: connection, local_transport: connection, local_mtu: connection, local_routes: network, local_ipv6: network, local_dns: network, dns_blocklist: network };
+  return { local_protection: connection, local_transport: connection, local_mtu: connection, local_routes: network, local_ipv6: network, local_dns: network, dns_blocklist: network,
+    ...(turnOnUpdates && { os_security_updates: { label: t("maintenance.diagnostics.turnOnUpdates"), run: turnOnUpdates } }) };
 }
 
 export function WorkspaceDialogs({
@@ -76,7 +77,8 @@ export function WorkspaceDialogs({
             ) : (
               <>
                 <DiagnosticResults report={diagnostics} onRunAgain={() => void model.runDiagnostics()}
-                  onConnect={model.localKnown && model.localStatus.state === "disconnected" && !model.anotherConnected ? () => { setDiagnosticsOpen(false); void model.toggle(); } : undefined} fixes={onOpenSettings && diagnosticFixes((category) => { setDiagnosticsOpen(false); onOpenSettings(category); })} />
+                  onConnect={model.localKnown && model.localStatus.state === "disconnected" && !model.anotherConnected ? () => { setDiagnosticsOpen(false); void model.toggle(); } : undefined} fixes={onOpenSettings && diagnosticFixes((category) => { setDiagnosticsOpen(false); onOpenSettings(category); },
+                    profile.role === "owner" ? () => { setDiagnosticsOpen(false); model.setMaintenanceReview("security"); } : undefined)} />
                 {model.canManageAccess && <SpeedTest serverId={profile.id} />}
               </>
             )}
@@ -121,7 +123,7 @@ export function WorkspaceDialogs({
         onRepair={() => model.setRepairIntent("repair")}
       />
       <RepairServerDialog
-        intent={model.repairIntent === "dns" ? "dns" : "repair"}
+        intent={model.repairIntent === "update" ? "repair" : model.repairIntent}
         profile={profile}
         open={repairOpen && model.repairIntent !== "update"}
         onOpenChange={setRepairOpen}

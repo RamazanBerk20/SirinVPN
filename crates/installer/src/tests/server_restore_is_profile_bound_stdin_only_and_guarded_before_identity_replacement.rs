@@ -205,6 +205,7 @@ fn server_restore_is_profile_bound_stdin_only_and_guarded_before_identity_replac
         private_dns_records: Vec::new(),
         nat64_prefix: None,
         replace_existing_installation: true,
+        enable_security_updates: false,
     };
     let discovery = ServerDiscovery {
         os_id: "debian".into(),

@@ -73,6 +73,12 @@
         "choose": "You choose DNS servers or private records for every device on this server.",
         "apply": "Changes are applied with a repair, which reinstalls the server software."
       }
+    },
+    "security": {
+      "title": "Turn on VPS security updates",
+      "steps": {
+        "enable": "A repair turns on the operating system’s automatic security updates and reinstalls the server software."
+      }
     }
   },
   "review": {
@@ -114,6 +120,7 @@
     "checking": "Checking this device and server…",
     "copy": "Copy report",
     "openNetwork": "Open network settings",
+    "turnOnUpdates": "Turn on",
     "copied": "Report copied. It stays in your clipboard until replaced.",
     "copyFailed": "Couldn’t copy the report. Check clipboard access and try again.",
     "summary": {

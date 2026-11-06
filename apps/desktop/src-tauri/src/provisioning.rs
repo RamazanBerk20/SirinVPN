@@ -93,6 +93,7 @@ pub(super) fn provision_blocking(
             .transpose()
             .map_err(|error| error.to_string())?,
         replace_existing_installation: input.replace_existing_installation,
+        enable_security_updates: false,
     };
     let secrets = paths.secret_store();
     secrets
@@ -273,6 +274,7 @@ pub(super) fn repair_blocking(
             .map_err(safe_error)?;
     let outcome = Provisioner::repair(RepairRequest {
         transport: input.transport.clone(),
+        enable_security_updates: input.enable_security_updates,
         profile: profile.clone(),
         target: crate::ssh_login::resolve_target(crate::ssh_login::SshLoginInput {
             host: profile.endpoint.host.clone(),

@@ -186,6 +186,8 @@ pub struct InstallRequest {
     /// Members reach IPv4-only websites through this NAT64 /96 when the VPS has no IPv4.
     pub nat64_prefix: Option<Ipv6Addr>,
     pub replace_existing_installation: bool,
+    /// The Owner asked to turn automatic OS security updates on even where they exist but are off.
+    pub enable_security_updates: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -206,6 +208,7 @@ pub struct RepairRequest {
     /// `None` keeps the VPS's current NAT64 prefix; `Some(None)` turns NAT64 off.
     pub nat64_prefix: Option<Option<Ipv6Addr>>,
     pub transport: Option<TransportSetup>,
+    pub enable_security_updates: bool,
 }
 
 pub struct ServerBackupRequest {
@@ -521,6 +524,7 @@ impl Provisioner {
             private_dns_records,
             nat64_prefix,
             replace_existing_installation: false,
+            enable_security_updates: request.enable_security_updates,
         };
         let outcome = stage_and_install(
             &session,
@@ -680,6 +684,7 @@ impl Provisioner {
             // The backup holds no NAT64 choice; Repair turns it on again on a VPS without IPv4.
             nat64_prefix: None,
             replace_existing_installation: request.replace_existing_installation,
+            enable_security_updates: false,
         };
         let outcome = stage_and_install(
             &session,
@@ -785,6 +790,7 @@ pub fn default_install_request(
         private_dns_records: Vec::new(),
         nat64_prefix: None,
         replace_existing_installation: false,
+        enable_security_updates: false,
     }
 }
 

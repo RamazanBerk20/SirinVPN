@@ -66,7 +66,7 @@ export function useServerWorkspace({
   const [vpsBackupOpen, setVpsBackupOpen] = useState(false);
   const [vpsRestoreOpen, setVpsRestoreOpen] = useState(false);
   const [vpsBackupScheduleOpen, setVpsBackupScheduleOpen] = useState(false);
-  const [repairIntent, setRepairIntent] = useState<"repair" | "update" | "dns">(
+  const [repairIntent, setRepairIntent] = useState<"repair" | "update" | "dns" | "security">(
     "repair",
   );
   const [repairOpen, setRepairOpen] = useState(false);

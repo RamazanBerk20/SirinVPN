@@ -25,6 +25,7 @@ fn script_has_scoped_firewall_ownership_and_docker_interop() {
         private_dns_records: Vec::new(),
         nat64_prefix: None,
         replace_existing_installation: false,
+        enable_security_updates: false,
     };
     let discovery = ServerDiscovery {
         os_id: "debian".into(),
@@ -76,10 +77,30 @@ fn script_has_scoped_firewall_ownership_and_docker_interop() {
     );
     assert!(shared_script.contains("--quic false"));
     assert_eq!(shared_script.matches("udp dport 443 accept").count(), 1);
-    // Security updates are installed and enabled only where unattended-upgrades is missing.
+    // Security updates are installed and enabled where unattended-upgrades is missing, and
+    // switched on over an existing setup only when the Owner asks.
     assert!(script.contains("if ! command -v unattended-upgrade >/dev/null 2>&1; then"));
     let enable = script.find("APT::Periodic::Unattended-Upgrade").unwrap();
     assert!(script[..enable].contains("if [ -n \"$ENABLE_SECURITY_UPDATES\" ]; then"));
+    assert!(script.contains("\nENABLE_SECURITY_UPDATES=\n"));
+    let mut asked = request.clone();
+    asked.enable_security_updates = true;
+    let asked_script = install_script(
+        &asked,
+        &discovery,
+        "/tmp/server",
+        "/tmp/owner",
+        "nonce",
+        script_transaction("10.77.0.2", false, false),
+    );
+    assert!(asked_script.contains("\nENABLE_SECURITY_UPDATES=1\n"));
+    assert_eq!(
+        asked_script.replace(
+            "\nENABLE_SECURITY_UPDATES=1\n",
+            "\nENABLE_SECURITY_UPDATES=\n"
+        ),
+        script
+    );
     // The running server must stop before init rewrites the authorization it holds.
     let stop = script
         .find("systemctl stop sirinvpn-server.service")

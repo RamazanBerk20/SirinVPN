@@ -672,6 +672,9 @@ pub(super) struct RepairServerArguments {
     pub(super) passwordless_sudo: bool,
     #[arg(long)]
     pub(super) confirm_repair: bool,
+    /// Turn the OS's automatic security updates on even where they are installed but off.
+    #[arg(long)]
+    pub(super) enable_security_updates: bool,
     #[command(flatten)]
     pub(super) dns: DnsPolicyArguments,
     #[command(flatten)]

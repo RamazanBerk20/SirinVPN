@@ -362,6 +362,7 @@ fn rollback_script() -> String {
         private_dns_records: Vec::new(),
         nat64_prefix: None,
         replace_existing_installation: false,
+        enable_security_updates: false,
     };
     let discovery = ServerDiscovery {
         os_id: "debian".into(),

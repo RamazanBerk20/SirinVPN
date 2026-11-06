@@ -267,7 +267,7 @@ command -v unbound >/dev/null 2>&1 || set -- "$@" unbound
 test -s /usr/share/dns/root.key || set -- "$@" dns-root-data
 command -v ip >/dev/null 2>&1 || set -- "$@" iproute2
 test -s /etc/ssl/certs/ca-certificates.crt || set -- "$@" ca-certificates
-ENABLE_SECURITY_UPDATES=
+ENABLE_SECURITY_UPDATES={enable_security_updates}
 if ! command -v unattended-upgrade >/dev/null 2>&1; then
   set -- "$@" unattended-upgrades
   ENABLE_SECURITY_UPDATES=1
@@ -279,9 +279,11 @@ if [ "$#" -gt 0 ]; then
   apt-get update -qq
   apt-get install -y -qq --no-install-recommends "$@"
 fi
-# Only a VPS that lacked unattended-upgrades is switched on; an existing setup is the Owner's choice.
+# Only a VPS that lacked unattended-upgrades, or whose Owner asked for it, is switched on; an
+# existing setup is otherwise the Owner's choice.
 if [ -n "$ENABLE_SECURITY_UPDATES" ]; then
   printf '%s\n' 'APT::Periodic::Update-Package-Lists "1";' 'APT::Periodic::Unattended-Upgrade "1";' >/etc/apt/apt.conf.d/20auto-upgrades
+  systemctl unmask apt-daily.timer apt-daily-upgrade.timer >/dev/null 2>&1 || true
   systemctl enable --now apt-daily.timer apt-daily-upgrade.timer >/dev/null
 fi
 
@@ -802,6 +804,11 @@ systemctl restart sirinvpn-dns-blocklist.path sirinvpn-dns-blocklist.timer sirin
         ipv6_nat_table = ipv6_nat_table,
         ipv6_unbound = ipv6_unbound,
         unbound_dns64 = unbound_dns64_configuration(request.nat64_prefix),
+        enable_security_updates = if request.enable_security_updates {
+            "1"
+        } else {
+            ""
+        },
         unbound_tls_configuration = unbound_tls_configuration,
         unbound_forward_zone = unbound_forward_zone,
         leak_test_zone = leak_test_zone(),

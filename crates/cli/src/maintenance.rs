@@ -112,6 +112,7 @@ pub(super) fn repair_server(
     let transport = arguments.transport.requested(Some(&profile))?;
     let outcome = Provisioner::repair(RepairRequest {
         transport,
+        enable_security_updates: arguments.enable_security_updates,
         profile: profile.clone(),
         target: SshTarget {
             host: profile.endpoint.host.clone(),

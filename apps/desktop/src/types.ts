@@ -322,6 +322,8 @@ export interface RepairInput extends UninstallInput {
   /** Omitted keeps the VPS's NAT64 choice; `null` turns NAT64 off. */
   nat64_prefix?: string | null;
   transport?: TransportSetup | null;
+  /** Turns the OS's automatic security updates on even where they are installed but off. */
+  enable_security_updates?: boolean;
 }
 
 export interface VpsBackupInput extends UninstallInput {

@@ -39,6 +39,7 @@ fn repair_requires_intact_matching_identity_and_compatible_state() {
     };
     let request = RepairRequest {
         transport: None,
+        enable_security_updates: false,
         profile: profile.clone(),
         target: SshTarget {
             host: profile.endpoint.host.clone(),

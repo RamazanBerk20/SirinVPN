@@ -251,6 +251,7 @@ impl Provisioner {
             private_dns_records: None,
             nat64_prefix: None,
             transport: None,
+            enable_security_updates: false,
         })?;
         let session = verified_session(&request)?;
         let directory = format!("/tmp/sirinvpn-signed-baseline-{}", Uuid::new_v4().simple());

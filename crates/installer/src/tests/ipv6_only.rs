@@ -190,6 +190,7 @@ fn an_ipv6_only_install_routes_members_out_of_the_ipv6_uplink_with_optional_dns6
         private_dns_records: Vec::new(),
         nat64_prefix: None,
         replace_existing_installation: false,
+        enable_security_updates: false,
     };
     let discovery = parse_discovery(IPV6_ONLY).unwrap();
     let script = |request: &InstallRequest| {
@@ -298,6 +299,7 @@ fn kernel_ipv6_only_vps_forwards_members_over_ipv6_and_reaches_ipv4_names_throug
         private_dns_records: vec!["printer.home=10.1.2.3".parse().unwrap()],
         nat64_prefix: Some("64:ff9b::".parse().unwrap()),
         replace_existing_installation: false,
+        enable_security_updates: false,
     };
     let discovery = parse_discovery(&IPV6_ONLY.replace("enp1s0", "vps-up")).unwrap();
     ensure_dns_upstream_compatible(&request.dns_upstream, &discovery).unwrap();

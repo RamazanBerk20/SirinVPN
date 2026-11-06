@@ -144,7 +144,7 @@ fn sanitize_check(value: &DiagnosticCheck) -> Option<DiagnosticCheck> {
                 if on {
                     "Automatic security updates for the VPS operating system are on."
                 } else {
-                    "Automatic security updates are off or could not be confirmed. Enable unattended-upgrades on the VPS; server repair installs and enables it when it is missing."
+                    "Automatic security updates are off or could not be confirmed. Repair VPS with “Turn on automatic security updates” selected switches them on."
                 },
             ));
         }

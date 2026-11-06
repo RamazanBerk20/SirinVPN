@@ -92,6 +92,7 @@ pub(super) fn add_server(
         private_dns_records: arguments.private_dns_record,
         nat64_prefix: arguments.nat64_prefix,
         replace_existing_installation: arguments.replace_existing,
+        enable_security_updates: false,
     };
     install_new_server(paths, request, &identity.secret, json)
 }
@@ -259,6 +260,7 @@ pub(super) async fn create_hetzner_server(
                     // Hetzner servers come with IPv4, so NAT64 never applies.
                     nat64_prefix: None,
                     replace_existing_installation: false,
+                    enable_security_updates: false,
                 },
                 &identity.secret,
                 json,

@@ -48,6 +48,14 @@ const plans = {
       "maintenance.operation.interruption",
     ],
   },
+  security: {
+    title: "maintenance.operation.security.title",
+    steps: [
+      "maintenance.operation.security.steps.enable",
+      "maintenance.operation.repair.steps.preserve",
+      "maintenance.operation.interruption",
+    ],
+  },
 } as const satisfies Record<string, { title: MessageKey; steps: readonly MessageKey[] }>;
 export type MaintenanceOperation = keyof typeof plans;
 
@@ -84,7 +92,7 @@ export function MaintenanceReview({ model }: { model: ServerWorkspaceModel }) {
     if (operation === "backup") model.setVpsBackupOpen(true);
     else if (operation === "restore") model.setVpsRestoreOpen(true);
     else {
-      model.setRepairIntent(operation === "update" ? "update" : operation === "dns" ? "dns" : "repair");
+      model.setRepairIntent(operation);
       model.setRepairOpen(true);
     }
   };
