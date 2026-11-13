@@ -19,3 +19,11 @@ After publishing a release, run `scripts/update-aur-checksums.sh`: it fills the
 `.SRCINFO` and `sirinvpn.install` to its AUR repository. Never publish a
 placeholder checksum. The full sequence is in
 [the release checklist](../../docs/release-checklist-1.0.0-rc.1.md).
+
+## Installing over a hand-installed helper
+
+A machine where `install-system` was run from a source build or an AppImage already has the
+helper, its systemd units, the Polkit policy and the NetworkManager file, owned by no package.
+pacman then stops with "exists in filesystem". Disconnect the VPN and install once with
+`--overwrite '/usr/lib/sirinvpn/*,/usr/lib/systemd/system/sirinvpn-*,/usr/share/polkit-1/actions/org.sirinvpn.network.policy,/usr/lib/NetworkManager/conf.d/90-sirinvpn-probe.conf'`;
+afterwards the package owns those files.

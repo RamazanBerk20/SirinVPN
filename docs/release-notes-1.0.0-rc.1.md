@@ -68,6 +68,14 @@ speakers; corrections are welcome.
 
 ## Known limitations
 
+- **Installing the AUR package over a hand-installed helper.** If you ever ran
+  `install-system` from a source build or an earlier AppImage, the helper, its
+  systemd units, the Polkit policy and the NetworkManager file are already on
+  the system and belong to no package, so pacman refuses to install over them
+  ("exists in filesystem"). Disconnect the VPN, then install once with:
+  `--overwrite '/usr/lib/sirinvpn/*,/usr/lib/systemd/system/sirinvpn-*,/usr/share/polkit-1/actions/org.sirinvpn.network.policy,/usr/lib/NetworkManager/conf.d/90-sirinvpn-probe.conf'`.
+  From then on the package owns those files.
+
 From [SECURITY.md](https://github.com/RamazanBerk20/SirinVPN/blob/v1.0.0-rc.1/SECURITY.md):
 
 - SirinVPN does not protect against a compromised client or VPS, a malicious
