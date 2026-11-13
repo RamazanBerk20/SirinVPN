@@ -1,6 +1,6 @@
 # Maintainer: RamazanBerk20 <ramazanberksirin@protonmail.com>
 pkgname=sirinvpn-git
-pkgver=1.0.0rc1.r0.g0000000
+pkgver=1.0.0rc1.r2.g7ade32e
 pkgrel=1
 pkgdesc="Self-hosted WireGuard VPN: set up your own VPS and connect your devices (development version)"
 arch=('x86_64' 'aarch64')
@@ -26,8 +26,8 @@ source=("sirinvpn::git+$url.git#branch=main"
         "sirinvpn-server-aarch64-$_payload_tag::$url/releases/download/$_payload_tag/sirinvpn-server-aarch64")
 # The payload sums are filled from that release by scripts/update-aur-checksums.sh.
 sha256sums=('SKIP'
-            'FILL_FROM_RELEASE'
-            'FILL_FROM_RELEASE')
+            'c4e55d4c80550c2ec8887f416c2c0f7306c6f568d59d88288eb94e892bf76063'
+            'a57bb04e72c441f88517998f1d2f5a0e906fc6a53c226de0e472de6b213f5550')
 
 pkgver() {
   cd sirinvpn

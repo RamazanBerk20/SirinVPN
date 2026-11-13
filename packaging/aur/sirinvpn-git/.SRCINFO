@@ -1,6 +1,6 @@
 pkgbase = sirinvpn-git
 	pkgdesc = Self-hosted WireGuard VPN: set up your own VPS and connect your devices (development version)
-	pkgver = 1.0.0rc1.r0.g0000000
+	pkgver = 1.0.0rc1.r2.g7ade32e
 	pkgrel = 1
 	url = https://github.com/RamazanBerk20/SirinVPN
 	install = sirinvpn.install
@@ -36,7 +36,7 @@ pkgbase = sirinvpn-git
 	depends = zlib
 	optdepends = networkmanager: Wi-Fi automation and an unmanaged measurement probe interface
 	optdepends = org.freedesktop.secrets: remember SSH logins in the desktop keyring
-	provides = sirinvpn=1.0.0rc1.r0.g0000000
+	provides = sirinvpn=1.0.0rc1.r2.g7ade32e
 	conflicts = sirinvpn
 	conflicts = sirinvpn-bin
 	options = !lto
@@ -46,7 +46,7 @@ pkgbase = sirinvpn-git
 	source = sirinvpn-server-x86_64-v1.0.0-rc.1::https://github.com/RamazanBerk20/SirinVPN/releases/download/v1.0.0-rc.1/sirinvpn-server-x86_64
 	source = sirinvpn-server-aarch64-v1.0.0-rc.1::https://github.com/RamazanBerk20/SirinVPN/releases/download/v1.0.0-rc.1/sirinvpn-server-aarch64
 	sha256sums = SKIP
-	sha256sums = FILL_FROM_RELEASE
-	sha256sums = FILL_FROM_RELEASE
+	sha256sums = c4e55d4c80550c2ec8887f416c2c0f7306c6f568d59d88288eb94e892bf76063
+	sha256sums = a57bb04e72c441f88517998f1d2f5a0e906fc6a53c226de0e472de6b213f5550
 
 pkgname = sirinvpn-git
