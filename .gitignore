@@ -34,3 +34,6 @@ invite-code.txt
 *~
 .DS_Store
 Thumbs.db
+
+# pnpm store created by the container build
+.pnpm-store/
