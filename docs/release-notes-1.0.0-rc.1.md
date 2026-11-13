@@ -51,8 +51,9 @@ The root key ID is
 - **Windows:** the code is cross-compiled and checked, but this release
   candidate was never run on Windows and no installer is published. Executable
   routing also needs a signed driver.
-- **Android:** not part of this release. The Android app was not compiled in
-  this release cycle and there is no production-signed APK; publishing a
+- **Android:** not part of this release. The Android app builds and starts on
+  one test phone, but nothing beyond that was tested and there is no
+  production-signed APK; publishing a
   debug- or test-signed APK would lock testers into a signer they would have to
   uninstall to leave.
 - **VPS:** Debian 13 and Ubuntu 24.04 LTS, x86_64 and ARM64 server payloads.
