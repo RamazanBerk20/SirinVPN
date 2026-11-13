@@ -1,0 +1,42 @@
+{
+  "unavailable": "Недоступно",
+  "bytes": {
+    "B": "{{value}} Б",
+    "KB": "{{value}} КБ",
+    "MB": "{{value}} МБ",
+    "GB": "{{value}} ГБ",
+    "TB": "{{value}} ТБ"
+  },
+  "rate": "{{value}}/с",
+  "memoryUsage": "{{percent}} · {{used}}",
+  "latency": "{{value}} мс",
+  "latencyBelowOne": "<1 мс",
+  "uptimeDays": "{{days}} д {{hours}} ч",
+  "uptimeHours": "{{hours}} ч {{minutes}} мин",
+  "transport": {
+    "direct_udp": "Прямой UDP",
+    "obfuscated_udp": "UDP с маскировкой",
+    "tls_like": "Резервный TLS",
+    "tcp_fallback": "Резервный TCP",
+    "quic": "QUIC (HTTP/3)"
+  },
+  "dnsPolicy": {
+    "recursive": "Рекурсивный DNS",
+    "dnsOverTls": "{count, plural, one {DNS через TLS · # сервер} few {DNS через TLS · # сервера} many {DNS через TLS · # серверов} other {DNS через TLS · # сервера}}",
+    "dnsOverHttps": "{count, plural, one {DNS через HTTPS · # сервер} few {DNS через HTTPS · # сервера} many {DNS через HTTPS · # серверов} other {DNS через HTTPS · # сервера}}",
+    "split": "{count, plural, one {Раздельный DNS · # зона · {{fallback}}} few {Раздельный DNS · # зоны · {{fallback}}} many {Раздельный DNS · # зон · {{fallback}}} other {Раздельный DNS · # зоны · {{fallback}}}}"
+  },
+  "os": {
+    "android": "Android",
+    "windows": "Windows",
+    "linux": "Linux"
+  },
+  "arch": {
+    "x86_64": "64-бит x86",
+    "aarch64": "64-бит ARM"
+  },
+  "clock": {
+    "minutes": "{{minutes}}:{{seconds}}",
+    "hours": "{{hours}}:{{minutes}}:{{seconds}}"
+  }
+}

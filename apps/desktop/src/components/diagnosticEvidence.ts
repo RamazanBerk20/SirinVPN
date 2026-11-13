@@ -1,4 +1,5 @@
 import type { DiagnosticCheck } from "../types";
+import { diagnosticCause } from "../lib/errors";
 
 /** How a check was established; DiagnosticResults maps each code to its label. */
 export type DiagnosticEvidence = "configuration" | "service" | "observed" | "notChecked" | "notApplicable" | "reported";
@@ -12,14 +13,10 @@ const unavailable = new Set(["external_reachability", "diagnostics_busy", "dns_p
 export function diagnosticEvidence(check: DiagnosticCheck): DiagnosticEvidence {
   if (check.level === "not_applicable") return "notApplicable";
   if (unavailable.has(check.code)) return "notChecked";
-  if (check.level === "warning" && (
-    /^(No current |No fresh |A current .*unavailable|This current state could not be read)/.test(check.message) ||
-    (check.code === "local_mtu" && /Path probing is pending|ICMP probing is unavailable|measurement is incomplete/.test(check.message)) ||
-    (["local_dns", "management"].includes(check.code))
-  )) return "notChecked";
-  if (configuration.has(check.code)) return "configuration";
-  if (check.code === "management" && /^The saved (server certificate pin|device management certificate\/key) is invalid\./.test(check.message))
-    return "configuration";
+  const cause = diagnosticCause(check);
+  if (check.level === "warning" && (cause === "not_measured" || cause === "mtu_pending" || ["local_dns", "management"].includes(check.code)))
+    return "notChecked";
+  if (configuration.has(check.code) || cause === "management_credentials_invalid") return "configuration";
   if (service.has(check.code)) return "service";
   if (["local_dns", "management", "local_quality", "local_mtu", "dns_resolver_response", "leak_ipv4", "leak_ipv6", "leak_dns"].includes(check.code) ||
       /^dns_(tls_\d+|https_\d+|zone_\d+(?:_\d+)?)$/.test(check.code)) return "observed";

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-preview-recovery-key"
+description = "Enables the preview_recovery_key command without any pre-configured scope."
+commands.allow = ["preview_recovery_key"]
+
+[[permission]]
+identifier = "deny-preview-recovery-key"
+description = "Denies the preview_recovery_key command without any pre-configured scope."
+commands.deny = ["preview_recovery_key"]

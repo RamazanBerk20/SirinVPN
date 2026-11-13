@@ -1,12 +1,12 @@
 import { useEffect } from "react";
 import { onBackButtonPress } from "@tauri-apps/api/app";
-import { invoke, isAndroid } from "../platform";
+import { browserDemo, invoke, isAndroid } from "../platform";
 import { confirmNavigation } from "../lib/navigationGuard";
 
 /** Android owns the gesture; existing dialogs and navigation guards own dismissal. */
 export function useAndroidBack() {
   useEffect(() => {
-    if (!isAndroid) return;
+    if (!isAndroid || browserDemo) return;
     let disposed = false;
     const listener = onBackButtonPress(({ canGoBack }) => {
       if (disposed) return;

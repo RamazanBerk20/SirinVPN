@@ -51,7 +51,7 @@
     "headlineFirst": "Your VPN.",
     "headlineSecond": "On your terms.",
     "androidIntro": "Connect to a private server. Your keys stay with you.",
-    "desktopIntro": "Set up your own server, join one with an invitation, or restore this device from a backup or recovery key.",
+    "desktopIntro": "Set up your own server, join one with a join code, or restore this device from a backup or recovery key.",
     "firstServer": "Add your first server",
     "storeTitle": "Saved servers unavailable",
     "storeHelpDesktop": "Your system keyring may be locked. Unlock it, for example by signing out and in again, then try again.",
@@ -141,14 +141,12 @@
     "recoveryKeySaved": "Offline recovery key saved",
     "recoveryKeyMissing": "No offline recovery key yet",
     "serverFault": "Needs attention: the server reports a fault",
-    "advancedAdmin": "Ports, key rotation",
-    "advancedMember": "Key rotation, ports if allowed"
+    "advancedAdmin": "Key rotation",
+    "advancedMember": "Key rotation"
   },
   "advanced": {
     "devicesTitle": "Device network features",
-    "devicesSummaryOwner": "Mutual access and device pairs are under Advanced in a device’s menu on Devices, and local networks too for your own devices.",
-    "devicesSummaryAdmin": "Mutual access and device pairs are under Advanced in a device’s menu on Devices.",
-    "devicesWireguard": "When the server offers WireGuard configurations, they are under Advanced in Add device.",
+    "devicesSummary": "Port forwarding, device-to-device access, device pairs and local networks are set on each device. Open a device on Devices to change them.",
     "openDevices": "Open Devices"
   }
 }

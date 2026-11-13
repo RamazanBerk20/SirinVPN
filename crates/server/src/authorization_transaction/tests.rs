@@ -9,6 +9,7 @@ struct Model {
     contained: bool,
     faults: VecDeque<(Stage, bool)>,
     stages: Vec<Stage>,
+    configuration: ServerConfiguration,
 }
 struct Fake(Mutex<Model>);
 impl Effects for Fake {
@@ -17,6 +18,9 @@ impl Effects for Fake {
     }
     fn authority(&self) -> Result<AuthorizationDocument> {
         Ok(self.0.lock().unwrap().authority.clone())
+    }
+    fn footprint(&self, document: &AuthorizationDocument) -> Result<Footprint> {
+        footprint(&self.0.lock().unwrap().configuration, None, document)
     }
     async fn execute(&self, stage: Stage, document: &AuthorizationDocument) -> Result<()> {
         let mut model = self.0.lock().unwrap();
@@ -76,6 +80,7 @@ fn fixture() -> (
         contained: false,
         faults: VecDeque::new(),
         stages: vec![],
+        configuration: load_configuration(&paths).unwrap(),
     }));
     (a, b, io, Mutex::default())
 }
@@ -181,7 +186,261 @@ async fn post_rename_failure_never_restores_old_authority() {
     assert!(error.message.contains("was committed"));
     assert_eq!(a, b);
     assert_eq!(io.0.lock().unwrap().authority, b);
-    assert!(status(&state).committed);
+    // The error reports the commit; once recovery enforced it, the state is plainly Healthy
+    // instead of carrying a stale in-flight `committed` flag.
+    assert!(!needs_recovery(&state));
+    assert!(!status(&state).committed);
+}
+
+fn contained(io: &Fake) -> usize {
+    let mut model = io.0.lock().unwrap();
+    let count = model
+        .stages
+        .iter()
+        .filter(|stage| **stage == Stage::Contain)
+        .count();
+    model.stages.clear();
+    count
+}
+
+#[tokio::test]
+async fn a_handler_commit_is_not_applied_again_by_the_periodic_loop() {
+    let (mut a, b, io, state) = fixture();
+    commit(&io, &state, &mut a, b.clone()).await.unwrap();
+    assert_eq!(contained(&io), 1);
+    // The loop's tick: the same document and peers are already enforced.
+    let mut next = a.clone();
+    next.prune_expired(unix_time());
+    assert!(is_applied(&io, &state, &a, &next));
+    commit(&io, &state, &mut a, next).await.unwrap();
+    assert!(io.0.lock().unwrap().stages.is_empty());
+    assert_eq!(status(&state).generation, 1);
+}
+
+#[tokio::test]
+async fn only_changes_that_remove_access_contain_traffic() {
+    let (mut a, _, io, state) = fixture();
+    let mut isolated = a.clone();
+    isolated.devices[0].peer_communication_enabled = false;
+    // Nothing is known about the kernel yet: contain.
+    commit(&io, &state, &mut a, isolated.clone()).await.unwrap();
+    assert_eq!(contained(&io), 1);
+    let mut reachable = isolated.clone();
+    reachable.devices[0].peer_communication_enabled = true;
+    commit(&io, &state, &mut a, reachable.clone())
+        .await
+        .unwrap();
+    assert_eq!(contained(&io), 0, "an addition must not interrupt traffic");
+    assert_eq!(io.0.lock().unwrap().kernel[2], reachable);
+    commit(&io, &state, &mut a, isolated.clone()).await.unwrap();
+    assert_eq!(contained(&io), 1, "a removal must contain");
+    // A changed peer (here its preshared key) counts as removing the old grant.
+    let mut rekeyed = isolated.clone();
+    rekeyed.devices[0].preshared_key = Some(STANDARD.encode([9; 32]));
+    commit(&io, &state, &mut a, rekeyed).await.unwrap();
+    assert_eq!(contained(&io), 1);
+    assert!(!io.0.lock().unwrap().contained);
+    assert!(!needs_recovery(&state));
+}
+
+#[tokio::test]
+async fn a_key_rotation_swaps_the_key_before_persist_without_containing_others() {
+    let (mut a, _, io, state) = fixture();
+    let settled = a.clone();
+    commit(&io, &state, &mut a, settled).await.unwrap();
+    contained(&io);
+    let next = sirinvpn_core::LocalIdentity::generate("rotated").unwrap();
+    let mut rotated = a.clone();
+    let old_key = rotated.devices[0].wireguard_public_key.clone();
+    rotated.devices[0].wireguard_public_key = next.public.wireguard_public_key.clone();
+    rotated.devices[0].certificate_fingerprint =
+        certificate_fingerprint(&next.public.management_certificate_pem).unwrap();
+    rotated.devices[0].management_certificate_pem = next.public.management_certificate_pem;
+    commit(&io, &state, &mut a, rotated.clone()).await.unwrap();
+    let stages = io.0.lock().unwrap().stages.clone();
+    assert_eq!(
+        contained(&io),
+        0,
+        "a key rotation must not interrupt other devices"
+    );
+    // The old key leaves the kernel before the new document is durable.
+    let position = |stage| stages.iter().position(|s| *s == stage).unwrap();
+    assert!(position(Stage::Wireguard) < position(Stage::Persist));
+    let (kernel, authority) = {
+        let model = io.0.lock().unwrap();
+        (model.kernel[1].clone(), model.authority.clone())
+    };
+    assert!(
+        kernel
+            .desired_peers(unix_time())
+            .iter()
+            .all(|peer| peer.public_key != old_key)
+    );
+    assert_eq!(authority, rotated);
+
+    // A failed rotation still recovers under containment.
+    let mut again = a.clone();
+    again.devices[0].wireguard_public_key = STANDARD.encode([42; 32]);
+    io.0.lock()
+        .unwrap()
+        .faults
+        .push_back((Stage::Wireguard, true));
+    assert!(commit(&io, &state, &mut a, again).await.is_err());
+    assert_eq!(contained(&io), 1);
+    assert_eq!(a, rotated);
+}
+
+#[tokio::test]
+async fn a_failed_addition_still_recovers_under_containment() {
+    let (mut a, _, io, state) = fixture();
+    let mut isolated = a.clone();
+    isolated.devices[0].peer_communication_enabled = false;
+    commit(&io, &state, &mut a, isolated.clone()).await.unwrap();
+    contained(&io);
+    let mut reachable = isolated.clone();
+    reachable.devices[0].peer_communication_enabled = true;
+    io.0.lock()
+        .unwrap()
+        .faults
+        .push_back((Stage::Isolation, true));
+    assert!(commit(&io, &state, &mut a, reachable).await.is_err());
+    assert_eq!(contained(&io), 1);
+    let model = io.0.lock().unwrap();
+    assert!(model.kernel.iter().all(|document| *document == isolated));
+    assert!(!model.contained);
+}
+
+#[test]
+fn narrowing_is_judged_against_what_was_enforced() {
+    let peer = |key: u8, routes: &[&str]| DesiredPeer {
+        public_key: STANDARD.encode([key; 32]),
+        address: IpAddr::V4(Ipv4Addr::new(10, 77, 0, key)),
+        preshared_key: None,
+        subnet_routes: routes.iter().map(|route| route.to_string()).collect(),
+    };
+    let applied = Footprint {
+        peers: vec![peer(2, &[])],
+        ..Default::default()
+    };
+    let mut next = applied.clone();
+    assert!(!narrows(&applied, &next));
+    next.peers.push(peer(3, &[]));
+    assert!(!narrows(&applied, &next));
+    // An added router could take traffic from an existing route: contain.
+    next.peers.push(peer(4, &["192.168.1.0/24"]));
+    assert!(narrows(&applied, &next));
+    // A peer that expired by time is still enforced until a commit removes it.
+    assert!(narrows(&applied, &Footprint::default()));
+    let handoff = Footprint {
+        handoff_source: true,
+        ..applied.clone()
+    };
+    assert!(narrows(&applied, &handoff) && narrows(&handoff, &applied));
+    let forwarded = |rules: &str| Footprint {
+        forwarding: Some(format!(
+            "flush chain inet sirinvpn_filter port_forward\n{rules}"
+        )),
+        ..applied.clone()
+    };
+    assert!(!narrows(&forwarded(""), &forwarded("add rule a accept\n")));
+    assert!(narrows(&forwarded("add rule a accept\n"), &forwarded("")));
+
+    // A replaced key at the same address and routes (key rotation) keeps every grant.
+    let with_transport = |peers: Vec<DesiredPeer>| Footprint {
+        transport: peers
+            .iter()
+            .map(|peer| decode_key(&peer.public_key).unwrap())
+            .collect(),
+        peers,
+        ..Default::default()
+    };
+    let rekeyed = |key: u8, like: &DesiredPeer| DesiredPeer {
+        public_key: STANDARD.encode([key; 32]),
+        ..like.clone()
+    };
+    let applied = with_transport(vec![peer(2, &[]), peer(5, &["10.1.0.0/24"])]);
+    assert!(!narrows(
+        &applied,
+        &with_transport(vec![rekeyed(9, &peer(2, &[])), peer(5, &["10.1.0.0/24"])])
+    ));
+    // Not a replacement: the routes change, the old key stays elsewhere, or the old key
+    // vanishes from the relays without a replacing peer.
+    let mut routed = rekeyed(9, &peer(2, &[]));
+    routed.subnet_routes = vec!["10.2.0.0/24".into()];
+    assert!(narrows(
+        &applied,
+        &with_transport(vec![routed, peer(5, &["10.1.0.0/24"])])
+    ));
+    let mut moved = peer(2, &[]);
+    moved.address = IpAddr::V4(Ipv4Addr::new(10, 77, 0, 7));
+    assert!(narrows(
+        &applied,
+        &with_transport(vec![
+            rekeyed(9, &peer(2, &[])),
+            moved,
+            peer(5, &["10.1.0.0/24"])
+        ])
+    ));
+    assert!(narrows(
+        &applied,
+        &Footprint {
+            transport: vec![decode_key(&peer(5, &[]).public_key).unwrap()],
+            ..applied.clone()
+        }
+    ));
+}
+
+#[test]
+fn startup_discards_an_intent_that_root_maintenance_made_stale() {
+    let directory = tempfile::tempdir().unwrap();
+    let paths = ServerPaths::under(directory.path());
+    let owner = sirinvpn_core::LocalIdentity::generate("fixture").unwrap();
+    let id = ServerId::new();
+    let init = |host: &str| {
+        initialize_with_transport_capabilities(
+            &paths,
+            "fixture",
+            &owner.public.management_certificate_pem,
+            id,
+            &owner.public.wireguard_public_key,
+            51820,
+            ServerCapabilities {
+                public_host: Some(host.into()),
+                ..Default::default()
+            },
+        )
+        .unwrap()
+    };
+    init("8.8.8.8");
+    let a = load_authorization(&paths.authorization).unwrap();
+    let mut b = a.clone();
+    b.devices[0].peer_communication_enabled = !b.devices[0].peer_communication_enabled;
+    // The daemon died after its intent; repair then signed a new endpoint into the file.
+    journal::write(&paths, &a, &b, 7).unwrap();
+    init("9.9.9.9");
+    assert_eq!(
+        journal::inspect(&paths).unwrap(),
+        journal::Consistency::Stale
+    );
+    assert!(journal::validate(&paths).is_err());
+    assert!(journal::discard_stale(&paths).unwrap());
+    journal::validate(&paths).unwrap();
+    assert_eq!(
+        journal::inspect(&paths).unwrap(),
+        journal::Consistency::Absent
+    );
+    // A matching intent is the transaction's own and stays for recovery.
+    let c = load_authorization(&paths.authorization).unwrap();
+    journal::write(&paths, &c, &b, 8).unwrap();
+    assert!(!journal::discard_stale(&paths).unwrap());
+    assert_eq!(
+        journal::inspect(&paths).unwrap(),
+        journal::Consistency::Previous
+    );
+    // A malformed intent still fails closed.
+    let path = paths.authorization.with_extension("recovery.json");
+    sirinvpn_platform::files::atomic_write(&path, b"{}", true).unwrap();
+    assert!(journal::discard_stale(&paths).is_err());
 }
 
 #[tokio::test]

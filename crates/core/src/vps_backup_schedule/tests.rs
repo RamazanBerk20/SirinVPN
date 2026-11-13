@@ -205,3 +205,62 @@ fn a_scheduled_backup_restores_after_rotation() {
     assert_eq!(restored.metadata().server_name, "Scheduled VPS");
     assert!(read_encrypted_server_backup(names.last().unwrap(), "wrong password long").is_err());
 }
+
+#[test]
+fn a_clock_that_was_ahead_cannot_pause_backups_or_hide_staleness() {
+    let schedule = VpsBackupSchedule {
+        server_id: ServerId::new(),
+        folder: "/backups".into(),
+        keep: 3,
+        interval_days: 7,
+        enabled_at: NOW - 30 * DAY,
+        // Recorded while the clock was a year ahead, then corrected.
+        last_success: Some(NOW + 365 * DAY),
+        last_failure: Some(VpsBackupFailure {
+            at: NOW + 365 * DAY,
+            message: "failed".into(),
+        }),
+    };
+    assert!(schedule.due(NOW));
+    assert!(schedule.stale(NOW));
+    let mut recent = schedule.clone();
+    recent.last_success = Some(NOW - DAY);
+    recent.last_failure = None;
+    assert!(!recent.due(NOW));
+    assert!(!recent.stale(NOW));
+}
+
+#[test]
+fn cleanup_never_deletes_the_backup_just_written_by_a_clock_set_back() {
+    let folder = tempfile::tempdir().unwrap();
+    let id = ServerId::new();
+    // Earlier backups were written while the clock was a month ahead.
+    for day in [30, 31] {
+        fs::write(
+            folder
+                .path()
+                .join(vps_backup_file_name(id, NOW + day * DAY)),
+            b"x",
+        )
+        .unwrap();
+    }
+    let written = vps_backup_file_name(id, NOW);
+    fs::write(folder.path().join(&written), b"new").unwrap();
+    rotate_vps_backup_folder_at(folder.path(), id, 1, NOW).unwrap();
+    assert!(folder.path().join(&written).exists());
+    // Ordinary rotation still trims older backups; the future-stamped ones age out later.
+    for day in 2..5 {
+        fs::write(
+            folder
+                .path()
+                .join(vps_backup_file_name(id, NOW - day * DAY)),
+            b"x",
+        )
+        .unwrap();
+    }
+    assert_eq!(
+        rotate_vps_backup_folder_at(folder.path(), id, 1, NOW).unwrap(),
+        3
+    );
+    assert!(folder.path().join(&written).exists());
+}

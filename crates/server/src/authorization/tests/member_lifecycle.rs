@@ -169,6 +169,7 @@ fn member_lifecycle_cancels_pending_bootstrap_identities_and_rotations_permanent
     let server = LocalIdentity::generate("Server").unwrap();
     let claims = InvitationClaims {
         recipient_names: false,
+        fixed_member_name: false,
         alternate_endpoint_hosts: Vec::new(),
         endpoint_discovery_port: None,
         max_uses: 1,

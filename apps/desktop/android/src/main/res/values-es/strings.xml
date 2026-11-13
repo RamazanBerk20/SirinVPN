@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Connection status, shared by the VPN notification and the Quick Settings tile.
+         Match home.status in the WebView catalog. -->
+    <string name="status_connected">Conectado</string>
+    <string name="status_connecting">Conectando…</string>
+    <string name="status_reconnecting">Reconectando…</string>
+    <string name="status_interrupted">Conexión interrumpida</string>
+    <string name="status_disconnected">Desconectado</string>
+    <string name="status_unknown">Estado desconocido</string>
+
+    <!-- Notification channels, shown in Android notification settings. -->
+    <string name="notification_channel_vpn">Conexión VPN</string>
+    <string name="notification_channel_vpn_description">Estado de la conexión y controles</string>
+    <string name="notification_channel_maintenance">Tareas del servidor</string>
+    <string name="notification_channel_maintenance_description">Progreso de las tareas del servidor que inicias</string>
+    <string name="notification_channel_updates">Actualizaciones de la app</string>
+    <string name="notification_channel_updates_description">Solicitudes para aprobar actualizaciones de SirinVPN</string>
+    <string name="notification_channel_wifi">Conexión automática por Wi-Fi</string>
+    <string name="notification_channel_wifi_description">Se muestra mientras la conexión automática vigila redes Wi-Fi no fiables con la VPN desactivada. Desactivarla no detiene la conexión automática.</string>
+
+    <!-- Ongoing VPN notification. %1$s is the download rate and %2$s the upload rate. -->
+    <string name="notification_status_connected_traffic">Conectado · ↓ %1$s · ↑ %2$s</string>
+    <string name="notification_status_waiting_for_network">Esperando la red</string>
+    <string name="notification_status_failed">No se pudo conectar</string>
+    <!-- Transfer rates. %1$s is a formatted number. -->
+    <string name="notification_rate_bytes">%1$s B/s</string>
+    <string name="notification_rate_kilobytes">%1$s KB/s</string>
+    <string name="notification_rate_megabytes">%1$s MB/s</string>
+    <string name="notification_rate_gigabytes">%1$s GB/s</string>
+    <string name="notification_rate_terabytes">%1$s TB/s</string>
+    <!-- Notification actions: 1–3 words, verb first. -->
+    <string name="notification_action_vpn_settings">Ajustes de VPN</string>
+    <string name="notification_action_disconnect">Desconectar</string>
+    <string name="notification_action_stop_connecting">Dejar de conectar</string>
+    <string name="notification_action_hide">Ocultar aviso</string>
+    <string name="notification_action_retry">Reintentar</string>
+    <!-- Dismissible alert after a connection attempt fails. -->
+    <string name="notification_failure_text">No se pudo conectar. Abre SirinVPN para ver el motivo.</string>
+    <string name="notification_maintenance_title">Tarea del servidor en curso</string>
+    <string name="notification_maintenance_text">Vuelve a abrir SirinVPN para ver el resultado.</string>
+    <string name="notification_wifi_watch_text">La conexión automática vigila redes Wi-Fi no fiables</string>
+    <string name="notification_update_title">Aprobar actualización de SirinVPN</string>
+    <string name="notification_update_text">Toca para revisar e instalar la actualización verificada.</string>
+    <string name="notification_test_text">Las notificaciones funcionan.</string>
+
+    <!-- Quick Settings tile. Subtitles are short; the tile shows about 15 characters. -->
+    <string name="tile_status_always_on">VPN siempre activa</string>
+    <string name="tile_status_no_network">Sin red</string>
+    <string name="tile_status_open_app">Abrir SirinVPN</string>
+    <!-- Spoken description of the tile. %1$s is its status, for example “Connected”. -->
+    <string name="tile_description">SirinVPN, %1$s</string>
+    <!-- Shown on Android 12 and older, which can’t add the tile from the app. -->
+    <string name="tile_add_instructions">Abre Ajustes rápidos, toca Editar y añade SirinVPN.</string>
+
+    <!-- Home-screen widget. Its button reuses the notification action labels. -->
+    <string name="widget_description">Estado de la conexión con un botón para conectar y desconectar</string>
+    <string name="widget_no_server">Elige un servidor de Ajustes rápidos</string>
+    <string name="widget_action_connect">Conectar</string>
+    <string name="widget_action_open">Abrir</string>
+
+    <!-- Permission an automation app (Tasker, Automate) asks for. Android shows the label
+         as “Allow <app> to <label>?”, so it starts lowercase. -->
+    <string name="automation_permission_label">conectar y desconectar SirinVPN</string>
+    <string name="automation_permission_description">Permite que la app conecte o desconecte SirinVPN y elija su servidor de Ajustes rápidos, sin abrir SirinVPN.</string>
+
+    <!-- QR code scanner. -->
+    <string name="scanner_title">Escanear código QR</string>
+    <string name="scanner_back">Atrás</string>
+    <string name="scanner_guidance">Mantén el código completo a la vista. Amplía un código denso en la otra pantalla y sujeta el teléfono firme.</string>
+    <string name="scanner_flashlight_on">Encender linterna</string>
+    <string name="scanner_flashlight_off">Apagar linterna</string>
+    <string name="scanner_refocus">Reenfocar</string>
+    <string name="scanner_refocused">Enfoque restablecido. Acércate o aléjate, manteniendo el código completo a la vista.</string>
+    <string name="scanner_camera_error">La cámara no está disponible. Toca Reenfocar para intentarlo de nuevo, o vuelve atrás e introduce el código.</string>
+
+    <!-- Protected value viewer and secure entry. -->
+    <string name="protected_value_title">Valor protegido</string>
+    <string name="protected_value_qr_description">Código QR protegido</string>
+    <string name="protected_value_close">Cerrar</string>
+    <string name="protected_value_copy">Copiar durante 1 minuto</string>
+    <string name="protected_value_show">Mostrar</string>
+    <string name="protected_value_confirm_show">¿Mostrar este valor protegido en pantalla?</string>
+    <string name="protected_value_confirm_copy">¿Copiar este valor protegido al portapapeles durante 1 minuto?</string>
+    <!-- Clipboard label; some keyboards and clipboard previews show it. -->
+    <string name="protected_value_clip_label">Valor protegido de SirinVPN</string>
+    <string name="secret_input_use">Usar valor</string>
+    <string name="secret_input_clear">Borrar valor</string>
+    <plurals name="secret_input_minimum_length">
+        <item quantity="one">Usa al menos un carácter.</item>
+        <item quantity="many">Usa al menos %1$d caracteres.</item>
+        <item quantity="other">Usa al menos %1$d caracteres.</item>
+    </plurals>
+
+    <!-- Native confirmation dialog. -->
+    <string name="dialog_confirm">Confirmar</string>
+    <string name="dialog_cancel">Cancelar</string>
+
+    <!-- App routing picker. Match connection.routing in the WebView catalog. -->
+    <string name="routing_title">Elegir apps</string>
+    <string name="routing_mode_include">Solo las apps seleccionadas usan la VPN</string>
+    <string name="routing_mode_exclude">Las apps seleccionadas se saltan la VPN</string>
+    <string name="routing_include_title">Apps que usan la VPN</string>
+    <string name="routing_exclude_title">Apps que se saltan la VPN</string>
+    <string name="routing_use_selection">Usar selección</string>
+
+    <!-- Sharing an encrypted backup or recovery file. -->
+    <string name="share_chooser_title">Compartir archivo cifrado</string>
+    <string name="share_clip_label">Archivo cifrado de SirinVPN</string>
+
+    <!-- Shown instead of the app when the system WebView is too old. %1$d is the minimum version. -->
+    <string name="webview_update_message">Actualiza Android System WebView\n\nSirinVPN necesita WebView %1$d o una versión posterior. Actualízalo y vuelve a abrir SirinVPN.</string>
+    <string name="webview_update_action">Abrir ajustes de WebView</string>
+
+    <!-- Errors shown in the app. What happened, then what to do. -->
+    <string name="error_choose_document">Elige primero un archivo cifrado.</string>
+    <string name="error_service_unavailable">No se pudo contactar con el servicio de VPN. Inténtalo de nuevo.</string>
+    <string name="error_service_interrupted">Se perdió el contacto con el servicio de VPN. Revisa el estado y luego inténtalo de nuevo.</string>
+    <string name="error_share_expired">Este archivo ya no se puede compartir. Expórtalo de nuevo y luego compártelo.</string>
+    <string name="error_share_failed">No se pudo compartir el archivo. Inténtalo de nuevo.</string>
+    <string name="error_install_permission">Permite que SirinVPN instale apps desconocidas y luego vuelve a intentar la actualización.</string>
+    <string name="error_protected_value_unavailable">No se pudo abrir el valor protegido. Inténtalo de nuevo.</string>
+    <string name="error_protected_value_expired">Este valor protegido caducó. Introdúcelo o créalo de nuevo.</string>
+    <string name="error_protected_input">No se pudo conservar el valor protegido. Termina la tarea actual y luego inténtalo de nuevo.</string>
+    <string name="error_entry_cancelled">Introducción cancelada.</string>
+    <string name="error_notifications_blocked">Las notificaciones están bloqueadas. Permítelas para SirinVPN en los ajustes de Android y luego inténtalo de nuevo.</string>
+    <string name="error_camera_denied">No se concedió acceso a la cámara. Puedes introducir el código de forma segura en su lugar.</string>
+    <string name="error_scanner_open">El escáner ya está abierto.</string>
+    <string name="error_scan_cancelled">Escaneo cancelado. Puedes introducir el código de forma segura en su lugar.</string>
+    <string name="error_code_too_large">Este código es demasiado grande. Escanea un código de SirinVPN.</string>
+    <string name="error_vpn_permission_denied">No se concedió el permiso de VPN. Conéctate de nuevo y permítelo.</string>
+    <string name="error_vpn_permission_required">Se necesita el permiso de VPN. Conéctate de nuevo para permitirlo.</string>
+    <string name="error_vpn_start_failed">Android no pudo iniciar la VPN. Inténtalo de nuevo.</string>
+    <string name="error_vpn_recovery_deferred">Android retrasó la restauración de la VPN. Conéctate de nuevo.</string>
+    <string name="error_always_on">La VPN siempre activa controla esta conexión. Cámbialo en los ajustes de VPN de Android.</string>
+    <string name="error_connection_changed">La conexión cambió. Revisa su estado y luego inténtalo de nuevo.</string>
+    <string name="error_busy_disconnect">Hay otra tarea en curso. Desconéctate cuando termine.</string>
+    <string name="error_busy">Hay otra tarea en curso. Inténtalo de nuevo cuando termine.</string>
+    <string name="error_switching_method">Cambiando el método de conexión. Inténtalo de nuevo en un momento.</string>
+    <string name="error_queue_full">Hay demasiadas peticiones en espera. Inténtalo de nuevo cuando termine la actual.</string>
+    <string name="error_request_too_large">Esta petición es demasiado grande. Acórtala e inténtalo de nuevo.</string>
+    <string name="error_preferences">No se pudieron leer ni guardar los ajustes de la app. Inténtalo de nuevo.</string>
+    <string name="error_server_task_background">Android bloqueó la tarea del servidor. Mantén SirinVPN abierta e inténtalo de nuevo.</string>
+    <string name="error_server_task_interrupted">Una tarea del servidor no terminó. Revisa el servidor o el archivo antes de volver a intentarlo.</string>
+    <string name="error_missing_command">La petición estaba incompleta. Actualiza SirinVPN y luego inténtalo de nuevo.</string>
+    <string name="error_native_only">Esta acción solo está disponible en los diálogos seguros de SirinVPN.</string>
+    <string name="error_operation_failed">La petición no pudo terminar. Revisa los permisos, los ajustes y tu red, y luego inténtalo de nuevo.</string>
+</resources>

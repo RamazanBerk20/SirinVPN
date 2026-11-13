@@ -134,5 +134,5 @@
 .android .home-alerts { margin: 12px 0 0; }
 .android .home-alert { flex-wrap: wrap; gap: 8px 12px; padding: 14px var(--inset); border-radius: var(--radius-card); background: var(--surface); font-size: var(--fs-small); }
 .android .home-alert > p { flex-basis: calc(100% - 40px); }
-.android .home-alert > button { margin-left: 32px; }
+.android .home-alert > button { margin-inline-start: 32px; }
 .android[data-font-scale=large] .power-control { width: 190px; height: 190px; }

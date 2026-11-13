@@ -78,6 +78,43 @@ pub(crate) fn validate_display_name(name: &str) -> Result<String> {
     Ok(trimmed.to_owned())
 }
 
+/// Every member or device name a request introduces. Stored names keep the looser
+/// `validate_display_name` so state written by earlier versions still loads.
+pub(crate) fn validate_new_display_name(name: &str) -> Result<String> {
+    let trimmed = validate_display_name(name)?;
+    if trimmed.chars().any(is_hidden_formatting) {
+        bail!("name must not contain invisible or text-direction formatting characters");
+    }
+    Ok(trimmed)
+}
+
+/// Bidirectional overrides, isolates and marks, and characters that render as nothing.
+/// ZWJ/ZWNJ stay allowed: emoji sequences and several scripts need them.
+fn is_hidden_formatting(character: char) -> bool {
+    matches!(
+        character,
+        '\u{00AD}'
+            | '\u{034F}'
+            | '\u{061C}'
+            | '\u{115F}'
+            | '\u{1160}'
+            | '\u{17B4}'
+            | '\u{17B5}'
+            | '\u{180E}'
+            | '\u{200B}'
+            | '\u{200E}'
+            | '\u{200F}'
+            | '\u{2028}'..='\u{202E}'
+            | '\u{2060}'..='\u{206F}'
+            | '\u{3164}'
+            | '\u{FEFF}'
+            | '\u{FFA0}'
+            | '\u{FFF9}'..='\u{FFFB}'
+            | '\u{1D173}'..='\u{1D17A}'
+            | '\u{E0000}'..='\u{E007F}'
+    )
+}
+
 pub(crate) fn sign_claims(private_key_path: &Path, claims: &InvitationClaims) -> Result<String> {
     sign_serialized(private_key_path, claims)
 }
@@ -253,6 +290,10 @@ pub(super) fn validate_claims(server_id: ServerId, claims: &InvitationClaims) ->
         bail!("invitation claims are inconsistent with this server");
     }
     if !(1..=100).contains(&claims.max_uses)
+        || (claims.fixed_member_name
+            && (claims.max_uses != 1
+                || claims.target_member_id.is_some()
+                || !claims.recipient_names))
         || (claims.target_role == Some(ServerRole::Owner)
             && (claims.max_uses > 1 || !claims.member_policy.is_default()))
     {

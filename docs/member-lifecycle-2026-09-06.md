@@ -4,7 +4,7 @@ Implemented the first feature slice from the [prompt gap audit](feature-gap-audi
 
 ## Behavior
 
-The desktop's Devices page offers **Suspend member**, **Reactivate member**, and **Revoke all member devices** in that member's device action menu. The confirmation identifies the member and describes the effect on all devices. The same operations are available through the CLI:
+The desktop's Devices page offers **Suspend** / **Resume** and **Remove person** under **Pause or remove** in a person's panel (current labels; this slice first shipped them as Suspend member, Reactivate member and Revoke all member devices). **Remove person** is the bulk revocation described below and also deletes the person's pairs and waiting join codes. The confirmation names the person and describes the effect on all their devices. The same operations are available through the CLI:
 
 ```sh
 sirinvpn server members SERVER_ID
@@ -22,6 +22,8 @@ Suspension cancels that member's pending additional-device invitations, enrollme
 Bulk revocation permanently removes the member, every one of their device authorizations, their port mappings and pending access. A returning person needs a new invitation. The Owner cannot be suspended or bulk revoked; transfer ownership first. An Owner can manage Admins and ordinary Members, while an Admin can manage only ordinary Members. Suspended Admins cannot reactivate themselves through an existing management connection.
 
 Repeated suspension/reactivation to the current state is harmless. Repeating a successful bulk revocation after losing its response is also harmless. Read-only endpoint handoff sources reject all these operations.
+
+Renaming a person (`PATCH /v1/members/{member_id}/name`) is described in [Member policies and reusable invitations](member-policies-and-invitations-2026-09-06.md#named-join-codes-person-rename-and-admin-devices-added-later).
 
 ## Implementation and compatibility
 

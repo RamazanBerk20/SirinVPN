@@ -615,6 +615,21 @@ fn canonical_semver(value: &str) -> bool {
     Version::parse(value).is_ok_and(|version| version.to_string() == value)
 }
 
+/// The `Version:` a signed release's `.deb` carries. Debian reads `1.0.0-rc.1` as upstream
+/// `1.0.0` with revision `rc.1`, which sorts after `1.0.0`; a tilde sorts before it. Packaging
+/// rewrites the control field the same way (`scripts/debian_version.py`). Another hyphen would
+/// become a Debian revision separator, so such versions have no package version.
+pub(crate) fn debian_package_version(release_version: &str) -> Option<String> {
+    let version = Version::parse(release_version).ok()?;
+    if version.to_string() != release_version
+        || version.pre.contains('-')
+        || version.build.contains('-')
+    {
+        return None;
+    }
+    Some(release_version.replacen('-', "~", 1))
+}
+
 fn valid_digest(value: &str) -> bool {
     value.len() == 64
         && value
@@ -703,7 +718,7 @@ impl DebianPackageManager for SystemDebianPackageManager {
         let package_version = debian_control_field(package, "Version")?;
         let package_architecture = debian_control_field(package, "Architecture")?;
         if package_name != DEBIAN_PACKAGE_NAME
-            || package_version != expected_version
+            || Some(package_version) != debian_package_version(expected_version)
             || package_architecture != expected_architecture
         {
             return Err(ReleaseError::InvalidDebianPackage);
@@ -745,7 +760,9 @@ impl DebianPackageManager for SystemDebianPackageManager {
             .strip_suffix('\n')
             .and_then(|line| line.split_once('\t'))
             .ok_or(ReleaseError::DebianPackageHealth)?;
-        if abbreviation != "ii " || version != expected_version {
+        if abbreviation != "ii "
+            || Some(version) != debian_package_version(expected_version).as_deref()
+        {
             return Err(ReleaseError::DebianPackageHealth);
         }
 

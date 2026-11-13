@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-forget-trusted-wifi"
+description = "Enables the forget_trusted_wifi command without any pre-configured scope."
+commands.allow = ["forget_trusted_wifi"]
+
+[[permission]]
+identifier = "deny-forget-trusted-wifi"
+description = "Denies the forget_trusted_wifi command without any pre-configured scope."
+commands.deny = ["forget_trusted_wifi"]

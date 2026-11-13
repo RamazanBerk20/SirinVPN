@@ -156,8 +156,8 @@
     "server": "Server",
     "blockWithoutVpn": "Block without VPN",
     "alwaysOn": "Always-on VPN",
-    "mtuValue": "{{value}} bytes",
-    "mtuPending": "{{value}} bytes measured · applies on your next connection"
+    "mtuValue": "{value, plural, one {{{value}} byte} other {{{value}} bytes}}",
+    "mtuPending": "{value, plural, one {{{value}} byte measured · applies on your next connection} other {{{value}} bytes measured · applies on your next connection}}"
   },
   "traffic": {
     "label": "This device’s traffic",
@@ -210,8 +210,7 @@
     "uptime": "Uptime",
     "devices": "Devices",
     "devicesActive": "{{active}} of {{total}} active",
-    "devicesAuthorized_one": "{{count}} device",
-    "devicesAuthorized_other": "{{count}} devices",
+    "devicesAuthorized": "{count, plural, one {# device} other {# devices}}",
     "activityUnavailable": "Activity unavailable",
     "activityUnreadable": "Couldn’t read device activity from the server.",
     "activityUnsupported": "This server can’t report device activity. Update it to turn this on.",
@@ -239,7 +238,7 @@
     "label": "Alerts",
     "runDiagnostics": "Run diagnostics",
     "checkServer": "Check server health",
-    "unstable": "Unstable connection: {{lost}} of the last {{sent}} checks got no reply.",
+    "unstable": "{sent, plural, one {Unstable connection: {{lost}} of the last check got no reply.} other {Unstable connection: {{lost}} of the last # checks got no reply.}}",
     "storage": "The server’s storage is {{percent}} full. Free some space before it stops working.",
     "rotationPending": "A key rotation didn’t finish. Finish it so this device keeps its access.",
     "finishRotation": "Finish key rotation"

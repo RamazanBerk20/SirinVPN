@@ -208,13 +208,15 @@ fn observe_transport_success(
             let Ok(local) = invoke_helper("status", None) else {
                 return;
             };
+            // An unknown (contradictory) phase is skipped, never recorded.
+            let phase = local.phase();
             if local.server_id != Some(server_id)
-                || local.waiting_for_user
+                || matches!(phase, Some(sirinvpn_tunnel_model::TunnelPhase::Paused { .. }))
                 || crate::connection_controller::require_current(connection_epoch).is_err()
             {
                 return;
             }
-            if local.state == ConnectionState::Connected
+            if matches!(phase, Some(sirinvpn_tunnel_model::TunnelPhase::Connected { .. }))
                 && local.transport_quality.as_ref().is_none_or(|quality| {
                     matches!(
                         quality.selection,

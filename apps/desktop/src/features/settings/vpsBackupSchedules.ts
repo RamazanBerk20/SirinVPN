@@ -1,7 +1,7 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { api } from "../../api";
 import type { VpsBackupSchedule } from "../../types";
-import { t } from "../../i18n";
+import { formatRelativeTime, t } from "../../i18n";
 
 const FIRST_CHECK_DELAY_MS = 60_000;
 const CHECK_INTERVAL_MS = 15 * 60_000;
@@ -37,9 +37,9 @@ export function backupAgeDays(at: number, now = Date.now()) {
   return Math.max(0, Math.floor((now / 1000 - at) / 86_400));
 }
 
+/** "today", "yesterday", "3 days ago", in the interface language. */
 export function backupAge(at: number) {
-  const days = backupAgeDays(at);
-  return days === 0 ? t("vps.schedule.age.today") : t("vps.schedule.age.days", { count: days });
+  return formatRelativeTime(-backupAgeDays(at), "day");
 }
 
 export function needsAttention(schedule: VpsBackupSchedule | null) {

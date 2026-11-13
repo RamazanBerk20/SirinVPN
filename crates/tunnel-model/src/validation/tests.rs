@@ -101,3 +101,77 @@ fn sessions_saved_before_the_ceiling_are_normalized_on_load() {
     validate_request(&saved).unwrap();
     assert_eq!(saved.mtu, 1_398);
 }
+
+#[test]
+fn one_schema_derivation_covers_every_feature_combination() {
+    let https = || sirinvpn_protocol::HttpsTransport {
+        server_name: "vpn.example.com".into(),
+        path: "/sirinvpn".into(),
+        cdn: false,
+    };
+    let legacy = |transport| {
+        let mut request = request(transport, MtuPolicy::Automatic, 1_420);
+        request.mtu_policy = None;
+        request.policy = None;
+        request.mtu = 1_280;
+        if transport == TransportKind::TlsLike {
+            request.server_certificate_sha256 = Some(key(4));
+        }
+        request
+    };
+    for (transport, expected) in [
+        (TransportKind::DirectUdp, 2),
+        (TransportKind::ObfuscatedUdp, 3),
+        (TransportKind::TcpFallback, 4),
+        (TransportKind::TlsLike, 5),
+    ] {
+        let mut request = legacy(transport);
+        assert_eq!(request.required_schema(), expected, "{transport:?}");
+        request.schema_version = request.required_schema();
+        validate_request(&request).unwrap();
+    }
+    let mut routed = legacy(TransportKind::DirectUdp);
+    routed.routing = TunnelRoutingPolicy::full_tunnel(true);
+    assert_eq!(routed.required_schema(), 6);
+    routed.policy = Some(ConnectionPolicy::default());
+    assert_eq!(routed.required_schema(), 7);
+    routed.mtu_policy = Some(MtuPolicy::Automatic);
+    assert_eq!(routed.required_schema(), 8);
+    routed.mtu = 1_420;
+    routed.schema_version = routed.required_schema();
+    validate_request(&routed).unwrap();
+    let mut tls = routed.clone();
+    tls.transport = TransportKind::TlsLike;
+    tls.server_transport_public_key = Some(key(3));
+    tls.server_certificate_sha256 = Some(key(4));
+    tls.https = Some(https());
+    assert_eq!(tls.required_schema(), 9);
+    tls.schema_version = tls.required_schema();
+    validate_request(&tls).unwrap();
+    routed.routing = TunnelRoutingPolicy::selected_applications(false);
+    // Schema 11 also needs signed endpoint identity, which validation checks separately.
+    assert_eq!(routed.required_schema(), 11);
+
+    // Writers derive the schema instead of keeping their own ladders.
+    let mut candidate_base = request(TransportKind::DirectUdp, MtuPolicy::Automatic, 1_420);
+    candidate_base.reconnect_candidates = vec![
+        candidate(TransportKind::DirectUdp, 1_420),
+        candidate(TransportKind::ObfuscatedUdp, 1_398),
+    ];
+    let derived = request_for_reconnect_candidate(
+        &candidate_base,
+        &candidate_base.reconnect_candidates[1].clone(),
+    );
+    assert_eq!(derived.schema_version, derived.required_schema());
+    let mut mtu = legacy(TransportKind::DirectUdp);
+    mtu.policy = Some(ConnectionPolicy::default());
+    mtu.set_mtu_policy(MtuPolicy::Automatic).unwrap();
+    assert_eq!((mtu.schema_version, mtu.required_schema()), (8, 8));
+}
+
+#[test]
+fn endpoint_hosts_must_arrive_normalised() {
+    let mut padded = request(TransportKind::DirectUdp, MtuPolicy::Automatic, 1_420);
+    padded.endpoint_host = "203.0.113.8\n".into();
+    assert!(validate_request(&padded).is_err());
+}

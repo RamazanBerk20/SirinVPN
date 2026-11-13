@@ -1,5 +1,5 @@
 import { DialogContent } from "../../components/DialogContent";
-import { DiagnosticProgress, DiagnosticResults } from "../../components/DiagnosticResults";
+import { DiagnosticProgress, DiagnosticResults, DiagnosticRunFailed } from "../../components/DiagnosticResults";
 import { SpeedTest } from "../../components/SpeedTest";
 import { MaintenanceReview } from "./MaintenanceReview";
 import * as Dialog from "@radix-ui/react-dialog";
@@ -48,7 +48,6 @@ export function WorkspaceDialogs({
     setVpsRestoreOpen,
     vpsBackupScheduleOpen,
     setVpsBackupScheduleOpen,
-    repairOpen,
     setRepairOpen,
     rotationOpen,
     setRotationOpen,
@@ -72,7 +71,9 @@ export function WorkspaceDialogs({
           <Dialog.Overlay className="dialog-overlay" />
           <DialogContent className="dialog-content diagnostics-dialog" heading={t("maintenance.diagnostics.title")}
             description={t("maintenance.diagnostics.description")}>
-            {!diagnostics ? (
+            {model.diagnosticsFailed ? (
+              <DiagnosticRunFailed onRunAgain={() => void model.runDiagnostics()} />
+            ) : !diagnostics ? (
               <DiagnosticProgress title={t("maintenance.diagnostics.checking")} connected={connected} />
             ) : (
               <>
@@ -115,17 +116,17 @@ export function WorkspaceDialogs({
       />
       <VpsUpdateDialog
         profile={profile}
-        open={repairOpen && model.repairIntent === "update"}
+        open={model.repairIntent === "update"}
         onOpenChange={setRepairOpen}
         disconnected={localStatus.state === "disconnected" && !localStatus.kill_switch_enabled && !localStatus.auto_reconnect_enabled}
         onCompleted={onAccessChanged}
-        // Same open flag: switching the intent closes the update and opens the repair.
-        onRepair={() => model.setRepairIntent("repair")}
+        // Replaces the update dialog with the repair dialog.
+        onRepair={() => model.openRepair("repair")}
       />
       <RepairServerDialog
-        intent={model.repairIntent === "update" ? "repair" : model.repairIntent}
+        intent={model.repairIntent === "update" || model.repairIntent === null ? "repair" : model.repairIntent}
         profile={profile}
-        open={repairOpen && model.repairIntent !== "update"}
+        open={model.repairIntent !== null && model.repairIntent !== "update"}
         onOpenChange={setRepairOpen}
         disconnected={localStatus.state === "disconnected"}
         onCompleted={onAccessChanged}

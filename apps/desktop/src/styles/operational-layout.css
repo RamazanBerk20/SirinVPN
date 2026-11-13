@@ -142,7 +142,7 @@
 .action-menu-panel {
   position: absolute;
   z-index: 20;
-  right: 0;
+  inset-inline-end: 0;
   top: calc(100% + 5px);
   width: min(310px, calc(100vw - 56px));
   padding: 6px;
@@ -165,7 +165,7 @@
   background: transparent;
   padding: 8px 12px;
   border-radius: 5px;
-  text-align: left;
+  text-align: start;
   font-size: 0.9375rem;
   overflow-wrap: anywhere;
 }
@@ -291,7 +291,7 @@ summary:focus-visible,
 }
 
 .initialization-shell .settings-sections {
-  text-align: left;
+  text-align: start;
 }
 @media (max-width: 760px) {
   .workspace {
@@ -369,5 +369,5 @@ summary:focus-visible,
 }
 
 .port-forward-form select {
-  padding-right: 2.2em;
+  padding-inline-end: 2.2em;
 }

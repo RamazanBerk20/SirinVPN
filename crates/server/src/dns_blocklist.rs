@@ -232,6 +232,118 @@ pub(crate) fn reserved_names(configuration: &ServerConfiguration) -> BTreeSet<St
         .collect()
 }
 
+/// What the resolver serves.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub(crate) enum Applied {
+    /// No list; `policy_sha256` names the disabled policy last applied, if any.
+    Off { policy_sha256: Option<String> },
+    Active {
+        policy_sha256: String,
+        updated_at_unix: u64,
+        domain_count: u32,
+    },
+}
+
+/// The refresh state machine behind `DnsBlocklistStatus`, which stays the file and wire shape.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub(crate) enum BlocklistState {
+    Applied(Applied),
+    /// The latest refresh for `policy_sha256` failed; `last_good` stays in effect.
+    Failed {
+        policy_sha256: String,
+        failed_at_unix: u64,
+        failure: DnsBlocklistFailure,
+        last_good: Applied,
+    },
+}
+
+impl BlocklistState {
+    fn last_good(&self) -> &Applied {
+        match self {
+            Self::Applied(applied)
+            | Self::Failed {
+                last_good: applied, ..
+            } => applied,
+        }
+    }
+
+    /// A failure belongs to the policy it was for; for any other policy only the applied list counts.
+    pub(crate) fn for_policy(self, policy_sha256: &str) -> Self {
+        match self {
+            Self::Failed {
+                policy_sha256: failed,
+                last_good,
+                ..
+            } if failed != policy_sha256 => Self::Applied(last_good),
+            state => state,
+        }
+    }
+}
+
+impl From<&DnsBlocklistStatus> for BlocklistState {
+    fn from(status: &DnsBlocklistStatus) -> Self {
+        let applied = match (&status.policy_sha256, status.updated_at_unix) {
+            (Some(policy_sha256), Some(updated_at_unix)) if status.active => Applied::Active {
+                policy_sha256: policy_sha256.clone(),
+                updated_at_unix,
+                domain_count: status.domain_count,
+            },
+            _ => Applied::Off {
+                policy_sha256: status.policy_sha256.clone(),
+            },
+        };
+        match (
+            status.failure,
+            &status.failed_policy_sha256,
+            status.failed_at_unix,
+        ) {
+            (Some(failure), Some(policy_sha256), Some(failed_at_unix)) => Self::Failed {
+                policy_sha256: policy_sha256.clone(),
+                failed_at_unix,
+                failure,
+                last_good: applied,
+            },
+            _ => Self::Applied(applied),
+        }
+    }
+}
+
+impl From<BlocklistState> for DnsBlocklistStatus {
+    fn from(state: BlocklistState) -> Self {
+        let applied = |applied: &Applied| match applied {
+            Applied::Off { policy_sha256 } => DnsBlocklistStatus {
+                policy_sha256: policy_sha256.clone(),
+                ..Default::default()
+            },
+            Applied::Active {
+                policy_sha256,
+                updated_at_unix,
+                domain_count,
+            } => DnsBlocklistStatus {
+                active: true,
+                domain_count: *domain_count,
+                updated_at_unix: Some(*updated_at_unix),
+                policy_sha256: Some(policy_sha256.clone()),
+                ..Default::default()
+            },
+        };
+        match &state {
+            BlocklistState::Applied(state) => applied(state),
+            BlocklistState::Failed {
+                policy_sha256,
+                failed_at_unix,
+                failure,
+                last_good,
+            } => DnsBlocklistStatus {
+                failure: Some(*failure),
+                failed_at_unix: Some(*failed_at_unix),
+                failed_policy_sha256: Some(policy_sha256.clone()),
+                ..applied(last_good)
+            },
+        }
+    }
+}
+
 pub(crate) fn refresh(
     policy: &DnsBlocklistPolicy,
     reserved: &BTreeSet<String>,
@@ -241,41 +353,65 @@ pub(crate) fn refresh(
     download: &mut dyn FnMut(&str) -> Result<Vec<u8>, DnsBlocklistFailure>,
     resolver: &dyn Resolver,
 ) -> DnsBlocklistStatus {
+    refresh_state(
+        policy,
+        reserved,
+        &previous.into(),
+        now,
+        zone,
+        download,
+        resolver,
+    )
+    .into()
+}
+
+fn refresh_state(
+    policy: &DnsBlocklistPolicy,
+    reserved: &BTreeSet<String>,
+    previous: &BlocklistState,
+    now: u64,
+    zone: &Path,
+    download: &mut dyn FnMut(&str) -> Result<Vec<u8>, DnsBlocklistFailure>,
+    resolver: &dyn Resolver,
+) -> BlocklistState {
     let policy_sha256 = fingerprint(policy, reserved);
-    let failed = |failure| DnsBlocklistStatus {
-        failure: Some(failure),
-        failed_at_unix: Some(now),
-        failed_policy_sha256: Some(policy_sha256.clone()),
-        ..previous.clone()
+    let last_good = previous.last_good();
+    let failed = |failure| BlocklistState::Failed {
+        policy_sha256: policy_sha256.clone(),
+        failed_at_unix: now,
+        failure,
+        last_good: last_good.clone(),
     };
     if !policy.enabled {
-        if (previous.active || zone.exists())
+        if (matches!(last_good, Applied::Active { .. }) || zone.exists())
             && let Err(failure) = install_zone(zone, None, resolver)
         {
             return failed(failure);
         }
-        return DnsBlocklistStatus {
+        return BlocklistState::Applied(Applied::Off {
             policy_sha256: Some(policy_sha256),
-            ..Default::default()
-        };
+        });
     }
-    let recent =
-        |time: Option<u64>, window| time.is_some_and(|time| now.saturating_sub(time) < window);
-    if previous.active
-        && previous.policy_sha256.as_deref() == Some(policy_sha256.as_str())
-        && recent(previous.updated_at_unix, REFRESH_SECONDS)
+    let recent = |time: u64, window| now.saturating_sub(time) < window;
+    if let Applied::Active {
+        policy_sha256: active,
+        updated_at_unix,
+        ..
+    } = last_good
+        && *active == policy_sha256
+        && recent(*updated_at_unix, REFRESH_SECONDS)
     {
         // A failure here belongs to a different policy that is no longer selected.
-        return DnsBlocklistStatus {
-            failure: None,
-            failed_at_unix: None,
-            failed_policy_sha256: None,
-            ..previous.clone()
-        };
+        return BlocklistState::Applied(last_good.clone());
     }
     // Authorization changes also start this task; do not retry a failing list on each one.
-    if previous.failed_policy_sha256.as_deref() == Some(policy_sha256.as_str())
-        && recent(previous.failed_at_unix, RETRY_SECONDS)
+    if let BlocklistState::Failed {
+        policy_sha256: failing,
+        failed_at_unix,
+        ..
+    } = previous
+        && *failing == policy_sha256
+        && recent(*failed_at_unix, RETRY_SECONDS)
     {
         return previous.clone();
     }
@@ -289,13 +425,11 @@ pub(crate) fn refresh(
             install_zone(zone, Some(&text), resolver).map(|()| count)
         });
     match result {
-        Ok(domain_count) => DnsBlocklistStatus {
-            active: true,
+        Ok(domain_count) => BlocklistState::Applied(Applied::Active {
+            policy_sha256,
+            updated_at_unix: now,
             domain_count,
-            updated_at_unix: Some(now),
-            policy_sha256: Some(policy_sha256),
-            ..Default::default()
-        },
+        }),
         Err(failure) => failed(failure),
     }
 }
@@ -434,18 +568,21 @@ pub(super) fn management_available(state: &AppState) -> bool {
 
 fn settings(state: &AppState, policy: DnsBlocklistPolicy) -> DnsBlocklistSettings {
     let policy_sha256 = fingerprint(&policy, &reserved_names(&state.configuration));
-    let mut status = read_status();
-    if status.failed_policy_sha256.as_deref() != Some(policy_sha256.as_str()) {
-        status.failure = None;
-        status.failed_at_unix = None;
-        status.failed_policy_sha256 = None;
-    }
+    let state = BlocklistState::from(&read_status()).for_policy(&policy_sha256);
+    let pending = match &state {
+        BlocklistState::Failed { .. } => false,
+        BlocklistState::Applied(Applied::Active {
+            policy_sha256: applied,
+            ..
+        }) => *applied != policy_sha256,
+        BlocklistState::Applied(Applied::Off {
+            policy_sha256: applied,
+        }) => policy.enabled && applied.as_deref() != Some(policy_sha256.as_str()),
+    };
     DnsBlocklistSettings {
-        pending: (policy.enabled || status.active)
-            && status.failure.is_none()
-            && status.policy_sha256.as_deref() != Some(policy_sha256.as_str()),
+        pending,
         policy,
-        status,
+        status: state.into(),
         presets: BUILT_IN_DNS_BLOCKLISTS
             .iter()
             .map(|(name, url)| DnsBlocklistPreset {

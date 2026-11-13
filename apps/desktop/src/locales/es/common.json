@@ -1,0 +1,74 @@
+{
+  "appName": "SirinVPN",
+  "action": {
+    "back": "Atrás",
+    "cancel": "Cancelar",
+    "close": "Cerrar",
+    "continue": "Continuar",
+    "copy": "Copiar",
+    "copied": "Copiado",
+    "dismiss": "Descartar",
+    "done": "Hecho",
+    "moreInfo": "Más información",
+    "remove": "Quitar",
+    "retry": "Reintentar"
+  },
+  "state": {
+    "checking": "Comprobando…",
+    "disabled": "Desactivado",
+    "enabled": "Activado",
+    "loading": "Cargando…",
+    "notConnected": "No conectado",
+    "saved": "Guardado",
+    "saving": "Guardando…",
+    "unavailable": "No disponible",
+    "unknown": "Desconocido"
+  },
+  "role": {
+    "owner": "Propietario",
+    "admin": "Administrador",
+    "member": "Miembro"
+  },
+  "noun": {
+    "thisDevice": "Este dispositivo"
+  },
+  "separator": {
+    "pair": "{{first}} · {{second}}",
+    "triple": "{{first}} · {{second}} · {{third}}"
+  },
+  "target": "{{os}}, {{arch}} ({{target}})",
+  "error": {
+    "withDetail": "{{summary}} {{detail}}",
+    "needsConnection": "Conéctate primero a este servidor.",
+    "localSave": "No se pudo guardar en este dispositivo. Inténtalo de nuevo.",
+    "passwordsDiffer": "Las contraseñas no coinciden."
+  },
+  "errorCode": {
+    "hetzner_create_uncertain": "Es posible que Hetzner haya creado el servidor {{server}}. Revisa la consola de Hetzner Cloud antes de volver a intentarlo.",
+    "hetzner_provision_pending": "El servidor {{name}} no se terminó de configurar. Reanúdalo o elimínalo antes de crear otro.",
+    "hetzner_host_key_replacement": "El nuevo servidor {{name}} presentó una clave de host SSH distinta de la esperada. No continúes a menos que puedas confirmar la clave en la consola de Hetzner Cloud.",
+    "install_phase_failed": "Un paso en el VPS ha fallado.",
+    "install_ssh_failed": "No se pudo iniciar sesión en el VPS por SSH. Revisa la clave de host y el inicio de sesión. No se ha cambiado nada en el VPS.",
+    "install_incompatible": "Este VPS no se puede usar: es incompatible o ya tiene otra instalación. No se ha cambiado nada en el VPS.",
+    "backup_wrong_password": "La contraseña de la copia de seguridad es incorrecta.",
+    "invitation_expired": "Este código para unirse ha caducado. Pide uno nuevo.",
+    "invitation_used": "Este código para unirse ya se usó o se canceló. Pide uno nuevo.",
+    "invitation_invalid": "Este código para unirse no es válido. Revísalo e inténtalo de nuevo.",
+    "port_forward_public_port": "Ese puerto público está reservado, ya está en uso o no es válido. Elige otro.",
+    "operation_in_progress": "Hay otro cambio en este servidor en curso. Espera a que termine e inténtalo de nuevo.",
+    "maintenance_blocked": "Este cambio no puede empezar todavía: {{steps}}.",
+    "maintenance_blocked_unnamed": "Este cambio no puede empezar todavía.",
+    "install_outcome_unknown": "No se sabe el resultado en {{host}}: es posible que el VPS haya aplicado el cambio, pero se perdió su confirmación. Este dispositivo conservó sus claves. Vuelve a comprobar el cambio cuando el VPS esté accesible.",
+    "install_rolled_back": "El VPS revirtió el cambio, así que no cambió nada.",
+    "person_has_join_codes": "Esta persona todavía tiene códigos para unirse de dispositivos. Cancélalos primero.",
+    "person_name_taken": "Otra persona de este servidor ya usa este nombre. Elige un nombre diferente.",
+    "transaction_unresolved": "Un cambio anterior en {{host}} desde este dispositivo no se ha resuelto. Resuélvelo o olvídalo antes de empezar otro."
+  },
+  "maintenanceBlocker": {
+    "not_owner": "solo el dispositivo del propietario puede mantener este VPS",
+    "connected": "primero desconéctate de este VPS",
+    "persistent_policy": "primero desactiva el interruptor de corte y la reconexión automática",
+    "pending_key_rotation": "primero termina o recupera la rotación de claves pendiente de este dispositivo",
+    "unresolved_transaction": "primero resuelve el cambio interrumpido en el VPS"
+  }
+}

@@ -55,7 +55,31 @@ cargo run --locked -p sirinvpn-release -- trust verify \
   --signature /trusted/policy/sirinvpn-release-trust.sig.json
 ```
 
-## Build and sign Linux artifacts
+## Embedded trust floor
+
+A fresh installation (a new VPS bootstrapped from the Debian desktop or the CLI, or any device without installed release state) would otherwise accept every policy the root ever signed, including one that still lists a since-revoked release key. To prevent that, `sirinvpn-release` compiles in a **trust floor**: the release owner's current root-signed policy. Every policy a SirinVPN binary accepts, on a device or a VPS, must be at least as new as that floor and keep every key it revokes, in addition to the installed record's own rules.
+
+The floor is a build-time input. The build embeds it from exactly these two files when both are present:
+
+```text
+release/sirinvpn-release-trust.json
+release/sirinvpn-release-trust.sig.json
+```
+
+These are the public outputs of `trust create` (above), byte for byte; never place a private key in `release/`. Supplying only one of them fails the build. When both are absent the build prints `warning: … no embedded floor …` and the binaries behave as before; `sirinvpn-release trust root` then reports `Embedded trust policy floor: none (no embedded floor)` (JSON: `"embedded_floor_policy_sequence": null`).
+
+No trust policy has been created yet, so the repository currently ships no floor. Release owner checklist:
+
+1. Create policy sequence 1 (and later each new policy) with the offline root key as described above, and verify it with `trust verify`.
+2. Copy the two public files into `release/` under the names above and commit them with the release that first ships them.
+3. Build, then confirm `sirinvpn-release trust root` prints `Embedded trust policy floor: sequence N` for the expected `N`. `cargo test -p sirinvpn-release` fails if the embedded policy does not verify under the bundled root.
+4. Every later policy (key rotation or revocation) must be placed there again before the next release, so new binaries never accept anything older than the newest policy they were built with. Publish the same files in each release directory.
+
+The floor does not pin release sequences: replaying an older release that the current policy still authorizes remains bounded by each installation's own high watermark.
+
+**Until a floor is embedded, a fresh VPS (and any device without installed release state) accepts any policy the root ever signed**, including one that still lists a since-revoked release key, and can be baselined on any release such a policy authorizes. Embed the first signed policy in the very release that introduces it; never ship a release whose policy is newer than the embedded floor.
+
+
 
 Build release-compatible Linux packages first:
 
@@ -74,7 +98,7 @@ env \
 
 The sequence is a positive, globally monotonic number for that channel. Mark a release that contains a security fix by adding `security` as the final argument. Preview versions must use the `preview` channel; stable manifests reject SemVer prereleases.
 
-The signing script refuses an existing destination, copies exactly one `.deb` and one AppImage into a staging directory, hashes their complete bytes, and creates `sirinvpn-release.json` plus `sirinvpn-release.sig.json`. When both public trust-policy environment paths are set, it also stages them under their canonical names and proves the bundled root authenticates the policy and that the policy authorizes the release signer. Supplying only one path fails. It does not copy or print either private key. Omitting both trust paths retains the legacy externally pinned engineering bundle format; do not publish that form as a production update.
+The signing script refuses an existing destination, copies exactly one `.deb`, one AppImage and the two VPS server payloads (`target/server-payloads/{x86_64,aarch64}-unknown-linux-gnu/release/sirinvpn-server`, built by `packaging/Dockerfile.server-payloads`, which `package-linux-container.sh` now runs) into a staging directory as `sirinvpn-server-x86_64` and `sirinvpn-server-aarch64`, declares them as `server_elf` artifacts for their targets so the same release serves "Install signed VPS baseline" and the VPS updater, hashes their complete bytes, and creates `sirinvpn-release.json` plus `sirinvpn-release.sig.json`. When both public trust-policy environment paths are set, it also stages them under their canonical names and proves the bundled root authenticates the policy and that the policy authorizes the release signer. Supplying only one path fails. It does not copy or print either private key. Omitting both trust paths retains the legacy externally pinned engineering bundle format; do not publish that form as a production update.
 
 ## Add release notes
 

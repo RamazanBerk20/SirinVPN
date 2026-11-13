@@ -1,7 +1,7 @@
 use crate::{
     ClientPaths, KeyRotationError, ManagementClient, ManagementError, ProfileStoreError,
-    SecretIdentity, SecretStore, SecretStoreError, has_pending_key_rotation, identity,
-    management_certificate_fingerprint,
+    SecretIdentity, SecretStore, SecretStoreError, ServerOperationError, ServerOperationLock,
+    has_pending_key_rotation, identity, management_certificate_fingerprint,
 };
 use base64::{
     Engine as _,
@@ -10,9 +10,9 @@ use base64::{
 use ed25519_dalek::{Signature, Verifier};
 use serde::Serialize;
 use sirinvpn_protocol::{
-    DEFAULT_MANAGEMENT_PORT, EndpointTransitionCreateRequest, EndpointTransitionResponse,
-    SERVER_TUNNEL_ADDRESS, ServerEndpoint, ServerId, ServerProfile, ServerRole, validate_host,
-    validate_server_name,
+    DEFAULT_MANAGEMENT_PORT, EndpointHandoff, EndpointTransitionCreateRequest,
+    EndpointTransitionResponse, SERVER_TUNNEL_ADDRESS, ServerEndpoint, ServerId, ServerProfile,
+    ServerRole, validate_host, validate_server_name,
 };
 use std::future::Future;
 use std::net::IpAddr;
@@ -56,6 +56,8 @@ pub enum EndpointTransitionError {
     CleanupRequired(String),
     #[error("the endpoint update could not be encoded")]
     EncodingFailed,
+    #[error("{0}")]
+    Operation(#[from] ServerOperationError),
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize)]
@@ -172,8 +174,7 @@ impl DecodedEndpointTransition {
         let mut candidate = profile.clone();
         candidate.set_endpoint_descriptor(&claims.endpoint_descriptor());
         candidate.endpoint_generation = claims.generation;
-        candidate.pending_previous_endpoint = None;
-        candidate.pending_previous_transports = None;
+        candidate.set_endpoint_handoff(EndpointHandoff::Current);
         Ok(candidate)
     }
 
@@ -198,8 +199,7 @@ impl DecodedEndpointTransition {
         }
         previous.endpoint = claims.previous_endpoint.clone();
         previous.endpoint_generation = claims.generation.saturating_sub(1);
-        previous.pending_previous_endpoint = None;
-        previous.pending_previous_transports = None;
+        previous.set_endpoint_handoff(EndpointHandoff::Current);
         Ok(previous)
     }
 
@@ -215,8 +215,7 @@ impl DecodedEndpointTransition {
         let mut next = profile.clone();
         next.set_endpoint_descriptor(&self.response.claims.endpoint_descriptor());
         next.endpoint_generation = self.response.claims.generation;
-        next.pending_previous_endpoint = None;
-        next.pending_previous_transports = None;
+        next.set_endpoint_handoff(EndpointHandoff::Current);
         Ok(next)
     }
 }
@@ -225,11 +224,12 @@ pub async fn create_endpoint_transition(
     paths: &ClientPaths,
     server_id: ServerId,
 ) -> Result<EndpointTransitionCode, EndpointTransitionError> {
+    let _operation = ServerOperationLock::acquire(paths, server_id)?;
     if has_pending_key_rotation(paths, server_id)? {
         return Err(EndpointTransitionError::KeyRotationPending);
     }
     let profiles = paths.profile_store();
-    let mut profile = profiles
+    let profile = profiles
         .load()?
         .into_iter()
         .find(|profile| profile.id == server_id)
@@ -243,33 +243,46 @@ pub async fn create_endpoint_transition(
         return Err(EndpointTransitionError::UnsupportedServer);
     }
 
-    let response = if let Some(previous_endpoint) = profile.pending_previous_endpoint.clone() {
-        let generation = profile
-            .endpoint_generation
-            .checked_add(1)
-            .ok_or(EndpointTransitionError::InvalidCode)?;
-        let request = EndpointTransitionCreateRequest {
-            server_id,
-            generation,
+    let response = match handoff(&profile)? {
+        EndpointHandoff::AwaitingPublication {
             previous_endpoint,
-            previous_transports: profile.pending_previous_transports.clone(),
-            endpoint: profile.endpoint.clone(),
-        };
-        client.create_endpoint_transition(&request).await?
-    } else {
-        client
+            previous_transports,
+        } => {
+            let generation = profile
+                .endpoint_generation
+                .checked_add(1)
+                .ok_or(EndpointTransitionError::InvalidCode)?;
+            let request = EndpointTransitionCreateRequest {
+                server_id,
+                generation,
+                previous_endpoint,
+                previous_transports,
+                endpoint: profile.endpoint.clone(),
+            };
+            client.create_endpoint_transition(&request).await?
+        }
+        EndpointHandoff::Current => client
             .endpoint_transition()
             .await?
-            .ok_or(EndpointTransitionError::NoPendingMigration)?
+            .ok_or(EndpointTransitionError::NoPendingMigration)?,
     };
 
     validate_owner_response(&profile, &response)?;
     let code = EndpointTransitionCode::from_response(response)?;
-    profile.endpoint_generation = code.generation();
-    profile.pending_previous_endpoint = None;
-    profile.pending_previous_transports = None;
-    profiles.upsert(profile)?;
+    // Only the handoff and its generation change, checked against the profile as it is now.
+    profiles.update(server_id, |current| {
+        Ok(validate_owner_response(current, code.response()).map(|()| {
+            current.endpoint_generation = code.generation();
+            current.set_endpoint_handoff(EndpointHandoff::Current);
+        }))
+    })??;
     Ok(code)
+}
+
+fn handoff(profile: &ServerProfile) -> Result<EndpointHandoff, EndpointTransitionError> {
+    profile
+        .endpoint_handoff()
+        .map_err(|_| EndpointTransitionError::BindingMismatch)
 }
 
 pub async fn apply_endpoint_transition<Connect, ConnectFuture, Disconnect>(
@@ -284,6 +297,7 @@ where
     ConnectFuture: Future<Output = Result<(), String>>,
     Disconnect: FnMut() -> Result<(), String>,
 {
+    let _operation = ServerOperationLock::acquire(paths, server_id)?;
     if has_pending_key_rotation(paths, server_id)? {
         return Err(EndpointTransitionError::KeyRotationPending);
     }
@@ -347,10 +361,28 @@ where
         cleanup_after_failure(&mut disconnect)?;
         return Err(error);
     }
-    if let Err(error) = profiles.upsert(candidate.clone()) {
-        cleanup_after_failure(&mut disconnect)?;
-        return Err(error.into());
-    }
+    // Apply the verified checkpoint to the profile as it is now: a rename or a newer
+    // checkpoint saved meanwhile is kept, and a stale generation is refused.
+    let saved = profiles
+        .update(server_id, |current| {
+            Ok(decoded.candidate_profile(current).map(|mut next| {
+                next.role = candidate.role;
+                next.administrator = candidate.administrator;
+                next.member_id = candidate.member_id;
+                next.device_id = candidate.device_id;
+                *current = next.clone();
+                next
+            }))
+        })
+        .map_err(EndpointTransitionError::from)
+        .and_then(|saved| saved);
+    let candidate = match saved {
+        Ok(saved) => saved,
+        Err(error) => {
+            cleanup_after_failure(&mut disconnect)?;
+            return Err(error);
+        }
+    };
     Ok(EndpointTransitionResult {
         server_id,
         previous_endpoint: profile.endpoint,
@@ -371,6 +403,7 @@ where
     ConnectFuture: Future<Output = Result<(), String>>,
     Disconnect: FnMut() -> Result<(), String>,
 {
+    let _operation = ServerOperationLock::acquire(paths, server_id)?;
     if has_pending_key_rotation(paths, server_id)? {
         return Err(EndpointTransitionError::KeyRotationPending);
     }
@@ -442,15 +475,17 @@ fn validate_owner_response(
 ) -> Result<(), EndpointTransitionError> {
     validate_response(response)?;
     let claims = &response.claims;
-    let generation_or_predecessor_mismatch = match &profile.pending_previous_endpoint {
-        Some(previous) => {
-            previous != &claims.previous_endpoint
+    let generation_or_predecessor_mismatch = match handoff(profile)? {
+        EndpointHandoff::AwaitingPublication {
+            previous_endpoint, ..
+        } => {
+            previous_endpoint != claims.previous_endpoint
                 || profile
                     .endpoint_generation
                     .checked_add(1)
                     .is_none_or(|expected| claims.generation != expected)
         }
-        None => claims.generation < profile.endpoint_generation,
+        EndpointHandoff::Current => claims.generation < profile.endpoint_generation,
     };
     if claims.server_id != profile.id
         || claims.endpoint != profile.endpoint
@@ -575,8 +610,11 @@ pub(crate) fn validate_descriptor(
 }
 
 fn validate_endpoint(endpoint: &ServerEndpoint) -> Result<(), EndpointTransitionError> {
-    validate_host(&endpoint.host).map_err(|_| EndpointTransitionError::InvalidCode)?;
-    if endpoint.wireguard_port == 0 {
+    // Signed hosts are stored and resolved as signed, so they must already be normalised.
+    if validate_host(&endpoint.host).map_err(|_| EndpointTransitionError::InvalidCode)?
+        != endpoint.host
+        || endpoint.wireguard_port == 0
+    {
         return Err(EndpointTransitionError::InvalidCode);
     }
     Ok(())
@@ -852,6 +890,48 @@ mod tests {
             Err(EndpointTransitionError::InvalidSignature)
         ));
         assert_eq!(store.load().unwrap(), vec![saved]);
+    }
+
+    #[tokio::test]
+    async fn a_second_endpoint_or_rotation_runner_is_refused_before_touching_anything() {
+        let directory = tempfile::tempdir().unwrap();
+        let paths = ClientPaths::under(directory.path().into());
+        let (profile, response) = fixture();
+        paths.profile_store().insert(profile.clone()).unwrap();
+        let code = EndpointTransitionCode::from_response(response).unwrap();
+        let _running = ServerOperationLock::acquire(&paths, profile.id).unwrap();
+        fn busy<T>(result: Result<T, EndpointTransitionError>) -> bool {
+            matches!(
+                result,
+                Err(EndpointTransitionError::Operation(
+                    ServerOperationError::AlreadyInProgress
+                ))
+            )
+        }
+        let never = |_: ServerProfile, _: SecretIdentity| async {
+            panic!("a refused runner must not reconnect")
+        };
+        assert!(busy(
+            apply_endpoint_transition(&paths, profile.id, code.expose(), never, || Ok(())).await
+        ));
+        assert!(busy(
+            publish_endpoint_transition(&paths, profile.id, code.expose(), never, || Ok(())).await
+        ));
+        assert!(busy(create_endpoint_transition(&paths, profile.id).await));
+        assert_eq!(paths.profile_store().load().unwrap(), vec![profile]);
+    }
+
+    #[test]
+    fn signed_endpoints_must_already_be_normalised() {
+        for host in [" 203.0.113.20", "203.0.113.20\n"] {
+            assert!(matches!(
+                validate_endpoint(&ServerEndpoint {
+                    host: host.into(),
+                    wireguard_port: 51_820,
+                }),
+                Err(EndpointTransitionError::InvalidCode)
+            ));
+        }
     }
 
     #[test]

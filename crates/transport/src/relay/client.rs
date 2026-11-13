@@ -34,6 +34,7 @@ where
 {
     run_client_relay_inner(
         config,
+        None,
         before_remote_socket,
         after_remote_socket,
         |_| Ok(()),
@@ -55,6 +56,31 @@ where
 {
     run_client_relay_inner(
         config,
+        None,
+        || async { Ok(()) },
+        || async { Ok(()) },
+        protect,
+        ready,
+    )
+    .await
+}
+
+/// Like `run_client_relay_with_socket_protector`, for a caller that fixed WireGuard's
+/// local address: datagrams from any other source are dropped and replies go only to
+/// `wireguard`, so no other local process can take over or inject into the tunnel.
+pub async fn run_client_relay_pinned<F, Protect>(
+    config: ClientRelayConfig,
+    wireguard: SocketAddr,
+    protect: Protect,
+    ready: F,
+) -> Result<(), RelayError>
+where
+    F: FnOnce(),
+    Protect: FnOnce(&Socket) -> Result<(), RelayError>,
+{
+    run_client_relay_inner(
+        config,
+        Some(wireguard),
         || async { Ok(()) },
         || async { Ok(()) },
         protect,
@@ -65,6 +91,7 @@ where
 
 async fn run_client_relay_inner<F, Before, BeforeFuture, After, AfterFuture, Protect>(
     config: ClientRelayConfig,
+    wireguard: Option<SocketAddr>,
     before_remote_socket: Before,
     after_remote_socket: After,
     protect: Protect,
@@ -81,6 +108,7 @@ where
     if !config.local_listen.ip().is_loopback() {
         return Err(RelayError::InvalidConfiguration);
     }
+    let mut local_peer = LocalPeer::new(wireguard)?;
     let (client_private, server_public) = config.decoded_keys()?;
     let local_socket = crate::socket_policy::bind_loopback(config.local_listen)?;
     before_remote_socket().await?;
@@ -100,9 +128,7 @@ where
 
     let mut local_buffer = [0_u8; MAX_DATAGRAM_LENGTH];
     let mut remote_buffer = [0_u8; MAX_DATAGRAM_LENGTH];
-    let mut local_peer = None;
-    let mut last_server_packet = Instant::now();
-    let mut last_local_packet = Instant::now();
+    let mut carrier = CarrierSession::established();
     let mut health_interval = tokio::time::interval(Duration::from_secs(5));
 
     loop {
@@ -114,11 +140,10 @@ where
                     Err(error) if error.kind() == std::io::ErrorKind::ConnectionReset => continue,
                     Err(error) => return Err(error.into()),
                 };
-                if !peer.ip().is_loopback() {
+                if !local_peer.admit(peer) {
                     continue;
                 }
-                local_peer = Some(peer);
-                last_local_packet = Instant::now();
+                carrier.sent();
                 // An oversized packet (manual MTU above this transport's limit) is dropped, as the
                 // server relay does, instead of ending the tunnel.
                 let Ok(packet) = encode_transport_packet(
@@ -150,22 +175,20 @@ where
                     continue;
                 };
                 session.inbound_replay.commit(sequence);
-                last_server_packet = Instant::now();
-                if let Some(peer) = local_peer {
+                carrier.received();
+                if let Some(peer) = local_peer.target() {
                     local_socket.send_to(&inner, peer).await?;
                 }
             }
             _ = health_interval.tick() => {
-                if last_server_packet.elapsed() >= CLIENT_REHANDSHAKE_AFTER
-                    && last_local_packet.elapsed() < CLIENT_REHANDSHAKE_AFTER
-                {
+                if carrier.phase() == CarrierPhase::Stale {
                     session = establish_client_session(
                         &remote_socket,
                         &client_private,
                         &server_public,
                     )
                     .await?;
-                    last_server_packet = Instant::now();
+                    carrier.received();
                 }
             }
         }

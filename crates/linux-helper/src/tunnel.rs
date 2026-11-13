@@ -9,27 +9,12 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
         endpoint: IpAddr,
         persistent_protection: bool,
     ) -> Result<()> {
-        let wireguard_endpoint = match request.transport {
-            TransportKind::DirectUdp => {
-                self.stop_transport();
-                SocketAddr::new(endpoint, request.endpoint_port).to_string()
-            }
-            TransportKind::ObfuscatedUdp => {
-                self.start_transport(request, endpoint)?;
-                format!("127.0.0.1:{CLIENT_RELAY_PORT}")
-            }
-            TransportKind::TcpFallback => {
-                self.start_transport(request, endpoint)?;
-                format!("127.0.0.1:{TCP_CLIENT_RELAY_PORT}")
-            }
-            TransportKind::TlsLike => {
-                self.start_transport(request, endpoint)?;
-                format!("127.0.0.1:{TLS_LIKE_CLIENT_RELAY_PORT}")
-            }
-            TransportKind::Quic => {
-                self.start_transport(request, endpoint)?;
-                format!("127.0.0.1:{QUIC_CLIENT_RELAY_PORT}")
-            }
+        let wireguard_endpoint = if request.transport == TransportKind::DirectUdp {
+            self.stop_transport();
+            SocketAddr::new(endpoint, request.endpoint_port).to_string()
+        } else {
+            self.start_transport(request, endpoint)?;
+            format!("127.0.0.1:{}", cleanup::carrier_port(request.transport))
         };
         self.runner.run(
             "ip",
@@ -40,26 +25,29 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
         private_key.push('\n');
         let mtu = mtu::session_mtu(request).to_string();
         let allowed_ips = wireguard_allowed_ips(request);
-        self.runner.run(
-            "wg",
-            &[
-                "set",
-                INTERFACE_NAME,
-                "private-key",
-                "/dev/stdin",
-                "fwmark",
-                ROUTING_TABLE,
-                "peer",
-                &request.server_public_key,
-                "endpoint",
-                &wireguard_endpoint,
-                "allowed-ips",
-                &allowed_ips,
-                "persistent-keepalive",
-                "25",
-            ],
-            Some(private_key.as_bytes()),
-        )?;
+        let relayed = request.transport != TransportKind::DirectUdp;
+        let listen_port = WIREGUARD_LISTEN_PORT.to_string();
+        let mut arguments = vec!["set", INTERFACE_NAME, "private-key", "/dev/stdin"];
+        // Only a loopback relay needs WireGuard's port fixed; Direct UDP keeps the
+        // kernel's ephemeral source port on the outer path.
+        if relayed {
+            arguments.extend(["listen-port", listen_port.as_str()]);
+        }
+        arguments.extend([
+            "fwmark",
+            ROUTING_TABLE,
+            "peer",
+            &request.server_public_key,
+            "endpoint",
+            &wireguard_endpoint,
+            "allowed-ips",
+            &allowed_ips,
+            "persistent-keepalive",
+            "25",
+        ]);
+        self.runner
+            .run("wg", &arguments, Some(private_key.as_bytes()))
+            .map_err(|error| self.listen_port_error(relayed, error))?;
         // stdin already carried the private key; the link stays down until both are set.
         if let Some(preshared_key) = &request.preshared_key {
             let preshared_key = Zeroizing::new(format!("{preshared_key}\n"));
@@ -161,6 +149,35 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
             None,
         )?;
         Ok(())
+    }
+
+    /// Fixes WireGuard's port on a live interface before a relay carrier starts, or with
+    /// `relayed == false` gives it back a random port (0) after a handoff to Direct UDP.
+    pub(super) fn pin_wireguard_port(&self, relayed: bool) -> Result<()> {
+        let port = if relayed { WIREGUARD_LISTEN_PORT } else { 0 };
+        self.runner
+            .run(
+                "wg",
+                &["set", INTERFACE_NAME, "listen-port", &port.to_string()],
+                None,
+            )
+            .map_err(|error| self.listen_port_error(relayed, error))
+    }
+
+    /// A taken WireGuard port is reported like a taken relay port, not as a generic
+    /// WireGuard failure.
+    fn listen_port_error(&self, relayed: bool, error: anyhow::Error) -> anyhow::Error {
+        let port = format!(":{WIREGUARD_LISTEN_PORT}");
+        let taken = relayed
+            && self
+                .runner
+                .output("ss", &["-H", "-u", "-a", "-n", "sport", "=", &port])
+                .is_ok_and(|sockets| sockets.iter().any(|byte| !byte.is_ascii_whitespace()));
+        if taken {
+            cleanup::CarrierPortInUse(WIREGUARD_LISTEN_PORT).into()
+        } else {
+            error
+        }
     }
 
     pub(super) fn apply_policy_routes(

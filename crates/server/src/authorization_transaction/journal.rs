@@ -29,11 +29,23 @@ pub(super) fn write(
     Ok(())
 }
 
-pub(super) fn validate(paths: &ServerPaths) -> Result<()> {
+/// How the intent on disk relates to the durable document.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(crate) enum Consistency {
+    Absent,
+    /// The transaction never replaced the document.
+    Previous,
+    /// The document was replaced; publication may still be pending.
+    Next,
+    /// Root maintenance (repair/`init`/restore) replaced the document after the intent.
+    Stale,
+}
+
+fn read(paths: &ServerPaths) -> Result<Option<Intent>> {
     use std::io::Read;
     let file = match files::open_no_follow(&path(paths)) {
         Ok(file) => file,
-        Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(()),
+        Err(error) if error.kind() == io::ErrorKind::NotFound => return Ok(None),
         Err(error) => return Err(error.into()),
     };
     files::validate_private_file(&file)?;
@@ -51,11 +63,44 @@ pub(super) fn validate(paths: &ServerPaths) -> Result<()> {
     {
         bail!("invalid authorization recovery intent");
     }
+    Ok(Some(intent))
+}
+
+/// Errors only for a malformed, oversized, foreign-owned or symlinked intent.
+pub(crate) fn inspect(paths: &ServerPaths) -> Result<Consistency> {
+    let Some(intent) = read(paths)? else {
+        return Ok(Consistency::Absent);
+    };
     let authority = fingerprint(&load_authorization(&paths.authorization)?)?;
-    if authority != intent.previous && authority != intent.next {
-        bail!("authorization recovery authority mismatch");
+    Ok(if authority == intent.previous {
+        Consistency::Previous
+    } else if authority == intent.next {
+        Consistency::Next
+    } else {
+        Consistency::Stale
+    })
+}
+
+pub(super) fn validate(paths: &ServerPaths) -> Result<()> {
+    if inspect(paths)? == Consistency::Stale {
+        bail!(
+            "authorization recovery authority mismatch; run `sirinvpn-server authorization doctor`"
+        );
     }
     Ok(())
+}
+
+/// Startup only, before the first recovery and with startup containment installed. A
+/// stale intent means root maintenance wrote the durable document while the daemon was
+/// stopped; that document is authoritative (see `Host::intent`). Recovery then enforces
+/// exactly it under containment, so access it removed cannot survive. Malformed intents
+/// still fail closed.
+pub(crate) fn discard_stale(paths: &ServerPaths) -> Result<bool> {
+    if inspect(paths)? != Consistency::Stale {
+        return Ok(false);
+    }
+    remove(paths)?;
+    Ok(true)
 }
 
 pub(super) fn remove(paths: &ServerPaths) -> Result<()> {

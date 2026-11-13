@@ -15,7 +15,10 @@ native memory. They are not claimed to be non-exportable hardware keys.
   existing unreadable credentials. Keystore hardware backing depends on the
   device; the emulator is not hardware-security evidence.
 - Protected input handles expire after ten minutes and have a sixteen-entry
-  ceiling. Native password/QR windows use `FLAG_SECURE`; explicit clipboard
+  ceiling. Each handle is bound to the argument it was entered for (`password`,
+  `sudo_password`, `apiToken`, `key`, `code`, …): a typed SSH password can't be
+  redeemed as a sudo password or an API token. Showing or copying a protected
+  value asks the user in a native dialog first, whatever the WebView requests. Native password/QR windows use `FLAG_SECURE`; explicit clipboard
   copy is marked sensitive and cleared after a minute if it is still the same
   value. No secret form value is put in WebView localStorage or an Intent.
 - Current profile metadata, connection intent/preferences and unfinished
@@ -36,7 +39,14 @@ native memory. They are not claimed to be non-exportable hardware keys.
 
 Transport sockets are opened without a WireGuard endpoint, protected with
 `VpnService.protect`, bound to the selected underlying network, and only then
-committed. Relay sockets use the same protection boundary. The app itself
+committed. Relay sockets use the same protection boundary. When a loopback
+carrier relay may carry the session (any relay transport, or automatic
+transport), WireGuard listens on the fixed port UDP 31820 (31821 for the
+measurement probe) and the relay accepts datagrams only from, and replies only
+to, `127.0.0.1` on that port, so another app can't inject into or take over the
+tunnel. Apps can't bind ports below 1024, so the port is unprivileged; if another
+app holds it, Connect fails with a message that says so. Direct UDP alone keeps
+an ephemeral port. The app itself
 remains routed; excluding its whole UID is not a transport shortcut.
 
 The controller owns endpoint changes. Upstream WireGuard's mobile roaming
@@ -46,6 +56,11 @@ two comparisons and bounded probes. Positive handoff and injected rollback
 retained the actual TUN and passed traffic. A lease conflict can leave quality
 optimization unavailable for the current connection; it does not fabricate
 measurements or prevent the active tunnel from carrying traffic.
+
+Notification control actions (Disconnect, Stop connecting, Retry) always require
+authentication: Android asks for the unlock only when the phone is locked, and
+then delivers the action. A receiver can't start an unlock screen itself on
+Android 12+, and one that arrives while locked is refused.
 
 Android's Always-on and “Block connections without VPN” settings are the
 system policy authority. App-only disconnect is rejected while Always-on

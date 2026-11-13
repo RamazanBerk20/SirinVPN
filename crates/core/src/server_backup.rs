@@ -41,6 +41,10 @@ pub enum ServerBackupError {
     AuthenticationFailed,
     #[error("the server backup file operation failed: {0}")]
     Io(#[from] io::Error),
+    #[error(
+        "the server backup's private keys do not match the server identity devices have pinned; it was not restored. Export a new backup from a working server"
+    )]
+    IdentityMismatch,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -294,6 +298,18 @@ fn validate_snapshot(
         || management_identity_fingerprint(&snapshot.management_certificate_pem).is_err()
     {
         return Err(ServerBackupError::InvalidSnapshot);
+    }
+    // Restoring keys that do not match the pinned public identity would cut off every
+    // device after the old identity is already gone, so refuse before anything changes.
+    let restored = crate::SecretIdentity {
+        wireguard_private_key: snapshot.wireguard_private_key.clone(),
+        management_private_key_pem: snapshot.management_private_key_pem.clone(),
+        wireguard_preshared_key: None,
+    }
+    .public_identity(&snapshot.management_certificate_pem)
+    .map_err(|_| ServerBackupError::IdentityMismatch)?;
+    if restored.wireguard_public_key != configuration.wireguard_public_key {
+        return Err(ServerBackupError::IdentityMismatch);
     }
     validate_transport_configuration(
         configuration.wireguard_port,
@@ -618,6 +634,32 @@ mod tests {
                 read_encrypted_server_backup(&path, password).is_ok(),
                 accepted
             );
+        }
+
+        // Keys from a corrupted or partly migrated server do not match what devices pinned.
+        let other = LocalIdentity::generate("Other server").unwrap();
+        for (field, value) in [
+            ("wireguard_private_key", &other.secret.wireguard_private_key),
+            (
+                "management_private_key_pem",
+                &other.secret.management_private_key_pem,
+            ),
+        ] {
+            let mut mismatched: serde_json::Value = serde_json::from_slice(&snapshot).unwrap();
+            mismatched[field] = json!(value);
+            let path = directory
+                .path()
+                .join(format!("{field}.sirinvpn-server-backup"));
+            write_encrypted_server_backup(
+                &path,
+                &serde_json::to_vec(&mismatched).unwrap(),
+                password,
+            )
+            .unwrap();
+            assert!(matches!(
+                read_encrypted_server_backup(&path, password),
+                Err(ServerBackupError::IdentityMismatch)
+            ));
         }
 
         let future = json!({

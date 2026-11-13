@@ -208,8 +208,10 @@ fn inspect(app: &tauri::AppHandle, entry: &mut NetworkEntry) -> Result<Automatio
         WifiNetworkStatus::TrustedWifi => return Ok(AutomationStatus::Trusted),
         WifiNetworkStatus::UntrustedWifi => (),
     }
+    // A Disconnect after this reading advances the epoch; it must not be undone below.
+    let epoch = crate::connection_controller::epoch();
     let local = invoke_helper("status", None).map_err(safe_error)?;
-    if local.server_id.is_some() || !crate::connection_controller::confirmed_disconnected(&local) {
+    if !crate::connection_controller::confirmed_disconnected(&local) {
         // A session or retained guard belongs to the user, including paused sessions.
         entry.attempted = true;
         return Ok(AutomationStatus::SessionActive);
@@ -228,6 +230,10 @@ fn inspect(app: &tauri::AppHandle, entry: &mut NetworkEntry) -> Result<Automatio
     let Ok(_operation) = crate::connection_controller::acquire_connection() else {
         return Ok(AutomationStatus::SessionActive);
     };
+    if crate::connection_controller::require_current(epoch).is_err() {
+        entry.attempted = true;
+        return Ok(AutomationStatus::WaitingForNetworkChange);
+    }
     let id = snapshot
         .policy
         .server_id

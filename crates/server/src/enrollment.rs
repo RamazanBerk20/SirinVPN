@@ -14,6 +14,7 @@ pub(super) async fn prepare_key_rotation_handler(
         .map_err(|_| ApiError::invalid("the new management certificate is invalid"))?;
     let authorization = require_authorization(&state)?;
     let mut current = authorization.write().await;
+    limit_mutation(&state, &current, &caller)?;
     ensure_active_endpoint_authority(&current)?;
     authorize_current(&current, &caller, false)?;
     let mut next = current.clone();
@@ -39,6 +40,7 @@ pub(super) async fn commit_key_rotation_handler(
         .map_err(|_| ApiError::invalid("key rotation identifier is invalid"))?;
     let authorization = require_authorization(&state)?;
     let mut current = authorization.write().await;
+    limit_mutation(&state, &current, &caller)?;
     ensure_active_endpoint_authority(&current)?;
     let mut next = current.clone();
     let now = unix_time();
@@ -60,6 +62,7 @@ pub(super) async fn cancel_key_rotation_handler(
         .map_err(|_| ApiError::invalid("key rotation identifier is invalid"))?;
     let authorization = require_authorization(&state)?;
     let mut current = authorization.write().await;
+    limit_mutation(&state, &current, &caller)?;
     ensure_active_endpoint_authority(&current)?;
     let mut next = current.clone();
     next.prune_expired(unix_time());
@@ -214,6 +217,12 @@ pub(super) async fn enrollment_handler(
             "the invitation target changed; create a new invitation",
         ));
     }
+    // A recipient-named join sets a new person's name now (named codes were checked at
+    // creation too, but someone may have taken the name since). An issuer-set name on a
+    // multi-use code is shared by its joiners by design and was checked at creation.
+    if target_member.is_none() && invitation.claims.recipient_names {
+        ensure_person_name_free(&current, &member_name, None)?;
+    }
     let resolved_member_id = target_member.as_ref().map_or_else(
         || {
             if invitation.claims.max_uses > 1 {
@@ -359,14 +368,14 @@ pub(super) fn redemption_is_limited(
         .redemption_failures
         .lock()
         .unwrap_or_else(|poisoned| poisoned.into_inner());
-    let attempts = failures.entry(invitation_id).or_default();
-    while attempts
-        .front()
-        .is_some_and(|timestamp| now.saturating_sub(*timestamp) >= 60)
-    {
-        attempts.pop_front();
-    }
-    attempts.len() >= 5
+    // Prune every grant, not only this one: expired or cancelled grants must not keep entries.
+    failures.retain(|_, attempts| {
+        attempts.retain(|timestamp| now.saturating_sub(*timestamp) < 60);
+        !attempts.is_empty()
+    });
+    failures
+        .get(&invitation_id)
+        .is_some_and(|attempts| attempts.len() >= 5)
 }
 
 pub(super) fn record_redemption_failure(state: &AppState, invitation_id: InvitationId, now: u64) {
@@ -390,7 +399,9 @@ pub(super) const MIN_LIVE_METRIC_INTERVAL: Duration = Duration::from_millis(250)
 pub(super) const MAX_LIVE_METRIC_INTERVAL: Duration = Duration::from_secs(30);
 
 /// Called only after the bearer token, signature and exact stored claims match.
-fn resolve_enrollment_names(request: &EnrollmentRequest) -> Result<(String, String), ApiError> {
+pub(super) fn resolve_enrollment_names(
+    request: &EnrollmentRequest,
+) -> Result<(String, String), ApiError> {
     let claims = &request.claims;
     if !claims.recipient_names {
         if request.names.is_some() {
@@ -401,11 +412,17 @@ fn resolve_enrollment_names(request: &EnrollmentRequest) -> Result<(String, Stri
     let names = request.names.as_ref().ok_or_else(|| {
         ApiError::invalid("choose the member and device display names before joining")
     })?;
-    let device_name = validate_display_name(&names.device_name)
+    let device_name = validate_new_display_name(&names.device_name)
         .map_err(|_| ApiError::invalid("device name must contain 1–64 visible characters"))?;
     let member_name = match (claims.target_member_id, &names.member_name) {
         (Some(_), None) => claims.member_name.clone(),
-        (None, Some(value)) => validate_display_name(value)
+        (None, None) if claims.fixed_member_name => claims.member_name.clone(),
+        (None, Some(_)) if claims.fixed_member_name => {
+            return Err(ApiError::invalid(
+                "this join code already names the new person; choose only the device name",
+            ));
+        }
+        (None, Some(value)) => validate_new_display_name(value)
             .map_err(|_| ApiError::invalid("member name must contain 1–64 visible characters"))?,
         _ => {
             return Err(ApiError::invalid(

@@ -1,0 +1,270 @@
+{
+  "tools": {
+    "deviceTitle": "Cihaz yedeği",
+    "vpsTitle": "VPS yedeği ve kurtarma",
+    "serverTitle": "{{name}} bakımı",
+    "finishRotationFirst": "Önce anahtar değişimini tamamlayın",
+    "exportBackup": {
+      "label": "Cihaz yedeğini dışa aktar",
+      "summary": "Bu cihazın anahtarlarının şifreli kopyası"
+    },
+    "restoreBackup": {
+      "label": "Cihaz yedeğini geri yükle",
+      "summary": "Şifreli bir yedek dosyasından cihaz anahtarlarını yükle"
+    },
+    "rotateKeys": {
+      "label": "Cihaz anahtarlarını değiştir",
+      "resumeLabel": "Anahtar değişimini sürdür",
+      "summary": "Bu cihazın anahtarlarını değiştir",
+      "resumeSummary": "Bu cihazın kesintiye uğrayan değişimini tamamla",
+      "needsConnection": "Önce bu sunucuya bağlanın"
+    },
+    "endpoint": {
+      "ownerLabel": "Yeni bir adrese taşı",
+      "ownerSummary": "Tüm cihazları sunucunun yeni adresine yönlendir",
+      "memberLabel": "Adres güncellemesini uygula",
+      "memberSummary": "Sunucunun yeni adresine ulaşmak için imzalı bir güncelleme kullan",
+      "otherConnected": "Önce diğer sunucunun bağlantısını kesin"
+    },
+    "remove": {
+      "label": "Kaldır veya kurulumu kaldır",
+      "summary": "Bu cihazda unut veya VPS’ten kaldır"
+    },
+    "deviceKeysTitle": "Cihaz anahtarları",
+    "vpsScheduleTitle": "Otomatik VPS yedekleri"
+  },
+  "operation": {
+    "interruption": "Hizmetler yeniden başlar; diğer cihazların bağlantısı kısa süreliğine kesilebilir.",
+    "backup": {
+      "title": "VPS’i yedekle",
+      "summary": "Sunucu ayarlarının ve erişiminin şifreli kopyası",
+      "steps": {
+        "read": "Sunucu ayarları ve erişim, doğrulanmış SSH üzerinden okunur.",
+        "encrypt": "Yedek parolanızla şifrelenir ve bu cihaza kaydedilir."
+      }
+    },
+    "restore": {
+      "title": "VPS’i geri yükle veya taşı",
+      "summary": "Bu VPS’te veya yeni bir VPS’te yedeği geri yükle",
+      "steps": {
+        "choose": "Bir VPS yedeği seçersiniz ve hedef VPS’i SSH üzerinden doğrulanırsınız.",
+        "review": "Hiçbir şey değişmeden önce neyin değiştirileceğini incelersiniz."
+      }
+    },
+    "update": {
+      "title": "VPS yazılımını güncelle",
+      "summary": "VPS’e daha yeni bir SirinVPN sürümü kur",
+      "steps": {
+        "review": "İmzalı sürüm kurulmadan önce incelersiniz.",
+        "rollback": "Geri alma için mevcut sürüm saklanır."
+      }
+    },
+    "repair": {
+      "title": "VPS yapılandırmasını onar",
+      "summary": "VPS’te ağı ve hizmetleri yeniden uygula",
+      "steps": {
+        "reapply": "Ağ, hizmetler ve DNS yeniden uygulanır ve sunucu yazılımı yeniden kurulur.",
+        "preserve": "Cihazlar ve erişim korunur. Önce DNS değişikliklerini incelersiniz."
+      }
+    },
+    "dns": {
+      "title": "VPS DNS’ini yapılandır",
+      "steps": {
+        "choose": "Bu sunucudaki her cihaz için DNS sunucularını veya özel kayıtları seçersiniz.",
+        "apply": "Değişiklikler, sunucu yazılımını yeniden kuran bir onarımla uygulanır."
+      }
+    },
+    "security": {
+      "title": "VPS güvenlik güncellemelerini aç",
+      "steps": {
+        "enable": "Bir onarım, işletim sisteminin otomatik güvenlik güncellemelerini açar ve sunucu yazılımını yeniden kurar."
+      }
+    }
+  },
+  "review": {
+    "description": "{{name}} üzerinde ne olur",
+    "close": "İncelemeyi kapat",
+    "rotationFirst": "Önce bu cihazın anahtar değişimini tamamlayın.",
+    "reviewRotation": "Anahtar değişimini incele",
+    "refreshFirst": "Önce bu cihazın VPN durumunu yenileyin.",
+    "disconnectFirst": "Önce bu cihazda VPN’in bağlantısını kesin. Diğer cihazlar etkilenmez.",
+    "disconnectFirstKillSwitch": "Önce bu cihazda VPN’in bağlantısını kesin. Bu, kill switch’i kaldırır ve otomatik yeniden bağlanmayı durdurur.",
+    "disconnect": "Bu cihazın bağlantısını kes",
+    "disconnecting": "Bağlantı kesiliyor…",
+    "refresh": "Durumu yenile",
+    "disconnectFailed": "VPN’in bağlantısı kesilemedi.",
+    "blocked": "Devam etmek için yukarıdaki adımı yapın."
+  },
+  "health": {
+    "title": "Sistem sağlığı",
+    "connection": "Bağlantı",
+    "killSwitch": "Kill switch",
+    "autoReconnect": "Otomatik yeniden bağlanma",
+    "autoReconnectOther": "Bağlı sunucuya bak",
+    "management": "Sunucu yönetimi",
+    "managementResponding": "Yanıt veriyor",
+    "managementUnavailable": "Kullanılamıyor · VPN hâlâ bağlı",
+    "notChecked": "Denetlenmedi",
+    "serverVpn": "Sunucu VPN’i",
+    "serverVpnUp": "Açık",
+    "serverVpnDown": "Kapalı",
+    "serverDns": "Sunucu DNS’i",
+    "serverDnsRunning": "Çalışıyor",
+    "serverDnsDown": "Yanıt vermiyor",
+    "diagnosticsSummary": "Bu cihazı ve bağlıyken DNS’i, trafik sızıntılarını ve sunucuyu denetler.",
+    "runDiagnostics": "Tanılamayı çalıştır"
+  },
+  "diagnostics": {
+    "title": "Tanılama",
+    "description": "Bu cihazın ve sunucunun güncel durumu. Sonuçlar kaydedilmez.",
+    "checking": "Bu cihaz ve sunucu denetleniyor…",
+    "copy": "Raporu kopyala",
+    "openNetwork": "Ağ ayarlarını aç",
+    "turnOnUpdates": "Aç",
+    "copied": "Rapor kopyalandı. Değiştirilene kadar panonuzda kalır.",
+    "copyFailed": "Rapor kopyalanamadı. Pano erişimini kontrol edip tekrar deneyin.",
+    "summary": {
+      "attention": "{count, plural, one {# dikkat gerektiriyor} other {# dikkat gerektiriyor}}",
+      "review": "{count, plural, one {# incelenecek} other {# incelenecek}}",
+      "unavailable": "{count, plural, one {# denetlenmedi} other {# denetlenmedi}}",
+      "passed": "{count, plural, one {# geçti} other {# geçti}}",
+      "line": "{{attention}} · {{review}} · {{passed}}",
+      "withUnavailable": "{{attention}} · {{review}} · {{unavailable}} · {{passed}}"
+    },
+    "group": {
+      "attention": "Dikkat gerektiriyor",
+      "review": "İncelenecek",
+      "unavailable": "Denetlenmedi",
+      "passed": "Geçti"
+    },
+    "passedChecks": "Geçen denetimler · {{count}}",
+    "passedNote": "Geçen denetimler, olası her sızıntıyı dışlamaz.",
+    "checkTitle": {
+      "local_backend": "Yerel VPN hizmeti",
+      "local_tunnel": "Seçilen VPN bağlantısı",
+      "local_protection": "Geçerli trafik koruması",
+      "local_transport": "Geçerli taşıma",
+      "local_routes": "Yapılandırılmış VPN yönlendirmesi",
+      "local_ipv6": "Yapılandırılmış IPv6 işlemesi",
+      "local_mtu": "Geçerli yol MTU’su",
+      "local_quality": "Geçerli özel tünel yoklamaları",
+      "local_dns": "Bu cihaz üzerinden özel DNS",
+      "local_identity": "Cihaz kimliği depolaması",
+      "management": "VPS kimlik doğrulama ve bağlantı",
+      "server_report_format": "VPS tanılama uyumluluğu",
+      "interface": "VPS VPN arayüzü",
+      "wireguard": "VPS WireGuard",
+      "dns": "VPS özel DNS hizmeti",
+      "forwarding": "VPS IPv4 yönlendirmesi",
+      "ipv6": "VPS IPv6 tüneli",
+      "server_process": "VPS sistem hizmeti",
+      "server_routes": "VPS yolları",
+      "server_firewall": "VPS güvenlik duvarı yapısı",
+      "server_nat4": "VPS IPv4 NAT",
+      "server_nat6": "VPS IPv6 NAT",
+      "server_ports": "VPS dinleme portları",
+      "server_mtu": "VPS arayüz MTU’su",
+      "server_cpu": "VPS CPU",
+      "server_memory": "VPS bellek",
+      "server_disk": "VPS disk",
+      "external_reachability": "Sağlayıcı güvenlik duvarı ve genel erişilebilirlik",
+      "dns_blocklist": "VPS DNS engelleme",
+      "os_security_updates": "VPS güvenlik güncellemeleri",
+      "os_reboot_required": "VPS yeniden başlatma",
+      "diagnostics_busy": "VPS güncel tanılamaları",
+      "dns_probe_busy": "VPS DNS yanıt denetimleri",
+      "dns_resolver_response": "VPS özel çözümleyici yanıtı",
+      "leak_ipv4": "IPv4 sızıntı testi",
+      "leak_ipv6": "IPv6 sızıntı testi",
+      "leak_dns": "DNS sızıntı testi",
+      "authorization_transaction": "Erişim değişiklikleri",
+      "authorization_containment": "Erişim değişiklikleri sırasında trafik engeli",
+      "authorization_intent": "Erişim kurtarma kaydı",
+      "authorization_peers": "Uygulanan cihazlar"
+    },
+    "evidence": {
+      "configuration": "Yapılandırma denetlendi",
+      "service": "Hizmet tarafından bildirildi",
+      "observed": "Test edildi",
+      "notChecked": "Denetlenmedi",
+      "notApplicable": "Uygulanamaz",
+      "reported": "Bildirildi"
+    },
+    "report": {
+      "title": "SirinVPN tanılaması",
+      "scope": "Yalnızca güncel durum. Etkinlik geçmişi yok.",
+      "evidence": "Kanıt: {{evidence}}",
+      "check": "[{{level}}] {{label}}",
+      "level": {
+        "pass": "GEÇTİ",
+        "warning": "UYARI",
+        "fail": "BAŞARISIZ",
+        "not_applicable": "UYGULANAMAZ"
+      }
+    },
+    "progress": {
+      "device": {
+        "label": "Bu cihaz",
+        "detail": "VPN hizmeti, tünel, kill switch, yönlendirme ve MTU"
+      },
+      "identity": {
+        "label": "Kayıtlı sunucu kimliği",
+        "detail": "Sunucu sabitlemesi ve bu cihazın sertifikası"
+      },
+      "server": {
+        "label": "VPS",
+        "detail": "Oturum açma, DNS, ağ, güvenlik duvarı ve kaynaklar"
+      },
+      "leaks": {
+        "label": "Sızıntı testleri",
+        "detail": "IPv4, IPv6 ve DNS"
+      },
+      "disconnected": "VPS’i de denetlemek ve sızıntı testleri yapmak için bu sunucuya bağlanın."
+    },
+    "cause": {
+      "not_measured": "Güncel bir ölçüm yok.",
+      "mtu_pending": "Yol MTU’su hâlâ ölçülüyor.",
+      "management_clock": "VPS ile güvenli bağlantı başarısız oldu. Bu cihazın ve VPS’in saatlerini kontrol edin.",
+      "management_credentials_invalid": "Kayıtlı sunucu kimliği veya bu cihazın sertifikası geçersiz.",
+      "management_device_rejected": "VPS, bu cihazın sertifikasını reddetti.",
+      "management_access_rejected": "VPS, bu cihazın güncel erişimini reddetti.",
+      "management_unreachable": "VPS yönetim hizmetine VPN üzerinden ulaşılamadı."
+    },
+    "numberedCheck": {
+      "dnsTls": "VPS TLS çözümleyici {{number}}",
+      "dnsHttps": "VPS HTTPS çözümleyici {{number}}",
+      "dnsZone": "VPS bölünmüş DNS bölgesi {{zone}}",
+      "dnsZoneUpstream": "VPS bölünmüş DNS bölgesi {{zone}}, üst çözümleyici {{upstream}}"
+    }
+  },
+  "speedTest": {
+    "title": "VPS’inize hız testi",
+    "description": "VPN üzerinden kendi VPS’inize tek bağlantıyla indirme, yükleme ve gecikmeyi ölçer; bu yüzden internet hızınız değildir. Yaklaşık 20 saniye sürer ve herkes için VPN’i kısa süreliğine yavaşlatır. Sonuç bu cihazda kalır.",
+    "run": "Hız testini çalıştır",
+    "again": "Hız testini yeniden çalıştır",
+    "running": "VPS’inize giden tünel ölçülüyor…",
+    "download": "İndirme",
+    "upload": "Yükleme",
+    "idleLatency": "Gecikme, boşta",
+    "downloadLatency": "İndirme sırasında gecikme",
+    "uploadLatency": "Yükleme sırasında gecikme",
+    "rate": "{{value}} Mbit/sn",
+    "latency": "{{value}} ms",
+    "notMeasured": "Ölçülmedi",
+    "failed": "Hız testi tamamlanmadı. Bu cihazın bağlı olduğunu kontrol edip tekrar deneyin."
+  },
+  "workspace": {
+    "metric": {
+      "needsUpdate": "Sunucuyu güncelle",
+      "sampling": "Ölçülüyor…"
+    },
+    "error": {
+      "unsavedSettings": "Ayarlar’da değişikliklerinizi kaydedin veya vazgeçin, sonra bağlanın.",
+      "settingsNotLoaded": "Bağlantı ayarları henüz yüklenmedi. Ayarlar’ı açıp tekrar deneyin.",
+      "connectionChange": "Bağlantı değişmedi. Durumu yenileyip tekrar deneyin.",
+      "stopUnconfirmed": "VPN’in durduğu doğrulanamadı. Durumunu kontrol edin.",
+      "resume": "Devam ettirilemedi. Trafik ayarlarınız değişmedi.",
+      "diagnostics": "Tanılama çalıştırılamadı. Durumu yenileyip tekrar deneyin."
+    }
+  }
+}

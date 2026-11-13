@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
-  canCancelInvitation,
-  canManageMember,
+  canActOnOwn,
+  canAddDeviceFor,
+  canCancelJoinCode,
+  canManagePerson,
   canRotateDeviceKeys,
-  memberAccessLabel,
-  memberAccessLevel,
+  personRole,
+  roleLabel,
   resolveAccess,
 } from "./access";
 import { t } from "./i18n";
@@ -74,29 +76,52 @@ describe("device key rotation gate", () => {
   });
 });
 
-describe("management target boundaries", () => {
-  it("labels compatibility roles without inventing a third wire role", () => {
-    expect([owner, admin, member].map(memberAccessLevel)).toEqual(["owner", "admin", "member"]);
-    expect(memberAccessLabel(owner)).toBe(t("common.role.owner"));
-    expect(memberAccessLabel(admin)).toBe(t("common.role.admin"));
-    expect(memberAccessLabel(member)).toBe(t("common.role.member"));
+describe("roles", () => {
+  it("names the three roles without inventing a third wire role", () => {
+    expect([owner, admin, member].map(personRole)).toEqual(["owner", "admin", "member"]);
+    expect(roleLabel("owner")).toBe(t("common.role.owner"));
+    expect(roleLabel("admin")).toBe(t("common.role.admin"));
+    expect(roleLabel("member")).toBe(t("common.role.member"));
   });
 
-  it("lets Admins manage only ordinary Members", () => {
-    expect(canManageMember("owner", owner)).toBe(true);
-    expect(canManageMember("owner", admin)).toBe(true);
-    expect(canManageMember("admin", member)).toBe(true);
-    expect(canManageMember("admin", admin)).toBe(false);
-    expect(canManageMember("admin", owner)).toBe(false);
+  it("lets Admins manage only Members", () => {
+    expect(canManagePerson("owner", owner)).toBe(true);
+    expect(canManagePerson("owner", admin)).toBe(true);
+    expect(canManagePerson("admin", member)).toBe(true);
+    expect(canManagePerson("admin", admin)).toBe(false);
+    expect(canManagePerson("admin", owner)).toBe(false);
+    expect(canManagePerson("member", member)).toBe(false);
   });
 
-  it("fails closed when an Admin cannot resolve an invitation target", () => {
-    expect(canCancelInvitation("admin", invitation(), [owner, admin, member])).toBe(true);
-    expect(canCancelInvitation("admin", invitation({ administrator: true }), [owner, admin, member])).toBe(false);
-    expect(canCancelInvitation("admin", invitation({ target_member_id: member.id }), [owner, admin, member])).toBe(true);
-    expect(canCancelInvitation("admin", invitation({ target_member_id: admin.id }), [owner, admin, member])).toBe(false);
-    expect(canCancelInvitation("admin", invitation({ target_member_id: owner.id }), [owner, admin, member])).toBe(false);
-    expect(canCancelInvitation("admin", invitation({ target_member_id: "missing" }), [owner, admin, member])).toBe(false);
-    expect(canCancelInvitation("owner", invitation({ administrator: true }), [owner, admin, member])).toBe(true);
+  it("lets a person act on their own devices when their permissions allow it, Admins included", () => {
+    const allowedAdmin = { ...admin, policy: { device_limit: null, expires_at_unix: null, weekly_access: [], invite_members: false,
+      add_own_devices: true, manage_own_peer_communication: false, manage_own_port_forwards: false } };
+    expect(canActOnOwn("admin", allowedAdmin, admin.id, "add_own_devices")).toBe(true);
+    expect(canActOnOwn("admin", admin, admin.id, "add_own_devices")).toBe(false);
+    expect(canActOnOwn("admin", allowedAdmin, "someone else", "add_own_devices")).toBe(false);
+    expect(canActOnOwn("admin", allowedAdmin, admin.id, "manage_own_port_forwards")).toBe(false);
+  });
+
+  it("fails closed when an Admin cannot resolve a join code's person", () => {
+    const people = [owner, admin, member];
+    expect(canCancelJoinCode("admin", invitation(), people, admin.id)).toBe(true);
+    expect(canCancelJoinCode("admin", invitation({ administrator: true }), people, admin.id)).toBe(false);
+    expect(canCancelJoinCode("admin", invitation({ target_member_id: member.id }), people, admin.id)).toBe(true);
+    expect(canCancelJoinCode("admin", invitation({ target_member_id: admin.id, administrator: true }), people, admin.id)).toBe(true);
+    expect(canCancelJoinCode("admin", invitation({ target_member_id: admin.id }), people, "other")).toBe(false);
+    expect(canCancelJoinCode("admin", invitation({ target_member_id: owner.id }), people, admin.id)).toBe(false);
+    expect(canCancelJoinCode("admin", invitation({ target_member_id: "missing" }), people, admin.id)).toBe(false);
+    expect(canCancelJoinCode("owner", invitation({ administrator: true }), people, owner.id)).toBe(true);
+  });
+});
+
+describe("adding devices", () => {
+  it("lets an Admin add their own device without a grant only where the server allows it", () => {
+    expect(canAddDeviceFor("admin", admin, admin.id, false)).toBe(false);
+    expect(canAddDeviceFor("admin", { ...admin, policy: { add_own_devices: true } as MemberSummary["policy"] }, admin.id, false)).toBe(true);
+    expect(canAddDeviceFor("admin", admin, admin.id, true)).toBe(true);
+    expect(canAddDeviceFor("admin", owner, admin.id, true)).toBe(false);
+    expect(canAddDeviceFor("member", member, member.id, true)).toBe(false);
+    expect(canAddDeviceFor("admin", member, admin.id, false)).toBe(true);
   });
 });

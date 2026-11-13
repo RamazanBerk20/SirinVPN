@@ -1,0 +1,74 @@
+{
+  "appName": "SirinVPN",
+  "action": {
+    "back": "Geri",
+    "cancel": "İptal",
+    "close": "Kapat",
+    "continue": "Devam et",
+    "copy": "Kopyala",
+    "copied": "Kopyalandı",
+    "dismiss": "Kapat",
+    "done": "Tamam",
+    "moreInfo": "Daha fazla bilgi",
+    "remove": "Kaldır",
+    "retry": "Tekrar dene"
+  },
+  "state": {
+    "checking": "Denetleniyor…",
+    "disabled": "Kapalı",
+    "enabled": "Açık",
+    "loading": "Yükleniyor…",
+    "notConnected": "Bağlı değil",
+    "saved": "Kaydedildi",
+    "saving": "Kaydediliyor…",
+    "unavailable": "Kullanılamıyor",
+    "unknown": "Bilinmiyor"
+  },
+  "role": {
+    "owner": "Sahip",
+    "admin": "Yönetici",
+    "member": "Üye"
+  },
+  "noun": {
+    "thisDevice": "Bu cihaz"
+  },
+  "separator": {
+    "pair": "{{first}} · {{second}}",
+    "triple": "{{first}} · {{second}} · {{third}}"
+  },
+  "target": "{{os}}, {{arch}} ({{target}})",
+  "error": {
+    "withDetail": "{{summary}} {{detail}}",
+    "needsConnection": "Önce bu sunucuya bağlanın.",
+    "localSave": "Bu cihaza kaydedilemedi. Tekrar deneyin.",
+    "passwordsDiffer": "Parolalar eşleşmiyor."
+  },
+  "errorCode": {
+    "hetzner_create_uncertain": "Hetzner, {{server}} sunucusunu oluşturmuş olabilir. Tekrar denemeden önce Hetzner Cloud Console’u kontrol edin.",
+    "hetzner_provision_pending": "{{name}} sunucusunun kurulumu tamamlanmadı. Yeni bir tane oluşturmadan önce onu sürdürün veya silin.",
+    "hetzner_host_key_replacement": "Yeni {{name}} sunucusu beklenenden farklı bir SSH ana bilgisayar anahtarı sundu. Anahtarı Hetzner Cloud Console’da doğrulayamıyorsanız devam etmeyin.",
+    "install_phase_failed": "VPS üzerindeki bir adım başarısız oldu.",
+    "install_ssh_failed": "VPS’e SSH ile giriş yapılamadı. Ana bilgisayar anahtarını ve oturum bilgilerini kontrol edin. VPS üzerinde hiçbir şey değiştirilmedi.",
+    "install_incompatible": "Bu VPS kullanılamaz: uyumsuz veya zaten başka bir kurulum çalıştırıyor. VPS üzerinde hiçbir şey değiştirilmedi.",
+    "backup_wrong_password": "Yedek parolası yanlış.",
+    "invitation_expired": "Bu katılım kodunun süresi doldu. Yeni bir kod isteyin.",
+    "invitation_used": "Bu katılım kodu zaten kullanıldı veya iptal edildi. Yeni bir kod isteyin.",
+    "invitation_invalid": "Bu katılım kodu geçerli değil. Kontrol edip tekrar deneyin.",
+    "port_forward_public_port": "Bu genel port ayrılmış, zaten kullanımda veya geçerli değil. Başka bir port seçin.",
+    "operation_in_progress": "Bu sunucuda başka bir değişiklik çalışıyor. Bitmesini bekleyip tekrar deneyin.",
+    "maintenance_blocked": "Bu değişiklik henüz başlatılamaz: {{steps}}.",
+    "maintenance_blocked_unnamed": "Bu değişiklik henüz başlatılamaz.",
+    "install_outcome_unknown": "{{host}} üzerindeki sonuç bilinmiyor: VPS değişikliği uygulamış olabilir, ancak onayı kaybolmuş olabilir. Bu cihaz anahtarlarını korudu. VPS’e ulaşılabildiğinde değişikliği yeniden kontrol edin.",
+    "install_rolled_back": "VPS değişikliği geri aldı, bu yüzden hiçbir şey değişmedi.",
+    "person_has_join_codes": "Bu kişinin hâlâ cihaz katılım kodları var. Önce bunları iptal edin.",
+    "person_name_taken": "Bu sunucudaki başka bir kişi bu adı zaten kullanıyor. Farklı bir ad seçin.",
+    "transaction_unresolved": "Bu cihazdan {{host}} sunucusuna yapılan önceki bir değişiklik çözülmemiş. Başka bir işlem başlatmadan önce bunu çözün veya unutun."
+  },
+  "maintenanceBlocker": {
+    "not_owner": "bu VPS’in bakımını yalnızca Sahip cihazı yapabilir",
+    "connected": "önce bu VPS’in bağlantısını kesin",
+    "persistent_policy": "önce kill switch’i ve otomatik yeniden bağlanmayı kapatın",
+    "pending_key_rotation": "önce bu cihazın bekleyen anahtar değişimini tamamlayın veya kurtarın",
+    "unresolved_transaction": "önce yarım kalan VPS değişikliğini çözün"
+  }
+}

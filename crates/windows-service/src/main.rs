@@ -13,6 +13,7 @@ fn main() {
         [argument] if argument == "--install-service" => install::install(),
         [argument] if argument == "--stop-service" => install::stop_for_update(),
         [argument] if argument == "--uninstall-service" => install::uninstall(),
+        [argument] if argument == "--release-guard" => install::release_guard(),
         [argument, directory] if argument == "--prepare-install" => {
             install::prepare_install(std::path::Path::new(directory))
         }

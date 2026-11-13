@@ -9,7 +9,7 @@ use rand::{RngCore, rngs::OsRng};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use sirinvpn_protocol::{
-    DeviceId, EnrollmentRequest, EnrollmentResult, InvitationCreateRequest,
+    DeviceId, EnrollmentRequest, EnrollmentResult, InvitationCreateBody, InvitationCreateRequest,
     InvitationCreateResponse, InvitationId, MemberId, ObfuscatedUdpEndpoint, SERVER_TUNNEL_ADDRESS,
     ServerEndpoint, ServerId, ServerProfile, ServerRole, TcpFallbackEndpoint, TlsLikeEndpoint,
     validate_host, validate_server_name,
@@ -51,6 +51,7 @@ pub struct InvitationDraft {
     token: Zeroizing<String>,
     expected_server: ExpectedServer,
     expected_target: InvitationTarget,
+    fixed_member_name: bool,
 }
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
@@ -196,7 +197,9 @@ impl InvitationDraft {
     ) -> Result<Self, InvitationError> {
         validate_server_name(member_name).map_err(|_| InvitationError::InvalidCode)?;
         validate_server_name(device_name).map_err(|_| InvitationError::InvalidCode)?;
-        validate_host(&profile.endpoint.host).map_err(|_| InvitationError::InvalidCode)?;
+        let host = validate_host(&profile.endpoint.host)
+            .map_err(|_| InvitationError::InvalidCode)?
+            .to_owned();
         if !(60..=7 * 24 * 60 * 60).contains(&expires_in_seconds)
             || target.member_id.is_some() != target.role.is_some()
             || (target.role == Some(ServerRole::Owner) && target.administrator)
@@ -213,7 +216,11 @@ impl InvitationDraft {
         let request = InvitationCreateRequest {
             recipient_names: false,
             server_id: profile.id,
-            endpoint: profile.endpoint.clone(),
+            // The VPS signs this host; send what validation accepted.
+            endpoint: ServerEndpoint {
+                host,
+                wireguard_port: profile.endpoint.wireguard_port,
+            },
             member_name: member_name.trim().to_owned(),
             device_name: device_name.trim().to_owned(),
             target_member_id: target.member_id,
@@ -241,11 +248,35 @@ impl InvitationDraft {
                 tls_like: profile.tls_like.clone(),
             },
             expected_target: target,
+            fixed_member_name: false,
         })
     }
 
     pub fn request(&self) -> &InvitationCreateRequest {
         &self.request
+    }
+
+    /// The `POST /v1/invitations` body: the request plus the options sent beside it.
+    pub fn body(&self) -> InvitationCreateBody {
+        InvitationCreateBody {
+            fixed_member_name: self.fixed_member_name,
+            ..InvitationCreateBody::from(self.request.clone())
+        }
+    }
+
+    /// Named join code: the new person is called the request's member name and the
+    /// recipient chooses only the device name. Needs recipient names, a new person and
+    /// one use; call it after `with_recipient_names` and `with_policy`.
+    pub fn with_fixed_member_name(mut self, enabled: bool) -> Result<Self, InvitationError> {
+        if enabled
+            && (!self.request.recipient_names
+                || self.request.target_member_id.is_some()
+                || self.request.max_uses != 1)
+        {
+            return Err(InvitationError::InvalidCode);
+        }
+        self.fixed_member_name = enabled;
+        Ok(self)
     }
 
     pub fn with_recipient_names(mut self, enabled: bool) -> Self {
@@ -262,6 +293,7 @@ impl InvitationDraft {
             || member_policy.validate().is_err()
             || (self.request.target_member_id.is_some() && !member_policy.is_default())
             || (self.expected_target.role == Some(ServerRole::Owner) && max_uses > 1)
+            || (self.fixed_member_name && max_uses > 1)
         {
             return Err(InvitationError::InvalidCode);
         }
@@ -275,7 +307,9 @@ impl InvitationDraft {
         response: InvitationCreateResponse,
     ) -> Result<SecretInvitationCode, InvitationError> {
         let claims = &response.claims;
+        // An older VPS ignores `fixed_member_name`; its code would let the joiner pick the name.
         if claims.recipient_names != self.request.recipient_names
+            || claims.fixed_member_name != self.fixed_member_name
             || claims.max_uses != self.request.max_uses
             || claims.member_policy != self.request.member_policy
             || claims.server_id != self.request.server_id
@@ -416,6 +450,11 @@ impl DecodedInvitation {
         self.response.claims.target_member_id.is_none()
     }
 
+    /// A named join code: `member_name` is the new person's name; only the device is named.
+    pub fn member_name_fixed(&self) -> bool {
+        self.response.claims.fixed_member_name
+    }
+
     pub fn set_recipient_names(
         &mut self,
         member_name: Option<&str>,
@@ -427,7 +466,7 @@ impl DecodedInvitation {
             }
             return Ok(());
         }
-        if self.creates_member() != member_name.is_some() {
+        if (self.creates_member() && !self.member_name_fixed()) != member_name.is_some() {
             return Err(InvitationError::BindingMismatch);
         }
         let device_name = device_name.ok_or(InvitationError::InvalidCode)?;
@@ -646,7 +685,12 @@ fn validate_invitation_response(
     validate_server_name(&claims.server_name).map_err(|_| InvitationError::InvalidCode)?;
     validate_server_name(&claims.member_name).map_err(|_| InvitationError::InvalidCode)?;
     validate_server_name(&claims.device_name).map_err(|_| InvitationError::InvalidCode)?;
-    validate_host(&claims.endpoint.host).map_err(|_| InvitationError::InvalidCode)?;
+    // Signed hosts are stored and resolved as signed, so they must already be normalised.
+    if validate_host(&claims.endpoint.host).map_err(|_| InvitationError::InvalidCode)?
+        != claims.endpoint.host
+    {
+        return Err(InvitationError::InvalidCode);
+    }
     let target_is_valid = match (claims.target_member_id, claims.target_role) {
         (None, None) => true,
         (Some(target_member_id), Some(target_role)) => {
@@ -682,6 +726,10 @@ fn validate_invitation_response(
             .map(|bytes| bytes.len() != 32)
             .unwrap_or(true)
         || claims.token_hash.len() != 64
+        || (claims.fixed_member_name
+            && (!claims.recipient_names
+                || claims.target_member_id.is_some()
+                || claims.max_uses != 1))
         || !valid_transport_capabilities(claims)
     {
         return Err(InvitationError::InvalidCode);

@@ -1,3 +1,4 @@
+/* Physical left/right below are intentional: resize edges map to OS window edges, not reading direction. */
 /* Desktop-only chrome. Dialogs and sticky navigation leave the title bar reachable. */
 html[data-window-chrome="custom"],
 html[data-window-chrome="custom"] * {

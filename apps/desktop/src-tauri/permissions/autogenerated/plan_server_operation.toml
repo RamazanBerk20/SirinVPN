@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-plan-server-operation"
+description = "Enables the plan_server_operation command without any pre-configured scope."
+commands.allow = ["plan_server_operation"]
+
+[[permission]]
+identifier = "deny-plan-server-operation"
+description = "Denies the plan_server_operation command without any pre-configured scope."
+commands.deny = ["plan_server_operation"]

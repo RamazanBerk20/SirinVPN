@@ -6,6 +6,9 @@ use zeroize::Zeroize;
 pub(super) struct InvitationInput {
     #[serde(default)]
     pub(super) recipient_names: bool,
+    /// Named join code: `member_name` names the new person; the recipient names the device.
+    #[serde(default)]
+    pub(super) fixed_member_name: bool,
     pub(super) server_id: String,
     pub(super) member_name: String,
     pub(super) device_name: String,

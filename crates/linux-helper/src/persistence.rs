@@ -2,10 +2,40 @@
 
 use super::*;
 
+const GUARD_CHECK_INTERVAL: Duration = Duration::from_secs(1);
+
+/// Why a supervisor wait ended.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(super) enum Wake {
+    Timeout,
+    Stopped,
+    Handshake,
+    NetworkChanged,
+    GuardMissing,
+}
+
 impl<R: CommandRunner> LinuxNetworkHelper<R> {
     pub fn restore_kill_switch(&self) -> Result<(), HelperError> {
         let _lock = self.lock_operations()?;
-        let persistent = self.read_persistent()?;
+        let persistent = match self.read_persistent() {
+            Ok(persistent) => persistent,
+            // A request this helper no longer accepts (an upgrade that tightened a rule,
+            // a damaged file) cannot start a tunnel, but it must not boot unprotected.
+            Err(error) => {
+                // No saved intent at all is no reason to block anything.
+                if !self.persistent_path().exists() {
+                    return Err(error);
+                }
+                let spec = self.read_guard_spec();
+                if spec.as_ref().is_some_and(|spec| !spec.blocks_at_boot()) {
+                    return Err(error);
+                }
+                if let Some(objects) = enforcement::deny_all_guard_objects(spec.as_ref()) {
+                    self.install_guard(objects)?;
+                }
+                return Ok(());
+            }
+        };
         let runtime = self.read_state().ok();
         let request = current_persistent_request(&persistent, runtime.as_ref());
         if request.policy.is_some() {
@@ -74,49 +104,53 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
             {
                 return Ok(());
             }
+            // Paused sessions keep their guard too; only the policy decides.
+            let guarded = desired.request.connection_policy().kill_switch;
             let physical_route = self.physical_default_route_fingerprint();
             let observed_handshake = self.latest_handshake_timestamp();
             if let Some(physical_route) = physical_route {
                 network_epoch.observe(physical_route, observed_handshake, now_unix());
             }
-            match self.reconcile_persistent_once_with_context(true, network_epoch.context())? {
-                ReconcileOutcome::Healthy => {
-                    reconnect_backoff = SUPERVISOR_POLL_SECONDS;
-                    thread::sleep(Duration::from_secs(SUPERVISOR_POLL_SECONDS));
+            let outcome =
+                self.reconcile_persistent_once_with_context(true, network_epoch.context())?;
+            let (timeout, handshake) = match outcome {
+                ReconcileOutcome::Healthy => (SUPERVISOR_POLL_SECONDS, None),
+                ReconcileOutcome::AwaitingHandshake => (
+                    SUPERVISOR_POLL_SECONDS,
+                    (network_epoch.context().physical_route_available != Some(false))
+                        .then_some(observed_handshake),
+                ),
+                ReconcileOutcome::ReconnectPending => (reconnect_backoff, None),
+            };
+            let woken = self.wait_for_network_or_handshake(
+                Duration::from_secs(timeout),
+                physical_route,
+                handshake,
+                guarded,
+            );
+            reconnect_backoff = match (outcome, woken) {
+                (_, Wake::NetworkChanged | Wake::GuardMissing) => SUPERVISOR_POLL_SECONDS,
+                (ReconcileOutcome::ReconnectPending, _) => {
+                    (reconnect_backoff.saturating_mul(2)).min(MAX_RECONNECT_BACKOFF_SECONDS)
                 }
-                ReconcileOutcome::AwaitingHandshake => {
-                    if self.wait_for_network_or_handshake(
-                        Duration::from_secs(SUPERVISOR_POLL_SECONDS),
-                        physical_route,
-                        (network_epoch.context().physical_route_available != Some(false))
-                            .then_some(observed_handshake),
-                    ) {
-                        reconnect_backoff = SUPERVISOR_POLL_SECONDS;
-                    }
-                }
-                ReconcileOutcome::ReconnectPending => {
-                    reconnect_backoff = if self.wait_for_network_or_handshake(
-                        Duration::from_secs(reconnect_backoff),
-                        physical_route,
-                        None,
-                    ) {
-                        SUPERVISOR_POLL_SECONDS
-                    } else {
-                        (reconnect_backoff.saturating_mul(2)).min(MAX_RECONNECT_BACKOFF_SECONDS)
-                    };
-                }
-            }
+                (ReconcileOutcome::Healthy, _) => SUPERVISOR_POLL_SECONDS,
+                (ReconcileOutcome::AwaitingHandshake, _) => reconnect_backoff,
+            };
         }
     }
 
     // ponytail: poll only during connection/recovery; use netlink notifications
     // if spawning route queries becomes a measurable cost on low-power devices.
+    /// Every supervisor wait, reconnect backoff included, also watches the guard: a
+    /// third-party `flush ruleset` must not leave the device unprotected until the
+    /// backoff ends. The next reconcile pass reinstalls it.
     pub(super) fn wait_for_network_or_handshake(
         &self,
         timeout: Duration,
         route: Option<Option<u64>>,
         initial_handshake: Option<Option<u64>>,
-    ) -> bool {
+        guarded: bool,
+    ) -> Wake {
         // Compare with the observation BEFORE apply: the first handshake may
         // already have arrived while configuring DNS or publishing state.
         let interval = Duration::from_millis(if initial_handshake.is_some() {
@@ -125,21 +159,29 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
             250
         });
         let started = std::time::Instant::now();
+        let mut guard_checked = started;
         while started.elapsed() < timeout {
             thread::sleep(interval.min(timeout.saturating_sub(started.elapsed())));
             if !self.persistent_path().exists() {
-                return false;
+                return Wake::Stopped;
+            }
+            // One cheap table lookup per second; reconcile verifies the full contents.
+            if guarded && guard_checked.elapsed() >= GUARD_CHECK_INTERVAL {
+                guard_checked = std::time::Instant::now();
+                if !self.kill_switch_exists() {
+                    return Wake::GuardMissing;
+                }
             }
             let current = self.physical_default_route_fingerprint();
             if current.is_some() && current != route {
-                return true;
+                return Wake::NetworkChanged;
             }
             if initial_handshake.is_some_and(|initial| self.latest_handshake_timestamp() != initial)
             {
-                return false;
+                return Wake::Handshake;
             }
         }
-        false
+        Wake::Timeout
     }
 
     pub(super) fn reconcile_persistent_once(
@@ -284,11 +326,11 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
                 .then_some(next_request.dns_address),
         })
         .map_err(|_| HelperError::NetworkOperationFailed)?;
-        if self
-            .apply(&next_request, persistent.endpoint, true)
-            .is_err()
-        {
+        if let Err(error) = self.apply(&next_request, persistent.endpoint, true) {
             self.cleanup_tunnel_owned()?;
+            if let Some(error) = cleanup::CarrierPortInUse::helper_error(&error) {
+                return Err(error);
+            }
             return Ok(ReconcileOutcome::ReconnectPending);
         }
         Ok(ReconcileOutcome::AwaitingHandshake)

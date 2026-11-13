@@ -1,0 +1,264 @@
+{
+  "choice": {
+    "listLabel": "So fügst du einen Server hinzu",
+    "back": "Zurück zu den Optionen",
+    "privacy": "Kein Konto. Keine Telemetrie.",
+    "join": {
+      "title": "Beitrittscode verwenden",
+      "summary": "QR-Code scannen oder deinen Code eingeben"
+    },
+    "provision": {
+      "title": "Meinen VPS einrichten",
+      "summary": "Ein VPN auf deinem eigenen Server erstellen"
+    },
+    "backup": {
+      "title": "Backup wiederherstellen",
+      "summary": "Ein verschlüsseltes Geräte-Backup importieren"
+    },
+    "recovery": {
+      "title": "Wiederherstellungsschlüssel verwenden",
+      "summary": "Zugriff auf deinen Server wiederherstellen"
+    },
+    "hetzner": {
+      "title": "Hetzner-Server erstellen",
+      "summary": "Einen neuen VPS mieten, der sich selbst einrichtet"
+    },
+    "advanced": "Erweitert",
+    "advancedHint": "Einen Server mit einem Hetzner-Cloud-Konto erstellen"
+  },
+  "backup": {
+    "title": "Dieses Gerät wiederherstellen",
+    "summary": "Fügt diesem Gerät wieder einen Server hinzu. Der Server selbst wird nicht kontaktiert.",
+    "file": "Backup-Datei",
+    "fileHint": "Eine .sirinvpn-backup-Datei. Auf diesem Gerät bereits vorhandene Server werden nie überschrieben.",
+    "choose": "Datei wählen",
+    "pickerTitle": "Ein SirinVPN-Backup öffnen",
+    "fileType": "SirinVPN-Backup",
+    "password": "Backup-Passwort",
+    "submit": "Backup wiederherstellen",
+    "submitting": "Wird wiederhergestellt…",
+    "error": {
+      "picker": "Die Dateiauswahl konnte nicht geöffnet werden. Versuche es erneut.",
+      "restore": "Das Backup konnte nicht wiederhergestellt werden. Prüfe Datei und Passwort."
+    },
+    "change": "Datei ändern",
+    "restored": "{{name}} wurde auf diesem Gerät wiederhergestellt."
+  },
+  "invitation": {
+    "expires": "Läuft ab {{date}}",
+    "identity": "Geprüfte Serveridentität",
+    "trust": "Tritt nur bei, wenn du diesen Beitrittscode von einer Person erwartet hast, der du vertraust.",
+    "error": "Dieser Beitrittscode konnte nicht geprüft werden. Bitte um einen neuen."
+  },
+  "join": {
+    "title": "Einem Server beitreten",
+    "summary": "Dein privater Schlüssel wird auf diesem Gerät erstellt und verlässt es nie.",
+    "code": "Beitrittscode",
+    "codeHint": "Halte ihn geheim, wie ein Passwort",
+    "review": "Beitrittscode prüfen",
+    "submit": "Server beitreten",
+    "submitting": "Wird beigetreten…",
+    "error": "Dieser Beitrittscode hat nicht funktioniert. Er ist vielleicht abgelaufen, schon verwendet oder abgebrochen worden. Bitte um einen neuen."
+  },
+  "recover": {
+    "title": "Wiederherstellungsschlüssel verwenden",
+    "summary": "Auf diesem Gerät wieder Besitzer dieses Servers werden.",
+    "key": "Wiederherstellungsschlüssel",
+    "keyHint": "Beginnt mit sirr1. Nichts wird gesendet, bis du bestätigst.",
+    "file": {
+      "toggle": "Eine Wiederherstellungsschlüssel-Datei öffnen",
+      "choose": "Datei wählen",
+      "password": "Dateipasswort",
+      "open": "Datei öffnen",
+      "opening": "Datei wird geöffnet…",
+      "loaded": "Wiederherstellungsschlüssel aus der Datei geladen.",
+      "pickerError": "Die Dateiauswahl konnte nicht geöffnet werden.",
+      "openError": "Die Wiederherstellungsschlüssel-Datei konnte nicht geöffnet werden. Prüfe die Datei und ihr Passwort.",
+      "type": "SirinVPN-Wiederherstellungsschlüssel"
+    },
+    "serverIdentity": "Serveridentität",
+    "deviceName": "Name des Besitzer-Geräts",
+    "defaultDeviceName": "Wiederhergestelltes Besitzer-Gerät",
+    "confirmRevoke": "Alle bisherigen Besitzer-Geräte entfernen und diesen Schlüssel verbrauchen. Andere Personen behalten ihren Zugriff; Admins verlieren ihre Wiederherstellungsrechte.",
+    "replaceProfile": "Gespeichertes Profil dieses Geräts für {{name}} ersetzen",
+    "review": "Wiederherstellungsschlüssel prüfen",
+    "submit": "Besitzer-Zugriff wiederherstellen",
+    "error": "Die Wiederherstellung ist nicht abgeschlossen. Versuche es erneut mit demselben Schlüssel.",
+    "disconnectFirst": "Trenne zuerst das VPN. Die Wiederherstellung kann nicht starten, solange dieses Gerät verbunden ist.",
+    "reviewing": "Wiederherstellungsschlüssel wird geprüft…",
+    "submitting": "Besitzer-Zugriff wird wiederhergestellt…",
+    "done": "Du bist wieder Besitzer von {{name}}. Dein alter Wiederherstellungsschlüssel ist verbraucht, erstelle daher unter Schlüssel und Wiederherstellung einen neuen."
+  },
+  "setup": {
+    "title": "Deinen Server verbinden",
+    "summary": "Melde dich per SSH bei deinem Server an, um SirinVPN zu installieren.",
+    "defaultName": "Mein Server",
+    "name": "Servername",
+    "nameHint": "Wird nur auf diesem Gerät gespeichert",
+    "host": "IP-Adresse oder Hostname",
+    "advanced": "Erweiterte Einstellungen",
+    "replace": {
+      "title": "Vorhandene Installation ersetzen",
+      "summary": "Nur wenn alle Besitzer-Geräte und Wiederherstellungsschlüssel verloren sind"
+    },
+    "verify": "Server prüfen",
+    "verifying": "Verbindung zu {{host}} wird hergestellt…",
+    "fingerprint": {
+      "title": "Deinen Server prüfen",
+      "summary": "Prüfe diesen Fingerabdruck in der Web-Konsole deines Hosting-Anbieters.",
+      "copy": "Fingerabdruck kopieren",
+      "mismatch": "Stimmt er nicht überein, fahre nicht fort. Die Verbindung könnte abgefangen werden.",
+      "replaceWarning": "Beim Ersetzen werden alle Geräte, Beitrittscodes und Wiederherstellungsschlüssel dieses Servers entfernt.",
+      "matches": "Fingerabdruck stimmt überein",
+      "checkAgain": "Netzwerk erneut prüfen",
+      "checking": "Netzwerk wird geprüft…",
+      "install": "SirinVPN installieren",
+      "replace": "SirinVPN ersetzen",
+      "pinnedTitle": "Der SSH-Schlüssel deines Servers",
+      "pinned": "SirinVPN hat diesen Schlüssel auf diesem Gerät erstellt und ihn vor dem ersten Start auf den Server gebracht, daher gibt es nichts zu vergleichen.",
+      "checkNetwork": "Netzwerk prüfen",
+      "confirmed": "Du hast bestätigt, dass dieser Fingerabdruck zu deinem Server passt.",
+      "changePort": "Port ändern"
+    },
+    "confirmReplace": {
+      "title": "Vorhandene Installation ersetzen?",
+      "message": "Jedes Gerät, jeder Beitrittscode und jeder Wiederherstellungsschlüssel für diesen Server funktioniert nicht mehr. Andere Software auf dem Server ist nicht betroffen.",
+      "confirm": "Ersetzen"
+    },
+    "installing": {
+      "title": "Dein Server wird eingerichtet",
+      "summary": "SirinVPN wird auf {{host}} installiert. Das dauert meist ein paar Minuten.",
+      "keepOpen": "Lass SirinVPN geöffnet, bis dies abgeschlossen ist.",
+      "stepChecked": "VPS-Identität und Netzwerk bestätigen",
+      "stepInstall": "SirinVPN auf dem VPS installieren",
+      "stepInstallDetail": "Verbindet sich, prüft den Server, lädt die Software hoch und prüft sie, dann richtet es das VPN ein"
+    },
+    "success": {
+      "title": "Dein VPN ist bereit",
+      "summary": "{{name}} wurde hinzugefügt, und dieses Gerät ist sein Besitzer.",
+      "recoveryTitle": "Wiederherstellungsschlüssel speichern",
+      "recoverySummary": "Nur dieses Gerät kann den Server verwalten. Wenn du es verlierst, ist ein Wiederherstellungsschlüssel der einzige Weg zurück. Du kannst ihn erstellen, sobald du verbunden bist.",
+      "recoveryKey": "Wiederherstellungsschlüssel speichern",
+      "open": "Server öffnen"
+    },
+    "error": {
+      "unreachable": "Der Server war per SSH nicht erreichbar. Prüfe Adresse und Port.",
+      "network": "Das Netzwerk des Servers konnte nicht geprüft werden. Versuche es erneut.",
+      "install": "SirinVPN konnte nicht installiert werden."
+    },
+    "hostPlaceholder": "z. B. 203.0.113.10",
+    "continue": "Weiter",
+    "previousStep": "Vorheriger Schritt",
+    "progress": {
+      "label": "Einrichtungsschritte",
+      "server": "Server",
+      "verify": "Prüfen",
+      "install": "Installieren"
+    },
+    "failed": {
+      "title": "Die Installation ist nicht abgeschlossen",
+      "stage": "Abgebrochen bei",
+      "server": "Dein Server",
+      "fingerprint": "Geprüfter Fingerabdruck",
+      "stages": {
+        "connect": "Anmeldung am Server",
+        "check": "Server wird geprüft",
+        "upload": "SirinVPN wird hochgeladen",
+        "configure": "Server wird konfiguriert"
+      },
+      "change": {
+        "unchanged": "Auf dem Server wurde nichts verändert.",
+        "rolledBack": "SirinVPN hat den Server verändert und diese Änderungen anschließend zurückgesetzt.",
+        "unknown": "SirinVPN konnte nicht bestätigen, ob der Server verändert wurde. Bei einer erneuten Installation wird der Server zuerst geprüft."
+      },
+      "signInAgain": "Das SSH-Passwort wurde nicht gespeichert. Geh zurück zu den Einstellungen, um es erneut einzugeben.",
+      "back": "Zurück zu den Einstellungen",
+      "retry": "Installation wiederholen"
+    },
+    "created": {
+      "title": "{{name}} ist bereit",
+      "summary": "Er läuft unter {{host}} mit einem SSH-Schlüssel, den dieses Gerät erstellt hat, daher gibt es nichts zu prüfen. Installiere SirinVPN mit den empfohlenen Einstellungen oder prüfe sie zuerst.",
+      "settings": "Einstellungen prüfen (optional)",
+      "address": "Adresse",
+      "key": "Root-SSH-Schlüssel",
+      "copyKey": "Schlüsselpfad kopieren"
+    }
+  },
+  "hetzner": {
+    "title": "Server auf Hetzner Cloud erstellen",
+    "summary": "SirinVPN mietet in deinem Hetzner-Konto einen Debian-13-Server und installiert sich selbst. Du gibst nie eine IP-Adresse oder ein Passwort ein.",
+    "token": "Hetzner-Cloud-API-Token",
+    "tokenHint": "Öffne in der Hetzner Cloud Console dein Projekt und erstelle unter Sicherheit, dann API-Tokens, ein Token mit Lese- und Schreibzugriff. Es wird nur an Hetzner gesendet und nicht gespeichert.",
+    "tokenExpired": "SirinVPN behält den API-Token nur 10 Minuten. Gib ihn erneut ein, um fortzufahren.",
+    "loadPlans": "Preise anzeigen",
+    "loading": "Preise werden von Hetzner abgerufen…",
+    "location": "Standort",
+    "serverType": "Servertyp",
+    "typeOption": "{{price}}/Monat · {{name}} ({{architecture}}) · {{cores}} vCPU · {{memory}} GB RAM · {{disk}} GB",
+    "price": "{{total}} pro Monat: Server {{server}} plus IPv4-Adresse {{ipv4}}. Hetzner berechnet dein Konto, bis du den Server löschst.",
+    "priceNoIpv4": "{{total}} pro Monat für den Server. Hetzner berechnet dein Konto, bis du den Server löschst.",
+    "create": "Server für {{total}}/Monat erstellen",
+    "confirm": {
+      "title": "Hetzner-Server erstellen?",
+      "message": "{{type}} in {{location}} kostet {{total}} im Monat, bis du ihn löschst.",
+      "confirm": "Server erstellen"
+    },
+    "creating": "Server wird erstellt…",
+    "waiting": "Warte, bis {{name}} startet…",
+    "waitingHint": "Das dauert meist ein oder zwei Minuten.",
+    "cancel": "Nicht weiter warten",
+    "keyPath": "Root-SSH-Schlüssel",
+    "delete": "Diesen Server löschen",
+    "deleting": "{{name}} wird gelöscht…",
+    "deleteConfirm": {
+      "title": "{{name}} löschen?",
+      "message": "{{name}}, seine IP-Adresse und alles darauf werden aus deinem Hetzner-Konto entfernt. Das kann nicht rückgängig gemacht werden.",
+      "confirm": "Server löschen"
+    },
+    "deleted": "Er ist aus deinem Hetzner-Konto entfernt, und Hetzner berechnet ihn dir nicht mehr.",
+    "startOver": "Neu beginnen",
+    "failedTitle": "{{name}} ist noch nicht bereit",
+    "failedSummary": "Der Server existiert in deinem Hetzner-Konto und wird berechnet, bis er gelöscht wird. Warte erneut, behalte ihn, um ihn später einzurichten, oder lösche ihn.",
+    "waitAgain": "Erneut warten",
+    "keep": "Server behalten",
+    "keptTitle": "{{name}} bleibt in deinem Hetzner-Konto",
+    "kept": "Hetzner berechnet ihn, bis du ihn in der Hetzner Cloud Console löschst. Um ihn später einzurichten, wähle Meinen VPS einrichten und gib seine Adresse ein. Sein SSH-Host-Schlüssel steht unten zum Prüfen.",
+    "leaveWarning": "Ein Hetzner-Server wurde erstellt und wird berechnet, bis er gelöscht wird. Trotzdem verlassen?",
+    "error": {
+      "catalog": "Die Hetzner-Preise konnten nicht geladen werden.",
+      "create": "Der Server konnte nicht erstellt werden.",
+      "wait": "Der Server wurde nicht betriebsbereit.",
+      "delete": "Der Server konnte nicht gelöscht werden."
+    },
+    "hostKey": "SSH-Host-Schlüssel",
+    "dangerLabel": "Server löschen",
+    "billed": "{{name}} wird deinem Hetzner-Konto berechnet, bis er gelöscht wird.",
+    "deletedTitle": "{{name}} wurde gelöscht",
+    "locationOption": "{{city}}, {{country}} ({{name}})",
+    "uncertain": {
+      "title": "Hetzner hat {{name}} vielleicht erstellt",
+      "summary": "Die Antwort von Hetzner ist nicht angekommen, daher existiert {{name}} vielleicht in deinem Hetzner-Konto und wird berechnet. Suche in der Hetzner Cloud Console nach einem Server mit diesem Namen oder prüfe es hier. Das Erstellen eines weiteren Servers bleibt aus, bis dies geklärt ist.",
+      "nameLabel": "Servername",
+      "copyName": "Servernamen kopieren",
+      "check": "Prüfen, ob er existiert",
+      "checking": "Hetzner wird geprüft…",
+      "checkFailed": "Es konnte nicht geprüft werden, ob der Server existiert. Suche ihn in der Hetzner Cloud Console.",
+      "found": "{{name}} existiert in deinem Hetzner-Konto. Richte ihn jetzt ein oder lösche ihn in der Hetzner Cloud Console.",
+      "notFound": "Hetzner listet {{name}} gerade nicht auf. Zeigt die Hetzner Cloud Console ihn ebenfalls nicht an, wurde er nicht erstellt.",
+      "adopt": "Diesen Server einrichten",
+      "absent": "Er existiert nicht",
+      "absentConfirm": {
+        "title": "{{name}} existiert nicht?",
+        "message": "Bestätige das nur, nachdem du in der Hetzner Cloud Console geprüft hast. Wenn {{name}} existiert, zahlst du bei einem weiteren Server für beide.",
+        "confirm": "Er existiert nicht"
+      },
+      "leaveWarning": "Hetzner hat {{name}} vielleicht erstellt, der berechnet wird, bis er gelöscht wird. Suche ihn in der Hetzner Cloud Console. Trotzdem verlassen?"
+    }
+  },
+  "port": {
+    "range": "Gib einen Port von 1 bis 65535 ein.",
+    "reserved": "SirinVPN nutzt auf dem Server Port {{port}}. Wähle einen anderen.",
+    "sameAsDirect": "Direktes UDP nutzt diesen Port bereits. Wähle einen anderen.",
+    "sameAsQuic": "QUIC antwortet auf diesem UDP-Port, derselben Nummer wie TCP/TLS. Wähle einen anderen."
+  }
+}

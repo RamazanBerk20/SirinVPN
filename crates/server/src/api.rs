@@ -177,6 +177,10 @@ pub(super) fn management_router(state: AppState) -> Router {
             patch(super::member_lifecycle::update_member_policy_handler),
         )
         .route(
+            "/v1/members/{member_id}/name",
+            patch(super::member_lifecycle::rename_member_handler),
+        )
+        .route(
             "/v1/members/{member_id}/suspension",
             patch(update_member_suspension_handler),
         )
@@ -207,15 +211,23 @@ pub(super) async fn status_handler(
     State(state): State<AppState>,
     Extension(caller_identity): Extension<CallerIdentity>,
 ) -> Result<Json<ApiEnvelope<ServerStatus>>, ApiError> {
-    caller_status(&state, &caller_identity, state.live_metrics.as_ref())
-        .await
-        .map(|status| Json(ApiEnvelope::new(status)))
+    authorize_device(&state, &caller_identity, false).await?;
+    let sample = state.throttle.status.latest(&state.configuration).await;
+    caller_status(
+        &state,
+        &caller_identity,
+        state.live_metrics.as_ref(),
+        &sample,
+    )
+    .await
+    .map(|status| Json(ApiEnvelope::new(status)))
 }
 
 pub(super) async fn caller_status(
     state: &AppState,
     caller_identity: &CallerIdentity,
     sampler: &Mutex<LiveMetricSampler>,
+    sample: &HostSample,
 ) -> Result<ServerStatus, ApiError> {
     let caller = authorize_device(state, caller_identity, false).await?;
     let authorized_keys = match &state.authorization {
@@ -235,15 +247,12 @@ pub(super) async fn caller_status(
             .collect(),
     };
     let peer_count = authorized_keys.len() as u32;
-    let mut status =
-        collect_status_with_peer_count(&state.configuration, peer_count, sampler).await;
-    if let Some(activity) =
-        super::service_metrics::recent_peer_activity(&state.configuration.interface_name).await
-    {
+    let mut status = status_from_sample(sample, peer_count, sampler);
+    if let Some(activity) = &sample.peer_activity {
         status.recently_active_peer_count =
-            super::service_metrics::count_recent_authorized(&activity, &authorized_keys);
+            super::service_metrics::count_recent_authorized(activity, &authorized_keys);
     }
-    // Collection awaits host processes; recheck access before sending a reading.
+    // The document can change while the sample is read; recheck access before replying.
     let caller = authorize_device(state, caller_identity, false).await?;
     status.caller_role = Some(caller.role);
     status.caller_administrator = caller.administrator;
@@ -271,14 +280,10 @@ pub(super) async fn caller_status(
             };
         }
     }
-    status.authorization_recovery = state.authorization.as_ref().map(|_| {
-        state
-            .recovery
-            .lock()
-            .unwrap_or_else(|e| e.into_inner())
-            .status
-            .clone()
-    });
+    status.authorization_recovery = state
+        .authorization
+        .as_ref()
+        .map(|_| authorization_transaction::status(&state.recovery));
     if authorization_transaction::needs_recovery(&state.recovery) {
         status.connection_state = ConnectionState::Degraded;
     }
@@ -289,8 +294,22 @@ pub(super) async fn diagnostics_handler(
     State(state): State<AppState>,
     Extension(caller): Extension<CallerIdentity>,
 ) -> Result<Json<ApiEnvelope<DiagnosticReport>>, ApiError> {
-    authorize_device(&state, &caller, false).await?;
-    let report = collect_diagnostics(&state.configuration).await;
+    let access = authorize_device(&state, &caller, false).await?;
+    let mut report = collect_diagnostics(&state.configuration).await;
+    // The doctor starts root subprocesses and reveals containment; Members get the base report.
+    if let Some(authorization) = state.authorization.as_ref().filter(|_| access.can_manage()) {
+        let document = authorization.read().await.clone();
+        let live = super::authorization_doctor::live(&state);
+        report.checks.extend(
+            super::authorization_doctor::inspect(
+                &state.paths,
+                &state.configuration,
+                Some(&document),
+                Some(&live),
+            )
+            .await,
+        );
+    }
     authorize_device(&state, &caller, false).await?;
     Ok(Json(ApiEnvelope::new(report)))
 }
@@ -334,5 +353,8 @@ pub(super) async fn configuration_handler(
         device_pairs_enabled: state.authorization.is_some(),
         alerts_enabled: super::alerts::management_available(&state),
         device_platforms_enabled: state.authorization.is_some(),
+        named_join_codes_enabled: state.authorization.is_some(),
+        person_rename_enabled: state.authorization.is_some(),
+        admin_own_devices_enabled: state.authorization.is_some(),
     })))
 }

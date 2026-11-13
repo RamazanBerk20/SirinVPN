@@ -6,7 +6,7 @@ use sirinvpn_protocol::TransportKind;
 use snow::{Builder, HandshakeState, StatelessTransportState, params::NoiseParams};
 use socket2::{Domain, Protocol, Socket, Type};
 use std::{
-    collections::{HashMap, HashSet, VecDeque},
+    collections::{BTreeSet, HashMap, HashSet},
     future::Future,
     io,
     net::{IpAddr, SocketAddr},
@@ -34,7 +34,7 @@ const HANDSHAKE_MAX_LENGTH: usize = 512;
 const HANDSHAKE_ATTEMPTS: usize = 4;
 const HANDSHAKE_TIMEOUT: Duration = Duration::from_secs(2);
 const SESSION_IDLE_TIMEOUT: Duration = Duration::from_secs(180);
-const CLIENT_REHANDSHAKE_AFTER: Duration = Duration::from_secs(50);
+pub(crate) const CLIENT_REHANDSHAKE_AFTER: Duration = Duration::from_secs(50);
 const REPLAY_WINDOW_SIZE: u64 = 128;
 const MAX_SERVER_SESSIONS: usize = 4_096;
 const MAX_SESSIONS_PER_CLIENT: usize = 4;
@@ -86,116 +86,12 @@ pub struct ServerRelayConfig {
 mod authorization;
 #[cfg(fuzzing)]
 pub(crate) mod fuzzing;
+mod session;
 pub use authorization::{AuthorizedPeers, EndpointPublicationRequest};
+pub(crate) use session::{CarrierPhase, CarrierSession, LocalPeer};
 
-type TransportActivity = HashMap<[u8; 32], (TransportKind, Instant, u64)>;
-
-#[derive(Default)]
-struct TransportActivityState {
-    entries: RwLock<TransportActivity>,
-    next_connection_id: AtomicU64,
-}
-
-#[derive(Clone, Default)]
-pub struct ActiveTransportRegistry(Arc<TransportActivityState>);
-
-pub(crate) struct ActiveTransportConnection {
-    registry: ActiveTransportRegistry,
-    peer: [u8; 32],
-    transport: TransportKind,
-    connection_id: u64,
-}
-
-impl ActiveTransportRegistry {
-    pub(crate) fn record(&self, peer: [u8; 32], transport: TransportKind) {
-        self.0
-            .entries
-            .write()
-            .unwrap_or_else(|poisoned| poisoned.into_inner())
-            .insert(peer, (transport, Instant::now(), 0));
-    }
-
-    pub(crate) fn connection(
-        &self,
-        peer: [u8; 32],
-        transport: TransportKind,
-    ) -> ActiveTransportConnection {
-        let connection_id = loop {
-            let candidate = self
-                .0
-                .next_connection_id
-                .fetch_add(1, Ordering::Relaxed)
-                .wrapping_add(1);
-            if candidate != 0 {
-                break candidate;
-            }
-        };
-        let connection = ActiveTransportConnection {
-            registry: self.clone(),
-            peer,
-            transport,
-            connection_id,
-        };
-        connection.record();
-        connection
-    }
-
-    pub fn is_obfuscated_recent(&self, peer: &[u8; 32], maximum_age: Duration) -> bool {
-        self.recent_transport(peer, maximum_age) == Some(TransportKind::ObfuscatedUdp)
-    }
-
-    pub fn recent_transport(
-        &self,
-        peer: &[u8; 32],
-        maximum_age: Duration,
-    ) -> Option<TransportKind> {
-        self.0
-            .entries
-            .read()
-            .unwrap_or_else(|poisoned| poisoned.into_inner())
-            .get(peer)
-            .and_then(|(transport, seen, _)| (seen.elapsed() <= maximum_age).then_some(*transport))
-    }
-
-    pub(crate) fn prune(&self, maximum_age: Duration) {
-        self.0
-            .entries
-            .write()
-            .unwrap_or_else(|poisoned| poisoned.into_inner())
-            .retain(|_, (_, seen, _)| seen.elapsed() <= maximum_age);
-    }
-}
-
-impl ActiveTransportConnection {
-    pub(crate) fn record(&self) {
-        self.registry
-            .0
-            .entries
-            .write()
-            .unwrap_or_else(|poisoned| poisoned.into_inner())
-            .insert(
-                self.peer,
-                (self.transport, Instant::now(), self.connection_id),
-            );
-    }
-}
-
-impl Drop for ActiveTransportConnection {
-    fn drop(&mut self) {
-        let mut entries = self
-            .registry
-            .0
-            .entries
-            .write()
-            .unwrap_or_else(|poisoned| poisoned.into_inner());
-        if entries
-            .get(&self.peer)
-            .is_some_and(|(_, _, connection_id)| *connection_id == self.connection_id)
-        {
-            entries.remove(&self.peer);
-        }
-    }
-}
+mod registry;
+pub use registry::ActiveTransportRegistry;
 
 struct ClientSession {
     id: [u8; SESSION_ID_LENGTH],
@@ -214,6 +110,9 @@ struct ServerSession {
     last_seen: Mutex<Instant>,
     backend: Arc<UdpSocket>,
     active: AtomicBool,
+    /// Set by the first packet that decrypted: proof that the client holds the keys of
+    /// this exchange, which a replayed handshake never gives.
+    proven: AtomicBool,
 }
 
 impl ServerSession {
@@ -273,209 +172,22 @@ impl ReplayWindow {
     }
 }
 
-/// Client handshakes start their encrypted payload with this marker and a wall-clock
-/// timestamp. Older servers never read the payload and older clients send only random
-/// padding, so both directions stay compatible.
-const HANDSHAKE_TIMESTAMP_MARKER: [u8; 8] = *b"SVPNts01";
-const HANDSHAKE_TIMESTAMP_LENGTH: usize = HANDSHAKE_TIMESTAMP_MARKER.len() + 12;
-/// Concurrent carriers and quality probes from one client can arrive out of order.
-const HANDSHAKE_TIMESTAMP_TOLERANCE: Duration = Duration::from_secs(10);
-
-fn unix_now() -> Duration {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default()
-}
-
-/// The first initiator payload: a timestamp followed by random padding.
-pub(crate) fn client_handshake_payload() -> Vec<u8> {
-    let mut payload = random_bytes(OsRng.gen_range(48..=144));
-    let now = unix_now();
-    payload[..HANDSHAKE_TIMESTAMP_MARKER.len()].copy_from_slice(&HANDSHAKE_TIMESTAMP_MARKER);
-    payload[8..16].copy_from_slice(&now.as_secs().to_be_bytes());
-    payload[16..HANDSHAKE_TIMESTAMP_LENGTH].copy_from_slice(&now.subsec_nanos().to_be_bytes());
-    payload
-}
-
-fn handshake_timestamp(payload: &[u8]) -> Option<Duration> {
-    let rest = payload.strip_prefix(&HANDSHAKE_TIMESTAMP_MARKER)?;
-    let seconds = u64::from_be_bytes(rest.get(..8)?.try_into().ok()?);
-    let nanos = u32::from_be_bytes(rest.get(8..12)?.try_into().ok()?);
-    (nanos < 1_000_000_000).then(|| Duration::new(seconds, nanos))
-}
-
-/// Rejects repeated handshake messages, and older handshakes from a client that has
-/// since sent a newer one. The digest window alone forgets everything after 180 s and
-/// on restart, which let a captured handshake be replayed to occupy a client's slots.
-#[derive(Default)]
-pub(crate) struct HandshakeReplayCache {
-    entries: VecDeque<(Instant, [u8; 32])>,
-    digests: HashSet<[u8; 32]>,
-    /// Newest accepted timestamp per authorized client key, clamped to this server's
-    /// clock so a client whose clock ran ahead is not locked out once it is corrected.
-    latest: HashMap<[u8; 32], Duration>,
-}
-
-impl HandshakeReplayCache {
-    /// For tunnel handshakes whose initiator payload came from `client_handshake_payload`.
-    pub(crate) fn accept_client_handshake(
-        &mut self,
-        message: &[u8],
-        client_static: [u8; 32],
-        payload: &[u8],
-    ) -> bool {
-        let timestamp = handshake_timestamp(payload);
-        match (timestamp, self.latest.get(&client_static)) {
-            // A client that sends timestamps never sends an unmarked handshake again.
-            (None, Some(_)) => return false,
-            (Some(timestamp), Some(latest))
-                if timestamp.saturating_add(HANDSHAKE_TIMESTAMP_TOLERANCE) <= *latest =>
-            {
-                return false;
-            }
-            _ => {}
-        }
-        if !self.insert_once(message) {
-            return false;
-        }
-        if let Some(timestamp) = timestamp {
-            let latest = self.latest.entry(client_static).or_default();
-            *latest = (*latest).max(timestamp.min(unix_now()));
-        }
-        true
-    }
-
-    pub(crate) fn insert_once(&mut self, message: &[u8]) -> bool {
-        self.prune();
-        let digest: [u8; 32] = Sha256::digest(message).into();
-        if self.digests.contains(&digest) {
-            return false;
-        }
-        while self.entries.len() >= 4_096 {
-            if let Some((_, removed)) = self.entries.pop_front() {
-                self.digests.remove(&removed);
-            }
-        }
-        self.entries.push_back((Instant::now(), digest));
-        self.digests.insert(digest);
-        true
-    }
-
-    fn prune(&mut self) {
-        while self
-            .entries
-            .front()
-            .is_some_and(|(seen, _)| seen.elapsed() > SESSION_IDLE_TIMEOUT)
-        {
-            if let Some((_, digest)) = self.entries.pop_front() {
-                self.digests.remove(&digest);
-            }
-        }
-    }
-}
-
-/// Bounds handshake attempts per source, and in total, before any Noise work is done.
-#[derive(Default)]
-pub(crate) struct ProbeLimiter {
-    peers: HashMap<IpAddr, ProbeWindow>,
-    global: Option<ProbeWindow>,
-}
-
-struct ProbeWindow {
-    started: Instant,
-    attempts: u16,
-}
-
-const PROBE_SOURCES: usize = 1_024;
-const PROBE_ATTEMPTS_PER_SOURCE: u16 = 12;
-const PROBE_ATTEMPTS_PER_SECOND: u16 = 1_024;
-
-/// IPv6 sources are limited per /64, which one subscriber can occupy entirely.
-fn probe_source(address: IpAddr) -> IpAddr {
-    match address {
-        IpAddr::V6(address) => match address.to_ipv4_mapped() {
-            Some(mapped) => IpAddr::V4(mapped),
-            None => {
-                let segments = address.segments();
-                IpAddr::V6(std::net::Ipv6Addr::new(
-                    segments[0],
-                    segments[1],
-                    segments[2],
-                    segments[3],
-                    0,
-                    0,
-                    0,
-                    0,
-                ))
-            }
-        },
-        address => address,
-    }
-}
-
-impl ProbeLimiter {
-    pub(crate) fn allow(&mut self, address: IpAddr) -> bool {
-        self.allow_source(Some(probe_source(address)))
-    }
-
-    /// Behind a CDN every source is a shared CDN edge that anyone can make connect,
-    /// so a per-source budget would let one client lock out everyone at that edge.
-    pub(crate) fn allow_global(&mut self) -> bool {
-        self.allow_source(None)
-    }
-
-    fn allow_source(&mut self, address: Option<IpAddr>) -> bool {
-        if let Some(address) = address
-            && self.peers.len() >= PROBE_SOURCES
-            && !self.peers.contains_key(&address)
-        {
-            self.peers
-                .retain(|_, window| window.started.elapsed() < Duration::from_secs(60));
-            // A full table must not lock every new source out: replace the oldest window and
-            // rely on the global budget below to bound the work a flood can cause.
-            if self.peers.len() >= PROBE_SOURCES
-                && let Some(oldest) = self
-                    .peers
-                    .iter()
-                    .min_by_key(|(_, window)| window.started)
-                    .map(|(address, _)| *address)
-            {
-                self.peers.remove(&oldest);
-            }
-        }
-        let global = self.global.get_or_insert(ProbeWindow {
-            started: Instant::now(),
-            attempts: 0,
-        });
-        if global.started.elapsed() >= Duration::from_secs(1) {
-            global.started = Instant::now();
-            global.attempts = 0;
-        }
-        if global.attempts >= PROBE_ATTEMPTS_PER_SECOND {
-            return false;
-        }
-        if let Some(address) = address {
-            let window = self.peers.entry(address).or_insert(ProbeWindow {
-                started: Instant::now(),
-                attempts: 0,
-            });
-            if window.started.elapsed() >= Duration::from_secs(10) {
-                window.started = Instant::now();
-                window.attempts = 0;
-            }
-            if window.attempts >= PROBE_ATTEMPTS_PER_SOURCE {
-                return false;
-            }
-            window.attempts += 1;
-        }
-        global.attempts += 1;
-        true
-    }
-}
+mod handshake;
+#[cfg(test)]
+pub(crate) use handshake::HandshakeRefusal;
+#[cfg(test)]
+use handshake::{
+    HANDSHAKE_MAX_AGE, HANDSHAKE_TIMESTAMP_MARKER, PROBE_ATTEMPTS_PER_SOURCE, PROBE_SOURCES,
+    handshake_timestamp, unix_now,
+};
+pub(crate) use handshake::{
+    HandshakeReplayCache, ProbeLimiter, client_handshake_payload, client_handshake_payload_bound,
+    handshake_is_bound,
+};
 
 mod client;
 pub use client::{
-    run_client_relay, run_client_relay_with_remote_socket_setup,
+    run_client_relay, run_client_relay_pinned, run_client_relay_with_remote_socket_setup,
     run_client_relay_with_socket_protector,
 };
 
@@ -517,7 +229,7 @@ pub async fn run_server_relay(
         if let Some((session_id, sequence, ciphertext)) = parse_server_transport_packet(packet) {
             let session = sessions.read().await.get(&session_id).cloned();
             if let Some(session) = session {
-                handle_server_transport_packet(
+                if handle_server_transport_packet(
                     &session,
                     sequence,
                     ciphertext,
@@ -525,7 +237,11 @@ pub async fn run_server_relay(
                     &authorized,
                     &activity,
                 )
-                .await;
+                .await
+                    && !session.proven.swap(true, Ordering::AcqRel)
+                {
+                    evict_beyond_client_limit(&sessions, &session).await;
+                }
                 continue;
             }
         }
@@ -555,37 +271,46 @@ pub async fn run_server_relay(
             }
             continue;
         }
-        activity.record(session.client_static, TransportKind::ObfuscatedUdp);
         spawn_backend_forwarder(session, socket.clone());
     }
 }
 
+/// A new session ends none: a replayed handshake creates one too. Until its first packet
+/// decrypts it holds no per-client slot, and idle cleanup removes it if that never happens.
 async fn insert_server_session(
     sessions: &tokio::sync::RwLock<HashMap<[u8; SESSION_ID_LENGTH], Arc<ServerSession>>>,
     session: Arc<ServerSession>,
 ) -> bool {
     let mut sessions = sessions.write().await;
-    if sessions.contains_key(&session.id) {
+    if sessions.contains_key(&session.id) || sessions.len() >= MAX_SERVER_SESSIONS {
         return false;
     }
+    sessions.insert(session.id, session);
+    true
+}
+
+/// Once `proven` proved the client's keys, the client's most idle proven sessions beyond
+/// its limit end; `proven` itself was just used, so it is never the one.
+async fn evict_beyond_client_limit(
+    sessions: &tokio::sync::RwLock<HashMap<[u8; SESSION_ID_LENGTH], Arc<ServerSession>>>,
+    proven: &ServerSession,
+) {
+    let mut sessions = sessions.write().await;
     let mut same_client: Vec<_> = sessions
         .iter()
-        .filter_map(|(id, existing)| {
-            (existing.client_static == session.client_static).then_some((*id, existing.idle_for()))
+        .filter(|(_, existing)| {
+            existing.client_static == proven.client_static
+                && existing.proven.load(Ordering::Acquire)
         })
+        .map(|(id, existing)| (*id, existing.idle_for()))
         .collect();
     same_client.sort_unstable_by_key(|(_, idle)| std::cmp::Reverse(*idle));
-    while same_client.len() >= MAX_SESSIONS_PER_CLIENT {
+    while same_client.len() > MAX_SESSIONS_PER_CLIENT {
         let (id, _) = same_client.remove(0);
         if let Some(expired) = sessions.remove(&id) {
             expired.active.store(false, Ordering::Release);
         }
     }
-    if sessions.len() >= MAX_SERVER_SESSIONS {
-        return false;
-    }
-    sessions.insert(session.id, session);
-    true
 }
 
 async fn establish_client_session(
@@ -651,6 +376,7 @@ async fn accept_server_handshake(
                 client_static,
                 &client_payload[..client_payload_length],
             )
+            .is_ok()
     {
         return Ok(None);
     }
@@ -680,6 +406,7 @@ async fn accept_server_handshake(
             last_seen: Mutex::new(Instant::now()),
             backend,
             active: AtomicBool::new(true),
+            proven: AtomicBool::new(false),
         },
         response[..response_length].to_vec(),
     )))
@@ -692,10 +419,10 @@ async fn handle_server_transport_packet(
     source: SocketAddr,
     authorized: &AuthorizedPeers,
     activity: &ActiveTransportRegistry,
-) {
+) -> bool {
     if !authorized.contains(&session.client_static) {
         session.active.store(false, Ordering::Release);
-        return;
+        return false;
     }
     {
         let replay = session
@@ -703,11 +430,11 @@ async fn handle_server_transport_packet(
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner());
         if !replay.accepts(sequence) {
-            return;
+            return false;
         }
     }
     let Some(inner) = decrypt_inner(&session.noise, sequence, ciphertext) else {
-        return;
+        return false;
     };
     session
         .inbound_replay
@@ -717,6 +444,7 @@ async fn handle_server_transport_packet(
     session.touch(source);
     activity.record(session.client_static, TransportKind::ObfuscatedUdp);
     let _ = session.backend.send(&inner).await;
+    true
 }
 
 fn spawn_backend_forwarder(session: Arc<ServerSession>, socket: Arc<UdpSocket>) -> JoinHandle<()> {

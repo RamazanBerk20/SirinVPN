@@ -236,23 +236,42 @@ impl Provisioner {
         }
         Ok(discovery)
     }
+    /// The VPS's signed-release state, read-only, for an Owner-verified target.
+    pub fn server_release_state(
+        request: &ServerReleaseRequest,
+    ) -> Result<ServerReleaseState, InstallerError> {
+        validate_owner_operation_request(
+            &request.profile,
+            &request.target,
+            &request.identity,
+            "VPS release state inspection",
+        )?;
+        let session = verified_session(request)?;
+        release_guard::inspect_state(&session, &request.target)
+    }
+    /// Journaled like repair: a lost commit reply (`CommitUncertain`) is finished
+    /// with `resolve_transaction`, which merges the repaired profile.
     pub fn install_signed_baseline(
         request: ServerReleaseRequest,
         bundle: Arc<SignedServerBundle>,
+        journal: &TransactionJournal,
     ) -> Result<SignedBaselineOutcome, InstallerError> {
         let discovery = Self::inspect_signed_baseline_target(&request)?;
         bundle.bytes_for(&discovery.architecture)?;
-        let repair = Self::repair(RepairRequest {
-            profile: request.profile.clone(),
-            target: request.target.clone(),
-            server_binary: ServerBinarySource::Signed(bundle.clone()),
-            identity: request.identity.clone(),
-            dns_upstream: None,
-            private_dns_records: None,
-            nat64_prefix: None,
-            transport: None,
-            enable_security_updates: false,
-        })?;
+        let repair = Self::repair_with_journal(
+            RepairRequest {
+                profile: request.profile.clone(),
+                target: request.target.clone(),
+                server_binary: ServerBinarySource::Signed(bundle.clone()),
+                identity: request.identity.clone(),
+                dns_upstream: None,
+                private_dns_records: None,
+                nat64_prefix: None,
+                transport: None,
+                enable_security_updates: false,
+            },
+            journal,
+        )?;
         let session = verified_session(&request)?;
         let directory = format!("/tmp/sirinvpn-signed-baseline-{}", Uuid::new_v4().simple());
         run(

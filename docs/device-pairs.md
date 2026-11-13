@@ -1,15 +1,15 @@
 # Device pairs
 
-Devices are isolated from each other by default. The mutual-access switch on a
-device ("peer communication") lets it reach every other device that has the
-switch on too. A **pair** is narrower: it lets exactly two devices reach each
+Devices are isolated from each other by default. **Device-to-device access** on
+a device (wire name `peer_communication`, "the switch" below) lets it reach every
+other device that has it on too. A **pair** is narrower: it lets exactly two devices reach each
 other, whatever their switches say.
 
 - **Both ways:** either device may start connections to the other.
 - **One way:** the first device may start connections; the second only answers
   them. It cannot start a connection to the first.
 
-The switch keeps working as before, as "all my peers that have it on too".
+The switch keeps working as before: it reaches every device that has it on too.
 Pairs add to it and never take access away.
 
 ## Who can pair
@@ -20,19 +20,20 @@ of them, the same rule as for the switch itself:
 - the **Owner** pairs any two devices;
 - an **Admin** pairs devices of ordinary Members (not their own, another
   Admin's or the Owner's devices);
-- a **Member** whose policy allows "manage own peer communication" pairs only
-  their own devices.
+- a **Member** whose permissions include **Change device-to-device access and
+  pairs for their devices** pairs only their own devices.
 
 Removing a pair needs the same authority. Members (in `GET /v1/membership` and
 every answer that carries the snapshot) see the pairs that involve their own
 devices, including pairs with devices they cannot otherwise see
-(shown as "another member's device"), so they know who may reach them.
+(shown as "another person's device"), so they know who may reach them.
 
-- **Desktop and Android:** **Devices → the device's menu → Advanced → Device pairs**. The
-  dialog lists the device's pairs, removes those the caller manages and adds a
-  pair with one of the caller's manageable devices in a chosen direction. The
-  device details list its pairs. The action appears when the VPS advertises
-  `device_pairs_enabled`.
+- **Desktop and Android:** **Devices →** the device → **Network → Device pairs**.
+  The section lists the device's pairs, removes those the caller manages
+  (**Remove**) and adds a pair (**Add pair**) with one of the caller's
+  manageable devices, with a **Direction** of **Both ways** or **Only X starts,
+  to Y**. Rows read "With X, both ways", "Starts connections to X" or "Answers X
+  only". The section appears when the VPS advertises `device_pairs_enabled`.
 - **CLI:**
 
   ```sh

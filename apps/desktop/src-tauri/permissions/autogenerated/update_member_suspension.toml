@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-update-member-suspension"
+description = "Enables the update_member_suspension command without any pre-configured scope."
+commands.allow = ["update_member_suspension"]
+
+[[permission]]
+identifier = "deny-update-member-suspension"
+description = "Denies the update_member_suspension command without any pre-configured scope."
+commands.deny = ["update_member_suspension"]

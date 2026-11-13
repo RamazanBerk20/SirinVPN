@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-install-vps-baseline"
+description = "Enables the install_vps_baseline command without any pre-configured scope."
+commands.allow = ["install_vps_baseline"]
+
+[[permission]]
+identifier = "deny-install-vps-baseline"
+description = "Denies the install_vps_baseline command without any pre-configured scope."
+commands.deny = ["install_vps_baseline"]

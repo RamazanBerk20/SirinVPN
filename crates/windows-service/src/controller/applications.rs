@@ -14,11 +14,9 @@ impl Controller {
         if !self.application_driver_ready() {
             return Err(ServiceError::ApplicationDriverUnavailable);
         }
-        if self.enforcement_failed
-            || !self.firewall.verified().map_err(network_error)?
-            || self.active.as_ref().is_none_or(|active| {
-                active.connected_at.is_none()
-                    || active.request.routing.mode != TunnelRoutingMode::SelectedApplications
+        if !self.firewall.verified().map_err(network_error)?
+            || self.link.connected().is_none_or(|active| {
+                active.request.routing.mode != TunnelRoutingMode::SelectedApplications
             })
             || self
                 .saved
@@ -51,8 +49,7 @@ impl Controller {
             .apply(self.plan().ok_or(ServiceError::SessionChanged)?)
             .is_err()
         {
-            self.enforcement_failed = true;
-            let _ = self.hold().await;
+            self.fail().await;
             return Err(ServiceError::NetworkOperation);
         }
         Ok(())

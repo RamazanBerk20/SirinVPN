@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-update-server-presentation"
+description = "Enables the update_server_presentation command without any pre-configured scope."
+commands.allow = ["update_server_presentation"]
+
+[[permission]]
+identifier = "deny-update-server-presentation"
+description = "Denies the update_server_presentation command without any pre-configured scope."
+commands.deny = ["update_server_presentation"]

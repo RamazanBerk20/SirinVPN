@@ -1,0 +1,152 @@
+{
+  "skipToContent": "İçeriğe geç",
+  "nav": {
+    "label": "Ana gezinme",
+    "mobileLabel": "Alt gezinme",
+    "home": "Ana sayfa",
+    "servers": "Sunucular",
+    "devices": "Cihazlar",
+    "settings": "Ayarlar"
+  },
+  "sidebar": {
+    "servers": "Sunucular",
+    "serverList": "Kayıtlı sunucular",
+    "manage": "Yönet",
+    "manageLabel": "Sunucuları yönet",
+    "privacy": "Hesap yok · Telemetri yok"
+  },
+  "addServer": {
+    "title": "Sunucu ekle",
+    "description": "Nasıl bağlanmak istediğinizi seçin."
+  },
+  "home": {
+    "connectionTitle": "Bağlantı",
+    "connectionSummary": "Yöntem: {{method}}",
+    "automatic": "Otomatik",
+    "detailsTitle": "Bağlantı ayrıntıları",
+    "detailsSummary": "Durum, adresler ve sunucu istatistikleri",
+    "detailsSummaryMember": "Durum ve adresler"
+  },
+  "settingsScope": {
+    "general": "Bu cihaz için tercihler",
+    "connection": "{{name}} · bu cihazda",
+    "network": "{{name}} · yönlendirme ve DNS",
+    "recovery": "{{name}} · anahtarlar ve yedekler",
+    "maintenance": "{{name}} · sunucu bakımı",
+    "advanced": "{{name}} · gelişmiş özellikler"
+  },
+  "network": {
+    "dnsTitle": "DNS",
+    "dnsRefresh": "DNS ayarlarını görmek için durumu yenileyin.",
+    "dnsUnavailable": "DNS ayarları şu anda kullanılamıyor.",
+    "dnsNeedsConnection": "DNS durumunu görmek için bağlanın.",
+    "dnsChange": "Değişiklikler bu sunucudaki her cihaza uygulanır.",
+    "dnsConfigure": "DNS’i yapılandır"
+  },
+  "onboarding": {
+    "settings": "Uygulama ayarları",
+    "settingsDescription": "Bu cihaz için tercihler.",
+    "checkUpdates": "Güncellemeleri denetle",
+    "welcome": "SirinVPN’e hoş geldiniz",
+    "headlineFirst": "Sizin VPN’iniz.",
+    "headlineSecond": "Sizin kurallarınızla.",
+    "androidIntro": "Özel bir sunucuya bağlanın. Anahtarlarınız sizde kalır.",
+    "desktopIntro": "Kendi sunucunuzu kurun, bir katılım koduyla bir sunucuya katılın veya bu cihazı bir yedekten ya da kurtarma anahtarından geri yükleyin.",
+    "firstServer": "İlk sunucunuzu ekleyin",
+    "storeTitle": "Kayıtlı sunucular kullanılamıyor",
+    "storeHelpDesktop": "Sistem anahtarlığınız kilitli olabilir. Oturumu kapatıp yeniden açarak kilidini açın, sonra tekrar deneyin.",
+    "storeHelpAndroid": "Telefonunuzun kilidini açın, sonra tekrar deneyin. O zamana kadar kayıtlı sunucularınız şifreli kalır."
+  },
+  "errors": {
+    "profiles": "Bu cihazda kayıtlı sunucular açılamadı.",
+    "platform": "SirinVPN korumalı hizmetlerini başlatamadı.",
+    "trayServer": "Bu sunucu artık bu cihazda kayıtlı değil."
+  },
+  "unavailable": {
+    "title": "SirinVPN başlatılamıyor",
+    "copy": "Ayrıntıları kopyala",
+    "report": "SirinVPN başlatılamadı: {{message}} Hiçbir VPN işlemi yapılmadı.",
+    "helpDesktop": "SirinVPN hizmetinin kurulu ve çalışır durumda olduğundan emin olun, sonra tekrar deneyin. Kayıtlı sunucularınız güvende.",
+    "helpAndroid": "Telefonunuzun kilidini açın, sonra tekrar deneyin. Kayıtlı sunucularınız güvende."
+  },
+  "dialog": {
+    "waitToClose": "Geçerli işlemin bitmesini bekleyin"
+  },
+  "operation": {
+    "result": "Sonuç",
+    "running": "Bir işlem çalışıyor. Bu ekrandan ayrılıp daha sonra dönebilirsiniz.",
+    "completed": "İşlem tamamlandı. Sonucu görmek için sayfasını yeniden açın.",
+    "interrupted": "İşlem tamamlanmadı. Tekrar denemeden önce sunucuyu veya dosyayı kontrol edin.",
+    "dismiss": "Kapat",
+    "dismissFailed": "Bu bildirim kapatılamadı. Tekrar deneyin.",
+    "step": {
+      "done": "Tamamlandı",
+      "running": "Devam ediyor",
+      "todo": "Başlamadı"
+    }
+  },
+  "copy": {
+    "label": "{{label}} kopyala",
+    "failed": "Kopyalanamadı",
+    "failedManual": "Kopyalanamadı. Metni seçip elle kopyalayın.",
+    "showAll": "Tümünü göster",
+    "showLess": "Daha azını göster"
+  },
+  "secret": {
+    "value": "Korumalı değer",
+    "code": "Gizli kod",
+    "enterLabel": "{{label}} girin",
+    "enter": "Güvenli şekilde girin",
+    "entered": "Girildi · Değiştir",
+    "unchanged": "Hiçbir şey değiştirilmedi.",
+    "scan": "QR kodunu tara",
+    "scanFailed": "Kod taranamadı. Bunun yerine elle girebilirsiniz.",
+    "codeReady": "Kod incelemeye hazır"
+  },
+  "share": {
+    "button": "Şifreli dosyayı paylaş",
+    "failed": "Dosya paylaşılamadı."
+  },
+  "brand": {
+    "tagline": "Son derece özel. Kendi sunucunuzda.",
+    "keysLocal": "Anahtarlar cihazlarınızda kalır",
+    "noHistory": "Etkinlik geçmişi yok",
+    "noCloud": "SirinVPN bulutu yok"
+  },
+  "metric": {
+    "usage": "{{label}} kullanımı"
+  },
+  "window": {
+    "label": "Uygulama penceresi",
+    "minimize": "Küçült",
+    "maximize": "Ekranı kapla",
+    "restore": "Geri yükle",
+    "closeToTray": "Kapatınca sistem tepsisine küçült · VPN çalışmaya devam eder",
+    "quit": "Uygulamadan çık · VPN çalışmaya devam eder",
+    "actionFailed": "Bu işlem çalışmadı. Masaüstünüzün pencere denetimlerini kullanın.",
+    "resizeFailed": "Burada boyut değiştirilemez. Masaüstünüzün boyutlandırma kısayolunu kullanın."
+  },
+  "recoveryKeyGuard": "Bu kurtarma anahtarını bir daha görüntüleyemezsiniz. Kaydetmeden çıkılsın mı?",
+  "settingsIndex": {
+    "app": "Bu uygulama",
+    "server": "Bu sunucu",
+    "serverNote": "Bu ayarlar yalnızca bu sunucu için geçerlidir.",
+    "scope": "Bu ayarlar yalnızca {{name}} için geçerlidir.",
+    "general": "Tema, bildirimler, Hızlı Ayarlar",
+    "automaticMethod": "Otomatik yöntem",
+    "reconnectOn": "Otomatik olarak yeniden bağlanır",
+    "reconnectOff": "Otomatik olarak yeniden bağlanmaz",
+    "attention": "Dikkat gerekiyor: bir anahtar değişimi tamamlanmadı",
+    "serverHealthy": "Sunucu normal çalışıyor",
+    "recoveryKeySaved": "Çevrimdışı kurtarma anahtarı kaydedildi",
+    "recoveryKeyMissing": "Henüz çevrimdışı kurtarma anahtarı yok",
+    "serverFault": "Dikkat gerekiyor: sunucu bir hata bildiriyor",
+    "advancedAdmin": "Anahtar değişimi",
+    "advancedMember": "Anahtar değişimi"
+  },
+  "advanced": {
+    "devicesTitle": "Cihaz ağ özellikleri",
+    "devicesSummary": "Port yönlendirme, cihazlar arası erişim, cihaz eşleşmeleri ve yerel ağlar her cihazda ayarlanır. Değiştirmek için Cihazlar’da bir cihazı açın.",
+    "openDevices": "Cihazlar’ı aç"
+  }
+}

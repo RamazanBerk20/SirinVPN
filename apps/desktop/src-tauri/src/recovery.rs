@@ -291,14 +291,12 @@ pub(super) async fn export_recovery_package(
         return Err("Confirm exporting this recovery key.".into());
     }
     tauri::async_runtime::spawn_blocking(move || {
-        {
-            sirinvpn_core::write_recovery_package(
-                Path::new(&input.path),
-                &input.key,
-                &input.password,
-            )
-            .map_err(safe_error)
-        }
+        use crate::picked_files::{Purpose, granted, release};
+        let path = granted(Purpose::RecoveryExport, &input.path)?;
+        sirinvpn_core::write_recovery_package(&path, &input.key, &input.password)
+            .map_err(safe_error)?;
+        release(Purpose::RecoveryExport, &input.path);
+        Ok(())
     })
     .await
     .map_err(|_| "The recovery export was interrupted.".to_owned())?
@@ -308,10 +306,12 @@ pub(super) async fn export_recovery_package(
 pub(super) async fn import_recovery_package(
     _app: tauri::AppHandle,
     input: RecoveryPackageInput,
-) -> Result<RecoveryKeyOutput, String> {
+) -> Result<RecoveryKeyOutput, crate::CommandError> {
     tauri::async_runtime::spawn_blocking(move || {
-        let key = sirinvpn_core::read_recovery_package(Path::new(&input.path), &input.password)
-            .map_err(safe_error)?;
+        let path = crate::picked_files::granted(crate::picked_files::Purpose::RecoveryImport, &input.path)?;
+        // Coded `backup_wrong_password` for a wrong password, like the other backups.
+        let key = sirinvpn_core::read_recovery_package(&path, &input.password)
+            .map_err(crate::command_error)?;
         Ok(RecoveryKeyOutput {
             qr_svg: String::new(),
             recovery_id: DecodedRecoveryKey::decode(&key)

@@ -14,10 +14,13 @@ mod measurement;
 mod mtu;
 mod ownership;
 mod persistence;
+#[cfg(test)]
+use persistence::Wake;
 mod policy;
 mod policy_lifecycle;
 mod policy_supervision;
 mod quality;
+mod session;
 mod session_control;
 mod tunnel;
 pub use managed::ManagedConnectRequest;
@@ -46,11 +49,12 @@ use serde::{Deserialize, Serialize};
 use sirinvpn_protocol::ipv6_tunnel_address;
 use sirinvpn_protocol::{ConnectionState, INTERFACE_NAME, ServerId, TransportKind, validate_host};
 use sirinvpn_transport::{
-    CLIENT_RELAY_PORT, ClientRelayConfig, QUIC_CLIENT_RELAY_PORT, TCP_CLIENT_RELAY_PORT,
-    TLS_LIKE_CLIENT_RELAY_PORT, TcpClientRelayConfig, TlsLikeClientRelayConfig, TransportSelection,
-    client_relay_config, quic_client_relay_config, run_client_relay, run_quic_client_relay,
-    run_tcp_client_relay, run_tls_like_client_relay, tcp_client_relay_config,
-    tls_like_client_relay_config,
+    CLIENT_RELAY_PORT, ClientRelayConfig, QUIC_CLIENT_RELAY_PORT, RelayError,
+    TCP_CLIENT_RELAY_PORT, TLS_LIKE_CLIENT_RELAY_PORT, TcpClientRelayConfig,
+    TlsLikeClientRelayConfig, TransportSelection, client_relay_config, quic_client_relay_config,
+    run_client_relay, run_client_relay_pinned, run_quic_client_relay, run_quic_client_relay_pinned,
+    run_tcp_client_relay, run_tcp_client_relay_pinned, run_tls_like_client_relay,
+    run_tls_like_client_relay_pinned, tcp_client_relay_config, tls_like_client_relay_config,
 };
 use std::{
     collections::{BTreeSet, hash_map::DefaultHasher},
@@ -84,6 +88,16 @@ const HANDSHAKE_GRACE_SECONDS: u64 = 30;
 const HANDSHAKE_STALE_SECONDS: u64 = 240;
 const SUPERVISOR_POLL_SECONDS: u64 = 5;
 const MAX_RECONNECT_BACKOFF_SECONDS: u64 = 60;
+/// WireGuard's own UDP port. Carrier relays accept datagrams only from it and answer only
+/// to it, so no other local process can take over the tunnel. Below 1024 so that an
+/// unprivileged process cannot occupy it first; IANA keeps 1023 unassigned.
+/// It lies in the kernel's RPC reserved range (665-1023): if an RPC client holds it, the
+/// relayed session pauses with the clear "another program is using local port" error.
+const WIREGUARD_LISTEN_PORT: u16 = 1_023;
+/// The isolated measurement peer's port, pinned the same way for its probe relay.
+const PROBE_WIREGUARD_LISTEN_PORT: u16 = 1_022;
+/// A relay exits with this status (EADDRINUSE) when another program holds its loopback port.
+const RELAY_PORT_IN_USE_EXIT: i32 = 98;
 
 #[cfg(test)]
 const MAX_INCLUDED_ROUTES: usize = 32;
@@ -174,8 +188,18 @@ struct PersistentTcpFallback {
 #[derive(Serialize, Deserialize)]
 #[serde(untagged)]
 enum ClientTransportConfig {
+    /// Written by this helper: the relay answers only WireGuard's fixed address.
+    Pinned(PinnedClientTransportConfig),
+    /// Written by older helpers, whose interfaces use a random WireGuard port.
     LegacyObfuscatedUdp(ClientRelayConfig),
     Current(CurrentClientTransportConfig),
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct PinnedClientTransportConfig {
+    wireguard: SocketAddr,
+    carrier: CurrentClientTransportConfig,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -185,6 +209,7 @@ enum ClientTransportConfig {
     rename_all = "snake_case"
 )]
 enum CurrentClientTransportConfig {
+    ObfuscatedUdp(ClientRelayConfig),
     TcpFallback(TcpClientRelayConfig),
     TlsLike(TlsLikeClientRelayConfig),
     Quic(TlsLikeClientRelayConfig),
@@ -296,7 +321,7 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
 }
 
 fn disconnected_status() -> LocalTunnelStatus {
-    LocalTunnelStatus {
+    let mut status = LocalTunnelStatus {
         application_routing_supported: cfg!(target_os = "linux"),
         application_routing_backend: Some(
             sirinvpn_tunnel_model::ApplicationRoutingBackend::LinuxNamespace,
@@ -338,7 +363,9 @@ fn disconnected_status() -> LocalTunnelStatus {
         transport_fallback_enabled: false,
         routing_mode: TunnelRoutingMode::FullTunnel,
         allow_lan: false,
-    }
+    };
+    status.set_phase(TunnelPhase::Idle);
+    status
 }
 
 fn ipv6_blocked_for_state(state: &RuntimeState, ipv6_tunneled: bool) -> bool {

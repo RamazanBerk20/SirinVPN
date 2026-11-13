@@ -152,22 +152,21 @@ pub(super) fn sample_candidate(
                     .as_deref()
                     .ok_or_else(|| anyhow!("missing transport identity"))?;
                 let local = SocketAddr::from(([127, 0, 0, 1], PROBE_PORT));
+                let wireguard = SocketAddr::from(([127, 0, 0, 1], PROBE_WIREGUARD_LISTEN_PORT));
+                let ready = || {
+                    let _ = ready.send(());
+                };
+                let unprotected = |_: &socket2::Socket| Ok(());
                 match request.transport {
                     TransportKind::ObfuscatedUdp => {
                         let mut config = client_relay_config(server, &private, key)?;
                         config.local_listen = local;
-                        run_client_relay(config, || {
-                            let _ = ready.send(());
-                        })
-                        .await?;
+                        run_client_relay_pinned(config, wireguard, unprotected, ready).await?;
                     }
                     TransportKind::TcpFallback => {
                         let mut config = tcp_client_relay_config(server, &private, key)?;
                         config.local_listen = local;
-                        run_tcp_client_relay(config, || {
-                            let _ = ready.send(());
-                        })
-                        .await?;
+                        run_tcp_client_relay_pinned(config, wireguard, unprotected, ready).await?;
                     }
                     TransportKind::TlsLike => {
                         let mut config = tls_like_client_relay_config(
@@ -181,10 +180,8 @@ pub(super) fn sample_candidate(
                         )?
                         .with_https(request.https.clone())?;
                         config.local_listen = local;
-                        run_tls_like_client_relay(config, || {
-                            let _ = ready.send(());
-                        })
-                        .await?;
+                        run_tls_like_client_relay_pinned(config, wireguard, unprotected, ready)
+                            .await?;
                     }
                     TransportKind::Quic => {
                         let mut config = quic_client_relay_config(
@@ -198,10 +195,7 @@ pub(super) fn sample_candidate(
                         )?
                         .with_https(request.https.clone())?;
                         config.local_listen = local;
-                        run_quic_client_relay(config, || {
-                            let _ = ready.send(());
-                        })
-                        .await?;
+                        run_quic_client_relay_pinned(config, wireguard, unprotected, ready).await?;
                     }
                     TransportKind::DirectUdp => unreachable!(),
                 }
@@ -242,26 +236,37 @@ pub(super) fn sample_candidate(
                     return Err(error);
                 }
                 let private = Zeroizing::new(format!("{}\n", private.as_str()));
-                helper.runner.run(
-                    "wg",
-                    &[
-                        "set",
-                        PROBE_INTERFACE,
-                        "private-key",
-                        "/dev/stdin",
-                        "fwmark",
-                        ROUTING_TABLE,
-                        "peer",
-                        &task_request.server_public_key,
-                        "endpoint",
-                        &wireguard_endpoint.to_string(),
-                        "allowed-ips",
-                        &format!("{}/32", task_request.dns_address),
-                        "persistent-keepalive",
-                        "1",
-                    ],
-                    Some(private.as_bytes()),
-                )?;
+                let relayed = task_request.transport != TransportKind::DirectUdp;
+                let listen_port = PROBE_WIREGUARD_LISTEN_PORT.to_string();
+                // As for the session: only a relayed candidate fixes the probe's port.
+                let pinned: &[&str] = if relayed {
+                    &["listen-port", &listen_port]
+                } else {
+                    &[]
+                };
+                let endpoint = wireguard_endpoint.to_string();
+                let allowed = format!("{}/32", task_request.dns_address);
+                let peer: &[&str] = &[
+                    "fwmark",
+                    ROUTING_TABLE,
+                    "peer",
+                    &task_request.server_public_key,
+                    "endpoint",
+                    &endpoint,
+                    "allowed-ips",
+                    &allowed,
+                    "persistent-keepalive",
+                    "1",
+                ];
+                let arguments = [
+                    &["set", PROBE_INTERFACE, "private-key", "/dev/stdin"][..],
+                    pinned,
+                    peer,
+                ]
+                .concat();
+                helper
+                    .runner
+                    .run("wg", &arguments, Some(private.as_bytes()))?;
                 run(&[
                     "address",
                     "add",

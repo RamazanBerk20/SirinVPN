@@ -49,8 +49,14 @@ pub(super) async fn connect(
     let mut status = connect_managed_with_mtu(
         &profile, &secret, policy, first, &plan, &routing, manual_mtu,
     )?;
+    let settled = |status: &LocalTunnelStatus| {
+        matches!(
+            status.phase(),
+            Some(TunnelPhase::Connected { .. } | TunnelPhase::Paused { .. })
+        )
+    };
     for _ in 0..32 {
-        if status.state == ConnectionState::Connected || status.waiting_for_user {
+        if settled(&status) {
             break;
         }
         tokio::time::sleep(std::time::Duration::from_secs(5)).await;
@@ -72,9 +78,9 @@ pub(super) async fn connect(
     {
         let _ = store.record_success(profile.id, &network, transport);
     }
-    let message = if status.state == ConnectionState::Connected {
+    let message = if matches!(status.phase(), Some(TunnelPhase::Connected { .. })) {
         "Connected through SirinVPN."
-    } else if status.waiting_for_user {
+    } else if matches!(status.phase(), Some(TunnelPhase::Paused { .. })) {
         "Connection paused. Use `sirinvpn resume SERVER` to retry or `sirinvpn disconnect` to release the traffic block."
     } else {
         "Connection is still pending. The helper will follow the configured recovery policy. Use `sirinvpn status` to check it."
@@ -85,12 +91,13 @@ pub(super) async fn connect(
         && let Ok(client) = ManagementClient::new(&profile, &secret)
         && let Ok(server) = client.status().await
     {
-        let mut refreshed = profile.clone();
-        if refreshed.adopt_caller_status(&server) {
-            let _ = paths.profile_store().upsert(refreshed.clone());
-            if !json && refreshed.subnet_routes != profile.subnet_routes {
-                println!("This device's subnet routes changed. Connect again to apply them.");
-            }
+        // Only the caller fields change, on the profile as it is now: the loop above may
+        // have applied an endpoint checkpoint that an older copy would roll back.
+        if let Some(refreshed) = adopt_caller_status(paths, &profile, &server)
+            && !json
+            && refreshed.subnet_routes != profile.subnet_routes
+        {
+            println!("This device's subnet routes changed. Connect again to apply them.");
         }
     }
     if !json
@@ -112,12 +119,6 @@ pub(super) fn connect_managed_with_mtu(
     manual_mtu: Option<u16>,
 ) -> Result<LocalTunnelStatus> {
     let mut request = build_tunnel_request(profile, secret, false, transport, &[], routing)?;
-    request.schema_version =
-        if routing.mode == sirinvpn_tunnel_model::TunnelRoutingMode::SelectedApplications {
-            11
-        } else {
-            10
-        };
     request.policy = Some(policy);
     let mtu_policy = manual_mtu.map_or(sirinvpn_protocol::MtuPolicy::Automatic, |value| {
         sirinvpn_protocol::MtuPolicy::Manual { value }
@@ -135,6 +136,7 @@ pub(super) fn connect_managed_with_mtu(
         }
     }
     request.reconnect_candidates = sirinvpn_tunnel_model::policy_transport_candidates(&ordered);
+    request.schema_version = request.required_schema();
     let payload = Zeroizing::new(serde_json::to_vec(&request)?);
     let status = invoke_helper("connect", Some(payload.as_slice()))?;
     if status.policy != Some(policy) || status.server_id != Some(profile.id) {

@@ -1,0 +1,129 @@
+{
+  "example": "例如 {{value}}",
+  "resolver": {
+    "legend": "DNS 解析器",
+    "mode": {
+      "preserve": "保持当前",
+      "recursive": "递归",
+      "dnsOverTls": "DNS over TLS",
+      "dnsOverHttps": "DNS over HTTPS"
+    },
+    "note": {
+      "preserve": "当前解析器和分流 DNS 区域保持不变",
+      "recursive": "你的服务器自行查询域名，并进行 DNSSEC 验证",
+      "dnsOverTls": "通过端口 853 上的 TLS 转发查询，不回退到明文",
+      "dnsOverHttps": "通过端口 443 上的 HTTPS 转发查询，不回退到明文"
+    },
+    "endpoint": "解析器 {{number}}",
+    "endpointOptional": "解析器 {{number}}（可选）",
+    "address": "IP 地址",
+    "tlsName": "TLS 主机名",
+    "httpsPath": "HTTPS 路径",
+    "error": {
+      "address": "请输入解析器的 IP 地址，例如 9.9.9.9。",
+      "duplicate": "这与解析器 1 相同。",
+      "name": "请输入解析器证书上的主机名，例如 dns.quad9.net。",
+      "path": "以 / 开头，且只能使用字母、数字以及 - _ . ~"
+    }
+  },
+  "records": {
+    "legend": "私有 DNS 记录",
+    "mode": {
+      "preserve": "保持当前",
+      "replace": "替换",
+      "clear": "清除"
+    },
+    "note": {
+      "preserve": "当前记录保持不变",
+      "replace": "仅能在你的 VPN 内解析的名称",
+      "clear": "从服务器中删除所有设备的全部私有 DNS 记录"
+    },
+    "label": "记录",
+    "hint": "每行一条“名称=IP”，最多 64 条",
+    "invalidLine": "“{{line}}”不是有效的记录。请按“名称=IP”的格式填写，例如 nas.home=10.20.30.40。",
+    "invalid": "最多输入 64 条记录。"
+  },
+  "nat64": {
+    "legend": "通过 NAT64 访问 IPv4 网站",
+    "mode": {
+      "preserve": "保持当前",
+      "replace": "使用前缀",
+      "clear": "关闭"
+    },
+    "note": {
+      "setup": "可选。此 VPS 没有 IPv4，因此仅支持 IPv4 的网站将无法访问，除非成员通过 NAT64 网关访问。该网关的运营方可以看到他们访问的 IPv4 地址。",
+      "preserve": "VPS 保持其当前的 NAT64 设置",
+      "replace": "仅适用于没有 IPv4 的 VPS。NAT64 网关的运营方可以看到成员访问的 IPv4 地址。",
+      "clear": "VPS 没有 IPv4 时，成员只能访问 IPv6 网站"
+    },
+    "label": "NAT64 前缀",
+    "hint": "来自你的 VPS 提供商或公共 NAT64 服务",
+    "invalid": "请输入 IPv6 前缀，例如 64:ff9b::/96。"
+  },
+  "split": {
+    "label": "分流 DNS 区域",
+    "summary": "可选。将某个域名发送到其专用解析器：域名=IP，每行一条。",
+    "infoLabel": "关于分流 DNS 区域",
+    "info": "私有 IP 解析器无需 DNSSEC 即可信任。IP#TLS 主机名 使用带 DNSSEC 的 DNS over TLS。多个备用解析器请用逗号分隔；区域绝不会回退到主解析器。",
+    "invalid": "每个域名只能列出一次，最多 16 个区域。",
+    "invalidLine": "“{{line}}”不是有效的区域。请按“域名=IP”的格式填写（IP 为私有解析器地址），或使用“IP#TLS 主机名”。",
+    "localSuffix": "{{zone}} 以 .local 结尾，它属于你自己网络中的设备。请为此区域使用其他名称。",
+    "publicResolver": "{{resolver}} 是公共地址。区域只能通过 TLS 使用它：请填写“{{resolver}}#TLS 主机名”。"
+  },
+  "review": {
+    "label": "DNS 更改审核",
+    "title": "审核 DNS 更改",
+    "resolver": {
+      "term": "解析器",
+      "preserve": "保持当前解析器和分流 DNS 区域",
+      "recursive": "带 DNSSEC 的递归 DNS",
+      "dnsOverTls": "DNS over TLS，不回退到明文",
+      "dnsOverHttps": "DNS over HTTPS，不回退到明文"
+    },
+    "addresses": "解析器地址",
+    "split": {
+      "term": "分流 DNS 区域",
+      "none": "无。现有区域将被删除。"
+    },
+    "records": {
+      "term": "私有 DNS 记录",
+      "preserve": "保持当前记录",
+      "clear": "移除所有记录",
+      "replace": "将所有记录替换为："
+    },
+    "impact": "这会影响此服务器上的每台设备，并且 VPN 会短暂重启。VPN 地址、端口、设备和访问权限保持不变。"
+  },
+  "blocklist": {
+    "title": "广告和追踪器拦截",
+    "summary": "为使用此服务器 DNS 的每台设备拦截广告和追踪器域名。服务器不保存任何查询记录。",
+    "unsupported": "请使用当前版本的应用修复此服务器，以启用 DNS 拦截。",
+    "enable": "拦截广告和追踪器",
+    "lists": "拦截列表",
+    "custom": "其他拦截列表",
+    "customHint": "可选。每行一个 HTTPS 地址，格式为 hosts 或域名列表。",
+    "customInvalid": "每个地址都必须是完整的 HTTPS 地址，最多 8 个列表。",
+    "allowlist": "永不拦截",
+    "allowlistHint": "每行一个域名。其子域名也会被允许。",
+    "allowlistInvalid": "请使用有效的域名，最多 512 个。",
+    "save": "保存拦截设置",
+    "refresh": "刷新状态",
+    "saved": "已保存。服务器将在一分钟内应用。",
+    "loadFailed": "无法加载 DNS 拦截设置。",
+    "saveFailed": "无法保存 DNS 拦截设置。",
+    "status": {
+      "off": "DNS 拦截已关闭。",
+      "pending": "正在等待服务器应用最新更改。",
+      "active": "{count, plural, other {正在拦截 # 个域名。列表更新于 {{time}}。}}"
+    },
+    "member": {
+      "on": "已开启。只有所有者或管理员可以更改。",
+      "off": "已关闭。只有所有者或管理员可以更改。"
+    },
+    "failure": {
+      "download": "无法下载某个拦截列表。上一次可用的列表仍然有效。",
+      "format": "某个拦截列表不是 hosts 或域名列表格式。上一次可用的列表仍然有效。",
+      "too_many_domains": "所选列表包含超过 300,000 个域名。请选择更少的列表；上一次可用的列表仍然有效。",
+      "resolver": "DNS 服务拒绝了新列表。上一次可用的列表仍然有效。"
+    }
+  }
+}

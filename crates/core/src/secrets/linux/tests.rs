@@ -470,3 +470,58 @@ fn policy_names_do_not_collide_with_valid_references() {
     store.put("storage-policy", &secret).unwrap();
     assert_eq!(store.policy().unwrap(), StoragePolicy::SecureStoreRequired);
 }
+
+#[test]
+fn credential_state_reads_records_written_by_earlier_versions() {
+    let (_dir, store, backend) = fixture();
+    let generated = crate::LocalIdentity::generate("state fixture").unwrap();
+    let bytes = serde_json::to_vec(&generated.secret).unwrap();
+    let binding = identity(&bytes).unwrap().1;
+    let _ = store.lock("setup").unwrap();
+    assert_eq!(store.state("absent").unwrap(), CredentialState::Absent);
+    // Schema-2 records exactly as earlier versions wrote them.
+    for (reference, record, expected) in [
+        (
+            "keyring",
+            serde_json::json!({"schema_version": 2, "backend": "keyring", "binding": binding}),
+            CredentialState::Stored(CredentialBackend::SecureStore),
+        ),
+        (
+            "file",
+            serde_json::json!({"schema_version": 2, "backend": "private_file", "binding": binding}),
+            CredentialState::Stored(CredentialBackend::PrivateFile),
+        ),
+        (
+            "writing",
+            serde_json::json!({"schema_version": 2, "backend": "writing", "binding": binding}),
+            CredentialState::Writing,
+        ),
+        (
+            "deleting",
+            serde_json::json!({"schema_version": 2, "backend": "deleting", "binding": ""}),
+            CredentialState::Deleting,
+        ),
+        (
+            "deleted",
+            serde_json::json!({"schema_version": 2, "backend": "deleted", "binding": ""}),
+            CredentialState::Deleted,
+        ),
+    ] {
+        files::atomic_write(
+            &store
+                .fallback_directory
+                .join(format!("{reference}.state.json")),
+            &serde_json::to_vec(&record).unwrap(),
+            false,
+        )
+        .unwrap();
+        assert_eq!(store.state(reference).unwrap(), expected, "{reference}");
+    }
+    // A pre-provenance file with no record is stored, but never called verified.
+    files::atomic_write(&store.fallback_path("legacy").unwrap(), &bytes, false).unwrap();
+    backend.0.lock().unwrap().unavailable = true;
+    assert_eq!(
+        store.state("legacy").unwrap(),
+        CredentialState::Stored(CredentialBackend::Unverified)
+    );
+}

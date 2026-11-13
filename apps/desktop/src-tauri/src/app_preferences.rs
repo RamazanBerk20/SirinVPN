@@ -98,6 +98,9 @@ pub async fn set_app_preferences(
         .lock()
         .map_err(|_| "App preferences are unavailable.")?;
     let previous = data.as_ref().map_err(Clone::clone)?;
+    if !store::valid_language(&preferences.language) {
+        return Err("This language setting is not valid.".to_owned());
+    }
     if preferences.close_to_tray
         && !previous.close_to_tray
         && !state.tray_available.load(Ordering::Relaxed)

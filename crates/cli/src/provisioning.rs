@@ -4,6 +4,114 @@ use super::*;
 use sirinvpn_installer::{ServerBinarySource, hetzner::*};
 use std::sync::atomic::AtomicBool;
 
+/// Where this device records unresolved VPS transactions (one per VPS host; an
+/// earlier version's single file at this path is moved on first use).
+pub(super) fn transaction_journal(paths: &ClientPaths) -> TransactionJournal {
+    TransactionJournal::new(paths.configuration_directory.join("vps-transaction.json"))
+}
+
+/// Names the new Owner key of an install in progress on `host`, so `server resolve` can delete it if the VPS rolled back.
+fn pending_secret_marker(paths: &ClientPaths, host: &str) -> PathBuf {
+    transaction_journal(paths).pending_secret_path(host)
+}
+
+/// Writes the marker owner-only from the moment it exists (it names a secret).
+fn record_pending_secret(paths: &ClientPaths, host: &str, reference: &str) -> std::io::Result<()> {
+    use std::io::Write;
+    let marker = pending_secret_marker(paths, host);
+    // A leftover file would keep its old mode; `create_new` then sets ours.
+    let _ = std::fs::remove_file(&marker);
+    let mut options = std::fs::OpenOptions::new();
+    options.write(true).create_new(true);
+    #[cfg(unix)]
+    std::os::unix::fs::OpenOptionsExt::mode(&mut options, 0o600);
+    options.open(marker)?.write_all(reference.as_bytes())
+}
+
+fn forget_pending_secret(paths: &ClientPaths, host: &str) {
+    let _ = std::fs::remove_file(pending_secret_marker(paths, host));
+}
+
+/// What the VPS said about a transaction whose commit reply was lost.
+pub(super) enum Settlement {
+    Committed(Box<ServerProfile>),
+    RolledBack,
+    /// Still unknown: the VPS was unreachable or has not finished. Keep every key and the journal.
+    Unknown(String),
+}
+
+pub(super) fn settle(resolved: Result<Option<ResolvedTransaction>, InstallerError>) -> Settlement {
+    match resolved {
+        Ok(Some(resolved)) => match resolved.state {
+            RemoteTransactionState::RolledBack => Settlement::RolledBack,
+            RemoteTransactionState::Committed => match resolved.committed_profile() {
+                Some(profile) => Settlement::Committed(Box::new(profile.clone())),
+                None => Settlement::Unknown(
+                    "the VPS committed the change, but this device holds no profile for it"
+                        .to_owned(),
+                ),
+            },
+            state => Settlement::Unknown(format!("the VPS reports the transaction as {state:?}")),
+        },
+        Ok(None) => Settlement::Unknown("this device has no record of the transaction".to_owned()),
+        Err(error) => Settlement::Unknown(error.to_string()),
+    }
+}
+
+/// Asks the VPS what became of the transaction in this device's journal.
+pub(super) fn settle_uncertain(paths: &ClientPaths, target: &SshTarget) -> Settlement {
+    settle(Provisioner::resolve_transaction(
+        target,
+        &transaction_journal(paths),
+    ))
+}
+
+pub(super) fn unresolved_outcome(reason: &str) -> anyhow::Error {
+    anyhow!(
+        "The outcome on the VPS is unknown ({reason}). This device kept its keys and its record of the transaction. When the VPS is reachable, run `sirinvpn server resolve` to finish it; `sirinvpn server transaction-status` shows where it stands. If the VPS is gone for good, `sirinvpn server resolve --abandon <server>` forgets the record and keeps every key."
+    )
+}
+
+/// Saves a profile the VPS on `host` confirmed: new for an install, merged for a repair or restore.
+pub(super) fn save_committed_profile(
+    paths: &ClientPaths,
+    committed: &ServerProfile,
+    host: &str,
+) -> Result<ServerProfile> {
+    let store = paths.profile_store();
+    let saved = if store.load()?.iter().any(|p| p.id == committed.id) {
+        store.update(committed.id, |current| {
+            *current = sirinvpn_installer::merge_committed_profile(current, committed);
+            Ok(current.clone())
+        })?
+    } else {
+        store.upsert(committed.clone())?;
+        committed.clone()
+    };
+    forget_pending_secret(paths, host);
+    Ok(saved)
+}
+
+fn plan_output(plan: &InstallPlan, json: bool) -> Result<String> {
+    Ok(if json {
+        format!("{}\n", serde_json::to_string_pretty(plan)?)
+    } else {
+        plan.to_text()
+    })
+}
+
+/// `--plan`: show what the operation would do. Nothing on the VPS or this device changed.
+pub(super) fn print_plan(plan: &InstallPlan, json: bool) -> Result<()> {
+    print!("{}", plan_output(plan, json)?);
+    Ok(())
+}
+
+mod transactions;
+use transactions::discard_new_secret;
+#[cfg(test)]
+use transactions::{discard_marked_secret, selected_transaction, transaction_target};
+pub(crate) use transactions::{resolve_transaction, transaction_status};
+
 pub(super) fn inspect_host_key(arguments: HostKeyArguments) -> Result<()> {
     let target = SshTarget {
         host: arguments.host,
@@ -84,7 +192,7 @@ pub(super) fn add_server(
         server_id,
         server_name: arguments.name,
         target,
-        server_binary: resolve_server_binary(arguments.server_binary)?.into(),
+        server_binary: resolve_server_binary(arguments.server_binary)?,
         identity: identity.public.clone(),
         identity_reference: server_id.to_string(),
         transport,
@@ -94,6 +202,9 @@ pub(super) fn add_server(
         replace_existing_installation: arguments.replace_existing,
         enable_security_updates: false,
     };
+    if arguments.plan {
+        return print_plan(&Provisioner::plan_install(request)?, json);
+    }
     install_new_server(paths, request, &identity.secret, json)
 }
 
@@ -105,195 +216,56 @@ fn install_new_server(
     json: bool,
 ) -> Result<()> {
     let identity_reference = request.identity_reference.clone();
+    let target = request.target.clone();
+    let host = target.host.as_str();
+    // Refused before the marker of the unresolved install on this host is replaced.
+    if transaction_journal(paths).read_server(host)?.is_some() {
+        return Err(InstallerError::TransactionUnresolved {
+            host: host.to_owned(),
+        }
+        .into());
+    }
     let secrets = paths.secret_store();
     secrets.put(&identity_reference, secret)?;
-    let outcome = match Provisioner::install(request) {
-        Ok(outcome) => outcome,
-        Err(error) => {
-            if secrets.delete(&identity_reference).is_err() {
-                bail!(
-                    "Provisioning failed; credential cleanup is incomplete. Unlock the secure store and retry credential cleanup."
-                );
+    if let Err(error) = record_pending_secret(paths, host, &identity_reference) {
+        discard_new_secret(paths, host, &identity_reference)?;
+        return Err(anyhow!(error).context("could not record the new Owner key for this install"));
+    }
+    let (profile, events) =
+        match Provisioner::install_with_journal(request, &transaction_journal(paths)) {
+            Ok(outcome) => (outcome.profile, outcome.events),
+            // The change may be live, so the Owner key stays until the VPS says otherwise.
+            Err(InstallerError::CommitUncertain { .. }) => match settle_uncertain(paths, &target) {
+                Settlement::Committed(profile) => (*profile, Vec::new()),
+                Settlement::RolledBack => {
+                    discard_new_secret(paths, host, &identity_reference)?;
+                    bail!("The VPS rolled the installation back. Nothing was installed.");
+                }
+                Settlement::Unknown(reason) => return Err(unresolved_outcome(&reason)),
+            },
+            // Anything but `CommitUncertain` means the commit never ran or the VPS
+            // confirmed the rollback, so the new key is used nowhere.
+            Err(error) => {
+                discard_new_secret(paths, host, &identity_reference)?;
+                return Err(error.into());
             }
-            return Err(error.into());
-        }
-    };
-    paths.profile_store().upsert(outcome.profile.clone())?;
+        };
+    let profile = save_committed_profile(paths, &profile, host)?;
     if json {
-        println!("{}", serde_json::to_string_pretty(&outcome.profile)?);
+        println!("{}", serde_json::to_string_pretty(&profile)?);
     } else {
-        for event in outcome.events {
+        for event in events {
             println!("{:?}: {}", event.phase, event.message);
         }
-        println!(
-            "Server added: {} ({})",
-            outcome.profile.name, outcome.profile.id
-        );
+        println!("Server added: {} ({})", profile.name, profile.id);
     }
     Ok(())
 }
 
-pub(super) async fn create_hetzner_server(
-    paths: &ClientPaths,
-    arguments: CreateHetznerArguments,
-    json: bool,
-) -> Result<()> {
-    let token = match env::var("HCLOUD_TOKEN") {
-        Ok(token) if !token.is_empty() => Zeroizing::new(token),
-        _ => prompt_nonempty_secret("Hetzner Cloud API token: ")?,
-    };
-    let client = HetznerClient::new(&token)?;
-    let server_binary = ServerBinarySource::from(resolve_server_binary(arguments.server_binary)?);
-    let arm = server_binary.supports("aarch64");
-    let catalog = client.catalog(arm).await?;
-    let location = arguments
-        .location
-        .or_else(|| {
-            catalog
-                .locations
-                .first()
-                .map(|location| location.name.clone())
-        })
-        .context("Hetzner Cloud lists no location with an available server type")?;
-    let server_type = arguments
-        .server_type
-        .or_else(|| {
-            catalog
-                .cheapest_x86(&location)
-                .map(|kind| kind.name.clone())
-        })
-        .with_context(|| format!("no x86 server type is available in {location}"))?;
-    let price = catalog
-        .price(&location, &server_type)
-        .with_context(|| format!("{server_type} is not available in {location}"))?
-        .clone();
-    if arguments.accept_monthly_price.as_deref() != Some(price.total_monthly.as_str()) {
-        if json {
-            println!("{}", serde_json::to_string_pretty(&catalog)?);
-        } else {
-            for kind in &catalog.server_types {
-                if let Some(offer) = kind.prices.iter().find(|offer| offer.location == location) {
-                    println!(
-                        "{:<8} {:<4} {:>3} vCPU {:>4} GB RAM {:>5} GB disk  {} {}/month",
-                        kind.name,
-                        kind.architecture,
-                        kind.cores,
-                        kind.memory_gb,
-                        kind.disk_gb,
-                        offer.total_monthly,
-                        catalog.currency
-                    );
-                }
-            }
-            let names = catalog
-                .locations
-                .iter()
-                .map(|l| format!("{} ({})", l.name, l.city));
-            println!("Locations: {}", names.collect::<Vec<_>>().join(", "));
-            println!(
-                "Selected: {server_type} in {location} with Debian 13 for {} {}/month (server {} + IPv4 {}), billed by Hetzner until deleted.",
-                price.total_monthly,
-                catalog.currency,
-                price.server_monthly,
-                price.ipv4_monthly.as_deref().unwrap_or("not reported")
-            );
-        }
-        bail!(
-            "Nothing was created. Re-run with --accept-monthly-price {} to create this server.",
-            price.total_monthly
-        );
-    }
-
-    let prepared = PreparedServer::generate();
-    let key_path = save_login_key(&paths.configuration_directory, &prepared)
-        .context("could not save the new server's SSH key")?;
-    let request = HetznerServerRequest {
-        location,
-        server_type,
-        accepted_monthly_price: price.total_monthly,
-    };
-    let server = match client.create_server(&prepared, &request, arm).await {
-        Ok(server) => server,
-        Err(error) => {
-            if !matches!(error, HetznerError::Uncertain(_)) {
-                let _ = forget_login_key(&paths.configuration_directory, &prepared.name);
-            }
-            return Err(error.into());
-        }
-    };
-    eprintln!(
-        "Created {} (Hetzner ID {}). Waiting for it to start with SSH host key {}; Ctrl-C stops waiting.",
-        server.name, server.id, server.host_key_sha256
-    );
-    // Ctrl-C drops the wait instead of using the cancel flag.
-    let never = AtomicBool::new(false);
-    let ready = tokio::select! {
-        ready = client.wait_until_ready(&server, prepared.login_private_key(), &never) => ready,
-        _ = tokio::signal::ctrl_c() => Err(HetznerError::Cancelled),
-    };
-    let mut host_key = server.host_key_sha256.clone();
-    let result = match ready {
-        Ok(ready) => {
-            host_key.clone_from(&ready.host_key_sha256);
-            eprintln!(
-                "{} is ready at {} with SSH host key {}. Installing SirinVPN; this cannot be interrupted.",
-                server.name, ready.ipv4, ready.host_key_sha256
-            );
-            let identity = new_identity_for_server(&arguments.name)?;
-            let server_id = ServerId::new();
-            install_new_server(
-                paths,
-                InstallRequest {
-                    server_id,
-                    server_name: arguments.name,
-                    target: ssh_target(
-                        ready.ipv4,
-                        prepared.login_private_key(),
-                        ready.host_key_sha256,
-                    ),
-                    server_binary,
-                    identity: identity.public.clone(),
-                    identity_reference: server_id.to_string(),
-                    transport: arguments.transport.requested(None)?.unwrap_or_default(),
-                    dns_upstream: arguments.dns.requested().unwrap_or_default(),
-                    private_dns_records: arguments.private_dns_record,
-                    // Hetzner servers come with IPv4, so NAT64 never applies.
-                    nat64_prefix: None,
-                    replace_existing_installation: false,
-                    enable_security_updates: false,
-                },
-                &identity.secret,
-                json,
-            )
-        }
-        Err(error) => Err(error.into()),
-    };
-    if let Err(error) = &result {
-        eprintln!("{error}");
-        eprint!(
-            "Delete the Hetzner server {} (ID {})? Hetzner bills it until it is deleted. [y/N] ",
-            server.name, server.id
-        );
-        let mut answer = String::new();
-        std::io::stdin().read_line(&mut answer)?;
-        if answer.trim().eq_ignore_ascii_case("y") {
-            client.delete_server(server.id).await?;
-            let _ = forget_login_key(&paths.configuration_directory, &server.name);
-            bail!("The server was deleted.");
-        }
-        bail!(
-            "The server was kept. Log in with: ssh -i {} root@<its IPv4>; its SSH host key is {}.",
-            key_path.display(),
-            host_key
-        );
-    }
-    eprintln!(
-        "The root SSH key for {} is saved at {}.",
-        server.name,
-        key_path.display()
-    );
-    result
-}
+mod hetzner;
+pub(crate) use hetzner::create_hetzner_server;
+#[cfg(test)]
+use hetzner::{PendingChoice, host_key_note, pending_choice};
 
 #[derive(Serialize)]
 pub(super) struct InvitationOutput<'a> {
@@ -313,7 +285,7 @@ pub(super) async fn create_invitation(
     if let Some(role) = status.caller_role {
         profile.role = role;
         profile.administrator = status.caller_administrator;
-        paths.profile_store().upsert(profile.clone())?;
+        save_caller_role(paths, &profile)?;
     }
     let advanced = arguments.admin || arguments.member_id.is_some();
     let mut policy = arguments
@@ -400,3 +372,6 @@ pub(super) async fn create_invitation(
     }
     Ok(())
 }
+
+#[cfg(test)]
+mod tests;

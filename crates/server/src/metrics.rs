@@ -34,10 +34,23 @@ pub(super) struct LiveMetricSample {
 #[derive(Default)]
 pub(super) struct LiveMetricSampler {
     pub(super) previous: Option<SystemMetricSnapshot>,
+    last: LiveMetricSample,
 }
 
 impl LiveMetricSampler {
     pub(super) fn sample(&mut self, current: SystemMetricSnapshot) -> LiveMetricSample {
+        // Readers of one shared host sample see the same rates instead of a zero interval.
+        if self
+            .previous
+            .is_some_and(|previous| previous.recorded_at == current.recorded_at)
+        {
+            return self.last;
+        }
+        self.last = self.measure(current);
+        self.last
+    }
+
+    fn measure(&mut self, current: SystemMetricSnapshot) -> LiveMetricSample {
         let memory_total_bytes = current.memory.map(|memory| memory.total_bytes);
         let memory_used_bytes = current
             .memory
@@ -89,32 +102,35 @@ impl LiveMetricSampler {
 
 pub async fn collect_status(configuration: &ServerConfiguration) -> ServerStatus {
     let sampler = Mutex::new(LiveMetricSampler::default());
-    collect_status_with_peer_count(configuration, 1, &sampler).await
+    status_from_sample(&sample_host(configuration).await, 1, &sampler)
 }
 
-pub(super) async fn collect_status_with_peer_count(
-    configuration: &ServerConfiguration,
-    authorized_peer_count: u32,
-    live_metrics: &Mutex<LiveMetricSampler>,
-) -> ServerStatus {
+/// One reading of the host, shared by every status request and stream for about a second.
+#[derive(Clone)]
+pub(super) struct HostSample {
+    /// Caller-independent fields; live rates and the peer count are filled per reader.
+    pub(super) status: ServerStatus,
+    pub(super) snapshot: SystemMetricSnapshot,
+    pub(super) peer_activity: Option<HashMap<String, bool>>,
+}
+
+/// Runs the host processes (`systemctl`, `stat`, `wg`); never call per request.
+pub(super) async fn sample_host(configuration: &ServerConfiguration) -> HostSample {
     let interface_up = interface_exists(&configuration.interface_name);
-    let (dns_healthy, disk) = tokio::join!(
+    let (dns_healthy, disk, peer_activity) = tokio::join!(
         dns_services_active(configuration),
         super::service_metrics::root_disk_usage(),
+        super::service_metrics::recent_peer_activity(&configuration.interface_name),
     );
-    let system_metrics = read_system_metric_snapshot(&configuration.interface_name);
-    let (rx_bytes, tx_bytes) = system_metrics.network.unwrap_or_default();
-    let live_sample = live_metrics
-        .lock()
-        .unwrap_or_else(|poisoned| poisoned.into_inner())
-        .sample(system_metrics);
+    let snapshot = read_system_metric_snapshot(&configuration.interface_name);
+    let (rx_bytes, tx_bytes) = snapshot.network.unwrap_or_default();
     let uptime_seconds = fs::read_to_string("/proc/uptime")
         .ok()
         .and_then(|contents| contents.split_whitespace().next()?.parse::<f64>().ok())
         .map(|value| value as u64)
         .unwrap_or_default();
 
-    ServerStatus {
+    let status = ServerStatus {
         authorization_recovery: None,
         api_version: API_VERSION.to_owned(),
         server_name: configuration.server_name.clone(),
@@ -128,17 +144,17 @@ pub(super) async fn collect_status_with_peer_count(
         dns_upstream: configuration.dns_upstream.clone(),
         private_dns_records: configuration.private_dns_records.clone(),
         transport: TransportKind::DirectUdp,
-        peer_count: authorized_peer_count,
+        peer_count: 0,
         peer_activity_supported: true,
         recently_active_peer_count: None,
         rx_bytes,
         tx_bytes,
         uptime_seconds,
-        cpu_usage_basis_points: live_sample.cpu_usage_basis_points,
-        memory_used_bytes: live_sample.memory_used_bytes,
-        memory_total_bytes: live_sample.memory_total_bytes,
-        rx_bytes_per_second: live_sample.rx_bytes_per_second,
-        tx_bytes_per_second: live_sample.tx_bytes_per_second,
+        cpu_usage_basis_points: None,
+        memory_used_bytes: None,
+        memory_total_bytes: None,
+        rx_bytes_per_second: None,
+        tx_bytes_per_second: None,
         disk_used_bytes: disk.map(|(used, _)| used),
         disk_total_bytes: disk.map(|(_, total)| total),
         rx_packets: super::service_metrics::packet_counter(
@@ -155,6 +171,32 @@ pub(super) async fn collect_status_with_peer_count(
         caller_identity_fingerprint: String::new(),
         caller_subnet_routes: Default::default(),
         dns_blocklist_enabled: None,
+    };
+    HostSample {
+        status,
+        snapshot,
+        peer_activity,
+    }
+}
+
+/// Rates come from the reader's own previous snapshot, so readers cannot erase each other's.
+pub(super) fn status_from_sample(
+    sample: &HostSample,
+    authorized_peer_count: u32,
+    live_metrics: &Mutex<LiveMetricSampler>,
+) -> ServerStatus {
+    let live_sample = live_metrics
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner())
+        .sample(sample.snapshot);
+    ServerStatus {
+        peer_count: authorized_peer_count,
+        cpu_usage_basis_points: live_sample.cpu_usage_basis_points,
+        memory_used_bytes: live_sample.memory_used_bytes,
+        memory_total_bytes: live_sample.memory_total_bytes,
+        rx_bytes_per_second: live_sample.rx_bytes_per_second,
+        tx_bytes_per_second: live_sample.tx_bytes_per_second,
+        ..sample.status.clone()
     }
 }
 

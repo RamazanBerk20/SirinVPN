@@ -1,0 +1,152 @@
+{
+  "skipToContent": "Aller au contenu",
+  "nav": {
+    "label": "Navigation principale",
+    "mobileLabel": "Navigation inférieure",
+    "home": "Accueil",
+    "servers": "Serveurs",
+    "devices": "Appareils",
+    "settings": "Paramètres"
+  },
+  "sidebar": {
+    "servers": "Serveurs",
+    "serverList": "Serveurs enregistrés",
+    "manage": "Gérer",
+    "manageLabel": "Gérer les serveurs",
+    "privacy": "Sans compte · Sans télémétrie"
+  },
+  "addServer": {
+    "title": "Ajouter un serveur",
+    "description": "Choisissez comment vous voulez vous connecter."
+  },
+  "home": {
+    "connectionTitle": "Connexion",
+    "connectionSummary": "Méthode : {{method}}",
+    "automatic": "Automatique",
+    "detailsTitle": "Détails de la connexion",
+    "detailsSummary": "État, adresses et statistiques du serveur",
+    "detailsSummaryMember": "État et adresses"
+  },
+  "settingsScope": {
+    "general": "Préférences de cet appareil",
+    "connection": "{{name}} · sur cet appareil",
+    "network": "{{name}} · routage et DNS",
+    "recovery": "{{name}} · clés et sauvegardes",
+    "maintenance": "{{name}} · maintenance du serveur",
+    "advanced": "{{name}} · fonctions avancées"
+  },
+  "network": {
+    "dnsTitle": "DNS",
+    "dnsRefresh": "Actualisez l’état pour voir les paramètres DNS.",
+    "dnsUnavailable": "Les paramètres DNS sont indisponibles pour le moment.",
+    "dnsNeedsConnection": "Connectez-vous pour voir l’état du DNS.",
+    "dnsChange": "Les modifications s’appliquent à tous les appareils de ce serveur.",
+    "dnsConfigure": "Configurer le DNS"
+  },
+  "onboarding": {
+    "settings": "Paramètres de l’application",
+    "settingsDescription": "Préférences de cet appareil.",
+    "checkUpdates": "Rechercher les mises à jour",
+    "welcome": "Bienvenue dans SirinVPN",
+    "headlineFirst": "Votre VPN.",
+    "headlineSecond": "À vos conditions.",
+    "androidIntro": "Connectez-vous à un serveur privé. Vos clés restent avec vous.",
+    "desktopIntro": "Configurez votre propre serveur, rejoignez-en un avec un code d’adhésion, ou restaurez cet appareil à partir d’une sauvegarde ou d’une clé de récupération.",
+    "firstServer": "Ajouter votre premier serveur",
+    "storeTitle": "Serveurs enregistrés indisponibles",
+    "storeHelpDesktop": "Votre trousseau système est peut-être verrouillé. Déverrouillez-le, par exemple en vous déconnectant puis en vous reconnectant, puis réessayez.",
+    "storeHelpAndroid": "Déverrouillez votre téléphone, puis réessayez. Vos serveurs enregistrés restent chiffrés jusque-là."
+  },
+  "errors": {
+    "profiles": "Impossible d’ouvrir les serveurs enregistrés sur cet appareil.",
+    "platform": "SirinVPN n’a pas pu démarrer ses services protégés.",
+    "trayServer": "Ce serveur n’est plus enregistré sur cet appareil."
+  },
+  "unavailable": {
+    "title": "SirinVPN ne peut pas démarrer",
+    "copy": "Copier les détails",
+    "report": "SirinVPN n’a pas pu démarrer : {{message}} Aucune action VPN n’a été effectuée.",
+    "helpDesktop": "Vérifiez que le service SirinVPN est installé et en cours d’exécution, puis réessayez. Vos serveurs enregistrés sont en sécurité.",
+    "helpAndroid": "Déverrouillez votre téléphone, puis réessayez. Vos serveurs enregistrés sont en sécurité."
+  },
+  "dialog": {
+    "waitToClose": "Attendez la fin de la tâche en cours"
+  },
+  "operation": {
+    "result": "Résultat",
+    "running": "Une tâche est en cours. Vous pouvez quitter cet écran et revenir plus tard.",
+    "completed": "La tâche est terminée. Rouvrez sa page pour voir le résultat.",
+    "interrupted": "La tâche ne s’est pas terminée. Vérifiez le serveur ou le fichier avant de réessayer.",
+    "dismiss": "Ignorer",
+    "dismissFailed": "Impossible d’ignorer cet avis. Réessayez.",
+    "step": {
+      "done": "Terminé",
+      "running": "En cours",
+      "todo": "Non commencé"
+    }
+  },
+  "copy": {
+    "label": "Copier {{label}}",
+    "failed": "Copie impossible",
+    "failedManual": "Copie impossible. Sélectionnez le texte et copiez-le manuellement.",
+    "showAll": "Tout afficher",
+    "showLess": "Afficher moins"
+  },
+  "secret": {
+    "value": "Valeur protégée",
+    "code": "Code secret",
+    "enterLabel": "Saisir {{label}}",
+    "enter": "Saisir en toute sécurité",
+    "entered": "Saisi · Modifier",
+    "unchanged": "Rien n’a été modifié.",
+    "scan": "Scanner le code QR",
+    "scanFailed": "Impossible de scanner le code. Vous pouvez le saisir à la place.",
+    "codeReady": "Code prêt à être vérifié"
+  },
+  "share": {
+    "button": "Partager le fichier chiffré",
+    "failed": "Impossible de partager le fichier."
+  },
+  "brand": {
+    "tagline": "Ultra-privé. Auto-hébergé.",
+    "keysLocal": "Les clés restent sur vos appareils",
+    "noHistory": "Aucun historique d’activité",
+    "noCloud": "Aucun cloud SirinVPN"
+  },
+  "metric": {
+    "usage": "Utilisation {{label}}"
+  },
+  "window": {
+    "label": "Fenêtre de l’application",
+    "minimize": "Réduire",
+    "maximize": "Agrandir",
+    "restore": "Restaurer",
+    "closeToTray": "Fermer dans la zone de notification · le VPN reste actif",
+    "quit": "Quitter l’application · le VPN reste actif",
+    "actionFailed": "Cela n’a pas fonctionné. Utilisez les commandes de fenêtre de votre bureau.",
+    "resizeFailed": "Redimensionnement impossible ici. Utilisez le raccourci de redimensionnement de votre bureau."
+  },
+  "recoveryKeyGuard": "Vous ne pourrez plus afficher cette clé de récupération. Quitter sans l’enregistrer ?",
+  "settingsIndex": {
+    "app": "Cette application",
+    "server": "Ce serveur",
+    "serverNote": "Ces paramètres ne s’appliquent qu’à ce serveur.",
+    "scope": "Ces paramètres ne s’appliquent qu’à {{name}}.",
+    "general": "Thème, notifications, réglages rapides",
+    "automaticMethod": "Méthode automatique",
+    "reconnectOn": "Se reconnecte automatiquement",
+    "reconnectOff": "Ne se reconnecte pas automatiquement",
+    "attention": "À vérifier : une rotation de clé ne s’est pas terminée",
+    "serverHealthy": "Serveur en fonctionnement normal",
+    "recoveryKeySaved": "Clé de récupération hors ligne enregistrée",
+    "recoveryKeyMissing": "Pas encore de clé de récupération hors ligne",
+    "serverFault": "À vérifier : le serveur signale une panne",
+    "advancedAdmin": "Rotation des clés",
+    "advancedMember": "Rotation des clés"
+  },
+  "advanced": {
+    "devicesTitle": "Fonctions réseau des appareils",
+    "devicesSummary": "La redirection de port, l’accès d’appareil à appareil, les paires d’appareils et les réseaux locaux se règlent sur chaque appareil. Ouvrez un appareil dans Appareils pour les modifier.",
+    "openDevices": "Ouvrir Appareils"
+  }
+}

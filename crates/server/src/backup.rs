@@ -53,7 +53,7 @@ pub fn export_backup_state(
                 serde_json::from_str(encoded.as_str())
                     .context("server authorization state is invalid")?;
             authorization.validate()?;
-            if let Some(transition) = &authorization.endpoint_transition {
+            if let Some(transition) = authorization.endpoint.head() {
                 verify_endpoint_transition_signature(&paths.tls_private_key, transition)?;
             }
             if authorization.server_id != expected_server_id
@@ -148,7 +148,7 @@ pub fn restore_backup_state(
             let document: AuthorizationDocument =
                 serde_json::from_str(encoded).context("server backup authorization is invalid")?;
             document.validate()?;
-            if let Some(transition) = &document.endpoint_transition {
+            if let Some(transition) = document.endpoint.head() {
                 verify_endpoint_transition_signature_with_key(
                     &state.management_private_key_pem,
                     transition,
@@ -330,19 +330,11 @@ pub(super) fn authorization_is_required(paths: &ServerPaths) -> Result<bool> {
     }
 }
 
+/// Random private temp name, file and directory fsync: a reported success survives power loss
+/// and a stale wider-mode `*.new` file can never be published.
 pub(super) fn write_private(path: &Path, contents: &[u8]) -> Result<()> {
-    let temporary = path.with_extension("new");
-    let mut file = fs::OpenOptions::new()
-        .create(true)
-        .write(true)
-        .truncate(true)
-        .mode(0o600)
-        .open(&temporary)
-        .with_context(|| format!("could not stage {}", path.display()))?;
-    io::Write::write_all(&mut file, contents)?;
-    file.sync_all()?;
-    fs::rename(temporary, path)?;
-    Ok(())
+    sirinvpn_platform::files::atomic_write(path, contents, true)
+        .with_context(|| format!("could not write {}", path.display()))
 }
 
 pub(super) fn write_json(path: &Path, value: &impl Serialize) -> Result<()> {
@@ -364,4 +356,22 @@ pub(super) struct AppState {
     pub(super) transport_peers: AuthorizedPeers,
     pub(super) transport_activity: ActiveTransportRegistry,
     pub(super) speed_test: Arc<Mutex<super::speed_test::Limiter>>,
+    pub(super) throttle: Throttle,
+}
+
+#[cfg(test)]
+mod write_private_tests {
+    use super::*;
+
+    #[test]
+    fn a_stale_wide_staging_file_cannot_publish_a_key_with_its_mode() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("management.key");
+        let stale = path.with_extension("new");
+        fs::write(&stale, b"old").unwrap();
+        fs::set_permissions(&stale, fs::Permissions::from_mode(0o644)).unwrap();
+        write_private(&path, b"secret").unwrap();
+        assert_eq!(fs::read(&path).unwrap(), b"secret");
+        assert_eq!(fs::metadata(&path).unwrap().mode() & 0o777, 0o600);
+    }
 }

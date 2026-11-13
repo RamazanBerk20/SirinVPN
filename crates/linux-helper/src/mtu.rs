@@ -22,6 +22,32 @@ pub(super) fn initial_mtu(request: &TunnelConnectRequest) -> Option<MtuStatus> {
     })
 }
 
+/// A lower MTU found once is confirmed by a second, later round before it is applied:
+/// a VPS that rate-limits ICMP, or a burst of Wi-Fi loss, is not a path limit.
+const MTU_CONFIRM_SECONDS: u64 = 30;
+/// A lowered MTU is probed again at the ceiling, so one bad period is not permanent.
+const MTU_RECOVERY_SECONDS: u64 = 600;
+
+/// Whether the current path's MTU should be probed now.
+fn probe_due(request: &TunnelConnectRequest, state: &RuntimeState, now: u64) -> bool {
+    let Some(mtu) = state.mtu else {
+        return true;
+    };
+    let waited = |seconds| {
+        state
+            .mtu_sampled_at_unix
+            .is_none_or(|at| now.saturating_sub(at) >= seconds)
+    };
+    match mtu.outcome {
+        MtuProbeOutcome::Pending if mtu.suggested.is_some() => waited(MTU_CONFIRM_SECONDS),
+        MtuProbeOutcome::Pending => true,
+        MtuProbeOutcome::Measured => {
+            mtu.configured < session_mtu(request) && waited(MTU_RECOVERY_SECONDS)
+        }
+        _ => false,
+    }
+}
+
 fn probe_candidates(ceiling: u16, minimum: u16) -> Vec<u16> {
     let mut result = vec![ceiling];
     for value in [1380, 1320, 1280, 1200, 1024, 768, 576] {
@@ -54,12 +80,6 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
             }
             state.mtu_sampled_at_unix = None;
         }
-        if state
-            .mtu
-            .is_some_and(|mtu| mtu.outcome != MtuProbeOutcome::Pending)
-        {
-            return;
-        }
         if let Some(result) = self.measure_mtu(request, state) {
             self.commit_mtu(request, state, result);
         }
@@ -71,12 +91,13 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
         state: &RuntimeState,
     ) -> Option<MtuStatus> {
         request.mtu_policy?;
-        if state
-            .mtu
-            .is_some_and(|mtu| mtu.outcome != MtuProbeOutcome::Pending)
-        {
+        if !probe_due(request, state, now_unix()) {
             return None;
         }
+        // Set by the first round that found a lower value.
+        let confirming = state
+            .mtu
+            .is_some_and(|mtu| mtu.outcome == MtuProbeOutcome::Pending && mtu.suggested.is_some());
         let minimum = if request.client_ipv6_address.is_some() {
             MIN_IPV6_TUNNEL_MTU
         } else {
@@ -112,24 +133,33 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
                 .is_ok()
         };
         // No conclusion can be drawn from large packets if this server does not answer ICMP.
-        if !ping(32) {
+        // Two of three replies: one lost reply neither passes nor fails a size.
+        let delivers = |size: u16| {
+            let (mut replies, mut losses) = (0, 0);
+            while replies < 2 && losses < 2 {
+                if ping(size) {
+                    replies += 1;
+                } else {
+                    losses += 1;
+                }
+            }
+            replies == 2
+        };
+        if !delivers(32) {
             result.outcome = MtuProbeOutcome::IcmpUnavailable;
+            result.suggested = None;
         } else {
-            let ceiling = result.configured.min(request.mtu);
+            // The session's own ceiling, not the configured value: a lowered MTU recovers.
+            let ceiling = session_mtu(request);
             let deadline = std::time::Instant::now() + Duration::from_secs(8);
             let safe = probe_candidates(ceiling, minimum)
                 .into_iter()
-                .find(|candidate| {
-                    std::time::Instant::now() < deadline
-                        && ping(candidate - 28)
-                        && ping(candidate - 28)
-                });
+                .find(|candidate| std::time::Instant::now() < deadline && delivers(candidate - 28));
             result.suggested = safe;
-            result.outcome = if let Some(value) = safe {
-                let _ = value;
-                MtuProbeOutcome::Measured
-            } else {
-                MtuProbeOutcome::NoUsableMtu
+            result.outcome = match safe {
+                None => MtuProbeOutcome::NoUsableMtu,
+                Some(value) if value < result.configured && !confirming => MtuProbeOutcome::Pending,
+                Some(_) => MtuProbeOutcome::Measured,
             };
         }
         Some(result)
@@ -142,6 +172,7 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
         mut result: MtuStatus,
     ) {
         if result.policy == MtuPolicy::Automatic
+            && result.outcome == MtuProbeOutcome::Measured
             && let Some(value) = result.suggested
             && value != result.configured
         {

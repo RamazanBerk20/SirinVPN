@@ -38,6 +38,7 @@ pub fn setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     crate::app_preferences::setup(app)?;
     crate::wifi_automation::start(app.handle().clone());
     let tray_ready = crate::desktop_tray::create(app).is_ok();
+    crate::local_status_stream::watch_native(app.handle().clone());
     let state = app.state::<PreferencesState>();
     state.tray_available.store(tray_ready, Ordering::Relaxed);
     let preferences = state.current();

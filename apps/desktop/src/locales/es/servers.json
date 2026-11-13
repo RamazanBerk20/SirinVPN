@@ -1,0 +1,38 @@
+{
+  "count": "{count, plural, one {# servidor} many {# servidores} other {# servidores}}",
+  "add": "Añadir servidor",
+  "open": "Abrir {{name}}",
+  "favorite": "Favorito",
+  "addressOf": "Dirección de {{name}}",
+  "search": {
+    "label": "Buscar servidores",
+    "placeholder": "Nombre o dirección",
+    "empty": "Ningún servidor coincide con tu búsqueda."
+  },
+  "actions": {
+    "label": "Acciones para {{name}}",
+    "rename": "Cambiar nombre",
+    "favorite": "Añadir a favoritos",
+    "unfavorite": "Quitar de favoritos",
+    "maintain": "Mantenimiento del VPS"
+  },
+  "rename": {
+    "title": "Cambiar nombre del servidor",
+    "description": "El nuevo nombre solo se guarda en este dispositivo.",
+    "label": "Nombre del servidor",
+    "save": "Guardar nombre"
+  },
+  "picker": {
+    "eyebrow": "Servidor",
+    "trigger": "Servidor: {{name}}. Cambiar de servidor",
+    "title": "Elige un servidor",
+    "manage": "Gestionar servidores"
+  },
+  "renamed": "Nombre cambiado a «{{name}}».",
+  "favorited": "{{name}} añadido a favoritos",
+  "unfavorited": "{{name}} quitado de favoritos",
+  "manageHint": "Cambia de servidor en la barra lateral. Aquí puedes cambiarles el nombre, marcarlos como favoritos o mantenerlos.",
+  "manageHintNarrow": "Cambia, renombra, marca como favorito o mantén tus servidores aquí.",
+  "switch": "Cambiar",
+  "switchTo": "Cambiar a {{name}}"
+}

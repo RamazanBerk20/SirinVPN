@@ -1,0 +1,74 @@
+{
+  "appName": "SirinVPN",
+  "action": {
+    "back": "戻る",
+    "cancel": "キャンセル",
+    "close": "閉じる",
+    "continue": "続行",
+    "copy": "コピー",
+    "copied": "コピーしました",
+    "dismiss": "閉じる",
+    "done": "完了",
+    "moreInfo": "詳細",
+    "remove": "削除",
+    "retry": "再試行"
+  },
+  "state": {
+    "checking": "確認中…",
+    "disabled": "オフ",
+    "enabled": "オン",
+    "loading": "読み込み中…",
+    "notConnected": "未接続",
+    "saved": "保存済み",
+    "saving": "保存中…",
+    "unavailable": "利用できません",
+    "unknown": "不明"
+  },
+  "role": {
+    "owner": "オーナー",
+    "admin": "管理者",
+    "member": "メンバー"
+  },
+  "noun": {
+    "thisDevice": "このデバイス"
+  },
+  "separator": {
+    "pair": "{{first}} · {{second}}",
+    "triple": "{{first}} · {{second}} · {{third}}"
+  },
+  "target": "{{os}}、{{arch}}（{{target}}）",
+  "error": {
+    "withDetail": "{{summary}} {{detail}}",
+    "needsConnection": "先にこのサーバーに接続してください。",
+    "localSave": "このデバイスに保存できませんでした。もう一度お試しください。",
+    "passwordsDiffer": "パスワードが一致しません。"
+  },
+  "errorCode": {
+    "hetzner_create_uncertain": "Hetzner でサーバー {{server}} が作成された可能性があります。再試行する前に、Hetzner Cloud Console を確認してください。",
+    "hetzner_provision_pending": "サーバー {{name}} の準備が完了していません。再開するか削除してから、別のサーバーを作成してください。",
+    "hetzner_host_key_replacement": "新しいサーバー {{name}} が、想定とは異なる SSH ホスト鍵を提示しました。Hetzner Cloud Console で鍵を確認できるまで、続行しないでください。",
+    "install_phase_failed": "VPS の手順の 1 つが失敗しました。",
+    "install_ssh_failed": "SSH で VPS にサインインできませんでした。ホスト鍵とログイン情報を確認してください。VPS 上の内容は変更されていません。",
+    "install_incompatible": "この VPS は使用できません。互換性がないか、すでに別のインストールが動作しています。VPS 上の内容は変更されていません。",
+    "backup_wrong_password": "バックアップのパスワードが正しくありません。",
+    "invitation_expired": "この参加コードは期限切れです。新しいコードを発行してもらってください。",
+    "invitation_used": "この参加コードはすでに使用済みか、取り消されています。新しいコードを発行してもらってください。",
+    "invitation_invalid": "この参加コードは有効ではありません。内容を確認して、もう一度お試しください。",
+    "port_forward_public_port": "そのパブリックポートは予約済み、使用中、または無効です。別のポートを選んでください。",
+    "operation_in_progress": "このサーバーでは別の変更が実行中です。完了するまで待ってから、もう一度お試しください。",
+    "maintenance_blocked": "この変更はまだ開始できません: {{steps}}。",
+    "maintenance_blocked_unnamed": "この変更はまだ開始できません。",
+    "install_outcome_unknown": "{{host}} での結果は不明です。VPS が変更を適用した可能性がありますが、その確認が途切れました。このデバイスは鍵を保持しています。VPS に接続できるようになったら、変更を再度確認してください。",
+    "install_rolled_back": "VPS が変更を元に戻したため、何も変更されていません。",
+    "person_has_join_codes": "この人にはまだデバイスの参加コードがあります。先に取り消してください。",
+    "person_name_taken": "このサーバーの別の人がすでにこの名前を使用しています。別の名前を選んでください。",
+    "transaction_unresolved": "このデバイスから {{host}} への以前の変更が未解決です。先に解決するか、取り消してから、次の操作を開始してください。"
+  },
+  "maintenanceBlocker": {
+    "not_owner": "この VPS をメンテナンスできるのはオーナーのデバイスだけです",
+    "connected": "先にこの VPS から切断してください",
+    "persistent_policy": "先にキルスイッチと自動再接続をオフにしてください",
+    "pending_key_rotation": "このデバイスの保留中の鍵の更新を、先に完了するか復旧してください",
+    "unresolved_transaction": "中断された VPS の変更を、先に解決してください"
+  }
+}

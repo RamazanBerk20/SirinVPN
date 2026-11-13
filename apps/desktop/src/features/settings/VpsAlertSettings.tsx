@@ -10,7 +10,7 @@ const formats = ["ntfy", "webhook"] as const;
 const httpsAddress = (value: string) => /^https:\/\/[^\s/?#@]+([/?][^\s#]*)?$/.test(value);
 const failureText = (failure: AlertFailure, status?: number | null) =>
   failure === "rejected" && status
-    ? `${t("vps.alerts.failure.rejectedStatus", { status })}${status >= 400 && status < 500 ? ` ${t("settings.alerts.rejectedHint")}` : ""}`
+    ? t(status >= 400 && status < 500 ? "vps.alerts.failure.rejectedClient" : "vps.alerts.failure.rejectedStatus", { status: String(status) })
     : t(`vps.alerts.failure.${failure}`);
 const time = (unix: number) => formatDateTime(new Date(unix * 1000), { dateStyle: "medium", timeStyle: "short" });
 

@@ -42,7 +42,7 @@ export function RecoverAccessFlow({ onComplete, compact = false }: { onComplete:
   };
   // The file comes first; its password is asked for once there is a file to open.
   const chooseFile = () => void action("file", async () => {
-    const path = await open({ multiple: false, filters: [{ name: t("onboarding.recover.file.type"), extensions: ["sirrec"] }] });
+    const path = await open({ purpose: "recovery_import", multiple: false, filters: [{ name: t("onboarding.recover.file.type"), extensions: ["sirrec"] }] });
     if (typeof path === "string") { setFile(path); setPassword(""); }
   }, t("onboarding.recover.file.pickerError"), setFileError);
   const openFile = () => void action("file", async () => {
@@ -70,7 +70,7 @@ export function RecoverAccessFlow({ onComplete, compact = false }: { onComplete:
     <div className="form-heading"><span><Lifebuoy size={20} /></span><div><h2>{t("onboarding.recover.title")}</h2><p>{t("onboarding.recover.summary")}</p></div></div>
     {tunnelUp && <p className="warning-note" role="status"><Warning size={18} weight="fill" /><span>{t("onboarding.recover.disconnectFirst")}</span></p>}
     <fieldset className="setup-fields" disabled={busy !== ""}>
-      <Field label={t("onboarding.recover.key")} hint={t("onboarding.recover.keyHint")}><SecretTextarea aria-label={t("onboarding.recover.key")} rows={5} value={key} onChange={(event) => reset(event.target.value)} spellCheck={false} autoComplete="off" /></Field>
+      <Field label={t("onboarding.recover.key")} hint={t("onboarding.recover.keyHint")}><SecretTextarea field="key" aria-label={t("onboarding.recover.key")} rows={5} value={key} onChange={(event) => reset(event.target.value)} spellCheck={false} autoComplete="off" /></Field>
       <SettingsDisclosure boxed className="recovery-file" open={file !== ""} summary={t("onboarding.recover.file.toggle")}>
         <div className="recovery-file-content">
           <button type="button" className={`file-pick ${file ? "chosen" : ""}`} title={file || undefined} onClick={chooseFile}>
@@ -78,14 +78,14 @@ export function RecoverAccessFlow({ onComplete, compact = false }: { onComplete:
             <span><strong>{file ? fileName(file) : t("onboarding.recover.file.choose")}</strong>{file && <small>{t("onboarding.backup.change")}</small>}</span>
           </button>
           {file && <>
-            <Field label={t("onboarding.recover.file.password")}><SecretInput type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" /></Field>
+            <Field label={t("onboarding.recover.file.password")}><SecretInput field="password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" /></Field>
             <button className="secondary-button" type="button" disabled={!password} onClick={openFile}><UploadSimple size={17} />{busy === "file" ? t(busyLabels.file) : t("onboarding.recover.file.open")}</button>
           </>}
           {fileError && <InlineError message={fileError} />}
         </div>
       </SettingsDisclosure>
       {preview && <>
-        <div className="recovery-target"><strong>{preview.preview.server_name}</strong><p>{preview.preview.host}</p>
+        <div className="recovery-target"><strong>{preview.preview.server_name}</strong><p dir="auto">{preview.preview.host}</p>
           <HashValue label={t("onboarding.recover.serverIdentity")} value={preview.preview.server_identity_fingerprint} />
         </div>
         <Field label={t("onboarding.recover.deviceName")}><input maxLength={64} value={deviceName} onChange={(event) => setDeviceName(event.target.value)} /></Field>

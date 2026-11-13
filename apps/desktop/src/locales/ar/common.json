@@ -1,0 +1,74 @@
+{
+  "appName": "SirinVPN",
+  "action": {
+    "back": "رجوع",
+    "cancel": "إلغاء",
+    "close": "إغلاق",
+    "continue": "متابعة",
+    "copy": "نسخ",
+    "copied": "تم النسخ",
+    "dismiss": "تجاهل",
+    "done": "تم",
+    "moreInfo": "مزيد من المعلومات",
+    "remove": "إزالة",
+    "retry": "إعادة المحاولة"
+  },
+  "state": {
+    "checking": "جارٍ التحقق…",
+    "disabled": "معطّل",
+    "enabled": "مفعّل",
+    "loading": "جارٍ التحميل…",
+    "notConnected": "غير متصل",
+    "saved": "تم الحفظ",
+    "saving": "جارٍ الحفظ…",
+    "unavailable": "غير متاح",
+    "unknown": "غير معروف"
+  },
+  "role": {
+    "owner": "المالك",
+    "admin": "المسؤول",
+    "member": "العضو"
+  },
+  "noun": {
+    "thisDevice": "هذا الجهاز"
+  },
+  "separator": {
+    "pair": "{{first}} · {{second}}",
+    "triple": "{{first}} · {{second}} · {{third}}"
+  },
+  "target": "{{os}}، {{arch}} ({{target}})",
+  "error": {
+    "withDetail": "{{summary}} {{detail}}",
+    "needsConnection": "اتصل بهذا الخادم أولًا.",
+    "localSave": "تعذّر الحفظ على هذا الجهاز. حاول مجددًا.",
+    "passwordsDiffer": "كلمتا المرور غير متطابقتين."
+  },
+  "errorCode": {
+    "hetzner_create_uncertain": "ربما أنشأت Hetzner الخادم {{server}}. تحقق من وحدة تحكم Hetzner Cloud قبل المحاولة مجددًا.",
+    "hetzner_provision_pending": "لم يكتمل إعداد الخادم {{name}}. استأنف إعداده أو احذفه قبل إنشاء خادم آخر.",
+    "hetzner_host_key_replacement": "قدّم الخادم الجديد {{name}} مفتاح مضيف SSH مختلفًا عمّا هو متوقع. لا تتابع إلا إذا أمكنك تأكيد المفتاح في وحدة تحكم Hetzner Cloud.",
+    "install_phase_failed": "فشلت خطوة على VPS.",
+    "install_ssh_failed": "تعذّر تسجيل الدخول إلى VPS عبر SSH. تحقق من مفتاح المضيف وبيانات الدخول. لم يُغيَّر أي شيء على VPS.",
+    "install_incompatible": "لا يمكن استخدام VPS هذا: فهو غير متوافق أو يعمل عليه تثبيت آخر بالفعل. لم يُغيَّر أي شيء على VPS.",
+    "backup_wrong_password": "كلمة مرور النسخة الاحتياطية غير صحيحة.",
+    "invitation_expired": "انتهت صلاحية رمز الانضمام هذا. اطلب رمزًا جديدًا.",
+    "invitation_used": "استُخدم رمز الانضمام هذا من قبل أو أُلغي. اطلب رمزًا جديدًا.",
+    "invitation_invalid": "رمز الانضمام هذا غير صالح. تحقق منه وحاول مجددًا.",
+    "port_forward_public_port": "هذا المنفذ العام محجوز أو مستخدم بالفعل أو غير صالح. اختر منفذًا آخر.",
+    "operation_in_progress": "يجري تغيير آخر على هذا الخادم. انتظر حتى ينتهي ثم حاول مجددًا.",
+    "maintenance_blocked": "لا يمكن بدء هذا التغيير بعد: {{steps}}.",
+    "maintenance_blocked_unnamed": "لا يمكن بدء هذا التغيير بعد.",
+    "install_outcome_unknown": "النتيجة على {{host}} غير معروفة: ربما طبّق VPS التغيير لكن تأكيده ضاع. احتفظ هذا الجهاز بمفاتيحه. تحقق من التغيير مجددًا عند إمكانية الوصول إلى VPS.",
+    "install_rolled_back": "تراجع VPS عن التغيير، فلم يتغير شيء.",
+    "person_has_join_codes": "ما زال لدى هذا الشخص رموز انضمام للأجهزة. ألغها أولًا.",
+    "person_name_taken": "يستخدم شخص آخر على هذا الخادم هذا الاسم بالفعل. اختر اسمًا مختلفًا.",
+    "transaction_unresolved": "لم يُحسم تغيير سابق على {{host}} من هذا الجهاز. احسمه أو تجاهله قبل بدء تغيير آخر."
+  },
+  "maintenanceBlocker": {
+    "not_owner": "جهاز المالك فقط يمكنه صيانة VPS هذا",
+    "connected": "اقطع الاتصال بهذا VPS أولًا",
+    "persistent_policy": "أوقف مفتاح قطع الإنترنت وإعادة الاتصال التلقائي أولًا",
+    "pending_key_rotation": "أكمل تدوير مفتاح هذا الجهاز المعلّق أو استرده أولًا",
+    "unresolved_transaction": "احسم تغيير VPS المتوقف أولًا"
+  }
+}

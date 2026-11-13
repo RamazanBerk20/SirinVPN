@@ -5,7 +5,9 @@ mod enrollment_state;
 mod member_lifecycle;
 mod member_policy;
 mod recovery;
-pub(crate) use recovery::RecoveryReceipt;
+pub(crate) use recovery::{OwnerRecovery, RecoveryReceipt};
+mod endpoint_authority;
+pub(crate) use endpoint_authority::EndpointAuthority;
 mod validation;
 use anyhow::{Context, Result, bail};
 use base64::{Engine as _, engine::general_purpose::STANDARD};
@@ -36,8 +38,9 @@ use validation::*;
 pub(crate) use validation::{
     certificate_fingerprint, load_authorization, sign_claims, sign_endpoint_transition,
     submitted_certificate_fingerprint, validate_display_name, validate_endpoint_descriptor,
-    validate_preshared_key, validate_wireguard_public_key, verify_endpoint_transition_signature,
-    verify_endpoint_transition_signature_with_key, write_authorization,
+    validate_new_display_name, validate_preshared_key, validate_wireguard_public_key,
+    verify_endpoint_transition_signature, verify_endpoint_transition_signature_with_key,
+    write_authorization,
 };
 
 pub(crate) fn sign_recovery_claims(
@@ -85,20 +88,17 @@ pub(crate) struct AuthorizationDocument {
     pub enrollment_receipts: Vec<EnrollmentReceipt>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub key_rotations: Vec<KeyRotationRecord>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub endpoint_transition: Option<EndpointTransitionResponse>,
-    #[serde(default, skip_serializing_if = "is_false")]
-    pub endpoint_transition_source: bool,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub endpoint_observed_address: Option<IpAddr>,
+    // Flattened: stored as `endpoint_transition`, `endpoint_transition_source` and
+    // `endpoint_observed_address`, in that order.
+    #[serde(flatten)]
+    pub endpoint: EndpointAuthority,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub port_forwards: Vec<PortForward>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub device_pairs: Vec<DevicePair>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub recovery_key: Option<sirinvpn_protocol::RecoveryKeyResponse>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub recovery_receipt: Option<RecoveryReceipt>,
+    // Flattened: stored as `recovery_key` or `recovery_receipt`, never both.
+    #[serde(flatten)]
+    pub owner_recovery: OwnerRecovery,
     #[serde(
         default,
         skip_serializing_if = "sirinvpn_protocol::RecoveryPolicy::is_default"
@@ -224,7 +224,7 @@ struct EndpointAuthorizationBinding<'a> {
     members: &'a [MemberRecord],
     devices: &'a [DeviceRecord],
     #[serde(skip_serializing_if = "Option::is_none")]
-    recovery_key: &'a Option<sirinvpn_protocol::RecoveryKeyResponse>,
+    recovery_key: Option<&'a sirinvpn_protocol::RecoveryKeyResponse>,
     #[serde(skip_serializing_if = "sirinvpn_protocol::RecoveryPolicy::is_default")]
     recovery_policy: &'a sirinvpn_protocol::RecoveryPolicy,
 }
@@ -266,13 +266,10 @@ impl AuthorizationDocument {
             invitations: Vec::new(),
             enrollment_receipts: Vec::new(),
             key_rotations: Vec::new(),
-            endpoint_transition: None,
-            endpoint_transition_source: false,
-            endpoint_observed_address: None,
+            endpoint: EndpointAuthority::Unpublished,
             port_forwards: Vec::new(),
             device_pairs: Vec::new(),
-            recovery_key: None,
-            recovery_receipt: None,
+            owner_recovery: OwnerRecovery::Unarmed,
             recovery_policy: Default::default(),
             dns_blocklist: Default::default(),
             alerts: Default::default(),
@@ -467,9 +464,9 @@ impl AuthorizationDocument {
                 bail!("authorization state contains duplicate key rotation identity material");
             }
         }
-        if let Some(transition) = &self.endpoint_transition {
+        if let Some(transition) = self.endpoint.head() {
             validate_endpoint_transition(self.server_id, &transition.claims)?;
-            if self.endpoint_transition_source
+            if self.endpoint.is_handoff_source()
                 && transition.claims.authorization_fingerprint
                     != self.endpoint_authorization_fingerprint()?
             {
@@ -481,15 +478,15 @@ impl AuthorizationDocument {
             if Signature::from_slice(&signature).is_err() {
                 bail!("endpoint transition signature is invalid");
             }
-        } else if self.endpoint_transition_source {
-            bail!("an endpoint handoff source must retain its signed transition");
         }
-        if let Some(observed) = self.endpoint_observed_address
-            && (self.endpoint_transition_source
-                || !crate::endpoint_observation::automatic_address(observed)
-                || self.endpoint_transition.as_ref().is_none_or(|head| {
-                    head.claims.endpoint.host.parse::<IpAddr>().ok() != Some(observed)
-                }))
+        // `EndpointAuthority` already rules out a source without a head or an observation
+        // without one; what remains is whether the observation names the head's address.
+        if let EndpointAuthority::Active {
+            head,
+            observed: Some(observed),
+        } = &self.endpoint
+            && (!crate::endpoint_observation::automatic_address(*observed)
+                || head.claims.endpoint.host.parse::<IpAddr>().ok() != Some(*observed))
         {
             bail!("current endpoint address observation is inconsistent");
         }
@@ -497,8 +494,8 @@ impl AuthorizationDocument {
     }
 
     pub(crate) fn endpoint_generation(&self) -> u64 {
-        self.endpoint_transition
-            .as_ref()
+        self.endpoint
+            .head()
             .map_or(0, |transition| transition.claims.generation)
     }
 
@@ -518,7 +515,7 @@ impl AuthorizationDocument {
             server_id: self.server_id,
             members: &self.members,
             devices: &devices,
-            recovery_key: &self.recovery_key,
+            recovery_key: self.owner_recovery.key(),
             recovery_policy: &self.recovery_policy,
         };
         Ok(hex::encode(Sha256::digest(serde_json::to_vec(&binding)?)))
@@ -529,7 +526,7 @@ impl AuthorizationDocument {
         response: EndpointTransitionResponse,
     ) -> Result<()> {
         validate_endpoint_transition(self.server_id, &response.claims)?;
-        if let Some(existing) = &self.endpoint_transition {
+        if let Some(existing) = self.endpoint.head() {
             if existing == &response {
                 return Ok(());
             }
@@ -549,8 +546,7 @@ impl AuthorizationDocument {
             }
         }
         let mut next = self.clone();
-        next.endpoint_observed_address = None;
-        next.endpoint_transition = Some(response);
+        next.endpoint = next.endpoint.with_head(response);
         next.schema_version = next.required_schema_version();
         next.validate()?;
         *self = next;
@@ -622,7 +618,7 @@ impl AuthorizationDocument {
 
     /// The device is active and in the peer-communication set the VPS enforces.
     pub(crate) fn reaches_peers(&self, device: &DeviceRecord) -> bool {
-        !self.endpoint_transition_source
+        !self.endpoint.is_handoff_source()
             && device.peer_communication_enabled
             && self.access_for_device(device).is_some()
     }
@@ -717,8 +713,8 @@ impl AuthorizationDocument {
         }
 
         let enrollment_is_pending = |member_id| {
-            self.recovery_receipt
-                .as_ref()
+            self.owner_recovery
+                .receipt()
                 .is_some_and(|receipt| receipt.result.member_id == member_id)
                 || self
                     .invitations
@@ -755,8 +751,7 @@ impl AuthorizationDocument {
         for device in &mut self.devices {
             device.subnet_routes.clear();
         }
-        self.recovery_key = None;
-        self.recovery_receipt = None;
+        self.owner_recovery = OwnerRecovery::Unarmed;
         self.recovery_policy = Default::default();
         // The addresses are the previous owner's channels and can carry their tokens.
         self.alerts = Default::default();
@@ -792,8 +787,8 @@ impl AuthorizationDocument {
             .iter()
             .any(|receipt| receipt.result.device_id == device.id)
             || self
-                .recovery_receipt
-                .as_ref()
+                .owner_recovery
+                .receipt()
                 .is_some_and(|receipt| receipt.result.device_id == device.id)
         {
             bail!("wait for the recent device enrollment handoff before rotating keys");
@@ -925,11 +920,11 @@ impl AuthorizationDocument {
     ) {
         self.devices.retain(|device| device.id != device_id);
         if self
-            .recovery_receipt
-            .as_ref()
+            .owner_recovery
+            .receipt()
             .is_some_and(|receipt| receipt.result.device_id == device_id)
         {
-            self.recovery_receipt = None;
+            self.owner_recovery = OwnerRecovery::Unarmed;
         }
         self.enrollment_receipts
             .retain(|receipt| receipt.result.device_id != device_id);
@@ -953,11 +948,11 @@ impl AuthorizationDocument {
                 .administrator_member_ids
                 .retain(|id| *id != member_id);
             if self
-                .recovery_key
-                .as_ref()
+                .owner_recovery
+                .key()
                 .is_some_and(|key| key.claims.issuer_member_id == member_id)
             {
-                self.recovery_key = None;
+                self.owner_recovery = OwnerRecovery::Unarmed;
             }
         }
         self.schema_version = self.required_schema_version();

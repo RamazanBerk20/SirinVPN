@@ -148,14 +148,14 @@ details[open] > summary > .disclosure-chevron {
 }
 .devices-search > svg {
   position: absolute;
-  left: 12px;
+  inset-inline-start: 12px;
   color: var(--muted);
   pointer-events: none;
 }
 .devices-search input {
   width: 100%;
   min-height: 40px;
-  padding: 8px 40px 8px 38px;
+  padding-block: 8px 8px; padding-inline: 38px 40px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface);
@@ -171,14 +171,15 @@ details[open] > summary > .disclosure-chevron {
 }
 .devices-search .icon-button {
   position: absolute;
-  right: 4px;
+  inset-inline-end: 4px;
   width: 32px;
   height: 32px;
 }
 .devices-summary {
-  margin: 0 0 0 auto;
+  margin-block: 0 0; margin-inline: auto 0;
   color: var(--muted);
-  white-space: nowrap;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .devices-content {
   display: grid;
@@ -235,7 +236,7 @@ details[open] > summary > .disclosure-chevron {
   grid-template-columns: 40px minmax(0, 1fr) auto;
   align-items: center;
   gap: 14px;
-  padding: 14px 10px 12px 16px;
+  padding-block: 14px 12px; padding-inline: 16px 10px;
 }
 .member-avatar {
   display: grid;
@@ -278,7 +279,7 @@ details[open] > summary > .disclosure-chevron {
 .member-group-reason,
 .member-group-empty {
   margin: 0;
-  padding: 0 16px 14px 70px;
+  padding-block: 0 14px; padding-inline: 70px 16px;
   color: var(--muted);
   font-size: var(--text-secondary);
 }
@@ -299,7 +300,7 @@ details[open] > summary > .disclosure-chevron {
   display: flex;
   align-items: center;
   gap: 4px;
-  padding-right: 10px;
+  padding-inline-end: 10px;
 }
 .device-item-summary {
   display: grid;
@@ -309,7 +310,7 @@ details[open] > summary > .disclosure-chevron {
   gap: 14px;
   min-width: 0;
   min-height: 64px;
-  padding: 10px 8px 10px 18px;
+  padding-block: 10px 10px; padding-inline: 18px 8px;
 }
 .device-tile {
   position: relative;
@@ -325,7 +326,7 @@ details[open] > summary > .disclosure-chevron {
 .device-dot {
   position: absolute;
   top: -3px;
-  left: -3px;
+  inset-inline-start: -3px;
   width: 10px;
   height: 10px;
   border: 2px solid var(--surface-2);
@@ -448,7 +449,7 @@ details[open] > summary > .disclosure-chevron {
 .invitation-item {
   display: grid;
   gap: 8px;
-  padding: 12px 14px 12px 16px;
+  padding-block: 12px 12px; padding-inline: 16px 14px;
 }
 .invitation-item + .invitation-item {
   border-top: 1px solid var(--line);
@@ -612,7 +613,7 @@ details[open] > summary > .disclosure-chevron {
   justify-content: space-between;
   gap: 12px;
   min-height: 48px;
-  padding: 6px 8px 6px 14px;
+  padding-block: 6px 6px; padding-inline: 14px 8px;
 }
 .pair-list-empty {
   margin: 0;
@@ -661,7 +662,7 @@ details[open] > summary > .disclosure-chevron {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 6px 6px 12px;
+  padding-block: 6px 6px; padding-inline: 12px 6px;
   border-radius: 6px;
   background: var(--bg);
 }
@@ -701,7 +702,7 @@ details[open] > summary > .disclosure-chevron {
   .device-item-summary {
     grid-template-columns: 36px minmax(0, 1fr);
     gap: 4px 12px;
-    padding: 10px 4px 10px 12px;
+    padding-block: 10px 10px; padding-inline: 12px 4px;
   }
   .device-item-summary .device-tile {
     grid-row: span 2;
@@ -722,7 +723,7 @@ details[open] > summary > .disclosure-chevron {
     gap: 10px;
   }
   .devices-summary {
-    margin-left: 0;
+    margin-inline-start: 0;
   }
 }
 
@@ -743,7 +744,7 @@ details[open] > summary > .disclosure-chevron {
 }
 .android .device-item-summary {
   min-height: 72px;
-  padding-left: var(--inset);
+  padding-inline-start: var(--inset);
 }
 .android .device-tile {
   width: var(--tile-size);
@@ -762,7 +763,7 @@ details[open] > summary > .disclosure-chevron {
 }
 .android .device-item-summary .device-status {
   grid-column: 2;
-  text-align: left;
+  text-align: start;
 }
 .android .member-avatar {
   width: var(--tile-size);
@@ -796,7 +797,7 @@ details[open] > summary > .disclosure-chevron {
 .android .invitation-item .text-button,
 .android .pair-row .text-button {
   justify-self: start;
-  padding-left: 0;
+  padding-inline-start: 0;
 }
 .android .pair-form .primary-button,
 .android .ports-form-footer > .primary-button {
@@ -806,3 +807,139 @@ details[open] > summary > .disclosure-chevron {
   width: 44px;
   height: 44px;
 }
+
+/* ---------- Devices redesign (2026-11): person groups, side panels, wizard, week grid ---------- */
+
+/* A person group header opens their panel; the name is the button. */
+.person-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+.person-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+.person-link:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; border-radius: 4px; }
+.person-chips { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+.compact-button { min-height: 34px; padding-block: 6px; padding-inline: 12px; font-size: var(--text-secondary); white-space: normal; text-align: start; }
+.member-group-actions { margin-inline-start: auto; }
+ul.member-device-list { margin: 0; padding: 0; list-style: none; }
+ul.member-device-list > li + li { border-top: 1px solid color-mix(in srgb, var(--line) 70%, transparent); }
+
+/* A device row is one button: tile, name and what it can do, presence, chevron. */
+.device-row-button {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto 16px;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 64px;
+  padding-block: 10px;
+  padding-inline: 18px 14px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+.device-row-button:hover { background: color-mix(in srgb, var(--line) 22%, transparent); }
+.device-row-button:focus-visible { outline: 2px solid var(--cyan); outline-offset: -2px; }
+.device-row-button .row-chevron { color: var(--quiet); }
+@media (max-width: 760px) {
+  .device-row-button { grid-template-columns: 36px minmax(0, 1fr) 16px; gap: 4px 12px; padding-inline: 12px 8px; }
+  .device-row-button .device-status { grid-column: 2; grid-row: 2; justify-self: start; }
+  .device-row-button .row-chevron { grid-column: 3; grid-row: 1 / span 2; }
+}
+
+.devices-next-step .empty-choices { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+
+/* The side panel: the inline end of the window on the desktop, the whole screen on narrow windows and Android. */
+.dialog-content.devices-panel.dialog-layout {
+  top: 0;
+  bottom: 0;
+  /* The base dialog centres with a physical left; reset both sides, then pin the inline end. */
+  inset-inline-start: auto;
+  inset-inline-end: auto;
+  inset-inline-end: 0;
+  width: min(520px, 100vw);
+  height: 100dvh;
+  max-height: 100dvh;
+  border-radius: 0;
+  transform: none;
+}
+html[data-window-chrome="custom"] .dialog-content.devices-panel.dialog-layout { top: var(--titlebar-height); height: calc(100dvh - var(--titlebar-height)); max-height: none; }
+.devices-panel .dialog-body { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; align-content: start; overflow-x: hidden; }
+.panel-section { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; padding-top: 16px; border-top: 1px solid var(--line); }
+.panel-section > h3 { margin: 0; font-size: 1rem; }
+.panel-section.danger-zone > h3 { color: var(--danger); }
+.danger-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; }
+.danger-row > p { flex: 1 1 220px; margin: 0; color: var(--muted); font-size: var(--text-secondary); }
+.panel-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.panel-actions > p { flex: 1 1 200px; margin: 0; }
+.name-field { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; }
+.name-field > .field { flex: 1 1 220px; }
+.name-field > .inline-error { flex-basis: 100%; }
+.role-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 10px; margin: 0; color: var(--muted); font-size: var(--text-secondary); }
+.make-owner-entry { display: grid; gap: 8px; padding-top: 10px; border-top: 1px dashed var(--line); }
+.make-owner-entry > p { display: flex; flex-wrap: wrap; gap: 6px 10px; margin: 0; color: var(--muted); font-size: var(--text-secondary); }
+.make-owner, .new-person { display: grid; gap: 14px; }
+.coupling-note { display: grid; gap: 8px; padding: 12px; border: 1px solid color-mix(in srgb, var(--warning) 45%, var(--line)); border-radius: 10px; background: color-mix(in srgb, var(--warning) 8%, transparent); }
+.coupling-note p { display: flex; gap: 8px; align-items: flex-start; margin: 0; font-size: var(--text-secondary); }
+.coupling-note svg { flex: none; color: var(--warning); margin-top: 2px; }
+.coupling-note .primary-button, .coupling-note .secondary-button { justify-self: start; }
+.network-subsection { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; min-width: 0; padding-top: 12px; border-top: 1px dashed var(--line); }
+.network-subsection > h4 { margin: 0; font-size: 0.9375rem; }
+.port-forwards .ports-form { padding: 0; border: 0; background: none; }
+
+/* The wizard's live state. */
+.join-state p { display: flex; gap: 8px; align-items: center; margin: 0; }
+.join-state[data-state="joined"] svg, .join-state[data-state="waiting"] svg[data-weight="fill"] { color: var(--success); }
+.join-state[data-state="expired"] svg, .join-state[data-state="cancelled"] svg { color: var(--warning); }
+
+/* Weekly hours: days are columns, hours are rows, in the viewer's local time. */
+.week-grid {
+  display: grid;
+  gap: 2px;
+  max-width: 420px;
+  user-select: none;
+}
+.week-grid-row { display: grid; grid-template-columns: 52px repeat(7, minmax(0, 1fr)); gap: 2px; }
+.week-grid-row > button {
+  min-height: 0;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.75rem;
+  line-height: 20px;
+  cursor: pointer;
+}
+.week-grid-row > [role="rowheader"] { text-align: end; padding-inline-end: 6px; }
+.week-grid-days > button { text-align: center; font-weight: 600; overflow: hidden; text-overflow: clip; }
+.week-grid-row > button:hover:not(:disabled) { color: var(--text); }
+.week-grid [role="gridcell"] {
+  height: 20px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--line) 55%, transparent);
+  cursor: pointer;
+  touch-action: pan-y;
+}
+.week-grid [role="gridcell"][data-on] { background: var(--cyan); }
+.week-grid [role="gridcell"]:focus-visible { outline: 2px solid var(--text); outline-offset: 1px; }
+.week-grid[aria-disabled="true"] [role="gridcell"] { cursor: default; opacity: 0.6; }
+.android .week-grid [role="gridcell"] { height: 28px; }
+/* Questions read top to bottom: one choice per line. */
+:is(.add-device-wizard, .devices-panel) .condition-choices { grid-template-columns: minmax(0, 1fr); }
+.add-device-wizard .invite-form, .add-device-wizard .policy-form-fields { display: grid; gap: 14px; }
+.add-device-wizard .policy-form-fields { margin: 0; padding: 0; border: 0; min-width: 0; }
+.devices-panel .device-fact-list dd .text-button { padding: 0; min-height: 0; }
+.devices-panel .preference-row { padding-inline: 0; }
+/* In a device's panel the form has three fields: protocol, public port, device port. */
+.port-forwards .ports-form { grid-template-columns: minmax(0, 1fr); }
+.port-forwards .ports-form-fields { grid-template-columns: minmax(5rem, 0.6fr) repeat(2, minmax(0, 1fr)); }
+@media (max-width: 480px) { .port-forwards .ports-form-fields { grid-template-columns: minmax(0, 1fr); } }
+.network-subsection :is(.pair-form, form) > .secondary-button, .network-subsection > .secondary-button { justify-self: start; }

@@ -33,10 +33,11 @@
     <application android:icon="@mipmap/ic_launcher" android:label="@string/app_name" android:banner="@drawable/tv_banner"
         android:theme="@style/Theme.sirinvpn_desktop" android:allowBackup="false"
         android:fullBackupContent="@xml/backup_rules" android:dataExtractionRules="@xml/data_extraction_rules"
-        android:usesCleartextTraffic="false" android:enableOnBackInvokedCallback="true">
+        android:usesCleartextTraffic="false" android:enableOnBackInvokedCallback="true"
+        android:supportsRtl="true" android:localeConfig="@xml/locales_config">
         <activity android:name=".MainActivity" android:exported="true" android:launchMode="singleTask"
             android:windowSoftInputMode="adjustResize"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode|fontScale|density">
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode|fontScale|density|layoutDirection">
             <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /><category android:name="android.intent.category.LEANBACK_LAUNCHER" /></intent-filter>
             <intent-filter><action android:name="android.service.quicksettings.action.QS_TILE_PREFERENCES" /><category android:name="android.intent.category.DEFAULT" /></intent-filter>
         </activity>
@@ -77,5 +78,9 @@
             <intent-filter><action android:name="android.intent.action.MY_PACKAGE_REPLACED" /><action android:name="android.intent.action.BOOT_COMPLETED" /></intent-filter>
         </receiver>
         <activity android:name="com.journeyapps.barcodescanner.CaptureActivity" tools:node="remove" />
+        <!-- AppCompat keeps the app language chosen on Android 12/12L; Android 13+ stores it itself. -->
+        <service android:name="androidx.appcompat.app.AppLocalesMetadataHolderService" android:enabled="false" android:exported="false">
+            <meta-data android:name="autoStoreLocales" android:value="true" />
+        </service>
     </application>
 </manifest>

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-update-recovery-policy"
+description = "Enables the update_recovery_policy command without any pre-configured scope."
+commands.allow = ["update_recovery_policy"]
+
+[[permission]]
+identifier = "deny-update-recovery-policy"
+description = "Denies the update_recovery_policy command without any pre-configured scope."
+commands.deny = ["update_recovery_policy"]

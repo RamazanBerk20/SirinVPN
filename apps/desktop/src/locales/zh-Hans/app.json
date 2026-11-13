@@ -1,0 +1,152 @@
+{
+  "skipToContent": "跳到内容",
+  "nav": {
+    "label": "主导航",
+    "mobileLabel": "底部导航",
+    "home": "首页",
+    "servers": "服务器",
+    "devices": "设备",
+    "settings": "设置"
+  },
+  "sidebar": {
+    "servers": "服务器",
+    "serverList": "已保存的服务器",
+    "manage": "管理",
+    "manageLabel": "管理服务器",
+    "privacy": "无需账户 · 无遥测"
+  },
+  "addServer": {
+    "title": "添加服务器",
+    "description": "选择连接方式。"
+  },
+  "home": {
+    "connectionTitle": "连接",
+    "connectionSummary": "连接方式：{{method}}",
+    "automatic": "自动",
+    "detailsTitle": "连接详情",
+    "detailsSummary": "状态、地址和服务器统计信息",
+    "detailsSummaryMember": "状态和地址"
+  },
+  "settingsScope": {
+    "general": "此设备的偏好设置",
+    "connection": "{{name}} · 仅此设备",
+    "network": "{{name}} · 路由和 DNS",
+    "recovery": "{{name}} · 密钥和备份",
+    "maintenance": "{{name}} · 服务器维护",
+    "advanced": "{{name}} · 高级功能"
+  },
+  "network": {
+    "dnsTitle": "DNS",
+    "dnsRefresh": "刷新状态以查看 DNS 设置。",
+    "dnsUnavailable": "DNS 设置目前不可用。",
+    "dnsNeedsConnection": "连接后即可查看 DNS 状态。",
+    "dnsChange": "更改将应用于此服务器上的每台设备。",
+    "dnsConfigure": "配置 DNS"
+  },
+  "onboarding": {
+    "settings": "应用设置",
+    "settingsDescription": "此设备的偏好设置。",
+    "checkUpdates": "检查更新",
+    "welcome": "欢迎使用 SirinVPN",
+    "headlineFirst": "你的 VPN。",
+    "headlineSecond": "按你的方式。",
+    "androidIntro": "连接到私有服务器。你的密钥由你自己保管。",
+    "desktopIntro": "设置你自己的服务器，使用加入码加入他人的服务器，或从备份或恢复密钥还原此设备。",
+    "firstServer": "添加你的第一台服务器",
+    "storeTitle": "无法使用已保存的服务器",
+    "storeHelpDesktop": "系统密钥环可能已锁定。请解锁它（例如注销后重新登录），然后重试。",
+    "storeHelpAndroid": "请解锁手机，然后重试。在此之前，已保存的服务器会保持加密状态。"
+  },
+  "errors": {
+    "profiles": "无法打开此设备上保存的服务器。",
+    "platform": "SirinVPN 无法启动其受保护的服务。",
+    "trayServer": "此服务器已不再保存在此设备上。"
+  },
+  "unavailable": {
+    "title": "SirinVPN 无法启动",
+    "copy": "复制详细信息",
+    "report": "SirinVPN 无法启动：{{message}} 未执行任何 VPN 操作。",
+    "helpDesktop": "请确认已安装并正在运行 SirinVPN 服务，然后重试。你已保存的服务器是安全的。",
+    "helpAndroid": "请解锁手机，然后重试。你已保存的服务器是安全的。"
+  },
+  "dialog": {
+    "waitToClose": "请等待当前任务完成"
+  },
+  "operation": {
+    "result": "结果",
+    "running": "任务正在进行中。你可以离开此页面，稍后再回来。",
+    "completed": "任务已完成。重新打开其页面即可查看结果。",
+    "interrupted": "任务未能完成。请先检查服务器或文件，然后再重试。",
+    "dismiss": "关闭",
+    "dismissFailed": "无法关闭此通知。请重试。",
+    "step": {
+      "done": "已完成",
+      "running": "进行中",
+      "todo": "未开始"
+    }
+  },
+  "copy": {
+    "label": "复制{{label}}",
+    "failed": "复制失败",
+    "failedManual": "复制失败。请选中文本后手动复制。",
+    "showAll": "显示全部",
+    "showLess": "收起"
+  },
+  "secret": {
+    "value": "受保护的值",
+    "code": "机密代码",
+    "enterLabel": "输入{{label}}",
+    "enter": "安全输入",
+    "entered": "已输入 · 更改",
+    "unchanged": "未更改任何内容。",
+    "scan": "扫描二维码",
+    "scanFailed": "无法扫描该代码。你可以改为手动输入。",
+    "codeReady": "代码已准备好，可以检查"
+  },
+  "share": {
+    "button": "分享加密文件",
+    "failed": "无法分享文件。"
+  },
+  "brand": {
+    "tagline": "极致私密。自托管。",
+    "keysLocal": "密钥保存在你的设备上",
+    "noHistory": "无活动记录",
+    "noCloud": "没有 SirinVPN 云服务"
+  },
+  "metric": {
+    "usage": "{{label}}使用情况"
+  },
+  "window": {
+    "label": "应用窗口",
+    "minimize": "最小化",
+    "maximize": "最大化",
+    "restore": "还原",
+    "closeToTray": "关闭到托盘 · VPN 继续运行",
+    "quit": "退出应用 · VPN 继续运行",
+    "actionFailed": "操作未成功。请使用桌面的窗口控件。",
+    "resizeFailed": "无法在此调整窗口大小。请使用桌面的调整大小快捷键。"
+  },
+  "recoveryKeyGuard": "你将无法再次查看此恢复密钥。确定不保存就离开吗？",
+  "settingsIndex": {
+    "app": "此应用",
+    "server": "此服务器",
+    "serverNote": "这些设置仅适用于此服务器。",
+    "scope": "这些设置仅适用于 {{name}}。",
+    "general": "主题、通知、快速设置",
+    "automaticMethod": "自动方式",
+    "reconnectOn": "自动重新连接",
+    "reconnectOff": "不会自动重新连接",
+    "attention": "需要注意：密钥轮换未完成",
+    "serverHealthy": "服务器运行正常",
+    "recoveryKeySaved": "已保存离线恢复密钥",
+    "recoveryKeyMissing": "尚无离线恢复密钥",
+    "serverFault": "需要注意：服务器报告故障",
+    "advancedAdmin": "密钥轮换",
+    "advancedMember": "密钥轮换"
+  },
+  "advanced": {
+    "devicesTitle": "设备网络功能",
+    "devicesSummary": "端口转发、设备间访问、设备配对和本地网络需在各台设备上设置。在“设备”中打开某台设备即可更改。",
+    "openDevices": "打开“设备”"
+  }
+}

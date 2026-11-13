@@ -370,3 +370,25 @@ printf 'snapshot:%s' "$(cat "$7")"
     );
     assert_eq!(fs::read_dir(&execution).unwrap().count(), 0);
 }
+
+#[test]
+fn the_vps_release_state_is_decided_once_from_its_records() {
+    assert_eq!(
+        ServerReleaseState::classify(None, None).unwrap().0,
+        ServerReleaseState::Unmanaged
+    );
+    assert_eq!(
+        ServerReleaseState::classify(None, Some(b"damaged"))
+            .unwrap()
+            .0,
+        ServerReleaseState::PolicyOnly {
+            policy_sequence: None
+        }
+    );
+    assert!(ServerReleaseState::classify(Some(b"damaged"), None).is_err());
+    let json = serde_json::to_value(ServerReleaseState::PolicyOnly {
+        policy_sequence: Some(3),
+    })
+    .unwrap();
+    assert_eq!(json["state"], "policy_only");
+}

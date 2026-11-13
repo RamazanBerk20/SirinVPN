@@ -148,3 +148,22 @@ fn application_forwarding_does_not_apply_dns_blocks_to_other_apps() {
         3
     );
 }
+
+/// `launch-application` runs as root and bind-mounts the file named by the caller's
+/// XAUTHORITY. Only the caller's own regular file may be carried; another account's
+/// file under /run must not become readable through the mount.
+#[test]
+fn only_the_callers_own_display_authority_is_carried() {
+    let directory = tempfile::tempdir().unwrap();
+    let authority = directory.path().join("Xauthority");
+    fs::write(&authority, b"cookie").unwrap();
+    let uid = nix::unistd::Uid::effective().as_raw();
+    runtime::owned_display_authority(&authority, uid).unwrap();
+    assert!(runtime::owned_display_authority(&authority, uid.wrapping_add(1)).is_err());
+    assert!(runtime::owned_display_authority(directory.path(), uid).is_err());
+    assert!(runtime::owned_display_authority(&directory.path().join("missing"), uid).is_err());
+    // A path swapped for a symlink after canonicalization is refused, not followed.
+    let link = directory.path().join("link");
+    std::os::unix::fs::symlink(&authority, &link).unwrap();
+    assert!(runtime::owned_display_authority(&link, uid).is_err());
+}

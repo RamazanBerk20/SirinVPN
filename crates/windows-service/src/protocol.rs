@@ -4,6 +4,10 @@ use sirinvpn_tunnel_model::{LocalTunnelStatus, SwitchConnectRequest, TunnelConne
 use thiserror::Error;
 
 pub const MAX_FRAME_BYTES: usize = 128 * 1024;
+/// WireGuardNT's fixed UDP port for relayed sessions. Loopback carrier relays
+/// accept datagrams only from 127.0.0.1 on this port. Same value as linux-helper; on
+/// Windows any user may bind it first, so the pin narrows but does not stop a squatter.
+pub const WIREGUARD_LISTEN_PORT: u16 = 1_023;
 pub const IPC_VERSION: u16 = 1;
 
 // The sole executable path operation installs routing rules; it never starts a
@@ -14,6 +18,19 @@ pub struct ApplicationRouteRequest {
     pub server_id: ServerId,
     pub executable: String,
 }
+/// Longest time a `WaitForChange` request is held open.
+pub const MAX_WAIT_MS: u32 = 30_000;
+
+/// Answered once the published status differs from the one numbered `after`
+/// (immediately when `after` is absent or already stale), or after `timeout_ms`
+/// (at most [`MAX_WAIT_MS`]) with the current status. Same ownership rules as Status.
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct StatusWait {
+    pub after: Option<u64>,
+    pub timeout_ms: u32,
+}
+
 #[derive(Serialize, Deserialize)]
 #[serde(
     tag = "operation",
@@ -34,6 +51,7 @@ pub enum Operation {
     PublishEndpointCheckpoint(EndpointTransitionResponse),
     DisconnectSession(ServerId),
     RouteApplication(ApplicationRouteRequest),
+    WaitForChange(StatusWait),
 }
 
 impl Operation {
@@ -107,6 +125,10 @@ impl Request {
 pub struct Response {
     pub version: u16,
     pub result: Result<LocalTunnelStatus, ServiceError>,
+    /// Number of the published status, sent only in reply to `WaitForChange` so
+    /// older clients, which reject unknown fields, never see it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sequence: Option<u64>,
 }
 
 #[derive(Clone, Copy, Debug, Error, Serialize, Deserialize)]
@@ -142,6 +164,11 @@ pub enum ServiceError {
         "This session already routes 24 executables. Disconnect to clear the current selection."
     )]
     ApplicationLimit,
+    #[error(
+        "Another program is using the local port SirinVPN needs (127.0.0.1:{port}). Close it and try again.",
+        port = WIREGUARD_LISTEN_PORT
+    )]
+    LocalPortInUse,
 }
 
 #[cfg(test)]
@@ -161,5 +188,30 @@ mod tests {
         assert!(Operation::from_helper("status", Some(b"extra")).is_err());
         assert!(Operation::from_helper("launch-application", None).is_err());
         assert!(Request::parse(&vec![b' '; MAX_FRAME_BYTES + 1]).is_err());
+    }
+
+    #[test]
+    fn status_wait_is_additive_and_old_responses_carry_no_sequence() {
+        let request = Request::parse(
+            br#"{"version":1,"operation":{"operation":"wait-for-change","payload":{"after":7,"timeout_ms":30000}}}"#,
+        )
+        .unwrap();
+        assert!(matches!(
+            request.operation,
+            Operation::WaitForChange(StatusWait {
+                after: Some(7),
+                timeout_ms: 30000
+            })
+        ));
+        let plain = serde_json::to_value(Response {
+            version: IPC_VERSION,
+            result: Err(ServiceError::Busy),
+            sequence: None,
+        })
+        .unwrap();
+        assert!(plain.get("sequence").is_none());
+        let parsed: Response =
+            serde_json::from_str(r#"{"version":1,"result":{"Err":"busy"},"sequence":3}"#).unwrap();
+        assert_eq!(parsed.sequence, Some(3));
     }
 }

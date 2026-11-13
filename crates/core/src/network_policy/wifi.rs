@@ -193,7 +193,10 @@ fn network_manager_names(wanted: impl Fn(&str) -> Option<String>) -> BTreeMap<St
         let Some((uuid, profile_name)) = wifi_profile(line) else {
             continue;
         };
-        let Some(id) = wanted(&format!("networkmanager:v1:{}", uuid.to_ascii_lowercase())) else {
+        let uuid_lower = uuid.to_ascii_lowercase();
+        let Some(id) = wanted(&format!("networkmanager:v1:{uuid_lower}"))
+            .or_else(|| wanted(&format!("networkmanager:v2:open:{uuid_lower}")))
+        else {
             continue;
         };
         // Query only explicitly trusted/current profiles, never scan nearby hotspots.

@@ -3,7 +3,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { DialogContent } from "../../components/DialogContent";
 import { InlineError } from "../../components/ui";
 import { Busy } from "../../components/OperationResult";
-import { api } from "../../api";
+import { disconnectTunnel } from "./connectionCommands";
 import { errorMessage } from "../../lib/errors";
 import { t, type MessageKey } from "../../i18n";
 import type { ServerWorkspaceModel } from "./useServerWorkspace";
@@ -76,7 +76,7 @@ export function MaintenanceReview({ model }: { model: ServerWorkspaceModel }) {
     setBusy(true);
     setError(null);
     try {
-      await api.disconnect();
+      await disconnectTunnel(model.profile.id);
     } catch (reason) {
       setError(
         errorMessage(reason, t("maintenance.review.disconnectFailed")),
@@ -88,13 +88,10 @@ export function MaintenanceReview({ model }: { model: ServerWorkspaceModel }) {
   };
   const proceed = () => {
     if (!operation || !disconnected || model.rotationPending || busy) return;
-    model.setMaintenanceReview(null);
+    // Opening the next dialog replaces this review.
     if (operation === "backup") model.setVpsBackupOpen(true);
     else if (operation === "restore") model.setVpsRestoreOpen(true);
-    else {
-      model.setRepairIntent(operation);
-      model.setRepairOpen(true);
-    }
+    else model.openRepair(operation);
   };
   return (
     <Dialog.Root
@@ -132,10 +129,7 @@ export function MaintenanceReview({ model }: { model: ServerWorkspaceModel }) {
               <p>{t("maintenance.review.rotationFirst")}</p>
               <button
                 className="secondary-button"
-                onClick={() => {
-                  model.setMaintenanceReview(null);
-                  model.setRotationOpen(true);
-                }}
+                onClick={() => model.setRotationOpen(true)}
               >
                 {t("maintenance.review.reviewRotation")}
               </button>

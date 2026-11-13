@@ -249,7 +249,9 @@ impl DecodedRecoveryKey {
         {
             bail!("the recovered Owner identity does not match this server");
         }
-        validate_host(&result.endpoint.host)?;
+        if validate_host(&result.endpoint.host)? != result.endpoint.host {
+            bail!("the recovered endpoint host is not normalised");
+        }
         if result.endpoint.wireguard_port == 0
             || result.device_id.0.is_nil()
             || !crate::invitation::valid_transport_endpoints(
@@ -302,7 +304,9 @@ pub fn validate_recovery_response(response: &RecoveryKeyResponse) -> Result<()> 
         bail!("the recovery authorization is invalid");
     }
     validate_server_name(&c.server_name)?;
-    validate_host(&c.endpoint.host)?;
+    if validate_host(&c.endpoint.host)? != c.endpoint.host {
+        bail!("the recovery endpoint host is not normalised");
+    }
     for key in [
         &c.server_wireguard_public_key,
         &c.recovery_wireguard_public_key,

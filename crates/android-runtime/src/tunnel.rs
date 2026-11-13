@@ -95,6 +95,7 @@ pub async fn connect(
             task.abort();
             let _ = task.await;
         }
+        let listen = listen_port(prefs, &selection);
         match activate(runtime, profile, secret, prefs, selection, mtu, generation).await {
             Ok(()) => return Ok(()),
             Err(error) => failure = error,
@@ -102,15 +103,29 @@ pub async fn connect(
         stop_relay(runtime);
         runtime.platform.current(generation)?;
         runtime.platform.deactivate(generation)?;
+        // This session's engine is stopped now, so a held port belongs to another app.
+        if let Some(port) = listen
+            && crate::uapi::port_taken(port)
+        {
+            return Err(ConnectionFailure(crate::uapi::PORT_IN_USE).into());
+        }
     }
     Err(failure)
 }
 
+fn listen_port(prefs: &ConnectionPreferences, selection: &TransportSelection) -> Option<u16> {
+    let automatic = prefs.transport == sirinvpn_protocol::TransportPreference::Automatic;
+    crate::uapi::listen_port(selection.kind, automatic)
+}
+
+/// Starts the carrier for `selection`. A relay listens on `local` (or its default port) and
+/// is pinned to the WireGuard engine at `wireguard`, which must listen on that fixed port.
 pub async fn carrier(
     runtime: &Runtime,
     selection: &TransportSelection,
     private_key: &str,
     local: Option<SocketAddr>,
+    wireguard: SocketAddr,
     timeout: u64,
 ) -> Result<Carrier> {
     // HTTPS through a CDN connects to the CDN's address for the HTTPS name.
@@ -155,20 +170,16 @@ pub async fn carrier(
             }
             runtime
                 .executor
-                .spawn(run_client_relay_with_socket_protector(
-                    config, protect, ready,
-                ))
+                .spawn(run_client_relay_pinned(config, wireguard, protect, ready))
         }
         TransportKind::TcpFallback => {
             let mut config = tcp_client_relay_config_unmarked(remote, private_key, server_key)?;
             if let Some(local) = local {
                 config.local_listen = local;
             }
-            runtime
-                .executor
-                .spawn(run_tcp_client_relay_with_socket_protector(
-                    config, protect, ready,
-                ))
+            runtime.executor.spawn(run_tcp_client_relay_pinned(
+                config, wireguard, protect, ready,
+            ))
         }
         TransportKind::TlsLike => {
             let mut config = tls_like_client_relay_config_unmarked(
@@ -184,11 +195,9 @@ pub async fn carrier(
                 config.local_listen = local;
             }
             config.https = selection.https.clone();
-            runtime
-                .executor
-                .spawn(run_tls_like_client_relay_with_socket_protector(
-                    config, protect, ready,
-                ))
+            runtime.executor.spawn(run_tls_like_client_relay_pinned(
+                config, wireguard, protect, ready,
+            ))
         }
         TransportKind::Quic => {
             let mut config = quic_client_relay_config_unmarked(
@@ -204,11 +213,9 @@ pub async fn carrier(
                 config.local_listen = local;
             }
             config.https = selection.https.clone();
-            runtime
-                .executor
-                .spawn(run_quic_client_relay_with_socket_protector(
-                    config, protect, ready,
-                ))
+            runtime.executor.spawn(run_quic_client_relay_pinned(
+                config, wireguard, protect, ready,
+            ))
         }
         _ => bail!("Unsupported transport"),
     };
@@ -259,15 +266,31 @@ async fn activate(
     mtu: u16,
     generation: i64,
 ) -> Result<()> {
-    let mut carrier = carrier(runtime, &selection, &secret.wireguard_private_key, None, 12).await?;
+    let listen = listen_port(prefs, &selection);
+    // Direct UDP has no relay to pin; its engine keeps an ephemeral port.
+    let wireguard = crate::uapi::pinned(listen.unwrap_or(crate::uapi::WIREGUARD_LISTEN_PORT));
+    let mut carrier = carrier(
+        runtime,
+        &selection,
+        &secret.wireguard_private_key,
+        None,
+        wireguard,
+        12,
+    )
+    .await?;
     let endpoint = carrier.endpoint;
     *runtime
         .relay
         .lock()
         .map_err(|_| anyhow::anyhow!("Transport unavailable"))? = carrier.task.take();
     let public = hex::encode(STANDARD.decode(&profile.server_wireguard_public_key)?);
-    let wireguard =
-        crate::uapi::wireguard_settings(secret, &public, endpoint, profile.ipv6_tunnel_enabled)?;
+    let wireguard = crate::uapi::wireguard_settings(
+        secret,
+        &public,
+        endpoint,
+        profile.ipv6_tunnel_enabled,
+        listen,
+    )?;
     let mut addresses = vec![format!("{}/32", profile.client_tunnel_address)];
     if profile.ipv6_tunnel_enabled {
         addresses.push(format!(

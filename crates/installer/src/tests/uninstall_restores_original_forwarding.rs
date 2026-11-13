@@ -281,7 +281,7 @@ fn install_records_before_applying_and_uninstall_restores_before_removing_the_re
                 .unwrap()
     );
 
-    let script = uninstall_script("uninstall");
+    let script = uninstall_script("uninstall", "0123456789abcdef");
     let snapshot = script.find(&snapshot_original_sysctl()).unwrap();
     let armed = script.find("tar -C / -cpf").unwrap();
     let network_down = script.rfind("/etc/sirinvpn/network.sh down").unwrap();

@@ -4,7 +4,6 @@ use sirinvpn_tunnel_model::request_for_reconnect_candidate;
 
 const HANDSHAKE_WINDOW: Duration = Duration::from_secs(12);
 const STALE_HANDSHAKE: Duration = Duration::from_secs(240);
-const PASS_WINDOW: Duration = Duration::from_secs(90);
 
 impl Controller {
     pub(crate) async fn tick(&mut self) {
@@ -12,17 +11,7 @@ impl Controller {
         if let Err(error) = self.tick_inner().await
             && error.kind() != io::ErrorKind::Interrupted
         {
-            // No error path removes persistent protection. Stop further attempts
-            // until the owner explicitly resumes after an enforcement/storage error.
-            self.enforcement_failed = true;
-            // A committed Disconnect is retried on the next tick, never held.
-            if self
-                .saved
-                .as_ref()
-                .is_none_or(|saved| saved.phase != SessionPhase::Disconnecting)
-            {
-                let _ = self.hold().await;
-            }
+            self.fail().await;
         }
         self.publish();
     }
@@ -57,7 +46,7 @@ impl Controller {
         let mut failed = false;
         let mut failed_transport = None;
         let mut route_changed = false;
-        if let Some(active) = self.active.as_mut() {
+        if let Some(active) = self.link.active_mut() {
             let now = Instant::now();
             active.stats = active.adapter.statistics().ok();
             if let Some(stats) = active.stats {
@@ -93,8 +82,7 @@ impl Controller {
         if connected && !failed {
             self.saved.as_mut().expect("active saved session").phase = SessionPhase::Active;
             self.persist()?;
-            self.had_connected = true;
-            self.retry_passes = 0;
+            drop(self.advance(Event::Handshake));
         }
         if failed {
             if route_changed {
@@ -108,7 +96,14 @@ impl Controller {
                 return Ok(());
             }
             self.close_guard()?;
-            self.stop_active().await?;
+            let established = self.link.connected().is_some();
+            // An established tunnel first retries its own transport on the new path.
+            self.transition(if established {
+                Event::PathLost
+            } else {
+                Event::TrialFailed
+            })
+            .await;
             self.cleanup_routes()?;
             let automatic = self
                 .saved
@@ -117,31 +112,23 @@ impl Controller {
                 .request
                 .connection_policy()
                 .automatic_reconnect;
-            if self.had_connected && !automatic {
+            if established && !automatic {
                 self.hold().await.map_err(|_| io::ErrorKind::Other)?;
                 return Ok(());
             }
             let saved = self.saved.as_mut().expect("saved session");
             saved.phase = SessionPhase::Connecting;
             self.persist()?;
-            if self.had_connected {
-                // First retry the current transport on the new physical path.
-                self.had_connected = false;
-                self.pass_started = Instant::now();
-            } else {
-                self.attempt_index += 1;
-            }
-            self.next_attempt = Instant::now() + Duration::from_secs(1);
         }
-        if self.active.is_some() {
+        if self.link.active().is_some() {
             self.inspect_measurements().await?;
             return Ok(());
         }
-        if Instant::now() < self.next_attempt {
+        let now = Instant::now();
+        let Some(attempts) = self.link.due(now) else {
             return Ok(());
-        }
-        let count = self.attempt_count();
-        if count == 0 || self.attempt_index >= count || self.pass_started.elapsed() >= PASS_WINDOW {
+        };
+        if attempts.exhausted(self.attempt_count(), now) {
             if !self
                 .saved
                 .as_ref()
@@ -167,34 +154,27 @@ impl Controller {
                 }
                 self.persist()?;
             }
-            self.retry_passes = self.retry_passes.saturating_add(1);
-            let delay = 5u64
-                .saturating_mul(1u64 << self.retry_passes.min(4).saturating_sub(1))
-                .min(60);
-            self.next_attempt = Instant::now() + Duration::from_secs(delay);
-            self.pass_started = self.next_attempt;
-            self.attempt_index = 0;
+            drop(self.advance(Event::PassExhausted));
             return Ok(());
         }
-        if self.start_attempt().await.is_err() {
-            let kind =
-                self.saved
-                    .as_ref()
-                    .and_then(|saved| {
-                        saved.request.reconnect_candidates.get(
-                            self.attempt_index % saved.request.reconnect_candidates.len().max(1),
-                        )
-                    })
-                    .map(|candidate| candidate.transport);
+        if self.start_attempt(attempts.index).await.is_err() {
+            let kind = self
+                .saved
+                .as_ref()
+                .and_then(|saved| {
+                    saved
+                        .request
+                        .reconnect_candidates
+                        .get(attempts.index % saved.request.reconnect_candidates.len().max(1))
+                })
+                .map(|candidate| candidate.transport);
             if let Some(previous) = kind.and_then(|kind| self.quality.failed_trial(kind)) {
                 self.change_quality_transport(previous).await?;
                 return Ok(());
             }
             self.close_guard()?;
-            self.stop_active().await?;
+            self.transition(Event::TrialFailed).await;
             self.cleanup_routes()?;
-            self.attempt_index += 1;
-            self.next_attempt = Instant::now() + Duration::from_secs(1);
         }
         Ok(())
     }
@@ -205,22 +185,19 @@ impl Controller {
         })
     }
 
-    async fn start_attempt(&mut self) -> io::Result<()> {
+    async fn start_attempt(&mut self, attempt: usize) -> io::Result<()> {
         let saved = self.saved.as_ref().ok_or(io::ErrorKind::InvalidInput)?;
         let count = saved.request.reconnect_candidates.len().max(1);
         let endpoint = saved
             .endpoints
-            .get(self.attempt_index / count)
+            .get(attempt / count)
             .ok_or(io::ErrorKind::InvalidInput)?;
-        let mut request = if let Some(candidate) = saved
-            .request
-            .reconnect_candidates
-            .get(self.attempt_index % count)
-        {
-            request_for_reconnect_candidate(&saved.request, candidate)
-        } else {
-            saved.request.clone()
-        };
+        let mut request =
+            if let Some(candidate) = saved.request.reconnect_candidates.get(attempt % count) {
+                request_for_reconnect_candidate(&saved.request, candidate)
+            } else {
+                saved.request.clone()
+            };
         request.endpoint_host = endpoint.host.clone();
         // HTTPS through a CDN goes to the CDN's address; the firewall admits only that.
         let through_cdn = request.https.as_ref().is_some_and(|https| https.cdn);
@@ -236,6 +213,10 @@ impl Controller {
         // socket stays on the underlay through IP_UNICAST_IF (`protect_socket`).
         if !through_cdn {
             self.add_route(network::endpoint_route(underlay, endpoint.ip()))?;
+        }
+        let listen_port = network_plan::wireguard_listen_port(request.transport);
+        if listen_port.is_some() && network_plan::require_free_port(network::probe_port).is_err() {
+            return Err(io::ErrorKind::AddrInUse.into());
         }
         let adapter = Adapter::create()?;
         // The closed tunnel allowance admits only the carrier to its enrolled
@@ -255,6 +236,7 @@ impl Controller {
             request.preshared_key.as_deref(),
             wireguard_endpoint,
             &network_plan::allowed_ips(&request),
+            listen_port,
         )?;
         network::configure_adapter(adapter.luid(), &request)?;
         for route in network::tunnel_routes(adapter.luid(), &request)? {
@@ -280,11 +262,16 @@ impl Controller {
             stats: None,
             epoch: uuid::Uuid::new_v4(),
         };
-        self.active = Some(active);
+        if let Some(previous) = self.advance(Event::TrialStarted(Box::new(active))) {
+            // Only a running attempt without a trial accepts one (a concurrent hold
+            // stopped it): close whichever adapter was handed back.
+            drop(previous);
+            return Err(io::ErrorKind::InvalidInput.into());
+        }
         self.firewall
             .apply(self.plan().ok_or(io::ErrorKind::InvalidInput)?)?;
-        self.active
-            .as_ref()
+        self.link
+            .active()
             .expect("active adapter")
             .adapter
             .set_up(true)?;

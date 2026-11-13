@@ -136,8 +136,8 @@ fn a_read_only_handoff_backup_binds_old_ports_to_the_signed_predecessor() {
         )
     );
     let mut source = load_authorization(&paths.authorization).unwrap();
-    source.accept_endpoint_transition(updated).unwrap();
-    source.endpoint_transition_source = true;
+    source.accept_endpoint_transition(updated.clone()).unwrap();
+    source.endpoint.hand_off(updated);
     write_authorization(&paths.authorization, &source).unwrap();
     let backup = export_backup_state(&paths, id, &owner.public.management_certificate_pem).unwrap();
     let archive = directory.path().join("old-source.sirinvpn");
@@ -166,6 +166,7 @@ async fn publishing_the_active_targets_own_checkpoint_never_freezes_its_authorit
         transport_peers: AuthorizedPeers::default(),
         transport_activity: ActiveTransportRegistry::default(),
         speed_test: Default::default(),
+        throttle: Default::default(),
     };
     let (result, received) = tokio::sync::oneshot::channel();
     endpoint_transition::publish_from_transport(
@@ -180,5 +181,57 @@ async fn publishing_the_active_targets_own_checkpoint_never_freezes_its_authorit
     assert!(received.await.unwrap());
     let current = state.authorization.as_ref().unwrap().read().await;
     assert_eq!(current.server_id, id);
-    assert!(!current.endpoint_transition_source);
+    assert!(!current.endpoint.is_handoff_source());
+}
+
+#[tokio::test]
+async fn an_owner_cannot_skip_endpoint_generations() {
+    let (_directory, paths, owner, id, _) = initial();
+    let state = AppState {
+        recovery: Default::default(),
+        measurement_ready: false,
+        leak_test_ready: false,
+        configuration: load_configuration(&paths).unwrap(),
+        operational_configuration: None,
+        authorization: Some(Arc::new(RwLock::new(
+            load_authorization(&paths.authorization).unwrap(),
+        ))),
+        paths,
+        redemption_failures: Arc::new(Mutex::new(HashMap::new())),
+        live_metrics: Arc::new(Mutex::new(LiveMetricSampler::default())),
+        transport_peers: AuthorizedPeers::default(),
+        transport_activity: ActiveTransportRegistry::default(),
+        speed_test: Default::default(),
+        throttle: Default::default(),
+    };
+    let current = state.authorization.as_ref().unwrap().read().await.clone();
+    assert_eq!(current.endpoint_generation(), 1);
+    let endpoint = |host: &str| ServerEndpoint {
+        host: host.into(),
+        wireguard_port: 51820,
+    };
+    for generation in [3, u64::MAX] {
+        let Err(error) = create_endpoint_transition_handler(
+            State(state.clone()),
+            Extension(CallerIdentity {
+                certificate_fingerprint: certificate_fingerprint(
+                    &owner.public.management_certificate_pem,
+                )
+                .unwrap(),
+            }),
+            Json(EndpointTransitionCreateRequest {
+                server_id: id,
+                generation,
+                previous_endpoint: endpoint("8.8.8.8"),
+                previous_transports: None,
+                endpoint: endpoint("9.9.9.9"),
+            }),
+        )
+        .await
+        else {
+            panic!("generation {generation} was accepted");
+        };
+        assert_eq!(error.status, StatusCode::BAD_REQUEST, "{}", error.message);
+    }
+    assert_eq!(*state.authorization.as_ref().unwrap().read().await, current);
 }

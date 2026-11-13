@@ -6,6 +6,63 @@ use sirinvpn_release::{ArtifactKind, parse_installed_release_receipt};
 const RELEASE_DIRECTORY: &str = "/var/lib/sirinvpn-server-release";
 const EXECUTION_DIRECTORY: &str = "/usr/local/lib";
 
+/// The signed-release state of a VPS, decided in one place from its two
+/// root-owned records. A signed binary installed by a baseline repair whose
+/// registration failed is `PolicyOnly`: without the receipt it cannot be told
+/// apart from any other binary, so it is not modelled as its own state.
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+#[serde(tag = "state", rename_all = "snake_case")]
+pub enum ServerReleaseState {
+    /// No signed release state: plain repair may install a packaged build.
+    Unmanaged,
+    /// A trusted policy without a registered baseline (a baseline registration
+    /// did not finish). Only a signed baseline installation can continue.
+    PolicyOnly { policy_sequence: Option<u64> },
+    /// A registered signed release; repair keeps exactly its cached artifact.
+    Registered {
+        release_version: String,
+        release_sequence: u64,
+        artifact_sha256: String,
+    },
+}
+
+impl ServerReleaseState {
+    pub(super) fn classify(
+        receipt: Option<&[u8]>,
+        trust: Option<&[u8]>,
+    ) -> Result<(Self, Option<sirinvpn_release::InstalledReleaseReceipt>), InstallerError> {
+        if let Some(receipt) = receipt {
+            let installed = parse_installed_release_receipt(receipt).map_err(|error| {
+                phase_error("installed VPS release verification", anyhow!(error))
+            })?;
+            let state = Self::Registered {
+                release_version: installed.active_release.manifest.release_version.clone(),
+                release_sequence: installed.active_release.manifest.release_sequence,
+                artifact_sha256: installed.active_artifact.sha256.clone(),
+            };
+            return Ok((state, Some(installed)));
+        }
+        let Some(trust) = trust else {
+            return Ok((Self::Unmanaged, None));
+        };
+        // The sequence is informational; the record is verified where it is used.
+        let policy_sequence =
+            serde_json::from_slice::<sirinvpn_release::InstalledReleaseTrust>(trust)
+                .ok()
+                .map(|trust| trust.policy.sequence);
+        Ok((Self::PolicyOnly { policy_sequence }, None))
+    }
+}
+
+pub(super) fn inspect_state(
+    session: &Session,
+    target: &SshTarget,
+) -> Result<ServerReleaseState, InstallerError> {
+    let receipt = read_optional_record(session, target, "receipt.json", 768 * 1024)?;
+    let trust = read_optional_record(session, target, "trust.json", 160 * 1024)?;
+    Ok(ServerReleaseState::classify(receipt.as_deref(), trust.as_deref())?.0)
+}
+
 pub(super) struct PreparedArtifact {
     pub bytes: Vec<u8>,
     pub sha256: String,
@@ -37,23 +94,26 @@ fn prepare_from_records(
         record_guard("receipt.json", receipt.as_deref()),
         record_guard("trust.json", trust.as_deref())
     );
-    let (bytes, sha256, preserves_signed_release) = match (source, receipt) {
-        (ServerBinarySource::Signed(_), Some(_)) => {
+    let (state, installed) = ServerReleaseState::classify(receipt.as_deref(), trust.as_deref())?;
+    let (bytes, sha256, preserves_signed_release) = match (source, state) {
+        (ServerBinarySource::Signed(_), ServerReleaseState::Registered { .. }) => {
             return Err(InstallerError::InvalidInput(
                 "this VPS already has a signed baseline; use its signed update transaction"
                     .to_owned(),
             ));
         }
-        (ServerBinarySource::Signed(bundle), None) => {
+        (
+            ServerBinarySource::Signed(bundle),
+            ServerReleaseState::Unmanaged | ServerReleaseState::PolicyOnly { .. },
+        ) => {
             bundle.verify_installed_trust(trust.as_deref())?;
             let (bytes, sha256) = bundle.bytes_for(&discovery.architecture)?;
             (bytes, sha256, false)
         }
-        (_, Some(receipt)) => {
-            let installed = parse_installed_release_receipt(&receipt).map_err(|error| {
-                phase_error("installed VPS release verification", anyhow!(error))
-            })?;
-            let artifact = installed.active_artifact;
+        (_, ServerReleaseState::Registered { .. }) => {
+            let artifact = installed
+                .expect("a registered state carries its receipt")
+                .active_artifact;
             if artifact.kind != ArtifactKind::ServerElf
                 || artifact.target != release_target(&discovery.architecture)?
                 || artifact.size_bytes > MAX_ARTIFACT_SIZE
@@ -75,11 +135,11 @@ fn prepare_from_records(
             }
             (bytes, artifact.sha256, true)
         }
-        (_, None) => {
-            if trust.is_some() {
-                return Err(InstallerError::InvalidInput(
-                    "this VPS has a signing policy without a registered baseline; install a verified signed baseline before repairing its executable".to_owned()));
-            }
+        (_, ServerReleaseState::PolicyOnly { .. }) => {
+            return Err(InstallerError::InvalidInput(
+                "this VPS has a signing policy but its signed baseline registration is pending: install the verified signed baseline again to register it, then repair".to_owned()));
+        }
+        (_, ServerReleaseState::Unmanaged) => {
             let (bytes, sha256) = load_install_server_artifact(source, discovery)?;
             (bytes, sha256, false)
         }

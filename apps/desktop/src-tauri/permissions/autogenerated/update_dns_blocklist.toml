@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-update-dns-blocklist"
+description = "Enables the update_dns_blocklist command without any pre-configured scope."
+commands.allow = ["update_dns_blocklist"]
+
+[[permission]]
+identifier = "deny-update-dns-blocklist"
+description = "Denies the update_dns_blocklist command without any pre-configured scope."
+commands.deny = ["update_dns_blocklist"]

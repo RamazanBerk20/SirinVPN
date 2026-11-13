@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-current-network-profile"
+description = "Enables the current_network_profile command without any pre-configured scope."
+commands.allow = ["current_network_profile"]
+
+[[permission]]
+identifier = "deny-current-network-profile"
+description = "Denies the current_network_profile command without any pre-configured scope."
+commands.deny = ["current_network_profile"]

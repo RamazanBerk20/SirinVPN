@@ -68,6 +68,8 @@ export function CredentialStorage() {
   }
   useEffect(() => {
     void run();
+    // generation is a request counter, not a DOM ref: bumping it on unmount drops replies that arrive later.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     return () => { ++generation.current; inFlight.current = false; };
   }, []);
   if (snapshot?.supported === false) return null;

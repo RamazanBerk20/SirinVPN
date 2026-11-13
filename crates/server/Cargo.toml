@@ -15,6 +15,8 @@ futures-util = "0.3"
 fs2.workspace = true
 hex.workspace = true
 hyper-util.workspace = true
+# Already locked through idna/url; compares person names after NFKC.
+icu_normalizer = { version = "=2.3.0", default-features = false, features = ["compiled_data"] }
 libc.workspace = true
 nix.workspace = true
 rand.workspace = true

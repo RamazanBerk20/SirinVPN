@@ -1,10 +1,12 @@
 //! Local-only pipe transport. No private bytes are sent before SCM, pipe owner,
 //! and pipe PID authentication agree on the running LocalSystem service.
 use crate::{
-    MAX_FRAME_BYTES, Operation, PIPE_NAME, Request, Response, SERVICE_NAME, ServiceError,
-    protocol::IPC_VERSION,
+    MAX_FRAME_BYTES, MAX_WAIT_MS, Operation, PIPE_NAME, Request, Response, SERVICE_NAME,
+    ServiceError, StatusWait, protocol::IPC_VERSION,
 };
-use sirinvpn_platform::windows::security::{self, SYSTEM_SID, SecurityDescriptor};
+use sirinvpn_platform::windows::security::{
+    self, ADMINISTRATORS_SID, SYSTEM_SID, SecurityDescriptor,
+};
 use sirinvpn_protocol::ConnectionState;
 use sirinvpn_tunnel_model::LocalTunnelStatus;
 use std::{
@@ -19,8 +21,11 @@ use tokio::{
     time::{Instant, timeout},
 };
 use windows_sys::Win32::{
-    Foundation::{ERROR_PIPE_BUSY, INVALID_HANDLE_VALUE},
-    Security::{RevertToSelf, TOKEN_QUERY},
+    Foundation::{ERROR_PIPE_BUSY, INVALID_HANDLE_VALUE, LocalFree},
+    Security::{
+        Authorization::ConvertStringSidToSidW, CheckTokenMembership, PSID, RevertToSelf,
+        TOKEN_QUERY,
+    },
     Storage::FileSystem::*,
     System::{Pipes::*, Services::*, Threading::*},
 };
@@ -36,6 +41,51 @@ const CLIENT_ACCESS: u32 =
     FILE_GENERIC_READ | FILE_WRITE_DATA | FILE_WRITE_ATTRIBUTES | FILE_WRITE_EA;
 
 pub async fn call(operation: Operation) -> Result<LocalTunnelStatus, ServiceError> {
+    exchange(operation).await?.result
+}
+
+/// Blocks until the service publishes a status other than the one numbered
+/// `after` (at once when `after` is `None` or stale), or until `timeout` (capped at
+/// 30 s) with the current status. Returns the new number to pass next time.
+/// Ownership rules match Status. A service older than this call answers
+/// `InvalidRequest`; `Busy` means every wait slot is taken. Poll Status for both.
+pub async fn wait_for_change(
+    after: Option<u64>,
+    timeout: Duration,
+) -> Result<(u64, LocalTunnelStatus), ServiceError> {
+    let timeout_ms = timeout.as_millis().min(u128::from(MAX_WAIT_MS)) as u32;
+    let response = exchange(Operation::WaitForChange(StatusWait { after, timeout_ms })).await?;
+    let status = response.result?;
+    Ok((
+        response.sequence.ok_or(ServiceError::IncompatibleService)?,
+        status,
+    ))
+}
+
+/// [`wait_for_change`] for synchronous callers; see there.
+pub fn wait_for_change_blocking(
+    after: Option<u64>,
+    timeout: Duration,
+) -> Result<(u64, LocalTunnelStatus), ServiceError> {
+    blocking(wait_for_change(after, timeout))
+}
+
+/// A separate thread avoids nesting a runtime on the caller's async executor.
+fn blocking<T: Send + 'static>(
+    future: impl Future<Output = Result<T, ServiceError>> + Send + 'static,
+) -> Result<T, ServiceError> {
+    std::thread::spawn(move || {
+        tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .map_err(|_| ServiceError::Unavailable)?
+            .block_on(future)
+    })
+    .join()
+    .map_err(|_| ServiceError::Unavailable)?
+}
+
+async fn exchange(operation: Operation) -> Result<Response, ServiceError> {
     let mut pipe = connect_authenticated().await?;
     let bytes = Zeroizing::new(
         serde_json::to_vec(&Request::new(operation)).map_err(|_| ServiceError::InvalidRequest)?,
@@ -51,45 +101,36 @@ pub async fn call(operation: Operation) -> Result<LocalTunnelStatus, ServiceErro
     if response.version != IPC_VERSION {
         return Err(ServiceError::IncompatibleService);
     }
-    response.result
+    Ok(response)
 }
 
 /// Existing desktop management transactions use a synchronous helper callback.
-/// A separate thread avoids nesting a runtime on the caller's async executor.
 pub fn call_blocking(
     command: &str,
     input: Option<&[u8]>,
 ) -> Result<LocalTunnelStatus, ServiceError> {
     let operation = Operation::from_helper(command, input)?;
     let connecting = matches!(operation, Operation::Connect(_));
-    std::thread::spawn(move || {
-        tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()
-            .map_err(|_| ServiceError::Unavailable)?
-            .block_on(async move {
-                let initial = call(operation).await?;
-                if !connecting {
-                    return Ok(initial);
-                }
-                // Connect acknowledges the saved intent before the controller's
-                // next tick creates the adapter and routes. Synchronous helper
-                // callers immediately use the private management API, so wait
-                // for actual network setup without blocking the service actor.
-                let deadline = Instant::now() + Duration::from_secs(30);
-                let mut current = initial.clone();
-                while !connection_ready(&initial, &current)? {
-                    if Instant::now() >= deadline {
-                        return Err(ServiceError::NetworkOperation);
-                    }
-                    tokio::time::sleep(Duration::from_millis(50)).await;
-                    current = call(Operation::Status).await?;
-                }
-                Ok(current)
-            })
+    blocking(async move {
+        let initial = call(operation).await?;
+        if !connecting {
+            return Ok(initial);
+        }
+        // Connect acknowledges the saved intent before the controller's
+        // next tick creates the adapter and routes. Synchronous helper
+        // callers immediately use the private management API, so wait
+        // for actual network setup without blocking the service actor.
+        let deadline = Instant::now() + Duration::from_secs(30);
+        let mut current = initial.clone();
+        while !connection_ready(&initial, &current)? {
+            if Instant::now() >= deadline {
+                return Err(ServiceError::NetworkOperation);
+            }
+            tokio::time::sleep(Duration::from_millis(50)).await;
+            current = call(Operation::Status).await?;
+        }
+        Ok(current)
     })
-    .join()
-    .map_err(|_| ServiceError::Unavailable)?
 }
 
 fn connection_ready(
@@ -249,6 +290,8 @@ fn create_server(first: bool) -> io::Result<NamedPipeServer> {
 
 pub struct AuthenticatedRequest {
     pub owner_sid: String,
+    /// The caller's token is elevated and BUILTIN\Administrators is enabled in it.
+    pub is_admin: bool,
     pub operation: Operation,
 }
 pub struct Connection {
@@ -261,22 +304,26 @@ impl Connection {
             .await
             .map_err(|_| ServiceError::InvalidRequest)??;
         // Impersonation is strictly synchronous and is reverted before any await.
-        let owner_sid =
+        let (owner_sid, is_admin) =
             authenticate_client(&self.pipe).map_err(|_| ServiceError::Unauthenticated)?;
         let request = Request::parse(&bytes)?;
         Ok(AuthenticatedRequest {
             owner_sid,
+            is_admin,
             operation: request.operation,
         })
     }
 
+    /// `sequence` is only for `WaitForChange` replies.
     pub async fn reply(
         &mut self,
         result: Result<LocalTunnelStatus, ServiceError>,
+        sequence: Option<u64>,
     ) -> Result<(), ServiceError> {
         let bytes = serde_json::to_vec(&Response {
             version: IPC_VERSION,
             result,
+            sequence,
         })
         .map_err(|_| ServiceError::NetworkOperation)?;
         timeout(CONNECT_TIMEOUT, write_frame(&mut self.pipe, &bytes))
@@ -295,7 +342,7 @@ impl Drop for Revert {
     }
 }
 
-fn authenticate_client(pipe: &impl AsHandle) -> io::Result<String> {
+fn authenticate_client(pipe: &impl AsHandle) -> io::Result<(String, bool)> {
     let raw = pipe.as_handle().as_raw_handle();
     let mut session = 0;
     if unsafe { GetNamedPipeClientSessionId(raw, &mut session) } == 0 {
@@ -317,7 +364,32 @@ fn authenticate_client(pipe: &impl AsHandle) -> io::Result<String> {
     if sid == SYSTEM_SID || !sid.starts_with("S-1-") {
         return Err(denied());
     }
-    Ok(sid)
+    Ok((sid, administrator(&token)?))
+}
+
+/// Enabled membership only: a UAC-filtered token carries Administrators as
+/// deny-only, so an unelevated admin's process is treated as a standard user.
+fn administrator(token: &OwnedHandle) -> io::Result<bool> {
+    struct Sid(PSID);
+    impl Drop for Sid {
+        fn drop(&mut self) {
+            unsafe {
+                LocalFree(self.0);
+            }
+        }
+    }
+    let name = security::wide(ADMINISTRATORS_SID)?;
+    let mut sid = ptr::null_mut();
+    if unsafe { ConvertStringSidToSidW(name.as_ptr(), &mut sid) } == 0 {
+        return Err(io::Error::last_os_error());
+    }
+    let sid = Sid(sid);
+    let mut member = 0;
+    // The impersonation token at identification level is valid for this check.
+    if unsafe { CheckTokenMembership(token.as_raw_handle(), sid.0, &mut member) } == 0 {
+        return Err(io::Error::last_os_error());
+    }
+    Ok(member != 0)
 }
 
 async fn read_frame(
@@ -384,16 +456,19 @@ mod tests {
         ready.counter_epoch = Some(uuid::Uuid::new_v4().to_string());
         // The adapter and routes may be ready before the peer's first handshake.
         assert!(connection_ready(&initial, &ready).unwrap());
-        ready.state = ConnectionState::Connected;
+        let server_id = initial.server_id.unwrap();
+        ready.set_phase(sirinvpn_tunnel_model::TunnelPhase::Connected { server_id });
         assert!(connection_ready(&initial, &ready).unwrap());
-        ready.state = ConnectionState::Degraded;
+        ready.set_phase(sirinvpn_tunnel_model::TunnelPhase::Unhealthy {
+            server_id,
+            recovering: true,
+        });
         assert!(matches!(
             connection_ready(&initial, &ready),
             Err(ServiceError::NetworkOperation)
         ));
         ready = initial.clone();
-        ready.server_id = None;
-        ready.state = ConnectionState::Disconnected;
+        ready.set_phase(sirinvpn_tunnel_model::TunnelPhase::Idle);
         assert!(matches!(
             connection_ready(&initial, &ready),
             Err(ServiceError::SessionChanged)

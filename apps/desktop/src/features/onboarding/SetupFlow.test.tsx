@@ -60,7 +60,7 @@ it("offers NAT64 for a VPS without IPv4 and sends only a well-formed prefix", as
 });
 
 it("prevents installation when the inspected network has a blocking conflict", async () => {
-  vi.mocked(api.inspectServerNetwork).mockResolvedValue({ ...report, issues: [{ code: "port_conflict", blocking: true, message: "The selected port is occupied." }] });
+  vi.mocked(api.inspectServerNetwork).mockResolvedValue({ ...report, issues: [{ code: "ssh_port_conflict", blocking: true, message: "The selected port is occupied." }] });
   fireEvent.click(await verifyHost());
   const install = await screen.findByRole("button", { name: t("onboarding.setup.fingerprint.install") });
   expect((install as HTMLButtonElement).disabled).toBe(true);
@@ -100,7 +100,7 @@ it("does not repeat the handoff after Open server", async () => {
 });
 
 it("keeps a failed install on the install step with what stopped, what changed and both ways on", async () => {
-  vi.mocked(api.provisionServer).mockRejectedValueOnce(new Error("server transaction failed during server configuration: apt-get exited with status 100"));
+  vi.mocked(api.provisionServer).mockRejectedValueOnce(Object.assign(new Error("server transaction failed during server configuration: apt-get exited with status 100"), { code: "install_phase_failed", params: { phase: "server configuration" } }));
   const onComplete = vi.fn().mockResolvedValue(undefined);
   fireEvent.click(await verifyHost(onComplete));
   fireEvent.click(await screen.findByRole("button", { name: t("onboarding.setup.fingerprint.install") }));
@@ -125,7 +125,7 @@ it("keeps a failed install on the install step with what stopped, what changed a
 });
 
 it("retries a failed install in place", async () => {
-  vi.mocked(api.provisionServer).mockRejectedValueOnce(new Error("SSH authentication failed")).mockResolvedValueOnce(provisioned);
+  vi.mocked(api.provisionServer).mockRejectedValueOnce(Object.assign(new Error("SSH authentication failed"), { code: "install_ssh_failed", params: {} })).mockResolvedValueOnce(provisioned);
   fireEvent.click(await verifyHost());
   fireEvent.click(await screen.findByRole("button", { name: t("onboarding.setup.fingerprint.install") }));
   expect(await screen.findByText(t("onboarding.setup.failed.change.unchanged"))).toBeTruthy();
@@ -139,7 +139,7 @@ it("labels the network retry and leads a port conflict back to the port field", 
   fireEvent.click(await verifyHost());
   const again = await screen.findByRole("button", { name: t("onboarding.setup.fingerprint.checkAgain") });
   expect(screen.getByRole("alert").textContent).toContain("Timed out");
-  vi.mocked(api.inspectServerNetwork).mockResolvedValueOnce({ ...report, issues: [{ code: "port_conflict", blocking: true, message: "UDP port 51820 is already owned by another service." }] });
+  vi.mocked(api.inspectServerNetwork).mockResolvedValueOnce({ ...report, issues: [{ code: "port_in_use", blocking: true, message: "UDP port 51820 is already owned by another service.", params: { protocol: "udp", port: "51820" } }] });
   fireEvent.click(again);
   fireEvent.click(await screen.findByRole("button", { name: t("onboarding.setup.fingerprint.changePort") }));
   const port = await screen.findByRole("textbox", { name: t("ssh.transport.directPort") });

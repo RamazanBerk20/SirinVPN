@@ -38,6 +38,7 @@ pub(crate) async fn diagnose(configuration: &ServerConfiguration) -> Vec<Diagnos
             label: "DNS response checks".into(),
             level: DiagnosticLevel::Warning,
             message: "Another DNS check is running. Try again in a few seconds.".into(),
+            cause: None,
         }];
     };
     diagnose_with_local_port(configuration, 53).await
@@ -140,7 +141,7 @@ async fn diagnose_with_local_port(
             validate_reply(&query, &response)
         }).await.unwrap_or(Err("No DNS reply within three seconds. Check upstream reachability and firewall rules; DNS protection remains enabled."));
         DiagnosticCheck { code, label, level: if result.is_ok() { DiagnosticLevel::Pass } else { DiagnosticLevel::Fail },
-            message: result.map_or_else(str::to_owned, |_| format!("Valid DNS response in {} ms. No query history is retained.", started.elapsed().as_millis())) }
+            message: result.map_or_else(str::to_owned, |_| format!("Valid DNS response in {} ms. No query history is retained.", started.elapsed().as_millis())), cause: None }
     })).await
 }
 

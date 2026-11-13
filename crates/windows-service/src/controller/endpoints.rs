@@ -199,18 +199,17 @@ impl Controller {
         };
         if saved.phase == SessionPhase::Held
             || saved.phase == SessionPhase::Disconnecting
-            || (!saved.request.connection_policy().automatic_reconnect
-                && (self.had_connected || self.attempt_index > 0))
+            || (!saved.request.connection_policy().automatic_reconnect && self.link.tried())
         {
             return Ok(());
         }
         let healthy = self
-            .active
-            .as_ref()
+            .link
+            .active()
             .is_some_and(|active| active.connected_at.is_some());
         let count = self
-            .active
-            .as_ref()
+            .link
+            .active()
             .and_then(|active| active.stats)
             .and_then(|stats| stats.rx_bytes.checked_add(stats.tx_bytes));
         let now = Instant::now();
@@ -246,12 +245,12 @@ impl Controller {
             // Discovery follows the current transport, so a session through a CDN never
             // probes a VPS address that may be blocked or watched.
             let through_cdn = self
-                .active
-                .as_ref()
+                .link
+                .active()
                 .is_some_and(|active| active.request.https.as_ref().is_some_and(|https| https.cdn));
             let addresses = self
-                .active
-                .as_ref()
+                .link
+                .active()
                 .map(|active| active.endpoint.ip())
                 .into_iter()
                 .chain(saved.endpoints.iter().map(|endpoint| endpoint.address))

@@ -39,8 +39,34 @@ pub(super) async fn membership_handler(
 pub(super) async fn create_invitation_handler(
     State(state): State<AppState>,
     Extension(caller): Extension<CallerIdentity>,
-    Json(request): Json<InvitationCreateRequest>,
+    Json(body): Json<InvitationCreateBody>,
 ) -> Result<Json<ApiEnvelope<InvitationCreateResponse>>, ApiError> {
+    let authorization = require_authorization(&state)?;
+    let mut current = authorization.write().await;
+    let (next, response) = prepare_invitation(&state, &current, &caller, body)?;
+    commit_authorization(&state, &mut current, next).await?;
+    Ok(Json(ApiEnvelope::new(response)))
+}
+
+/// Everything invitation creation decides, without committing: the next document and the
+/// signed grant. Called with the authorization write lock held.
+pub(super) fn prepare_invitation(
+    state: &AppState,
+    current: &AuthorizationDocument,
+    caller: &CallerIdentity,
+    body: InvitationCreateBody,
+) -> Result<(AuthorizationDocument, InvitationCreateResponse), ApiError> {
+    let InvitationCreateBody {
+        request,
+        fixed_member_name,
+    } = body;
+    if fixed_member_name
+        && (request.target_member_id.is_some() || request.max_uses != 1 || !request.recipient_names)
+    {
+        return Err(ApiError::invalid(
+            "a named join code creates one new person: it needs recipient names, no target member and a single use",
+        ));
+    }
     validate_host(&request.endpoint.host).map_err(|error| ApiError::invalid(error.to_string()))?;
     if request.endpoint.wireguard_port == 0 {
         return Err(ApiError::invalid(
@@ -52,9 +78,14 @@ pub(super) async fn create_invitation_handler(
             "invitation lifetime must be between 60 seconds and 7 days",
         ));
     }
-    let member_name = validate_display_name(&request.member_name)
-        .map_err(|error| ApiError::invalid(error.to_string()))?;
-    let device_name = validate_display_name(&request.device_name)
+    // An existing member's stored name only has to match; new names meet the strict rule.
+    let member_name = if request.target_member_id.is_some() {
+        validate_display_name(&request.member_name)
+    } else {
+        validate_new_display_name(&request.member_name)
+    }
+    .map_err(|error| ApiError::invalid(error.to_string()))?;
+    let device_name = validate_new_display_name(&request.device_name)
         .map_err(|error| ApiError::invalid(error.to_string()))?;
     validate_token_hash(&request.token_hash)?;
     validate_wireguard_public_key(&request.bootstrap_wireguard_public_key)
@@ -63,13 +94,12 @@ pub(super) async fn create_invitation_handler(
         submitted_certificate_fingerprint(&request.bootstrap_management_certificate_pem)
             .map_err(|error| ApiError::invalid(error.to_string()))?;
 
-    let authorization = require_authorization(&state)?;
-    let mut current = authorization.write().await;
+    limit_mutation(state, current, caller)?;
     let issuer_id = current
         .device_for_fingerprint(&caller.certificate_fingerprint)
         .ok_or_else(ApiError::forbidden)?
         .member_id;
-    let caller = authorize_current(&current, &caller, false)?;
+    let caller = authorize_current(current, caller, false)?;
     let issuer = current
         .members
         .iter()
@@ -95,7 +125,7 @@ pub(super) async fn create_invitation_handler(
             return Err(ApiError::forbidden());
         }
     }
-    ensure_active_endpoint_authority(&current)?;
+    ensure_active_endpoint_authority(current)?;
     if current.server_id != request.server_id {
         return Err(ApiError::conflict(
             "the invitation request belongs to a different server profile",
@@ -105,8 +135,8 @@ pub(super) async fn create_invitation_handler(
     let mut next = current.clone();
     next.prune_expired(now);
     if next
-        .endpoint_transition
-        .as_ref()
+        .endpoint
+        .head()
         .is_some_and(|transition| request.endpoint != transition.claims.endpoint)
     {
         return Err(ApiError::conflict(
@@ -149,13 +179,14 @@ pub(super) async fn create_invitation_handler(
                 "invitation target changed; refresh membership and try again",
             ));
         }
-        if !can_manage_member(caller, target.role, target.administrator)
-            && !(target.id == issuer_id && target.policy.add_own_devices)
-        {
+        if !can_add_device_to(caller, issuer_id, target) {
             return Err(ApiError::forbidden());
         }
     } else if request.administrator && !caller.is_owner() {
         return Err(ApiError::forbidden());
+    } else if fixed_member_name || !request.recipient_names {
+        // Otherwise the joiner chooses the name, and enrollment checks it.
+        ensure_person_name_free(&next, &member_name, None)?;
     }
     if next.devices.iter().any(|device| {
         device.wireguard_public_key == request.bootstrap_wireguard_public_key
@@ -173,17 +204,10 @@ pub(super) async fn create_invitation_handler(
         ));
     }
 
-    let claims = InvitationClaims {
+    let mut claims = InvitationClaims {
         recipient_names: request.recipient_names,
-        schema_version: if !state.configuration.alternate_endpoint_hosts.is_empty()
-            || state.configuration.endpoint_discovery_port.is_some()
-        {
-            3
-        } else if request.max_uses != 1 || !request.member_policy.is_default() {
-            2
-        } else {
-            1
-        },
+        fixed_member_name,
+        schema_version: 0,
         invitation_id: InvitationId::new(),
         server_id: current.server_id,
         server_name: state.configuration.server_name.clone(),
@@ -220,6 +244,7 @@ pub(super) async fn create_invitation_handler(
         bootstrap_wireguard_public_key: request.bootstrap_wireguard_public_key,
         bootstrap_management_certificate_pem: request.bootstrap_management_certificate_pem,
     };
+    claims.schema_version = claims.required_schema_version();
     let signature =
         sign_claims(&state.paths.tls_private_key, &claims).map_err(|_| ApiError::internal())?;
     let response = InvitationCreateResponse {
@@ -233,8 +258,7 @@ pub(super) async fn create_invitation_handler(
         uses_consumed: 0,
     });
     next.schema_version = next.required_schema_version();
-    commit_authorization(&state, &mut current, next).await?;
-    Ok(Json(ApiEnvelope::new(response)))
+    Ok((next, response))
 }
 
 pub(super) async fn cancel_invitation_handler(
@@ -247,6 +271,7 @@ pub(super) async fn cancel_invitation_handler(
         .map_err(|_| ApiError::invalid("invitation identifier is invalid"))?;
     let authorization = require_authorization(&state)?;
     let mut current = authorization.write().await;
+    limit_mutation(&state, &current, &caller)?;
     let issuer_id = current
         .device_for_fingerprint(&caller.certificate_fingerprint)
         .ok_or_else(ApiError::forbidden)?
@@ -294,7 +319,7 @@ pub(super) async fn rename_device_handler(
     let device_id = device_id
         .parse::<DeviceId>()
         .map_err(|_| ApiError::invalid("device identifier is invalid"))?;
-    let name = validate_display_name(&request.name)
+    let name = validate_new_display_name(&request.name)
         .map_err(|error| ApiError::invalid(error.to_string()))?;
     let authorization = require_authorization(&state)?;
     let mut current = authorization.write().await;
@@ -346,6 +371,11 @@ pub(super) async fn update_device_platform_handler(
     let device = authorize_current(&current, &caller, false)?
         .device_id
         .ok_or_else(ApiError::forbidden)?;
+    // A platform is set once; repeats write nothing and spend no budget.
+    if current.device_platforms.contains_key(&device) {
+        return Ok(Json(ApiEnvelope::new(())));
+    }
+    limit_mutation(&state, &current, &caller)?;
     current
         .record_device_platform(&state.paths.authorization, device, &request.platform)
         .map_err(|_| {
@@ -471,11 +501,11 @@ pub(super) async fn update_member_access_handler(
             .administrator_member_ids
             .retain(|id| *id != member_id);
         if next
-            .recovery_key
-            .as_ref()
+            .owner_recovery
+            .key()
             .is_some_and(|key| key.claims.issuer_member_id == member_id)
         {
-            next.recovery_key = None;
+            next.owner_recovery = authorization::OwnerRecovery::Unarmed;
         }
     }
     next.invitations

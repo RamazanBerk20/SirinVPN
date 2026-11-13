@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-revoke-recovery-key"
+description = "Enables the revoke_recovery_key command without any pre-configured scope."
+commands.allow = ["revoke_recovery_key"]
+
+[[permission]]
+identifier = "deny-revoke-recovery-key"
+description = "Denies the revoke_recovery_key command without any pre-configured scope."
+commands.deny = ["revoke_recovery_key"]

@@ -13,7 +13,8 @@ use crate::{
     native_text::text,
 };
 use serde::Serialize;
-use sirinvpn_protocol::{ConnectionState, ServerId};
+use sirinvpn_protocol::ServerId;
+use sirinvpn_tunnel_model::{LocalTunnelStatus, TunnelPhase};
 use std::{
     collections::HashMap,
     sync::{
@@ -46,6 +47,8 @@ pub(crate) enum Action {
     Open,
     Connect(ServerId),
     Disconnect(ServerId),
+    /// Cancel a connect that has no active session yet.
+    Cancel,
     Reconnect(ServerId),
     Pause(ServerId),
     Switch(ServerId),
@@ -71,6 +74,7 @@ struct Inner {
 }
 pub struct TrayState {
     inner: Mutex<Inner>,
+    /// Drops repeated menu clicks while a tray action runs; not shown as busy.
     busy: AtomicBool,
     refresh: SyncSender<()>,
 }
@@ -86,14 +90,16 @@ pub fn create(app: &tauri::App) -> tauri::Result<()> {
     std::thread::spawn(move || {
         loop {
             refresh(&handle);
-            if receiver.recv_timeout(Duration::from_secs(4))
+            // Native changes arrive through `request_refresh`; the timer is a fallback.
+            let fallback = if crate::local_status_stream::watching() { 15 } else { 4 };
+            if receiver.recv_timeout(Duration::from_secs(fallback))
                 == Err(mpsc::RecvTimeoutError::Disconnected)
             {
                 break;
             }
         }
     });
-    let initial = model::project(None, None, None, false);
+    let initial = model::project(None, None, None, crate::connection_controller::Gate::Idle);
     let (menu, actions) = build_menu(app.handle(), &initial, 0)?;
     if let Ok(mut inner) = app.state::<TrayState>().inner.lock() {
         inner.actions = actions;
@@ -133,19 +139,9 @@ fn refresh(app: &AppHandle) {
         local.as_ref(),
         profiles.as_deref(),
         selected,
-        state.busy.load(Ordering::Acquire) || crate::connection_controller::is_busy(),
+        crate::connection_controller::gate(),
     );
-    let phase = match local.as_ref() {
-        Some(s) if s.waiting_for_user => Phase::Paused,
-        Some(s) if s.state == ConnectionState::Connected => Phase::Connected,
-        Some(s) if s.server_id.is_none() && s.state == ConnectionState::Disconnected => {
-            Phase::Disconnected
-        }
-        Some(s) if s.recovery_in_progress && !s.waiting_for_user => Phase::Recovering,
-        Some(s) if s.state == ConnectionState::Connecting => Phase::Connecting,
-        _ => Phase::Unavailable,
-    };
-    connection_notifications::observe(app, phase);
+    connection_notifications::observe(app, notification_phase(local.as_ref()));
     let sequence = {
         let Ok(mut inner) = state.inner.lock() else {
             return;
@@ -170,6 +166,20 @@ fn refresh(app: &AppHandle) {
     }
     if let Some(base) = app.default_window_icon() {
         let _ = tray.set_icon(Some(icon::render(base, model.icon)));
+    }
+}
+
+/// An unreadable status and contradictory lifecycle flags are both "unknown".
+fn notification_phase(local: Option<&LocalTunnelStatus>) -> Phase {
+    match local.and_then(LocalTunnelStatus::phase) {
+        Some(TunnelPhase::Idle) => Phase::Disconnected,
+        Some(TunnelPhase::Connecting { .. }) => Phase::Connecting,
+        Some(TunnelPhase::Connected { .. }) => Phase::Connected,
+        Some(TunnelPhase::Paused { .. }) => Phase::Paused,
+        Some(TunnelPhase::Recovering { .. } | TunnelPhase::Unhealthy { recovering: true, .. }) => {
+            Phase::Recovering
+        }
+        Some(TunnelPhase::Unhealthy { recovering: false, .. }) | None => Phase::Unavailable,
     }
 }
 
@@ -221,15 +231,29 @@ fn build_menu(
         Some(Action::Open),
         true,
     )?)?;
+    // Disconnect stays available while a connect is starting: it cancels it.
+    let can_disconnect = !m.busy || m.cancellable;
     if let Some((label, action)) = &m.primary {
-        menu.append(&item(label, Some(action.clone()), !m.busy)?)?;
+        let enabled = if matches!(action, Action::Disconnect(_)) {
+            can_disconnect
+        } else {
+            !m.busy
+        };
+        menu.append(&item(label, Some(action.clone()), enabled)?)?;
+    }
+    if m.cancellable && m.active.is_none() {
+        menu.append(&item(
+            &text("native.tray.menu.stopConnecting"),
+            Some(Action::Cancel),
+            true,
+        )?)?;
     }
     if let Some(id) = m.active {
         if m.extra_disconnect {
             menu.append(&item(
                 &text("native.tray.menu.disconnect"),
                 Some(Action::Disconnect(id)),
-                !m.busy,
+                can_disconnect,
             )?)?;
         }
         if m.reconnect {
@@ -309,7 +333,7 @@ fn build_menu(
         menu.append(&item(
             &text("native.tray.menu.disconnectQuit"),
             Some(Action::DisconnectQuit(id)),
-            !m.busy && !m.needs_update,
+            can_disconnect && !m.needs_update,
         )?)?;
     }
     Ok((menu, actions))

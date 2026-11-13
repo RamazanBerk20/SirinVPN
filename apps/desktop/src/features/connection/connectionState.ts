@@ -6,6 +6,7 @@ import type {
 import { protectionEvidence } from "./protectionEvidence";
 import { connectionHealth } from "./connectionHealth";
 import { t } from "../../i18n";
+import { tunnelReport } from "./connectionView";
 
 /** Saved choices, runtime configuration, and verified service health are separate facts. */
 export function describeConnection(
@@ -14,19 +15,19 @@ export function describeConnection(
   remote: ServerStatus | null,
   savedPolicy?: ConnectionPolicy,
 ) {
-  const known = local.state !== "unknown";
+  const tunnel = tunnelReport(local);
+  const known = tunnel.phase !== "unknown";
   const selected = local.server_id === serverId;
-  const connected = known && selected && local.state === "connected";
+  const connected = known && selected && tunnel.established;
   const other = known && local.server_id !== null && !selected;
-  const active = known && selected && local.state !== "disconnected";
+  const active = known && selected && tunnel.phase !== "disconnected";
   const protectedSession = known && selected && local.kill_switch_enabled;
   const split = local.routing_mode === "selected_routes";
   const applications = local.routing_mode === "selected_applications";
   const android = local.application_routing_backend === "android_packages";
   const recovery = remote?.authorization_recovery;
   const recoveringAuthorization = selected && known && Boolean(recovery && recovery.health !== "healthy");
-  const health = connectionHealth({ known, established: connected,
-    reconnecting: active && !local.waiting_for_user && (local.recovery_in_progress === true || local.state === "degraded" && local.auto_reconnect_enabled),
+  const health = connectionHealth({ known, established: connected, reconnecting: active && tunnel.phase === "reconnecting",
     managementAvailable: Boolean(remote), probe: local.transport_quality?.sample });
   const statusState = !known
     ? "unknown"
@@ -37,13 +38,7 @@ export function describeConnection(
       : connected
         ? health.state
         : active
-          ? local.waiting_for_user
-            ? "interrupted"
-            : local.state === "connecting"
-              ? "connecting"
-              : local.auto_reconnect_enabled
-                ? "reconnecting"
-                : "interrupted"
+          ? tunnel.phase === "connecting" ? "connecting" : tunnel.phase === "reconnecting" ? "reconnecting" : "interrupted"
           : "disconnected";
   const actionState = !known
     ? "refresh"
@@ -110,15 +105,15 @@ export function describeConnection(
               ? "fullTunnelLan"
               : "fullTunnel"
           : active
-            ? local.waiting_for_user
+            ? tunnel.phase === "waiting_for_user"
               ? android && local.lockdown
                 ? "waitingAndroidLockdown"
                 : local.kill_switch_state === "blocking"
                 ? "waitingBlocked"
                 : "waiting"
-              : local.auto_reconnect_enabled
+              : tunnel.phase === "reconnecting"
                 ? "reconnecting"
-                : local.state === "degraded"
+                : tunnel.phase === "interrupted"
                   ? protectedSession ? "interruptedBlocked" : "interrupted"
                   : "connecting"
             : "disconnected";
@@ -158,6 +153,7 @@ export function describeConnection(
     status: t(`home.status.${statusState}`),
     actionState,
     action: t(`home.action.${actionState}`),
+    routingState,
     routing: t(`home.routing.${routingState}`),
     protectionState,
     protection: t(`home.killSwitch.${protectionState}`),

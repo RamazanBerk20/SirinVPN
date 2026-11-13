@@ -94,3 +94,15 @@ fn legacy_invitation_labels_and_serialized_signatures_remain_unchanged() {
             .is_err()
     );
 }
+
+#[test]
+fn invitations_send_the_normalised_host_and_refuse_an_unnormalised_signed_one() {
+    let (mut profile, private_key) = owner_profile();
+    let host = profile.endpoint.host.clone();
+    profile.endpoint.host = format!(" {host}\n");
+    let draft = InvitationDraft::new(&profile, "Alice", "Laptop", 3600).unwrap();
+    assert_eq!(draft.request().endpoint.host, host);
+    // A VPS that signed the raw text produces a code no device could resolve.
+    let response = signed_response(&profile, draft.request(), &private_key);
+    assert!(draft.finish(response).is_err());
+}

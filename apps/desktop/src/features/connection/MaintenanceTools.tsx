@@ -200,7 +200,7 @@ export function MaintenanceTools({
                       <strong>{label}</strong>
                       <small>{description}</small>
                     </span>
-                    <CaretRight size={17} />
+                    <CaretRight className="mirror-rtl" size={17} />
                   </button>
                 );
               },

@@ -3,24 +3,21 @@ import { formatNumber, t } from "./i18n";
 
 /** A release target triple in words, keeping the exact triple for checking against a manifest. */
 export function formatTarget(target: string): string {
-  const os = /android/.test(target) ? "Android" : /windows/.test(target) ? "Windows" : /linux/.test(target) ? "Linux" : "";
-  const arch = target.startsWith("x86_64") ? "64-bit x86" : target.startsWith("aarch64") ? "64-bit ARM" : "";
+  const os = /android/.test(target) ? t("format.os.android") : /windows/.test(target) ? t("format.os.windows") : /linux/.test(target) ? t("format.os.linux") : "";
+  const arch = target.startsWith("x86_64") ? t("format.arch.x86_64") : target.startsWith("aarch64") ? t("format.arch.aarch64") : "";
   return os && arch ? t("common.target", { os, arch, target }) : target;
 }
 
+/** Decimal (SI) sizes: 1 kB = 1000 B, as the unit names say. The number follows the interface locale. */
 export function formatBytes(value: number): string {
-  if (!Number.isFinite(value) || value <= 0) return "0 B";
-  const units = ["B", "KB", "MB", "GB", "TB"];
-  let index = Math.max(
-    0,
-    Math.min(Math.floor(Math.log(value) / Math.log(1024)), units.length - 1),
-  );
-  // Values that round up to 1024 read as the next unit, not "1024 KB".
-  if (index < units.length - 1 && Math.round(value / 1024 ** index) >= 1024) index += 1;
-  const amount = value / 1024 ** index;
+  if (!Number.isFinite(value) || value <= 0) return t("format.bytes.B", { value: formatNumber(0) });
+  const units = ["B", "KB", "MB", "GB", "TB"] as const;
+  let index = Math.max(0, Math.min(Math.floor(Math.log10(value) / 3), units.length - 1));
+  // Values that round up to 1000 read as the next unit, not "1000 kB".
+  if (index < units.length - 1 && Math.round(value / 1000 ** index) >= 1000) index += 1;
+  const amount = value / 1000 ** index;
   const digits = amount >= 10 || index === 0 ? 0 : 1;
-  const unit = units[index] as "B" | "KB" | "MB" | "GB" | "TB";
-  return t(`format.bytes.${unit}`, { value: formatNumber(amount, { minimumFractionDigits: digits, maximumFractionDigits: digits }) });
+  return t(`format.bytes.${units[index]}`, { value: formatNumber(amount, { minimumFractionDigits: digits, maximumFractionDigits: digits }) });
 }
 
 export function validateHost(value: string): boolean {
@@ -71,9 +68,11 @@ export function formatTunnelDuration(seconds: number | undefined): string {
   if (seconds === undefined || !Number.isFinite(seconds) || seconds < 0)
     return t("format.unavailable");
   const whole = Math.floor(seconds);
-  const pad = (value: number) => String(value).padStart(2, "0");
-  if (whole < 3600) return `${pad(Math.floor(whole / 60))}:${pad(whole % 60)}`;
-  return `${Math.floor(whole / 3600)}:${pad(Math.floor(whole / 60) % 60)}:${pad(whole % 60)}`;
+  // Locale digits; the clock layout itself comes from the catalog.
+  const pad = (value: number) => formatNumber(value, { minimumIntegerDigits: 2, useGrouping: false });
+  const minutes = pad(Math.floor(whole / 60) % (whole < 3600 ? Infinity : 60)), secs = pad(whole % 60);
+  if (whole < 3600) return t("format.clock.minutes", { minutes, seconds: secs });
+  return t("format.clock.hours", { hours: formatNumber(Math.floor(whole / 3600), { useGrouping: false }), minutes, seconds: secs });
 }
 
 export function formatRate(bytesPerSecond: number | undefined): string {

@@ -9,6 +9,7 @@ impl Controller {
         switching: bool,
     ) -> Result<(), ServiceError> {
         network_plan::validate(&request)?;
+        self.require_listen_port(&request)?;
         if request.routing.mode == sirinvpn_tunnel_model::TunnelRoutingMode::SelectedApplications
             && !self.application_driver_ready()
         {
@@ -64,11 +65,14 @@ impl Controller {
         self.store.save(&replacement).map_err(network_error)?;
         self.saved = Some(replacement);
         if let Err(error) = self.close_guard() {
-            self.enforcement_failed = true;
             if let Some(saved) = &mut self.saved {
                 saved.phase = SessionPhase::Held;
             }
             let _ = self.persist();
+            self.transition(Event::Stop {
+                enforcement_failed: true,
+            })
+            .await;
             return Err(network_error(error));
         }
         self.reset_attempts();
@@ -123,7 +127,10 @@ impl Controller {
         }
         self.persist().map_err(network_error)?;
         self.close_guard().map_err(network_error)?;
-        self.stop_active().await.map_err(network_error)?;
+        self.transition(Event::Stop {
+            enforcement_failed: self.link.enforcement_failed(),
+        })
+        .await;
         self.cleanup_routes().map_err(network_error)?;
         if !saved_policy_kill(&self.saved) {
             self.firewall.clear().map_err(network_error)?;
@@ -131,7 +138,22 @@ impl Controller {
         Ok(())
     }
 
+    /// Reports a fixed relay port held by another program before the session is
+    /// changed, unless this service's own relayed adapter currently holds it.
+    fn require_listen_port(&self, request: &TunnelConnectRequest) -> Result<(), ServiceError> {
+        let ours = self.link.active().is_some_and(|active| {
+            network_plan::wireguard_listen_port(active.request.transport).is_some()
+        });
+        if ours || !network_plan::uses_fixed_port(request) {
+            return Ok(());
+        }
+        network_plan::require_free_port(network::probe_port)
+    }
+
     pub(super) async fn restart(&mut self) -> Result<(), ServiceError> {
+        if let Some(saved) = &self.saved {
+            self.require_listen_port(&saved.request)?;
+        }
         self.hold().await?;
         if let Some(saved) = &mut self.saved {
             saved.phase = SessionPhase::Connecting;
@@ -142,13 +164,21 @@ impl Controller {
         Ok(())
     }
 
+    /// Fresh attempts for a Connecting session; a Held one stays stopped. Callers
+    /// have already stopped any adapter (dropping one would still close it).
     pub(super) fn reset_attempts(&mut self) {
-        self.next_attempt = Instant::now();
-        self.pass_started = Instant::now();
-        self.attempt_index = 0;
-        self.retry_passes = 0;
-        self.had_connected = false;
-        self.enforcement_failed = false;
+        let event = if self
+            .saved
+            .as_ref()
+            .is_some_and(|saved| saved.phase == SessionPhase::Connecting)
+        {
+            Event::Start
+        } else {
+            Event::Stop {
+                enforcement_failed: false,
+            }
+        };
+        drop(self.advance(event));
         self.endpoints = endpoints::EndpointMonitor::default();
         self.quality = crate::quality_plan::QualityMonitor::default();
     }
@@ -160,7 +190,10 @@ impl Controller {
         // Commit the explicit stop before touching the guard. A crash at any later
         // step finishes cleanup and cannot turn this Disconnect into an auto-connect.
         self.persist().map_err(network_error)?;
-        self.stop_active().await.map_err(network_error)?;
+        self.transition(Event::Stop {
+            enforcement_failed: self.link.enforcement_failed(),
+        })
+        .await;
         self.finish_disconnect().map_err(network_error)
     }
 
@@ -169,21 +202,52 @@ impl Controller {
         self.firewall.clear()?;
         self.store.remove()?;
         self.saved = None;
-        self.enforcement_failed = false;
+        drop(self.advance(Event::Stop {
+            enforcement_failed: false,
+        }));
         Ok(())
     }
 
-    pub(super) async fn stop_active(&mut self) -> io::Result<()> {
-        if let Some(mut active) = self.active.take() {
+    /// Applies one runtime transition and returns the adapter it displaced.
+    pub(super) fn advance(&mut self, event: Event<Box<Active>>) -> Option<Box<Active>> {
+        let link = std::mem::replace(
+            &mut self.link,
+            Link::Stopped {
+                enforcement_failed: false,
+            },
+        );
+        let (link, displaced) = link.next(event, Instant::now());
+        self.link = link;
+        displaced
+    }
+
+    /// Applies one runtime transition and stops the adapter it displaced.
+    pub(super) async fn transition(&mut self, event: Event<Box<Active>>) {
+        if let Some(mut active) = self.advance(event) {
             // A disabled or removed adapter must still be released. Its Drop
             // repeats the down transition before closing the driver handle.
             let _ = active.adapter.set_up(false);
             if let Some(carrier) = active.carrier.take() {
                 carrier.stop().await;
             }
-            drop(active);
         }
-        Ok(())
+    }
+
+    /// Enforcement or storage failed: hold (a committed Disconnect is retried on
+    /// the next tick instead), and stop attempts until the owner acts again.
+    /// No error path removes persistent protection.
+    pub(super) async fn fail(&mut self) {
+        if self
+            .saved
+            .as_ref()
+            .is_none_or(|saved| saved.phase != SessionPhase::Disconnecting)
+        {
+            let _ = self.hold().await;
+        }
+        self.transition(Event::Stop {
+            enforcement_failed: true,
+        })
+        .await;
     }
 
     pub(super) fn cleanup_routes(&mut self) -> io::Result<()> {

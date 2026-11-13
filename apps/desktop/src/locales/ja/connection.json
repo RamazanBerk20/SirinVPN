@@ -1,0 +1,276 @@
+{
+  "options": {
+    "title": "接続方式",
+    "automatic": {
+      "label": "方式を自動で選ぶ",
+      "summary": "お使いのネットワークで動作する方式を選びます"
+    },
+    "conditions": {
+      "legend": "ネットワークの種類",
+      "automatic": {
+        "title": "自動",
+        "summary": "各方式を順番に試します"
+      },
+      "normal": {
+        "title": "通常",
+        "summary": "自宅または携帯回線のネットワーク"
+      },
+      "restricted": {
+        "title": "制限あり",
+        "summary": "通常の VPN 通信をブロックします"
+      },
+      "extreme": {
+        "title": "厳しい制限あり",
+        "summary": "他の方式がすべて失敗した場合"
+      },
+      "hint": "自動選択が、お使いの環境に合う方式から始まるようにします。"
+    },
+    "methods": {
+      "legend": "方式を選択",
+      "unavailable": "新しいサーバーが必要です",
+      "summary": {
+        "direct_udp": "標準の WireGuard",
+        "obfuscated_udp": "WireGuard をブロックするネットワーク向けに UDP を偽装",
+        "tls_like": "Web の通信と同じく TLS 1.3 を使用",
+        "tcp_fallback": "UDP がブロックされたときの最後の手段",
+        "quic": "UDP 上で HTTP/3 の Web 通信のように見えます"
+      },
+      "unsupported": {
+        "owner": "{count, plural, other {{{methods}} には、サーバーソフトウェアの新しいバージョンが必要です。使用するには VPS を更新してください。}}",
+        "member": "{count, plural, other {{{methods}} には、サーバーソフトウェアの新しいバージョンが必要です。オーナーに VPS の更新を依頼してください。}}",
+        "update": "VPS を更新"
+      }
+    },
+    "policy": {
+      "kill_switch": {
+        "label": "キルスイッチ",
+        "summary": "VPN が切断されると、切断操作を行うまでインターネットをブロックします",
+        "nextConnection": "保存済みですが、まだ有効ではありません。次回接続時に有効になります。それまでは、VPN が切断されても通信はブロックされません。"
+      },
+      "automatic_reconnect": {
+        "label": "自動再接続",
+        "summary": "接続が切れた場合に再試行します",
+        "summaryAndroid": "接続が切れた場合に再試行します。すぐに適用されます。",
+        "info": "オフの場合、切断された接続は再接続するまで切れたままになります。キルスイッチは、どちらの場合もブロックを続けます。",
+        "infoAndroid": "オフの場合、切断された接続は再接続するまで切れたままになります。Wi-Fi とモバイルデータの切り替え時には、1 回だけ再接続を試みます。",
+        "infoLabel": "自動再接続について"
+      },
+      "connect_on_startup": {
+        "label": "システム起動時に接続",
+        "summary": "このデバイスの起動時に接続します"
+      }
+    },
+    "android": {
+      "label": "VPN なしの接続をブロック",
+      "summary": "常時接続 VPN とブロックは Android で設定します。ブロックがオンの場合、切断後もインターネットはブロックされたままです。",
+      "open": "VPN の設定を開く",
+      "on": "Android でオン",
+      "off": "Android でオフ",
+      "unknown": "Android から報告されていません",
+      "status": "状態: {{value}}"
+    },
+    "notes": {
+      "selectedRoutes": "選択したルートと、システムの DNS のみが VPN を使用します。",
+      "windowsApps": "Windows アプリのルーティングには、キルスイッチがオンで、ローカルネットワークへのアクセスがオフである必要があります。",
+      "launchedApps": "起動したアプリは、VPN が切断されているときは常にブロックされます。他のアプリは通常のネットワークを使用します。"
+    },
+    "status": {
+      "title": "現在の状態",
+      "method": "接続方式",
+      "killSwitch": "キルスイッチ",
+      "routing": "ルーティング",
+      "blocking": "VPN なしの接続をブロック"
+    },
+    "protection": {
+      "title": "保護",
+      "titleAndroid": "再接続とブロック",
+      "note": "キルスイッチと自動再接続は、次回の接続から適用されます。"
+    }
+  },
+  "routing": {
+    "title": "トラフィックのルーティング",
+    "legend": "ルーティングモード",
+    "modes": {
+      "full_tunnel": {
+        "label": "フルトンネル",
+        "summary": "すべてのインターネット通信が VPN を使用します"
+      },
+      "selected_routes": {
+        "label": "選択したルート",
+        "summary": "指定した IP 範囲のみが VPN を使用します"
+      },
+      "selected_applications": {
+        "label": "選択したアプリ",
+        "summaryAndroid": "VPN を使用するアプリを選択します",
+        "summaryWindows": "選択したアプリのみが VPN を使用します",
+        "summaryLinux": "SirinVPN から起動したアプリのみが VPN を使用します"
+      }
+    },
+    "unsupported": "このデバイスではアプリのルーティングを利用できません。選択したルートは引き続き機能します。",
+    "unsupportedWindows": "Windows のドライバーが動作していないため、アプリのルーティングを利用できません。SirinVPN を再インストールまたは更新すると復元されます。",
+    "windowsKillSwitch": "Windows アプリのルーティングには、キルスイッチがオンである必要があります。接続する前に、接続の設定でオンにしてください。",
+    "android": {
+      "blockNote": "「VPN なしの接続をブロック」がオンの場合、VPN を使用しないアプリはインターネットに接続できません。",
+      "choose": "アプリを選択",
+      "chooseError": "アプリの一覧を開けませんでした。",
+      "none": "選択したアプリはありません",
+      "all": "すべてのアプリが VPN を使用します",
+      "include": "{count, plural, other {#個のアプリが VPN を使用します}}",
+      "exclude": "{count, plural, other {#個のアプリは VPN を経由しません}}"
+    },
+    "routes": {
+      "label": "IP 範囲 (CIDR)、1 行に 1 つ",
+      "hint": "{max, plural, other {最大 #件の範囲。システムの DNS は常に VPN を使用します。}}",
+      "empty": "少なくとも 1 件の範囲を追加してください。範囲がないと、どの通信も VPN を使用しません。",
+      "invalid": "{{routes}}: CIDR 形式のネットワークではありません。198.51.100.0/24 のように範囲を入力してください。",
+      "hostBits": "{{route}} はネットワークの先頭アドレスではありません。{{network}} を使用してください。",
+      "placeholder": "例: {{example}}"
+    },
+    "localNetwork": {
+      "label": "ローカルネットワークを許可",
+      "summary": "VPN の外にあるプリンターなどのローカルデバイスに接続します",
+      "summaryLaunched": "起動したアプリが、ローカルネットワーク上のデバイスに接続できるようにします",
+      "summaryWindows": "オフにしてください: Windows アプリのルーティングには、ローカルネットワークへのアクセスがオフである必要があります"
+    }
+  },
+  "launcher": {
+    "legend": "VPN 内でアプリを起動",
+    "summaryLinux": "ここで起動したアプリのみが VPN を使用します。先に開いているコピーをすべて閉じてください。",
+    "summaryWindows": "ここで選択したアプリが VPN を使用します。先に開いているコピーをすべて閉じてください。",
+    "infoLinux": "ネイティブのプログラムを選択してください。Flatpak や Snap のアプリ、バックグラウンドサービスに依存するアプリは動作しない場合があります。",
+    "infoWindows": "ローカルドライブ上の .exe を選択し、ネットワークを使用する各アプリを追加してください。ヘルパーやサービスは自動では追加されません。選択したアプリは IPv6 を使用できず、システムの DNS は VPN を経由します。",
+    "infoLabel": "アプリの起動について",
+    "notReady": "「選択したアプリ」を保存して、このサーバーに接続すると、アプリを起動できます。",
+    "executable": "プログラム",
+    "placeholderLinux": "例: /usr/bin/firefox",
+    "placeholderWindows": "例: C:\\Program Files\\App\\app.exe",
+    "browse": "参照…",
+    "dialogTitle": "アプリを選択",
+    "dialogFilter": "アプリ (.exe)",
+    "chooserError": "ファイルの選択画面を開けませんでした。もう一度お試しください。",
+    "arguments": {
+      "summary": "起動引数",
+      "label": "引数は 1 行に 1 つ",
+      "hint": "スペースを含む場合も引用符は不要です。引数は保存されません。"
+    },
+    "safetyLinux": "起動したアプリは、キルスイッチがオフでも VPN の外のインターネットを使用しません。切断後も、アプリは開いたままになりますが、オフラインになります。",
+    "safetyWindows": "選択したアプリは、VPN が切断または一時停止された場合、VPN の外でブロックされたままになります。切断するとブロックが解除され、選択も解除されます。",
+    "launch": "VPN 内で起動",
+    "launching": "起動中…",
+    "launched": "{{name}} を VPN 内で起動しました。",
+    "exited": "{{name}} を起動しましたが、すぐに終了しました。すでに開いていた場合は、閉じてから再度お試しください。",
+    "launchError": "VPN 内でアプリを起動できませんでした。",
+    "needsProgram": "「参照」からプログラムを選択してください。"
+  },
+  "mtu": {
+    "title": "パケットサイズ (MTU)",
+    "automatic": {
+      "label": "パケットサイズを自動で設定",
+      "summary": "接続中にパケットサイズを測定して調整します"
+    },
+    "manual": {
+      "label": "MTU を手動で設定",
+      "hint": "{max, plural, other {{{min}}～{{max}} バイト。難読化 UDP は最大 {{obfuscatedMax}}、QUIC は最大 {{quicMax}} を使用します。}}",
+      "invalid": "{{min}} から {{max}} までの整数を入力してください。",
+      "invalidIpv6": "IPv6 がオンの場合は、{{min}} から {{max}} までの整数を入力してください。"
+    },
+    "notConnected": "パケットサイズを測定するには、接続してください。",
+    "unsupported": "このデバイスの VPN コンポーネントが更新されるまで、パケットサイズを測定できません。全般の設定の「ローカル VPN コンポーネント」で確認してください。",
+    "unsupportedAction": "このデバイスの VPN コンポーネントが更新されるまで、パケットサイズを測定できません。",
+    "details": {
+      "current": "現在の MTU",
+      "recommended": "推奨",
+      "notMeasured": "まだ測定していません",
+      "pending": "保留中の変更",
+      "bytes": "{value, plural, other {{{value}} バイト}}",
+      "pendingValue": "{value, plural, other {{{value}} バイト · まだ適用されていません}}"
+    },
+    "outcome": {
+      "pending": "パケットサイズの測定を待っています。",
+      "incomplete": "測定はまだ完了していません。",
+      "verified": "{value, plural, other {{{value}} バイトで確認済みです。}}",
+      "smaller": "より小さいパケットサイズが測定されたため、適用されます。",
+      "manual": "推奨値の準備ができました。手動で設定した MTU を引き続き使用します。",
+      "noReply": "サーバーが測定に応答しませんでした。現在の MTU を引き続き使用します。",
+      "noUsable": "このネットワークでは大きなパケットが通りません。{{tls}} または {{tcp}} をお試しください。",
+      "applyFailed": "{value, plural, other {測定したサイズを適用できませんでした。MTU は {{value}} バイトのままです。}}"
+    }
+  },
+  "quality": {
+    "label": "接続の品質",
+    "sample": "遅延 {{latency}} · ジッター {{jitter}} · 損失 {{loss}}",
+    "selection": {
+      "pending": "最初の品質チェックを待っています。",
+      "observing": "VPN の内部で測定しています。速度テストではありません。",
+      "waiting_for_idle": "通信がアイドル状態のときに、接続方式を比較します。",
+      "comparing": "接続方式を比較しています…",
+      "selected": "測定された中で最も良い接続方式を使用しています。",
+      "icmp_unavailable": "サーバーが品質チェックに応答しなかったため、遅延と損失を確認できません。",
+      "protection_required": "SirinVPN が接続方式を比較できるように、キルスイッチをオンにしてください。"
+    },
+    "reason": {
+      "confirmed_failure": "前の接続方式が失敗したため、接続方式を切り替えました。",
+      "quality_improvement": "一貫してより良い接続方式に切り替えました。",
+      "rollback": "現在の接続方式を維持しました。代替の方式は接続できませんでした。"
+    }
+  },
+  "startup": {
+    "unknown": "起動時の接続を確認できませんでした。",
+    "otherServer": "保存済みですが、現在は別のサーバーに接続しています。起動時に使用するには、このサーバーに接続してください。",
+    "serviceUnknown": "保存済みです。起動サービスの状態を確認できません。",
+    "inactive": "保存済みですが、まだ有効ではありません。",
+    "activateHint": "「接続して有効化」を選択すると、オンになります。",
+    "nextConnection": "次回このサーバーに接続したときに、オンになります。",
+    "active": "このデバイスの起動時に、このサーバーに接続します。",
+    "unconfirmed": "起動サービスはオンですが、まだこのサーバーに設定されていません。",
+    "activate": "接続して有効化"
+  },
+  "saveBar": {
+    "unsaved": "未保存の変更",
+    "discard": "破棄",
+    "save": "設定を保存",
+    "pending": "<strong>次回の接続用に保存しました。</strong> 現在の接続: {{differences}}。",
+    "invalid": "保存するには、ハイライトされた値を修正してください。"
+  },
+  "differences": {
+    "mtu": {
+      "automatic": "MTU {{value}}（自動）",
+      "manual": "MTU {{value}}（手動）"
+    },
+    "method": "接続方式: {{method}}",
+    "policy": {
+      "kill_switch": {
+        "on": "キルスイッチ: オン",
+        "off": "キルスイッチ: オフ"
+      },
+      "automatic_reconnect": {
+        "on": "自動再接続: オン",
+        "off": "自動再接続: オフ"
+      },
+      "connect_on_startup": {
+        "on": "起動時に接続: オン",
+        "off": "起動時に接続: オフ"
+      }
+    },
+    "routing": {
+      "full_tunnel": "ルーティング: フルトンネル",
+      "selected_routes": "ルーティング: 選択したルート",
+      "selected_applications": "ルーティング: 選択したアプリ"
+    },
+    "localNetwork": {
+      "on": "ローカルネットワークへのアクセス: オン",
+      "off": "ローカルネットワークへのアクセス: オフ"
+    },
+    "routes": "異なる IP 範囲"
+  },
+  "preferences": {
+    "loadError": "接続の設定を読み込めませんでした。",
+    "loading": "接続の設定を読み込んでいます…",
+    "saved": "接続の設定を保存しました。次回の接続から適用されます。",
+    "saveError": "保存できませんでした。以前の設定がそのまま残っています。",
+    "reconnectOn": "自動再接続はオンです。",
+    "reconnectOff": "自動再接続はオフです。",
+    "reconnectError": "自動再接続を変更できませんでした。"
+  },
+  "nextConnection": "次回の接続から適用されます。"
+}

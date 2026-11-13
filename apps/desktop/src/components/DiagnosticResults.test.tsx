@@ -2,7 +2,7 @@ import { afterEach, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { t } from "../i18n";
 import type { DiagnosticReport } from "../types";
-import { DiagnosticResults } from "./DiagnosticResults";
+import { DiagnosticResults, DiagnosticRunFailed } from "./DiagnosticResults";
 
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 
@@ -17,6 +17,8 @@ it("copies only the displayed report after an explicit click", async () => {
   await waitFor(() => expect(writeText).toHaveBeenCalledTimes(1));
   const text = writeText.mock.calls[0][0];
   expect(text).toContain("This device is disconnected.");
+  // The level tag comes from the catalog, not from the backend's level value.
+  expect(text).toContain(t("maintenance.diagnostics.report.check", { level: t("maintenance.diagnostics.report.level.warning"), label: "Selected VPN connection" }));
   expect(text).not.toContain("never-export-this-field");
 });
 
@@ -32,9 +34,10 @@ it("puts issues and unavailable checks before collapsed passes and preserves evi
     { code: "server_nat4", label: "IPv4 NAT", level: "fail" as const, message: "The NAT rule is missing." },
   ] };
   const { container } = render(<DiagnosticResults report={report} />);
-  expect(Array.from(container.querySelectorAll(".diagnostic-row strong")).map((item) => item.textContent)).toEqual([
-    "IPv4 NAT", "Public reachability", "Compatibility", "Traffic protection", "Configured routing", "DNS response",
-  ]);
+  // Known checks are named from the catalog, not by the backend's English label.
+  const title = (code: string) => t(`maintenance.diagnostics.checkTitle.${code}` as never);
+  expect(Array.from(container.querySelectorAll(".diagnostic-row strong")).map((item) => item.textContent)).toEqual(
+    ["server_nat4", "external_reachability", "server_report_format", "local_protection", "local_routes", "dns_resolver_response"].map(title));
   expect(container.querySelector("details")?.open).toBe(false);
   const evidence = (code: "configuration" | "service" | "observed" | "notChecked") =>
     Array.from(container.querySelectorAll(".diagnostic-evidence")).filter((item) => item.textContent === t(`maintenance.diagnostics.evidence.${code}`)).length;
@@ -51,8 +54,8 @@ it("puts issues and unavailable checks before collapsed passes and preserves evi
   fireEvent.click(screen.getByRole("button", { name: t("maintenance.diagnostics.copy") }));
   await waitFor(() => expect(writeText).toHaveBeenCalledOnce());
   const copied = writeText.mock.calls[0][0];
-  expect(copied.indexOf("IPv4 NAT")).toBeLessThan(copied.indexOf("Public reachability"));
-  expect(copied.indexOf("Public reachability")).toBeLessThan(copied.indexOf("Traffic protection"));
+  expect(copied.indexOf(title("server_nat4"))).toBeLessThan(copied.indexOf(title("external_reachability")));
+  expect(copied.indexOf(title("external_reachability"))).toBeLessThan(copied.indexOf(title("local_protection")));
   expect(copied).toContain(t("maintenance.diagnostics.report.evidence", { evidence: t("maintenance.diagnostics.evidence.service") }));
 });
 
@@ -74,9 +77,8 @@ it("shows leak test results as tested and not applicable families as not checked
 
 it("shows a failed or empty run as such, with Run again, and headlines an all-pass report", () => {
   const onRunAgain = vi.fn();
-  const failed = { api_version: "v1", checks: [{ code: "local_diagnostics_unavailable", label: "Diagnostics", level: "fail" as const, message: "Couldn’t run diagnostics." }] };
-  const view = render(<DiagnosticResults report={failed} onRunAgain={onRunAgain} />);
-  expect(screen.getByRole("alert").textContent).toContain("Couldn’t run diagnostics.");
+  const view = render(<DiagnosticRunFailed onRunAgain={onRunAgain} />);
+  expect(screen.getByRole("alert").textContent).toContain(t("maintenance.workspace.error.diagnostics"));
   expect(screen.queryByRole("status")).toBeNull();
   fireEvent.click(screen.getByRole("button", { name: t("settings.diagnostics.runAgain") }));
   expect(onRunAgain).toHaveBeenCalledOnce();
@@ -96,4 +98,21 @@ it("offers a check's fix only while the check needs attention", () => {
   fireEvent.click(screen.getByRole("button", { name: "Fix protection" }));
   expect(run).toHaveBeenCalledOnce();
   expect(screen.queryByRole("button", { name: "Fix MTU" })).toBeNull();
+});
+
+it("names a check and its cause in the interface language, with the backend's English text as marked detail", () => {
+  const report = { api_version: "v1", checks: [
+    { code: "management", label: "VPS authentication and connectivity", level: "fail" as const, message: "The private TLS handshake failed.", cause: "management_clock" as const },
+    { code: "dns_zone_0_1", label: "VPS split DNS zone 1, upstream 2", level: "fail" as const, message: "No answer." },
+    { code: "brand_new_check", label: "Brand new check", level: "fail" as const, message: "Something new." },
+  ] };
+  const { container } = render(<DiagnosticResults report={report} />);
+  const rows = Array.from(container.querySelectorAll(".diagnostic-row"));
+  expect(rows[0].querySelector("strong")?.textContent).toBe(t("maintenance.diagnostics.checkTitle.management"));
+  expect(rows[0].textContent).toContain(t("maintenance.diagnostics.cause.management_clock"));
+  expect(rows[0].querySelector(".error-detail")?.getAttribute("lang")).toBe("en");
+  expect(rows[1].querySelector("strong")?.textContent).toBe(t("maintenance.diagnostics.numberedCheck.dnsZoneUpstream", { zone: 1, upstream: 2 }));
+  // A check this version doesn't know keeps the backend's label, marked as English.
+  expect(rows[2].querySelector("strong")?.getAttribute("lang")).toBe("en");
+  expect(rows[2].querySelector("strong")?.textContent).toBe("Brand new check");
 });

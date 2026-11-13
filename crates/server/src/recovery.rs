@@ -51,14 +51,14 @@ pub(super) async fn policy_handler(
     }
     let mut next = current.clone();
     next.recovery_policy = policy;
-    if next.recovery_key.as_ref().is_some_and(|key| {
+    if next.owner_recovery.key().is_some_and(|key| {
         key.claims.issuer_member_id != key.claims.owner_member_id
             && !next
                 .recovery_policy
                 .administrator_member_ids
                 .contains(&key.claims.issuer_member_id)
     }) {
-        next.recovery_key = None;
+        next.owner_recovery = authorization::OwnerRecovery::Unarmed;
     }
     let result = next
         .recovery_settings(caller_member(&next, caller).ok_or_else(ApiError::forbidden)?)
@@ -96,8 +96,8 @@ pub(super) async fn create_key_handler(
         || request.endpoint_generation != current.endpoint_generation()
         || request.endpoint.wireguard_port != state.configuration.wireguard_port
         || current
-            .endpoint_transition
-            .as_ref()
+            .endpoint
+            .head()
             .is_some_and(|transition| transition.claims.endpoint != request.endpoint)
         || request.recovery_id.0.is_nil()
     {
@@ -106,7 +106,7 @@ pub(super) async fn create_key_handler(
         ));
     }
     // A lost setup response can be retried using the same local recovery identity.
-    if let Some(existing) = &current.recovery_key
+    if let Some(existing) = current.owner_recovery.key()
         && existing.claims.recovery_id == request.recovery_id
         && existing.claims.recovery_wireguard_public_key == request.recovery_wireguard_public_key
         && existing.claims.recovery_management_certificate_pem
@@ -115,8 +115,8 @@ pub(super) async fn create_key_handler(
         return Ok(Json(ApiEnvelope::new(existing.clone())));
     }
     if current
-        .recovery_key
-        .as_ref()
+        .owner_recovery
+        .key()
         .map(|key| key.claims.recovery_id)
         != request.replace_recovery_id
     {
@@ -126,7 +126,7 @@ pub(super) async fn create_key_handler(
     }
     let mut next = current.clone();
     next.prune_expired(unix_time());
-    if next.recovery_receipt.is_some() {
+    if next.owner_recovery.receipt().is_some() {
         return Err(ApiError::conflict(
             "wait one minute for the current recovery enrollment to finish",
         ));
@@ -191,7 +191,7 @@ pub(super) async fn create_key_handler(
     let signature = authorization::sign_recovery_claims(&state.paths.tls_private_key, &claims)
         .map_err(|_| ApiError::internal())?;
     let response = RecoveryKeyResponse { claims, signature };
-    next.recovery_key = Some(response.clone());
+    next.owner_recovery = authorization::OwnerRecovery::Armed(Box::new(response.clone()));
     commit_authorization(&state, &mut current, next).await?;
     Ok(Json(ApiEnvelope::new(response)))
 }
@@ -212,8 +212,8 @@ pub(super) async fn revoke_key_handler(
     }
     ensure_active_endpoint_authority(&current)?;
     if current
-        .recovery_key
-        .as_ref()
+        .owner_recovery
+        .key()
         .is_some_and(|key| key.claims.recovery_id != id)
     {
         return Err(ApiError::conflict(
@@ -221,7 +221,7 @@ pub(super) async fn revoke_key_handler(
         ));
     }
     let mut next = current.clone();
-    next.recovery_key = None;
+    next.owner_recovery = authorization::OwnerRecovery::Unarmed;
     let result = next
         .recovery_settings(caller_member(&next, caller).ok_or_else(ApiError::forbidden)?)
         .map_err(|_| ApiError::internal())?;
@@ -262,7 +262,7 @@ pub(super) async fn enroll_handler(
             "too many failed recovery attempts; try again shortly",
         ));
     }
-    if let Some(receipt) = &current.recovery_receipt {
+    if let Some(receipt) = current.owner_recovery.receipt() {
         if receipt.device_wireguard_public_key == request.device_wireguard_public_key
             && receipt.device_management_certificate_pem
                 == request.device_management_certificate_pem
@@ -274,12 +274,7 @@ pub(super) async fn enroll_handler(
             "this recovery key has already enrolled a different Owner identity",
         ));
     }
-    let name = validate_display_name(&request.device_name)
-        .map_err(|error| ApiError::invalid(error.to_string()))?;
-    validate_wireguard_public_key(&request.device_wireguard_public_key)
-        .map_err(|error| ApiError::invalid(error.to_string()))?;
-    let fingerprint = certificate_fingerprint(&request.device_management_certificate_pem)
-        .map_err(|error| ApiError::invalid(error.to_string()))?;
+    let (name, fingerprint) = new_owner_identity(&request)?;
     if fingerprint == identity.certificate_fingerprint
         || request.device_wireguard_public_key == response.claims.recovery_wireguard_public_key
         || current.devices.iter().any(|device| {
@@ -346,7 +341,7 @@ pub(super) async fn enroll_handler(
         role: ServerRole::Owner,
         administrator: false,
         server_name: state.configuration.server_name.clone(),
-        endpoint: next.endpoint_transition.as_ref().map_or_else(
+        endpoint: next.endpoint.head().map_or_else(
             || response.claims.endpoint.clone(),
             |transition| transition.claims.endpoint.clone(),
         ),
@@ -361,16 +356,50 @@ pub(super) async fn enroll_handler(
         ipv6_tunnel_enabled: state.configuration.ipv6_tunnel_enabled,
         preshared_key: false,
     };
-    next.recovery_key = None;
     next.recovery_policy = RecoveryPolicy::default();
-    next.recovery_receipt = Some(authorization::RecoveryReceipt {
-        response,
-        device_wireguard_public_key: request.device_wireguard_public_key,
-        device_management_certificate_pem: request.device_management_certificate_pem,
-        result: result.clone(),
-        expires_at_unix: now + ENROLLMENT_HANDOFF_SECONDS,
-    });
+    next.owner_recovery =
+        authorization::OwnerRecovery::Finishing(Box::new(authorization::RecoveryReceipt {
+            response,
+            device_wireguard_public_key: request.device_wireguard_public_key,
+            device_management_certificate_pem: request.device_management_certificate_pem,
+            result: result.clone(),
+            expires_at_unix: now + ENROLLMENT_HANDOFF_SECONDS,
+        }));
     commit_authorization(&state, &mut current, next).await?;
     clear_redemption_failures(&state, rate_id);
     Ok(Json(ApiEnvelope::new(result)))
+}
+
+/// The new Owner identity takes the same size-bounded certificate intake as every other path.
+fn new_owner_identity(request: &RecoveryRedeemRequest) -> Result<(String, String), ApiError> {
+    let name = validate_new_display_name(&request.device_name)
+        .map_err(|error| ApiError::invalid(error.to_string()))?;
+    validate_wireguard_public_key(&request.device_wireguard_public_key)
+        .map_err(|error| ApiError::invalid(error.to_string()))?;
+    let fingerprint = submitted_certificate_fingerprint(&request.device_management_certificate_pem)
+        .map_err(|error| ApiError::invalid(error.to_string()))?;
+    Ok((name, fingerprint))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_recovered_owner_certificate_is_size_bounded() {
+        let identity = sirinvpn_core::LocalIdentity::generate("Recovered owner").unwrap();
+        let request = |certificate: String| RecoveryRedeemRequest {
+            recovery_id: sirinvpn_protocol::RecoveryId::new(),
+            device_name: "Laptop".into(),
+            device_wireguard_public_key: identity.public.wireguard_public_key.clone(),
+            device_management_certificate_pem: certificate,
+            confirmed: true,
+        };
+        let certificate = identity.public.management_certificate_pem.clone();
+        assert!(new_owner_identity(&request(certificate.clone())).is_ok());
+        // Text outside the PEM block still parses, so only the byte cap rejects it.
+        let padded = format!("{}\n{certificate}", "x".repeat(60 * 1024));
+        assert!(certificate_fingerprint(&padded).is_ok());
+        assert!(new_owner_identity(&request(padded)).is_err());
+    }
 }

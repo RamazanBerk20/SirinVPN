@@ -55,3 +55,27 @@ async fn a_device_records_only_its_own_known_platform_without_a_commit() {
     after.device_platforms.clear();
     assert_eq!(after, before);
 }
+
+#[tokio::test]
+async fn platform_reports_spend_budget_only_when_they_write() {
+    let (_directory, state) = fixture();
+    let before = state.authorization.as_ref().unwrap().read().await.clone();
+    let (reported, fresh) = (&before.devices[2], &before.devices[3]);
+    report(&state, reported, "android").await.unwrap();
+    // Repeats write nothing, so they neither spend nor need budget.
+    for _ in 0..2 * MEMBER_MUTATIONS_PER_MINUTE {
+        report(&state, reported, "linux").await.unwrap();
+    }
+    for _ in 0..MEMBER_MUTATIONS_PER_MINUTE - 1 {
+        assert!(limit_mutation(&state, &before, &identity(fresh)).is_ok());
+    }
+    report(&state, fresh, "linux").await.unwrap();
+    let mut other = before.clone();
+    other.device_platforms.clear();
+    let exhausted = &before.devices[4];
+    for _ in 0..MEMBER_MUTATIONS_PER_MINUTE {
+        let _ = limit_mutation(&state, &other, &identity(exhausted));
+    }
+    let limited = report(&state, exhausted, "windows").await.unwrap_err();
+    assert_eq!(limited.status, StatusCode::TOO_MANY_REQUESTS);
+}

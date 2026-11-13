@@ -233,7 +233,40 @@ impl Drop for TunnelConnectRequest {
     }
 }
 
+/// Declares `LocalTunnelStatus` once and derives its wire form from the same field
+/// list: every legacy field unchanged plus the additive `phase`, computed from the
+/// lifecycle flags, which readers without it ignore. Adding a real struct field would
+/// break every producer's struct literal, so the phase stays derived until they adopt it.
+macro_rules! local_tunnel_status {
+    ($(#[$attribute:meta])* pub struct LocalTunnelStatus {
+        $($(#[$field_attribute:meta])* pub $field:ident: $type:ty,)*
+    }) => {
+        $(#[$attribute])*
+        pub struct LocalTunnelStatus {
+            $($(#[$field_attribute])* pub $field: $type,)*
+        }
+
+        #[derive(Serialize)]
+        struct LocalTunnelStatusWire {
+            $($(#[$field_attribute])* $field: $type,)*
+            #[serde(skip_serializing_if = "Option::is_none")]
+            phase: Option<crate::TunnelPhase>,
+        }
+
+        impl From<LocalTunnelStatus> for LocalTunnelStatusWire {
+            fn from(status: LocalTunnelStatus) -> Self {
+                Self {
+                    phase: status.phase(),
+                    $($field: status.$field,)*
+                }
+            }
+        }
+    };
+}
+
+local_tunnel_status! {
 #[derive(Clone, Debug, Eq, PartialEq, Deserialize, Serialize)]
+#[serde(into = "LocalTunnelStatusWire")]
 pub struct LocalTunnelStatus {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub application_routing_backend: Option<ApplicationRoutingBackend>,
@@ -308,6 +341,7 @@ pub struct LocalTunnelStatus {
     #[serde(default)]
     pub allow_lan: bool,
 }
+}
 
 #[derive(Debug, Error)]
 pub enum HelperError {
@@ -374,6 +408,30 @@ impl TunnelConnectRequest {
             Some(endpoint)
         }
     }
+    /// The one place the request schema is derived from the features a request uses.
+    /// Every writer sets `schema_version` from this instead of keeping its own ladder.
+    pub fn required_schema(&self) -> u16 {
+        if self.routing.mode == TunnelRoutingMode::SelectedApplications {
+            11
+        } else if self.endpoint_identity.is_some() {
+            10
+        } else if self.requires_https_support() {
+            9
+        } else if self.mtu_policy.is_some() {
+            8
+        } else if self.policy.is_some() {
+            7
+        } else if !self.routing.is_legacy_default() {
+            6
+        } else {
+            match self.transport {
+                TransportKind::DirectUdp => 2,
+                TransportKind::ObfuscatedUdp => 3,
+                TransportKind::TcpFallback => 4,
+                TransportKind::TlsLike | TransportKind::Quic => 5,
+            }
+        }
+    }
     pub fn desired_schema(&self) -> u16 {
         if self.schema_version >= 11 {
             6
@@ -403,16 +461,8 @@ impl TunnelConnectRequest {
         policy
             .validate(self.client_ipv6_address.is_some())
             .map_err(|message| HelperError::InvalidConfiguration(message.into()))?;
-        self.schema_version = if self.routing.mode == TunnelRoutingMode::SelectedApplications {
-            11
-        } else if self.endpoint_identity.is_some() {
-            10
-        } else if self.requires_https_support() {
-            9
-        } else {
-            8
-        };
         self.mtu_policy = Some(policy);
+        self.schema_version = self.required_schema();
         self.reapply_manual_mtu();
         Ok(())
     }

@@ -1,0 +1,42 @@
+{
+  "unavailable": "Kullanılamıyor",
+  "bytes": {
+    "B": "{{value}} B",
+    "KB": "{{value}} kB",
+    "MB": "{{value}} MB",
+    "GB": "{{value}} GB",
+    "TB": "{{value}} TB"
+  },
+  "rate": "{{value}}/sn",
+  "memoryUsage": "{{percent}} · {{used}}",
+  "latency": "{{value}} ms",
+  "latencyBelowOne": "<1 ms",
+  "uptimeDays": "{{days}}g {{hours}}s",
+  "uptimeHours": "{{hours}}s {{minutes}}dk",
+  "transport": {
+    "direct_udp": "Doğrudan UDP",
+    "obfuscated_udp": "Gizlenmiş UDP",
+    "tls_like": "TLS yedeği",
+    "tcp_fallback": "TCP yedeği",
+    "quic": "QUIC (HTTP/3)"
+  },
+  "dnsPolicy": {
+    "recursive": "Özyinelemeli DNS",
+    "dnsOverTls": "{count, plural, one {DNS over TLS · # sunucu} other {DNS over TLS · # sunucu}}",
+    "dnsOverHttps": "{count, plural, one {DNS over HTTPS · # sunucu} other {DNS over HTTPS · # sunucu}}",
+    "split": "{count, plural, one {Bölünmüş DNS · # bölge · {{fallback}}} other {Bölünmüş DNS · # bölge · {{fallback}}}}"
+  },
+  "os": {
+    "android": "Android",
+    "windows": "Windows",
+    "linux": "Linux"
+  },
+  "arch": {
+    "x86_64": "64 bit x86",
+    "aarch64": "64 bit ARM"
+  },
+  "clock": {
+    "minutes": "{{minutes}}:{{seconds}}",
+    "hours": "{{hours}}:{{minutes}}:{{seconds}}"
+  }
+}

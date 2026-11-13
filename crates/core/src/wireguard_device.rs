@@ -65,7 +65,9 @@ impl WireGuardDeviceDraft {
     ) -> Result<Self, WireGuardDeviceError> {
         validate_server_name(member_name).map_err(|_| WireGuardDeviceError::InvalidInput)?;
         validate_server_name(device_name).map_err(|_| WireGuardDeviceError::InvalidInput)?;
-        validate_host(&profile.endpoint.host).map_err(|_| WireGuardDeviceError::InvalidInput)?;
+        let host = validate_host(&profile.endpoint.host)
+            .map_err(|_| WireGuardDeviceError::InvalidInput)?
+            .to_owned();
         if member_policy.validate().is_err()
             || (target_member_id.is_some() && !member_policy.is_default())
         {
@@ -74,7 +76,10 @@ impl WireGuardDeviceDraft {
         let private_key = StaticSecret::random_from_rng(OsRng);
         let request = WireGuardDeviceCreateRequest {
             server_id: profile.id,
-            endpoint: profile.endpoint.clone(),
+            endpoint: sirinvpn_protocol::ServerEndpoint {
+                host,
+                wireguard_port: profile.endpoint.wireguard_port,
+            },
             member_name: member_name.trim().to_owned(),
             device_name: device_name.trim().to_owned(),
             target_member_id,

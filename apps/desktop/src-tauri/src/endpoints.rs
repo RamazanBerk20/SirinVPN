@@ -6,17 +6,17 @@ use super::*;
 pub(super) async fn create_endpoint_update(
     state: State<'_, AppState>,
     server_id: String,
-) -> Result<EndpointUpdateCodeResult, String> {
+) -> Result<EndpointUpdateCodeResult, CommandError> {
     let profile = find_profile(&state.paths, &server_id)?;
     let local = invoke_helper("status", None).map_err(safe_error)?;
     if local.server_id != Some(profile.id) || local.state == ConnectionState::Disconnected {
         return Err(
-            "Connect to the restored server before creating its address update.".to_owned(),
+            "Connect to the restored server before creating its address update.".into(),
         );
     }
     let code = create_endpoint_transition(&state.paths, profile.id)
         .await
-        .map_err(safe_error)?;
+        .map_err(crate::vps_transaction::operation_error)?;
     Ok(endpoint_update_code_result(profile.id, code))
 }
 
@@ -53,7 +53,7 @@ pub(super) async fn available_endpoint_update(
 pub(super) async fn apply_endpoint_update(
     state: State<'_, AppState>,
     input: EndpointUpdateInput,
-) -> Result<sirinvpn_core::EndpointTransitionResult, String> {
+) -> Result<sirinvpn_core::EndpointTransitionResult, CommandError> {
     let _operation = crate::connection_controller::acquire()?;
     let profile = find_profile(&state.paths, &input.server_id)?;
     crate::connection_controller::require_finished_rotation(&state.paths, profile.id)?;
@@ -85,14 +85,14 @@ pub(super) async fn apply_endpoint_update(
         || disconnect_candidate(profile.id),
     )
     .await
-    .map_err(safe_error)
+    .map_err(crate::vps_transaction::operation_error)
 }
 
 #[tauri::command]
 pub(super) async fn publish_endpoint_update(
     state: State<'_, AppState>,
     input: EndpointUpdateInput,
-) -> Result<sirinvpn_core::EndpointTransitionResult, String> {
+) -> Result<sirinvpn_core::EndpointTransitionResult, CommandError> {
     let _operation = crate::connection_controller::acquire()?;
     let profile = find_profile(&state.paths, &input.server_id)?;
     crate::connection_controller::require_finished_rotation(&state.paths, profile.id)?;
@@ -117,7 +117,7 @@ pub(super) async fn publish_endpoint_update(
         || disconnect_candidate(profile.id),
     )
     .await
-    .map_err(safe_error)
+    .map_err(crate::vps_transaction::operation_error)
 }
 
 pub(super) fn endpoint_update_code_result(

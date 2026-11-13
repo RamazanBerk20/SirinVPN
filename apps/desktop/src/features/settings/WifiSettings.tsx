@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowClockwise } from "@phosphor-icons/react";
 import { api } from "../../api";
 import { invoke, isAndroid } from "../../platform";
@@ -11,8 +11,13 @@ import { t, type MessageKey } from "../../i18n";
 import { Rich } from "../../i18n/Rich";
 import { useInfoHint } from "../../components/InfoHint";
 
-/** Stored label for a trusted network the user did not name; never displayed. */
-const UNNAMED_NETWORK_LABEL = "Wi-Fi exception";
+/**
+ * Stored label for a trusted network the user did not name; never displayed. The backend needs a
+ * non-empty label without control characters, so this is a lone WORD JOINER nobody types as a name.
+ */
+export const UNNAMED_NETWORK_LABEL = "\u2060";
+/** What older versions stored for an unnamed network (English, so a real name could collide with it). */
+const LEGACY_UNNAMED_LABEL = "Wi-Fi exception";
 const networkLabels: Record<WifiPolicySnapshot["current_network"], MessageKey> = {
   unavailable: "settings.wifi.network.unavailable",
   other_network: "settings.wifi.network.otherNetwork",
@@ -55,11 +60,12 @@ export function WifiSettings() {
   // A later successful poll clears only errors that polling itself reported.
   const pollFailed = useRef(false);
   const [info, infoPanel] = useInfoHint(t(isAndroid ? "settings.wifi.infoAndroid" : "settings.wifi.infoDesktop"), t("settings.wifi.infoLabel"));
-  const applySnapshot = (next: WifiPolicySnapshot, profiles?: ServerProfile[]) => {
+  // Only setters: the polling effect created on mount can call it without a stale list of servers.
+  const applySnapshot = useCallback((next: WifiPolicySnapshot, profiles?: ServerProfile[]) => {
     setSnapshot(next);
     if (profiles) setServers(profiles);
-    setSelected(next.policy.server_id ?? profiles?.[0]?.id ?? servers[0]?.id ?? "");
-  };
+    setSelected(current => next.policy.server_id ?? profiles?.[0]?.id ?? current);
+  }, []);
   useEffect(() => {
     active.current = true;
     ++generation.current;
@@ -126,11 +132,13 @@ export function WifiSettings() {
     return () => {
       mounted = false;
       active.current = false;
+      // generation is a request counter, not a DOM ref: bumping it on unmount drops replies that arrive later.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
       ++generation.current;
       clearInterval(timer);
       document.removeEventListener("visibilitychange", resume);
     };
-  }, []);
+  }, [applySnapshot]);
   async function action(key: string, operation: () => Promise<unknown>, done?: (next: WifiPolicySnapshot) => void) {
     const failure = t(key === "refresh" ? "settings.wifi.refreshFailed" : "settings.wifi.saveFailed");
     if (writing.current) return;
@@ -160,7 +168,7 @@ export function WifiSettings() {
   // Hidden names get a stable number from their place in the list, never a fragment of the token.
   const trusted = (snapshot?.trusted_networks ?? []).map((network, index) => {
     const osName = snapshot?.network_names?.[network.id];
-    const friendly = network.label !== UNNAMED_NETWORK_LABEL ? network.label : "";
+    const friendly = network.label !== UNNAMED_NETWORK_LABEL && network.label !== LEGACY_UNNAMED_LABEL ? network.label : "";
     return { network, osName, friendly, name: osName || friendly || t("settings.wifi.trusted.unnamed", { number: index + 1 }) };
   });
   const access = snapshot?.android_access;
@@ -216,11 +224,12 @@ export function WifiSettings() {
       {trusted.length > 0 && <div className="wifi-trusted">
         <h3>{t("settings.wifi.trusted.title")}</h3>
         <ul className="plain-list">{trusted.map(({ network, osName, friendly, name }) => <li key={network.id} className="trusted-wifi-row">
-          <div><strong>{name}</strong>
-            <small>{[
-              network.id === snapshot?.current_network_token ? t("settings.wifi.trusted.current") : null,
-              osName && friendly && friendly !== osName ? t("settings.wifi.trusted.label", { label: friendly }) : null,
-            ].filter(Boolean).join(" · ") || t("settings.wifi.trusted.saved")}</small>
+          <div><strong dir="auto">{name}</strong>
+            <small>{(() => {
+              const current = network.id === snapshot?.current_network_token ? t("settings.wifi.trusted.current") : null;
+              const labelled = osName && friendly && friendly !== osName ? t("settings.wifi.trusted.label", { label: friendly }) : null;
+              return current && labelled ? t("common.separator.pair", { first: current, second: labelled }) : current ?? labelled ?? t("settings.wifi.trusted.saved");
+            })()}</small>
           </div>
           <button className="text-button" aria-label={t("settings.wifi.trusted.removeLabel", { name })} disabled={Boolean(busy)}
             onClick={() => void action(network.id, () => api.forgetTrustedWifi(network.id), () => notify(t("settings.wifi.trusted.removed", { name })))}>

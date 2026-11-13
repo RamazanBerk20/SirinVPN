@@ -1,0 +1,249 @@
+{
+  "consoleLabel": "VPN 연결",
+  "status": {
+    "unknown": "상태를 알 수 없음",
+    "restoringAccess": "서버 접근 복원 중",
+    "monitorUnavailable": "VPN 모니터가 응답하지 않음",
+    "reconnecting": "다시 연결하는 중",
+    "connected": "연결됨",
+    "connecting": "연결하는 중",
+    "interrupted": "연결이 중단됨",
+    "disconnected": "연결 끊김",
+    "changing": "연결 변경 중…",
+    "checking": "VPN 상태 확인 중…",
+    "connectingTo": "{{name}}에 연결하는 중…",
+    "disconnecting": "연결을 끊는 중…"
+  },
+  "action": {
+    "showActive": "연결된 서버로 이동",
+    "refresh": "상태 새로 고침",
+    "disconnectAndUnblock": "연결 끊기 및 킬 스위치 차단 끄기",
+    "disconnect": "연결 끊기",
+    "connect": "연결",
+    "changing": "연결 변경",
+    "wait": "잠시 기다려 주세요…",
+    "vpnSettings": "VPN 설정",
+    "androidVpnSettings": "Android VPN 설정",
+    "cancelConnection": "취소",
+    "reconnect": "다시 연결",
+    "reconnectHint": "현재 설정으로 다시 시작",
+    "stop": "VPN 중지",
+    "connecting": "연결하는 중…",
+    "disconnecting": "연결을 끊는 중…",
+    "checkAgain": "다시 확인"
+  },
+  "routing": {
+    "unknown": "알 수 없음",
+    "inactive": "활성화되지 않음",
+    "selectedApps": "선택한 앱",
+    "selectedRoutes": "선택한 경로",
+    "fullTunnelLan": "전체 터널 · 로컬 네트워크 허용",
+    "fullTunnel": "전체 터널"
+  },
+  "killSwitch": {
+    "unknown": "알 수 없음",
+    "otherServer": "활성 서버 보기",
+    "nextConnection": "다음 연결에서 켜짐",
+    "off": "끔",
+    "inactive": "활성화되지 않음",
+    "armed": "켬",
+    "blocking": "트래픽 차단 중",
+    "failed": "작동하지 않음",
+    "unverified": "켬 · 확인되지 않음"
+  },
+  "isolation": {
+    "verified": "확인됨",
+    "unverified": "확인되지 않음"
+  },
+  "summary": {
+    "unknown": "VPN 상태를 읽지 못했습니다. 새로 고쳐서 확인하세요.",
+    "restoringAccess": "서버 접근이 복원될 때까지 이 연결을 신뢰하지 마세요.",
+    "monitorUnavailable": "VPN 모니터가 응답하지 않아 킬 스위치 상태를 알 수 없습니다.",
+    "otherServer": "다른 서버가 연결되어 있습니다. 연결을 끊으려면 해당 서버로 이동하세요.",
+    "androidApps": "선택한 앱만 VPN을 사용합니다.",
+    "windowsApps": "선택한 앱이 VPN을 사용합니다. 시스템 DNS는 서버를 거칩니다.",
+    "launchedApps": "SirinVPN에서 실행한 앱이 VPN을 사용합니다.",
+    "selectedRoutes": "선택한 네트워크만 VPN을 사용합니다. 나머지는 사용하지 않습니다.",
+    "fullTunnelLan": "인터넷 트래픽은 VPN을 사용합니다. 로컬 네트워크 트래픽은 사용하지 않습니다.",
+    "fullTunnel": "모든 인터넷 트래픽이 VPN을 거칩니다.",
+    "fullTunnelIpv4": "IPv4 트래픽은 VPN을 거칩니다. IPv6은 터널링되지도 차단되지도 않습니다.",
+    "interrupted": "연결이 끊어졌습니다. 다시 연결하기 전까지 트래픽이 보호되지 않습니다.",
+    "interruptedBlocked": "연결이 끊어졌습니다. 킬 스위치가 다시 연결하거나 연결을 끊을 때까지 트래픽을 차단합니다.",
+    "waitingAndroidLockdown": "Android가 다시 연결할 때까지 트래픽을 차단합니다.",
+    "waitingBlocked": "트래픽이 차단되어 있습니다. 다시 연결하거나 연결을 끊어 차단을 해제하세요.",
+    "waiting": "자동 다시 연결이 꺼져 있습니다. 준비되면 다시 연결하세요.",
+    "reconnecting": "연결을 복원하는 중입니다.",
+    "connecting": "보안 연결을 설정하는 중입니다.",
+    "disconnected": "트래픽이 VPN을 사용하지 않습니다.",
+    "disconnecting": "VPN을 끄는 중입니다."
+  },
+  "warning": {
+    "accessContained": "서버 접근을 복원하는 중입니다. 완료될 때까지 VPN 트래픽이 보류됩니다.",
+    "accessUnenforced": "서버 접근 확인이 작동하지 않습니다. 복원될 때까지 이 서버를 신뢰하지 마세요.",
+    "androidLockdown": "연결을 끊은 뒤에도 Android의 “VPN 없이 연결 차단”이 켜져 있습니다.",
+    "killSwitchFailed": "킬 스위치를 확인하지 못했습니다. 문제가 해결될 때까지 신뢰하지 마세요.",
+    "androidAppsUnverified": "앱 라우팅을 확인하지 못했습니다. 신뢰하기 전에 연결을 확인하세요.",
+    "appsUnverified": "앱 라우팅을 확인하지 못했습니다. 새 앱 실행이 꺼져 있습니다.",
+    "dnsDown": "서버의 DNS가 응답하지 않아 웹사이트가 열리지 않을 수 있습니다.",
+    "ipv6": "IPv6 트래픽은 터널링되지도 차단되지도 않아 VPN을 우회할 수 있습니다.",
+    "serverInterfaceDown": "서버가 VPN 인터페이스가 꺼졌다고 보고했습니다. 트래픽이 언제든 멈출 수 있습니다."
+  },
+  "componentUpdate": {
+    "needed": "연결하려면 VPN 구성 요소를 업데이트하세요.",
+    "review": "업데이트 검토"
+  },
+  "presharedKey": {
+    "missing": "이 기기에는 사전 공유 키가 없으므로, 기록된 VPN 트래픽은 미래의 양자 컴퓨터로부터 보호되지 않습니다.",
+    "add": "사전 공유 키 추가"
+  },
+  "health": {
+    "idle": "최근 핸드셰이크가 없습니다. 연결이 단순히 유휴 상태일 수 있습니다.",
+    "managementUnavailable": "서버 관리를 사용할 수 없습니다.",
+    "reachability": {
+      "notChecked": "확인되지 않음",
+      "replied": "응답함",
+      "noReply": "응답 없음"
+    }
+  },
+  "protection": {
+    "ipv6NotVerified": "IPv6 확인되지 않음",
+    "ipv6": {
+      "tunneled": "VPN 경유",
+      "blocked": "차단됨",
+      "unknown": "알 수 없음",
+      "blockedLanAllowed": "차단됨 · 로컬 네트워크 허용",
+      "blockedVerified": "차단됨 · 확인됨",
+      "selectedRoutes": "선택한 경로만",
+      "blockedUnverified": "차단됨 · 확인되지 않음",
+      "bypassesOutsideRoutes": "선택한 경로 밖은 VPN을 우회함",
+      "unverified": "확인되지 않음"
+    },
+    "android": {
+      "unverified": "Android의 라우팅이나 차단을 확인하지 못했습니다.",
+      "packages": "선택한 앱이 VPN과 해당 DNS를 사용합니다. 다른 앱은 Android가 차단하지 않는 한 VPN을 우회합니다.",
+      "lockdown": "Android의 “VPN 없이 연결 차단”이 모든 앱에 대해 켜져 있습니다."
+    },
+    "apps": {
+      "ipv6Unverified": "앱 라우팅 확인되지 않음",
+      "ipv6Tunneled": "실행한 앱: VPN 경유",
+      "ipv6Blocked": "실행한 앱: 차단됨",
+      "notReady": "앱 라우팅이 준비되지 않았습니다. 새 앱 실행이 꺼져 있습니다.",
+      "windows": "선택한 앱은 IPv4에 VPN을 사용하며, IPv6은 차단됩니다. DNS는 서버를 사용합니다.",
+      "launched": "실행한 앱과 해당 DNS가 VPN을 사용합니다. 다른 앱은 일반 네트워크를 사용합니다."
+    },
+    "firewall": {
+      "verifiedSelectedRoutes": "선택한 경로와 DNS에 대해 방화벽이 확인되었습니다.",
+      "verifiedLanAllowed": "IPv4, IPv6, DNS에 대해 방화벽이 확인되었습니다. 로컬 네트워크 허용.",
+      "verified": "IPv4, IPv6, DNS에 대해 방화벽이 확인되었습니다.",
+      "unverified": "방화벽을 확인하지 못했습니다."
+    }
+  },
+  "details": {
+    "connection": "연결",
+    "status": "상태",
+    "method": "방식",
+    "routing": "라우팅",
+    "killSwitch": "킬 스위치",
+    "appIsolation": "앱 격리",
+    "reachability": "서버 접속 가능",
+    "serverResponse": "서버 응답",
+    "serverResponseInfo": "서버가 상태 요청에 응답하는 데 걸리는 시간입니다. VPN 지연 시간이 아닙니다.",
+    "addresses": "주소",
+    "serverAddress": "서버 주소",
+    "vpnAddress": "VPN 주소",
+    "thisDevice": "이 기기",
+    "mtu": "패킷 크기(MTU)",
+    "server": "서버",
+    "blockWithoutVpn": "VPN 없이 차단",
+    "alwaysOn": "항상 켜진 VPN",
+    "mtuValue": "{value, plural, other {{{value}} 바이트}}",
+    "mtuPending": "{value, plural, other {{{value}} 바이트 측정됨 · 다음 연결부터 적용}}"
+  },
+  "traffic": {
+    "label": "이 기기의 트래픽",
+    "session": "현재 세션",
+    "countersUnavailable": "카운터를 사용할 수 없음",
+    "notConnected": "이 서버에 연결되지 않음",
+    "download": "다운로드",
+    "upload": "업로드",
+    "duration": "연결 시간",
+    "measuring": "측정 중…",
+    "received": "{{amount}} 수신",
+    "sent": "{{amount}} 전송",
+    "counterFailed": "카운터를 읽지 못했습니다",
+    "needsUpdate": "VPN 구성 요소 업데이트 필요",
+    "durationFailed": "세션 시간을 읽지 못했습니다",
+    "updateNeeded": "이 기기의 트래픽 카운터와 세션 시간을 보려면 VPN 구성 요소를 업데이트해야 합니다."
+  },
+  "device": {
+    "summary": "기기 세부 정보",
+    "receivedPackets": "수신한 패킷",
+    "sentPackets": "전송한 패킷",
+    "latency": "지연 시간",
+    "latencyInfo": "VPN을 통한 서버와의 평균 왕복 시간입니다. 인터넷 속도가 아닙니다.",
+    "noMeasurement": "아직 측정되지 않음",
+    "probes": "프로브 응답",
+    "probesValue": "{{received}}/{{sent}} · 지터 {{jitter}}",
+    "ipv6": "IPv6",
+    "autoReconnect": "자동 다시 연결",
+    "fallback": "대체 방식",
+    "countersNote": "다시 연결하면 카운터가 초기화됩니다. 기록은 보관되지 않습니다."
+  },
+  "server": {
+    "title": "서버",
+    "freshness": {
+      "unavailable": "사용할 수 없음",
+      "live": "실시간",
+      "polling": "주기적으로 새로 고침",
+      "connecting": "통계 불러오는 중…",
+      "reconnecting": "통계 다시 연결하는 중…"
+    },
+    "unavailable": "서버 통계를 사용할 수 없습니다. 자동으로 다시 표시됩니다.",
+    "connectToSee": "서버 통계를 보려면 연결하세요.",
+    "pollingNote": "실시간 서버 통계를 보려면 서버 업데이트가 필요합니다.",
+    "noMeasurement": "측정되지 않음",
+    "usedOf": "{{total}} 중 {{used}}",
+    "cpu": "CPU",
+    "cpuDetail": "모든 코어의 평균",
+    "memory": "메모리",
+    "storage": "저장 공간",
+    "uptime": "가동 시간",
+    "devices": "기기",
+    "devicesActive": "{{total}}대 중 {{active}}대 활성",
+    "devicesAuthorized": "{count, plural, other {기기 #대}}",
+    "activityUnavailable": "활동 정보를 사용할 수 없음",
+    "activityUnreadable": "서버에서 기기 활동을 읽지 못했습니다.",
+    "activityUnsupported": "이 서버는 기기 활동을 보고할 수 없습니다. 이 기능을 켜려면 서버를 업데이트하세요.",
+    "reviewHealth": "서버 상태 확인",
+    "reviewUpdate": "업데이트 검토",
+    "detailsSummary": "서버 세부 정보",
+    "inbound": "수신",
+    "outbound": "송신",
+    "received": "수신",
+    "sent": "전송",
+    "receivedPackets": "수신한 패킷",
+    "sentPackets": "전송한 패킷",
+    "dns": "DNS",
+    "dnsRunning": "실행 중",
+    "dnsDown": "응답 없음",
+    "totalsInfo": "합계는 서버의 VPN이 시작된 이후 모든 기기를 포함합니다.",
+    "pollingNoteMember": "실시간 서버 통계를 보려면 서버 업데이트가 필요합니다. 서버 소유자가 설치할 수 있습니다."
+  },
+  "alwaysOnNote": "항상 켜진 VPN이 켜져 있어 VPN이 언제 멈출지는 Android가 결정합니다. Android VPN 설정에서 연결을 끊으세요.",
+  "method": {
+    "https": "HTTPS",
+    "automatic": "자동 · {{method}}"
+  },
+  "alert": {
+    "label": "경고",
+    "runDiagnostics": "진단 실행",
+    "checkServer": "서버 상태 확인",
+    "unstable": "{sent, plural, other {불안정한 연결: 최근 확인 #회 중 {{lost}}회는 응답이 없었습니다.}}",
+    "storage": "서버 저장 공간이 {{percent}} 찼습니다. 작동이 멈추기 전에 공간을 확보하세요.",
+    "rotationPending": "키 교체가 완료되지 않았습니다. 이 기기가 접근 권한을 유지하도록 완료하세요.",
+    "finishRotation": "키 교체 완료"
+  },
+  "consequence": {
+    "desktop": "연결을 끊으면 킬 스위치 차단과 자동 다시 연결도 함께 꺼집니다."
+  }
+}

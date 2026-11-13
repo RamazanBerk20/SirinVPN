@@ -1,7 +1,7 @@
 import { act, cleanup, fireEvent, render, renderHook, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { api } from "../../api";
-import { t } from "../../i18n";
+import { formatRelativeTime, t } from "../../i18n";
 import { open } from "../../lib/nativeDialog";
 import type { ServerProfile, VpsBackupSchedule } from "../../types";
 import { VpsBackupScheduleDialog } from "./VpsBackupScheduleDialog";
@@ -107,7 +107,7 @@ it("explains a missing saved SSH login and turns the schedule off", async () => 
   render(<VpsBackupScheduleDialog profile={profile} open onOpenChange={vi.fn()} disconnected />);
   expect(await screen.findByText(t("vps.schedule.loginMissing"))).toBeTruthy();
   expect(await screen.findByText(t("vps.schedule.stale"))).toBeTruthy();
-  expect(screen.getByText(t("vps.schedule.lastBackup", { age: t("vps.schedule.age.days", { count: 10 }) }))).toBeTruthy();
+  expect(screen.getByText(t("vps.schedule.lastBackup", { age: formatRelativeTime(-10, "day") }))).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: t("vps.schedule.turnOff") }));
   await waitFor(() => expect(api.disableVpsBackupSchedule).toHaveBeenCalledExactlyOnceWith("a"));
   expect(screen.queryByRole("button", { name: t("vps.schedule.turnOff") })).toBeNull();

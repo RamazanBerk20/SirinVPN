@@ -189,67 +189,67 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
             .outer_address(endpoint)
             .ok_or_else(|| anyhow!("the CDN address for HTTPS did not resolve"))?;
         let server_address = SocketAddr::new(endpoint, request.endpoint_port);
-        let config = match request.transport {
-            TransportKind::ObfuscatedUdp => ClientTransportConfig::LegacyObfuscatedUdp(
+        let carrier = match request.transport {
+            TransportKind::ObfuscatedUdp => CurrentClientTransportConfig::ObfuscatedUdp(
                 client_relay_config(server_address, &request.private_key, server_public_key)?,
             ),
-            TransportKind::TcpFallback => ClientTransportConfig::Current(
-                CurrentClientTransportConfig::TcpFallback(tcp_client_relay_config(
+            TransportKind::TcpFallback => CurrentClientTransportConfig::TcpFallback(
+                tcp_client_relay_config(server_address, &request.private_key, server_public_key)?,
+            ),
+            TransportKind::TlsLike => CurrentClientTransportConfig::TlsLike(
+                tls_like_client_relay_config(
                     server_address,
                     &request.private_key,
                     server_public_key,
-                )?),
+                    request
+                        .server_certificate_sha256
+                        .as_deref()
+                        .ok_or_else(|| {
+                            anyhow!("TLS-like certificate fingerprint is unavailable")
+                        })?,
+                )?
+                .with_https(request.https.clone())?,
             ),
-            TransportKind::TlsLike => {
-                ClientTransportConfig::Current(CurrentClientTransportConfig::TlsLike(
-                    tls_like_client_relay_config(
-                        server_address,
-                        &request.private_key,
-                        server_public_key,
-                        request
-                            .server_certificate_sha256
-                            .as_deref()
-                            .ok_or_else(|| {
-                                anyhow!("TLS-like certificate fingerprint is unavailable")
-                            })?,
-                    )?
-                    .with_https(request.https.clone())?,
-                ))
-            }
-            TransportKind::Quic => {
-                ClientTransportConfig::Current(CurrentClientTransportConfig::Quic(
-                    quic_client_relay_config(
-                        server_address,
-                        &request.private_key,
-                        server_public_key,
-                        request
-                            .server_certificate_sha256
-                            .as_deref()
-                            .ok_or_else(|| {
-                                anyhow!("QUIC certificate fingerprint is unavailable")
-                            })?,
-                    )?
-                    .with_https(request.https.clone())?,
-                ))
-            }
+            TransportKind::Quic => CurrentClientTransportConfig::Quic(
+                quic_client_relay_config(
+                    server_address,
+                    &request.private_key,
+                    server_public_key,
+                    request
+                        .server_certificate_sha256
+                        .as_deref()
+                        .ok_or_else(|| anyhow!("QUIC certificate fingerprint is unavailable"))?,
+                )?
+                .with_https(request.https.clone())?,
+            ),
             TransportKind::DirectUdp => bail!("Direct UDP does not use a transport relay"),
         };
+        let config = ClientTransportConfig::Pinned(PinnedClientTransportConfig {
+            wireguard: SocketAddr::from((Ipv4Addr::LOCALHOST, WIREGUARD_LISTEN_PORT)),
+            carrier,
+        });
+        let unit = carrier_unit(request.transport);
         self.write_transport_config_at(&config, &self.carrier_config_path(request.transport))?;
         if self
             .runner
-            .run(
-                "systemctl",
-                &["start", &carrier_unit(request.transport)],
-                None,
-            )
+            .run("systemctl", &["start", &unit], None)
             .is_err()
         {
-            let _ = self.runner.run(
-                "systemctl",
-                &["stop", &carrier_unit(request.transport)],
-                None,
-            );
+            // Read before `stop` resets it: the relay's own exit status names the cause.
+            let port_in_use = self
+                .runner
+                .output(
+                    "systemctl",
+                    &["show", "--property=ExecMainStatus", "--value", &unit],
+                )
+                .is_ok_and(|status| {
+                    String::from_utf8_lossy(&status).trim() == RELAY_PORT_IN_USE_EXIT.to_string()
+                });
+            let _ = self.runner.run("systemctl", &["stop", &unit], None);
             let _ = remove_file_if_exists(&self.carrier_config_path(request.transport));
+            if port_in_use {
+                return Err(CarrierPortInUse(carrier_port(request.transport)).into());
+            }
             bail!("transport service failed to authenticate")
         }
         Ok(())
@@ -319,6 +319,32 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
             return Err(HelperError::NetworkOperationFailed);
         }
         Ok(())
+    }
+}
+
+/// Another program holds a carrier relay's loopback port. This is reported, never
+/// answered by silently moving to another carrier: a local user must not be able to
+/// switch the anti-censorship carriers off by occupying their ports.
+#[derive(Debug, thiserror::Error)]
+#[error("another program is using local port {0}, which the carrier relay needs")]
+pub(super) struct CarrierPortInUse(pub(super) u16);
+
+impl CarrierPortInUse {
+    /// The helper error for an operation that failed because of a squatted carrier port.
+    pub(super) fn helper_error(error: &anyhow::Error) -> Option<HelperError> {
+        error
+            .downcast_ref::<Self>()
+            .map(|port| HelperError::InvalidConfiguration(port.to_string()))
+    }
+}
+
+pub(super) fn carrier_port(kind: TransportKind) -> u16 {
+    match kind {
+        TransportKind::DirectUdp => 0,
+        TransportKind::ObfuscatedUdp => CLIENT_RELAY_PORT,
+        TransportKind::TcpFallback => TCP_CLIENT_RELAY_PORT,
+        TransportKind::TlsLike => TLS_LIKE_CLIENT_RELAY_PORT,
+        TransportKind::Quic => QUIC_CLIENT_RELAY_PORT,
     }
 }
 

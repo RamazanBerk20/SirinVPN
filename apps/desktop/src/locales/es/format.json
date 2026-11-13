@@ -1,0 +1,42 @@
+{
+  "unavailable": "No disponible",
+  "bytes": {
+    "B": "{{value}} B",
+    "KB": "{{value}} kB",
+    "MB": "{{value}} MB",
+    "GB": "{{value}} GB",
+    "TB": "{{value}} TB"
+  },
+  "rate": "{{value}}/s",
+  "memoryUsage": "{{percent}} · {{used}}",
+  "latency": "{{value}} ms",
+  "latencyBelowOne": "<1 ms",
+  "uptimeDays": "{{days}} d {{hours}} h",
+  "uptimeHours": "{{hours}} h {{minutes}} min",
+  "transport": {
+    "direct_udp": "Direct UDP",
+    "obfuscated_udp": "UDP ofuscado",
+    "tls_like": "Alternativa TLS",
+    "tcp_fallback": "Alternativa TCP",
+    "quic": "QUIC (HTTP/3)"
+  },
+  "dnsPolicy": {
+    "recursive": "DNS recursivo",
+    "dnsOverTls": "{count, plural, one {DNS sobre TLS · # servidor} many {DNS sobre TLS · # servidores} other {DNS sobre TLS · # servidores}}",
+    "dnsOverHttps": "{count, plural, one {DNS sobre HTTPS · # servidor} many {DNS sobre HTTPS · # servidores} other {DNS sobre HTTPS · # servidores}}",
+    "split": "{count, plural, one {DNS dividido · # zona · {{fallback}}} many {DNS dividido · # zonas · {{fallback}}} other {DNS dividido · # zonas · {{fallback}}}}"
+  },
+  "os": {
+    "android": "Android",
+    "windows": "Windows",
+    "linux": "Linux"
+  },
+  "arch": {
+    "x86_64": "x86 de 64 bits",
+    "aarch64": "ARM de 64 bits"
+  },
+  "clock": {
+    "minutes": "{{minutes}}:{{seconds}}",
+    "hours": "{{hours}}:{{minutes}}:{{seconds}}"
+  }
+}

@@ -58,7 +58,14 @@ pub fn check(code: &str, label: &str, level: DiagnosticLevel, message: &str) -> 
         label: label.into(),
         level,
         message: message.into(),
+        cause: None,
     }
+}
+
+/// A check whose message has a stable cause the interface can tell apart.
+fn caused(mut check: DiagnosticCheck, cause: &str) -> DiagnosticCheck {
+    check.cause = Some(cause.into());
+    check
 }
 
 pub async fn diagnose(
@@ -224,8 +231,8 @@ pub fn local_checks(current: Option<&CurrentConnection>) -> Vec<DiagnosticCheck>
                     &format!("{} of {} probes returned; average latency {} ms, jitter {} ms. This is a current private-tunnel sample, not an Internet speed test.",
                         sample.probes_received, sample.probes_sent, sample.latency_micros / 1000, sample.jitter_micros / 1000)));
             } else {
-                checks.push(check("local_quality", "Current private-tunnel probes", Warning,
-                    "No fresh private-tunnel quality sample is available. ICMP filtering can prevent measurement even when the VPN works."));
+                checks.push(caused(check("local_quality", "Current private-tunnel probes", Warning,
+                    "No fresh private-tunnel quality sample is available. ICMP filtering can prevent measurement even when the VPN works."), "not_measured"));
             }
         }
     }
@@ -235,11 +242,14 @@ pub fn local_checks(current: Option<&CurrentConnection>) -> Vec<DiagnosticCheck>
 fn mtu_check(mtu: Option<MtuStatus>) -> DiagnosticCheck {
     use DiagnosticLevel::{Fail, Pass, Warning};
     let Some(mtu) = mtu else {
-        return check(
-            "local_mtu",
-            "Current path MTU",
-            Warning,
-            "No current path MTU reading is available. Check Network settings after the tunnel connects.",
+        return caused(
+            check(
+                "local_mtu",
+                "Current path MTU",
+                Warning,
+                "No current path MTU reading is available. Check Network settings after the tunnel connects.",
+            ),
+            "not_measured",
         );
     };
     let (level, action) = match mtu.outcome {
@@ -277,62 +287,89 @@ fn mtu_check(mtu: Option<MtuStatus>) -> DiagnosticCheck {
     } else {
         "Automatic"
     };
-    check(
+    let pending = level == Warning
+        && match mtu.outcome {
+            MtuProbeOutcome::Pending | MtuProbeOutcome::IcmpUnavailable => true,
+            MtuProbeOutcome::Measured => mtu.suggested.is_none_or(|value| value > mtu.configured),
+            _ => false,
+        };
+    let check = check(
         "local_mtu",
         "Current path MTU",
         level,
         &format!("{policy} MTU: {} bytes. {action}", mtu.configured),
-    )
+    );
+    if pending {
+        caused(check, "mtu_pending")
+    } else {
+        check
+    }
 }
 
 pub fn management_failure(error: &ManagementError) -> DiagnosticCheck {
-    let message = match error {
-        ManagementError::InvalidServerIdentity => {
-            "The saved server certificate pin is invalid. Restore a trusted device backup or use the authenticated endpoint recovery flow; do not accept an unverified replacement certificate."
-        }
-        ManagementError::InvalidClientIdentity => {
-            "The saved device management certificate/key is invalid. Restore a device backup or enroll this device again."
-        }
-        ManagementError::DiagnosticTlsFailed => {
-            "The private TLS handshake failed. Check the pinned server identity, this device's enrollment and both device and VPS clocks. Do not bypass certificate verification."
-        }
-        ManagementError::DiagnosticTimedOut => {
-            "The private management request timed out. Check the local tunnel, included management route and VPS service. A timeout alone does not identify a certificate problem."
-        }
+    let (message, cause) = match error {
+        ManagementError::InvalidServerIdentity => (
+            "The saved server certificate pin is invalid. Restore a trusted device backup or use the authenticated endpoint recovery flow; do not accept an unverified replacement certificate.",
+            Some("management_credentials_invalid"),
+        ),
+        ManagementError::InvalidClientIdentity => (
+            "The saved device management certificate/key is invalid. Restore a device backup or enroll this device again.",
+            Some("management_credentials_invalid"),
+        ),
+        ManagementError::DiagnosticTlsFailed => (
+            "The private TLS handshake failed. Check the pinned server identity, this device's enrollment and both device and VPS clocks. Do not bypass certificate verification.",
+            Some("management_clock"),
+        ),
+        ManagementError::DiagnosticTimedOut => (
+            "The private management request timed out. Check the local tunnel, included management route and VPS service. A timeout alone does not identify a certificate problem.",
+            Some("management_unreachable"),
+        ),
         ManagementError::ProtocolMismatch
         | ManagementError::StatusStreamingUnsupported
-        | ManagementError::SpeedTestUnsupported => {
-            "The VPS management protocol is incompatible. Update the app and VPS to compatible versions."
-        }
+        | ManagementError::SpeedTestUnsupported => (
+            "The VPS management protocol is incompatible. Update the app and VPS to compatible versions.",
+            None,
+        ),
         ManagementError::RequestRejected {
             code: ErrorCode::AuthenticationFailed,
             ..
-        } => {
-            "The VPS rejected device authentication. Check the enrolled device certificate and recover or enroll again if it was replaced."
-        }
+        } => (
+            "The VPS rejected device authentication. Check the enrolled device certificate and recover or enroll again if it was replaced.",
+            Some("management_device_rejected"),
+        ),
         ManagementError::RequestRejected {
             code: ErrorCode::AuthorizationFailed | ErrorCode::PermissionDenied,
             ..
-        } => {
-            "The VPS rejected this device's current access. The owner can check device revocation, member suspension, expiration and access schedules."
-        }
+        } => (
+            "The VPS rejected this device's current access. The owner can check device revocation, member suspension, expiration and access schedules.",
+            Some("management_access_rejected"),
+        ),
         ManagementError::RequestRejected {
             code: ErrorCode::RateLimited,
             ..
-        } => "The VPS is limiting requests. Wait briefly, then rerun diagnostics.",
-        ManagementError::RequestRejected { .. } => {
-            "The authenticated VPS rejected diagnostics. Check current device access and compatible app/server versions."
-        }
-        ManagementError::ConnectionFailed => {
-            "The private management connection did not complete. Check tunnel connectivity, its private route, the VPS service and pinned identities. The current response cannot distinguish those causes."
-        }
+        } => (
+            "The VPS is limiting requests. Wait briefly, then rerun diagnostics.",
+            None,
+        ),
+        ManagementError::RequestRejected { .. } => (
+            "The authenticated VPS rejected diagnostics. Check current device access and compatible app/server versions.",
+            None,
+        ),
+        ManagementError::ConnectionFailed => (
+            "The private management connection did not complete. Check tunnel connectivity, its private route, the VPS service and pinned identities. The current response cannot distinguish those causes.",
+            Some("management_unreachable"),
+        ),
     };
-    check(
+    let check = check(
         "management",
         "VPS authentication and connectivity",
         DiagnosticLevel::Fail,
         message,
-    )
+    );
+    match cause {
+        Some(cause) => caused(check, cause),
+        None => check,
+    }
 }
 
 pub(crate) fn request_failure(error: reqwest::Error) -> ManagementError {

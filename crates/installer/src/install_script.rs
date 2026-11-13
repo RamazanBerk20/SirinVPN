@@ -249,10 +249,7 @@ umask 077
 {restore_stdin_setup}
 
 printf '%s\n' 'SIRINVPN_INSTALL_STEP=recovery'
-for pending in /run/sirinvpn-rollback-*.sh /run/sirinvpn-uninstall-rollback-*.sh /var/lib/sirinvpn-maintenance/sirinvpn-rollback-*.sh /var/lib/sirinvpn-maintenance/sirinvpn-uninstall-rollback-*.sh; do
-  [ -f "$pending" ] || continue
-  /bin/sh "$pending"
-done
+{recover_pending}
 
 printf '%s\n' 'SIRINVPN_INSTALL_STEP=guards'
 {maintenance_begin}
@@ -831,13 +828,18 @@ systemctl restart sirinvpn-dns-blocklist.path sirinvpn-dns-blocklist.timer sirin
         dns_blocklist_setup = super::dns_blocklist::DNS_BLOCKLIST_SETUP,
         alerts_managed_paths = super::alerts::ALERTS_MANAGED_PATHS,
         alerts_setup = super::alerts::ALERTS_SETUP,
+        recover_pending = maintenance::recover_pending(),
         maintenance_begin = super::updates::MAINTENANCE_BEGIN,
         update_setup = super::updates::UPDATE_SETUP,
         artifact_preflight =
             artifact.root_preflight(remote_binary, nonce, transaction.expected_profile.is_some()),
         rollback_begin = maintenance::rollback_begin(nonce, false),
         rollback_finish = maintenance::rollback_finish(),
-        arm_recovery = maintenance::arm(nonce, false),
+        arm_recovery = maintenance::arm(
+            nonce,
+            false,
+            &maintenance::owner_label(&request.identity.management_certificate_pem),
+        ),
         preserve_authorization = if transaction.expected_profile.is_some() {
             maintenance::PRESERVE_AUTHORIZATION
         } else {

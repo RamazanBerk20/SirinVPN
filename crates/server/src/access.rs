@@ -57,12 +57,161 @@ pub(super) fn authorize_current(
     Ok(caller)
 }
 
+/// Authorization commits a device without manager rights may make per minute. Each commit
+/// that removes access briefly contains every device's traffic and holds the write lock.
+pub(super) const MEMBER_MUTATIONS_PER_MINUTE: usize = 10;
+/// All of one person's devices together. Twice one device's budget leaves room to act from a
+/// phone and a laptop in the same minute, while a person with many devices cannot multiply
+/// the server-wide containment and write-lock holds the per-device budget bounds.
+pub(super) const MEMBER_WIDE_MUTATIONS_PER_MINUTE: usize = 2 * MEMBER_MUTATIONS_PER_MINUTE;
+pub(super) const STATUS_STREAMS_PER_DEVICE: usize = 2;
+
+/// Budgets follow the stable ids, never the certificate fingerprint a key rotation replaces.
+#[derive(Clone, Copy, Eq, Hash, PartialEq)]
+enum Budget {
+    Device(DeviceId),
+    Member(MemberId),
+}
+
+/// Process-local request budgets; nothing here is persisted.
+#[derive(Clone, Default)]
+pub(super) struct Throttle {
+    mutations: Arc<Mutex<HashMap<Budget, VecDeque<Instant>>>>,
+    streams: Arc<Mutex<HashMap<String, usize>>>,
+    pub(super) status: super::status_stream::StatusFeed,
+}
+
+/// Call with the write lock held, before any work, in every mutating handler a Member can reach.
+/// Owners and Admins are not limited: they can already remove every device.
+pub(super) fn limit_mutation(
+    state: &AppState,
+    authorization: &AuthorizationDocument,
+    caller: &CallerIdentity,
+) -> Result<(), ApiError> {
+    let fingerprint = &caller.certificate_fingerprint;
+    // Committing or cancelling a key rotation comes from the new identity, which owns no
+    // device yet: charge the device being rotated.
+    let device = authorization
+        .device_for_fingerprint(fingerprint)
+        .or_else(|| {
+            let rotation = authorization
+                .key_rotations
+                .iter()
+                .find(|rotation| rotation.new_certificate_fingerprint == *fingerprint)?;
+            authorization.devices.iter().find(|device| {
+                device.id == rotation.device_id
+                    && device.certificate_fingerprint == rotation.previous_certificate_fingerprint
+            })
+        });
+    // Unknown identities get their usual 403 from the handler; managers are not limited.
+    let Some((device, access)) =
+        device.and_then(|device| Some((device, authorization.access_for_device(device)?)))
+    else {
+        return Ok(());
+    };
+    if access.role == ServerRole::Owner || access.administrator {
+        return Ok(());
+    }
+    let now = Instant::now();
+    let mut budgets = state
+        .throttle
+        .mutations
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
+    budgets.retain(|_, times| {
+        times.retain(|time| now.duration_since(*time) < Duration::from_secs(60));
+        !times.is_empty()
+    });
+    let charged = [
+        (Budget::Device(device.id), MEMBER_MUTATIONS_PER_MINUTE),
+        (
+            Budget::Member(device.member_id),
+            MEMBER_WIDE_MUTATIONS_PER_MINUTE,
+        ),
+    ];
+    if charged.iter().any(|(budget, limit)| {
+        budgets
+            .get(budget)
+            .is_some_and(|times| times.len() >= *limit)
+    }) {
+        return Err(ApiError::new(
+            StatusCode::TOO_MANY_REQUESTS,
+            ErrorCode::RateLimited,
+            "this device made too many changes; try again in a minute",
+        ));
+    }
+    for (budget, _) in charged {
+        budgets.entry(budget).or_default().push_back(now);
+    }
+    Ok(())
+}
+
+/// Held by an open status stream; dropping it frees the slot.
+pub(super) struct StreamSlot {
+    streams: Arc<Mutex<HashMap<String, usize>>>,
+    fingerprint: String,
+}
+
+impl Drop for StreamSlot {
+    fn drop(&mut self) {
+        let mut streams = self
+            .streams
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        if let Some(count) = streams.get_mut(&self.fingerprint) {
+            *count -= 1;
+            if *count == 0 {
+                streams.remove(&self.fingerprint);
+            }
+        }
+    }
+}
+
+pub(super) fn acquire_stream(
+    state: &AppState,
+    caller: &CallerIdentity,
+) -> Result<StreamSlot, ApiError> {
+    let mut streams = state
+        .throttle
+        .streams
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
+    let count = streams
+        .entry(caller.certificate_fingerprint.clone())
+        .or_default();
+    if *count >= STATUS_STREAMS_PER_DEVICE {
+        return Err(ApiError::new(
+            StatusCode::TOO_MANY_REQUESTS,
+            ErrorCode::RateLimited,
+            "this device already has open status streams",
+        ));
+    }
+    *count += 1;
+    Ok(StreamSlot {
+        streams: state.throttle.streams.clone(),
+        fingerprint: caller.certificate_fingerprint.clone(),
+    })
+}
+
 pub(super) fn can_manage_member(
     caller: CallerAuthorization,
     role: ServerRole,
     administrator: bool,
 ) -> bool {
     caller.is_owner() || (caller.administrator && role == ServerRole::Member && !administrator)
+}
+
+/// Adding a device to `target`: any member the caller manages; their own member when the
+/// caller is an Admin or holds the delegated permission. Limits and suspension are checked
+/// separately and still apply.
+pub(super) fn can_add_device_to(
+    caller: CallerAuthorization,
+    caller_member_id: MemberId,
+    target: &MemberRecord,
+) -> bool {
+    can_manage_member(caller, target.role, target.administrator)
+        || (target.id == caller_member_id
+            && (caller.administrator || target.policy.add_own_devices))
 }
 
 pub(super) fn caller_member(

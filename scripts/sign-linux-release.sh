@@ -70,6 +70,14 @@ find_one() {
 
 APPIMAGE=$(find_one "$PROJECT_ROOT/target/release/bundle/appimage" '.AppImage')
 DEB=$(find_one "$PROJECT_ROOT/target/release/bundle/deb" '.deb')
+# The VPS server payloads the packages carry: signed here so the same release
+# serves "Install signed VPS baseline" and the VPS updater.
+for SERVER_ARCH in x86_64 aarch64; do
+  [ -f "$PROJECT_ROOT/target/server-payloads/$SERVER_ARCH-unknown-linux-gnu/release/sirinvpn-server" ] || {
+    echo "the $SERVER_ARCH VPS server payload is unavailable; build packaging/Dockerfile.server-payloads first" >&2
+    exit 1
+  }
+done
 
 OUTPUT_PARENT=$(dirname -- "$OUTPUT_DIRECTORY")
 [ -d "$OUTPUT_PARENT" ] || { echo "release output parent does not exist" >&2; exit 1; }
@@ -91,6 +99,10 @@ APPIMAGE_NAME=$(basename -- "$APPIMAGE")
 DEB_NAME=$(basename -- "$DEB")
 install -m 0644 "$APPIMAGE" "$STAGING/$APPIMAGE_NAME"
 install -m 0644 "$DEB" "$STAGING/$DEB_NAME"
+for SERVER_ARCH in x86_64 aarch64; do
+  install -m 0644 "$PROJECT_ROOT/target/server-payloads/$SERVER_ARCH-unknown-linux-gnu/release/sirinvpn-server" \
+    "$STAGING/sirinvpn-server-$SERVER_ARCH"
+done
 if [ -n "$TRUST_POLICY" ]; then
   install -m 0644 "$TRUST_POLICY" "$STAGING/sirinvpn-release-trust.json"
   install -m 0644 "$TRUST_SIGNATURE" "$STAGING/sirinvpn-release-trust.sig.json"
@@ -112,6 +124,8 @@ cargo run --manifest-path "$PROJECT_ROOT/Cargo.toml" --locked --quiet \
   --private-key "$PRIVATE_KEY" \
   --artifact "linux_appimage,$RUST_TARGET,$STAGING/$APPIMAGE_NAME" \
   --artifact "linux_deb,$RUST_TARGET,$STAGING/$DEB_NAME" \
+  --artifact "server_elf,x86_64-unknown-linux-gnu,$STAGING/sirinvpn-server-x86_64" \
+  --artifact "server_elf,aarch64-unknown-linux-gnu,$STAGING/sirinvpn-server-aarch64" \
   --manifest "$STAGING/sirinvpn-release.json" \
   --signature "$STAGING/sirinvpn-release.sig.json"
 

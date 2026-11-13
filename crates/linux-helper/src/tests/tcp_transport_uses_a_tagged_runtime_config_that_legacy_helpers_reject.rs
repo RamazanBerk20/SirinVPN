@@ -18,7 +18,10 @@ fn tcp_transport_uses_a_tagged_runtime_config_that_legacy_helpers_reject() {
     let bytes = fs::read(&transport_path).unwrap();
     assert!(serde_json::from_slice::<ClientRelayConfig>(&bytes).is_err());
     let config: ClientTransportConfig = serde_json::from_slice(&bytes).unwrap();
-    let ClientTransportConfig::Current(CurrentClientTransportConfig::TcpFallback(config)) = config
+    let ClientTransportConfig::Pinned(PinnedClientTransportConfig {
+        carrier: CurrentClientTransportConfig::TcpFallback(config),
+        ..
+    }) = config
     else {
         panic!("TCP must use the tagged current runtime shape");
     };
@@ -259,7 +262,8 @@ fn persistent_protection_is_persisted_root_only_and_started_before_network_chang
             .permissions()
             .mode()
             & 0o777,
-        0o700
+        // Searchable, not listable: only the public guard spec is readable by name.
+        0o711
     );
     let desired = directory.path().join("persistent/desired-connection.json");
     assert_eq!(

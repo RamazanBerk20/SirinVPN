@@ -48,14 +48,13 @@ class ExternalControlsTest {
         assertEquals(PermissionInfo.PROTECTION_DANGEROUS, context.packageManager.getPermissionInfo(permission, 0).protection)
         assertNull("Grant VPN consent on this emulator first", android.net.VpnService.prepare(context))
         val link = ServiceLink(context)
-        instrumentation.runOnMainSync { link.bind() }
         val host = AppWidgetHost(context, 0x5157)
         val user = android.os.Process.myUid() / 100000  // `--user current` is killed on API 36 images.
         // Read to the end: the command has finished only when its output closes.
         fun shellCommand(command: String) = android.os.ParcelFileDescriptor.AutoCloseInputStream(shell.executeShellCommand(command)).use { it.readBytes() }
         var id: String? = null
         try {
-            val control = link.ready.get(10, TimeUnit.SECONDS)
+            val control = link.control(10000).get(10, TimeUnit.SECONDS)
             fun state() = JSONObject(control.snapshot())
             fun call(command: String, args: JSONObject = JSONObject()): Any {
                 val result = CompletableFuture<JSONObject>()
@@ -159,7 +158,7 @@ class ExternalControlsTest {
             shell.revokeRuntimePermission(relay, permission)
             shellCommand("appwidget revokebind --package ${context.packageName} --user $user")
             instrumentation.runOnMainSync { host.stopListening(); host.deleteHost() }
-            link.ready.getNow(null)?.let { control ->
+            link.current()?.let { control ->
                 for ((command, args) in listOfNotNull("disconnect_server" to JSONObject(), id?.let { "remove_server" to JSONObject().put("serverId", it) })) {
                     val done = CompletableFuture<String>()
                     control.execute(command, args.toString(), UUID.randomUUID().toString(), -1,

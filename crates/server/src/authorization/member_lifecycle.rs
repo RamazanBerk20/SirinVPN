@@ -23,10 +23,10 @@ impl AuthorizationDocument {
                 .any(|rotation| rotation.new_preshared_key.is_some())
         {
             PRESHARED_KEY_AUTHORIZATION_SCHEMA_VERSION
-        } else if self.endpoint_observed_address.is_some()
+        } else if self.endpoint.observed().is_some()
             || self
-                .endpoint_transition
-                .as_ref()
+                .endpoint
+                .head()
                 .is_some_and(|head| head.claims.schema_version >= 2)
         {
             5
@@ -36,8 +36,8 @@ impl AuthorizationDocument {
     }
 
     pub(crate) fn authorization_policy_schema_version(&self) -> u16 {
-        if self.recovery_key.is_some()
-            || self.recovery_receipt.is_some()
+        if self.owner_recovery.key().is_some()
+            || self.owner_recovery.receipt().is_some()
             || !self.recovery_policy.is_default()
         {
             4
@@ -116,11 +116,11 @@ impl AuthorizationDocument {
 
     pub(super) fn remove_member_pending_access(&mut self, member_id: MemberId) {
         if self
-            .recovery_key
-            .as_ref()
+            .owner_recovery
+            .key()
             .is_some_and(|key| key.claims.issuer_member_id == member_id)
         {
-            self.recovery_key = None;
+            self.owner_recovery = OwnerRecovery::Unarmed;
         }
         self.invitations.retain(|invitation| {
             invitation.claims.target_member_id != Some(member_id)

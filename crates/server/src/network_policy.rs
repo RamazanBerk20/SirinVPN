@@ -22,9 +22,10 @@ pub(super) async fn sync_wireguard_peers(
         }
     }
 
-    let output = diagnostics::output("wg", &["show", &configuration.interface_name, "peers"])
-        .await
-        .context("could not inspect WireGuard peers within its bounds")?;
+    let output =
+        diagnostics::mutation_output("wg", &["show", &configuration.interface_name, "peers"])
+            .await
+            .context("could not inspect WireGuard peers within its bounds")?;
     let current: HashSet<_> = output
         .lines()
         .map(str::trim)
@@ -53,7 +54,7 @@ pub(super) async fn sync_wireguard_peers(
     }
     if arguments.len() > 2 {
         let arguments: Vec<&str> = arguments.iter().map(String::as_str).collect();
-        diagnostics::output("wg", &arguments)
+        diagnostics::mutation_output("wg", &arguments)
             .await
             .context("could not update WireGuard peers within its bounds")?;
     }
@@ -99,7 +100,7 @@ pub(super) async fn sync_subnet_kernel_routes(
     interface: &str,
     desired: &[DesiredPeer],
 ) -> Result<()> {
-    let output = diagnostics::output(
+    let output = diagnostics::mutation_output(
         "ip",
         &["-4", "route", "show", "dev", interface, "proto", "static"],
     )
@@ -107,7 +108,7 @@ pub(super) async fn sync_subnet_kernel_routes(
     .context("could not inspect subnet routes within its bounds")?;
     let (stale, missing) = subnet_kernel_route_changes(&output, desired);
     for route in &stale {
-        diagnostics::output(
+        diagnostics::mutation_output(
             "ip",
             &[
                 "-4", "route", "delete", route, "dev", interface, "proto", "static",
@@ -120,7 +121,7 @@ pub(super) async fn sync_subnet_kernel_routes(
     for route in missing {
         // A range that later collides with a VPS route stays inactive instead of failing
         // every commit and recovery, which would leave it impossible to remove.
-        if diagnostics::output(
+        if diagnostics::mutation_output(
             "ip",
             &[
                 "-4", "route", "add", &route, "dev", interface, "proto", "static",
@@ -172,9 +173,10 @@ pub(super) async fn vps_route_conflict(
     if routes.is_empty() {
         return Ok(None);
     }
-    let output = diagnostics::output("ip", &["-4", "-j", "route", "show", "table", "main"])
-        .await
-        .context("could not inspect VPS routes within its bounds")?;
+    let output =
+        diagnostics::mutation_output("ip", &["-4", "-j", "route", "show", "table", "main"])
+            .await
+            .context("could not inspect VPS routes within its bounds")?;
     vps_route_overlap(&output, interface, routes)
 }
 
@@ -199,7 +201,7 @@ async fn sync_preshared_keys(interface: &str, desired: &[DesiredPeer]) -> Result
         return Ok(());
     }
     let current = Zeroizing::new(
-        diagnostics::output("wg", &["show", interface, "preshared-keys"])
+        diagnostics::mutation_output("wg", &["show", interface, "preshared-keys"])
             .await
             .context("could not inspect WireGuard preshared keys within its bounds")?,
     );
@@ -311,7 +313,7 @@ pub(super) async fn sync_peer_isolation(
     let mut batch = enrollment_quarantine_nft_batch(configuration, authorization.server_id);
     batch.push_str(&handoff_guard_nft_batch(
         configuration,
-        authorization.endpoint_transition_source,
+        authorization.endpoint.is_handoff_source(),
     ));
     batch.push_str(&peer_isolation_nft_batch(&peer_isolation_state(
         configuration,
@@ -370,7 +372,7 @@ pub async fn install_network_guard(paths: &ServerPaths) -> Result<()> {
     let authorization = load_runtime_authorization(paths)?;
     let source = authorization
         .as_ref()
-        .is_some_and(|document| document.endpoint_transition_source);
+        .is_some_and(|document| document.endpoint.is_handoff_source());
     apply_nft_batch(
         &handoff_guard_nft_batch(&configuration, source),
         "handoff guard",
@@ -478,7 +480,7 @@ pub(super) fn port_forward_nft_batch(
     .to_owned();
     for forward in forwards
         .into_iter()
-        .filter(|_| !authorization.endpoint_transition_source)
+        .filter(|_| !authorization.endpoint.is_handoff_source())
     {
         // A forward that later collides with a reserved port stays inactive instead of failing
         // every commit and recovery, which would leave it impossible to remove.
@@ -662,7 +664,7 @@ async fn run_with_input(
     input: &[u8],
     description: &str,
 ) -> Result<()> {
-    tokio::time::timeout(Duration::from_secs(5), async {
+    tokio::time::timeout(diagnostics::MUTATION_TIMEOUT, async {
         let mut child = Command::new(program)
             .args(arguments)
             .stdin(Stdio::piped())

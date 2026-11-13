@@ -99,3 +99,28 @@ fn failed_wallet_write_never_reports_success() {
     );
     assert!(read_entry("vps.example", &store).unwrap().is_none());
 }
+
+#[test]
+fn key_paths_come_only_from_the_chooser_generated_keys_or_the_saved_login() {
+    let directory = tempfile::tempdir().unwrap();
+    let keys = directory.path().join("ssh-keys");
+    std::fs::create_dir(&keys).unwrap();
+    std::fs::write(keys.join("sirinvpn-0123abcd"), "key").unwrap();
+    std::fs::write(directory.path().join("secret"), "not a key").unwrap();
+    let generated = keys.join("sirinvpn-0123abcd").display().to_string();
+    let escape = keys.join("../secret").display().to_string();
+    assert!(key_path_allowed(&generated, Some(&keys), || None));
+    assert!(!key_path_allowed(&escape, Some(&keys), || None));
+    assert!(!key_path_allowed("/etc/passwd", Some(&keys), || None));
+    assert!(!key_path_allowed(&generated, None, || None));
+    assert!(key_path_allowed("/home/me/.ssh/id_ed25519", None, || Some("/home/me/.ssh/id_ed25519".into())));
+    assert!(!key_path_allowed("/home/me/.ssh/other", None, || Some("/home/me/.ssh/id_ed25519".into())));
+}
+
+#[test]
+fn other_sign_in_methods_never_carry_a_key_path_into_a_saved_login() {
+    let mut password = login();
+    password.private_key_path = Some("/etc/shadow".into());
+    check_key_path(&mut password).unwrap();
+    assert!(password.private_key_path.is_none());
+}

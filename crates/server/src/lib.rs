@@ -53,6 +53,7 @@ use network_policy::*;
 
 pub mod alerts;
 mod authorization;
+pub mod authorization_doctor;
 pub mod dns_blocklist;
 mod dns_diagnostics;
 mod doh_proxy;
@@ -64,9 +65,9 @@ use authorization::{
     AuthorizationDocument, DesiredPeer, DeviceRecord, ENROLLMENT_HANDOFF_SECONDS,
     EnrollmentReceipt, InvitationRecord, MemberRecord, certificate_fingerprint, load_authorization,
     sign_claims, sign_endpoint_transition, submitted_certificate_fingerprint,
-    validate_display_name, validate_preshared_key, validate_wireguard_public_key,
-    verify_endpoint_transition_signature, verify_endpoint_transition_signature_with_key,
-    write_authorization,
+    validate_display_name, validate_new_display_name, validate_preshared_key,
+    validate_wireguard_public_key, verify_endpoint_transition_signature,
+    verify_endpoint_transition_signature_with_key, write_authorization,
 };
 use axum::{
     Extension, Json, Router,
@@ -99,17 +100,17 @@ use sirinvpn_protocol::{
     DevicePeerCommunicationUpdateRequest, DevicePlatformUpdateRequest, DeviceSubnetRoutes,
     DeviceSubnetRoutesUpdateRequest, DiagnosticReport, DnsUpstream, EndpointTransitionClaims,
     EndpointTransitionCreateRequest, EndpointTransitionResponse, EnrollmentRequest,
-    EnrollmentResult, ErrorCode, INTERFACE_NAME, InvitationClaims, InvitationCreateRequest,
+    EnrollmentResult, ErrorCode, INTERFACE_NAME, InvitationClaims, InvitationCreateBody,
     InvitationCreateResponse, InvitationId, KeyRotationCommitResponse, KeyRotationId,
     KeyRotationPrepareRequest, KeyRotationPrepareResponse, MAX_DEVICE_PAIRS, MAX_PORT_FORWARDS,
     MIN_PORT_FORWARD_PUBLIC_PORT, MemberAccessUpdateRequest, MemberDevicesRevokeRequest, MemberId,
     MemberSuspensionUpdateRequest, MembershipSnapshot, ObfuscatedUdpEndpoint,
     OwnershipTransferRequest, PortForward, PortForwardCreateRequest, PortForwardProtocol,
-    PrivateDnsRecord, RenameDeviceRequest, SERVER_TUNNEL_ADDRESS, ServerEndpoint, ServerId,
-    ServerRole, ServerStatus, TUNNEL_CIDR, TcpFallbackEndpoint, TlsLikeEndpoint, TransportKind,
-    ipv6_tunnel_address, server_dns_configuration_schema_version, validate_dns_upstream,
-    validate_host, validate_private_dns_records, validate_server_dns_configuration,
-    validate_server_name, validate_subnet_routes,
+    PrivateDnsRecord, RenameDeviceRequest, RenameMemberRequest, SERVER_TUNNEL_ADDRESS,
+    ServerEndpoint, ServerId, ServerRole, ServerStatus, TUNNEL_CIDR, TcpFallbackEndpoint,
+    TlsLikeEndpoint, TransportKind, ipv6_tunnel_address, server_dns_configuration_schema_version,
+    validate_dns_upstream, validate_host, validate_private_dns_records,
+    validate_server_dns_configuration, validate_server_name, validate_subnet_routes,
 };
 use sirinvpn_transport::{
     ActiveTransportRegistry, AuthorizedPeers, ServerRelayConfig, TcpServerRelayConfig, decode_key,
@@ -120,7 +121,7 @@ use std::{
     collections::{BTreeSet, HashMap, HashSet, VecDeque},
     fs, io,
     net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr},
-    os::unix::fs::{DirBuilderExt, MetadataExt, OpenOptionsExt, PermissionsExt},
+    os::unix::fs::{DirBuilderExt, MetadataExt, PermissionsExt},
     path::{Path, PathBuf},
     process::Stdio,
     sync::{Arc, Mutex},

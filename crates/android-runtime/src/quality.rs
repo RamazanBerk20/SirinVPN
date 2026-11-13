@@ -3,6 +3,7 @@ use crate::{
     commands::{active_preferences, profile},
     jni_bridge::Runtime,
     tunnel::carrier,
+    uapi::{PROBE_LISTEN_PORT, Rollback, WIREGUARD_LISTEN_PORT, pinned, roll_back},
 };
 use anyhow::{Context, Result, ensure};
 use base64::{Engine as _, engine::general_purpose::STANDARD};
@@ -78,10 +79,10 @@ pub async fn measure(runtime: &Runtime, generation: i64) -> Result<Value> {
         let mut winner=None;
         for selection in plan.iter().filter(|s|s.kind!=active && u64::from(s.mtu)>=original["mtu"].as_u64().unwrap_or(u64::MAX)) {
             unchanged()?;
-            let transport=match carrier(runtime,selection,&probe.secret.wireguard_private_key,Some(SocketAddr::from(([127,0,0,1],51826))),4).await {Ok(value)=>value,Err(_)=>continue};
+            let transport=match carrier(runtime,selection,&probe.secret.wireguard_private_key,Some(SocketAddr::from(([127,0,0,1],51826))),pinned(PROBE_LISTEN_PORT),4).await {Ok(value)=>value,Err(_)=>continue};
             status.candidates_checked+=1;
             let config=json!({"source":lease.client_address,"destination":p.server_tunnel_address,"transport":selection.kind,
-                "wireguard":format!("private_key={}\nreplace_peers=true\npublic_key={}\nendpoint={}\nallowed_ip={}/32\npersistent_keepalive_interval=25\n",*private,public,transport.endpoint,p.server_tunnel_address)});
+                "wireguard":format!("private_key={}\nlisten_port={}\nreplace_peers=true\npublic_key={}\nendpoint={}\nallowed_ip={}/32\npersistent_keepalive_interval=25\n",*private,PROBE_LISTEN_PORT,public,transport.endpoint,p.server_tunnel_address)});
             let mut measured=None;
             for comparison in 0..2 {
                 unchanged()?;
@@ -97,7 +98,8 @@ pub async fn measure(runtime: &Runtime, generation: i64) -> Result<Value> {
         if let Some(winner)=winner {
             unchanged()?;
             let selection=plan.iter().find(|s|s.kind==winner.transport).context("Missing candidate")?;
-            let mut next=carrier(runtime,selection,&secret.wireguard_private_key,Some(SocketAddr::from(([127,0,0,1],51825))),4).await?;
+            // Automatic sessions fix WireGuard's port (uapi::listen_port), so this relay can pin it.
+            let mut next=carrier(runtime,selection,&secret.wireguard_private_key,Some(SocketAddr::from(([127,0,0,1],51825))),pinned(WIREGUARD_LISTEN_PORT),4).await?;
             unchanged()?;
             let candidate=next.endpoint.to_string();
             runtime.platform.handoff(&json!({"previous":original["endpoint"],"endpoint":candidate,"maximum_mtu":selection.mtu}),generation)?;
@@ -107,15 +109,33 @@ pub async fn measure(runtime: &Runtime, generation: i64) -> Result<Value> {
                 // No JNI calls while holding the relay lock: Controller.stopEngine
                 // takes the locks in the opposite order. The native generation
                 // prevents a late optimizer from replacing a newer session's task.
-                let mut relay=runtime.relay.lock().map_err(|_|anyhow::anyhow!("Transport unavailable"))?;
-                ensure!(runtime.generation.load(Ordering::SeqCst)==generation,"Connection changed");
-                if let Some(previous)=relay.take() {previous.abort();}
-                *relay=next.task.take();
-                sample.transport=winner.transport;status.sample=Some(sample);
-                status.selection=QualitySelection::Selected;status.last_switch_reason=Some(TransportSwitchReason::QualityImprovement);
-                let mut result=serde_json::to_value(&status)?;result["selected_transport"]=serde_json::to_value(winner.transport)?;return Ok(result)
+                let installed={
+                    let mut relay=runtime.relay.lock().map_err(|_|anyhow::anyhow!("Transport unavailable"))?;
+                    let current=runtime.generation.load(Ordering::SeqCst)==generation;
+                    if current {
+                        if let Some(previous)=relay.take() {previous.abort();}
+                        *relay=next.task.take();
+                    }
+                    current
+                };
+                if installed {
+                    sample.transport=winner.transport;status.sample=Some(sample);
+                    status.selection=QualitySelection::Selected;status.last_switch_reason=Some(TransportSwitchReason::QualityImprovement);
+                    let mut result=serde_json::to_value(&status)?;result["selected_transport"]=serde_json::to_value(winner.transport)?;return Ok(result)
+                }
             }
-            runtime.platform.handoff(&json!({"previous":candidate,"endpoint":original["endpoint"],"maximum_mtu":original["mtu"]}),generation)?;
+            // The engine points at `next`: keep it running until the engine is back on the
+            // original relay, or the controller rebuilds the tunnel.
+            let rollback=roll_back(
+                ||runtime.platform.handoff(&json!({"previous":candidate,"endpoint":original["endpoint"],"maximum_mtu":original["mtu"]}),generation),
+                ||runtime.platform.handoff(&json!({"mode":"force","endpoint":original["endpoint"],"engine":original["engine"]}),generation),
+            );
+            next.shutdown().await;
+            if rollback==Rollback::Reconnect {
+                // Refused only for a stopped or replaced engine, or one a newer command now drives.
+                let _=runtime.platform.handoff(&json!({"mode":"reconnect","engine":original["engine"]}),generation);
+                anyhow::bail!("Transport rollback refused; reconnecting");
+            }
             status.last_switch_reason=Some(TransportSwitchReason::Rollback);
         }
         Ok(serde_json::to_value(&status)?)

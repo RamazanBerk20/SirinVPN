@@ -190,7 +190,10 @@ pub fn validate_server_name(name: &str) -> Result<(), ValidationError> {
     Ok(())
 }
 
-pub fn validate_host(host: &str) -> Result<(), ValidationError> {
+/// Validates a host and returns its normalised form (surrounding whitespace removed).
+/// Callers store, resolve and compare the returned value, never the raw input; a
+/// stored or signed value is canonical only when it equals the returned value.
+pub fn validate_host(host: &str) -> Result<&str, ValidationError> {
     let trimmed = host.trim();
     if let Ok(ip) = trimmed.parse::<IpAddr>() {
         return if ip.is_unspecified()
@@ -199,7 +202,7 @@ pub fn validate_host(host: &str) -> Result<(), ValidationError> {
         {
             Err(ValidationError::InvalidHost)
         } else {
-            Ok(())
+            Ok(trimmed)
         };
     }
     let valid_dns_name = !trimmed.is_empty()
@@ -216,7 +219,7 @@ pub fn validate_host(host: &str) -> Result<(), ValidationError> {
     if !valid_dns_name {
         return Err(ValidationError::InvalidHost);
     }
-    Ok(())
+    Ok(trimmed)
 }
 
 pub fn validate_dns_over_tls_endpoint(

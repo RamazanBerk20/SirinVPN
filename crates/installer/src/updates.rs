@@ -17,6 +17,8 @@ fi
 for incomplete in /var/lib/sirinvpn-maintenance/*.backup.preparing; do
   [ ! -d "$incomplete" ] || rm -rf -- "$incomplete"
 done
+# Outcome records only answer a client whose commit reply was lost.
+find /var/lib/sirinvpn-maintenance -maxdepth 1 -type f -name 'sirinvpn-install-*.outcome*' -mtime +30 -delete
 [ ! -L /var/lib/sirinvpn-server-release ]
 if [ ! -e /var/lib/sirinvpn-server-release ]; then
   install -d -o root -g root -m 0700 /var/lib/sirinvpn-server-release

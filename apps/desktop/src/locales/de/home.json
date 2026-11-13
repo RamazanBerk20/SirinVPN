@@ -1,0 +1,249 @@
+{
+  "consoleLabel": "VPN-Verbindung",
+  "status": {
+    "unknown": "Status unbekannt",
+    "restoringAccess": "Serverzugriff wird wiederhergestellt",
+    "monitorUnavailable": "VPN-Überwachung antwortet nicht",
+    "reconnecting": "Verbindet erneut",
+    "connected": "Verbunden",
+    "connecting": "Verbindet",
+    "interrupted": "Verbindung unterbrochen",
+    "disconnected": "Getrennt",
+    "changing": "Verbindung wird geändert…",
+    "checking": "VPN-Status wird geprüft…",
+    "connectingTo": "Verbindung zu {{name}} wird hergestellt…",
+    "disconnecting": "Verbindung wird getrennt…"
+  },
+  "action": {
+    "showActive": "Zum verbundenen Server",
+    "refresh": "Status aktualisieren",
+    "disconnectAndUnblock": "Trennen und Kill-Switch-Sperre aufheben",
+    "disconnect": "Trennen",
+    "connect": "Verbinden",
+    "changing": "Verbindung ändern",
+    "wait": "Bitte warten…",
+    "vpnSettings": "VPN-Einstellungen",
+    "androidVpnSettings": "Android-VPN-Einstellungen",
+    "cancelConnection": "Abbrechen",
+    "reconnect": "Erneut verbinden",
+    "reconnectHint": "Mit den aktuellen Einstellungen fortsetzen",
+    "stop": "VPN beenden",
+    "connecting": "Verbindet…",
+    "disconnecting": "Trennt…",
+    "checkAgain": "Erneut prüfen"
+  },
+  "routing": {
+    "unknown": "Unbekannt",
+    "inactive": "Nicht aktiv",
+    "selectedApps": "Ausgewählte Apps",
+    "selectedRoutes": "Ausgewählte Routen",
+    "fullTunnelLan": "Voller Tunnel · LAN erlaubt",
+    "fullTunnel": "Voller Tunnel"
+  },
+  "killSwitch": {
+    "unknown": "Unbekannt",
+    "otherServer": "Aktiven Server anzeigen",
+    "nextConnection": "Ein für die nächste Verbindung",
+    "off": "Aus",
+    "inactive": "Nicht aktiv",
+    "armed": "Ein",
+    "blocking": "Blockiert Datenverkehr",
+    "failed": "Funktioniert nicht",
+    "unverified": "Ein · nicht geprüft"
+  },
+  "isolation": {
+    "verified": "Geprüft",
+    "unverified": "Nicht geprüft"
+  },
+  "summary": {
+    "unknown": "Der VPN-Status konnte nicht gelesen werden. Aktualisiere, um zu prüfen.",
+    "restoringAccess": "Verlass dich nicht auf diese Verbindung, bis der Serverzugriff wiederhergestellt ist.",
+    "monitorUnavailable": "Die VPN-Überwachung antwortet nicht, daher ist der Kill-Switch-Status unbekannt.",
+    "otherServer": "Ein anderer Server ist verbunden. Wechsle dorthin, um die Verbindung zu trennen.",
+    "androidApps": "Nur die ausgewählten Apps nutzen das VPN.",
+    "windowsApps": "Ausgewählte Apps nutzen das VPN. Das System-DNS läuft über den Server.",
+    "launchedApps": "Apps, die über SirinVPN gestartet werden, nutzen das VPN.",
+    "selectedRoutes": "Ausgewählte Netzwerke nutzen das VPN. Alles andere nicht.",
+    "fullTunnelLan": "Internetverkehr nutzt das VPN. Verkehr im lokalen Netzwerk nicht.",
+    "fullTunnel": "Der gesamte Internetverkehr läuft über das VPN.",
+    "fullTunnelIpv4": "IPv4-Verkehr läuft über das VPN. IPv6 wird weder getunnelt noch blockiert.",
+    "interrupted": "Die Verbindung ist abgebrochen. Dein Datenverkehr ist erst wieder geschützt, wenn du dich erneut verbindest.",
+    "interruptedBlocked": "Die Verbindung ist abgebrochen. Der Kill-Switch blockiert den Datenverkehr, bis du dich erneut verbindest oder trennst.",
+    "waitingAndroidLockdown": "Android blockiert den Datenverkehr, bis du dich erneut verbindest.",
+    "waitingBlocked": "Der Datenverkehr ist blockiert. Verbinde dich erneut, oder trenne die Verbindung, um die Sperre aufzuheben.",
+    "waiting": "Die automatische Wiederverbindung ist aus. Verbinde dich erneut, wenn du bereit bist.",
+    "reconnecting": "Die Verbindung wird wiederhergestellt.",
+    "connecting": "Eine sichere Verbindung wird aufgebaut.",
+    "disconnected": "Dein Datenverkehr nutzt das VPN nicht.",
+    "disconnecting": "Das VPN wird ausgeschaltet."
+  },
+  "warning": {
+    "accessContained": "Der Serverzugriff wird wiederhergestellt. VPN-Datenverkehr wird zurückgehalten, bis das abgeschlossen ist.",
+    "accessUnenforced": "Die Prüfungen des Serverzugriffs funktionieren nicht. Verlass dich nicht auf diesen Server, bis sie wiederhergestellt sind.",
+    "androidLockdown": "Androids „Verbindungen ohne VPN blockieren“ bleibt nach dem Trennen aktiv.",
+    "killSwitchFailed": "Der Kill-Switch konnte nicht geprüft werden. Verlass dich nicht darauf, bis das behoben ist.",
+    "androidAppsUnverified": "Die App-Weiterleitung konnte nicht geprüft werden. Prüfe die Verbindung, bevor du dich darauf verlässt.",
+    "appsUnverified": "Die App-Weiterleitung konnte nicht geprüft werden. Das Starten neuer Apps ist ausgeschaltet.",
+    "dnsDown": "Das DNS des Servers antwortet nicht, daher laden Websites vielleicht nicht.",
+    "ipv6": "IPv6-Verkehr wird weder getunnelt noch blockiert und kann daher am VPN vorbeilaufen.",
+    "serverInterfaceDown": "Der Server meldet, dass seine VPN-Schnittstelle nicht läuft. Der Datenverkehr kann jederzeit abbrechen."
+  },
+  "componentUpdate": {
+    "needed": "Aktualisiere die VPN-Komponente, um dich zu verbinden.",
+    "review": "Update prüfen"
+  },
+  "presharedKey": {
+    "missing": "Dieses Gerät hat keinen Preshared Key. Aufgezeichneter VPN-Datenverkehr ist daher nicht gegen künftige Quantencomputer geschützt.",
+    "add": "Preshared Key hinzufügen"
+  },
+  "health": {
+    "idle": "Kein aktueller Handshake. Die Verbindung ist vielleicht nur untätig.",
+    "managementUnavailable": "Die Serververwaltung ist nicht verfügbar.",
+    "reachability": {
+      "notChecked": "Nicht geprüft",
+      "replied": "Antwortet",
+      "noReply": "Keine Antwort"
+    }
+  },
+  "protection": {
+    "ipv6NotVerified": "IPv6 nicht geprüft",
+    "ipv6": {
+      "tunneled": "Über das VPN",
+      "blocked": "Blockiert",
+      "unknown": "Unbekannt",
+      "blockedLanAllowed": "Blockiert · LAN erlaubt",
+      "blockedVerified": "Blockiert · geprüft",
+      "selectedRoutes": "Nur ausgewählte Routen",
+      "blockedUnverified": "Blockiert · nicht geprüft",
+      "bypassesOutsideRoutes": "Umgeht das VPN außerhalb der ausgewählten Routen",
+      "unverified": "Nicht geprüft"
+    },
+    "android": {
+      "unverified": "Androids Weiterleitung oder Blockierung konnte nicht geprüft werden.",
+      "packages": "Ausgewählte Apps nutzen das VPN und dessen DNS. Andere Apps umgehen es, außer Android blockiert sie.",
+      "lockdown": "Androids „Verbindungen ohne VPN blockieren“ ist für alle Apps aktiv."
+    },
+    "apps": {
+      "ipv6Unverified": "App-Weiterleitung nicht geprüft",
+      "ipv6Tunneled": "Gestartete Apps: über das VPN",
+      "ipv6Blocked": "Gestartete Apps: blockiert",
+      "notReady": "Die App-Weiterleitung ist nicht bereit. Neue Starts sind ausgeschaltet.",
+      "windows": "Ausgewählte Apps nutzen das VPN für IPv4; ihr IPv6 ist blockiert. Das DNS läuft über den Server.",
+      "launched": "Gestartete Apps und ihr DNS nutzen das VPN. Andere Apps nutzen dein normales Netzwerk."
+    },
+    "firewall": {
+      "verifiedSelectedRoutes": "Firewall für ausgewählte Routen und DNS geprüft.",
+      "verifiedLanAllowed": "Firewall für IPv4, IPv6 und DNS geprüft. LAN erlaubt.",
+      "verified": "Firewall für IPv4, IPv6 und DNS geprüft.",
+      "unverified": "Die Firewall konnte nicht geprüft werden."
+    }
+  },
+  "details": {
+    "connection": "Verbindung",
+    "status": "Status",
+    "method": "Methode",
+    "routing": "Routing",
+    "killSwitch": "Kill-Switch",
+    "appIsolation": "App-Trennung",
+    "reachability": "Server erreichbar",
+    "serverResponse": "Antwort des Servers",
+    "serverResponseInfo": "Wie lange der Server braucht, um auf eine Statusabfrage zu antworten. Das ist nicht die VPN-Latenz.",
+    "addresses": "Adressen",
+    "serverAddress": "Serveradresse",
+    "vpnAddress": "VPN-Adresse",
+    "thisDevice": "Dieses Gerät",
+    "mtu": "Paketgröße (MTU)",
+    "server": "Server",
+    "blockWithoutVpn": "Ohne VPN blockieren",
+    "alwaysOn": "Dauerhaftes VPN",
+    "mtuValue": "{value, plural, one {{{value}} Byte} other {{{value}} Byte}}",
+    "mtuPending": "{value, plural, one {{{value}} Byte gemessen · gilt ab deiner nächsten Verbindung} other {{{value}} Byte gemessen · gilt ab deiner nächsten Verbindung}}"
+  },
+  "traffic": {
+    "label": "Datenverkehr dieses Geräts",
+    "session": "Aktuelle Sitzung",
+    "countersUnavailable": "Zähler nicht verfügbar",
+    "notConnected": "Nicht mit diesem Server verbunden",
+    "download": "Download",
+    "upload": "Upload",
+    "duration": "Verbunden seit",
+    "measuring": "Wird gemessen…",
+    "received": "{{amount}} empfangen",
+    "sent": "{{amount}} gesendet",
+    "counterFailed": "Zähler konnten nicht gelesen werden",
+    "needsUpdate": "Braucht ein Update der VPN-Komponente",
+    "durationFailed": "Sitzungsdauer konnte nicht gelesen werden",
+    "updateNeeded": "Die Datenverkehrszähler und die Sitzungsdauer dieses Geräts brauchen ein Update der VPN-Komponente."
+  },
+  "device": {
+    "summary": "Gerätedetails",
+    "receivedPackets": "Empfangene Pakete",
+    "sentPackets": "Gesendete Pakete",
+    "latency": "Latenz",
+    "latencyInfo": "Durchschnittliche Laufzeit zum Server über das VPN. Das ist nicht die Internetgeschwindigkeit.",
+    "noMeasurement": "Noch nicht gemessen",
+    "probes": "Antworten der Prüfungen",
+    "probesValue": "{{received}} von {{sent}} · {{jitter}} Jitter",
+    "ipv6": "IPv6",
+    "autoReconnect": "Automatische Wiederverbindung",
+    "fallback": "Ersatzmethoden",
+    "countersNote": "Die Zähler werden beim erneuten Verbinden zurückgesetzt. Es wird kein Verlauf gespeichert."
+  },
+  "server": {
+    "title": "Server",
+    "freshness": {
+      "unavailable": "Nicht verfügbar",
+      "live": "Live",
+      "polling": "Regelmäßig aktualisiert",
+      "connecting": "Statistiken werden geladen…",
+      "reconnecting": "Statistiken werden neu verbunden…"
+    },
+    "unavailable": "Serverstatistiken sind nicht verfügbar. Sie kehren automatisch zurück.",
+    "connectToSee": "Verbinde dich, um Serverstatistiken zu sehen.",
+    "pollingNote": "Live-Serverstatistiken brauchen ein Serverupdate.",
+    "noMeasurement": "Nicht gemessen",
+    "usedOf": "{{used}} von {{total}}",
+    "cpu": "CPU",
+    "cpuDetail": "Durchschnitt aller Kerne",
+    "memory": "Arbeitsspeicher",
+    "storage": "Speicher",
+    "uptime": "Laufzeit",
+    "devices": "Geräte",
+    "devicesActive": "{{active}} von {{total}} aktiv",
+    "devicesAuthorized": "{count, plural, one {# Gerät} other {# Geräte}}",
+    "activityUnavailable": "Aktivität nicht verfügbar",
+    "activityUnreadable": "Die Geräteaktivität konnte nicht vom Server gelesen werden.",
+    "activityUnsupported": "Dieser Server kann keine Geräteaktivität melden. Aktualisiere ihn, um sie einzuschalten.",
+    "reviewHealth": "Serverzustand prüfen",
+    "reviewUpdate": "Update prüfen",
+    "detailsSummary": "Serverdetails",
+    "inbound": "Eingehend",
+    "outbound": "Ausgehend",
+    "received": "Empfangen",
+    "sent": "Gesendet",
+    "receivedPackets": "Empfangene Pakete",
+    "sentPackets": "Gesendete Pakete",
+    "dns": "DNS",
+    "dnsRunning": "Läuft",
+    "dnsDown": "Antwortet nicht",
+    "totalsInfo": "Die Summen umfassen alle Geräte seit dem Start des VPN des Servers.",
+    "pollingNoteMember": "Live-Serverstatistiken brauchen ein Serverupdate. Der Besitzer des Servers kann es installieren."
+  },
+  "alwaysOnNote": "Das dauerhafte VPN ist aktiv, daher entscheidet Android, wann das VPN aufhört. Trenne die Verbindung in Androids VPN-Einstellungen.",
+  "method": {
+    "https": "HTTPS",
+    "automatic": "Automatisch · {{method}}"
+  },
+  "alert": {
+    "label": "Warnungen",
+    "runDiagnostics": "Diagnose starten",
+    "checkServer": "Serverzustand prüfen",
+    "unstable": "{sent, plural, one {Instabile Verbindung: {{lost}} der letzten Prüfung blieb ohne Antwort.} other {Instabile Verbindung: {{lost}} der letzten # Prüfungen blieben ohne Antwort.}}",
+    "storage": "Der Speicher des Servers ist zu {{percent}} voll. Gib Platz frei, bevor er nicht mehr funktioniert.",
+    "rotationPending": "Ein Schlüsselwechsel wurde nicht abgeschlossen. Schließe ihn ab, damit dieses Gerät seinen Zugriff behält.",
+    "finishRotation": "Schlüsselwechsel abschließen"
+  },
+  "consequence": {
+    "desktop": "Beim Trennen werden auch die Kill-Switch-Sperre und die automatische Wiederverbindung ausgeschaltet."
+  }
+}

@@ -6,7 +6,7 @@ import type {
   TunnelRoutingPolicy,
 } from "../../types";
 import { formatTransport } from "../../format";
-import { formatNumber, t } from "../../i18n";
+import { t } from "../../i18n";
 
 export interface ConnectionPreferences {
   android_applications?: { mode: "all" | "include" | "exclude"; packages: string[] } | null;
@@ -35,9 +35,9 @@ export const MAX_MTU = 1420;
 export const OBFUSCATED_UDP_MAX_MTU = 1398;
 export const QUIC_MAX_MTU = 1380;
 
-/** MTU values are technical sizes: localized digits, but no thousands separator. */
+/** MTU values are technical sizes, written as typed in the MTU field: ASCII digits, no grouping. */
 export function formatMtu(value: number): string {
-  return formatNumber(value, { useGrouping: false });
+  return String(value);
 }
 
 function manualMtuMatches(saved: number | null, local: LocalTunnelStatus): boolean {

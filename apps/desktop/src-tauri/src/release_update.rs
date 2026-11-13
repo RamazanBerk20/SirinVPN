@@ -18,6 +18,8 @@ use tempfile::{Builder as TempBuilder, TempDir};
 const RELEASE_FETCH_BINARY: &str = "/usr/lib/sirinvpn/sirinvpn-release-fetch";
 const RELEASE_COORDINATOR_BINARY: &str = "/usr/lib/sirinvpn/sirinvpn-release";
 const DEBIAN_DESKTOP_BINARY: &str = "/usr/bin/sirinvpn-desktop";
+/// Written by every system packaging except the Debian package (scripts/install-linux.sh).
+const INSTALL_METHOD_FILE: &str = "/usr/lib/sirinvpn/install-method";
 const PKEXEC_BINARY: &str = "/usr/bin/pkexec";
 const MAX_SOURCE_BYTES: usize = 2 * 1024;
 const MAX_FETCH_OUTPUT_BYTES: u64 = 64 * 1024;
@@ -41,7 +43,7 @@ pub(crate) async fn get_release_update_status(
         match appimage::Context::capture(&app)? {
             Some(context) => context.status(),
             None => Ok(crate::release_update_status::ReleaseUpdateStatus {
-                installer_kind: "debian",
+                installer_kind: system_installer_kind(),
                 rollback_version: None,
                 baseline_required: false,
             }),
@@ -601,6 +603,13 @@ fn require_private_file(path: &Path, uid: u32) -> Result<(), String> {
 }
 
 fn candidate_summary(fetched: &FetchOutput) -> Result<ReleaseUpdateCandidate, String> {
+    candidate_summary_for(fetched, system_installer_kind())
+}
+
+fn candidate_summary_for(
+    fetched: &FetchOutput,
+    installer_kind: &'static str,
+) -> Result<ReleaseUpdateCandidate, String> {
     let current = Version::parse(env!("CARGO_PKG_VERSION"))
         .map_err(|_| "The running application version is invalid.".to_owned())?;
     let candidate = Version::parse(&fetched.release_version)
@@ -620,12 +629,29 @@ fn candidate_summary(fetched: &FetchOutput) -> Result<ReleaseUpdateCandidate, St
         artifact_sha256: fetched.artifact.sha256.clone(),
         release_notes: fetched.release_notes.clone(),
         newer_than_running: candidate > current,
-        debian_install_available: installed_debian_release_coordinator().is_ok(),
+        debian_install_available: installer_kind == "debian"
+            && installed_debian_release_coordinator().is_ok(),
         appimage_install_available: false,
         baseline_bind_available: false,
         baseline_bound: false,
-        installer_kind: "debian",
+        installer_kind,
     })
+}
+
+/// "debian", or "package_manager" when another package manager (pacman) owns the installed
+/// files: the app then shows the new version and leaves installing it to that manager. This
+/// only chooses the update UI; the Debian coordinator still verifies everything it installs.
+fn system_installer_kind() -> &'static str {
+    installer_kind_for(fs::read(INSTALL_METHOD_FILE).map_err(|error| error.kind()))
+}
+
+fn installer_kind_for(marker: Result<Vec<u8>, std::io::ErrorKind>) -> &'static str {
+    match marker {
+        Err(std::io::ErrorKind::NotFound) => "debian",
+        Ok(method) if method.trim_ascii() == b"deb" => "debian",
+        // Another method, or a marker that can't be read: never hand those files to dpkg.
+        _ => "package_manager",
+    }
 }
 
 fn pending_summary(pending: &PendingReleaseUpdate) -> Result<ReleaseUpdateCandidate, String> {
@@ -638,7 +664,10 @@ fn pending_summary(pending: &PendingReleaseUpdate) -> Result<ReleaseUpdateCandid
 
 fn installed_debian_release_coordinator() -> Result<PathBuf> {
     let current = env::current_exe()?.canonicalize()?;
-    if current != Path::new(DEBIAN_DESKTOP_BINARY) || env::var_os("APPIMAGE").is_some() {
+    if current != Path::new(DEBIAN_DESKTOP_BINARY)
+        || env::var_os("APPIMAGE").is_some()
+        || system_installer_kind() != "debian"
+    {
         bail!("the running application is not the installed Debian package");
     }
     let coordinator = PathBuf::from(RELEASE_COORDINATOR_BINARY);
@@ -774,11 +803,11 @@ mod tests {
             private_file(&destination.join(name), b"fixture");
         }
         private_file(
-            &artifact_directory.join("SirinVPN_0.2.0_amd64.deb"),
+            &artifact_directory.join("SirinVPN_2.0.0_amd64.deb"),
             b"package",
         );
         let output = serde_json::to_vec(&json!({
-            "release_version": "0.2.0",
+            "release_version": "2.0.0",
             "release_sequence": 2,
             "channel": "stable",
             "security_update": true,
@@ -789,7 +818,7 @@ mod tests {
             "artifact": {
                 "kind": "linux_deb",
                 "target": "x86_64-unknown-linux-gnu",
-                "file_name": "SirinVPN_0.2.0_amd64.deb",
+                "file_name": "SirinVPN_2.0.0_amd64.deb",
                 "size_bytes": 7,
                 "sha256": "c".repeat(64),
             },
@@ -808,7 +837,7 @@ mod tests {
                 .unwrap();
         validate_fetched_layout(&fetched).unwrap();
         let summary = candidate_summary(&fetched).unwrap();
-        assert_eq!(summary.release_version, "0.2.0");
+        assert_eq!(summary.release_version, "2.0.0");
         assert_eq!(summary.release_sequence, "2");
         assert_eq!(summary.trust_policy_sequence, "3");
         assert_eq!(summary.artifact_target, "x86_64-unknown-linux-gnu");
@@ -819,6 +848,34 @@ mod tests {
         );
         assert!(summary.newer_than_running);
         assert!(!summary.debian_install_available);
+    }
+
+    #[test]
+    fn only_an_unmarked_or_deb_install_uses_the_debian_installer() {
+        use std::io::ErrorKind;
+        assert_eq!(installer_kind_for(Err(ErrorKind::NotFound)), "debian");
+        assert_eq!(installer_kind_for(Ok(b"deb\n".to_vec())), "debian");
+        assert_eq!(installer_kind_for(Ok(b"aur\n".to_vec())), "package_manager");
+        assert_eq!(installer_kind_for(Ok(b"".to_vec())), "package_manager");
+        assert_eq!(installer_kind_for(Ok(b"debian".to_vec())), "package_manager");
+        assert_eq!(
+            installer_kind_for(Err(ErrorKind::PermissionDenied)),
+            "package_manager"
+        );
+    }
+
+    #[test]
+    fn a_package_manager_install_shows_the_release_without_the_debian_installer() {
+        let (_parent, destination, output) = fetched_fixture();
+        let fetched =
+            parse_fetch_output(&output, &destination, "stable", "x86_64-unknown-linux-gnu")
+                .unwrap();
+        let summary = candidate_summary_for(&fetched, "package_manager").unwrap();
+        assert_eq!(summary.installer_kind, "package_manager");
+        assert_eq!(summary.release_version, "2.0.0");
+        assert!(summary.newer_than_running);
+        assert!(!summary.debian_install_available);
+        assert!(!summary.appimage_install_available);
     }
 
     #[test]

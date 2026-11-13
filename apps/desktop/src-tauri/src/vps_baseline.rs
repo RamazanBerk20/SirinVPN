@@ -1,10 +1,10 @@
 use serde::Deserialize;
 use sirinvpn_core::ClientPaths;
 use sirinvpn_installer::{
-    Provisioner, ServerReleaseAction, ServerReleaseRequest, SignedBaselineCandidate,
-    SignedServerBundle,
+    OwnerMaintenance, Provisioner, ServerReleaseAction, ServerReleaseRequest,
+    SignedBaselineCandidate, SignedServerBundle,
 };
-use sirinvpn_protocol::{ConnectionState, ServerRole};
+use sirinvpn_protocol::ServerRole;
 use std::sync::{Arc, Mutex};
 use tauri::State;
 
@@ -174,7 +174,7 @@ pub(crate) async fn install_vps_baseline(
     state: State<'_, crate::AppState>,
     runtime: State<'_, BaselineRuntime>,
     input: InstallBaselineInput,
-) -> Result<serde_json::Value, String> {
+) -> Result<serde_json::Value, crate::CommandError> {
     let (bundle, generation) = {
         let pending = runtime
             .0
@@ -189,26 +189,24 @@ pub(crate) async fn install_vps_baseline(
             || pending.host_key != input.ssh.host_key_sha256
             || pending.bundle.summary().manifest_sha256 != input.manifest_sha256
         {
-            return Err("The VPS or the checked release changed. Check the release again.".to_owned());
+            return Err("The VPS or the checked release changed. Check the release again.".into());
         }
         (pending.bundle.clone(), generation)
     };
     let paths = state.paths.clone();
-    let result = tauri::async_runtime::spawn_blocking(move || {
-        let status = crate::invoke_helper("status", None).map_err(crate::safe_error)?;
-        if status.state != ConnectionState::Disconnected || status.kill_switch_enabled || status.auto_reconnect_enabled {
-            return Err("Disconnect this device and turn off the kill switch before installing.".to_owned());
-        }
+    let result = tauri::async_runtime::spawn_blocking(move || -> Result<_, crate::CommandError> {
+        let profile = crate::find_profile(&paths, &input.server_id)?;
+        crate::vps_transaction::ensure_owner_maintenance_ready(&paths, &profile, OwnerMaintenance::SignedBaseline)?;
         let request = request(&paths, &input.server_id, input.ssh)?;
-        if sirinvpn_core::has_pending_key_rotation(&paths, request.profile.id).map_err(crate::safe_error)? {
-            return Err("Finish this device’s key rotation first.".to_owned());
-        }
-        let profile = request.profile.clone();
-        let outcome = Provisioner::install_signed_baseline(request, bundle).map_err(|error| error.to_string())?;
-        paths.profile_store().upsert(outcome.repair.updated_profile(&profile))
-            .map_err(|_| "The release is installed, but this device couldn’t save the server’s updated settings. Refresh before connecting.".to_owned())?;
+        let outcome = Provisioner::install_signed_baseline(request, bundle, &crate::vps_transaction::journal(&paths)).map_err(crate::command_error)?;
+        // Owns the endpoint and transport fields the repair reinstalled.
+        paths.profile_store().update(profile.id, |current| {
+            *current = outcome.repair.updated_profile(current);
+            Ok(())
+        })
+            .map_err(|_| crate::CommandError::from("The release is installed, but this device couldn’t save the server’s updated settings. Refresh before connecting."))?;
         Ok(outcome.release)
-    }).await.map_err(|_| "Installing the release was interrupted. Check the VPS status before trying again.".to_owned())?;
+    }).await.map_err(|_| crate::CommandError::from("Installing the release was interrupted. Check the VPS status before trying again."))?;
     if result.is_ok() {
         let mut current = runtime
             .0

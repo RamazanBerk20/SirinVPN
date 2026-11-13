@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-membership"
+description = "Enables the membership command without any pre-configured scope."
+commands.allow = ["membership"]
+
+[[permission]]
+identifier = "deny-membership"
+description = "Denies the membership command without any pre-configured scope."
+commands.deny = ["membership"]

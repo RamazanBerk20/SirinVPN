@@ -15,7 +15,7 @@ pub fn datagram(data: &[u8]) {
         let mut handshake = responder_handshake(&[7; 32]).unwrap();
         let _ = handshake.read_message(data, &mut [0; HANDSHAKE_MAX_LENGTH]);
     }
-    HandshakeReplayCache::default().accept_client_handshake(data, [1; 32], data);
+    let _ = HandshakeReplayCache::default().accept_client_handshake(data, [1; 32], data);
 
     // After authentication the peer chooses the whole plaintext of a record.
     let mut record = vec![0; data.len() + AEAD_TAG_LENGTH];

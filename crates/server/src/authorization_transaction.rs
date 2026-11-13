@@ -3,9 +3,214 @@
 use super::*;
 use sirinvpn_protocol::{AuthorizationHealth, AuthorizationRecovery};
 
+/// What the kernel, transport and durable authority look like right now. Owned by the
+/// authorization write lock; every transition below happens while it is held.
+#[derive(Clone, Debug, PartialEq)]
+pub(super) enum Phase {
+    /// Every effect agrees with the in-memory document. `applied` is what was enforced
+    /// (absent before the first apply or when it could not be computed).
+    Healthy { applied: Option<Footprint> },
+    /// An intent is durable and effects are being changed. `committed` once the new
+    /// document is durable; `contained` while the drop rules are verified installed.
+    Applying { contained: bool, committed: bool },
+    /// Effects or authority are uncertain; the next recovery attempt restores them.
+    RecoveryPending { contained: bool, committed: bool },
+    /// The last recovery attempt failed; containment stays until one succeeds.
+    RecoveryFailed { contained: bool, committed: bool },
+}
+
+impl Default for Phase {
+    fn default() -> Self {
+        Self::Healthy { applied: None }
+    }
+}
+
 #[derive(Default)]
 pub(super) struct RecoveryState {
-    pub status: AuthorizationRecovery,
+    pub generation: u64,
+    pub phase: Phase,
+    /// Consecutive failed periodic attempts and when the next one is due.
+    pub failures: u32,
+    pub retry_at: Option<Instant>,
+}
+
+impl RecoveryState {
+    /// The wire shape older clients already understand.
+    pub(super) fn wire(&self) -> AuthorizationRecovery {
+        let (health, containment_verified, committed) = match self.phase {
+            Phase::Healthy { .. } => (AuthorizationHealth::Healthy, false, false),
+            Phase::Applying {
+                contained,
+                committed,
+            } => (AuthorizationHealth::Applying, contained, committed),
+            Phase::RecoveryPending {
+                contained,
+                committed,
+            } => (AuthorizationHealth::RecoveryPending, contained, committed),
+            Phase::RecoveryFailed {
+                contained,
+                committed,
+            } => (AuthorizationHealth::RecoveryFailed, contained, committed),
+        };
+        AuthorizationRecovery {
+            health,
+            generation: self.generation,
+            containment_verified,
+            committed,
+        }
+    }
+
+    fn contained(&mut self, value: bool) {
+        if let Phase::Applying { contained, .. }
+        | Phase::RecoveryPending { contained, .. }
+        | Phase::RecoveryFailed { contained, .. } = &mut self.phase
+        {
+            *contained = value;
+        }
+    }
+
+    fn flags(&self) -> (bool, bool) {
+        match self.phase {
+            Phase::Healthy { .. } => (false, false),
+            Phase::Applying {
+                contained,
+                committed,
+            }
+            | Phase::RecoveryPending {
+                contained,
+                committed,
+            }
+            | Phase::RecoveryFailed {
+                contained,
+                committed,
+            } => (contained, committed),
+        }
+    }
+
+    fn pending(&mut self) {
+        let (contained, committed) = self.flags();
+        self.phase = Phase::RecoveryPending {
+            contained,
+            committed,
+        };
+    }
+
+    fn failed(&mut self) {
+        let (contained, committed) = self.flags();
+        self.phase = Phase::RecoveryFailed {
+            contained,
+            committed,
+        };
+    }
+}
+
+/// Everything a document enforces, as the stages render it. Comparing two of them tells
+/// whether a change only adds access (no containment needed) or may take some away.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub(super) struct Footprint {
+    pub peers: Vec<DesiredPeer>,
+    pub transport: Vec<[u8; 32]>,
+    pub isolation: PeerIsolationState,
+    pub forwarding: Option<String>,
+    pub handoff_source: bool,
+}
+
+pub(super) fn footprint(
+    configuration: &ServerConfiguration,
+    operational: Option<&OperationalConfiguration>,
+    document: &AuthorizationDocument,
+) -> Result<Footprint> {
+    Ok(Footprint {
+        peers: document.desired_peers(unix_time()),
+        transport: decoded_transport_peers(document)?,
+        isolation: peer_isolation_state(configuration, document)?,
+        forwarding: port_forward_nft_batch(configuration, operational, document)?,
+        handoff_source: document.endpoint.is_handoff_source(),
+    })
+}
+
+/// True unless `next` keeps every enforced grant of `applied` unchanged and only adds new
+/// ones. A changed peer (key, PSK, address, routes) counts as removal, and a new peer
+/// carrying routes or reusing an address could take traffic from an existing one.
+///
+/// One exception: a peer whose public key alone was replaced, at the same address with the
+/// same routes (a key rotation), keeps every grant. Containment adds nothing to removing the
+/// old key: the Wireguard stage swaps it in a single `wg set` before Persist, so the old key
+/// is gone before the commit is durable or answered; any failed stage recovers under
+/// containment; and containment never covered the relays (it drops only on the tunnel
+/// interface), which pass the old key's packets to a WireGuard that no longer has its peer.
+pub(super) fn narrows(applied: &Footprint, next: &Footprint) -> bool {
+    let addresses: HashSet<IpAddr> = applied.peers.iter().map(|peer| peer.address).collect();
+    let added: Vec<&DesiredPeer> = next
+        .peers
+        .iter()
+        .filter(|peer| !applied.peers.contains(peer))
+        .collect();
+    let at = |peers: &[DesiredPeer], address: IpAddr| {
+        peers.iter().filter(|peer| peer.address == address).count()
+    };
+    let replacement = |old: &DesiredPeer| {
+        added
+            .iter()
+            .copied()
+            .find(|new| new.address == old.address && new.subnet_routes == old.subnet_routes)
+            .filter(|_| {
+                at(&applied.peers, old.address) == 1
+                    && at(&next.peers, old.address) == 1
+                    && !next
+                        .peers
+                        .iter()
+                        .any(|peer| peer.public_key == old.public_key)
+            })
+    };
+    let mut replaced_keys = HashSet::new();
+    let mut replacements = HashSet::new();
+    for old in applied
+        .peers
+        .iter()
+        .filter(|peer| !next.peers.contains(peer))
+    {
+        let Some(new) = replacement(old) else {
+            return true;
+        };
+        replaced_keys.insert(old.public_key.as_str());
+        replacements.insert(new.public_key.as_str());
+    }
+    let added_peers_are_isolated = added.iter().all(|peer| {
+        replacements.contains(peer.public_key.as_str())
+            || (peer.subnet_routes.is_empty() && !addresses.contains(&peer.address))
+    });
+    let replaced_transport: HashSet<[u8; 32]> = replaced_keys
+        .iter()
+        .filter_map(|key| decode_key(key).ok())
+        .collect();
+    // The forwarding chain holds only accept rules ahead of isolation; flushes are framing.
+    let rules = |batch: &Option<String>| -> HashSet<String> {
+        batch
+            .iter()
+            .flat_map(|batch| batch.lines())
+            .filter(|line| !line.starts_with("flush "))
+            .map(str::to_owned)
+            .collect()
+    };
+    let kept = applied
+        .transport
+        .iter()
+        .all(|key| next.transport.contains(key) || replaced_transport.contains(key))
+        && applied
+            .isolation
+            .ipv4
+            .iter()
+            .all(|address| next.isolation.ipv4.contains(address))
+        && applied
+            .isolation
+            .ipv6
+            .iter()
+            .all(|address| next.isolation.ipv6.contains(address))
+        && applied.handoff_source == next.handoff_source
+        && applied.forwarding.is_some() == next.forwarding.is_some()
+        && rules(&applied.forwarding).is_subset(&rules(&next.forwarding));
+    !(kept && added_peers_are_isolated)
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -35,21 +240,65 @@ pub(super) trait Effects: Sync {
         stage: Stage,
         document: &AuthorizationDocument,
     ) -> impl std::future::Future<Output = Result<()>> + Send;
+    /// Unknown footprints always contain.
+    fn footprint(&self, _document: &AuthorizationDocument) -> Result<Footprint> {
+        bail!("authorization footprint is not modeled")
+    }
 }
 
-fn status(state: &Mutex<RecoveryState>) -> AuthorizationRecovery {
-    state
-        .lock()
-        .unwrap_or_else(|e| e.into_inner())
-        .status
-        .clone()
+fn lock(state: &Mutex<RecoveryState>) -> std::sync::MutexGuard<'_, RecoveryState> {
+    state.lock().unwrap_or_else(|e| e.into_inner())
 }
-fn update(state: &Mutex<RecoveryState>, change: impl FnOnce(&mut AuthorizationRecovery)) {
-    change(&mut state.lock().unwrap_or_else(|e| e.into_inner()).status);
+
+pub(super) fn status(state: &Mutex<RecoveryState>) -> AuthorizationRecovery {
+    lock(state).wire()
 }
 
 pub(super) fn needs_recovery(state: &Mutex<RecoveryState>) -> bool {
-    status(state).health != AuthorizationHealth::Healthy
+    !matches!(lock(state).phase, Phase::Healthy { .. })
+}
+
+fn healthy(io: &impl Effects, state: &Mutex<RecoveryState>, document: &AuthorizationDocument) {
+    let applied = io.footprint(document).ok();
+    lock(state).phase = Phase::Healthy { applied };
+}
+
+/// The in-memory document is enforced exactly as `next` would be: committing it is a no-op.
+pub(super) fn is_applied(
+    io: &impl Effects,
+    state: &Mutex<RecoveryState>,
+    current: &AuthorizationDocument,
+    next: &AuthorizationDocument,
+) -> bool {
+    let Phase::Healthy {
+        applied: Some(applied),
+    } = &lock(state).phase
+    else {
+        return false;
+    };
+    current == next
+        && io
+            .footprint(next)
+            .is_ok_and(|footprint| footprint == *applied)
+}
+
+/// Whether the periodic loop may try again now.
+pub(super) fn retry_due(state: &Mutex<RecoveryState>) -> bool {
+    lock(state)
+        .retry_at
+        .is_none_or(|retry_at| Instant::now() >= retry_at)
+}
+
+/// Exponential backoff (2–32 s) for the periodic loop after failures.
+pub(super) fn record_attempt(state: &Mutex<RecoveryState>, succeeded: bool) {
+    let mut state = lock(state);
+    if succeeded {
+        state.failures = 0;
+        state.retry_at = None;
+    } else {
+        state.failures = state.failures.saturating_add(1).min(5);
+        state.retry_at = Some(Instant::now() + Duration::from_secs(1 << state.failures));
+    }
 }
 
 async fn network(io: &impl Effects, document: &AuthorizationDocument) -> bool {
@@ -77,12 +326,15 @@ pub(super) async fn recover(
     state: &Mutex<RecoveryState>,
     current: &mut AuthorizationDocument,
 ) -> Result<()> {
-    let generation = status(state).generation;
-    update(state, |s| s.health = AuthorizationHealth::RecoveryPending);
+    let generation = {
+        let mut state = lock(state);
+        state.pending();
+        state.generation
+    };
     let contained = io.execute(Stage::Contain, current).await.is_ok();
-    update(state, |s| s.containment_verified = contained);
+    lock(state).contained(contained);
     if !contained {
-        update(state, |s| s.health = AuthorizationHealth::RecoveryFailed);
+        lock(state).failed();
         bail!("authorization containment is unavailable");
     }
     let restored = async {
@@ -96,22 +348,17 @@ pub(super) async fn recover(
         if !effects || !published {
             bail!("authorization recovery is incomplete");
         }
-        update(state, |s| s.containment_verified = false);
+        lock(state).contained(false);
         io.execute(Stage::Complete, current).await
     }
     .await;
-    update(state, |s| {
-        if s.generation == generation {
-            s.health = if restored.is_ok() {
-                AuthorizationHealth::Healthy
-            } else {
-                AuthorizationHealth::RecoveryFailed
-            };
-            if restored.is_ok() {
-                s.containment_verified = false;
-            }
+    if lock(state).generation == generation {
+        if restored.is_ok() {
+            healthy(io, state, current);
+        } else {
+            lock(state).failed();
         }
-    });
+    }
     restored
 }
 
@@ -130,21 +377,42 @@ pub(super) async fn commit(
     next.validate().map_err(|_| ApiError::internal())?;
     decoded_transport_peers(&next).map_err(|_| ApiError::internal())?;
     checkpoint(&next).map_err(|_| ApiError::internal())?;
-    update(state, |s| {
-        s.generation = s.generation.saturating_add(1);
-        s.health = AuthorizationHealth::Applying;
-        s.containment_verified = false;
-        s.committed = false;
-    });
-    if io.intent(current, &next, status(state).generation).is_err() {
-        update(state, |s| s.health = AuthorizationHealth::RecoveryPending);
+    if is_applied(io, state, current, &next) {
+        // Nothing to enforce: no intent, no containment, no kernel work.
+        return Ok(());
+    }
+    // Containment only guards against access outliving its removal. A pure addition
+    // that fails part-way still recovers under containment below.
+    let contain = {
+        let applied = match &lock(state).phase {
+            Phase::Healthy { applied } => applied.clone(),
+            _ => None,
+        };
+        match (applied, io.footprint(&next)) {
+            (Some(applied), Ok(next)) => narrows(&applied, &next),
+            _ => true,
+        }
+    };
+    let generation = {
+        let mut state = lock(state);
+        state.generation = state.generation.saturating_add(1);
+        state.phase = Phase::Applying {
+            contained: false,
+            committed: false,
+        };
+        state.generation
+    };
+    if io.intent(current, &next, generation).is_err() {
+        lock(state).pending();
         return Err(recovery_error(false));
     }
-    if io.execute(Stage::Contain, current).await.is_err() {
-        update(state, |s| s.health = AuthorizationHealth::RecoveryFailed);
-        return Err(recovery_error(false));
+    if contain {
+        if io.execute(Stage::Contain, current).await.is_err() {
+            lock(state).failed();
+            return Err(recovery_error(false));
+        }
+        lock(state).contained(true);
     }
-    update(state, |s| s.containment_verified = true);
     if !network(io, &next).await {
         let restored = recover(io, state, current).await.is_ok();
         return Err(if restored {
@@ -159,7 +427,9 @@ pub(super) async fn commit(
         let committed = io
             .authority()
             .is_ok_and(|document| fingerprint(&document).ok() == fingerprint(&next).ok());
-        update(state, |s| s.committed = committed);
+        if let Phase::Applying { committed: c, .. } = &mut lock(state).phase {
+            *c = committed;
+        }
         let restored = recover(io, state, current).await.is_ok();
         return Err(if committed {
             recovery_error(true)
@@ -170,17 +440,16 @@ pub(super) async fn commit(
         });
     }
     *current = next;
-    update(state, |s| s.committed = true);
+    if let Phase::Applying { committed, .. } = &mut lock(state).phase {
+        *committed = true;
+    }
     let published = publish(io, current).await;
-    update(state, |s| s.containment_verified = false);
+    lock(state).contained(false);
     if !published || io.execute(Stage::Complete, current).await.is_err() {
-        update(state, |s| s.health = AuthorizationHealth::RecoveryPending);
+        lock(state).pending();
         return Err(recovery_error(true));
     }
-    update(state, |s| {
-        s.health = AuthorizationHealth::Healthy;
-        s.containment_verified = false;
-    });
+    healthy(io, state, current);
     Ok(())
 }
 
@@ -202,8 +471,8 @@ pub(super) fn fingerprint(document: &AuthorizationDocument) -> Result<String> {
 
 fn checkpoint(document: &AuthorizationDocument) -> Result<Option<Vec<u8>>> {
     let bytes = document
-        .endpoint_transition
-        .as_ref()
+        .endpoint
+        .head()
         .map(serde_json::to_vec)
         .transpose()?;
     if bytes
@@ -235,6 +504,13 @@ impl Effects for Host<'_> {
     fn authority(&self) -> Result<AuthorizationDocument> {
         journal::validate(&self.0.paths)?;
         load_authorization(&self.0.paths.authorization)
+    }
+    fn footprint(&self, document: &AuthorizationDocument) -> Result<Footprint> {
+        footprint(
+            &self.0.configuration,
+            self.0.operational_configuration.as_ref(),
+            document,
+        )
     }
     async fn execute(&self, stage: Stage, document: &AuthorizationDocument) -> Result<()> {
         let state = self.0;
@@ -306,6 +582,6 @@ pub(super) fn containment(configuration: &ServerConfiguration, enabled: bool) ->
     batch
 }
 
-mod journal;
+pub(super) mod journal;
 #[cfg(test)]
 mod tests;

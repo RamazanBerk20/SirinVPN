@@ -42,11 +42,26 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
     ) -> Result<LocalTunnelStatus, HelperError> {
         // Resolving a hostname before arming is limited to the explicit Connect operation.
         // Manual resume reuses the already resolved endpoint; no DNS exception is opened.
-        let previous = if self.persistent_path().exists() {
-            Some(self.read_persistent()?)
-        } else {
-            None
-        };
+        // Saved intent whose session never restarted after a reboot (no runtime state)
+        // is a paused leftover: any explicit Connect replaces it, even one the current
+        // helper can no longer read.
+        let stale = self.persistent_path().exists() && !self.state_path().exists();
+        let previous = match self
+            .persistent_path()
+            .exists()
+            .then(|| self.read_persistent())
+        {
+            Some(Ok(saved)) => Some(saved),
+            Some(Err(_)) if stale => None,
+            Some(Err(error)) => return Err(error),
+            None => None,
+        }
+        // A stale address belongs to its own server only.
+        .filter(|saved| {
+            !stale
+                || (saved.request.server_id == request.server_id
+                    && saved.request.server_public_key == request.server_public_key)
+        });
         let mut prepared = request.clone();
         if prepared.endpoint_identity.is_some() {
             prepared.endpoint_dns_servers = self.endpoint_dns_servers();
@@ -66,11 +81,12 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
             .or_else(|| resolved_endpoints.first());
         let endpoint = if let Some(previous) = &previous {
             let state = self.read_state().ok();
-            if state.as_ref().is_some_and(|s| !s.waiting_for_user)
-                || previous.request.server_id != request.server_id
-                || previous.request.server_public_key != request.server_public_key
-                || previous.request.policy != request.policy
-                || previous.request.routing != request.routing
+            if !stale
+                && (state.as_ref().is_some_and(|s| !s.waiting_for_user)
+                    || previous.request.server_id != request.server_id
+                    || previous.request.server_public_key != request.server_public_key
+                    || previous.request.policy != request.policy
+                    || previous.request.routing != request.routing)
             {
                 return Err(HelperError::ActivePolicy);
             }
@@ -126,15 +142,23 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
                 .map_err(|_| HelperError::NetworkOperationFailed)?;
             if request.connection_policy().kill_switch {
                 if let Err(error) = self.apply_policy_guard(request, endpoint) {
-                    state.waiting_for_user = true;
-                    state.reconnecting = false;
+                    state.pause();
                     self.observe_policy(&mut state, request, endpoint);
                     self.write_state(&state)
                         .map_err(|_| HelperError::NetworkOperationFailed)?;
                     return Err(error);
                 }
             } else if !self.guard_is_absent()? {
-                return Err(HelperError::ActivePolicy);
+                // Only a guard left for replaced stale intent may be released here.
+                let stale_guard = stale
+                    && self
+                        .runner
+                        .run("nft", &["delete", "table", "inet", "sirinvpn_guard"], None)
+                        .is_ok()
+                    && self.guard_is_absent()?;
+                if !stale_guard {
+                    return Err(HelperError::ActivePolicy);
+                }
             }
         }
         // No cleanup path here removes the traffic block. Explicit Disconnect releases it.
@@ -142,8 +166,7 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
         if let Err(error) = self.start_policy_services(request.connection_policy()) {
             let _lock = self.lock_operations()?;
             let mut state = self.read_state()?;
-            state.reconnecting = false;
-            state.waiting_for_user = true;
+            state.pause();
             self.cleanup_tunnel_owned()?;
             self.observe_policy(&mut state, request, endpoint);
             self.write_state(&state)
@@ -186,14 +209,12 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
                 state.policy = Some(policy);
                 state.persistent_protection = false;
                 state.schema_version = 3;
-                state.has_connected = !state.reconnecting;
-                state.initial_attempts = 1;
+                state.adopt_legacy();
                 let request = current_persistent_request(&desired, Some(&state));
                 self.apply_policy_guard(&request, desired.endpoint)?;
                 self.write_persistent(&desired)?;
             }
-            state.waiting_for_user = true;
-            state.reconnecting = false;
+            state.pause();
             self.write_state(&state)
                 .map_err(|_| HelperError::NetworkOperationFailed)?;
             self.cleanup_tunnel_owned()?;
@@ -207,10 +228,16 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
 
     pub fn resume(&self, server_id: ServerId) -> Result<LocalTunnelStatus, HelperError> {
         let desired = self.read_persistent()?;
-        let current = self.read_state()?;
+        // Without runtime state this is saved intent that did not restart after a reboot.
+        let current = if self.state_path().exists() {
+            Some(self.read_state()?)
+        } else {
+            None
+        };
         if desired.request.server_id != server_id
-            || current.server_id != server_id
-            || !current.waiting_for_user
+            || current
+                .as_ref()
+                .is_some_and(|current| current.server_id != server_id || !current.waiting_for_user)
             || desired.request.policy.is_none()
         {
             return Err(HelperError::ActivePolicy);

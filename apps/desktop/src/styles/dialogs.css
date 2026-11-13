@@ -9,7 +9,7 @@
 }
 
 .metric:nth-child(3n) {
-  border-right: 1px solid var(--line);
+  border-inline-end: 1px solid var(--line);
 }
 
 .metric:nth-child(n + 4) {
@@ -61,7 +61,7 @@
 .dialog-content {
   position: fixed;
   top: 50%;
-  left: 50%;
+  left: 50%; /* physical on purpose: centred with translate(-50%), same in both directions */
   z-index: 50;
   width: min(560px, calc(100vw - 32px));
   overflow-y: auto;
@@ -88,7 +88,7 @@
 .dialog-close {
   position: absolute;
   top: 20px;
-  right: 20px;
+  inset-inline-end: 20px;
   width: 32px;
   height: 32px;
   display: grid;
@@ -233,7 +233,7 @@
   list-style: decimal;
   gap: 10px;
   margin: 0;
-  padding-left: 22px;
+  padding-inline-start: 22px;
   font-size: 0.875rem;
   line-height: 1.6;
 }

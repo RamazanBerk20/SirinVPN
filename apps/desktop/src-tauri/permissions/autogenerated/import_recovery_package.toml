@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-import-recovery-package"
+description = "Enables the import_recovery_package command without any pre-configured scope."
+commands.allow = ["import_recovery_package"]
+
+[[permission]]
+identifier = "deny-import-recovery-package"
+description = "Denies the import_recovery_package command without any pre-configured scope."
+commands.deny = ["import_recovery_package"]

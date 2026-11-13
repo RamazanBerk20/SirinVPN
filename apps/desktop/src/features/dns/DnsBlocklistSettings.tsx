@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "../../api";
 import { Field, InlineError } from "../../components/ui";
 import { privateDnsNameIsValid } from "../../dns";
-import { formatDateTime, formatList, formatNumber, t } from "../../i18n";
+import { formatDateTime, formatList, t } from "../../i18n";
 import { errorMessage } from "../../lib/errors";
 import type { DnsBlocklistSettings as Settings, ServerProfile } from "../../types";
 import { CardSaveRow, ConnectFirst, SettingsNotice } from "../settings/SettingsParts";
@@ -92,7 +92,7 @@ export function DnsBlocklistSettings({ profile, connected, canManage, blocking, 
   const serverText = !settings || !status ? null
     : settings.pending ? t("dns.blocklist.status.pending")
     : status.active ? t("dns.blocklist.status.active", {
-      count: formatNumber(status.domain_count),
+      count: status.domain_count,
       time: formatDateTime(new Date((status.updated_at_unix ?? 0) * 1000), { dateStyle: "medium", timeStyle: "short" }),
     })
     : t("dns.blocklist.status.off");
@@ -113,7 +113,7 @@ export function DnsBlocklistSettings({ profile, connected, canManage, blocking, 
           <legend>{t("dns.blocklist.lists")}</legend>
           {settings.presets.map((preset) => <label className="preference-checkbox" key={preset.url}>
             <input type="checkbox" checked={presets.includes(preset.url)} disabled={busy} onChange={(event) => edit(setPresets)(event.target.checked ? [...presets, preset.url] : presets.filter((url) => url !== preset.url))} />
-            <span>{preset.name}</span>
+            <span lang="en" dir="auto">{preset.name}</span>
           </label>)}
         </fieldset>
         <div className="invite-form">

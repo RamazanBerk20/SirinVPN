@@ -1,6 +1,6 @@
 import { TransportSetupFields, newTransportDraft, transportDraftIsValid, transportSetupFromDraft } from "./TransportSetupFields";
 import { DnsChangeReview } from "../dns/DnsChangeReview";
-import { useSshLogin } from "../../hooks/useSshLogin";
+import { useSshOperation } from "../../hooks/useSshOperation";
 import { SshLoginFields } from "./SshLoginFields";
 import { ConfirmationRow } from "../../components/ConfirmationRow";
 import { RepairSummary } from "./RepairSummary";
@@ -8,18 +8,13 @@ import { DialogBack, DialogContent } from "../../components/DialogContent";
 import { Busy, OperationProgress, stepsAt } from "../../components/OperationResult";
 import * as Dialog from "@radix-ui/react-dialog";
 import { GlobeHemisphereWest } from "@phosphor-icons/react";
-import { useEffect, useId, useState } from "react";
+import { useId, useState } from "react";
 import { api } from "../../api";
-import {
-  useSshHostTrust,
-  type InspectedSshHost,
-} from "../../hooks/useSshHostTrust";
 import { SshHostVerification } from "./SshHostVerification";
 import { privateDnsDraftIsValid, privateDnsRecordsFromDraft } from "../../dns";
-import { type RepairResult, type ServerProfile } from "../../types";
+import { type RepairResult, type ServerProfile, type SshCredentials } from "../../types";
+import { OperationPlan, ServerChangeFailure } from "../../components/ServerChange";
 import { SplitDnsFields, splitDnsDraftIsValid, withSplitDns } from "../dns/SplitDnsFields";
-import { InlineError } from "../../components/ui";
-import { errorMessage } from "../../lib/errors";
 import { t } from "../../i18n";
 import {
   type DnsPolicyChoice,
@@ -57,15 +52,9 @@ export function RepairServerDialog({
   const formId = useId();
   const dns = intent === "dns";
   const [securityUpdates, setSecurityUpdates] = useState(intent === "security");
-  const [step, setStep] = useState<
-    "details" | "fingerprint" | "review" | "repairing" | "success"
-  >("details");
-  // Which step of the running task is under way, for its progress list.
-  const [phase, setPhase] = useState(0);
-  const login = useSshLogin(profile.endpoint.host, open);
+  const op = useSshOperation<RepairResult>(profile.endpoint.host, open);
+  const { login, trust, view, busy, error, phase, result } = op;
   const { port } = login;
-  const trust = useSshHostTrust(profile.endpoint.host, Number(port), open);
-  const [confirmed, setConfirmed] = useState(false);
   const [dnsChoice, setDnsChoice] = useState<DnsPolicyChoice>("preserve");
   const [dnsEndpoints, setDnsEndpoints] =
     useState<DnsEndpointDraft[]>(newDnsEndpointDrafts);
@@ -76,25 +65,17 @@ export function RepairServerDialog({
   const [nat64Choice, setNat64Choice] = useState<Nat64Choice>("preserve");
   const [nat64Prefix, setNat64Prefix] = useState("");
   const [transport, setTransport] = useState(() => newTransportDraft(profile));
-  const [result, setResult] = useState<RepairResult | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  const clearSecrets = () => {
-    login.clearSecrets();
-  };
-
-  useEffect(() => {
-    if (open) {
-      // The dialog stays mounted; a restore or endpoint update may have changed
-      // the saved transport since the draft was last built.
+  // The dialog stays mounted: each opening starts afresh, and a restore or endpoint update may
+  // have changed the saved transport since the draft was last built.
+  const [openedAs, setOpenedAs] = useState<string | null>(null);
+  const opening = open ? intent : null;
+  if (openedAs !== opening) {
+    setOpenedAs(opening);
+    if (opening) {
+      op.reset();
       setTransport(newTransportDraft(profile));
       setSecurityUpdates(intent === "security");
-    } else {
-      clearSecrets();
-      setStep("details");
-      trust.reset();
-      setConfirmed(false);
       setDnsChoice("preserve");
       setDnsEndpoints(newDnsEndpointDrafts());
       setPrivateDnsChoice("preserve");
@@ -102,15 +83,11 @@ export function RepairServerDialog({
       setSplitDns("");
       setNat64Choice("preserve");
       setNat64Prefix("");
-      setTransport(newTransportDraft(profile));
-      setResult(null);
-      setError(null);
-      setBusy(false);
     }
-  }, [open, intent]);
+  }
 
   const changeOpen = (next: boolean) => {
-    if (!next && (busy || step === "repairing")) return;
+    if (!next && busy) return;
     onOpenChange(next);
   };
 
@@ -126,7 +103,7 @@ export function RepairServerDialog({
   const blocker = !disconnected ? t("vps.common.disconnectFirst")
     : !transportValid ? t("ssh.transport.invalid")
     : invalidSetting ? t(`vps.repair.blocked.${invalidSetting}`)
-    : login.missing ?? (step === "fingerprint" && !confirmed ? t("ssh.verify.confirmFirst") : null);
+    : login.missing ?? (view === "confirmHost" && !trust.confirmed ? t("ssh.verify.confirmFirst") : null);
 
   const updateDnsEndpoint = (
     index: number,
@@ -142,74 +119,40 @@ export function RepairServerDialog({
 
   const inspect = async () => {
     if (!sshValid) return;
-    setBusy(true);
-    setError(null);
-    try {
-      const checked = await trust.inspect();
-      if (!checked) return;
-      setConfirmed(false);
-      if (checked.status === "trusted") {
-        if (dns) setStep("review");
-        else await repair(checked);
-      } else {
-        setStep("fingerprint");
-      }
-    } catch (reason) {
-      setError(errorMessage(reason, t("vps.common.error.unreachable")));
-    } finally {
-      setBusy(false);
-    }
+    await op.verify(t("vps.common.error.unreachable"), checked => dns ? op.review() : repair(checked));
   };
 
-  const repair = async (
-    checked: InspectedSshHost | null = trust.inspection,
-  ) => {
-    if (!checked || !sshValid || (checked.status !== "trusted" && !confirmed))
-      return;
-    setStep("repairing");
-    setPhase(0);
-    setBusy(true);
-    setError(null);
-    try {
-      const fingerprint = await trust.accept(checked, confirmed);
-      setPhase(1);
-      const repaired = await api.repairServer({
-        server_id: profile.id,
-        ...(await login.prepare(fingerprint)),
-        confirmed: true,
-        transport: dns ? null : transportSetupFromDraft(transport, profile),
-        dns_upstream:
-          dnsChoice === "preserve"
-            ? null
-            : withSplitDns(dnsChoice === "dns_over_tls" || dnsChoice === "dns_over_https"
-              ? dnsUpstreamFromDraft(dnsChoice, dnsEndpoints)
-              : { mode: "recursive" }, splitDns),
-        private_dns_records:
-          privateDnsChoice === "preserve"
-            ? null
-            : privateDnsChoice === "clear"
-              ? []
-              : privateDnsRecordsFromDraft(privateDnsRecords),
-        ...(!dns && nat64Choice !== "preserve" && {
-          nat64_prefix: nat64Choice === "replace" ? nat64Prefix.trim() : null,
-        }),
-        enable_security_updates: !dns && securityUpdates,
-      });
-      clearSecrets();
+  const repairInput = (credentials: SshCredentials) => ({
+    server_id: profile.id,
+    ...credentials,
+    confirmed: true,
+    transport: dns ? null : transportSetupFromDraft(transport, profile),
+    dns_upstream:
+      dnsChoice === "preserve"
+        ? null
+        : withSplitDns(dnsChoice === "dns_over_tls" || dnsChoice === "dns_over_https"
+          ? dnsUpstreamFromDraft(dnsChoice, dnsEndpoints)
+          : { mode: "recursive" }, splitDns),
+    private_dns_records:
+      privateDnsChoice === "preserve"
+        ? null
+        : privateDnsChoice === "clear"
+          ? []
+          : privateDnsRecordsFromDraft(privateDnsRecords),
+    ...(!dns && nat64Choice !== "preserve" && {
+      nat64_prefix: nat64Choice === "replace" ? nat64Prefix.trim() : null,
+    }),
+    enable_security_updates: !dns && securityUpdates,
+  });
+
+  const repair = async (checked = trust.inspection) => {
+    if (!checked || !sshValid || (checked.status !== "trusted" && !trust.confirmed)) return;
+    await op.run(async (credentials, setPhase) => {
+      const repaired = await api.repairServer(repairInput(credentials));
       setPhase(2);
       await onCompleted();
-      setResult(repaired);
-      setStep("success");
-    } catch (reason) {
-      clearSecrets();
-      setConfirmed(false);
-      setStep("details");
-      setError(
-        errorMessage(reason, dns ? t("vps.repair.error.dns") : t("vps.repair.error.repair")),
-      );
-    } finally {
-      setBusy(false);
-    }
+      return repaired;
+    }, dns ? t("vps.repair.error.dns") : t("vps.repair.error.repair"), { inspection: checked, onError: login.clearSecrets });
   };
 
   const dnsFields = <>
@@ -237,24 +180,25 @@ export function RepairServerDialog({
         <Dialog.Overlay className="dialog-overlay" />
         <DialogContent className="dialog-content remove-server-dialog repair-server-dialog"
           heading={dns ? t("vps.repair.titleDns", { name: profile.name }) : t("vps.repair.title", { name: profile.name })}
-          description={step === "success"
+          description={view === "succeeded"
             ? dns ? t("vps.repair.titleDoneDns") : t("vps.repair.titleDone")
-            : step === "repairing"
+            : view === "running"
               ? t("vps.repair.description.running")
               : dns ? t("vps.repair.description.dns") : t("vps.repair.description.repair")}
-          closeDisabled={busy || step === "repairing"}
-          footerNote={step === "details" || step === "fingerprint" || step === "review" ? busy ? null : blocker : null}
-          footer={step === "repairing" ? null
-            : step === "success" ? <button className="primary-button" type="button" onClick={() => { onOpenChange(false); onReturnHome?.(); }}>{t("vps.repair.action.home")}</button>
+          data-operation="repair" data-flow-state={op.state.kind}
+          closeDisabled={busy}
+          footerNote={view === "form" || view === "confirmHost" || view === "review" ? busy ? null : blocker : null}
+          footer={view === "running" ? null
+            : view === "succeeded" ? <button className="primary-button" type="button" onClick={() => { onOpenChange(false); onReturnHome?.(); }}>{t("vps.repair.action.home")}</button>
             : <>
-              {step !== "details" && <DialogBack disabled={busy} onClick={() => setStep("details")} />}
+              {view !== "form" && <DialogBack disabled={busy} onClick={op.back} />}
               <button className="secondary-button" type="button" disabled={busy} onClick={() => changeOpen(false)}>{t("common.action.cancel")}</button>
-              {step === "details" ? <button className="primary-button" type="submit" form={formId} disabled={!sshValid || busy}>{busy ? <Busy label={t("vps.common.checking")} /> : primaryLabel}</button>
-                : <button className="primary-button" type="button" disabled={busy || !sshValid || step === "fingerprint" && !confirmed} onClick={() => { if (dns && step === "fingerprint") setStep("review"); else void repair(); }}>{dns ? step === "fingerprint" ? t("vps.repair.action.review") : t("vps.repair.action.apply") : t("vps.repair.action.repair")}</button>}
+              {view === "form" ? <button className="primary-button" type="submit" form={formId} disabled={!sshValid || busy}>{busy ? <Busy label={t("vps.common.checking")} /> : primaryLabel}</button>
+                : <button className="primary-button" type="button" disabled={busy || !sshValid || view === "confirmHost" && !trust.confirmed} onClick={() => { if (dns && view === "confirmHost") op.review(); else void repair(); }}>{dns ? view === "confirmHost" ? t("vps.repair.action.review") : t("vps.repair.action.apply") : t("vps.repair.action.repair")}</button>}
             </>}
         >
 
-          {step === "details" ? (
+          {view === "form" ? (
             <form
               className="uninstall-form"
               id={formId}
@@ -264,7 +208,7 @@ export function RepairServerDialog({
               }}
             >
               {/* The failure leads the form, where it is seen without scrolling. */}
-              {error ? <InlineError message={error} /> : null}
+              <ServerChangeFailure reason={op.failure} message={error} onResolved={() => void onCompleted()} />
               <fieldset disabled={busy} className="ssh-operation-fields">
                 <div className="uninstall-target">
                   <GlobeHemisphereWest size={16} />
@@ -293,26 +237,28 @@ export function RepairServerDialog({
             </form>
           ) : null}
 
-          {step === "fingerprint" && trust.inspection ? (
+          {view === "confirmHost" && trust.inspection ? (
             <SshHostVerification
               inspection={trust.inspection}
-              confirmed={confirmed}
-              onConfirmed={setConfirmed}
+              confirmed={trust.confirmed}
+              onConfirmed={trust.setConfirmed}
             />
           ) : null}
 
-          {step === "review" && <div className="dns-change-review-step">
-            {error && <InlineError message={error} />}
-            <p>{t("vps.repair.reviewTarget", { name: profile.name, host: profile.endpoint.host, port })}</p>
+          {view === "review" && <div className="dns-change-review-step">
+            <p>{t("vps.repair.reviewTarget", { name: profile.name, address: `${profile.endpoint.host.includes(":") ? `[${profile.endpoint.host}]` : profile.endpoint.host}:${port}` })}</p>
             <DnsChangeReview choice={dnsChoice} endpoints={dnsEndpoints} privateChoice={privateDnsChoice} records={privateDnsRecords} splitDns={splitDns} />
           </div>}
 
-          {step === "repairing" ? (
+          {(view === "form" || view === "confirmHost" || view === "review") && sshValid && !busy
+            ? <OperationPlan load={() => op.plan((credentials) => ({ operation: "repair", ...repairInput(credentials) }))} /> : null}
+
+          {view === "running" ? (
             <OperationProgress title={dns ? t("vps.repair.progressDns") : t("vps.repair.progress")}
               steps={stepsAt([t("vps.common.step.identity"), t(dns ? "vps.repair.stepDns" : "vps.repair.step"), t("vps.common.step.refresh")], phase)} />
           ) : null}
 
-          {step === "success" && result ? (
+          {result ? (
             <RepairSummary profile={profile} result={result} dnsPreserved={dnsChoice === "preserve"} recordsPreserved={privateDnsChoice === "preserve"} />
           ) : null}
         </DialogContent>

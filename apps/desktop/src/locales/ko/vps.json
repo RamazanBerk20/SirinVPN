@@ -1,0 +1,469 @@
+{
+  "common": {
+    "backupFileType": "SirinVPN VPS 백업",
+    "backupPassword": "백업 비밀번호",
+    "checking": "VPS 확인 중…",
+    "chooseFile": "파일 선택",
+    "disconnectFirst": "계속하려면 이 기기의 연결을 끊으세요.",
+    "keepOpen": "완료될 때까지 앱을 열어 두세요.",
+    "noFile": "선택한 파일 없음",
+    "softwareDetails": "소프트웨어 세부 정보",
+    "softwareHash": "소프트웨어 SHA-256",
+    "error": {
+      "picker": "파일 선택기를 열지 못했습니다. 다시 시도하세요.",
+      "unreachable": "SSH로 VPS에 연결하지 못했습니다. 로그인 정보를 확인한 뒤 다시 시도하세요."
+    },
+    "previousStep": "이전 단계",
+    "passwordsMatch": "비밀번호가 일치합니다.",
+    "step": {
+      "identity": "VPS ID 확인",
+      "refresh": "이 서버의 상태 새로 고침"
+    }
+  },
+  "update": {
+    "title": "{{name}} 업데이트",
+    "description": {
+      "login": "SSH로 로그인해 이 서버의 버전을 확인하세요.",
+      "configured": "서명된 릴리스를 확인하고 설치하기 전에 검토하세요.",
+      "setup": "이 서버에는 아직 업데이트가 설정되어 있지 않습니다."
+    },
+    "busy": {
+      "reading": "서버 버전을 읽는 중…",
+      "verifyingKey": "SSH 키를 확인하는 중…",
+      "verifying": "릴리스를 검증하는 중…",
+      "installing": "업데이트를 설치하는 중…",
+      "installingSetup": "설치하고 설정을 마무리하는 중…",
+      "recovering": "업데이트를 복구하는 중…",
+      "rollingBack": "이전 버전을 복원하는 중…",
+      "saving": "일정을 저장하는 중…",
+      "finishing": "설정을 마무리하는 중…"
+    },
+    "action": {
+      "check": "업데이트 확인",
+      "verify": "릴리스 검증",
+      "install": "{{version}} 설치",
+      "installAndFinish": "설치하고 설정 마무리",
+      "finishSetup": "설정 마무리",
+      "changeLogin": "SSH 로그인 변경",
+      "repair": "VPS 복구…"
+    },
+    "steps": {
+      "label": "설정 단계",
+      "source": "소스 선택",
+      "verify": "릴리스 검증",
+      "finish": "설정 마무리"
+    },
+    "statusUnknown": "설치된 버전을 읽지 못했습니다. 그래도 설정은 검증된 서버 소프트웨어를 설치할 수 있습니다.",
+    "versions": {
+      "installed": "설치된 버전",
+      "available": "사용 가능한 버전",
+      "notChecked": "아직 확인되지 않음"
+    },
+    "warning": {
+      "mismatch": "설치된 서버 소프트웨어가 서명된 기록과 일치하지 않습니다. 업데이트하기 전에 서버를 복구하세요.",
+      "automaticFailed": "마지막 자동 보안 업데이트가 실패했습니다. 릴리스 소스를 확인한 뒤 업데이트를 확인하세요."
+    },
+    "recovery": {
+      "needed": "중단된 업데이트를 먼저 복구해야 합니다.",
+      "action": "업데이트 복구"
+    },
+    "source": {
+      "label": "릴리스 소스",
+      "placeholder": "HTTPS 폴더 URL",
+      "help": "이 서버를 설치한 사람에게서 받은, 릴리스가 게시되는 HTTPS 폴더입니다",
+      "change": "소스 변경",
+      "invalid": "사용자 이름, ? 또는 #이 없는 HTTPS 주소를 사용하세요."
+    },
+    "channel": {
+      "label": "릴리스 채널",
+      "stable": "안정",
+      "preview": "미리 보기",
+      "previewHint": "안정성이 낮을 수 있는 초기 빌드입니다. 새 기능을 시험해 볼 때만 사용하세요."
+    },
+    "review": {
+      "label": "검증된 릴리스",
+      "title": "릴리스 {{version}}",
+      "alreadyInstalled": "이 릴리스는 이미 설치되어 있습니다.",
+      "baseline": "이 릴리스를 설치하며, 서버의 ID와 접근 권한은 유지됩니다. 서비스가 잠시 다시 시작됩니다.",
+      "register": "설치된 소프트웨어와 일치합니다. 업데이트를 받도록 등록하려면 설정을 마무리하세요.",
+      "upgrade": "서비스가 잠시 다시 시작됩니다. 상태 확인이 실패하면 이전 버전이 복원됩니다.",
+      "verification": "검증",
+      "verified": "서명과 해시가 확인됨",
+      "compatibility": "호환성",
+      "compatible": "호환됨",
+      "incompatible": "서버의 현재 상태에서는 설치할 수 없습니다",
+      "type": "릴리스 유형",
+      "security": "보안 업데이트입니다. 빨리 설치하세요.",
+      "standard": "일반 릴리스"
+    },
+    "schedule": {
+      "toggle": "보안 업데이트 자동 설치",
+      "help": "위 릴리스 소스에서 매일 확인합니다. 서명 및 롤백 검사는 계속 적용됩니다.",
+      "enabled": "자동 보안 업데이트를 켰습니다.",
+      "disabled": "자동 보안 업데이트를 껐습니다.",
+      "otherSource": "자동 업데이트는 여전히 {{source}}을(를) 확인합니다.",
+      "useSource": "위 소스 사용"
+    },
+    "rollback": {
+      "title": "이전 버전",
+      "kept": "이 버전에 문제가 있으면 롤백할 수 있도록 {{version}} 버전을 보관합니다.",
+      "action": "{{version}} 버전으로 롤백…",
+      "confirmTitle": "{{version}} 버전으로 롤백할까요?",
+      "confirmMessage": "서비스가 다시 시작되고 기기가 잠시 다시 연결됩니다. 해당 버전이 여전히 신뢰되고 호환되는 경우에만 작동합니다.",
+      "confirm": "롤백"
+    },
+    "privacy": {
+      "summary": "개인정보 보호 및 검증",
+      "identifiers": "요청에는 기기, 서버, 사용자 식별자가 포함되지 않습니다.",
+      "signing": "소스와 관계없이 SirinVPN에 내장된 키로 서명된 릴리스만 허용합니다."
+    },
+    "disconnectFirst": "설치, 복구 또는 롤백하려면 이 기기의 연결을 끊으세요.",
+    "done": {
+      "installed": "버전 {{version}}이(가) 설치되었습니다.",
+      "setUp": "업데이트가 설정되었습니다. 버전 {{version}}이(가) 설치되었습니다.",
+      "recovered": "중단되었던 업데이트를 복구했습니다.",
+      "rolledBack": "버전 {{version}}을(를) 복원했습니다."
+    },
+    "error": {
+      "notVerified": "먼저 서버의 SSH 키를 확인하세요.",
+      "cancelled": "작업이 취소되었습니다.",
+      "status": "서버의 업데이트 상태를 읽지 못했습니다.",
+      "check": "이 릴리스를 검증하지 못했습니다. 소스와 채널을 확인하세요.",
+      "notConfirmed": "서버가 새 버전을 확인하지 않았습니다. 다시 시도하기 전에 상태를 확인하세요.",
+      "stopped": "작업이 중지되었습니다. 다시 시도하기 전에 서버 상태를 확인하세요.",
+      "scheduleNotConfirmed": "서버가 새 일정을 확인하지 않았습니다. 다시 시도하기 전에 설정을 확인하세요.",
+      "schedule": "자동 업데이트를 저장하지 못했습니다."
+    },
+    "blocked": {
+      "mismatch": "업데이트를 확인하거나 설치하기 전에 VPS를 복구하세요.",
+      "recovery": "중단된 업데이트를 먼저 복구하세요.",
+      "source": "확인하려면 릴리스 소스를 입력하세요."
+    }
+  },
+  "backup": {
+    "title": "{{name}} 백업",
+    "titleDone": "백업 완료",
+    "description": "나중에 복원하거나 옮길 수 있도록 서버의 ID와 설정을 저장합니다.",
+    "warning": "<strong>이 파일과 비밀번호를 가진 사람은 서버를 복제할 수 있습니다.</strong> 따로 보관하세요.",
+    "saveDialogTitle": "VPS 백업 저장",
+    "destination": "저장 위치",
+    "destinationHint": "기존 파일은 절대 덮어쓰지 않습니다.",
+    "passwordHint": "12자 이상을 사용하세요.",
+    "repeatPassword": "비밀번호 다시 입력",
+    "create": "백업 만들기",
+    "progress": "VPS를 백업하는 중…",
+    "done": "암호화된 백업을 저장했습니다",
+    "doneNote": "파일과 비밀번호는 따로 보관하세요.",
+    "error": "백업을 만들지 못했습니다.",
+    "missing": {
+      "file": "백업을 저장할 위치를 선택하세요.",
+      "password": "12자 이상의 백업 비밀번호를 입력하세요.",
+      "repeat": "같은 비밀번호를 다시 입력하세요."
+    },
+    "step": "로그인하고 암호화된 백업 내보내기"
+  },
+  "schedule": {
+    "action": "예약 백업",
+    "title": "VPS 예약 백업",
+    "description": "암호화된 백업을 일정에 따라 저장합니다. 가장 최근 백업이 선택한 폴더에 보관됩니다.",
+    "folder": "백업 폴더",
+    "folderHint": "한도를 넘는 오래된 백업은 이 폴더에서 삭제됩니다.",
+    "chooseFolder": "폴더 선택",
+    "folderDialogTitle": "VPS 백업 폴더 선택",
+    "frequency": "빈도",
+    "daily": "매일",
+    "weekly": "매주",
+    "monthly": "30일마다",
+    "keep": "보관할 백업 수",
+    "keepHint": "1에서 30 사이",
+    "passwordHint": "12자 이상을 사용하세요. 이 기기의 보안 저장소에 저장됩니다.",
+    "passwordKeepHint": "저장된 비밀번호를 유지하려면 비워 두세요",
+    "loginMissing": "백업은 이 VPS에 저장된 SSH 로그인 정보를 사용합니다. ‘로그인 정보 기억’을 켠 상태로 VPS를 한 번 백업하세요.",
+    "disconnected": "백업은 SirinVPN이 열려 있고 이 기기의 연결이 끊어져 있을 때 실행됩니다.",
+    "save": "일정 저장",
+    "runNow": "지금 백업",
+    "running": "백업하는 중…",
+    "turnOff": "끄기",
+    "lastBackup": "마지막 백업: {{age}}",
+    "noBackup": "아직 백업이 없습니다",
+    "failed": "마지막 시도가 끝나지 않았습니다: {{message}}",
+    "stale": "백업 기한이 지났습니다. SirinVPN을 연 상태에서 이 기기의 연결을 끊거나 ‘지금 백업’을 선택하세요.",
+    "summary": {
+      "off": "꺼짐",
+      "pending": "켜짐 · 첫 백업 대기 중",
+      "ok": "마지막 백업 {{age}}",
+      "stale": "마지막 백업 {{age}} · 기한 지남",
+      "failed": "마지막 시도가 끝나지 않음"
+    },
+    "notice": {
+      "failed": "마지막 예약 VPS 백업이 끝나지 않았습니다.",
+      "stale": "마지막 VPS 백업: {{age}}.",
+      "none": "아직 예약된 VPS 백업이 없습니다.",
+      "review": "검토"
+    },
+    "error": {
+      "save": "일정을 저장하지 못했습니다.",
+      "run": "백업을 실행하지 못했습니다.",
+      "off": "예약 백업을 끄지 못했습니다."
+    },
+    "saving": "저장하는 중…",
+    "turningOff": "끄는 중…",
+    "saved": "예약 백업을 저장했습니다.",
+    "backedUp": "VPS 백업을 저장했습니다.",
+    "turnedOff": "예약 백업을 껐습니다.",
+    "missing": {
+      "folder": "백업 폴더를 선택하세요."
+    }
+  },
+  "restore": {
+    "title": "{{name}} 복원",
+    "titleDone": "복원 완료",
+    "description": "같은 VPS 또는 새 VPS에 이 서버의 ID를 복원합니다.",
+    "warning": "<strong>오래된 백업은 이후에 폐기한 접근 권한을 되살릴 수 있습니다.</strong> 복원 후 사람과 기기를 검토하세요.",
+    "openDialogTitle": "VPS 백업 열기",
+    "file": "백업 파일",
+    "host": "VPS 주소",
+    "hostHint": "복구하려면 현재 주소를 유지하고, 서버를 옮기려면 새 주소를 입력하세요.",
+    "replace": "기존 SirinVPN 설치 바꾸기",
+    "replaceHint": "해당 VPS에 이미 SirinVPN이 설치되어 있을 때 사용하세요. 다른 서비스는 건드리지 않습니다.",
+    "action": "VPS 복원",
+    "progress": "서버를 복원하고 검증하는 중…",
+    "done": "서버 ID를 복원했습니다",
+    "doneNote": "이 기기는 이제 {{host}}을(를) 사용합니다. 주소가 바뀌었다면 이전 VPS를 끄기 전에 다른 기기를 옮기세요.",
+    "reviewAccess": "접근 권한 검토",
+    "moveDevices": "기기 옮기기",
+    "error": "복원이 중지되었습니다. VPS는 이전 상태로 돌아가며 이 기기는 변경되지 않았습니다.",
+    "review": "복원 검토",
+    "reviewTitle": "이 백업을 복원할까요?",
+    "missing": {
+      "file": "백업 파일을 선택하세요.",
+      "password": "백업 비밀번호를 입력하세요(12자 이상).",
+      "host": "VPS 주소를 호스트 이름 또는 IP 주소로 입력하세요."
+    },
+    "consequence": {
+      "replace": "이 VPS의 SirinVPN 설치가 백업의 설치로 바뀝니다.",
+      "install": "백업을 사용해 이 VPS에 SirinVPN을 설치합니다.",
+      "access": "이 백업 이후에 삭제한 사람과 기기가 다시 접근할 수 있게 됩니다.",
+      "device": "이 기기는 {{host}}(으)로 전환됩니다. 서비스가 잠시 다시 시작됩니다."
+    },
+    "step": "로그인하고 VPS를 복원해 검증하기"
+  },
+  "repair": {
+    "title": "{{name}} 복구",
+    "titleDns": "{{name}}의 DNS 설정",
+    "titleDone": "복구 완료",
+    "titleDoneDns": "DNS 설정 적용됨",
+    "description": {
+      "repair": "ID나 접근 권한을 바꾸지 않고 서버 소프트웨어를 다시 설치합니다.",
+      "dns": "변경하지 않은 항목은 그대로 유지됩니다.",
+      "running": "서버가 다시 시작되는 동안 VPN을 잠시 사용할 수 없습니다."
+    },
+    "note": "서버가 다시 시작되는 동안 VPN을 잠시 사용할 수 없습니다.",
+    "securityUpdates": "자동 보안 업데이트 켜기",
+    "securityUpdatesNote": "그러면 VPS가 매일 운영체제의 보안 수정 사항을 설치합니다. 끄면 복구는 아직 설치되지 않은 곳에서만 자동 업데이트를 켭니다.",
+    "action": {
+      "repair": "VPS 복구",
+      "review": "변경 사항 검토",
+      "apply": "변경 사항 적용",
+      "home": "홈으로 돌아가기"
+    },
+    "reviewTarget": "{{name}} · SSH {{address}}",
+    "progress": "서버를 업데이트하고 확인하는 중…",
+    "error": {
+      "repair": "복구가 중지되었습니다. ID는 변경되지 않았으며 부분 변경은 자동으로 롤백됩니다.",
+      "dns": "DNS 변경이 중지되었습니다. 부분 변경은 자동으로 롤백됩니다."
+    },
+    "options": "서버 설정 변경(선택 사항)",
+    "optionsNote": "여기에서 변경하지 않으면 주소, 포트, DNS, NAT64는 그대로 유지됩니다.",
+    "signIn": "VPS에 로그인",
+    "progressDns": "DNS 설정을 적용하고 서버를 확인하는 중…",
+    "blocked": {
+      "dns": "위의 DNS 리졸버를 수정하세요.",
+      "split": "위의 분할 DNS 영역을 수정하세요.",
+      "records": "위의 비공개 DNS 레코드를 수정하세요.",
+      "nat64": "위의 NAT64 프리픽스를 수정하세요."
+    },
+    "step": "로그인하고 VPS를 업데이트해 확인하기",
+    "stepDns": "로그인하고 DNS 설정 적용하기"
+  },
+  "summary": {
+    "title": "{{name}}에 다시 연결할 준비가 되었습니다",
+    "completed": "완료됨",
+    "software": "서버 소프트웨어",
+    "softwareValue": "설치 및 검증됨",
+    "services": "VPN 서비스",
+    "servicesValue": "다시 시작 및 확인됨",
+    "dns": "비공개 DNS",
+    "dnsValue": "검증됨 · {{policy}}",
+    "records": "비공개 레코드",
+    "recordsNone": "없음",
+    "recordsValue": "{count, plural, other {레코드 #개 검증됨}}",
+    "preserved": "유지됨",
+    "identities": "서버 및 기기 ID와 접근 권한",
+    "dnsPolicy": "비공개 DNS 설정",
+    "dnsRecords": "비공개 DNS 레코드",
+    "fingerprint": "서버 ID 지문",
+    "fingerprintSaved": "이 기기의 서버 프로필에 고정됨",
+    "network": "네트워크 요구 사항",
+    "networkNote": "방화벽 접근은 확인하지 않았습니다. 연결에 실패하면 이 항목을 검토하세요.",
+    "next": "홈에서 연결하여 이 기기의 연결을 테스트하세요."
+  },
+  "remove": {
+    "title": "{{name}} 제거",
+    "description": {
+      "owner": "이 기기에서만 제거하거나 VPS에서 SirinVPN을 제거할 수 있습니다.",
+      "member": "VPS에서 SirinVPN을 제거할 수 있는 것은 소유자뿐입니다.",
+      "running": "VPS에서 SirinVPN을 제거하는 중입니다."
+    },
+    "local": {
+      "title": "이 기기에서 제거",
+      "summary": "여기에서 키를 삭제하며, 서버는 계속 설치된 상태로 남습니다",
+      "confirmTitle": "이 기기에서 {{name}}을(를) 제거할까요?",
+      "confirmOwner": "이 기기의 소유자 키가 삭제됩니다. 서버는 계속 설치되어 있고 소유가 유지됩니다.",
+      "confirmMember": "이 기기의 키가 삭제됩니다. 서버는 변경되지 않습니다.",
+      "error": "이 기기에서 서버를 제거하지 못했습니다.",
+      "done": "{{name}}을(를) 이 기기에서 제거했습니다.",
+      "removing": "제거하는 중…"
+    },
+    "uninstall": {
+      "title": "VPS에서 제거",
+      "summary": "VPS에서 SirinVPN을 제거한 뒤 이 기기에서도 제거합니다",
+      "review": "제거 검토",
+      "action": "SirinVPN 제거",
+      "confirmTitle": "{{host}}에서 SirinVPN을 제거할까요?",
+      "confirmMessage": "이 서버의 모든 기기와 참여 코드가 작동을 멈춥니다. VPS의 Docker 및 다른 서비스는 유지됩니다.",
+      "confirm": "제거",
+      "progress": "SirinVPN을 제거하는 중…",
+      "error": "제거가 끝나지 않았습니다. VPS는 부분 변경을 롤백하며, 이 기기는 서버를 계속 유지합니다.",
+      "done": "{{host}}에서 SirinVPN을 제거했습니다.",
+      "step": "로그인하고 VPS에서 SirinVPN 제거하기",
+      "stepLocal": "이 기기에서 서버 제거하기"
+    }
+  },
+  "endpoint": {
+    "titleShare": "새 주소로 이동",
+    "titleApply": "주소 업데이트 적용",
+    "description": "서명된 업데이트로 기기를 서버의 새 주소와 설정으로 옮깁니다.",
+    "tab": {
+      "label": "주소 업데이트 작업",
+      "share": "새 주소 공유",
+      "apply": "새 주소 사용"
+    },
+    "pending": "아직 {{host}}을(를) 사용하는 기기는 해당 VPS를 폐기하기 전에 이 업데이트가 필요합니다.",
+    "create": {
+      "title": "주소 업데이트 만들기",
+      "action": "업데이트 만들기"
+    },
+    "retrieve": {
+      "title": "최신 업데이트 가져오기",
+      "action": "업데이트 가져오기"
+    },
+    "intro": "새 VPS가 업데이트에 서명합니다. 그다음 기기를 위해 이전 VPS에 게시하세요.",
+    "connectFirst": "먼저 새 VPS에 연결하세요.",
+    "number": "업데이트 {{number}}",
+    "code": "업데이트 코드",
+    "codeHint": "접근 키는 포함되지 않으며, 서명으로 변조를 방지합니다",
+    "copy": "코드 복사",
+    "publish": "이전 VPS에 게시",
+    "published": "이전 VPS에 게시됨",
+    "publishNote": "아직 이전 VPS에 연결하는 기기는 그곳에서 업데이트를 받습니다.",
+    "applied": "주소가 업데이트됨",
+    "appliedNote": "새 주소에서 연결이 작동하는지 확인하세요.",
+    "applyIntro": "서버의 소유자에게 받은 코드를 붙여넣거나, 서버에서 가져오세요.",
+    "getFromServer": "서버에서 가져오기",
+    "verify": "검증 후 전환",
+    "identityNote": "새 주소도 여전히 같은 서버 ID를 증명해야 합니다.",
+    "error": {
+      "create": "업데이트를 만들지 못했습니다. 이전 VPS를 계속 실행한 상태에서 연결된 동안 다시 시도하세요.",
+      "retrieve": "이 서버에서 주소 업데이트를 가져오지 못했습니다.",
+      "publish": "이전 VPS에 게시하지 못했습니다. 변경되지 않았으므로 다시 시도할 수 있습니다.",
+      "apply": "업데이트를 적용하지 못했습니다. 연결을 확인하세요."
+    },
+    "showCode": "업데이트 코드 보기",
+    "to": "이동 대상",
+    "working": "업데이트를 가져오는 중…",
+    "publishing": "게시하는 중…",
+    "applying": "검증하는 중…",
+    "pasteFirst": "확인하려면 코드를 붙여넣으세요.",
+    "none": "이 서버에는 대기 중인 주소 업데이트가 없습니다."
+  },
+  "alerts": {
+    "title": "VPS 경고",
+    "summary": "이 VPS에 주의가 필요하면 알림을 받고, 응답이 없을 때 외부 모니터가 알아챌 수 있게 합니다. 주소를 추가하기 전까지는 꺼져 있습니다. 알림에는 고정된 텍스트만 포함되며 이름, 주소, 트래픽은 포함되지 않습니다.",
+    "unsupported": "VPS 경고를 사용하려면 최신 앱으로 이 서버를 복구하세요.",
+    "format": "경고 형식",
+    "formats": {
+      "ntfy": {
+        "label": "ntfy 주제",
+        "hint": "선택한 ntfy 서버용 제목이 있는 일반 텍스트"
+      },
+      "webhook": {
+        "label": "웹훅",
+        "hint": "제목, 메시지, 텍스트가 있는 작은 JSON 객체"
+      }
+    },
+    "alertUrl": "경고 주소",
+    "alertUrlHint": "선택 사항입니다. 주제 또는 웹훅의 전체 HTTPS 주소입니다. VPS는 5분마다 확인하며, 문제가 시작되거나 해결될 때 전송합니다.",
+    "heartbeatUrl": "하트비트 주소",
+    "heartbeatHint": "선택 사항입니다. VPS가 5분마다 요청합니다. 하트비트 누락 모니터를 가리키면 VPS가 멈추거나 오프라인이 되었을 때 알 수 있습니다.",
+    "invalid": "사용자 이름이 없는 전체 HTTPS 주소를 사용하세요.",
+    "allowPrivate": "사설, 루프백 및 VPN 주소 허용",
+    "save": "경고 저장",
+    "saved": "저장되었습니다. VPS는 다음 확인 때 이 설정을 사용합니다.",
+    "test": "테스트 경고 보내기",
+    "testSent": "VPS가 테스트 경고를 전달했습니다.",
+    "loadFailed": "경고 설정을 불러오지 못했습니다.",
+    "saveFailed": "경고 설정을 저장하지 못했습니다.",
+    "testFailed": "테스트 경고를 보내지 못했습니다.",
+    "status": {
+      "notChecked": "VPS가 아직 확인하지 않았습니다. 5분마다 확인합니다.",
+      "checked": "마지막 VPS 확인: {{time}}.",
+      "alertFailed": "마지막 경고가 전달되지 않았습니다. {{reason}} VPS는 다음 확인 때 다시 시도합니다.",
+      "heartbeat": "마지막 하트비트: {{time}}.",
+      "heartbeatFailed": "마지막 하트비트가 실패했습니다. {{reason}}"
+    },
+    "failure": {
+      "address": "주소를 확인하지 못했거나, 허용되지 않은 사설 주소로 확인되었습니다.",
+      "connection": "VPS가 HTTPS로 주소에 접속하지 못했습니다.",
+      "rejected": "주소가 요청을 거부했습니다.",
+      "rejectedStatus": "주소가 HTTP 상태 {{status}}(으)로 응답했습니다.",
+      "rejectedClient": "주소가 HTTP 상태 {{status}}(으)로 응답했습니다. 주소와 필요한 액세스 토큰을 확인하세요."
+    }
+  },
+  "rotation": {
+    "confirmFirst": "계속하려면 위 상자를 선택하세요.",
+    "fingerprint": "새 기기 ID 지문",
+    "unchanged": "변경된 내용이 없습니다. 현재 키가 계속 작동합니다.",
+    "interrupted": "교체가 중단되었습니다. 완료하려면 재개하세요. 그전까지 이 기기는 연결할 수 없습니다."
+  },
+  "deviceBackup": {
+    "confirmFirst": "확인하려면 위 상자를 선택하세요."
+  },
+  "change": {
+    "blocked": "이 변경은 아직 시작할 수 없습니다:",
+    "rolledBack": "서버가 변경을 롤백했으므로 아무것도 바뀌지 않았습니다. 다시 시도할 수 있습니다.",
+    "unknown": {
+      "message": "{{host}}의 변경이 적용되었을 수 있지만 확인 응답이 유실되었습니다. 이 기기는 키를 그대로 유지했습니다.",
+      "checkAgain": "다시 확인",
+      "checking": "확인하는 중…",
+      "checkFailed": "서버를 확인하지 못했습니다. 서버에 연결될 때 다시 시도하세요.",
+      "committed": "{{host}}의 변경이 적용되었습니다.",
+      "forget": "이 변경 잊기…",
+      "forgetTitle": "{{host}}의 변경을 잊을까요?",
+      "forgetMessage": "이 기기는 서버에 묻지 않고 변경 추적을 중지합니다. 서버는 변경을 적용했거나 롤백했을 수 있습니다. 저장된 소유자 키는 유지됩니다. 이후에 서버를 복구해야 할 수 있습니다.",
+      "forgetConfirm": "변경 잊기",
+      "forgetting": "잊는 중…",
+      "forgetFailed": "변경을 잊지 못했습니다. 다시 시도하세요.",
+      "forgotten": "이 기기는 더 이상 {{host}}의 변경을 추적하지 않습니다. 서버가 예상대로 작동하지 않으면 복구하세요."
+    },
+    "plan": {
+      "show": "수행될 작업 보기",
+      "loading": "계획을 준비하는 중…",
+      "error": "계획을 준비하지 못했습니다.",
+      "commands": "명령",
+      "asRoot": "(root 권한)",
+      "upload": "{{path}} 업로드 (모드 {{mode}})",
+      "files": "변경된 파일"
+    }
+  }
+}

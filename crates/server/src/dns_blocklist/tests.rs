@@ -401,3 +401,45 @@ fn backup_restore_keeps_the_policy_and_loading_rejects_an_invalid_one() {
     fs::write(&source.authorization, serde_json::to_vec(&value).unwrap()).unwrap();
     assert!(load_authorization(&source.authorization).is_err());
 }
+
+#[test]
+fn a_failure_belongs_only_to_the_policy_it_was_for() {
+    let status = DnsBlocklistStatus {
+        active: true,
+        domain_count: 3,
+        updated_at_unix: Some(10),
+        policy_sha256: Some("a".into()),
+        failure: Some(DnsBlocklistFailure::Download),
+        failed_at_unix: Some(20),
+        failed_policy_sha256: Some("b".into()),
+    };
+    let state = BlocklistState::from(&status);
+    assert_eq!(DnsBlocklistStatus::from(state.clone()), status);
+    let active = Applied::Active {
+        policy_sha256: "a".into(),
+        updated_at_unix: 10,
+        domain_count: 3,
+    };
+    assert_eq!(
+        state.clone().for_policy("b"),
+        BlocklistState::Failed {
+            policy_sha256: "b".into(),
+            failed_at_unix: 20,
+            failure: DnsBlocklistFailure::Download,
+            last_good: active.clone(),
+        }
+    );
+    // Once another policy is selected the old failure cannot be shown or block a retry.
+    assert_eq!(state.for_policy("c"), BlocklistState::Applied(active));
+    // An "active" list without its fingerprint or time is not an applied list.
+    let incomplete = DnsBlocklistStatus {
+        active: true,
+        ..Default::default()
+    };
+    assert_eq!(
+        BlocklistState::from(&incomplete),
+        BlocklistState::Applied(Applied::Off {
+            policy_sha256: None
+        })
+    );
+}

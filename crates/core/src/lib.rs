@@ -3,6 +3,8 @@
 mod backup;
 pub mod diagnostics;
 mod encrypted_backup;
+/// Recovery packages surface it directly; clients map `AuthenticationFailed` to a wrong password.
+pub use encrypted_backup::EncryptedBackupError;
 mod endpoint_discovery;
 mod endpoint_transition;
 #[cfg(fuzzing)]
@@ -19,7 +21,7 @@ mod management;
 mod network_policy;
 mod pending_enrollment;
 mod recovery;
-pub use pending_enrollment::PendingEnrollment;
+pub use pending_enrollment::{EnrollmentStage, PendingEnrollment};
 pub use recovery::{
     DecodedRecoveryKey, MAX_RECOVERY_PACKAGE_BYTES, RecoveryKeyDraft, RecoveryKeyPreview,
     decrypt_recovery_package, encrypt_recovery_package, read_recovery_package,
@@ -27,6 +29,7 @@ pub use recovery::{
 };
 mod secrets;
 mod server_backup;
+mod server_operation;
 mod store;
 mod vps_backup_schedule;
 
@@ -63,13 +66,16 @@ pub use network_policy::{
 };
 #[cfg(target_os = "android")]
 pub use secrets::install_android_secret_store;
-pub use secrets::{HybridSecretStore, SecretStore, SecretStoreError};
+pub use secrets::{
+    CredentialBackend, CredentialState, HybridSecretStore, SecretStore, SecretStoreError,
+};
 #[cfg(not(any(windows, target_os = "android")))]
 pub use secrets::{StoragePolicy, StorageStatus};
 pub use server_backup::{
     DecryptedServerBackup, ServerBackupError, ServerBackupMetadata, read_encrypted_server_backup,
     validate_server_backup_password, write_encrypted_server_backup,
 };
+pub use server_operation::{ServerOperationError, ServerOperationLock};
 pub use store::{ProfileStore, ProfileStoreError};
 pub use vps_backup_schedule::{
     MAX_VPS_BACKUP_INTERVAL_DAYS, MAX_VPS_BACKUPS_KEPT, VPS_BACKUP_RETRY_SECONDS, VpsBackupFailure,

@@ -11,15 +11,25 @@ pub(super) fn dispatch(app: AppHandle, action: Action) {
         Action::Open => show_main(&app),
         Action::Navigate(destination, server) => navigation::open(&app, destination, server),
         action => {
-            if app.state::<TrayState>().busy.swap(true, Ordering::AcqRel) {
+            // Disconnect must reach a connect the tray itself is still running.
+            let stops = matches!(
+                action,
+                Action::Disconnect(_) | Action::DisconnectQuit(_) | Action::Cancel
+            );
+            if !stops && app.state::<TrayState>().busy.swap(true, Ordering::AcqRel) {
                 return;
             }
             request_refresh(&app);
             tauri::async_runtime::spawn_blocking(move || {
-                let result = run(&app, action);
-                app.state::<TrayState>()
-                    .busy
-                    .store(false, Ordering::Release);
+                let result = if stops {
+                    stop(&app, action)
+                } else {
+                    let result = run(&app, action);
+                    app.state::<TrayState>()
+                        .busy
+                        .store(false, Ordering::Release);
+                    result
+                };
                 request_refresh(&app);
                 if let Err(error) = result {
                     show_main(&app);
@@ -61,7 +71,12 @@ fn run(app: &AppHandle, action: Action) -> Result<(), String> {
             .ok()
             .and_then(|i| i.model.as_ref().map(|m| m.quit));
         // Saved servers aren't loaded here; an empty list keeps the status line to the state.
-        let current = model::project(status.as_ref().ok(), Some(&[]), None, false);
+        let current = model::project(
+            status.as_ref().ok(),
+            Some(&[]),
+            None,
+            connection_controller::Gate::Idle,
+        );
         // Re-read at click time. A changed/unknown exit outcome needs fresh consent.
         if (status.is_err() || expected != Some(current.quit) || current.quit.needs_consent())
             && !confirm(
@@ -152,48 +167,63 @@ fn run(app: &AppHandle, action: Action) -> Result<(), String> {
                 return Ok(());
             }
             let paused = connection_controller::session_action("pause-session", id)?;
-            if !paused.waiting_for_user || paused.server_id != Some(id) {
+            if paused.phase() != Some(sirinvpn_tunnel_model::TunnelPhase::Paused { server_id: id }) {
                 return Err(text("native.tray.error.stopUnconfirmed"));
             }
         }
-        Action::Disconnect(id) | Action::DisconnectQuit(id) => {
-            if current.server_id != Some(id) {
-                return Err(text("native.tray.error.connectionChanged"));
-            }
-            let quitting = matches!(action, Action::DisconnectQuit(_));
-            let (title, button) = if quitting {
-                (
-                    "native.tray.confirm.disconnectQuit.title",
-                    "native.tray.confirm.disconnectQuit.confirm",
-                )
-            } else {
-                (
-                    "native.tray.confirm.disconnect.title",
-                    "native.tray.confirm.disconnect.confirm",
-                )
-            };
-            if !confirm(
-                app,
-                &text(title),
-                &text("native.tray.confirm.disconnect.message"),
-                &text(button),
-            ) {
-                return Ok(());
-            }
-            let result = connection_controller::session_action("disconnect-session", id)?;
-            if !connection_controller::confirmed_disconnected(&result) {
-                return Err(text("native.tray.error.disconnectUnconfirmed"));
-            }
-            if quitting {
-                let verified =
-                    crate::helper::invoke_helper("status", None).map_err(crate::safe_error)?;
-                if !connection_controller::confirmed_disconnected(&verified) {
-                    return Err(text("native.tray.error.quitUnconfirmed"));
-                }
-                app.exit(0);
-            }
-        }
         _ => {}
+    }
+    Ok(())
+}
+
+/// Disconnect cancels a starting connect instead of waiting for it, as in the window.
+fn stop(app: &AppHandle, action: Action) -> Result<(), String> {
+    let id = match action {
+        Action::Disconnect(id) | Action::DisconnectQuit(id) => id,
+        _ => {
+            let cancellation = connection_controller::cancel()?;
+            crate::connection::disconnect_cancelled(cancellation)?;
+            return Ok(());
+        }
+    };
+    let current = crate::helper::invoke_helper("status", None).map_err(crate::safe_error)?;
+    if current.server_id != Some(id) {
+        return Err(text("native.tray.error.connectionChanged"));
+    }
+    let quitting = matches!(action, Action::DisconnectQuit(_));
+    let (title, button) = if quitting {
+        (
+            "native.tray.confirm.disconnectQuit.title",
+            "native.tray.confirm.disconnectQuit.confirm",
+        )
+    } else {
+        (
+            "native.tray.confirm.disconnect.title",
+            "native.tray.confirm.disconnect.confirm",
+        )
+    };
+    if !confirm(
+        app,
+        &text(title),
+        &text("native.tray.confirm.disconnect.message"),
+        &text(button),
+    ) {
+        return Ok(());
+    }
+    let cancellation = connection_controller::cancel()?;
+    request_refresh(app);
+    // The helper refuses if the session is no longer the one confirmed.
+    let result = connection_controller::session_action("disconnect-session", id);
+    cancellation.wait_for_connect();
+    if !connection_controller::confirmed_disconnected(&result?) {
+        return Err(text("native.tray.error.disconnectUnconfirmed"));
+    }
+    if quitting {
+        let verified = crate::helper::invoke_helper("status", None).map_err(crate::safe_error)?;
+        if !connection_controller::confirmed_disconnected(&verified) {
+            return Err(text("native.tray.error.quitUnconfirmed"));
+        }
+        app.exit(0);
     }
     Ok(())
 }

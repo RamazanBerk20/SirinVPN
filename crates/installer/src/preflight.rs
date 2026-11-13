@@ -1,6 +1,7 @@
 //! Current VPS networking facts, collected only over the pinned SSH connection.
 use super::*;
 use sirinvpn_protocol::{PortForwardProtocol, public_ip_address as public_address};
+use std::collections::BTreeMap;
 mod inspection;
 use inspection::*;
 
@@ -43,6 +44,10 @@ pub struct NetworkIssue {
     pub blocking: bool,
     pub code: &'static str,
     pub message: String,
+    /// The values the message names, for clients that write their own text. Optional:
+    /// older clients ignore it, and issues without values omit it.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub params: BTreeMap<&'static str, String>,
 }
 
 impl NetworkPreflight {
@@ -51,6 +56,16 @@ impl NetworkPreflight {
     }
 
     fn issue(&mut self, blocking: bool, code: &'static str, message: String) {
+        self.issue_with(blocking, code, message, &[]);
+    }
+
+    fn issue_with(
+        &mut self,
+        blocking: bool,
+        code: &'static str,
+        message: String,
+        params: &[(&'static str, String)],
+    ) {
         if !self
             .issues
             .iter()
@@ -60,6 +75,7 @@ impl NetworkPreflight {
                 blocking,
                 code,
                 message,
+                params: params.iter().cloned().collect(),
             });
         }
     }
@@ -213,7 +229,7 @@ fn analyze(
             if let IpAddr::V4(address) = address
                 && address.octets()[..3] == [10, 77, 0]
             {
-                report.issue(true, "tunnel_address_conflict", format!("Interface {name} already uses {address}, inside SirinVPN's 10.77.0.0/24 network. Move the conflicting network before installing."));
+                report.issue_with(true, "tunnel_address_conflict", format!("Interface {name} already uses {address}, inside SirinVPN's 10.77.0.0/24 network. Move the conflicting network before installing."), &[("interface", name.to_string()), ("address", address.to_string())]);
             }
         }
     }
@@ -296,20 +312,21 @@ fn check_listeners(
             _ => false,
         };
         if conflict {
-            report.issue(true, "private_service_port", format!("Port {port} is already bound on an address needed by SirinVPN's private {}. Reconfigure the conflicting service before installing.", if port == 53 { "DNS resolver" } else { "management API" }));
+            report.issue_with(true, "private_service_port", format!("Port {port} is already bound on an address needed by SirinVPN's private {}. Reconfigure the conflicting service before installing.", if port == 53 { "DNS resolver" } else { "management API" }), &[("port", port.to_string())]);
         }
     }
     for requested in report.required_ports.clone() {
         if requested.protocol == PortForwardProtocol::Tcp
             && requested.port == discovery.ssh_server_port
         {
-            report.issue(
+            report.issue_with(
                 true,
                 "ssh_port_conflict",
                 format!(
                     "TCP port {} is used by SSH. Choose a different TCP/TLS port.",
                     requested.port
                 ),
+                &[("port", requested.port.to_string())],
             );
         }
         for line in listeners.lines() {
@@ -335,7 +352,7 @@ fn check_listeners(
                         && own_wg_ports.contains(&port)
                         && !line.contains("users:")));
             if !owned {
-                report.issue(true, "port_in_use", format!("{} port {port} is already listening for another service. Choose a free transport port or reconfigure that service.", match protocol { PortForwardProtocol::Tcp => "TCP", PortForwardProtocol::Udp => "UDP" }));
+                report.issue_with(true, "port_in_use", format!("{} port {port} is already listening for another service. Choose a free transport port or reconfigure that service.", match protocol { PortForwardProtocol::Tcp => "TCP", PortForwardProtocol::Udp => "UDP" }), &[("protocol", fields[0].to_owned()), ("port", port.to_string())]);
             }
         }
     }
@@ -371,7 +388,7 @@ fn check_routes(
         if !valid_interface(interface) {
             bail!("invalid route interface");
         }
-        report.issue(prefix >= 24, "tunnel_route_conflict", format!("Route {destination} on {interface} overlaps SirinVPN's 10.77.0.0/24 network. Check the existing private/VPN network before installing."));
+        report.issue_with(prefix >= 24, "tunnel_route_conflict", format!("Route {destination} on {interface} overlaps SirinVPN's 10.77.0.0/24 network. Check the existing private/VPN network before installing."), &[("route", destination.to_owned()), ("interface", interface.to_owned())]);
     }
     Ok(())
 }

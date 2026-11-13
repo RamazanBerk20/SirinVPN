@@ -18,11 +18,14 @@ serde_json.workspace = true
 tauri = { version = "2.11", features = [] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
-nix.workspace = true
+# inotify: push local status changes instead of spawning the helper on a timer.
+nix = { workspace = true, features = ["inotify"] }
 keyring = { workspace = true, features = ["linux-native-sync-persistent"] }
 # Bounded wallet prompts for saved SSH logins; the same pin as sirinvpn-core.
 dbus-secret-service = "=4.1.0"
 sirinvpn-linux-helper = { path = "../../../crates/linux-helper" }
+# Already in the workspace lock (installer, core); hashes a helper before it is installed as root.
+sha2.workspace = true
 notify-rust = "4.18"
 
 

@@ -122,6 +122,10 @@ enum Command {
         #[command(subcommand)]
         command: sirinvpn_server::alerts::AlertsCommand,
     },
+    Authorization {
+        #[command(subcommand)]
+        command: sirinvpn_server::authorization_doctor::AuthorizationCommand,
+    },
     DohProxy,
     Serve,
 }
@@ -265,6 +269,10 @@ async fn run() -> anyhow::Result<()> {
             sirinvpn_server::dns_blocklist::run(command, &paths).await?
         }
         Command::Alerts { command } => sirinvpn_server::alerts::run(command, &paths).await?,
+        Command::Authorization { command } => {
+            let report = sirinvpn_server::authorization_doctor::run(command, &paths).await?;
+            println!("{}", serde_json::to_string(&report)?);
+        }
         Command::DohProxy => serve_doh_proxy(&paths).await?,
         Command::Serve => serve(&paths).await?,
     }

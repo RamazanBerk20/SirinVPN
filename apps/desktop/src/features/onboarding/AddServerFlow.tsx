@@ -48,7 +48,7 @@ export function AddServerFlow({
   const current = choices.find(choice => choice.id === mode);
   const rows = (advanced: boolean) => choices.filter((choice) => ("advanced" in choice) === advanced).map(({ id, label, hint, icon: Icon }) =>
     <ListRow key={id} className={id === "join" ? "invitation-choice" : ""}
-      icon={<Icon size={24} />} title={t(label)} subtitle={t(hint)} trailing={<CaretRight size={18} />} onClick={() => choose(id)} />);
+      icon={<Icon size={24} />} title={t(label)} subtitle={t(hint)} trailing={<CaretRight className="mirror-rtl" size={18} />} onClick={() => choose(id)} />);
   const list = <>
     <div className="mobile-choice-list" role="group" aria-label={t("onboarding.choice.listLabel")}>{rows(false)}</div>
     <SettingsDisclosure className="add-server-advanced"
@@ -69,7 +69,7 @@ export function AddServerFlow({
   </div>;
   return <div className="add-server-flow">
     {current ? <>
-      {(mode !== "provision" && mode !== "hetzner" || setupStep === "details") && <button type="button" className="text-button flow-back" onClick={() => choose(null)}><ArrowLeft size={16} aria-hidden="true" /> {t("onboarding.choice.back")}</button>}
+      {(mode !== "provision" && mode !== "hetzner" || setupStep === "details") && <button type="button" className="text-button flow-back" onClick={() => choose(null)}><ArrowLeft className="mirror-rtl" size={16} aria-hidden="true" /> {t("onboarding.choice.back")}</button>}
       {flow}
     </> : list}
   </div>;

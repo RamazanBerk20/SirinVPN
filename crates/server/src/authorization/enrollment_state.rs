@@ -125,11 +125,11 @@ impl AuthorizationDocument {
 
     pub(crate) fn prune_expired(&mut self, now: u64) -> bool {
         let recovery_expired = self
-            .recovery_receipt
-            .as_ref()
+            .owner_recovery
+            .receipt()
             .is_some_and(|receipt| receipt.expires_at_unix <= now);
         if recovery_expired {
-            self.recovery_receipt = None;
+            self.owner_recovery = OwnerRecovery::Unarmed;
         }
         let invitation_count = self.invitations.len();
         let receipt_count = self.enrollment_receipts.len();
@@ -240,6 +240,7 @@ impl AuthorizationDocument {
                 uses_remaining: invitation.claims.max_uses - invitation.uses_consumed,
                 max_uses: invitation.claims.max_uses,
                 member_policy: invitation.claims.member_policy.clone(),
+                issued_by_member_id: invitation.issued_by,
             })
             .collect();
         active_invitations.sort_by_key(|invitation| invitation.expires_at_unix);

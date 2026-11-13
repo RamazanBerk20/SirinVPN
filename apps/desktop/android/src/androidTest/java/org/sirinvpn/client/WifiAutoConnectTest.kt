@@ -29,12 +29,11 @@ class WifiAutoConnectTest {
         fail(message)
     }
     private fun notice(id: Int) = context.getSystemService(NotificationManager::class.java).activeNotifications.any { it.id == id }
-    private fun watching() = notice(74)
+    private fun watching() = notice(VpnNotifications.WIFI_WATCH_ID)
     private fun withControl(block: (IControl) -> Unit) {
         assertTrue("Only isolated emulators", android.os.Build.HARDWARE in setOf("ranchu", "goldfish"))
         val link = ServiceLink(context)
-        instrumentation.runOnMainSync { link.bind() }
-        try { block(link.ready.get(10, TimeUnit.SECONDS)) } finally { instrumentation.runOnMainSync { link.close() } }
+        try { block(link.control(10000).get(10, TimeUnit.SECONDS)) } finally { instrumentation.runOnMainSync { link.close() } }
     }
     private fun IControl.call(command: String, args: JSONObject = JSONObject()): Any {
         val result = CompletableFuture<JSONObject>()

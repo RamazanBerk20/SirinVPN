@@ -5,15 +5,16 @@ import { SplitDnsFields, splitDnsDraftIsValid, withSplitDns } from "../dns/Split
 import { SshLoginFields } from "../settings/SshLoginFields";
 import { SshVerificationGuide } from "../settings/SshVerificationGuide";
 import { CaretRight, CheckCircle, CloudCheck, Key, TerminalWindow, Warning } from "@phosphor-icons/react";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useReducer, useRef, useState, type ReactNode } from "react";
 import { api } from "../../api";
 import { privateDnsDraftIsValid, privateDnsRecordsFromDraft } from "../../dns";
 import { validateHost } from "../../format";
-import { type NetworkPreflight, type ProvisionResult } from "../../types";
+import { type ProvisionResult, type SshCredentials } from "../../types";
+import { OperationPlan } from "../../components/ServerChange";
 import { ServerNetworkPreflight } from "../settings/ServerNetworkPreflight";
 import { Field, InlineError } from "../../components/ui";
 import { CopyButton } from "../../components/CopyButton";
-import { errorMessage } from "../../lib/errors";
+import { appError, errorMessage } from "../../lib/errors";
 import { registerNavigationGuard } from "../../lib/navigationGuard";
 import { t } from "../../i18n";
 import {
@@ -29,8 +30,9 @@ import {
 } from "../dns/DnsFields";
 import { FingerprintValue, InstallFailure, InstallProgress, InstallSuccess, SetupProgress, StepBack } from "./SetupOutcome";
 import { SettingsDisclosure } from "../settings/SettingsParts";
+import { initialSetup, setupReducer, setupStep, type SetupStep } from "./setupMachine";
 
-export type SetupStep = "details" | "fingerprint" | "installing" | "failed" | "success";
+export type { SetupStep };
 /** Where the app goes after a finished setup; "recovery" opens Keys & recovery for the new server. */
 export type SetupNext = "recovery";
 
@@ -43,6 +45,9 @@ export interface CreatedServer {
   /** Desktop keeps the generated login key in a file; Android saves it as the login. */
   private_key_path: string | null;
 }
+
+/** Preflight issue codes the installer sends when a chosen port is taken (crates/installer/src/preflight.rs). */
+const portConflictCodes = new Set(["ssh_port_conflict", "port_in_use"]);
 
 export function SetupFlow({
   onComplete,
@@ -58,11 +63,12 @@ export function SetupFlow({
   /** Provider actions shown under a created server's ready step. */
   children?: ReactNode;
 }) {
-  const [step, setStep] = useState<SetupStep>("details");
+  const [state, dispatch] = useReducer(setupReducer, initialSetup);
+  const step = setupStep(state);
   const [name, setName] = useState(() => t("onboarding.setup.defaultName"));
   const [host, setHost] = useState(created?.host ?? "");
   const login = useSshLogin(host);
-  const [busy, setBusy] = useState(false);
+  const busy = state.kind === "probing" || state.kind === "checkingNetwork";
   const [replaceExistingInstallation, setReplaceExistingInstallation] =
     useState(false);
   const [dnsChoice, setDnsChoice] = useState<DnsPolicyChoice>("recursive");
@@ -71,15 +77,14 @@ export function SetupFlow({
   const [privateDnsRecords, setPrivateDnsRecords] = useState("");
   const [splitDns, setSplitDns] = useState("");
   const [transport, setTransport] = useState(() => newTransportDraft());
-  const [fingerprint, setFingerprint] = useState(created?.host_key_sha256 ?? "");
   // The verified fingerprint and network check stay valid until the address, SSH port or ports change.
-  const [verifiedFor, setVerifiedFor] = useState("");
-  const [confirmed, setConfirmed] = useState(false);
-  const [checkedFor, setCheckedFor] = useState("");
-  const [result, setResult] = useState<ProvisionResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [installError, setInstallError] = useState("");
-  const [preflight, setPreflight] = useState<NetworkPreflight | null>(null);
+  const verified = "verified" in state ? state.verified : null;
+  const fingerprint = verified?.fingerprint ?? created?.host_key_sha256 ?? "";
+  // Confirmed means the fingerprint was accepted and the network check that followed succeeded.
+  // A failed check also follows the user's confirmation; only its network result is missing.
+  const confirmed = state.kind === "reviewed" || state.kind === "verifying" && state.error !== null;
+  const preflight = verified?.checked?.preflight ?? null;
+  const error = state.kind === "editing" || state.kind === "verifying" || state.kind === "reviewed" ? state.error : null;
   const [nat64Prefix, setNat64Prefix] = useState("");
   const [focusPort, setFocusPort] = useState(false);
   const form = useRef<HTMLFormElement>(null);
@@ -119,9 +124,9 @@ export function SetupFlow({
   useEffect(() => {
     if (step !== "details" || !focusPort || !form.current) return;
     setFocusPort(false);
-    const conflicts = preflight?.issues.filter((issue) => issue.blocking).map((issue) => issue.message).join(" ") ?? "";
+    const conflicts = new Set(preflight?.issues.filter((issue) => issue.blocking).map((issue) => issue.params?.port));
     const ports = [...form.current.querySelectorAll<HTMLInputElement>(".advanced-fields input[inputmode=numeric]")];
-    const field = ports.find((port) => new RegExp(`\\b${port.value}\\b`).test(conflicts)) ?? ports[0];
+    const field = ports.find((port) => conflicts.has(port.value.trim())) ?? ports[0];
     if (!field) return;
     for (let disclosure = field.closest("details"); disclosure; disclosure = disclosure.parentElement?.closest("details") ?? null) disclosure.open = true;
     field.focus();
@@ -137,7 +142,7 @@ export function SetupFlow({
     splitDnsDraftIsValid(splitDns) &&
     privateDnsDraftIsValid(privateDnsRecords, true);
   const blocked = preflight?.issues.some((issue) => issue.blocking) ?? false;
-  const portConflict = preflight?.issues.some((issue) => issue.code === "port_conflict") ?? false;
+  const portConflict = preflight?.issues.some((issue) => portConflictCodes.has(issue.code)) ?? false;
   const installable = preflight !== null && !blocked && (nat64 === "" || nat64PrefixIsValid(nat64));
 
   const updateDnsEndpoint = (
@@ -153,46 +158,48 @@ export function SetupFlow({
   };
 
   const inspect = async () => {
-    if (!valid || busy) return;
-    setError(null);
-    if (checkedFor !== networkFor) setPreflight(null);
-    if (verifiedFor === target) {
-      setStep("fingerprint");
-      return;
-    }
-    setBusy(true);
+    if (!valid || busy || state.kind !== "editing") return;
+    dispatch({ type: "submit", target, network: networkFor });
+    if (verified?.target === target) return;
     try {
-      setFingerprint(await api.probeHostKey(host.trim(), Number(login.port)));
-      setVerifiedFor(target);
-      setConfirmed(false);
-      setPreflight(null);
-      setStep("fingerprint");
+      dispatch({ type: "probed", fingerprint: await api.probeHostKey(host.trim(), Number(login.port)) });
     } catch {
-      setError(t("onboarding.setup.error.unreachable"));
-    } finally {
-      setBusy(false);
+      dispatch({ type: "probeFailed", error: t("onboarding.setup.error.unreachable") });
     }
   };
 
-  const inspectNetwork = async (pin = fingerprint): Promise<NetworkPreflight | null> => {
+  const inspectNetwork = async (pin = fingerprint) => {
     if (busy) return null;
-    setBusy(true);
-    setError(null);
-    setConfirmed(true);
-    setPreflight(null);
+    dispatch({ type: "checkNetwork", network: networkFor, pinned: created && { target, fingerprint: pin } });
     try {
+      const { credentials, save } = login.prepare(pin);
       const report = await api.inspectServerNetwork({
-        ssh: { host: host.trim(), ...(await login.prepare(pin)) },
+        ssh: { host: host.trim(), ...credentials },
         transport: transportSetupFromDraft(transport),
       });
-      setPreflight(report);
-      setCheckedFor(networkFor);
+      // The login reached the server, so one the user asked to remember is saved now.
+      await save();
+      dispatch({ type: "checked", preflight: report });
       return report;
     } catch (reason) {
-      setError(errorMessage(reason, t("onboarding.setup.error.network")));
+      dispatch({ type: "checkFailed", error: errorMessage(reason, t("onboarding.setup.error.network")) });
       return null;
-    } finally { setBusy(false); }
+    }
   };
+
+  const provisionInput = (credentials: SshCredentials) => ({
+    name: name.trim(),
+    host: host.trim(),
+    ...credentials,
+    replace_existing_installation: replaceExistingInstallation,
+    transport: transportSetupFromDraft(transport),
+    dns_upstream: withSplitDns(
+      dnsChoice === "dns_over_tls" || dnsChoice === "dns_over_https"
+        ? dnsUpstreamFromDraft(dnsChoice, dnsEndpoints)
+        : { mode: "recursive" }, splitDns),
+    private_dns_records: privateDnsRecordsFromDraft(privateDnsRecords),
+    nat64_prefix: nat64 || null,
+  });
 
   const provision = async (pin = fingerprint) => {
     if (
@@ -204,65 +211,50 @@ export function SetupFlow({
       })
     )
       return;
-    setStep("installing");
-    setError(null);
-    setInstallError("");
+    dispatch({ type: "install" });
     try {
-      const provisioned = await api.provisionServer({
-        name: name.trim(),
-        host: host.trim(),
-        ...(await login.prepare(pin)),
-        replace_existing_installation: replaceExistingInstallation,
-        transport: transportSetupFromDraft(transport),
-        dns_upstream: withSplitDns(
-          dnsChoice === "dns_over_tls" || dnsChoice === "dns_over_https"
-            ? dnsUpstreamFromDraft(dnsChoice, dnsEndpoints)
-            : { mode: "recursive" }, splitDns),
-        private_dns_records: privateDnsRecordsFromDraft(privateDnsRecords),
-        nat64_prefix: nat64 || null,
-      });
+      const { credentials, save } = login.prepare(pin);
+      const provisioned = await api.provisionServer(provisionInput(credentials));
+      await save();
       login.clearSecrets();
       if (!mounted.current) {
         void complete.current(provisioned);
         return;
       }
       unopened.current = provisioned;
-      setResult(provisioned);
-      setStep("success");
+      dispatch({ type: "installed", result: provisioned });
     } catch (reason) {
       login.clearSecrets();
-      setInstallError(errorMessage(reason, t("onboarding.setup.error.install")));
-      setStep("failed");
+      dispatch({ type: "installFailed", error: appError(reason, ["install_phase_failed", "install_ssh_failed", "install_incompatible", "install_outcome_unknown", "install_rolled_back", "maintenance_blocked"]) });
     }
   };
 
   // A created server needs no fingerprint check: Install checks the network and goes straight on unless it needs a decision.
   const installCreated = async () => {
     if (!created || !valid || busy) return;
-    setFingerprint(created.host_key_sha256);
     const report = await inspectNetwork(created.host_key_sha256);
-    if (!report) return;
-    if (report.issues.some((issue) => issue.blocking || issue.code === "ipv6_only")) setStep("fingerprint");
-    else await provision(created.host_key_sha256);
+    // A blocking issue or NAT64 needs a decision: the check's result stays on the review step.
+    if (report && !report.issues.some((issue) => issue.blocking || issue.code === "ipv6_only")) await provision(created.host_key_sha256);
   };
 
   const finish = (next?: SetupNext) => {
-    if (!result) return;
+    if (state.kind !== "done") return;
+    const result = state.result;
     unopened.current = null;
     void (next ? onComplete(result, next) : onComplete(result));
   };
 
-  if (step === "installing") return <InstallProgress host={host.trim()} steps={!created} />;
+  if (state.kind === "installing") return <div data-state={state.kind} style={{ display: "contents" }}><InstallProgress host={host.trim()} steps={!created} /></div>;
 
-  if (step === "failed") return <InstallFailure error={installError} fingerprint={fingerprint} steps={!created}
-    canRetry={login.valid} onRetry={() => void provision()} onBack={() => setStep("details")} />;
+  if (state.kind === "failed") return <div data-state={state.kind} style={{ display: "contents" }}><InstallFailure error={state.error} fallback={t("onboarding.setup.error.install")} fingerprint={fingerprint} steps={!created}
+    canRetry={login.valid} onRetry={() => void provision()} onBack={() => dispatch({ type: "back" })} /></div>;
 
-  if (step === "success" && result) return <InstallSuccess result={result} onOpen={() => finish()} onRecoveryKey={() => finish("recovery")} />;
+  if (state.kind === "done") return <div data-state={state.kind} style={{ display: "contents" }}><InstallSuccess result={state.result} onOpen={() => finish()} onRecoveryKey={() => finish("recovery")} /></div>;
 
   if (step === "fingerprint") {
     return (
-      <div className="fingerprint-step">
-        <StepBack onClick={() => setStep("details")} disabled={busy} />
+      <div className="fingerprint-step" data-state={state.kind}>
+        <StepBack onClick={() => dispatch({ type: "back" })} disabled={busy} />
         {!created && <SetupProgress current={1} />}
         {/* The same heading as step 1, so the steps read as one flow. */}
         <div className="form-heading fingerprint-heading">
@@ -284,11 +276,12 @@ export function SetupFlow({
           <span>{t("onboarding.setup.fingerprint.replaceWarning")}</span>
         </div>}
         {preflight && <ServerNetworkPreflight report={preflight} />}
-        {portConflict && <button type="button" className="secondary-button change-port" disabled={busy} onClick={() => { setFocusPort(true); setStep("details"); }}>
+        {portConflict && <button type="button" className="secondary-button change-port" disabled={busy} onClick={() => { setFocusPort(true); dispatch({ type: "back" }); }}>
           {t("onboarding.setup.fingerprint.changePort")}
         </button>}
         {ipv6Only && <Nat64Fields choice="replace" value={nat64Prefix} allowPreserve={false} onChoiceChange={() => undefined} onValueChange={setNat64Prefix} />}
         {error && <InlineError message={error} />}
+        {preflight && installable && !busy && <OperationPlan load={() => api.planServerOperation({ operation: "install", ...provisionInput(login.prepare(fingerprint).credentials) })} />}
         <div className="fingerprint-actions">
           <button className={preflight ? "secondary-button" : "primary-button"} disabled={busy} onClick={() => void inspectNetwork()}>
             {busy ? t("onboarding.setup.fingerprint.checking")
@@ -338,7 +331,7 @@ export function SetupFlow({
 
   if (created) {
     return (
-      <form ref={form} className={`setup-form created-server ${compact ? "compact" : ""}`} onSubmit={(event) => { event.preventDefault(); void installCreated(); }}>
+      <form ref={form} data-state={state.kind} className={`setup-form created-server ${compact ? "compact" : ""}`} onSubmit={(event) => { event.preventDefault(); void installCreated(); }}>
         <div className="ready-heading">
           <span><CloudCheck size={26} weight="duotone" /></span>
           <div>
@@ -373,6 +366,7 @@ export function SetupFlow({
   return (
     <form
       ref={form}
+      data-state={state.kind}
       className={`setup-form ${compact ? "compact" : ""}`}
       onSubmit={(event) => {
         event.preventDefault();
@@ -411,8 +405,8 @@ export function SetupFlow({
         type="submit"
         disabled={!valid || busy}
       >
-        {busy ? t("onboarding.setup.verifying", { host: host.trim() }) : verifiedFor === target ? t("onboarding.setup.continue") : t("onboarding.setup.verify")}{" "}
-        <CaretRight size={17} weight="bold" />
+        {busy ? t("onboarding.setup.verifying", { host: host.trim() }) : verified?.target === target ? t("onboarding.setup.continue") : t("onboarding.setup.verify")}{" "}
+        <CaretRight className="mirror-rtl" size={17} weight="bold" />
       </button>
     </form>
   );

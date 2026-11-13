@@ -114,6 +114,8 @@ pub(super) async fn apply_endpoint_update(
         bail!("finish the pending device key rotation before applying this endpoint update");
     }
     if local.server_id == Some(profile.id) && local.endpoint_updates_supported {
+        // The same per-server guard as key rotation and the disconnected path below.
+        let _operation = sirinvpn_core::ServerOperationLock::acquire(paths, profile.id)?;
         let head = sirinvpn_core::DecodedEndpointTransition::decode(&code)?
             .response()
             .clone();
@@ -334,13 +336,8 @@ pub(super) fn build_tunnel_request(
         cdn_address: None,
         mtu_policy: Some(sirinvpn_protocol::MtuPolicy::Automatic),
         policy: Some(ConnectionPolicy::legacy(persistent)),
-        schema_version: if routing.mode
-            == sirinvpn_tunnel_model::TunnelRoutingMode::SelectedApplications
-        {
-            11
-        } else {
-            10
-        },
+        // Set from `required_schema` below, once every feature field is in place.
+        schema_version: 0,
         server_id: profile.id,
         endpoint_host: transport.network_endpoint.host,
         endpoint_port: transport.network_endpoint.wireguard_port,
@@ -374,6 +371,8 @@ pub(super) fn build_tunnel_request(
             routing,
         ),
     };
+    let mut request = request;
+    request.schema_version = request.required_schema();
     Ok(request)
 }
 
@@ -398,13 +397,10 @@ pub(super) async fn status(paths: &ClientPaths, json: bool) -> Result<()> {
         Some((profile, secret))
     });
     let server = if let Some((profile, secret)) = &identity {
-        let mut profile = profile.clone();
-        match ManagementClient::new(&profile, secret) {
+        match ManagementClient::new(profile, secret) {
             Ok(client) => match client.status().await {
                 Ok(status) => {
-                    if profile.adopt_caller_status(&status) {
-                        let _ = paths.profile_store().upsert(profile);
-                    }
+                    adopt_caller_status(paths, profile, &status);
                     Some(status)
                 }
                 Err(_) => None,
@@ -478,6 +474,63 @@ pub(super) async fn status(paths: &ClientPaths, json: bool) -> Result<()> {
     Ok(())
 }
 
+/// Applies the caller fields of a fresh status to the saved profile as it is now, and
+/// only while it still holds the identity that asked. Returns the saved profile when
+/// those fields changed.
+pub(super) fn adopt_caller_status(
+    paths: &ClientPaths,
+    asked_as: &ServerProfile,
+    status: &sirinvpn_protocol::ServerStatus,
+) -> Option<ServerProfile> {
+    paths
+        .profile_store()
+        .update(asked_as.id, |current| {
+            Ok((current.client_management_certificate_pem
+                == asked_as.client_management_certificate_pem
+                && current.adopt_caller_status(status))
+            .then(|| current.clone()))
+        })
+        .ok()
+        .flatten()
+}
+
+/// Prints the local tunnel each time its lifecycle phase changes, so scripts, tests
+/// and agents can wait on `phase.kind` instead of polling in their own loops.
+pub(super) async fn watch_status(json: bool) -> Result<()> {
+    let mut last = None;
+    loop {
+        let local = invoke_helper("status", None)?;
+        if let Some(line) = phase_change(&mut last, &local, json)? {
+            println!("{line}");
+        }
+        tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+    }
+}
+
+/// One line for the first snapshot and for every phase change, nothing otherwise.
+/// A snapshot with contradictory lifecycle flags has no phase and is reported as such.
+pub(super) fn phase_change(
+    last: &mut Option<Option<TunnelPhase>>,
+    local: &LocalTunnelStatus,
+    json: bool,
+) -> Result<Option<String>> {
+    let phase = local.phase();
+    if *last == Some(phase) {
+        return Ok(None);
+    }
+    *last = Some(phase);
+    Ok(Some(if json {
+        serde_json::to_string(local)?
+    } else {
+        match phase {
+            Some(phase) => format!("Local tunnel: {phase:?}"),
+            None => {
+                "Local tunnel: unknown (the local service sent a contradictory status)".to_owned()
+            }
+        }
+    }))
+}
+
 pub(super) fn disconnect_candidate(server_id: ServerId) -> Result<()> {
     let local = invoke_helper("status", None)?;
     if local.server_id.is_none() && local.state == ConnectionState::Disconnected {
@@ -499,5 +552,116 @@ fn endpoint_result(
         previous_endpoint: head.claims.previous_endpoint.clone(),
         endpoint: head.claims.endpoint.clone(),
         generation: head.claims.generation,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn local(phase: TunnelPhase) -> LocalTunnelStatus {
+        let mut status: LocalTunnelStatus = serde_json::from_value(serde_json::json!({
+            "state": "disconnected",
+            "interface_name": "sirinvpn0",
+            "server_id": null,
+            "rx_bytes": 0,
+            "tx_bytes": 0,
+            "ipv6_blocked": false
+        }))
+        .unwrap();
+        status.set_phase(phase);
+        status
+    }
+
+    #[test]
+    fn watch_prints_one_json_line_per_phase_change() {
+        let server_id = ServerId::new();
+        let mut last = None;
+        let mut lines = Vec::new();
+        for phase in [
+            TunnelPhase::Idle,
+            TunnelPhase::Idle,
+            TunnelPhase::Connecting { server_id },
+            TunnelPhase::Connecting { server_id },
+            TunnelPhase::Connected { server_id },
+            TunnelPhase::Paused { server_id },
+        ] {
+            lines.extend(phase_change(&mut last, &local(phase), true).unwrap());
+        }
+        let kinds: Vec<String> = lines
+            .iter()
+            .map(|line| {
+                assert!(!line.contains('\n'));
+                let value: serde_json::Value = serde_json::from_str(line).unwrap();
+                value["phase"]["kind"].as_str().unwrap().to_owned()
+            })
+            .collect();
+        assert_eq!(kinds, ["idle", "connecting", "connected", "paused"]);
+        // A contradictory snapshot is reported once, without a guessed phase.
+        let mut contradictory = local(TunnelPhase::Idle);
+        contradictory.waiting_for_user = true;
+        let line = phase_change(&mut last, &contradictory, true)
+            .unwrap()
+            .unwrap();
+        assert!(serde_json::from_str::<serde_json::Value>(&line).unwrap()["phase"].is_null());
+        assert!(
+            phase_change(&mut last, &contradictory, true)
+                .unwrap()
+                .is_none()
+        );
+    }
+
+    #[test]
+    fn caller_status_keeps_changes_saved_while_the_cli_was_connecting() {
+        let directory = tempfile::tempdir().unwrap();
+        let paths = ClientPaths::under(directory.path().into());
+        let loaded: ServerProfile = serde_json::from_value(serde_json::json!({
+            "schema_version": 1,
+            "id": ServerId::new(),
+            "name": "Home",
+            "endpoint": {"host": "203.0.113.4", "wireguard_port": 51820},
+            "client_tunnel_address": "10.77.0.2",
+            "server_tunnel_address": "10.77.0.1",
+            "server_wireguard_public_key": "public",
+            "pinned_server_certificate_pem": "certificate",
+            "client_management_certificate_pem": "client-certificate",
+            "identity_reference": "identity",
+            "role": "member"
+        }))
+        .unwrap();
+        paths.profile_store().insert(loaded.clone()).unwrap();
+        // While connecting, a checkpoint moved the endpoint and the user renamed it.
+        paths
+            .profile_store()
+            .update(loaded.id, |current| {
+                current.endpoint.host = "198.51.100.9".into();
+                current.endpoint_generation = 3;
+                current.name = "Renamed".into();
+                Ok(())
+            })
+            .unwrap();
+        let status: sirinvpn_protocol::ServerStatus = serde_json::from_value(serde_json::json!({
+            "api_version": "1", "server_name": "Home", "connection_state": "connected",
+            "interface_up": true, "dns_healthy": true, "transport": "direct_udp",
+            "peer_count": 1, "rx_bytes": 0, "tx_bytes": 0, "uptime_seconds": 1,
+            "caller_role": "member", "caller_administrator": true
+        }))
+        .unwrap();
+        let saved = adopt_caller_status(&paths, &loaded, &status).unwrap();
+        assert!(saved.administrator);
+        assert_eq!(
+            (saved.endpoint.host.as_str(), saved.endpoint_generation),
+            ("198.51.100.9", 3)
+        );
+        assert_eq!(saved.name, "Renamed");
+        assert_eq!(paths.profile_store().load().unwrap(), vec![saved]);
+
+        // A profile whose identity was rotated meanwhile is not touched.
+        let mut stale = loaded.clone();
+        stale.client_management_certificate_pem = "older-certificate".into();
+        let mut demoted = status.clone();
+        demoted.caller_administrator = false;
+        assert!(adopt_caller_status(&paths, &stale, &demoted).is_none());
+        assert!(paths.profile_store().load().unwrap()[0].administrator);
     }
 }

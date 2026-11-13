@@ -8,20 +8,41 @@ NotifyAccess=all
 ExecStart=/usr/lib/sirinvpn/sirinvpn-helper relay
 Restart=on-failure
 RestartSec=3s
+# 98: another program holds the relay's loopback port; the helper reports it.
+RestartPreventExitStatus=98
 TimeoutStartSec=12s
+# The relay parses TLS, QUIC, WebSocket and HTTP from the network. It runs as an
+# unprivileged dynamic user. CAP_NET_ADMIN is kept so it can mark its carrier socket
+# (SO_MARK), but the capability is not limited to that: without AF_NETLINK it still
+# permits AF_INET route and link ioctls. systemd reads the root-owned configuration
+# and hands over a copy.
+DynamicUser=yes
+LoadCredential=config:/run/sirinvpn/transport.json
+CapabilityBoundingSet=CAP_NET_ADMIN
+AmbientCapabilities=CAP_NET_ADMIN
 NoNewPrivileges=yes
+UMask=0077
 PrivateDevices=yes
 PrivateTmp=yes
 ProtectHome=yes
 ProtectSystem=strict
+ProtectProc=invisible
+ProcSubset=pid
 ProtectKernelTunables=yes
 ProtectKernelModules=yes
+ProtectKernelLogs=yes
 ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
 RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
 RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
 LockPersonality=yes
 MemoryDenyWriteExecute=yes
-CapabilityBoundingSet=CAP_NET_ADMIN
-AmbientCapabilities=CAP_NET_ADMIN
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+# PrivateUsers= would confine CAP_NET_ADMIN to a user namespace, where SO_MARK fails.
 StandardOutput=null
 StandardError=null

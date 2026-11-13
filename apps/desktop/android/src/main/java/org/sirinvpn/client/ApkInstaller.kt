@@ -49,18 +49,19 @@ object ApkInstaller {
     }
 }
 class ApkInstallResult : BroadcastReceiver() {
-    override fun onReceive(context:Context,intent:Intent) {
+    override fun onReceive(receiverContext:Context,intent:Intent) {
+        val context=AppLanguage.wrap(receiverContext.applicationContext)
         val status=intent.getIntExtra(PackageInstaller.EXTRA_STATUS,PackageInstaller.STATUS_FAILURE)
         val manager=context.getSystemService(NotificationManager::class.java)
         if(status==PackageInstaller.STATUS_PENDING_USER_ACTION) {
             @Suppress("DEPRECATION") val consent=intent.getParcelableExtra<Intent>(Intent.EXTRA_INTENT) ?: return
             consent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             VpnNotifications.channels(context)
-            manager.notify(74,Notification.Builder(context,VpnNotifications.UPDATE_CHANNEL).setSmallIcon(R.drawable.ic_sirin_vpn)
+            manager.notify(VpnNotifications.UPDATE_ID,Notification.Builder(context,VpnNotifications.UPDATE_CHANNEL).setSmallIcon(R.drawable.ic_sirin_vpn)
                 .setBadgeIconType(Notification.BADGE_ICON_NONE)
                 .setContentTitle(context.getString(R.string.notification_update_title)).setContentText(context.getString(R.string.notification_update_text))
-                .setContentIntent(PendingIntent.getActivity(context,74,consent,PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)).setAutoCancel(true).build())
+                .setContentIntent(PendingIntent.getActivity(context,VpnNotifications.UPDATE_ID,consent,PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)).setAutoCancel(true).build())
             try { context.startActivity(consent) } catch (_:Exception) { /* The notification retains Android's approval action. */ }
-        } else manager.cancel(74)
+        } else manager.cancel(VpnNotifications.UPDATE_ID)
     }
 }

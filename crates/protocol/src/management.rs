@@ -18,6 +18,10 @@ pub struct DiagnosticCheck {
     pub label: String,
     pub level: DiagnosticLevel,
     pub message: String,
+    /// Stable cause of a known message, set only by the client that wrote the message
+    /// (for example `not_measured` or `management_unreachable`); never taken from a VPS report.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cause: Option<String>,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
@@ -92,6 +96,15 @@ pub struct CurrentConfiguration {
     /// A device can report its own platform with `PUT /v1/device-platform`.
     #[serde(default, skip_serializing_if = "is_false")]
     pub device_platforms_enabled: bool,
+    /// `InvitationCreateBody::fixed_member_name` is accepted and enforced at enrollment.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub named_join_codes_enabled: bool,
+    /// `PATCH /v1/members/{id}/name` exists.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub person_rename_enabled: bool,
+    /// An Admin may add devices to their own member without the delegated permission.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub admin_own_devices_enabled: bool,
 }
 
 /// The source address of the one request that asked; the VPS keeps nothing.
@@ -175,6 +188,28 @@ pub struct InvitationCreateRequest {
     pub bootstrap_management_certificate_pem: String,
 }
 
+/// `POST /v1/invitations` body: `InvitationCreateRequest` plus options added later. The
+/// options sit beside the request so code that builds the request literally keeps compiling;
+/// with every option off the JSON is exactly the request's.
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+pub struct InvitationCreateBody {
+    #[serde(flatten)]
+    pub request: InvitationCreateRequest,
+    /// Named join code: `member_name` becomes the new person's name and the joiner chooses
+    /// only the device name. Needs `recipient_names`, no target member and one use.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub fixed_member_name: bool,
+}
+
+impl From<InvitationCreateRequest> for InvitationCreateBody {
+    fn from(request: InvitationCreateRequest) -> Self {
+        Self {
+            request,
+            fixed_member_name: false,
+        }
+    }
+}
+
 /// The issuing device generated the key pair; only the public key and preshared key leave it.
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -224,6 +259,9 @@ pub struct InvitationClaims {
     pub device_name: String,
     #[serde(default, skip_serializing_if = "is_false")]
     pub recipient_names: bool,
+    /// The new person is named `member_name`; enrollment names only the device.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub fixed_member_name: bool,
     pub role: ServerRole,
     #[serde(default, skip_serializing_if = "is_false")]
     pub administrator: bool,
@@ -387,6 +425,9 @@ pub struct ActiveInvitationSummary {
     pub max_uses: u16,
     #[serde(default, skip_serializing_if = "MemberPolicy::is_default")]
     pub member_policy: MemberPolicy,
+    /// The member whose device created it; absent for invitations stored before it was kept.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub issued_by_member_id: Option<MemberId>,
 }
 
 fn one_use() -> u16 {
@@ -458,6 +499,13 @@ pub struct MembershipSnapshot {
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub struct RenameDeviceRequest {
+    pub name: String,
+}
+
+/// `PATCH /v1/members/{member_id}/name`.
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RenameMemberRequest {
     pub name: String,
 }
 

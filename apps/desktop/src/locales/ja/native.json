@@ -1,0 +1,110 @@
+{
+  "tray": {
+    "status": {
+      "unknown": "状態不明",
+      "connected": "接続済み",
+      "connectedTo": "{{name}} に接続済み",
+      "paused": "接続は一時停止中",
+      "pausedOn": "接続は一時停止中 · {{name}}",
+      "reconnecting": "再接続中…",
+      "reconnectingTo": "{{name}} に再接続中…",
+      "connecting": "接続中…",
+      "connectingTo": "{{name}} に接続中…",
+      "interrupted": "接続が中断されました",
+      "interruptedOn": "接続が中断されました · {{name}}",
+      "disconnected": "切断済み",
+      "serversUnavailable": "{{status}} · サーバーを読み込めませんでした",
+      "busy": "接続を変更中…",
+      "legacySession": "次回の接続で、より多くの操作が利用できます"
+    },
+    "killSwitch": {
+      "on": "キルスイッチ: オン",
+      "onIpv6Unverified": "キルスイッチ: オン · IPv6 は未確認",
+      "blocking": "キルスイッチ: 通信をブロック中",
+      "blockingIpv6Unverified": "キルスイッチ: 通信をブロック中 · IPv6 は未確認",
+      "off": "キルスイッチ: オフ",
+      "failed": "キルスイッチ: 動作していません",
+      "unknown": "キルスイッチ: 不明"
+    },
+    "menu": {
+      "open": "SirinVPN を開く",
+      "connectTo": "{{name}} に接続",
+      "addServer": "サーバーを追加…",
+      "disconnect": "切断…",
+      "resume": "再開",
+      "reconnect": "再接続",
+      "stopReconnecting": "再接続を停止…",
+      "stopConnecting": "接続を停止…",
+      "updateComponent": "VPN コンポーネントを更新…",
+      "switchServer": "サーバーを切り替え",
+      "connectServer": "サーバーに接続",
+      "manageServers": "サーバーを管理",
+      "connectionSettings": "接続の設定",
+      "settings": "設定",
+      "diagnostics": "診断",
+      "disconnectQuit": "切断して終了…"
+    },
+    "quit": {
+      "plain": "アプリを終了",
+      "statusUnknown": "アプリを終了 · 状態不明…",
+      "paused": "アプリを終了 · VPN は一時停止したまま",
+      "reconnecting": "アプリを終了 · VPN は再接続を続けます",
+      "connected": "アプリを終了 · VPN は動作を続けます",
+      "service": "アプリを終了 · VPN サービスは動作を続けます",
+      "blocking": "アプリを終了 · 通信のブロックは続きます",
+      "killSwitchUnknown": "アプリを終了 · キルスイッチの状態不明…"
+    },
+    "confirm": {
+      "cancel": "キャンセル",
+      "switch": {
+        "title": "{{name}} に切り替えますか？",
+        "messageKillSwitchOn": "現在の設定は引き継がれます。切り替え中もキルスイッチはオンのままです。",
+        "messageKillSwitchOff": "現在の設定は引き継がれます。キルスイッチがオフのため、切り替え中は通信が VPN を経由しない場合があります。",
+        "confirm": "切り替え"
+      },
+      "stop": {
+        "title": "接続の試行を停止しますか？",
+        "messageKillSwitchOn": "キルスイッチは、再接続または切断するまで通信をブロックし続けます。",
+        "messageKillSwitchOff": "キルスイッチがオフのため、再接続するまで通信は VPN を経由します。",
+        "confirm": "試行を停止"
+      },
+      "disconnect": {
+        "title": "VPN を切断しますか？",
+        "message": "通信のブロックはすべて解除され、再度接続するまで VPN はオフのままになります。他のデバイスの接続は維持されます。",
+        "confirm": "切断"
+      },
+      "disconnectQuit": {
+        "title": "切断して終了しますか？",
+        "confirm": "切断して終了"
+      },
+      "quit": {
+        "title": "SirinVPN を終了しますか？",
+        "message": "{{status}}\nアプリを閉じても、VPN、再接続、キルスイッチは停止しません。",
+        "confirm": "終了"
+      }
+    },
+    "error": {
+      "title": "接続を変更できませんでした",
+      "alreadyConnected": "別の接続が有効です。代わりに「サーバーを切り替え」を使用してください。",
+      "statusUnverified": "接続の状態を確認できませんでした。SirinVPN を開いて、もう一度お試しください。",
+      "updateToSwitch": "サーバーを切り替えるには、VPN コンポーネントを更新してください。",
+      "serverUnconfirmed": "VPN が選択したサーバーへの接続を確認できませんでした。状態を確認してください。",
+      "connectionChanged": "接続が変わりました。トレイメニューをもう一度開いてください。",
+      "stopUnconfirmed": "VPN が接続の試行を停止したことを確認できませんでした。状態を確認してください。",
+      "disconnectUnconfirmed": "VPN が切断されたことを確認できませんでした。状態とキルスイッチを確認してください。",
+      "quitUnconfirmed": "VPN が切断されたことを確認できなかったため、アプリは開いたままになります。状態を確認してください。",
+      "selectionUnavailable": "トレイメニューを更新できませんでした。もう一度お試しください。"
+    }
+  },
+  "notification": {
+    "test": "通知の準備ができました。接続の通知がここに表示されます。",
+    "connected": "VPN に接続しました",
+    "disconnected": "VPN が切断されました",
+    "reconnecting": "接続が中断されました。再接続しています…",
+    "statusUnknown": "VPN の状態を読み取れませんでした。SirinVPN を開いて確認してください。",
+    "error": {
+      "disabled": "先に通知をオンにしてください。",
+      "failed": "通知を表示できませんでした。システムの通知設定を確認してください。"
+    }
+  }
+}

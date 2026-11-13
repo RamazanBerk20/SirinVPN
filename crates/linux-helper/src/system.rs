@@ -348,11 +348,18 @@ pub fn run_transport_relay() -> Result<()> {
 }
 
 pub fn run_transport_relay_for(kind: Option<TransportKind>) -> Result<()> {
-    require_root().map_err(anyhow::Error::from)?;
-    let path = kind.map_or_else(
-        || PathBuf::from("/run/sirinvpn/transport.json"),
-        |kind| LinuxNetworkHelper::system().carrier_config_path(kind),
-    );
+    // The units run as an unprivileged dynamic user that receives its root-owned
+    // configuration from systemd (LoadCredential); a manual start as root reads the file.
+    let path = match std::env::var_os("CREDENTIALS_DIRECTORY") {
+        Some(directory) => PathBuf::from(directory).join("config"),
+        None => {
+            require_root().map_err(anyhow::Error::from)?;
+            kind.map_or_else(
+                || PathBuf::from("/run/sirinvpn/transport.json"),
+                |kind| LinuxNetworkHelper::system().carrier_config_path(kind),
+            )
+        }
+    };
     let bytes = Zeroizing::new(fs::read(path)?);
     let config: ClientTransportConfig = serde_json::from_slice(&bytes)?;
     let runtime = tokio::runtime::Builder::new_multi_thread()
@@ -366,21 +373,54 @@ pub fn run_transport_relay_for(kind: Option<TransportKind>) -> Result<()> {
             .stderr(Stdio::null())
             .status();
     };
+    let result = runtime.block_on(run_relay(config, ready));
+    if let Err(RelayError::Io(error)) = &result
+        && error.kind() == io::ErrorKind::AddrInUse
+    {
+        // A distinct status lets the helper report the occupied port instead of
+        // treating it like an unreachable server.
+        std::process::exit(RELAY_PORT_IN_USE_EXIT);
+    }
+    Ok(result?)
+}
+
+pub(super) async fn run_relay(
+    config: ClientTransportConfig,
+    ready: impl FnOnce(),
+) -> Result<(), RelayError> {
+    let unprotected = |_: &socket2::Socket| Ok(());
     match config {
-        ClientTransportConfig::LegacyObfuscatedUdp(config) => {
-            runtime.block_on(run_client_relay(config, ready))?
+        ClientTransportConfig::Pinned(PinnedClientTransportConfig { wireguard, carrier }) => {
+            match carrier {
+                CurrentClientTransportConfig::ObfuscatedUdp(config) => {
+                    run_client_relay_pinned(config, wireguard, unprotected, ready).await
+                }
+                CurrentClientTransportConfig::TcpFallback(config) => {
+                    run_tcp_client_relay_pinned(config, wireguard, unprotected, ready).await
+                }
+                CurrentClientTransportConfig::TlsLike(config) => {
+                    run_tls_like_client_relay_pinned(config, wireguard, unprotected, ready).await
+                }
+                CurrentClientTransportConfig::Quic(config) => {
+                    run_quic_client_relay_pinned(config, wireguard, unprotected, ready).await
+                }
+            }
+        }
+        // An interface built by an older helper has a random WireGuard port.
+        ClientTransportConfig::LegacyObfuscatedUdp(config)
+        | ClientTransportConfig::Current(CurrentClientTransportConfig::ObfuscatedUdp(config)) => {
+            run_client_relay(config, ready).await
         }
         ClientTransportConfig::Current(CurrentClientTransportConfig::TcpFallback(config)) => {
-            runtime.block_on(run_tcp_client_relay(config, ready))?
+            run_tcp_client_relay(config, ready).await
         }
         ClientTransportConfig::Current(CurrentClientTransportConfig::TlsLike(config)) => {
-            runtime.block_on(run_tls_like_client_relay(config, ready))?
+            run_tls_like_client_relay(config, ready).await
         }
         ClientTransportConfig::Current(CurrentClientTransportConfig::Quic(config)) => {
-            runtime.block_on(run_quic_client_relay(config, ready))?
+            run_quic_client_relay(config, ready).await
         }
     }
-    Ok(())
 }
 
 pub(super) fn write_system_file(path: &Path, contents: &str) -> Result<()> {

@@ -68,7 +68,12 @@ fn self_contained_recovery_key_and_encrypted_package_are_authenticated() {
             .as_str(),
         key.as_str()
     );
-    assert!(decrypt_recovery_package(&package, "the incorrect password").is_err());
+    // Typed, so clients can code a wrong password instead of reading the text.
+    let wrong = decrypt_recovery_package(&package, "the incorrect password").unwrap_err();
+    assert!(matches!(
+        wrong.downcast_ref::<crate::EncryptedBackupError>(),
+        Some(crate::EncryptedBackupError::AuthenticationFailed)
+    ));
     let mut corrupted: serde_json::Value = serde_json::from_slice(&package).unwrap();
     corrupted["format"] = serde_json::json!("sirinvpn-device-backup");
     assert!(

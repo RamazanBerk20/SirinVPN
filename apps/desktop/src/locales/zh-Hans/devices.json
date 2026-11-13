@@ -1,0 +1,468 @@
+{
+  "page": {
+    "mine": "我的设备",
+    "you": "你",
+    "add": "添加设备",
+    "addMine": "添加我的设备",
+    "addFor": "为 {{name}} 添加设备",
+    "cannotAdd": "你无法添加设备。请让所有者或管理员为你添加。",
+    "refresh": "刷新",
+    "loading": "正在加载用户和设备…",
+    "connect": "连接",
+    "openHome": "打开首页",
+    "disconnected": "未连接。连接后即可查看所有用户的设备并进行更改。",
+    "disconnectedSaved": "未连接。当前显示的是 {{time}} 保存的用户和设备；连接后即可进行更改。",
+    "stale": "当前显示的是 {{time}} 保存的用户和设备。在列表刷新之前，更改功能处于关闭状态。",
+    "unsupported": "此服务器版本过旧，无法在此管理用户和设备。",
+    "unsupportedOwner": "此服务器版本过旧，无法在此管理用户和设备。请在“设置”中更新 VPS 软件。",
+    "search": "搜索用户和设备",
+    "searchPlaceholder": "按名称或 VPN 地址搜索",
+    "clearSearch": "清除搜索",
+    "noMatches": "没有与“{{query}}”匹配的用户或设备。",
+    "adminOwnDevices": "要添加你自己的设备，请让所有者在你的“限制和权限”中允许此项。",
+    "unnamed": "名称尚未加载"
+  },
+  "empty": {
+    "title": "目前只有此设备",
+    "body": "此服务器上的每位用户都有一个角色，并且可以拥有多台设备。请添加你的另一台设备，或为他人添加一台设备。",
+    "mine": "添加我的另一台设备",
+    "someone": "为他人添加设备"
+  },
+  "count": {
+    "people": "{count, plural, other {# 位用户}}",
+    "devices": "{count, plural, other {# 台设备}}",
+    "forwards": "{count, plural, other {# 个端口转发}}",
+    "pairs": "{count, plural, other {# 组设备配对}}",
+    "codes": "{count, plural, other {# 个加入码}}"
+  },
+  "role": {
+    "title": "角色",
+    "description": {
+      "owner": "完全控制服务器。所有者只有一位。",
+      "admin": "可以添加用户并管理成员，但不能管理管理员或所有者。",
+      "member": "使用 VPN，除非获得授权，否则不管理任何内容。"
+    },
+    "change": "设为{{role}}",
+    "codesWaiting": "{count, plural, other {由 {{name}} 创建或为其创建的 # 个加入码正在等待。在取消之前，服务器无法更改角色。}}",
+    "cancelAndChange": "{count, plural, other {取消加入码并更改角色}}",
+    "createdCodes": "{{name}} 创建的加入码也会被取消。"
+  },
+  "presence": {
+    "active": "当前活跃",
+    "idle": "近期无活动",
+    "unknown": "活动状态未知",
+    "suspended": "已暂停"
+  },
+  "summary": {
+    "sirinApp": "SirinVPN 应用",
+    "wireguardApp": "WireGuard 应用",
+    "reachesOthers": "可访问其他设备",
+    "paired": "{count, plural, other {与 # 台设备配对}}",
+    "internetOnly": "仅互联网",
+    "sharesNetwork": "共享 {{network}}",
+    "sharesNetworks": "{count, plural, other {共享 # 个本地网络}}",
+    "forwards": "{count, plural, other {# 个转发端口}}"
+  },
+  "gate": {
+    "resumeFirst": "请先恢复 {{name}}。",
+    "limitReached": "{count, plural, other {已达到设备上限（#）。请在“限制和权限”中提高上限。}}",
+    "needsAppDevice": "需要运行 SirinVPN 应用的设备，而不仅仅是 WireGuard。",
+    "lastOwnerDevice": "这是所有者最后一台运行 SirinVPN 的设备，因此无法移除。请先添加另一台。"
+  },
+  "panel": {
+    "readOnly": "在列表刷新之前为只读。"
+  },
+  "person": {
+    "youTitle": "{{name}}（你）",
+    "summary": "{count, plural, other {{{role}} · # 台设备}}",
+    "name": "名称",
+    "devices": "{count, plural, other {设备}}",
+    "devicesOfLimit": "{limit, plural, other {{{count}} / # 台设备}}",
+    "noDevices": "尚无设备。",
+    "noDevicesSuspended": "没有设备。已暂停的用户无法添加设备。",
+    "suspended": "已暂停",
+    "limitedHours": "有时间限制",
+    "expires": "访问权限有效至 {{date}}",
+    "expired": "访问权限已于 {{date}} 结束",
+    "dangerZone": "暂停或移除",
+    "suspend": "暂停",
+    "resume": "恢复",
+    "suspendHint": "暂停其所有设备。不会删除任何内容，恢复即可重新获得访问权限。",
+    "resumeHint": "其设备已暂停。恢复后，将以已保存的设置重新获得访问权限。",
+    "renameCodesWaiting": "{count, plural, other {由 {{name}} 创建或为其创建的 # 个加入码正在等待。在取消之前，服务器无法重命名。}}",
+    "cancelAndRename": "{count, plural, other {取消加入码并重命名}}",
+    "remove": "移除用户",
+    "removeHint": "将删除该用户、{{devices}}、{{forwards}}、{{pairs}} 和 {{codes}}。该用户需要新的加入码才能重新加入。"
+  },
+  "device": {
+    "summary": "{{name}} · {{presence}}",
+    "name": "设备名称",
+    "owner": "所属用户",
+    "connection": "连接方式",
+    "sirinApp": "SirinVPN 应用",
+    "wireguardApp": "WireGuard 应用或路由器，仅限直接 UDP",
+    "address": "VPN 地址",
+    "activity": "活动",
+    "fingerprint": "身份指纹",
+    "fingerprintLabel": "{{name}} 的指纹",
+    "removeTitle": "移除",
+    "remove": "移除设备",
+    "removeThis": "移除此设备",
+    "removeHint": "其密钥将被撤销：VPN 和管理访问将立即停止。",
+    "removeThisHint": "这是你正在使用的设备。移除后，此应用将失去对 {{server}} 的访问权限。"
+  },
+  "network": {
+    "title": "网络",
+    "peer": "设备间访问",
+    "peerOn": "可以访问同样开启了此功能的其他设备。",
+    "peerOff": "关闭：仅互联网，以及任何设备配对。",
+    "suspended": "在 {{name}} 暂停期间已暂停。"
+  },
+  "pairs": {
+    "title": "设备配对",
+    "description": "配对可让两台设备互相访问，即使设备间访问已关闭。",
+    "bothWays": "与 {{name}} 双向连接",
+    "starts": "向 {{name}} 发起连接",
+    "answers": "仅响应 {{name}}",
+    "otherDevice": "其他用户的设备",
+    "peer": "设备",
+    "direction": "方向",
+    "directionHint": "单向：仅第一台设备可以发起连接，另一台仅作响应。向共享本地网络的设备发起连接，也可以访问这些网络。",
+    "option": {
+      "both": "双向",
+      "starts": "仅 {{from}} 发起，连接到 {{to}}"
+    },
+    "add": "添加配对",
+    "remove": "移除"
+  },
+  "networks": {
+    "title": "本地网络",
+    "description": "与可访问它的设备共享 {{name}} 后面的私有网络，例如家庭网络。",
+    "label": "网络",
+    "hint": "每行一个私有 IPv4 网络，前缀为 /20 或更小。留空即可停止共享。",
+    "invalid": "不是前缀为 /20 或更小的私有 IPv4 网络：{{networks}}",
+    "hostBits": "{{network}} 不是其网络的起始地址。请使用 {{canonical}}。",
+    "inactive": "当前未路由，因为 VPS 通过其他网络访问这些网络：{{networks}}",
+    "linux": "{{name}} 必须在 Linux 上运行 SirinVPN，并开启 IPv4 转发：",
+    "copyCommand": "复制命令",
+    "save": "保存网络"
+  },
+  "ports": {
+    "title": "端口转发",
+    "none": "没有转发到此设备的端口。",
+    "paused": "暂停期间已暂停",
+    "exposure": "互联网上的任何人都可以访问转发的服务。",
+    "protocol": "协议",
+    "publicPort": "公共端口",
+    "publicPortHint": "在你的 VPS 地址上开放。",
+    "devicePort": "设备端口",
+    "devicePortHint": "服务监听的端口。",
+    "publicPortLow": "请使用 1024 到 65535 之间的端口。较低的端口为保留端口。",
+    "publicPortRange": "请使用 1024 到 65535 之间的端口。",
+    "devicePortRange": "请使用 1 到 65535 之间的端口。",
+    "preview": "公共 {{protocol}} 端口 <strong>{{publicPort}}</strong> 转发到 <strong>{{device}}</strong> 的端口 <strong>{{devicePort}}</strong>",
+    "used": "{max, plural, other {已使用 {{count}} / # 个服务器端口}}",
+    "full": "{count, plural, other {所有 # 个服务器端口均已占用。请关闭一个以开启另一个。}}",
+    "open": "开放端口",
+    "close": "关闭",
+    "closeLabel": "关闭 {{protocol}} 端口 {{publicPort}}（转发到设备端口 {{devicePort}}）",
+    "visitorAddress": "服务会将访问者视为 <address>{{address}}</address>，而不是其真实 IP。"
+  },
+  "policy": {
+    "title": "限制和权限",
+    "limits": "限制",
+    "deviceLimit": "设备上限",
+    "deviceLimitHint": "留空表示不设上限。降低上限前请先移除多余的设备。",
+    "deviceLimitHintNew": "留空表示不设上限。",
+    "expires": "访问权限结束时间",
+    "expiresHint": "使用你的本地时间。留空表示永不结束。",
+    "expiresPast": "该时间已过。保存后，该用户将立即失去访问权限。",
+    "permissions": "权限",
+    "permission": {
+      "addPeople": "添加新用户",
+      "addOwnDevices": "添加其自己的设备",
+      "deviceToDevice": "更改其设备的设备间访问权限和配对",
+      "portForwards": "向其设备开放公共互联网端口"
+    },
+    "save": "保存限制",
+    "appliesToAll": "适用于其所有设备。",
+    "cancelsCodes": "{count, plural, other {保存将取消由其创建或为其创建的 # 个等待中的加入码。}}",
+    "cancelsCreated": "保存将取消 {{name}} 创建的所有加入码。",
+    "error": {
+      "limit": "请输入 1 到 222 之间的上限，或留空。",
+      "expires": "请输入有效的日期和时间。",
+      "noHours": "请至少选择一个小时，或关闭时间限制。",
+      "tooManyRanges": "{count, plural, other {每周最多使用 # 个独立时间段。}}"
+    }
+  },
+  "hours": {
+    "title": "每周时段",
+    "limit": "限制在特定时段",
+    "allWeek": "任何时间都允许访问。",
+    "localTime": "以你的时区（{{zone}}）计算。夏令时变化可能使其偏移一小时。",
+    "inexact": "部分已保存的时间并非整点开始。编辑网格时，它们将被取整为整点。",
+    "cell": "{{day}}，{{hour}}",
+    "toggleDay": "{{day}}全天",
+    "toggleHour": "每天 {{hour}}"
+  },
+  "codes": {
+    "title": "{count, plural, other {等待加入（#）}}",
+    "forPerson": "为 {{name}} 添加的设备",
+    "newPerson": "新用户",
+    "newNamed": "{{name}}，新用户",
+    "severalPeople": "多位新用户",
+    "row": "{{role}} · {{uses}} · {{date}} 到期",
+    "singleUse": "单次使用",
+    "usesLeft": "{max, plural, other {剩余 {{count}} / # 次使用}}",
+    "cancel": "取消加入码",
+    "cancelling": "正在取消…"
+  },
+  "add": {
+    "whose": {
+      "title": "这是谁的设备？",
+      "description": "每台设备只属于一位用户。",
+      "mine": "我的",
+      "mineHint": "你的另一部手机或电脑。",
+      "person": "此处已有的用户",
+      "personHint": "为此服务器上的某位用户添加一台设备。",
+      "pick": "用户",
+      "option": "{{name}} · {{role}}",
+      "new": "新用户",
+      "newHint": "添加一位用户及其第一台设备。"
+    },
+    "new": {
+      "name": "他们的名称",
+      "nameHint": "向所有管理此服务器的人显示。",
+      "several": "多位新用户将使用此加入码",
+      "people": "用户人数",
+      "peopleHint": "每位用户在加入时自行命名，并成为成员。",
+      "peopleInvalid": "请输入 2 到 100 之间的整数。",
+      "nameHintRename": "向所有管理此服务器的人显示。之后可以重命名。"
+    },
+    "connect": {
+      "title": "将如何连接？",
+      "app": "SirinVPN 应用",
+      "appHint": "推荐。设备将获得加入码并自行创建密钥。",
+      "wireguard": "WireGuard 应用",
+      "wireguardHint": "高级选项。适用于 iPhone、iPad、Mac 或路由器。仅支持直接 UDP；无法管理服务器。"
+    },
+    "forYou": "为你",
+    "forPerson": "为 {{name}}",
+    "severalPeople": "多位新用户",
+    "deviceName": "设备名称",
+    "deviceNameFixed": "此服务器不允许对方在加入时自行命名。管理此服务器的人之后可以重命名。",
+    "lifetime": "加入码有效期",
+    "hours": "{count, plural, other {# 小时}}",
+    "days": "{count, plural, other {# 天}}",
+    "uses": "此加入码可添加的设备数",
+    "usesHint": "每台设备都使用其自己的密钥加入。设备上限仍然适用。",
+    "usesInvalid": "请输入 1 到 100 之间的整数。",
+    "ownerWarningTitle": "使用此加入码的人将获得服务器的完全控制权。",
+    "ownerWarning": "这会添加一台所有者设备。请仅与你自己私下分享。",
+    "next": "下一步",
+    "creating": "正在创建…",
+    "createCode": "创建加入码",
+    "createWireguard": "创建配置",
+    "copyCode": "复制代码",
+    "copyFailed": "无法复制代码。请选中它并手动复制。",
+    "copyFailedAndroid": "无法复制代码。请改用“查看或分享加入码”。",
+    "done": "完成",
+    "closeUnshared": {
+      "title": "关闭而不分享加入码？",
+      "message": "加入码无法再次显示。如果你尚未复制、扫描或分享它，请在“等待加入”中取消它，然后重新添加设备。",
+      "action": "关闭"
+    },
+    "handover": {
+      "title": "交给对方"
+    },
+    "code": {
+      "instructionSelf": "在你的另一台设备上打开 SirinVPN，选择“使用加入码”，然后扫描此二维码或粘贴代码。",
+      "instructionSelfAndroid": "在你的另一台设备上打开 SirinVPN，选择“使用加入码”，然后扫描或粘贴你从此处分享的代码。",
+      "instructionPerson": "私下将此发送给 {{name}}。对方打开 SirinVPN，选择“使用加入码”，然后扫描或粘贴。",
+      "instructionSeveral": "私下将此发送给加入的人员。每人打开 SirinVPN，选择“使用加入码”，然后扫描或粘贴。",
+      "once": "此加入码仅显示一次",
+      "secret": "拥有它的人可以加入，直到它被使用、取消或于 {{date}} 过期。"
+    },
+    "wireguard": {
+      "instruction": "在设备上打开 WireGuard 应用，扫描此二维码，或导入已保存的文件。",
+      "secret": "此二维码和文件包含设备的私钥。拥有它们的任何人都可以使用此 VPN。导入后请删除该文件。",
+      "limits": "WireGuard 设备仅通过直接 UDP 连接，无法管理服务器，也无法跟随地址变更。",
+      "file": "配置文件",
+      "fileHint": "可选。保存 .conf 文件，供路由器使用或稍后导入。",
+      "fileType": "WireGuard 配置",
+      "chooseFile": "选择文件",
+      "noFile": "无文件；仅二维码",
+      "saved": "已保存到 <path>{{path}}</path>"
+    },
+    "state": {
+      "waiting": "正在等待设备加入…",
+      "joined": "{count, plural, other {{{name}} 已加入。}}",
+      "connected": "设备已连接。",
+      "expired": "加入码在被使用之前已过期。",
+      "cancelled": "加入码已被取消。",
+      "ended": "此加入码不再等待：它已被使用或已取消。"
+    }
+  },
+  "share": {
+    "showInvitation": "查看或分享加入码",
+    "showRecovery": "查看或分享恢复密钥",
+    "qrNote": "请扫描此二维码，而不是复制代码。",
+    "code": "代码",
+    "codeLabel": "加入码",
+    "enlarge": "放大二维码",
+    "enlargeInvitation": "放大加入码二维码",
+    "enlargeRecovery": "放大恢复密钥二维码",
+    "scanInvitation": "扫描加入码",
+    "scanRecovery": "扫描恢复密钥",
+    "closeQr": "关闭二维码",
+    "copyRecovery": "复制恢复密钥",
+    "altInvitation": "加入码二维码",
+    "altInvitationEnlarged": "放大的加入码二维码",
+    "altRecovery": "恢复密钥二维码",
+    "altRecoveryEnlarged": "放大的恢复密钥二维码",
+    "altWireguard": "WireGuard 配置二维码",
+    "copyCode": "复制代码"
+  },
+  "name": {
+    "save": "保存名称",
+    "empty": "请输入名称。",
+    "tooLong": "{count, plural, other {最多使用 # 个字符。}}",
+    "invalid": "请删除换行符和其他控制字符。"
+  },
+  "owner": {
+    "title": "将 {{name}} 设为所有者",
+    "open": "设为所有者…",
+    "effect": "{{name}} 将获得服务器的完全控制权。你将成为管理员，且无法在此处撤销此操作。",
+    "device": "将成为所有者的设备",
+    "wireguardExcluded": "WireGuard 设备无法管理服务器，因此未列出。",
+    "codesWaiting": "{count, plural, other {必须先取消 # 个加入码。}}",
+    "cancelCode": "取消 {{name}} 的加入码",
+    "confirm": "将 {{name}} 设为所有者"
+  },
+  "confirm": {
+    "removeDevice": {
+      "title": "移除 {{name}}？",
+      "message": "其密钥将被撤销，其 VPN 和管理访问权限将立即停止。需要新的加入码才能重新加入。",
+      "action": "移除设备"
+    },
+    "removeThis": {
+      "title": "移除此设备？",
+      "message": "此应用将立即失去对 {{server}} 的访问权限。要重新加入，需要另一台设备提供新的加入码。",
+      "action": "移除此设备"
+    },
+    "removePerson": {
+      "title": "移除 {{name}}？",
+      "message": "将删除 {{name}}、{{devices}}、{{forwards}}、{{pairs}} 和 {{codes}}。此操作无法撤销。",
+      "action": "移除用户"
+    },
+    "suspend": {
+      "title": "暂停 {{name}}？",
+      "message": "{count, plural, other {# 台设备在恢复之前将失去访问权限。等待中的加入码和密钥更改将被取消。}}",
+      "action": "暂停"
+    },
+    "resume": {
+      "title": "恢复 {{name}}？",
+      "message": "其设备将以已保存的设置重新获得访问权限。已取消的加入码不会被恢复。",
+      "action": "恢复"
+    },
+    "role": {
+      "title": "将 {{name}} 设为{{role}}？",
+      "toAdmin": "他们可以添加用户并管理成员。",
+      "toMember": "他们保留其设备，但除非获得授权，否则不管理任何内容。",
+      "toAdminCancels": "{count, plural, other {他们可以添加用户并管理成员。将先取消 # 个等待中的加入码。}}",
+      "toMemberCancels": "{count, plural, other {他们保留其设备，但除非获得授权，否则不管理任何内容。将先取消 # 个等待中的加入码。}}",
+      "action": "更改角色"
+    },
+    "limits": {
+      "title": "保存 {{name}} 的限制？",
+      "message": "{count, plural, other {将取消由其创建或为其创建的 # 个等待中的加入码。}}",
+      "action": "保存"
+    },
+    "makeOwner": {
+      "title": "将 {{name}} 设为所有者？",
+      "message": "{{device}}（{{fingerprint}}）及其其他 SirinVPN 设备将获得完全控制权。此设备将成为管理员设备。",
+      "action": "设为所有者"
+    },
+    "cancelCode": {
+      "title": "取消“{{name}}”？",
+      "message": "该加入码将立即停止工作。已加入的设备将保留其访问权限。",
+      "action": "取消加入码"
+    },
+    "openPort": {
+      "title": "开放公共端口 {{publicPort}}？",
+      "message": "{{protocol}} 端口 {{publicPort}} 将转发到 {{device}} 的端口 {{devicePort}}。互联网上的任何人都可以尝试访问它。",
+      "action": "开放端口"
+    },
+    "closePort": {
+      "title": "关闭 {{protocol}} 端口 {{publicPort}}？",
+      "message": "通过此端口的连接将立即停止。",
+      "action": "关闭端口"
+    },
+    "removePair": {
+      "title": "从 {{name}} 移除此配对？",
+      "message": "除非两台设备都开启了设备间访问，否则它们将无法再互相访问。",
+      "action": "移除配对"
+    }
+  },
+  "notice": {
+    "abandoned": "未发送更改：与服务器的连接已变化。请重试。",
+    "personRenamed": "已重命名为“{{name}}”。",
+    "deviceRenamed": "已重命名为“{{name}}”。",
+    "deviceRemoved": "已移除 {{name}}。",
+    "personRemoved": "已移除 {{name}}。",
+    "suspended": "{{name}} 已暂停。",
+    "resumed": "{{name}} 再次处于活动状态。",
+    "roleChanged": "{{name}} 现在是{{role}}。",
+    "ownerChanged": "{{name}} 现在是所有者。此设备为管理员设备。",
+    "limitsSaved": "已保存 {{name}} 的限制。",
+    "codeCancelled": "加入码已取消。",
+    "peerOn": "{{name}} 现已具备设备间访问权限。",
+    "peerOff": "{{name}} 不再具备设备间访问权限。",
+    "pairAdded": "已与 {{name}} 配对。",
+    "pairRemoved": "配对已移除。",
+    "networksSaved": "已保存 {{name}} 上的本地网络。",
+    "networksCleared": "{{name}} 不再共享本地网络。",
+    "portOpened": "端口 {{port}} 已开放。",
+    "portClosed": "端口 {{port}} 已关闭。"
+  },
+  "join": {
+    "codeAccepted": "加入码已接受",
+    "codeEntered": "已输入加入码",
+    "changeCode": "更改代码",
+    "rejected": {
+      "expired": "此加入码已过期。请索取新的加入码。",
+      "used": "此加入码已被使用或已被取消。请索取新的加入码。",
+      "invalid": "此加入码无效。请检查是否完整复制，或索取新的加入码。"
+    },
+    "ownerDevice": "将此设备添加到所有者 {{name}}。",
+    "ownerPower": "所有者设备对服务器、所有用户和所有设备拥有完全控制权。只有在你确实预期如此时才加入。",
+    "addsDevice": "将此设备添加到 {{name}}。",
+    "namedPerson": "你将以 <strong>{{name}}</strong> 的身份加入。",
+    "personName": "你的名称",
+    "personNameHint": "向管理此服务器的人显示。",
+    "deviceName": "此设备的名称",
+    "deviceNameHint": "例如手机或电脑的型号。之后可以重命名。",
+    "presetDevice": "此设备将被命名为 <strong>{{name}}</strong>。",
+    "renameLater": "之后可以在“设备”中重命名。"
+  },
+  "error": {
+    "load": "无法从服务器加载用户和设备。",
+    "features": "无法检查此服务器支持的功能。",
+    "renamePerson": "无法重命名该用户。请重试。",
+    "renameDevice": "无法重命名设备。请重试。",
+    "removeDevice": "无法移除设备。请重试。",
+    "removePerson": "无法移除该用户。请刷新以查看其当前状态。",
+    "suspension": "无法更改其暂停状态。请刷新以查看其当前状态。",
+    "role": "无法更改角色。请重试。",
+    "makeOwner": "无法更改所有者。请重试。",
+    "limits": "无法保存限制。请重试。",
+    "peer": "无法更改设备间访问权限。请重试。",
+    "pair": "无法更改配对。请重试。",
+    "networks": "无法保存本地网络。请重试。",
+    "openPort": "无法开放端口。请重试。",
+    "closePort": "无法关闭端口。请重试。",
+    "cancelCode": "无法取消加入码。请重试。",
+    "createCode": "无法创建加入码。请重试。",
+    "wireguard": "无法添加 WireGuard 设备。请重试。"
+  }
+}

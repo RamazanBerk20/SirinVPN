@@ -1,0 +1,152 @@
+{
+  "skipToContent": "Zum Inhalt springen",
+  "nav": {
+    "label": "Hauptnavigation",
+    "mobileLabel": "Untere Navigation",
+    "home": "Start",
+    "servers": "Server",
+    "devices": "Geräte",
+    "settings": "Einstellungen"
+  },
+  "sidebar": {
+    "servers": "Server",
+    "serverList": "Gespeicherte Server",
+    "manage": "Verwalten",
+    "manageLabel": "Server verwalten",
+    "privacy": "Kein Konto · Keine Telemetrie"
+  },
+  "addServer": {
+    "title": "Server hinzufügen",
+    "description": "Wähle, wie du dich verbinden möchtest."
+  },
+  "home": {
+    "connectionTitle": "Verbindung",
+    "connectionSummary": "Methode: {{method}}",
+    "automatic": "Automatisch",
+    "detailsTitle": "Verbindungsdetails",
+    "detailsSummary": "Status, Adressen und Serverwerte",
+    "detailsSummaryMember": "Status und Adressen"
+  },
+  "settingsScope": {
+    "general": "Einstellungen für dieses Gerät",
+    "connection": "{{name}} · auf diesem Gerät",
+    "network": "{{name}} · Routing und DNS",
+    "recovery": "{{name}} · Schlüssel und Backups",
+    "maintenance": "{{name}} · Serverwartung",
+    "advanced": "{{name}} · erweiterte Funktionen"
+  },
+  "network": {
+    "dnsTitle": "DNS",
+    "dnsRefresh": "Aktualisiere den Status, um die DNS-Einstellungen zu sehen.",
+    "dnsUnavailable": "Die DNS-Einstellungen sind gerade nicht verfügbar.",
+    "dnsNeedsConnection": "Verbinde dich, um den DNS-Status zu sehen.",
+    "dnsChange": "Änderungen gelten für jedes Gerät auf diesem Server.",
+    "dnsConfigure": "DNS einrichten"
+  },
+  "onboarding": {
+    "settings": "App-Einstellungen",
+    "settingsDescription": "Einstellungen für dieses Gerät.",
+    "checkUpdates": "Nach Updates suchen",
+    "welcome": "Willkommen bei SirinVPN",
+    "headlineFirst": "Dein VPN.",
+    "headlineSecond": "Nach deinen Regeln.",
+    "androidIntro": "Verbinde dich mit einem privaten Server. Deine Schlüssel bleiben bei dir.",
+    "desktopIntro": "Richte deinen eigenen Server ein, tritt mit einem Beitrittscode einem bei oder stelle dieses Gerät aus einem Backup oder einem Wiederherstellungsschlüssel wieder her.",
+    "firstServer": "Füge deinen ersten Server hinzu",
+    "storeTitle": "Gespeicherte Server nicht verfügbar",
+    "storeHelpDesktop": "Dein Systemschlüsselbund ist vielleicht gesperrt. Entsperre ihn, zum Beispiel indem du dich ab- und wieder anmeldest, und versuche es dann erneut.",
+    "storeHelpAndroid": "Entsperre dein Telefon und versuche es dann erneut. Deine gespeicherten Server bleiben bis dahin verschlüsselt."
+  },
+  "errors": {
+    "profiles": "Die auf diesem Gerät gespeicherten Server konnten nicht geöffnet werden.",
+    "platform": "SirinVPN konnte seine geschützten Dienste nicht starten.",
+    "trayServer": "Dieser Server ist auf diesem Gerät nicht mehr gespeichert."
+  },
+  "unavailable": {
+    "title": "SirinVPN kann nicht starten",
+    "copy": "Details kopieren",
+    "report": "SirinVPN konnte nicht gestartet werden: {{message}} Es wurde keine VPN-Aktion ausgeführt.",
+    "helpDesktop": "Stelle sicher, dass der SirinVPN-Dienst installiert ist und läuft, und versuche es dann erneut. Deine gespeicherten Server sind sicher.",
+    "helpAndroid": "Entsperre dein Telefon und versuche es dann erneut. Deine gespeicherten Server sind sicher."
+  },
+  "dialog": {
+    "waitToClose": "Warte, bis die aktuelle Aufgabe abgeschlossen ist"
+  },
+  "operation": {
+    "result": "Ergebnis",
+    "running": "Eine Aufgabe läuft. Du kannst diesen Bildschirm verlassen und später zurückkommen.",
+    "completed": "Die Aufgabe ist abgeschlossen. Öffne ihre Seite erneut, um das Ergebnis zu sehen.",
+    "interrupted": "Die Aufgabe wurde nicht abgeschlossen. Prüfe den Server oder die Datei, bevor du es erneut versuchst.",
+    "dismiss": "Ausblenden",
+    "dismissFailed": "Dieser Hinweis konnte nicht ausgeblendet werden. Versuche es erneut.",
+    "step": {
+      "done": "Erledigt",
+      "running": "In Arbeit",
+      "todo": "Nicht gestartet"
+    }
+  },
+  "copy": {
+    "label": "{{label}} kopieren",
+    "failed": "Konnte nicht kopiert werden",
+    "failedManual": "Konnte nicht kopiert werden. Markiere den Text und kopiere ihn manuell.",
+    "showAll": "Alle anzeigen",
+    "showLess": "Weniger anzeigen"
+  },
+  "secret": {
+    "value": "Geschützter Wert",
+    "code": "Geheimer Code",
+    "enterLabel": "{{label}} eingeben",
+    "enter": "Sicher eingeben",
+    "entered": "Eingegeben · Ändern",
+    "unchanged": "Nichts wurde geändert.",
+    "scan": "QR-Code scannen",
+    "scanFailed": "Der Code konnte nicht gescannt werden. Du kannst ihn stattdessen eingeben.",
+    "codeReady": "Code bereit zur Prüfung"
+  },
+  "share": {
+    "button": "Verschlüsselte Datei teilen",
+    "failed": "Die Datei konnte nicht geteilt werden."
+  },
+  "brand": {
+    "tagline": "Maximal privat. Selbst gehostet.",
+    "keysLocal": "Schlüssel bleiben auf deinen Geräten",
+    "noHistory": "Kein Aktivitätsverlauf",
+    "noCloud": "Keine SirinVPN-Cloud"
+  },
+  "metric": {
+    "usage": "Auslastung: {{label}}"
+  },
+  "window": {
+    "label": "Anwendungsfenster",
+    "minimize": "Minimieren",
+    "maximize": "Maximieren",
+    "restore": "Wiederherstellen",
+    "closeToTray": "In den Infobereich schließen · VPN läuft weiter",
+    "quit": "App beenden · VPN läuft weiter",
+    "actionFailed": "Das hat nicht funktioniert. Nutze die Fenstersteuerung deines Desktops.",
+    "resizeFailed": "Hier kann die Größe nicht geändert werden. Nutze die Tastenkombination deines Desktops."
+  },
+  "recoveryKeyGuard": "Du kannst diesen Wiederherstellungsschlüssel später nicht noch einmal anzeigen. Ohne Speichern verlassen?",
+  "settingsIndex": {
+    "app": "Diese App",
+    "server": "Dieser Server",
+    "serverNote": "Diese Einstellungen gelten nur für diesen Server.",
+    "scope": "Diese Einstellungen gelten nur für {{name}}.",
+    "general": "Design, Benachrichtigungen, Schnelleinstellungen",
+    "automaticMethod": "Automatische Methode",
+    "reconnectOn": "Verbindet sich automatisch neu",
+    "reconnectOff": "Verbindet sich nicht automatisch neu",
+    "attention": "Handlung nötig: Ein Schlüsselwechsel wurde nicht abgeschlossen",
+    "serverHealthy": "Server läuft normal",
+    "recoveryKeySaved": "Offline-Wiederherstellungsschlüssel gespeichert",
+    "recoveryKeyMissing": "Noch kein Offline-Wiederherstellungsschlüssel",
+    "serverFault": "Handlung nötig: Der Server meldet einen Fehler",
+    "advancedAdmin": "Schlüsselwechsel",
+    "advancedMember": "Schlüsselwechsel"
+  },
+  "advanced": {
+    "devicesTitle": "Netzwerkfunktionen der Geräte",
+    "devicesSummary": "Portweiterleitung, Gerät-zu-Gerät-Zugriff, Gerätepaare und lokale Netzwerke werden auf jedem Gerät eingestellt. Öffne ein Gerät unter Geräte, um sie zu ändern.",
+    "openDevices": "Geräte öffnen"
+  }
+}

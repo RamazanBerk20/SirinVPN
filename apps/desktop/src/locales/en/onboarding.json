@@ -4,7 +4,7 @@
     "back": "Back to options",
     "privacy": "No account. No telemetry.",
     "join": {
-      "title": "Use an invitation",
+      "title": "Use a join code",
       "summary": "Scan a QR code or enter your code"
     },
     "provision": {
@@ -45,30 +45,20 @@
     "restored": "{{name}} was restored on this device."
   },
   "invitation": {
-    "access": {
-      "owner": "Owner access",
-      "admin": "Admin access",
-      "member": "Member access"
-    },
     "expires": "Expires {{date}}",
-    "addsDevice": "Adds a device to an existing member. Access stays the same.",
-    "deviceName": "Device name",
-    "presetName": "The inviter named this device <strong>{{name}}</strong>.",
     "identity": "Verified server identity",
-    "trust": "Join only if you expected this invitation from someone you trust.",
-    "error": "Couldn’t verify this invitation. Ask for a new one."
+    "trust": "Join only if you expected this join code from someone you trust.",
+    "error": "Couldn’t check this join code. Ask for a new one."
   },
   "join": {
     "title": "Join a server",
     "summary": "Your private key is created on this device and never leaves it.",
-    "code": "Invitation code",
+    "code": "Join code",
     "codeHint": "Keep it private, like a password",
-    "review": "Review invitation",
+    "review": "Review join code",
     "submit": "Join server",
     "submitting": "Joining…",
-    "defaultDeviceNameAndroid": "My Android device",
-    "defaultDeviceNameDesktop": "My computer",
-    "error": "This invitation didn’t work. It may be expired, used or revoked; ask for a new one."
+    "error": "This join code didn’t work. It may have expired, been used or been cancelled; ask for a new one."
   },
   "recover": {
     "title": "Use a recovery key",
@@ -89,7 +79,7 @@
     "serverIdentity": "Server identity",
     "deviceName": "Owner device name",
     "defaultDeviceName": "Recovered Owner device",
-    "confirmRevoke": "Revoke all previous Owner devices and use up this key. Members keep access; Admins lose recovery permissions.",
+    "confirmRevoke": "Remove all previous Owner devices and use up this key. Other people keep access; Admins lose recovery permissions.",
     "replaceProfile": "Replace this device’s saved profile for {{name}}",
     "review": "Review recovery key",
     "submit": "Recover Owner access",
@@ -118,7 +108,7 @@
       "summary": "Check this fingerprint in your hosting provider’s web console.",
       "copy": "Copy fingerprint",
       "mismatch": "If it doesn’t match, don’t continue. The connection may be intercepted.",
-      "replaceWarning": "Replacing revokes every device, invitation and recovery key for this server.",
+      "replaceWarning": "Replacing removes every device, join code and recovery key for this server.",
       "matches": "Fingerprint matches",
       "checkAgain": "Check network again",
       "checking": "Checking network…",
@@ -132,7 +122,7 @@
     },
     "confirmReplace": {
       "title": "Replace the existing installation?",
-      "message": "Every device, invitation and recovery key for this server stops working. Other software on the server isn’t affected.",
+      "message": "Every device, join code and recovery key for this server stops working. Other software on the server isn’t affected.",
       "confirm": "Replace"
     },
     "installing": {
@@ -204,13 +194,13 @@
     "loading": "Getting prices from Hetzner…",
     "location": "Location",
     "serverType": "Server type",
-    "typeOption": "{{price}} {{currency}}/month · {{name}} ({{architecture}}) · {{cores}} vCPU · {{memory}} GB RAM · {{disk}} GB",
-    "price": "{{total}} {{currency}} per month: server {{server}} plus IPv4 address {{ipv4}}. Hetzner bills your account until you delete the server.",
-    "priceNoIpv4": "{{total}} {{currency}} per month for the server. Hetzner bills your account until you delete the server.",
-    "create": "Create server for {{total}} {{currency}}/month",
+    "typeOption": "{{price}}/month · {{name}} ({{architecture}}) · {{cores}} vCPU · {{memory}} GB RAM · {{disk}} GB",
+    "price": "{{total}} per month: server {{server}} plus IPv4 address {{ipv4}}. Hetzner bills your account until you delete the server.",
+    "priceNoIpv4": "{{total}} per month for the server. Hetzner bills your account until you delete the server.",
+    "create": "Create server for {{total}}/month",
     "confirm": {
       "title": "Create a Hetzner server?",
-      "message": "{{type}} in {{location}} costs {{total}} {{currency}} a month until you delete it.",
+      "message": "{{type}} in {{location}} costs {{total}} a month until you delete it.",
       "confirm": "Create server"
     },
     "creating": "Creating the server…",
@@ -243,7 +233,27 @@
     "hostKey": "SSH host key",
     "dangerLabel": "Delete the server",
     "billed": "{{name}} is billed to your Hetzner account until it’s deleted.",
-    "deletedTitle": "{{name}} was deleted"
+    "deletedTitle": "{{name}} was deleted",
+    "locationOption": "{{city}}, {{country}} ({{name}})",
+    "uncertain": {
+      "title": "Hetzner may have created {{name}}",
+      "summary": "The answer from Hetzner didn’t arrive, so {{name}} may exist in your Hetzner account and be billed. Look for a server with this name in the Hetzner Console, or check from here. Creating another server stays off until this is settled.",
+      "nameLabel": "Server name",
+      "copyName": "Copy server name",
+      "check": "Check whether it exists",
+      "checking": "Checking Hetzner…",
+      "checkFailed": "Couldn’t check whether the server exists. Look for it in the Hetzner Console.",
+      "found": "{{name}} exists in your Hetzner account. Set it up now, or delete it in the Hetzner Console.",
+      "notFound": "Hetzner doesn’t list {{name}} right now. If the Hetzner Console doesn’t show it either, it wasn’t created.",
+      "adopt": "Set up this server",
+      "absent": "It doesn’t exist",
+      "absentConfirm": {
+        "title": "{{name}} doesn’t exist?",
+        "message": "Confirm only after checking the Hetzner Console. If {{name}} exists, creating another server bills you for both.",
+        "confirm": "It doesn’t exist"
+      },
+      "leaveWarning": "Hetzner may have created {{name}}, which is billed until it’s deleted. Look for it in the Hetzner Console. Leave anyway?"
+    }
   },
   "port": {
     "range": "Enter a port from 1 to 65535.",

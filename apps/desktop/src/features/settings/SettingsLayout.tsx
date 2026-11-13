@@ -53,7 +53,7 @@ export function SettingsLayout({
   const panel = usePageTransition<HTMLDivElement>(category);
   const current = categories.find(item => item.id === category);
   if (mobile) return detail ? <div className="mobile-settings-detail">
-    <header className="mobile-page-header"><button className="icon-button" autoFocus={dpadOnly} aria-label={t("common.action.back")} onClick={onBack}><ArrowLeft size={24} /></button><h1>{current && t(current.label)}</h1></header>
+    <header className="mobile-page-header"><button className="icon-button" autoFocus={dpadOnly} aria-label={t("common.action.back")} onClick={onBack}><ArrowLeft className="mirror-rtl" size={24} /></button><h1>{current && t(current.label)}</h1></header>
     {category !== "general" && serverName && <p className="settings-index-note">{t("app.settingsIndex.scope", { name: serverName })}</p>}
     <div className="settings-panel">{children}</div>
   </div> : <div className="settings-index" aria-label={t("settings.layout.categories")}>
@@ -63,7 +63,7 @@ export function SettingsLayout({
       {index === 1 && <p className="settings-index-note">{t("app.settingsIndex.serverNote")}</p>}
       <div className="mobile-choice-list">
         {group.map(({ id: value, label, hint, icon: Icon }) => <button key={value} className="mobile-list-row" aria-label={t(label)} aria-describedby={`${id}-${value}-hint`} onClick={() => onChange(value)}>
-          <span className="mobile-row-icon"><Icon size={23} /></span><span><strong>{t(label)}</strong><small id={`${id}-${value}-hint`}>{summaries[value] ?? t(hint)}</small></span><CaretRight size={18} />
+          <span className="mobile-row-icon"><Icon size={23} /></span><span><strong>{t(label)}</strong><small id={`${id}-${value}-hint`}>{summaries[value] ?? t(hint)}</small></span><CaretRight className="mirror-rtl" size={18} />
         </button>)}
       </div>
     </section>)}
@@ -88,9 +88,11 @@ export function SettingsLayout({
             onClick={() => onChange(value)}
             onKeyDown={(event) => {
               let next = index;
-              if (event.key === "ArrowRight" || event.key === "ArrowDown")
+              // Left and right follow reading direction.
+              const rtl = getComputedStyle(event.currentTarget).direction === "rtl";
+              if (event.key === (rtl ? "ArrowLeft" : "ArrowRight") || event.key === "ArrowDown")
                 next = (index + 1) % categories.length;
-              else if (event.key === "ArrowLeft" || event.key === "ArrowUp")
+              else if (event.key === (rtl ? "ArrowRight" : "ArrowLeft") || event.key === "ArrowUp")
                 next = (index + categories.length - 1) % categories.length;
               else if (event.key === "Home") next = 0;
               else if (event.key === "End") next = categories.length - 1;

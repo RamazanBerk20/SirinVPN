@@ -5,10 +5,26 @@ const ACCENTED: Record<string, string> = {
   N: "Ñ", O: "Ó", P: "Þ", Q: "Ǫ", R: "Ŕ", S: "Š", T: "Ţ", U: "Ú", V: "Ṽ", W: "Ŵ", X: "Ẋ", Y: "Ý", Z: "Ž",
 };
 
-/** Accents letters and pads text by about 35% so untranslated or clipped strings stand out. */
-export function pseudoLocalize(text: string): string {
-  // Rich-text tags keep their names so <Rich> can still render them.
-  const accented = text.split(/(<\/?\w+>)/).map((part, index) => index % 2 ? part : [...part].map(c => ACCENTED[c] ?? c).join("")).join("");
+/**
+ * Pseudo-localizes literal message text, leaving rich-text tags intact. Values placed into the
+ * message are not passed through here, so they stay readable.
+ * - expanded (en-XA): accented letters; `pseudoWrap` then pads the whole message.
+ * - rtl (ar-XB): each word is a right-to-left override run, so English reads mirrored like an
+ *   RTL script and anything not isolated shows up in the wrong place.
+ */
+export function pseudoLiteral(text: string, rtl: boolean): string {
+  return text.split(/(<\/?\w+>)/).map((part, index) => index % 2 ? part
+    : rtl ? part.replace(/[A-Za-z]+/g, word => `\u202E${word}\u202C`)
+    : [...part].map(c => ACCENTED[c] ?? c).join("")).join("");
+}
+
+/** Pads text by 40% and brackets it, so clipped or concatenated strings stand out. */
+export function pseudoWrap(text: string): string {
   const letters = text.replace(/<[^>]+>|\s/g, "").length;
-  return `⟦${accented}${"·".repeat(Math.ceil(letters * 0.35))}⟧`;
+  return `⟦${text}${"·".repeat(Math.ceil(letters * 0.4))}⟧`;
+}
+
+/** Accents and pads a whole string (tests and quick checks). */
+export function pseudoLocalize(text: string): string {
+  return pseudoWrap(pseudoLiteral(text, false));
 }

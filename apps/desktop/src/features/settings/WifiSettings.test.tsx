@@ -45,12 +45,12 @@ it("does not send the OS display name when trusting a network without a friendly
   const trust = await screen.findByRole("button", { name: t("settings.wifi.trust.action") });
   expect(trust.matches(":disabled")).toBe(false);
   fireEvent.click(trust);
-  await waitFor(() => expect(mocks.trustCurrentWifi).toHaveBeenCalledWith("network-one", "Wi-Fi exception"));
+  await waitFor(() => expect(mocks.trustCurrentWifi).toHaveBeenCalledWith("network-one", "\u2060"));
 });
 
 it("resolves existing generic entries, marks the current hotspot, and removes the selected ID", async () => {
   mocks.getWifiPolicy.mockResolvedValue({ ...initial, current_network: "trusted_wifi",
-    trusted_networks: [{ id: "network-one", label: "Wi-Fi exception" }, { id: "network-two", label: "Wi-Fi exception" }],
+    trusted_networks: [{ id: "network-one", label: "\u2060" }, { id: "network-two", label: "Wi-Fi exception" }],
     network_names: { "network-one": "Home hotspot", "network-two": "Office hotspot" },
   });
   render(<WifiSettings />);
@@ -97,7 +97,7 @@ it("follows a network change on its own and says so before trusting", async () =
   expect(screen.getByText(t("settings.wifi.access.changedUnnamed"))).toBeTruthy();
   expect(mocks.trustCurrentWifi).not.toHaveBeenCalled();
   await act(async () => { fireEvent.click(screen.getByRole("button", { name: t("settings.wifi.trust.action") })); });
-  expect(mocks.trustCurrentWifi).toHaveBeenCalledWith("network-two", "Wi-Fi exception");
+  expect(mocks.trustCurrentWifi).toHaveBeenCalledWith("network-two", "\u2060");
 });
 
 it("pauses hidden network reads and refreshes on return without trusting a changed network", async () => {
@@ -181,7 +181,7 @@ it("tells Android users why every Wi-Fi counts as untrusted and asks for precise
   expect(mocks.trustCurrentWifi).not.toHaveBeenCalled();
   expect(screen.getByText(t("settings.wifi.access.background"))).toBeTruthy();
   fireEvent.click(trust);
-  await waitFor(() => expect(mocks.trustCurrentWifi).toHaveBeenCalledWith("network-one", "Wi-Fi exception"));
+  await waitFor(() => expect(mocks.trustCurrentWifi).toHaveBeenCalledWith("network-one", "\u2060"));
 });
 
 it("warns only where Android's limits change what auto-connect does", async () => {

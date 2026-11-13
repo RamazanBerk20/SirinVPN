@@ -10,10 +10,30 @@ pub(super) async fn create_wireguard_device_handler(
     Extension(caller): Extension<CallerIdentity>,
     Json(request): Json<WireGuardDeviceCreateRequest>,
 ) -> Result<Json<ApiEnvelope<DeviceSummary>>, ApiError> {
+    let authorization = require_authorization(&state)?;
+    let mut current = authorization.write().await;
+    let (next, device) = prepare_wireguard_device(&state, &current, &caller, request)?;
+    commit_authorization(&state, &mut current, next).await?;
+    Ok(Json(ApiEnvelope::new(device)))
+}
+
+/// Everything device creation decides, without committing. Called with the write lock held.
+pub(super) fn prepare_wireguard_device(
+    state: &AppState,
+    current: &AuthorizationDocument,
+    caller: &CallerIdentity,
+    request: WireGuardDeviceCreateRequest,
+) -> Result<(AuthorizationDocument, DeviceSummary), ApiError> {
     let invalid = |error: anyhow::Error| ApiError::invalid(error.to_string());
     validate_host(&request.endpoint.host).map_err(|error| ApiError::invalid(error.to_string()))?;
-    let member_name = validate_display_name(&request.member_name).map_err(invalid)?;
-    let device_name = validate_display_name(&request.device_name).map_err(invalid)?;
+    // An existing member's stored name only has to match; new names meet the strict rule.
+    let member_name = if request.target_member_id.is_some() {
+        validate_display_name(&request.member_name)
+    } else {
+        validate_new_display_name(&request.member_name)
+    }
+    .map_err(invalid)?;
+    let device_name = validate_new_display_name(&request.device_name).map_err(invalid)?;
     validate_wireguard_public_key(&request.wireguard_public_key).map_err(invalid)?;
     validate_preshared_key(&request.preshared_key).map_err(invalid)?;
     request
@@ -21,13 +41,12 @@ pub(super) async fn create_wireguard_device_handler(
         .validate()
         .map_err(ApiError::invalid)?;
 
-    let authorization = require_authorization(&state)?;
-    let mut current = authorization.write().await;
+    limit_mutation(state, current, caller)?;
     let issuer_id = current
         .device_for_fingerprint(&caller.certificate_fingerprint)
         .ok_or_else(ApiError::forbidden)?
         .member_id;
-    let caller = authorize_current(&current, &caller, false)?;
+    let caller = authorize_current(current, caller, false)?;
     let issuer = current
         .members
         .iter()
@@ -44,7 +63,7 @@ pub(super) async fn create_wireguard_device_handler(
             return Err(ApiError::forbidden());
         }
     }
-    ensure_active_endpoint_authority(&current)?;
+    ensure_active_endpoint_authority(current)?;
     if current.server_id != request.server_id {
         return Err(ApiError::conflict(
             "the device request belongs to a different server profile",
@@ -53,8 +72,8 @@ pub(super) async fn create_wireguard_device_handler(
     let mut next = current.clone();
     next.prune_expired(unix_time());
     if next
-        .endpoint_transition
-        .as_ref()
+        .endpoint
+        .head()
         .is_some_and(|transition| request.endpoint != transition.claims.endpoint)
     {
         return Err(ApiError::conflict(
@@ -84,9 +103,7 @@ pub(super) async fn create_wireguard_device_handler(
                     "the target member changed; refresh membership and try again",
                 ));
             }
-            if !can_manage_member(caller, target.role, target.administrator)
-                && !(target.id == issuer_id && target.policy.add_own_devices)
-            {
+            if !can_add_device_to(caller, issuer_id, target) {
                 return Err(ApiError::forbidden());
             }
             next.ensure_device_capacity(member_id)
@@ -94,6 +111,7 @@ pub(super) async fn create_wireguard_device_handler(
             member_id
         }
         None => {
+            ensure_person_name_free(&next, &member_name, None)?;
             let member_id = MemberId::new();
             next.members.push(MemberRecord {
                 id: member_id,
@@ -131,6 +149,5 @@ pub(super) async fn create_wireguard_device_handler(
         .flat_map(|member| member.devices)
         .find(|device| device.id == device_id)
         .ok_or_else(ApiError::internal)?;
-    commit_authorization(&state, &mut current, next).await?;
-    Ok(Json(ApiEnvelope::new(device)))
+    Ok((next, device))
 }

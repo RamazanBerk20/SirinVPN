@@ -1,0 +1,264 @@
+{
+  "choice": {
+    "listLabel": "添加服务器的方式",
+    "back": "返回选项",
+    "privacy": "无需账户，无遥测。",
+    "join": {
+      "title": "使用加入码",
+      "summary": "扫描二维码或输入你的加入码"
+    },
+    "provision": {
+      "title": "设置我的 VPS",
+      "summary": "在你自己的服务器上创建 VPN"
+    },
+    "backup": {
+      "title": "还原备份",
+      "summary": "导入加密的设备备份"
+    },
+    "recovery": {
+      "title": "使用恢复密钥",
+      "summary": "恢复对你服务器的访问权限"
+    },
+    "hetzner": {
+      "title": "创建 Hetzner 服务器",
+      "summary": "租用一台可自动完成设置的新 VPS"
+    },
+    "advanced": "高级",
+    "advancedHint": "使用 Hetzner Cloud 账户创建服务器"
+  },
+  "backup": {
+    "title": "还原此设备",
+    "summary": "将一台服务器重新添加到此设备。不会联系服务器本身。",
+    "file": "备份文件",
+    "fileHint": "一个 .sirinvpn-backup 文件。此设备上已有的服务器绝不会被覆盖。",
+    "choose": "选择文件",
+    "pickerTitle": "打开 SirinVPN 备份",
+    "fileType": "SirinVPN 备份",
+    "password": "备份密码",
+    "submit": "还原备份",
+    "submitting": "正在还原…",
+    "error": {
+      "picker": "无法打开文件选择器。请重试。",
+      "restore": "无法还原备份。请检查文件和密码。"
+    },
+    "change": "更改文件",
+    "restored": "{{name}} 已在此设备上还原。"
+  },
+  "invitation": {
+    "expires": "{{date}} 到期",
+    "identity": "已验证的服务器身份",
+    "trust": "只有当你确实预期会从你信任的人那里收到此加入码时，才加入。",
+    "error": "无法检查此加入码。请索取新的加入码。"
+  },
+  "join": {
+    "title": "加入服务器",
+    "summary": "你的私钥在此设备上生成，并且永远不会离开此设备。",
+    "code": "加入码",
+    "codeHint": "请像保管密码一样保密",
+    "review": "检查加入码",
+    "submit": "加入服务器",
+    "submitting": "正在加入…",
+    "error": "此加入码无效。它可能已过期、已被使用或已被取消；请索取新的加入码。"
+  },
+  "recover": {
+    "title": "使用恢复密钥",
+    "summary": "在此设备上重新成为此服务器的所有者。",
+    "key": "恢复密钥",
+    "keyHint": "以 sirr1 开头。在你确认之前，不会发送任何内容。",
+    "file": {
+      "toggle": "打开恢复密钥文件",
+      "choose": "选择文件",
+      "password": "文件密码",
+      "open": "打开文件",
+      "opening": "正在打开文件…",
+      "loaded": "已从文件中加载恢复密钥。",
+      "pickerError": "无法打开文件选择器。",
+      "openError": "无法打开恢复密钥文件。请检查文件及其密码。",
+      "type": "SirinVPN 恢复密钥"
+    },
+    "serverIdentity": "服务器身份",
+    "deviceName": "所有者设备名称",
+    "defaultDeviceName": "已恢复的所有者设备",
+    "confirmRevoke": "将移除之前所有的所有者设备，并使用掉此密钥。其他用户保留访问权限；管理员将失去恢复权限。",
+    "replaceProfile": "替换此设备上为 {{name}} 保存的配置",
+    "review": "检查恢复密钥",
+    "submit": "恢复所有者访问权限",
+    "error": "恢复未完成。请使用同一密钥重试。",
+    "disconnectFirst": "请先断开 VPN 连接。此设备连接时无法开始恢复。",
+    "reviewing": "正在检查恢复密钥…",
+    "submitting": "正在恢复所有者访问权限…",
+    "done": "你已重新成为 {{name}} 的所有者。旧的恢复密钥已用完，请在“密钥和恢复”中创建新的恢复密钥。"
+  },
+  "setup": {
+    "title": "连接你的服务器",
+    "summary": "通过 SSH 登录你的服务器，以安装 SirinVPN。",
+    "defaultName": "我的服务器",
+    "name": "服务器名称",
+    "nameHint": "仅保存在此设备上",
+    "host": "IP 地址或主机名",
+    "advanced": "高级设置",
+    "replace": {
+      "title": "替换现有安装",
+      "summary": "仅当所有所有者设备和恢复密钥都已丢失时使用"
+    },
+    "verify": "验证服务器",
+    "verifying": "正在连接到 {{host}}…",
+    "fingerprint": {
+      "title": "验证你的服务器",
+      "summary": "在你的托管服务商网页控制台中检查此指纹。",
+      "copy": "复制指纹",
+      "mismatch": "如果不一致，请勿继续。连接可能正在被拦截。",
+      "replaceWarning": "替换将移除此服务器的所有设备、加入码和恢复密钥。",
+      "matches": "指纹一致",
+      "checkAgain": "再次检查网络",
+      "checking": "正在检查网络…",
+      "install": "安装 SirinVPN",
+      "replace": "替换 SirinVPN",
+      "pinnedTitle": "你服务器的 SSH 密钥",
+      "pinned": "SirinVPN 在服务器首次启动之前，已在此设备上创建此密钥，并将其放到服务器上，因此没有可供比较的内容。",
+      "checkNetwork": "检查网络",
+      "confirmed": "你已确认此指纹与你的服务器一致。",
+      "changePort": "更改端口"
+    },
+    "confirmReplace": {
+      "title": "替换现有安装？",
+      "message": "此服务器的每台设备、加入码和恢复密钥都将停止工作。服务器上的其他软件不受影响。",
+      "confirm": "替换"
+    },
+    "installing": {
+      "title": "正在设置你的服务器",
+      "summary": "正在 {{host}} 上安装 SirinVPN。通常需要几分钟。",
+      "keepOpen": "在完成之前，请保持 SirinVPN 打开。",
+      "stepChecked": "确认 VPS 身份和网络",
+      "stepInstall": "在 VPS 上安装 SirinVPN",
+      "stepInstallDetail": "连接、检查服务器、上传并验证软件，然后配置 VPN"
+    },
+    "success": {
+      "title": "你的 VPN 已就绪",
+      "summary": "已添加 {{name}}，此设备是其所有者。",
+      "recoveryTitle": "保存恢复密钥",
+      "recoverySummary": "只有此设备可以管理服务器。如果丢失了它，恢复密钥是重新进入的唯一途径。连接后即可创建恢复密钥。",
+      "recoveryKey": "保存恢复密钥",
+      "open": "打开服务器"
+    },
+    "error": {
+      "unreachable": "无法通过 SSH 连接到服务器。请检查地址和端口。",
+      "network": "无法检查服务器的网络。请重试。",
+      "install": "无法安装 SirinVPN。"
+    },
+    "hostPlaceholder": "例如 203.0.113.10",
+    "continue": "继续",
+    "previousStep": "上一步",
+    "progress": {
+      "label": "设置步骤",
+      "server": "服务器",
+      "verify": "验证",
+      "install": "安装"
+    },
+    "failed": {
+      "title": "安装未完成",
+      "stage": "停止于",
+      "server": "你的服务器",
+      "fingerprint": "已验证的指纹",
+      "stages": {
+        "connect": "正在登录服务器",
+        "check": "正在检查服务器",
+        "upload": "正在上传 SirinVPN",
+        "configure": "正在配置服务器"
+      },
+      "change": {
+        "unchanged": "服务器上的任何内容都未被更改。",
+        "rolledBack": "SirinVPN 已更改服务器，然后回滚了这些更改。",
+        "unknown": "SirinVPN 无法确认服务器是否已被更改。重新安装时会先检查服务器。"
+      },
+      "signInAgain": "SSH 密码未被保存。请返回设置重新输入。",
+      "back": "返回设置",
+      "retry": "重试安装"
+    },
+    "created": {
+      "title": "{{name}} 已就绪",
+      "summary": "它正在 {{host}} 上运行，使用的是此设备创建的 SSH 密钥，因此无需验证。请使用推荐设置安装 SirinVPN，或先检查这些设置。",
+      "settings": "检查设置（可选）",
+      "address": "地址",
+      "key": "root SSH 密钥",
+      "copyKey": "复制密钥路径"
+    }
+  },
+  "hetzner": {
+    "title": "在 Hetzner Cloud 上创建服务器",
+    "summary": "SirinVPN 会在你的 Hetzner 账户中租用一台 Debian 13 服务器，并自动完成安装。你无需输入 IP 地址或密码。",
+    "token": "Hetzner Cloud API 令牌",
+    "tokenHint": "在 Hetzner 控制台中打开你的项目，然后在 Security 下的 API tokens 中创建一个 Read & Write 令牌。它只会发送给 Hetzner，不会被保存。",
+    "tokenExpired": "SirinVPN 只会保留 API 令牌 10 分钟。请重新输入以继续。",
+    "loadPlans": "显示价格",
+    "loading": "正在从 Hetzner 获取价格…",
+    "location": "位置",
+    "serverType": "服务器类型",
+    "typeOption": "{{price}}/月 · {{name}}（{{architecture}}）· {{cores}} vCPU · {{memory}} GB 内存 · {{disk}} GB",
+    "price": "每月 {{total}}：服务器 {{server}}，加上 IPv4 地址 {{ipv4}}。在你删除服务器之前，Hetzner 会向你的账户收费。",
+    "priceNoIpv4": "服务器每月 {{total}}。在你删除服务器之前，Hetzner 会向你的账户收费。",
+    "create": "以每月 {{total}} 的价格创建服务器",
+    "confirm": {
+      "title": "创建 Hetzner 服务器？",
+      "message": "在删除之前，{{location}} 的 {{type}} 每月费用为 {{total}}。",
+      "confirm": "创建服务器"
+    },
+    "creating": "正在创建服务器…",
+    "waiting": "正在等待 {{name}} 启动…",
+    "waitingHint": "通常需要一到两分钟。",
+    "cancel": "停止等待",
+    "keyPath": "root SSH 密钥",
+    "delete": "删除此服务器",
+    "deleting": "正在删除 {{name}}…",
+    "deleteConfirm": {
+      "title": "删除 {{name}}？",
+      "message": "{{name}}、其 IP 地址及其上的所有内容都将从你的 Hetzner 账户中移除。此操作无法撤销。",
+      "confirm": "删除服务器"
+    },
+    "deleted": "它已从你的 Hetzner 账户中移除，Hetzner 不再向你收费。",
+    "startOver": "重新开始",
+    "failedTitle": "{{name}} 尚未就绪",
+    "failedSummary": "服务器存在于你的 Hetzner 账户中，并会在删除前持续计费。你可以再次等待、保留它以便稍后设置，或将其删除。",
+    "waitAgain": "再次等待",
+    "keep": "保留服务器",
+    "keptTitle": "{{name}} 保留在你的 Hetzner 账户中",
+    "kept": "在你于 Hetzner 控制台中删除它之前，Hetzner 会持续收费。如需稍后设置，请选择“设置我的 VPS”并输入其地址。其 SSH 主机密钥显示在下方，供你核对。",
+    "leaveWarning": "已创建一台 Hetzner 服务器，在删除之前会持续计费。仍要离开吗？",
+    "error": {
+      "catalog": "无法加载 Hetzner 价格。",
+      "create": "无法创建服务器。",
+      "wait": "服务器未能就绪。",
+      "delete": "无法删除服务器。"
+    },
+    "hostKey": "SSH 主机密钥",
+    "dangerLabel": "删除服务器",
+    "billed": "在删除之前，{{name}} 会计入你的 Hetzner 账户。",
+    "deletedTitle": "{{name}} 已删除",
+    "locationOption": "{{city}}，{{country}}（{{name}}）",
+    "uncertain": {
+      "title": "Hetzner 可能已创建 {{name}}",
+      "summary": "Hetzner 没有返回响应，因此 {{name}} 可能存在于你的 Hetzner 账户中并被计费。请在 Hetzner 控制台中查找同名服务器，或在此处检查。在此问题确认之前，无法再创建其他服务器。",
+      "nameLabel": "服务器名称",
+      "copyName": "复制服务器名称",
+      "check": "检查它是否存在",
+      "checking": "正在检查 Hetzner…",
+      "checkFailed": "无法检查服务器是否存在。请在 Hetzner 控制台中查找。",
+      "found": "{{name}} 存在于你的 Hetzner 账户中。请立即设置它，或在 Hetzner 控制台中将其删除。",
+      "notFound": "Hetzner 目前未列出 {{name}}。如果 Hetzner 控制台中也没有显示它，说明它并未被创建。",
+      "adopt": "设置此服务器",
+      "absent": "它不存在",
+      "absentConfirm": {
+        "title": "{{name}} 不存在？",
+        "message": "请先在 Hetzner 控制台中检查后再确认。如果 {{name}} 确实存在，再创建另一台服务器将使你同时支付两台的费用。",
+        "confirm": "它不存在"
+      },
+      "leaveWarning": "Hetzner 可能已创建 {{name}}，它在删除之前会持续计费。请在 Hetzner 控制台中查找它。仍要离开吗？"
+    }
+  },
+  "port": {
+    "range": "请输入 1 到 65535 之间的端口。",
+    "reserved": "SirinVPN 在服务器上使用端口 {{port}}。请选择其他端口。",
+    "sameAsDirect": "直接 UDP 已使用此端口。请选择其他端口。",
+    "sameAsQuic": "QUIC 在此 UDP 端口上响应，端口号与 TCP/TLS 相同。请选择其他端口。"
+  }
+}

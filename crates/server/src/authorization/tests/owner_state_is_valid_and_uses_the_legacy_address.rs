@@ -140,23 +140,37 @@ fn endpoint_transition_is_additive_monotonic_state_with_verified_signature() {
     assert_eq!(state.endpoint_generation(), 1);
     verify_endpoint_transition_signature_with_key(
         &server.secret.management_private_key_pem,
-        state.endpoint_transition.as_ref().unwrap(),
+        state.endpoint.head().unwrap(),
     )
     .unwrap();
 
     let mut divergent_authorization = state.clone();
     divergent_authorization.members[0].name = "Changed owner".to_owned();
     divergent_authorization.validate().unwrap();
-    divergent_authorization.endpoint_transition_source = true;
+    divergent_authorization.endpoint.hand_off(response.clone());
     assert!(divergent_authorization.validate().is_err());
 
     let mut handoff_source = state.clone();
-    handoff_source.endpoint_transition_source = true;
+    handoff_source.endpoint.hand_off(response.clone());
     handoff_source.validate().unwrap();
-    let mut invalid_source = state.clone();
-    invalid_source.endpoint_transition = None;
-    invalid_source.endpoint_transition_source = true;
-    assert!(invalid_source.validate().is_err());
+    // A source without its signed head, or one that still observes an address, cannot load.
+    let mut invalid_source = serde_json::to_value(&handoff_source).unwrap();
+    let object = invalid_source.as_object_mut().unwrap();
+    object.remove("endpoint_transition");
+    assert!(serde_json::from_value::<AuthorizationDocument>(invalid_source.clone()).is_err());
+    let mut observing_source = serde_json::to_value(&handoff_source).unwrap();
+    observing_source["endpoint_observed_address"] = serde_json::json!("203.0.113.20");
+    assert!(serde_json::from_value::<AuthorizationDocument>(observing_source).is_err());
+    // The stored shape is unchanged: the three historical fields round-trip exactly.
+    let stored = serde_json::to_value(&handoff_source).unwrap();
+    assert_eq!(
+        stored["endpoint_transition_source"],
+        serde_json::json!(true)
+    );
+    assert_eq!(
+        serde_json::from_value::<AuthorizationDocument>(stored).unwrap(),
+        handoff_source
+    );
 
     let idempotent = state.clone();
     state.accept_endpoint_transition(response.clone()).unwrap();
@@ -185,7 +199,7 @@ fn endpoint_transition_is_additive_monotonic_state_with_verified_signature() {
             .is_err()
     );
 
-    let mut tampered = state.endpoint_transition.clone().unwrap();
+    let mut tampered = state.endpoint.head().cloned().unwrap();
     tampered.claims.endpoint.host = "203.0.113.99".to_owned();
     assert!(
         verify_endpoint_transition_signature_with_key(
@@ -203,7 +217,7 @@ fn endpoint_transition_is_additive_monotonic_state_with_verified_signature() {
     let legacy: AuthorizationDocument = serde_json::from_value(legacy).unwrap();
     legacy.validate().unwrap();
     assert_eq!(legacy.endpoint_generation(), 0);
-    assert!(!legacy.endpoint_transition_source);
+    assert!(!legacy.endpoint.is_handoff_source());
 }
 
 #[test]

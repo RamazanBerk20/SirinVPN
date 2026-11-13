@@ -73,9 +73,8 @@ unsafe extern "system" fn service_main(count: u32, arguments: *mut *mut u16) {
     let result = std::panic::catch_unwind(|| -> io::Result<()> {
         report(SERVICE_START_PENDING, 0)?;
         let _executable = open_protected_program(&std::env::current_exe()?)?;
-        let cleanup = unsafe { cleanup_argument(count, arguments) }?;
-        if cleanup {
-            return Controller::uninstall();
+        if let Some(uninstall) = unsafe { cleanup_argument(count, arguments) }? {
+            return Controller::release(uninstall);
         }
         let mut controller = Controller::open()?;
         // The same cancellation object is signalled by both SCM and pipe commands.
@@ -99,9 +98,12 @@ unsafe extern "system" fn service_main(count: u32, arguments: *mut *mut u16) {
     let _ = report(SERVICE_STOPPED, code);
 }
 
-unsafe fn cleanup_argument(count: u32, arguments: *mut *mut u16) -> io::Result<bool> {
+/// `Some(true)` for uninstall cleanup, `Some(false)` to release the current
+/// session's guard, `None` for a normal start. Only SCM START callers, which the
+/// service DACL limits to SYSTEM and administrators, can pass arguments.
+unsafe fn cleanup_argument(count: u32, arguments: *mut *mut u16) -> io::Result<Option<bool>> {
     if count == 1 {
-        return Ok(false);
+        return Ok(None);
     }
     if count != 2 || arguments.is_null() {
         return Err(io::ErrorKind::InvalidInput.into());
@@ -110,14 +112,22 @@ unsafe fn cleanup_argument(count: u32, arguments: *mut *mut u16) -> io::Result<b
     if argument.is_null() {
         return Err(io::ErrorKind::InvalidInput.into());
     }
-    let expected = security::wide("--uninstall")?;
-    for (offset, value) in expected.iter().enumerate() {
-        if unsafe { *argument.add(offset) } != *value {
-            return Err(io::ErrorKind::InvalidInput.into());
+    for (name, uninstall) in [(UNINSTALL_ARGUMENT, true), (RELEASE_ARGUMENT, false)] {
+        let expected = security::wide(name)?;
+        // Stops at the first difference, so a shorter argument's NUL ends the read.
+        if expected
+            .iter()
+            .enumerate()
+            .all(|(offset, value)| unsafe { *argument.add(offset) } == *value)
+        {
+            return Ok(Some(uninstall));
         }
     }
-    Ok(true)
+    Err(io::ErrorKind::InvalidInput.into())
 }
+
+pub(crate) const UNINSTALL_ARGUMENT: &str = "--uninstall";
+pub(crate) const RELEASE_ARGUMENT: &str = "--release-guard";
 
 unsafe extern "system" fn handler(code: u32, _: u32, _: *mut c_void, _: *mut c_void) -> u32 {
     let Some(control) = CONTROL.get() else {

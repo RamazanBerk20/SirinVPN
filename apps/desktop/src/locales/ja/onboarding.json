@@ -1,0 +1,264 @@
+{
+  "choice": {
+    "listLabel": "サーバーの追加方法",
+    "back": "選択肢に戻る",
+    "privacy": "アカウント不要。テレメトリなし。",
+    "join": {
+      "title": "参加コードを使用",
+      "summary": "QR コードをスキャンするか、コードを入力します"
+    },
+    "provision": {
+      "title": "自分の VPS を設定",
+      "summary": "自分のサーバーに VPN を作成します"
+    },
+    "backup": {
+      "title": "バックアップを復元",
+      "summary": "暗号化されたデバイスのバックアップを読み込みます"
+    },
+    "recovery": {
+      "title": "復旧キーを使用",
+      "summary": "サーバーへのアクセスを復旧します"
+    },
+    "hetzner": {
+      "title": "Hetzner サーバーを作成",
+      "summary": "自動で設定される新しい VPS をレンタルします"
+    },
+    "advanced": "詳細",
+    "advancedHint": "Hetzner Cloud アカウントでサーバーを作成します"
+  },
+  "backup": {
+    "title": "このデバイスを復元",
+    "summary": "このデバイスにサーバーを再度追加します。サーバー自体には接続しません。",
+    "file": "バックアップファイル",
+    "fileHint": ".sirinvpn-backup ファイルです。このデバイスにすでにあるサーバーは、上書きされることはありません。",
+    "choose": "ファイルを選択",
+    "pickerTitle": "SirinVPN のバックアップを開く",
+    "fileType": "SirinVPN のバックアップ",
+    "password": "バックアップのパスワード",
+    "submit": "バックアップを復元",
+    "submitting": "復元中…",
+    "error": {
+      "picker": "ファイルの選択画面を開けませんでした。もう一度お試しください。",
+      "restore": "バックアップを復元できませんでした。ファイルとパスワードを確認してください。"
+    },
+    "change": "ファイルを変更",
+    "restored": "{{name}} をこのデバイスに復元しました。"
+  },
+  "invitation": {
+    "expires": "{{date}} に期限切れ",
+    "identity": "確認済みのサーバーの ID",
+    "trust": "信頼できる相手から受け取った参加コードである場合にのみ参加してください。",
+    "error": "この参加コードを確認できませんでした。新しいコードを発行してもらってください。"
+  },
+  "join": {
+    "title": "サーバーに参加",
+    "summary": "秘密鍵はこのデバイスで作成され、デバイスの外に出ることはありません。",
+    "code": "参加コード",
+    "codeHint": "パスワードと同様に、他人に知られないようにしてください",
+    "review": "参加コードを確認",
+    "submit": "サーバーに参加",
+    "submitting": "参加中…",
+    "error": "この参加コードは使用できませんでした。期限切れ、使用済み、または取り消されている可能性があります。新しいコードを発行してもらってください。"
+  },
+  "recover": {
+    "title": "復旧キーを使用",
+    "summary": "このデバイスで、このサーバーのオーナーに再び戻ります。",
+    "key": "復旧キー",
+    "keyHint": "sirr1 で始まります。確定するまで何も送信されません。",
+    "file": {
+      "toggle": "復旧キーのファイルを開く",
+      "choose": "ファイルを選択",
+      "password": "ファイルのパスワード",
+      "open": "ファイルを開く",
+      "opening": "ファイルを開いています…",
+      "loaded": "ファイルから復旧キーを読み込みました。",
+      "pickerError": "ファイルの選択画面を開けませんでした。",
+      "openError": "復旧キーのファイルを開けませんでした。ファイルとそのパスワードを確認してください。",
+      "type": "SirinVPN の復旧キー"
+    },
+    "serverIdentity": "サーバーの ID",
+    "deviceName": "オーナーのデバイス名",
+    "defaultDeviceName": "復旧したオーナーのデバイス",
+    "confirmRevoke": "以前のオーナーのデバイスをすべて削除し、このキーを使い切ります。他の人のアクセスは維持されます。管理者は復旧の権限を失います。",
+    "replaceProfile": "{{name}} について、このデバイスに保存されたプロファイルを置き換える",
+    "review": "復旧キーを確認",
+    "submit": "オーナーのアクセスを復旧",
+    "error": "復旧が完了しませんでした。同じキーでもう一度お試しください。",
+    "disconnectFirst": "先に VPN を切断してください。このデバイスが接続中は、復旧を開始できません。",
+    "reviewing": "復旧キーを確認しています…",
+    "submitting": "オーナーのアクセスを復旧しています…",
+    "done": "{{name}} のオーナーに戻りました。以前の復旧キーは使い切られたため、「鍵と復旧」で新しいキーを作成してください。"
+  },
+  "setup": {
+    "title": "サーバーを接続",
+    "summary": "SSH でサーバーにサインインし、SirinVPN をインストールします。",
+    "defaultName": "マイサーバー",
+    "name": "サーバー名",
+    "nameHint": "このデバイスにのみ保存されます",
+    "host": "IP アドレスまたはホスト名",
+    "advanced": "詳細設定",
+    "replace": {
+      "title": "既存のインストールを置き換える",
+      "summary": "すべてのオーナーのデバイスと復旧キーを失った場合にのみ"
+    },
+    "verify": "サーバーを確認",
+    "verifying": "{{host}} に接続中…",
+    "fingerprint": {
+      "title": "サーバーを確認",
+      "summary": "ホスティングプロバイダーの Web コンソールで、このフィンガープリントを確認してください。",
+      "copy": "フィンガープリントをコピー",
+      "mismatch": "一致しない場合は、続行しないでください。通信が傍受されている可能性があります。",
+      "replaceWarning": "置き換えると、このサーバーのすべてのデバイス、参加コード、復旧キーが削除されます。",
+      "matches": "フィンガープリントが一致します",
+      "checkAgain": "ネットワークを再確認",
+      "checking": "ネットワークを確認中…",
+      "install": "SirinVPN をインストール",
+      "replace": "SirinVPN を置き換える",
+      "pinnedTitle": "サーバーの SSH 鍵",
+      "pinned": "SirinVPN は、このデバイスでこの鍵を作成し、初回の起動前にサーバーに配置したため、比較するものはありません。",
+      "checkNetwork": "ネットワークを確認",
+      "confirmed": "このフィンガープリントがサーバーのものと一致することを確認しました。",
+      "changePort": "ポートを変更"
+    },
+    "confirmReplace": {
+      "title": "既存のインストールを置き換えますか？",
+      "message": "このサーバーのすべてのデバイス、参加コード、復旧キーは使用できなくなります。サーバー上のほかのソフトウェアには影響しません。",
+      "confirm": "置き換える"
+    },
+    "installing": {
+      "title": "サーバーを設定しています",
+      "summary": "{{host}} に SirinVPN をインストールしています。通常は数分かかります。",
+      "keepOpen": "完了するまで、SirinVPN を開いたままにしてください。",
+      "stepChecked": "VPS の ID とネットワークを確認",
+      "stepInstall": "VPS に SirinVPN をインストール",
+      "stepInstallDetail": "接続し、サーバーを確認し、ソフトウェアをアップロードして検証した後、VPN を設定します"
+    },
+    "success": {
+      "title": "VPN の準備ができました",
+      "summary": "{{name}} を追加し、このデバイスがそのオーナーになりました。",
+      "recoveryTitle": "復旧キーを保存",
+      "recoverySummary": "このサーバーを管理できるのはこのデバイスだけです。失うと、復旧キーが唯一の再接続手段になります。接続後に作成できます。",
+      "recoveryKey": "復旧キーを保存",
+      "open": "サーバーを開く"
+    },
+    "error": {
+      "unreachable": "SSH でサーバーに接続できませんでした。アドレスとポートを確認してください。",
+      "network": "サーバーのネットワークを確認できませんでした。もう一度お試しください。",
+      "install": "SirinVPN をインストールできませんでした。"
+    },
+    "hostPlaceholder": "例: 203.0.113.10",
+    "continue": "続行",
+    "previousStep": "前の手順",
+    "progress": {
+      "label": "セットアップの手順",
+      "server": "サーバー",
+      "verify": "確認",
+      "install": "インストール"
+    },
+    "failed": {
+      "title": "インストールが完了しませんでした",
+      "stage": "停止した箇所",
+      "server": "サーバー",
+      "fingerprint": "確認済みのフィンガープリント",
+      "stages": {
+        "connect": "サーバーにサインイン中",
+        "check": "サーバーを確認中",
+        "upload": "SirinVPN をアップロード中",
+        "configure": "サーバーを構成中"
+      },
+      "change": {
+        "unchanged": "サーバー上の内容は変更されていません。",
+        "rolledBack": "SirinVPN はサーバーを変更した後、それらの変更を元に戻しました。",
+        "unknown": "サーバーが変更されたかどうかを SirinVPN で確認できませんでした。再度インストールすると、まずサーバーを確認します。"
+      },
+      "signInAgain": "SSH パスワードは保持されていません。設定に戻って、もう一度入力してください。",
+      "back": "設定に戻る",
+      "retry": "インストールを再試行"
+    },
+    "created": {
+      "title": "{{name}} の準備ができました",
+      "summary": "{{host}} で動作しており、このデバイスが作成した SSH 鍵を使用するため、確認は不要です。推奨設定で SirinVPN をインストールするか、先に設定を確認してください。",
+      "settings": "設定を確認（任意）",
+      "address": "アドレス",
+      "key": "root の SSH 鍵",
+      "copyKey": "鍵のパスをコピー"
+    }
+  },
+  "hetzner": {
+    "title": "Hetzner Cloud にサーバーを作成",
+    "summary": "SirinVPN は、お使いの Hetzner アカウントで Debian 13 のサーバーをレンタルし、自動でインストールします。IP アドレスやパスワードを入力する必要はありません。",
+    "token": "Hetzner Cloud の API トークン",
+    "tokenHint": "Hetzner Console でプロジェクトを開き、「Security」の「API tokens」から Read & Write のトークンを作成してください。トークンは Hetzner に送信されるだけで、保存されません。",
+    "tokenExpired": "SirinVPN が API トークンを保持するのは 10 分間だけです。続行するには、もう一度入力してください。",
+    "loadPlans": "料金を表示",
+    "loading": "Hetzner から料金を取得しています…",
+    "location": "ロケーション",
+    "serverType": "サーバーの種類",
+    "typeOption": "{{price}}/月 · {{name}}（{{architecture}}）· {{cores}} vCPU · メモリ {{memory}} GB · ディスク {{disk}} GB",
+    "price": "月額 {{total}}: サーバー {{server}} と IPv4 アドレス {{ipv4}}。サーバーを削除するまで、Hetzner はお使いのアカウントに課金します。",
+    "priceNoIpv4": "サーバーの月額は {{total}} です。サーバーを削除するまで、Hetzner はお使いのアカウントに課金します。",
+    "create": "月額 {{total}} でサーバーを作成",
+    "confirm": {
+      "title": "Hetzner サーバーを作成しますか？",
+      "message": "{{location}} の {{type}} は、削除するまで月額 {{total}} かかります。",
+      "confirm": "サーバーを作成"
+    },
+    "creating": "サーバーを作成しています…",
+    "waiting": "{{name}} の起動を待っています…",
+    "waitingHint": "通常は 1 ～ 2 分かかります。",
+    "cancel": "待機を停止",
+    "keyPath": "root の SSH 鍵",
+    "delete": "このサーバーを削除",
+    "deleting": "{{name}} を削除中…",
+    "deleteConfirm": {
+      "title": "{{name}} を削除しますか？",
+      "message": "{{name}}、その IP アドレス、およびそこにあるすべてのデータが、Hetzner アカウントから削除されます。この操作は元に戻せません。",
+      "confirm": "サーバーを削除"
+    },
+    "deleted": "Hetzner アカウントから削除されました。Hetzner はこのサーバーの課金を停止します。",
+    "startOver": "最初からやり直す",
+    "failedTitle": "{{name}} の準備がまだできていません",
+    "failedSummary": "サーバーは Hetzner アカウントに存在し、削除されるまで課金されます。もう一度待つか、後で設定するために残すか、削除してください。",
+    "waitAgain": "もう一度待つ",
+    "keep": "サーバーを残す",
+    "keptTitle": "{{name}} は Hetzner アカウントに残ります",
+    "kept": "Hetzner Console で削除するまで、Hetzner は課金を続けます。後で設定するには、「自分の VPS を設定」を選び、そのアドレスを入力してください。確認用の SSH ホスト鍵は以下にあります。",
+    "leaveWarning": "Hetzner サーバーが作成されており、削除するまで課金されます。それでも離れますか？",
+    "error": {
+      "catalog": "Hetzner の料金を読み込めませんでした。",
+      "create": "サーバーを作成できませんでした。",
+      "wait": "サーバーの準備が完了しませんでした。",
+      "delete": "サーバーを削除できませんでした。"
+    },
+    "hostKey": "SSH ホスト鍵",
+    "dangerLabel": "サーバーを削除",
+    "billed": "{{name}} は、削除するまで Hetzner アカウントに課金されます。",
+    "deletedTitle": "{{name}} を削除しました",
+    "locationOption": "{{city}}、{{country}}（{{name}}）",
+    "uncertain": {
+      "title": "Hetzner が {{name}} を作成した可能性があります",
+      "summary": "Hetzner からの応答が届かなかったため、{{name}} がお使いの Hetzner アカウントに存在し、課金されている可能性があります。Hetzner Console でこの名前のサーバーを探すか、ここで確認してください。この問題が解決するまで、別のサーバーの作成はオフのままです。",
+      "nameLabel": "サーバー名",
+      "copyName": "サーバー名をコピー",
+      "check": "存在するか確認",
+      "checking": "Hetzner を確認中…",
+      "checkFailed": "サーバーが存在するか確認できませんでした。Hetzner Console で探してください。",
+      "found": "{{name}} はお使いの Hetzner アカウントに存在します。今すぐ設定するか、Hetzner Console で削除してください。",
+      "notFound": "Hetzner は現在 {{name}} を一覧に表示していません。Hetzner Console にも表示されない場合は、作成されていません。",
+      "adopt": "このサーバーを設定",
+      "absent": "存在しません",
+      "absentConfirm": {
+        "title": "{{name}} は存在しませんか？",
+        "message": "Hetzner Console で確認した後にのみ確定してください。{{name}} が存在する場合、別のサーバーを作成すると両方に課金されます。",
+        "confirm": "存在しません"
+      },
+      "leaveWarning": "Hetzner が {{name}} を作成した可能性があり、削除するまで課金されます。Hetzner Console で探してください。それでも離れますか？"
+    }
+  },
+  "port": {
+    "range": "1 から 65535 までのポートを入力してください。",
+    "reserved": "SirinVPN はサーバーでポート {{port}} を使用します。別のポートを選んでください。",
+    "sameAsDirect": "直接 UDP がすでにこのポートを使用しています。別のポートを選んでください。",
+    "sameAsQuic": "QUIC はこの UDP ポートで応答します。TCP/TLS と同じ番号です。別のポートを選んでください。"
+  }
+}

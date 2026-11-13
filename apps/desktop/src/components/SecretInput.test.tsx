@@ -8,13 +8,14 @@ vi.mock("../platform", () => ({ isAndroid: true, invoke: vi.fn() }));
 it("shows native scan denial and passes only an opaque successful result to the form", async () => {
   const change = vi.fn();
   vi.mocked(invoke).mockRejectedValueOnce(new Error("Camera access wasn’t granted. You can enter the code securely instead."));
-  render(<SecretTextarea aria-label="Invitation" onChange={change} />);
+  render(<SecretTextarea field="code" aria-label="Invitation" onChange={change} />);
   fireEvent.click(screen.getByRole("button", { name: "Scan QR code" }));
   expect((await screen.findByRole("alert")).textContent).toContain("enter the code securely instead");
   expect(change).not.toHaveBeenCalled();
   vi.mocked(invoke).mockResolvedValueOnce("native-secret:fixture-reference");
   fireEvent.click(screen.getByRole("button", { name: "Scan QR code" }));
   await waitFor(() => expect(change).toHaveBeenCalledOnce());
+  expect(invoke).toHaveBeenLastCalledWith("android_scan_code", { field: "code" });
   expect(change.mock.calls[0][0].target.value).toBe("native-secret:fixture-reference");
   expect(screen.queryByRole("alert")).toBeNull();
 });

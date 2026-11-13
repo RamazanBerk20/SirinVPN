@@ -281,6 +281,7 @@ struct CreatedRelease {
 struct BundledTrustRoot {
     root_key_id_sha256: String,
     public_key_pem: &'static str,
+    embedded_floor_policy_sequence: Option<u64>,
 }
 
 #[derive(Serialize)]
@@ -328,6 +329,7 @@ fn trust(arguments: TrustArguments, json: bool) -> Result<()> {
             let root = BundledTrustRoot {
                 root_key_id_sha256: bundled_release_trust_root_id()?,
                 public_key_pem: BUNDLED_RELEASE_TRUST_ROOT_PEM,
+                embedded_floor_policy_sequence: sirinvpn_release::embedded_trust_floor_sequence()?,
             };
             if json {
                 println!("{}", serde_json::to_string_pretty(&root)?);
@@ -336,6 +338,10 @@ fn trust(arguments: TrustArguments, json: bool) -> Result<()> {
                     "Bundled SirinVPN release trust root: {}",
                     root.root_key_id_sha256
                 );
+                match root.embedded_floor_policy_sequence {
+                    Some(sequence) => println!("Embedded trust policy floor: sequence {sequence}"),
+                    None => println!("Embedded trust policy floor: none (no embedded floor)"),
+                }
             }
             Ok(())
         }

@@ -495,28 +495,27 @@ fn sync_directory(path: &Path) -> Result<(), FetchError> {
     Ok(())
 }
 
-#[cfg(all(target_os = "linux", target_env = "gnu"))]
+// rustix issues renameat2 directly, so glibc, musl and Android (bionic) share this path.
+#[cfg(any(target_os = "linux", target_os = "android"))]
 fn commit_staging(staging: TempDir, destination: &Path) -> Result<(), FetchError> {
-    use nix::{
-        errno::Errno,
-        fcntl::{AT_FDCWD, RenameFlags, renameat2},
+    use rustix::{
+        fs::{CWD, RenameFlags, renameat_with},
+        io::Errno,
     };
 
-    match renameat2(
-        AT_FDCWD,
+    match renameat_with(
+        CWD,
         staging.path(),
-        AT_FDCWD,
+        CWD,
         destination,
-        RenameFlags::RENAME_NOREPLACE,
+        RenameFlags::NOREPLACE,
     ) {
         Ok(()) => {}
-        Err(Errno::EEXIST) => return Err(FetchError::DestinationExists),
-        Err(Errno::ENOSYS | Errno::EINVAL | Errno::EOPNOTSUPP) => {
+        Err(Errno::EXIST) => return Err(FetchError::DestinationExists),
+        Err(Errno::NOSYS | Errno::INVAL | Errno::OPNOTSUPP) => {
             return Err(FetchError::AtomicCommitUnsupported);
         }
-        Err(error) => {
-            return Err(FetchError::Io(io::Error::from_raw_os_error(error as i32)));
-        }
+        Err(error) => return Err(FetchError::Io(error.into())),
     }
     let _ = staging.keep();
     let parent = destination.parent().ok_or(FetchError::InvalidDestination)?;
@@ -587,7 +586,7 @@ fn validate_windows_destination(destination: &Path, canonical: &Path) -> Result<
     Ok(())
 }
 
-#[cfg(not(any(windows, all(target_os = "linux", target_env = "gnu"))))]
+#[cfg(not(any(windows, target_os = "linux", target_os = "android")))]
 fn commit_staging(_staging: TempDir, _destination: &Path) -> Result<(), FetchError> {
     Err(FetchError::AtomicCommitUnsupported)
 }

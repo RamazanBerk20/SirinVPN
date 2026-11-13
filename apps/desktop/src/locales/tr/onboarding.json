@@ -1,0 +1,264 @@
+{
+  "choice": {
+    "listLabel": "Sunucu nasıl eklenir",
+    "back": "Seçeneklere dön",
+    "privacy": "Hesap yok. Telemetri yok.",
+    "join": {
+      "title": "Katılım kodu kullan",
+      "summary": "QR kodu tarayın veya kodunuzu girin"
+    },
+    "provision": {
+      "title": "VPS’imi kur",
+      "summary": "Kendi sunucunuzda bir VPN oluşturun"
+    },
+    "backup": {
+      "title": "Yedeği geri yükle",
+      "summary": "Şifreli bir cihaz yedeğini içe aktarın"
+    },
+    "recovery": {
+      "title": "Kurtarma anahtarı kullan",
+      "summary": "Sunucunuza erişimi geri kazanın"
+    },
+    "hetzner": {
+      "title": "Hetzner sunucusu oluştur",
+      "summary": "Kendini kuran yeni bir VPS kiralayın"
+    },
+    "advanced": "Gelişmiş",
+    "advancedHint": "Bir Hetzner Cloud hesabıyla sunucu oluşturun"
+  },
+  "backup": {
+    "title": "Bu cihazı geri yükle",
+    "summary": "Bu cihaza bir sunucuyu geri ekler. Sunucuyla iletişime geçilmez.",
+    "file": "Yedek dosyası",
+    "fileHint": ".sirinvpn-backup dosyası. Bu cihazda zaten bulunan sunucular asla üzerine yazılmaz.",
+    "choose": "Dosya seç",
+    "pickerTitle": "Bir SirinVPN yedeği açın",
+    "fileType": "SirinVPN yedeği",
+    "password": "Yedek parolası",
+    "submit": "Yedeği geri yükle",
+    "submitting": "Geri yükleniyor…",
+    "error": {
+      "picker": "Dosya seçici açılamadı. Tekrar deneyin.",
+      "restore": "Yedek geri yüklenemedi. Dosyayı ve parolayı kontrol edin."
+    },
+    "change": "Dosyayı değiştir",
+    "restored": "{{name}} bu cihazda geri yüklendi."
+  },
+  "invitation": {
+    "expires": "{{date}} tarihinde sona erer",
+    "identity": "Doğrulanmış sunucu kimliği",
+    "trust": "Yalnızca güvendiğiniz birinden bu katılım kodunu beklediyseniz katılın.",
+    "error": "Bu katılım kodu denetlenemedi. Yeni bir kod isteyin."
+  },
+  "join": {
+    "title": "Bir sunucuya katılın",
+    "summary": "Özel anahtarınız bu cihazda oluşturulur ve asla bu cihazdan çıkmaz.",
+    "code": "Katılım kodu",
+    "codeHint": "Bir parola gibi gizli tutun",
+    "review": "Katılım kodunu incele",
+    "submit": "Sunucuya katıl",
+    "submitting": "Katılınıyor…",
+    "error": "Bu katılım kodu işe yaramadı. Süresi dolmuş, kullanılmış veya iptal edilmiş olabilir; yeni bir kod isteyin."
+  },
+  "recover": {
+    "title": "Kurtarma anahtarı kullan",
+    "summary": "Bu cihazda bu sunucunun Sahibi olun.",
+    "key": "Kurtarma anahtarı",
+    "keyHint": "sirr1 ile başlar. Siz onaylayana kadar hiçbir şey gönderilmez.",
+    "file": {
+      "toggle": "Bir kurtarma anahtarı dosyası aç",
+      "choose": "Dosya seç",
+      "password": "Dosya parolası",
+      "open": "Dosyayı aç",
+      "opening": "Dosya açılıyor…",
+      "loaded": "Kurtarma anahtarı dosyadan yüklendi.",
+      "pickerError": "Dosya seçici açılamadı.",
+      "openError": "Kurtarma anahtarı dosyası açılamadı. Dosyayı ve parolasını kontrol edin.",
+      "type": "SirinVPN kurtarma anahtarı"
+    },
+    "serverIdentity": "Sunucu kimliği",
+    "deviceName": "Sahip cihazının adı",
+    "defaultDeviceName": "Kurtarılan Sahip cihazı",
+    "confirmRevoke": "Önceki tüm Sahip cihazlarını kaldır ve bu anahtarı kullanılmış say. Diğer kişilerin erişimi korunur; Yöneticiler kurtarma yetkilerini kaybeder.",
+    "replaceProfile": "{{name}} için bu cihazdaki kayıtlı profili değiştir",
+    "review": "Kurtarma anahtarını incele",
+    "submit": "Sahip erişimini kurtar",
+    "error": "Kurtarma tamamlanmadı. Aynı anahtarla tekrar deneyin.",
+    "disconnectFirst": "Önce VPN’in bağlantısını kesin. Bu cihaz bağlıyken kurtarma başlatılamaz.",
+    "reviewing": "Kurtarma anahtarı denetleniyor…",
+    "submitting": "Sahip erişimi kurtarılıyor…",
+    "done": "{{name}} sunucusunun Sahibi yeniden sizsiniz. Eski kurtarma anahtarınız kullanıldı; bu yüzden Anahtarlar ve kurtarma bölümünden yenisini oluşturun."
+  },
+  "setup": {
+    "title": "Sunucunuzu bağlayın",
+    "summary": "SirinVPN’i kurmak için sunucunuzda SSH ile oturum açın.",
+    "defaultName": "Sunucum",
+    "name": "Sunucu adı",
+    "nameHint": "Yalnızca bu cihazda kaydedilir",
+    "host": "IP adresi veya ana bilgisayar adı",
+    "advanced": "Gelişmiş ayarlar",
+    "replace": {
+      "title": "Mevcut kurulumu değiştir",
+      "summary": "Yalnızca her Sahip cihazı ve kurtarma anahtarı kaybolduysa"
+    },
+    "verify": "Sunucuyu doğrula",
+    "verifying": "{{host}} adresine bağlanılıyor…",
+    "fingerprint": {
+      "title": "Sunucunuzu doğrulayın",
+      "summary": "Bu parmak izini barındırma sağlayıcınızın web konsolunda kontrol edin.",
+      "copy": "Parmak izini kopyala",
+      "mismatch": "Eşleşmiyorsa devam etmeyin. Bağlantı ele geçirilmiş olabilir.",
+      "replaceWarning": "Değiştirmek, bu sunucunun her cihazını, katılım kodunu ve kurtarma anahtarını kaldırır.",
+      "matches": "Parmak izi eşleşiyor",
+      "checkAgain": "Ağı yeniden denetle",
+      "checking": "Ağ denetleniyor…",
+      "install": "SirinVPN’i kur",
+      "replace": "SirinVPN’i değiştir",
+      "pinnedTitle": "Sunucunuzun SSH anahtarı",
+      "pinned": "SirinVPN bu anahtarı bu cihazda oluşturdu ve sunucu ilk başlamadan önce sunucuya koydu; bu yüzden karşılaştıracak bir şey yok.",
+      "checkNetwork": "Ağı denetle",
+      "confirmed": "Bu parmak izinin sunucunuzla eşleştiğini onayladınız.",
+      "changePort": "Portu değiştir"
+    },
+    "confirmReplace": {
+      "title": "Mevcut kurulum değiştirilsin mi?",
+      "message": "Bu sunucunun her cihazı, katılım kodu ve kurtarma anahtarı çalışmayı durdurur. Sunucudaki diğer yazılımlar etkilenmez.",
+      "confirm": "Değiştir"
+    },
+    "installing": {
+      "title": "Sunucunuz kuruluyor",
+      "summary": "{{host}} üzerine SirinVPN kuruluyor. Bu genellikle birkaç dakika sürer.",
+      "keepOpen": "Bu tamamlanana kadar SirinVPN’i açık tutun.",
+      "stepChecked": "VPS kimliğini ve ağı onaylayın",
+      "stepInstall": "VPS’e SirinVPN kurun",
+      "stepInstallDetail": "Bağlanır, sunucuyu denetler, yazılımı yükler ve doğrular, sonra VPN’i yapılandırır"
+    },
+    "success": {
+      "title": "VPN’iniz hazır",
+      "summary": "{{name}} eklendi ve bu cihaz onun Sahibi.",
+      "recoveryTitle": "Bir kurtarma anahtarı kaydedin",
+      "recoverySummary": "Sunucuyu yalnızca bu cihaz yönetebilir. Kaybederseniz geri dönmenin tek yolu kurtarma anahtarıdır. Bağlandıktan sonra bir tane oluşturabilirsiniz.",
+      "recoveryKey": "Kurtarma anahtarı kaydet",
+      "open": "Sunucuyu aç"
+    },
+    "error": {
+      "unreachable": "Sunucuya SSH ile ulaşılamadı. Adresi ve portu kontrol edin.",
+      "network": "Sunucunun ağı denetlenemedi. Tekrar deneyin.",
+      "install": "SirinVPN kurulamadı."
+    },
+    "hostPlaceholder": "örn. 203.0.113.10",
+    "continue": "Devam et",
+    "previousStep": "Önceki adım",
+    "progress": {
+      "label": "Kurulum adımları",
+      "server": "Sunucu",
+      "verify": "Doğrula",
+      "install": "Kur"
+    },
+    "failed": {
+      "title": "Kurulum tamamlanmadı",
+      "stage": "Şu sırada durdu",
+      "server": "Sunucunuz",
+      "fingerprint": "Doğrulanmış parmak izi",
+      "stages": {
+        "connect": "Sunucuda oturum açılıyor",
+        "check": "Sunucu denetleniyor",
+        "upload": "SirinVPN yükleniyor",
+        "configure": "Sunucu yapılandırılıyor"
+      },
+      "change": {
+        "unchanged": "Sunucuda hiçbir şey değiştirilmedi.",
+        "rolledBack": "SirinVPN sunucuyu değiştirdi, ardından bu değişiklikleri geri aldı.",
+        "unknown": "SirinVPN, sunucunun değiştirilip değiştirilmediğini doğrulayamadı. Yeniden kurmak önce sunucuyu denetler."
+      },
+      "signInAgain": "SSH parolası saklanmadı. Tekrar girmek için ayarlara dönün.",
+      "back": "Ayarlara dön",
+      "retry": "Kurulumu yeniden dene"
+    },
+    "created": {
+      "title": "{{name}} hazır",
+      "summary": "{{host}} adresinde, bu cihazın oluşturduğu bir SSH anahtarıyla çalışıyor; bu yüzden doğrulanacak bir şey yok. SirinVPN’i önerilen ayarlarla kurun ya da önce ayarları inceleyin.",
+      "settings": "Ayarları incele (isteğe bağlı)",
+      "address": "Adres",
+      "key": "Root SSH anahtarı",
+      "copyKey": "Anahtar yolunu kopyala"
+    }
+  },
+  "hetzner": {
+    "title": "Hetzner Cloud’da sunucu oluşturun",
+    "summary": "SirinVPN, Hetzner hesabınızda bir Debian 13 sunucusu kiralar ve kendini kurar. Hiçbir zaman IP adresi veya parola yazmazsınız.",
+    "token": "Hetzner Cloud API belirteci",
+    "tokenHint": "Hetzner Konsolu’nda projenizi açın, Güvenlik ve ardından API belirteçleri altında Okuma ve yazma belirteci oluşturun. Yalnızca Hetzner’e gönderilir ve kaydedilmez.",
+    "tokenExpired": "SirinVPN API belirtecini yalnızca 10 dakika saklar. Devam etmek için yeniden girin.",
+    "loadPlans": "Fiyatları göster",
+    "loading": "Hetzner’den fiyatlar alınıyor…",
+    "location": "Konum",
+    "serverType": "Sunucu türü",
+    "typeOption": "{{price}}/ay · {{name}} ({{architecture}}) · {{cores}} vCPU · {{memory}} GB RAM · {{disk}} GB",
+    "price": "Ayda {{total}}: sunucu {{server}} ve IPv4 adresi {{ipv4}}. Sunucuyu silene kadar Hetzner hesabınızdan ücret alınır.",
+    "priceNoIpv4": "Sunucu için ayda {{total}}. Sunucuyu silene kadar Hetzner hesabınızdan ücret alınır.",
+    "create": "Sunucuyu ayda {{total}} karşılığında oluştur",
+    "confirm": {
+      "title": "Bir Hetzner sunucusu oluşturulsun mu?",
+      "message": "{{location}} konumundaki {{type}}, siz silene kadar ayda {{total}} tutar.",
+      "confirm": "Sunucu oluştur"
+    },
+    "creating": "Sunucu oluşturuluyor…",
+    "waiting": "{{name}} başlatılması bekleniyor…",
+    "waitingHint": "Bu genellikle bir iki dakika sürer.",
+    "cancel": "Beklemeyi durdur",
+    "keyPath": "Root SSH anahtarı",
+    "delete": "Bu sunucuyu sil",
+    "deleting": "{{name}} siliniyor…",
+    "deleteConfirm": {
+      "title": "{{name}} silinsin mi?",
+      "message": "{{name}}, IP adresi ve üzerindeki her şey Hetzner hesabınızdan kaldırılır. Bu geri alınamaz.",
+      "confirm": "Sunucuyu sil"
+    },
+    "deleted": "Hetzner hesabınızdan kaldırıldı ve Hetzner artık bunun için ücret almıyor.",
+    "startOver": "Baştan başla",
+    "failedTitle": "{{name}} henüz hazır değil",
+    "failedSummary": "Sunucu Hetzner hesabınızda var ve silinene kadar ücretlendirilir. Yeniden bekleyin, daha sonra kurmak için tutun veya silin.",
+    "waitAgain": "Yeniden bekle",
+    "keep": "Sunucuyu tut",
+    "keptTitle": "{{name}} Hetzner hesabınızda kalır",
+    "kept": "Hetzner, siz Hetzner Konsolu’nda silene kadar ücret alır. Daha sonra kurmak için VPS’imi kur seçeneğini seçin ve adresini girin. Kontrol için SSH ana bilgisayar anahtarı aşağıda.",
+    "leaveWarning": "Bir Hetzner sunucusu oluşturuldu ve silinene kadar ücretlendirilir. Yine de çıkılsın mı?",
+    "error": {
+      "catalog": "Hetzner fiyatları yüklenemedi.",
+      "create": "Sunucu oluşturulamadı.",
+      "wait": "Sunucu hazır hale gelmedi.",
+      "delete": "Sunucu silinemedi."
+    },
+    "hostKey": "SSH ana bilgisayar anahtarı",
+    "dangerLabel": "Sunucuyu sil",
+    "billed": "{{name}}, silinene kadar Hetzner hesabınıza ücretlendirilir.",
+    "deletedTitle": "{{name}} silindi",
+    "locationOption": "{{city}}, {{country}} ({{name}})",
+    "uncertain": {
+      "title": "Hetzner {{name}} sunucusunu oluşturmuş olabilir",
+      "summary": "Hetzner’den yanıt ulaşmadı, bu yüzden {{name}} Hetzner hesabınızda var olabilir ve ücretlendirilebilir. Hetzner Konsolu’nda bu adda bir sunucu arayın veya buradan kontrol edin. Bu çözülene kadar başka sunucu oluşturma kapalı kalır.",
+      "nameLabel": "Sunucu adı",
+      "copyName": "Sunucu adını kopyala",
+      "check": "Var olup olmadığını denetle",
+      "checking": "Hetzner denetleniyor…",
+      "checkFailed": "Sunucunun var olup olmadığı denetlenemedi. Hetzner Konsolu’nda arayın.",
+      "found": "{{name}} Hetzner hesabınızda var. Şimdi kurun ya da Hetzner Konsolu’nda silin.",
+      "notFound": "Hetzner şu anda {{name}} sunucusunu listelemiyor. Hetzner Konsolu da göstermiyorsa oluşturulmamıştır.",
+      "adopt": "Bu sunucuyu kur",
+      "absent": "Yok",
+      "absentConfirm": {
+        "title": "{{name}} yok mu?",
+        "message": "Yalnızca Hetzner Konsolu’nu kontrol ettikten sonra onaylayın. {{name}} varsa başka bir sunucu oluşturmak sizden iki sunucunun da ücretini alır.",
+        "confirm": "Yok"
+      },
+      "leaveWarning": "Hetzner, {{name}} sunucusunu oluşturmuş olabilir; silinene kadar ücretlendirilir. Hetzner Konsolu’nda arayın. Yine de çıkılsın mı?"
+    }
+  },
+  "port": {
+    "range": "1 ile 65535 arasında bir port girin.",
+    "reserved": "SirinVPN sunucuda {{port}} portunu kullanır. Başka bir port seçin.",
+    "sameAsDirect": "Doğrudan UDP zaten bu portu kullanıyor. Başka bir port seçin.",
+    "sameAsQuic": "QUIC bu UDP portunda yanıt verir; TCP/TLS ile aynı numara. Başka bir port seçin."
+  }
+}

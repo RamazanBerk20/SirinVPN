@@ -44,9 +44,8 @@ class OptionHandlingTest {
         assertTrue("Grant notification permission first",notices.areNotificationsEnabled())
         assertNull("Grant VPN consent on this emulator first",android.net.VpnService.prepare(context))
         val link=ServiceLink(context)
-        instrumentation.runOnMainSync {link.bind()}
         try {
-            val control=link.ready.get(10,TimeUnit.SECONDS)
+            val control=link.control(10000).get(10,TimeUnit.SECONDS)
             fun state()=JSONObject(control.snapshot())
             fun begin(command:String,args:JSONObject=JSONObject(),expected:Long=-1):CompletableFuture<JSONObject> {
                 val result=CompletableFuture<JSONObject>()
@@ -143,7 +142,7 @@ class OptionHandlingTest {
                 assertFalse(stored.getBoolean("notifications"));assertFalse(stored.getBoolean("animations"))
                 call("android_set_reconnect",JSONObject().put("serverId",id).put("enabled",false))
                 assertTrue(begin("connect_saved",server).get(30,TimeUnit.SECONDS).has("error"));idle()
-                assertTrue("Disabled connection alert was posted",notices.activeNotifications.none {it.id==73})
+                assertTrue("Disabled connection alert was posted",notices.activeNotifications.none {it.id==VpnNotifications.FAILURE_ID})
             } finally {
                 call("disconnect_server");idle()
                 call("set_connection_preferences",JSONObject().put("serverId",id).put("preferences",original))

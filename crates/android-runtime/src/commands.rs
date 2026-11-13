@@ -13,6 +13,9 @@ mod membership;
 mod recovery;
 #[path = "commands/releases.rs"]
 mod releases;
+#[path = "commands/rules.rs"]
+mod rules;
+pub use rules::error_response;
 
 pub fn text<'a>(value: &'a Value, key: &str) -> Result<&'a str> {
     value
@@ -333,7 +336,8 @@ pub async fn dispatch(
                 json!({"server_name":invitation.server_name(),"host":binding.endpoint.host,
                 "server_identity_fingerprint":sirinvpn_core::management_certificate_fingerprint(&binding.pinned_server_certificate_pem)?,
                 "expires_at_unix":invitation.expires_at_unix(),"recipient_names":invitation.recipient_names(),
-                "creates_member":invitation.creates_member(),"member_name":invitation.member_name(),
+                "creates_member":invitation.creates_member(),"member_name_fixed":invitation.member_name_fixed(),
+                "member_name":invitation.member_name(),
                 "device_name":invitation.device_name(),"access_level":if invitation.administrator() {"admin"} else {"member"}}),
             );
         }
@@ -426,7 +430,10 @@ pub async fn dispatch(
                     client.refresh_membership_ids(&mut updated, device).await?;
                 }
                 if updated != p {
-                    runtime.paths.profile_store().upsert(updated)?;
+                    runtime.paths.profile_store().update(p.id, |current| {
+                        rules::adopt_caller_fields(current, &updated);
+                        Ok(())
+                    })?;
                 }
             }
             encode(status)
@@ -506,7 +513,13 @@ pub async fn dispatch(
 async fn join(runtime: &Runtime, input: &Value, generation: i64) -> Result<Value> {
     runtime.platform.require_idle()?;
     let mut invitation = DecodedInvitation::decode(text(input, "code")?)?;
-    invitation.set_recipient_names(input["member_name"].as_str(), input["device_name"].as_str())?;
+    // A named join code already names the person; only the device name is sent.
+    let member_name = if invitation.member_name_fixed() {
+        None
+    } else {
+        input["member_name"].as_str()
+    };
+    invitation.set_recipient_names(member_name, input["device_name"].as_str())?;
     ensure!(
         !runtime
             .paths
@@ -545,7 +558,15 @@ async fn join(runtime: &Runtime, input: &Value, generation: i64) -> Result<Value
             let client = ManagementClient::new(&bootstrap, invitation.bootstrap_secret())?;
             let result = client
                 .enroll(&invitation.enrollment_request(&pending.identity))
-                .await?;
+                .await
+                .map_err(|error| match error {
+                    // No invitation for this bootstrap identity: used up or cancelled.
+                    sirinvpn_core::ManagementError::RequestRejected {
+                        code: ErrorCode::AuthorizationFailed,
+                        ..
+                    } => anyhow::Error::from(rules::refused("invitation_used", error)),
+                    error => error.into(),
+                })?;
             pending.confirm_preshared_key(&secrets, result.preshared_key)?;
             invitation.permanent_profile(
                 &result,

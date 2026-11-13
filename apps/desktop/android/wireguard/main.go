@@ -61,20 +61,34 @@ func start(adapter tun.Device, value string, probe *probeTun) C.int {
 	// The controller owns carrier changes. Delayed authenticated packets from the
 	// old carrier must not roam the peer back after a reviewed endpoint handoff.
 	engine.DisableSomeRoamingForBrokenMobileSemantics()
-	var staged []string
-	for _, line := range strings.Split(value, "\n") {
-		// Open sockets without sending anything before Android protects them.
-		if !strings.HasPrefix(line, "endpoint=") && !strings.HasPrefix(line, "persistent_keepalive_interval=") {
-			staged = append(staged, line)
-		}
-	}
-	if engine.IpcSet(strings.Join(staged, "\n")) != nil || engine.Up() != nil {
+	staged, commit := stages(value)
+	if engine.IpcSet(staged) != nil || engine.Up() != nil {
 		engine.Close()
 		return -1
 	}
 	next++
-	tunnels[next] = &tunnel{engine, value, probe}
+	tunnels[next] = &tunnel{engine, commit, probe}
 	return C.int(next)
+}
+
+// stages splits UAPI settings into what start applies and what commit applies.
+// Sockets open without sending anything before Android protects them, so the
+// endpoint and keepalive wait for commit. listen_port binds them at start and is
+// not repeated: setting it again would reopen the sockets unprotected.
+func stages(value string) (staged string, commit string) {
+	var first, second []string
+	for _, line := range strings.Split(value, "\n") {
+		switch {
+		case strings.HasPrefix(line, "endpoint="), strings.HasPrefix(line, "persistent_keepalive_interval="):
+			second = append(second, line)
+		case strings.HasPrefix(line, "listen_port="):
+			first = append(first, line)
+		default:
+			first = append(first, line)
+			second = append(second, line)
+		}
+	}
+	return strings.Join(first, "\n"), strings.Join(second, "\n")
 }
 
 //export sirinEndpoint

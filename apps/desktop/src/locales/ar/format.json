@@ -1,0 +1,42 @@
+{
+  "unavailable": "غير متاح",
+  "bytes": {
+    "B": "{{value}} بايت",
+    "KB": "{{value}} كيلوبايت",
+    "MB": "{{value}} ميغابايت",
+    "GB": "{{value}} غيغابايت",
+    "TB": "{{value}} تيرابايت"
+  },
+  "rate": "{{value}}/ث",
+  "memoryUsage": "{{percent}} · {{used}}",
+  "latency": "{{value}} مللي ثانية",
+  "latencyBelowOne": "أقل من 1 مللي ثانية",
+  "uptimeDays": "{{days}} ي {{hours}} س",
+  "uptimeHours": "{{hours}} س {{minutes}} د",
+  "transport": {
+    "direct_udp": "UDP مباشر",
+    "obfuscated_udp": "UDP مموّه",
+    "tls_like": "احتياطي TLS",
+    "tcp_fallback": "احتياطي TCP",
+    "quic": "QUIC (HTTP/3)"
+  },
+  "dnsPolicy": {
+    "recursive": "DNS تكراري",
+    "dnsOverTls": "{count, plural, zero {DNS عبر TLS · لا خوادم} one {DNS عبر TLS · خادم واحد} two {DNS عبر TLS · خادمان} few {DNS عبر TLS · # خوادم} many {DNS عبر TLS · # خادمًا} other {DNS عبر TLS · # خادم}}",
+    "dnsOverHttps": "{count, plural, zero {DNS عبر HTTPS · لا خوادم} one {DNS عبر HTTPS · خادم واحد} two {DNS عبر HTTPS · خادمان} few {DNS عبر HTTPS · # خوادم} many {DNS عبر HTTPS · # خادمًا} other {DNS عبر HTTPS · # خادم}}",
+    "split": "{count, plural, zero {DNS مقسّم · لا مناطق · {{fallback}}} one {DNS مقسّم · منطقة واحدة · {{fallback}}} two {DNS مقسّم · منطقتان · {{fallback}}} few {DNS مقسّم · # مناطق · {{fallback}}} many {DNS مقسّم · # منطقةً · {{fallback}}} other {DNS مقسّم · # منطقة · {{fallback}}}}"
+  },
+  "os": {
+    "android": "Android",
+    "windows": "Windows",
+    "linux": "Linux"
+  },
+  "arch": {
+    "x86_64": "x86 بسعة 64 بت",
+    "aarch64": "ARM بسعة 64 بت"
+  },
+  "clock": {
+    "minutes": "{{minutes}}:{{seconds}}",
+    "hours": "{{hours}}:{{minutes}}:{{seconds}}"
+  }
+}

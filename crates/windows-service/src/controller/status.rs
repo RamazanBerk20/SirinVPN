@@ -1,6 +1,7 @@
 use super::*;
+use crate::link::{Observation, tunnel_phase};
 use sirinvpn_protocol::{MtuPolicy, MtuProbeOutcome, MtuStatus};
-use sirinvpn_tunnel_model::{KillSwitchState, TunnelRoutingMode};
+use sirinvpn_tunnel_model::{KillSwitchState, TunnelPhase, TunnelRoutingMode};
 
 impl Controller {
     pub(super) fn publish(&mut self) {
@@ -10,8 +11,8 @@ impl Controller {
         if let Some(saved) = &self.saved {
             owner = Some(saved.owner_sid.clone());
             let request = self
-                .active
-                .as_ref()
+                .link
+                .active()
                 .map_or(&saved.request, |active| &active.request);
             let policy = request.connection_policy();
             let registered = crate::install::registered_auto_start();
@@ -23,23 +24,18 @@ impl Controller {
                 self.firewall.verified().unwrap_or(false)
             }) && (!policy.kill_switch
                 || registered.as_ref().is_ok_and(|enabled| *enabled));
-            let connected = self.active.as_ref().is_some_and(|active| {
-                active.connected_at.is_some()
-                    && active.stats.is_some()
-                    && !active.carrier.as_ref().is_some_and(Carrier::finished)
+            let carrying = self.link.connected().is_some_and(|active| {
+                active.stats.is_some() && !active.carrier.as_ref().is_some_and(Carrier::finished)
             });
-            status.state = if self.enforcement_failed || !verified || held {
-                ConnectionState::Degraded
-            } else if connected {
-                ConnectionState::Connected
-            } else {
-                ConnectionState::Connecting
-            };
-            status.server_id = Some(request.server_id);
+            let phase = tunnel_phase(
+                request.server_id,
+                saved.phase,
+                &self.link,
+                Observation { verified, carrying },
+            );
+            let connected = matches!(phase, TunnelPhase::Connected { .. });
+            status.set_phase(phase);
             status.policy = Some(policy);
-            status.waiting_for_user = held;
-            status.recovery_in_progress =
-                !held && !connected && saved.phase != SessionPhase::Disconnecting;
             status.kill_switch_enabled = policy.kill_switch;
             status.kill_switch_state = Some(if !verified {
                 KillSwitchState::Failed
@@ -61,13 +57,9 @@ impl Controller {
             status.transport_quality = Some(self.quality.snapshot(connected));
             status.routing_mode = request.routing.mode;
             status.application_routing_ready =
-                (request.routing.mode == TunnelRoutingMode::SelectedApplications).then_some(
-                    connected
-                        && verified
-                        && !held
-                        && !self.enforcement_failed
-                        && status.application_routing_supported,
-                );
+                // Connected implies verified, not held and no enforcement failure.
+                (request.routing.mode == TunnelRoutingMode::SelectedApplications)
+                    .then_some(connected && status.application_routing_supported);
             status.allow_lan = request.routing.allow_lan;
             status.included_routes = Some(request.routing.included_routes.clone());
             status.ipv6_tunneled = connected
@@ -84,7 +76,7 @@ impl Controller {
                 suggested: None,
                 outcome: MtuProbeOutcome::Pending,
             });
-            if let Some(active) = &self.active {
+            if let Some(active) = self.link.active() {
                 status.mtu = Some(active.mtu);
                 if let Some(stats) = active.stats {
                     status.rx_bytes = stats.rx_bytes;
@@ -97,14 +89,12 @@ impl Controller {
                 status.counter_epoch = Some(active.epoch.to_string());
             }
         }
-        if let Ok(mut published) = self.published.write() {
-            *published = PublishedStatus { owner, status };
-        }
+        crate::published::publish(&self.published, owner, status);
     }
 }
 
 pub(super) fn idle() -> LocalTunnelStatus {
-    LocalTunnelStatus {
+    let mut status = LocalTunnelStatus {
         application_routing_backend: Some(
             sirinvpn_tunnel_model::ApplicationRoutingBackend::WindowsBindRedirect,
         ),
@@ -146,5 +136,7 @@ pub(super) fn idle() -> LocalTunnelStatus {
         transport_fallback_enabled: false,
         routing_mode: TunnelRoutingMode::FullTunnel,
         allow_lan: false,
-    }
+    };
+    status.set_phase(TunnelPhase::Idle);
+    status
 }

@@ -4,13 +4,18 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
-import android.app.KeyguardManager
 import android.content.Context
 import android.content.Intent
 import org.json.JSONObject
 
 object VpnNotifications {
+    // Every notification has its own ID: a shared one lets one notice replace another, foreground flag included.
     const val VPN_ID = 70
+    const val TEST_ID = 71
+    const val MAINTENANCE_ID = 72
+    const val FAILURE_ID = 73
+    const val WIFI_WATCH_ID = 74
+    const val UPDATE_ID = 75
     const val CHANNEL = "vpn_v2"
     const val MAINTENANCE_CHANNEL = "maintenance_v2"
     const val UPDATE_CHANNEL = "updates_v2"
@@ -20,7 +25,12 @@ object VpnNotifications {
     private var lastRx=0L
     private var lastTx=0L
     private var lastSample=0L
-    fun channels(context: Context) {
+    /** Native text in the app language; Android 12/12L does not apply it to plain contexts. */
+    private fun localized(context: Context) = AppLanguage.wrap(context.applicationContext)
+    /** Re-post the ongoing notice on the next update, e.g. in a new language. */
+    fun refresh() { lastState = "" }
+    fun channels(source: Context) {
+        val context = localized(source)
         val manager = context.getSystemService(NotificationManager::class.java)
         // Badge behavior is immutable after creation, so existing installs need new channel IDs.
         val channels = listOf(
@@ -77,14 +87,28 @@ object VpnNotifications {
         .setContentIntent(openApp(context)).setOnlyAlertOnce(true).setOngoing(true)
         .setBadgeIconType(Notification.BADGE_ICON_NONE)
         .setVisibility(Notification.VISIBILITY_PRIVATE).setCategory(Notification.CATEGORY_SERVICE)
-    fun connecting(context: Context): Notification = base(context).setContentText(context.getString(R.string.status_connecting)).build()
-    private fun controlAction(context: Context, label: String, intent: PendingIntent): Notification.Action {
-        val builder = Notification.Action.Builder(null, label, intent)
-        // Android closes the shade for authentication-required actions even when already unlocked.
-        // The receiver rechecks the lock at delivery, including after the notification was built.
-        builder.setAuthenticationRequired(context.getSystemService(KeyguardManager::class.java).isDeviceLocked)
-        return builder.build()
+    fun connecting(context: Context): Notification = base(context).setContentText(localized(context).getString(R.string.status_connecting)).build()
+    /**
+     * Always authentication-required: Android unlocks first only when needed, whenever the notice was
+     * built. A receiver can't start an unlock activity itself (Android 12+ blocks notification
+     * trampolines). The cost: Android closes the shade for these actions even when unlocked.
+     */
+    private fun controlAction(label: String, intent: PendingIntent): Notification.Action =
+        Notification.Action.Builder(null, label, intent).setAuthenticationRequired(true).build()
+
+    /** The tile, widget and notification all describe a session with this one table. [compact]: the tile's short form. */
+    fun statusText(session: Session?, alwaysOn: Boolean, compact: Boolean = false): Int = when (session) {
+        null, Session.PermissionRequired -> R.string.tile_status_open_app
+        Session.Idle, Session.Stopped -> R.string.status_disconnected
+        Session.Failed -> R.string.notification_status_failed
+        Session.Connecting -> R.string.status_connecting
+        Session.WaitingForNetwork -> if (compact) R.string.tile_status_no_network else R.string.notification_status_waiting_for_network
+        Session.Recovering -> R.string.status_reconnecting
+        Session.Connected -> if (alwaysOn) R.string.tile_status_always_on else R.string.status_connected
+        is Session.Unhealthy -> if (session.readable) R.string.status_interrupted else R.string.status_unknown
     }
+    /** The control a running session offers. */
+    fun stopLabel(session: Session?) = if (session?.established == true) R.string.notification_action_disconnect else R.string.notification_action_stop_connecting
     private val rateUnits = intArrayOf(R.string.notification_rate_bytes, R.string.notification_rate_kilobytes,
         R.string.notification_rate_megabytes, R.string.notification_rate_gigabytes, R.string.notification_rate_terabytes)
     private fun rate(context: Context, bytes: Long, seconds: Double): String {
@@ -95,23 +119,23 @@ object VpnNotifications {
             if (unit == 0 || amount >= 10) "%.0f" else "%.1f", amount)
         return context.getString(rateUnits[unit], number)
     }
-    fun update(service: Context, snapshot: JSONObject) {
+    fun update(source: Context, snapshot: JSONObject) {
         val phase = snapshot.getString("phase")
+        val session = Session.fromWire(phase)
         val policy = snapshot.optBoolean("always_on")
         val status=snapshot.getJSONObject("status")
         val sampledAt=status.optLong("counter_sampled_at_ms")
-        val state="$phase:$policy:${snapshot.getLong("generation")}:${service.getSystemService(KeyguardManager::class.java).isDeviceLocked}:${status.optString("counter_epoch")}:${status.optBoolean("byte_counters_available")}"
+        val state="$phase:$policy:${snapshot.getLong("generation")}:${status.optString("counter_epoch")}:${status.optBoolean("byte_counters_available")}"
         // Publish every fresh counter sample; unrelated status events keep the current rates.
         if(state==lastState && sampledAt==lastSample) return
+        val service = localized(source)
         val rx=status.optLong("rx_bytes");val tx=status.optLong("tx_bytes")
         val elapsed=(sampledAt-lastSample)/1000.0
         val connectedText=if(state==lastState && lastSample>0 && elapsed>0 && elapsed<=20 && rx>=lastRx && tx>=lastTx && status.optBoolean("byte_counters_available"))
             service.getString(R.string.notification_status_connected_traffic, rate(service,rx-lastRx,elapsed), rate(service,tx-lastTx,elapsed))
             else service.getString(R.string.status_connected)
         lastState=state;lastRx=rx;lastTx=tx;lastSample=sampledAt
-        val label = service.getString(if (policy) R.string.notification_action_vpn_settings
-            else if (phase in setOf("connected", "degraded")) R.string.notification_action_disconnect
-            else R.string.notification_action_stop_connecting)
+        val label = service.getString(if (policy) R.string.notification_action_vpn_settings else stopLabel(session))
         val action = if (policy) PendingIntent.getActivity(service, 2, Intent(android.provider.Settings.ACTION_VPN_SETTINGS),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         else PendingIntent.getBroadcast(service, 3, Intent(service, VpnActionReceiver::class.java)
@@ -119,25 +143,18 @@ object VpnNotifications {
             .setData(android.net.Uri.parse("sirin-control://stop/${snapshot.getLong("generation")}"))
             .putExtra("generation", snapshot.getLong("generation")), PendingIntent.FLAG_IMMUTABLE)
         service.getSystemService(NotificationManager::class.java).notify(VPN_ID,
-            base(service).setContentText(when (phase) {
-                "connected" -> connectedText
-                "degraded" -> service.getString(R.string.status_interrupted)
-                "waiting_for_network" -> service.getString(R.string.notification_status_waiting_for_network)
-                "reconnecting" -> service.getString(R.string.status_reconnecting)
-                "unknown" -> service.getString(R.string.status_unknown)
-                "failed" -> service.getString(R.string.notification_status_failed)
-                "paused", "disconnected" -> service.getString(R.string.status_disconnected)
-                else -> service.getString(R.string.status_connecting)
-            }).addAction(controlAction(service, label, action)).build())
+            base(service).setContentText(if (session == Session.Connected) connectedText
+                else service.getString(statusText(session, policy))).addAction(controlAction(label, action)).build())
     }
-    fun failed(context:Context,snapshot:JSONObject) {
+    fun failed(source:Context,snapshot:JSONObject) {
+        val context = localized(source)
         if(!context.getSharedPreferences("application-preferences",0).getBoolean("notifications",true)) return
         val action=PendingIntent.getBroadcast(context,4,Intent(context,VpnActionReceiver::class.java)
             .setAction("org.sirinvpn.CONNECT").setData(android.net.Uri.parse("sirin-control://retry/${snapshot.getLong("generation")}"))
             .putExtra("generation",snapshot.getLong("generation")),PendingIntent.FLAG_IMMUTABLE)
-        context.getSystemService(NotificationManager::class.java).notify(73,base(context).setOngoing(false).setAutoCancel(true)
+        context.getSystemService(NotificationManager::class.java).notify(FAILURE_ID,base(context).setOngoing(false).setAutoCancel(true)
             .setContentText(context.getString(R.string.notification_failure_text))
-            .addAction(controlAction(context, context.getString(R.string.notification_action_retry), action)).build())
+            .addAction(controlAction(context.getString(R.string.notification_action_retry), action)).build())
     }
-    fun clearFailure(context:Context) {context.getSystemService(NotificationManager::class.java).cancel(73)}
+    fun clearFailure(context:Context) {context.getSystemService(NotificationManager::class.java).cancel(FAILURE_ID)}
 }

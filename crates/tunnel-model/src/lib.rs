@@ -19,8 +19,10 @@ use zeroize::Zeroize;
 const MAX_INCLUDED_ROUTES: usize = 32;
 mod diagnostics;
 mod model;
+mod phase;
 mod validation;
 pub use model::*;
+pub use phase::{IllegalTransition, LegacyLifecycle, TunnelEvent, TunnelPhase};
 pub use validation::*;
 
 mod preferences;

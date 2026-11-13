@@ -1,0 +1,74 @@
+{
+  "appName": "SirinVPN",
+  "action": {
+    "back": "Retour",
+    "cancel": "Annuler",
+    "close": "Fermer",
+    "continue": "Continuer",
+    "copy": "Copier",
+    "copied": "Copié",
+    "dismiss": "Ignorer",
+    "done": "Terminé",
+    "moreInfo": "Plus d’infos",
+    "remove": "Supprimer",
+    "retry": "Réessayer"
+  },
+  "state": {
+    "checking": "Vérification…",
+    "disabled": "Désactivé",
+    "enabled": "Activé",
+    "loading": "Chargement…",
+    "notConnected": "Non connecté",
+    "saved": "Enregistré",
+    "saving": "Enregistrement…",
+    "unavailable": "Indisponible",
+    "unknown": "Inconnu"
+  },
+  "role": {
+    "owner": "Propriétaire",
+    "admin": "Administrateur",
+    "member": "Membre"
+  },
+  "noun": {
+    "thisDevice": "Cet appareil"
+  },
+  "separator": {
+    "pair": "{{first}} · {{second}}",
+    "triple": "{{first}} · {{second}} · {{third}}"
+  },
+  "target": "{{os}}, {{arch}} ({{target}})",
+  "error": {
+    "withDetail": "{{summary}} {{detail}}",
+    "needsConnection": "Connectez-vous d’abord à ce serveur.",
+    "localSave": "Impossible d’enregistrer sur cet appareil. Réessayez.",
+    "passwordsDiffer": "Les mots de passe ne correspondent pas."
+  },
+  "errorCode": {
+    "hetzner_create_uncertain": "Hetzner a peut-être créé le serveur {{server}}. Vérifiez la console Hetzner Cloud avant de réessayer.",
+    "hetzner_provision_pending": "Le serveur {{name}} n’a pas été terminé. Reprenez-le ou supprimez-le avant d’en créer un autre.",
+    "hetzner_host_key_replacement": "Le nouveau serveur {{name}} a présenté une clé d’hôte SSH différente de celle attendue. Ne continuez pas, sauf si vous pouvez confirmer la clé dans la console Hetzner Cloud.",
+    "install_phase_failed": "Une étape sur le VPS a échoué.",
+    "install_ssh_failed": "Impossible de se connecter au VPS en SSH. Vérifiez la clé d’hôte et l’identifiant. Rien n’a été modifié sur le VPS.",
+    "install_incompatible": "Ce VPS ne peut pas être utilisé : il est incompatible ou exécute déjà une autre installation. Rien n’a été modifié sur le VPS.",
+    "backup_wrong_password": "Le mot de passe de la sauvegarde est incorrect.",
+    "invitation_expired": "Ce code d’adhésion a expiré. Demandez-en un nouveau.",
+    "invitation_used": "Ce code d’adhésion a déjà été utilisé ou annulé. Demandez-en un nouveau.",
+    "invitation_invalid": "Ce code d’adhésion n’est pas valide. Vérifiez-le et réessayez.",
+    "port_forward_public_port": "Ce port public est réservé, déjà utilisé ou non valide. Choisissez-en un autre.",
+    "operation_in_progress": "Une autre modification de ce serveur est en cours. Attendez qu’elle se termine, puis réessayez.",
+    "maintenance_blocked": "Cette modification ne peut pas encore démarrer : {{steps}}.",
+    "maintenance_blocked_unnamed": "Cette modification ne peut pas encore démarrer.",
+    "install_outcome_unknown": "Le résultat sur {{host}} est inconnu : le VPS a peut-être appliqué la modification, mais sa confirmation a été perdue. Cet appareil a conservé ses clés. Vérifiez la modification à nouveau lorsque le VPS sera joignable.",
+    "install_rolled_back": "Le VPS a annulé la modification, donc rien n’a changé.",
+    "person_has_join_codes": "Cette personne a encore des codes d’adhésion d’appareil. Annulez-les d’abord.",
+    "person_name_taken": "Une autre personne de ce serveur utilise déjà ce nom. Choisissez un autre nom.",
+    "transaction_unresolved": "Une modification précédente de {{host}} depuis cet appareil n’est pas résolue. Résolvez-la ou oubliez-la avant d’en lancer une autre."
+  },
+  "maintenanceBlocker": {
+    "not_owner": "seul l’appareil Propriétaire peut entretenir ce VPS",
+    "connected": "déconnectez-vous d’abord de ce VPS",
+    "persistent_policy": "désactivez d’abord le coupe-circuit et la reconnexion automatique",
+    "pending_key_rotation": "terminez ou récupérez d’abord la rotation de clé en attente sur cet appareil",
+    "unresolved_transaction": "résolvez d’abord la modification interrompue du VPS"
+  }
+}

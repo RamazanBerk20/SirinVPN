@@ -16,7 +16,7 @@ vi.mock("../../platform", async importOriginal => ({
 vi.mock("../../lib/confirmAction", () => ({ confirmAction: vi.fn() }));
 vi.mock("../../api", () => ({ api: {
   hetznerCatalog: vi.fn(), createHetznerServer: vi.fn(), waitHetznerServer: vi.fn(),
-  cancelHetznerWait: vi.fn(), deleteHetznerServer: vi.fn(),
+  cancelHetznerWait: vi.fn(), deleteHetznerServer: vi.fn(), findHetznerServer: vi.fn(),
   getSshLogin: vi.fn(), saveSshLogin: vi.fn(), forgetSshLogin: vi.fn(), inspectServerNetwork: vi.fn(), provisionServer: vi.fn(),
 } }));
 
@@ -49,7 +49,7 @@ async function showPlans(props: { onDone?: () => void } = {}) {
   render(<HetznerFlow onComplete={vi.fn()} {...props} />);
   fireEvent.change(screen.getByLabelText(t("onboarding.hetzner.token")), { target: { value: token } });
   fireEvent.click(screen.getByRole("button", { name: t("onboarding.hetzner.loadPlans") }));
-  return screen.findByRole("button", { name: t("onboarding.hetzner.create", { total: "5.11", currency: "EUR" }) });
+  return screen.findByRole("button", { name: t("onboarding.hetzner.create", { total: "€5.11" }) });
 }
 
 it("defaults to the cheapest x86 type and lists Arm after x86", () => {
@@ -60,7 +60,7 @@ it("defaults to the cheapest x86 type and lists Arm after x86", () => {
 it("shows the monthly price and creates nothing until the Owner confirms it", async () => {
   const create = await showPlans();
   expect(api.hetznerCatalog).toHaveBeenCalledWith(token);
-  expect(screen.getByRole("status").textContent).toContain(t("onboarding.hetzner.price", { total: "5.11", currency: "EUR", server: "5.11", ipv4: "0.60" }));
+  expect(screen.getByRole("status").textContent).toContain(t("onboarding.hetzner.price", { total: "€5.11", server: "€5.11", ipv4: "€0.60" }));
   vi.mocked(confirmAction).mockResolvedValueOnce(false);
   fireEvent.click(create);
   await waitFor(() => expect(confirmAction).toHaveBeenCalled());
@@ -98,7 +98,7 @@ it("retries loading prices from the same button, with no second Try again", asyn
   expect(await screen.findByRole("alert")).toBeTruthy();
   expect(screen.queryByRole("button", { name: t("common.action.retry") })).toBeNull();
   fireEvent.click(screen.getByRole("button", { name: t("onboarding.hetzner.loadPlans") }));
-  expect(await screen.findByRole("button", { name: t("onboarding.hetzner.create", { total: "5.11", currency: "EUR" }) })).toBeTruthy();
+  expect(await screen.findByRole("button", { name: t("onboarding.hetzner.create", { total: "€5.11" }) })).toBeTruthy();
   expect(api.hetznerCatalog).toHaveBeenCalledTimes(2);
 });
 
@@ -136,7 +136,7 @@ it("asks for the token again once Android has forgotten it", async () => {
   render(<HetznerFlow onComplete={vi.fn()} />);
   enter();
   fireEvent.click(await screen.findByRole("button", { name: t("onboarding.hetzner.loadPlans") }));
-  fireEvent.click(await screen.findByRole("button", { name: t("onboarding.hetzner.create", { total: "5.11", currency: "EUR" }) }));
+  fireEvent.click(await screen.findByRole("button", { name: t("onboarding.hetzner.create", { total: "€5.11" }) }));
   expect(await screen.findByText("the server did not start in time", { exact: false })).toBeTruthy();
 
   vi.setSystemTime(600_000);
@@ -163,7 +163,7 @@ it("shows the created server when the Android token expires during creation", as
   render(<HetznerFlow onComplete={vi.fn()} />);
   fireEvent.click(screen.getByRole("button", { name: t("app.secret.enterLabel", { label: t("onboarding.hetzner.token") }) }));
   fireEvent.click(await screen.findByRole("button", { name: t("onboarding.hetzner.loadPlans") }));
-  fireEvent.click(await screen.findByRole("button", { name: t("onboarding.hetzner.create", { total: "5.11", currency: "EUR" }) }));
+  fireEvent.click(await screen.findByRole("button", { name: t("onboarding.hetzner.create", { total: "€5.11" }) }));
   expect(await screen.findByText(t("onboarding.hetzner.failedTitle", { name: server.name }))).toBeTruthy();
   expect(screen.getByText(t("onboarding.hetzner.tokenExpired"))).toBeTruthy();
   expect(api.waitHetznerServer).not.toHaveBeenCalled();
@@ -188,4 +188,50 @@ it("asks before deleting a server that was cancelled or failed to start", async 
   fireEvent.click(screen.getByRole("button", { name: t("onboarding.hetzner.delete") }));
   expect(await screen.findByText(t("onboarding.hetzner.deleted", { name: server.name }))).toBeTruthy();
   expect(api.deleteHetznerServer).toHaveBeenCalledExactlyOnceWith(token, server);
+});
+
+const uncertain = Object.assign(new Error(`Hetzner Cloud may have created server ${server.name}; check the Hetzner Cloud Console and delete it there if it exists`),
+  { code: "hetzner_create_uncertain", params: { server: server.name } });
+const createButton = () => screen.queryByRole("button", { name: t("onboarding.hetzner.create", { total: "€5.11" }) });
+
+it("never offers Create again once Hetzner may have created the server, and guards leaving", async () => {
+  vi.mocked(api.createHetznerServer).mockRejectedValueOnce(uncertain);
+  fireEvent.click(await showPlans());
+  expect(await screen.findByText(t("onboarding.hetzner.uncertain.title", { name: server.name }))).toBeTruthy();
+  expect(createButton()).toBeNull();
+  expect(screen.getByText(server.name)).toBeTruthy();
+  const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+  expect(confirmNavigation()).toBe(false);
+  expect(confirm).toHaveBeenCalledWith(t("onboarding.hetzner.uncertain.leaveWarning", { name: server.name }));
+  confirm.mockRestore();
+});
+
+it("adopts the uncertain server once a check finds it", async () => {
+  vi.mocked(api.createHetznerServer).mockRejectedValueOnce(uncertain);
+  vi.mocked(api.findHetznerServer).mockResolvedValueOnce({ server, private_key_path: "/config/ssh-keys/sirinvpn-0a1b2c3d" });
+  vi.mocked(api.waitHetznerServer).mockImplementation(() => new Promise(() => {}));
+  fireEvent.click(await showPlans());
+  fireEvent.click(await screen.findByRole("button", { name: t("onboarding.hetzner.uncertain.check") }));
+  await waitFor(() => expect(api.findHetznerServer).toHaveBeenCalledWith(token, server.name));
+  fireEvent.click(await screen.findByRole("button", { name: t("onboarding.hetzner.uncertain.adopt") }));
+  expect(await screen.findByText(t("onboarding.hetzner.waiting", { name: server.name }))).toBeTruthy();
+  expect(api.waitHetznerServer).toHaveBeenCalledWith(token, server);
+  expect(api.createHetznerServer).toHaveBeenCalledTimes(1);
+});
+
+it("returns to the plan only after the Owner confirms the server doesn't exist", async () => {
+  vi.mocked(api.createHetznerServer).mockRejectedValueOnce(uncertain);
+  vi.mocked(api.findHetznerServer).mockRejectedValueOnce(new Error("unknown command find_hetzner_server"));
+  fireEvent.click(await showPlans());
+  fireEvent.click(await screen.findByRole("button", { name: t("onboarding.hetzner.uncertain.check") }));
+  // A failed check says so and stays put.
+  expect(await screen.findByRole("alert")).toBeTruthy();
+  expect(createButton()).toBeNull();
+  vi.mocked(confirmAction).mockResolvedValueOnce(false);
+  fireEvent.click(screen.getByRole("button", { name: t("onboarding.hetzner.uncertain.absent") }));
+  await waitFor(() => expect(confirmAction).toHaveBeenCalledTimes(2));
+  expect(createButton()).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: t("onboarding.hetzner.uncertain.absent") }));
+  expect(await screen.findByRole("button", { name: t("onboarding.hetzner.create", { total: "€5.11" }) })).toBeTruthy();
+  expect(confirmNavigation()).toBe(true);
 });

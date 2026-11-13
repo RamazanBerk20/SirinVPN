@@ -4463,7 +4463,7 @@ checksum = "8ee5873ec9cce0195efcb7a4e9507a04cd49aec9c83d0389df45b1ef7ba2e649"
 
 [[package]]
 name = "sirinvpn-android-runtime"
-version = "0.1.1"
+version = "1.0.0-rc.1"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -4490,7 +4490,7 @@ dependencies = [
 
 [[package]]
 name = "sirinvpn-cli"
-version = "0.1.1"
+version = "1.0.0-rc.1"
 dependencies = [
  "anyhow",
  "clap",
@@ -4499,6 +4499,7 @@ dependencies = [
  "rpassword",
  "serde",
  "serde_json",
+ "sha2",
  "sirinvpn-core",
  "sirinvpn-installer",
  "sirinvpn-linux-helper",
@@ -4506,13 +4507,14 @@ dependencies = [
  "sirinvpn-transport",
  "sirinvpn-tunnel-model",
  "sirinvpn-windows-service",
+ "tempfile",
  "tokio",
  "zeroize",
 ]
 
 [[package]]
 name = "sirinvpn-core"
-version = "0.1.1"
+version = "1.0.0-rc.1"
 dependencies = [
  "anyhow",
  "argon2",
@@ -4549,7 +4551,7 @@ dependencies = [
 
 [[package]]
 name = "sirinvpn-desktop"
-version = "0.1.1"
+version = "1.0.0-rc.1"
 dependencies = [
  "anyhow",
  "dbus-secret-service",
@@ -4560,6 +4562,7 @@ dependencies = [
  "semver",
  "serde",
  "serde_json",
+ "sha2",
  "sirinvpn-core",
  "sirinvpn-installer",
  "sirinvpn-linux-helper",
@@ -4582,7 +4585,7 @@ dependencies = [
 
 [[package]]
 name = "sirinvpn-installer"
-version = "0.1.1"
+version = "1.0.0-rc.1"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -4609,7 +4612,7 @@ dependencies = [
 
 [[package]]
 name = "sirinvpn-linux-helper"
-version = "0.1.1"
+version = "1.0.0-rc.1"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -4636,7 +4639,7 @@ dependencies = [
 
 [[package]]
 name = "sirinvpn-platform"
-version = "0.1.1"
+version = "1.0.0-rc.1"
 dependencies = [
  "libc",
  "socket2",
@@ -4648,7 +4651,7 @@ dependencies = [
 
 [[package]]
 name = "sirinvpn-protocol"
-version = "0.1.1"
+version = "1.0.0-rc.1"
 dependencies = [
  "serde",
  "serde_json",
@@ -4658,7 +4661,7 @@ dependencies = [
 
 [[package]]
 name = "sirinvpn-release"
-version = "0.1.1"
+version = "1.0.0-rc.1"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -4681,13 +4684,13 @@ dependencies = [
 
 [[package]]
 name = "sirinvpn-release-fetch"
-version = "0.1.1"
+version = "1.0.0-rc.1"
 dependencies = [
  "anyhow",
  "clap",
- "nix",
  "rcgen",
  "reqwest 0.12.28",
+ "rustix",
  "rustls",
  "serde",
  "serde_json",
@@ -4700,7 +4703,7 @@ dependencies = [
 
 [[package]]
 name = "sirinvpn-server"
-version = "0.1.1"
+version = "1.0.0-rc.1"
 dependencies = [
  "anyhow",
  "axum",
@@ -4711,6 +4714,7 @@ dependencies = [
  "futures-util",
  "hex",
  "hyper-util",
+ "icu_normalizer",
  "libc",
  "nix",
  "rand 0.8.7",
@@ -4737,7 +4741,7 @@ dependencies = [
 
 [[package]]
 name = "sirinvpn-transport"
-version = "0.1.1"
+version = "1.0.0-rc.1"
 dependencies = [
  "base64 0.22.1",
  "futures-util",
@@ -4762,7 +4766,7 @@ dependencies = [
 
 [[package]]
 name = "sirinvpn-tunnel-model"
-version = "0.1.1"
+version = "1.0.0-rc.1"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -4780,7 +4784,7 @@ dependencies = [
 
 [[package]]
 name = "sirinvpn-windows-service"
-version = "0.1.1"
+version = "1.0.0-rc.1"
 dependencies = [
  "anyhow",
  "base64 0.22.1",

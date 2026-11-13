@@ -20,7 +20,9 @@ fn automatic_sessions_negotiate_an_mtu_safe_for_every_candidate() {
 }
 
 struct MtuRunner {
-    maximum: u16,
+    maximum: Cell<u16>,
+    /// Replies to drop, regardless of size, before answering normally again.
+    lose: Cell<u16>,
     icmp: bool,
     applied: Cell<Option<u16>>,
     calls: RefCell<Vec<String>>,
@@ -38,7 +40,11 @@ impl CommandRunner for MtuRunner {
         assert!(args.windows(2).any(|pair| pair == ["-I", INTERFACE_NAME]));
         let index = args.iter().position(|arg| *arg == "-s").unwrap();
         let size: u16 = args[index + 1].parse().unwrap();
-        if !self.icmp || size + 28 > self.maximum {
+        if self.lose.get() > 0 {
+            self.lose.set(self.lose.get() - 1);
+            bail!("simulated packet loss");
+        }
+        if !self.icmp || size + 28 > self.maximum.get() {
             bail!("simulated packet loss");
         }
         Ok(Vec::new())
@@ -57,7 +63,8 @@ fn fixture(
     let directory = tempfile::tempdir().unwrap();
     let helper = LinuxNetworkHelper {
         runner: MtuRunner {
-            maximum,
+            maximum: Cell::new(maximum),
+            lose: Cell::new(0),
             icmp,
             applied: Cell::new(None),
             calls: RefCell::default(),
@@ -83,6 +90,15 @@ fn safe_mtu_requires_delivery_and_manual_values_are_not_automatically_changed() 
         validate_request(&request).unwrap();
         let mut state = RuntimeState::for_policy(&request);
         helper.inspect_mtu(&request, &mut state, None);
+        // A first lower result is only evidence; a later round confirms it.
+        let first = state.mtu.unwrap();
+        assert_eq!(first.suggested, Some(1280));
+        assert_eq!(first.outcome, MtuProbeOutcome::Pending);
+        assert_eq!(helper.runner.applied.get(), None);
+        helper.inspect_mtu(&request, &mut state, None);
+        assert_eq!(state.mtu.unwrap().outcome, MtuProbeOutcome::Pending);
+        later(&mut state, MTU_CONFIRM_SECONDS);
+        helper.inspect_mtu(&request, &mut state, None);
         let measured = state.mtu.unwrap();
         assert_eq!(measured.suggested, Some(1280));
         assert_eq!(measured.outcome, MtuProbeOutcome::Measured);
@@ -98,6 +114,62 @@ fn safe_mtu_requires_delivery_and_manual_values_are_not_automatically_changed() 
             "current measurement must not create continuous probe traffic"
         );
     }
+}
+
+fn later(state: &mut RuntimeState, seconds: u64) {
+    state.mtu_sampled_at_unix = state.mtu_sampled_at_unix.map(|at| at - seconds);
+}
+
+/// Before, each size needed two consecutive replies, so one lost reply at the ceiling
+/// settled on a smaller MTU that was applied and never probed again.
+#[test]
+fn one_lost_reply_does_not_lower_the_mtu() {
+    let (_directory, helper, request) = fixture(MtuPolicy::Automatic, 1500, true);
+    let mut state = RuntimeState::for_policy(&request);
+    // The first reply is lost; one loss decides nothing.
+    helper.runner.lose.set(1);
+    helper.inspect_mtu(&request, &mut state, None);
+    let mtu = state.mtu.unwrap();
+    assert_eq!(mtu.outcome, MtuProbeOutcome::Measured);
+    assert_eq!(mtu.suggested, Some(1420));
+    assert_eq!(mtu.configured, 1420);
+    assert_eq!(helper.runner.applied.get(), None);
+}
+
+#[test]
+fn a_lower_result_not_seen_again_is_never_applied() {
+    let (_directory, helper, request) = fixture(MtuPolicy::Automatic, 1300, true);
+    let mut state = RuntimeState::for_policy(&request);
+    helper.inspect_mtu(&request, &mut state, None);
+    assert_eq!(state.mtu.unwrap().outcome, MtuProbeOutcome::Pending);
+    helper.runner.maximum.set(1500);
+    later(&mut state, MTU_CONFIRM_SECONDS);
+    helper.inspect_mtu(&request, &mut state, None);
+    let mtu = state.mtu.unwrap();
+    assert_eq!(mtu.outcome, MtuProbeOutcome::Measured);
+    assert_eq!(mtu.configured, 1420);
+    assert_eq!(helper.runner.applied.get(), None);
+}
+
+#[test]
+fn a_lowered_mtu_is_probed_again_and_recovers() {
+    let (_directory, helper, request) = fixture(MtuPolicy::Automatic, 1300, true);
+    let mut state = RuntimeState::for_policy(&request);
+    helper.inspect_mtu(&request, &mut state, None);
+    later(&mut state, MTU_CONFIRM_SECONDS);
+    helper.inspect_mtu(&request, &mut state, None);
+    assert_eq!(state.mtu.unwrap().configured, 1280);
+    helper.runner.maximum.set(1500);
+    // Not before the recovery interval: no continuous probe traffic.
+    let calls = helper.runner.calls.borrow().len();
+    helper.inspect_mtu(&request, &mut state, None);
+    assert_eq!(helper.runner.calls.borrow().len(), calls);
+    later(&mut state, MTU_RECOVERY_SECONDS);
+    helper.inspect_mtu(&request, &mut state, None);
+    let mtu = state.mtu.unwrap();
+    assert_eq!(mtu.outcome, MtuProbeOutcome::Measured);
+    assert_eq!(mtu.configured, 1420);
+    assert_eq!(helper.runner.applied.get(), Some(1420));
 }
 
 #[test]
@@ -149,6 +221,8 @@ fn kernel_mtu_probe_recovers_packet_delivery_without_changing_routing_or_firewal
     request.set_mtu_policy(MtuPolicy::Automatic).unwrap();
     let mut state = RuntimeState::for_policy(&request);
     helper.inspect_mtu(&request, &mut state, None);
+    later(&mut state, MTU_CONFIRM_SECONDS);
+    helper.inspect_mtu(&request, &mut state, None);
     assert_eq!(state.mtu.unwrap().configured, 1280);
     assert_eq!(state.mtu.unwrap().outcome, MtuProbeOutcome::Measured);
     let actual: serde_json::Value = serde_json::from_slice(
@@ -169,6 +243,8 @@ fn kernel_mtu_probe_recovers_packet_delivery_without_changing_routing_or_firewal
         .set_mtu_policy(MtuPolicy::Manual { value: 1420 })
         .unwrap();
     let mut state = RuntimeState::for_policy(&request);
+    helper.inspect_mtu(&request, &mut state, None);
+    later(&mut state, MTU_CONFIRM_SECONDS);
     helper.inspect_mtu(&request, &mut state, None);
     assert_eq!(state.mtu.unwrap().configured, 1420);
     assert_eq!(state.mtu.unwrap().suggested, Some(1280));

@@ -14,9 +14,25 @@ acceptance; the platform scenarios below belong to the later acceptance pass.
   own-process configuration, and the running service PID against the pipe PID.
   SCM queries use the existing read permissions; clients need no privileged
   process handle. Administrators remain trusted to configure the service.
-  The service impersonates each client to obtain its SID. An existing session
-  belongs to that SID; another interactive user cannot inspect or replace it.
+  The service impersonates each client to obtain its SID and whether its token
+  has BUILTIN\Administrators enabled (an elevated process; a UAC-filtered admin
+  token counts as a standard user). An existing session belongs to its SID;
+  another standard user cannot inspect, pause, replace or end it. An elevated
+  administrator may read its status and Disconnect it, which removes its routes
+  and kill switch, but cannot pause, resume, reconfigure or take it over.
   Remote clients and additional unprivileged pipe instances are rejected.
+- Shared PCs: the tunnel is machine-wide. Any interactive user may start a
+  session while none exists; its routes, DNS and kill switch then apply to every
+  Windows session on the PC, including other users' traffic, until its owner or
+  an elevated administrator disconnects it. Logging off does not end it. A PC
+  whose users must not route each other's traffic should give only one account
+  SirinVPN access, or have an administrator disconnect foreign sessions.
+- Status push: `WaitForChange { after, timeout_ms }` answers when the published
+  status differs from the one numbered `after`, or after at most 30 s with the
+  current one, and returns the new number. It follows Status ownership rules,
+  never holds the controller, and uses its own slots (2 per user, 6 in total)
+  so long polls cannot starve commands; a full set answers Busy and the client
+  falls back to Status polling, as it does with older services (InvalidRequest).
 - Installation, replacement and removal require SCM administrator access and a
   protected executable. Program Files ancestors, file ownership, ACLs, reparse
   points and sharing modes are checked before trusted executables are used.
@@ -27,7 +43,14 @@ acceptance; the platform scenarios below belong to the later acceptance pass.
 - Direct UDP, padded Noise UDP, Noise TCP and authenticated HTTPS transport use
   the shared implementations. Wrapped transport sockets bind to the physical
   underlay before connecting. The local UDP relay uses exclusive Windows socket
-  binding so another process cannot share its receive port.
+  binding so another process cannot share its receive port. With a relay
+  carrier WireGuardNT listens on the fixed port 127.0.0.1:1023 and the relay
+  accepts and answers only that source; Direct UDP keeps an ephemeral port.
+  Windows has no privileged ports, so this narrows but does not prevent a local
+  squatter: a process that binds 127.0.0.1:1023 first can block WireGuardNT or
+  receive its encrypted datagrams, but cannot read or forge tunnel contents. If
+  another program holds that port, Connect, Resume and Reconnect fail with a
+  message that names it.
 
 IPv4 and optional tunneled IPv6 addresses, IP/subnet selection, LAN policy, DNS
 and MTU use IP Helper APIs. Route records are written before adding owned routes;
@@ -47,13 +70,24 @@ network exceptions. Adapter and service transport permissions are dynamic, so a
 service crash does not leave an old interface identifier or transport exception
 persistently permitted. The service checks the actual owned filter conditions.
 
-Stopping the service for an update retains persistent protection and saved intent.
+Stopping the service (for an update, by SCM or by a crash) retains persistent
+protection and saved intent, so the kill switch survives every stop.
 Explicit Disconnect records cleanup intent before removing owned routes and
 filters, then removes the saved session. Pause retains intent and the selected
 guard. A volatile boot nonce distinguishes a same-boot service restart from a
 new Windows boot: reconnect policy governs the former; startup policy governs the
 latter. The SCM service starts automatically to restore protection even when the
 user's connection-on-startup option is disabled.
+
+An administrator who must release a kill switch left by another user's session,
+including one whose owner logged off or paused it, runs the CLI or app elevated
+and disconnects. When the pipe is unusable (service stopped, or it refuses to
+start because its session record is unreadable or a guard has no journal),
+`sirinvpn-windows-service.exe --release-guard` from an elevated prompt stops the
+service, has it remove the current session's routes, filters and record as
+LocalSystem through an SCM start argument, and starts it again. Ordinary
+callers cannot pass SCM start arguments; the service DACL limits that to SYSTEM
+and administrators.
 
 Administrator-requested uninstall can also remove the owned WFP guard when a
 private session record is corrupt. It still verifies that record's file type,

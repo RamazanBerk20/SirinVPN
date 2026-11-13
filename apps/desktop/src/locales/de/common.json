@@ -1,0 +1,74 @@
+{
+  "appName": "SirinVPN",
+  "action": {
+    "back": "Zurück",
+    "cancel": "Abbrechen",
+    "close": "Schließen",
+    "continue": "Weiter",
+    "copy": "Kopieren",
+    "copied": "Kopiert",
+    "dismiss": "Ausblenden",
+    "done": "Fertig",
+    "moreInfo": "Mehr Infos",
+    "remove": "Entfernen",
+    "retry": "Erneut versuchen"
+  },
+  "state": {
+    "checking": "Wird geprüft…",
+    "disabled": "Aus",
+    "enabled": "An",
+    "loading": "Wird geladen…",
+    "notConnected": "Nicht verbunden",
+    "saved": "Gespeichert",
+    "saving": "Wird gespeichert…",
+    "unavailable": "Nicht verfügbar",
+    "unknown": "Unbekannt"
+  },
+  "role": {
+    "owner": "Besitzer",
+    "admin": "Admin",
+    "member": "Mitglied"
+  },
+  "noun": {
+    "thisDevice": "Dieses Gerät"
+  },
+  "separator": {
+    "pair": "{{first}} · {{second}}",
+    "triple": "{{first}} · {{second}} · {{third}}"
+  },
+  "target": "{{os}}, {{arch}} ({{target}})",
+  "error": {
+    "withDetail": "{{summary}} {{detail}}",
+    "needsConnection": "Verbinde dich zuerst mit diesem Server.",
+    "localSave": "Konnte auf diesem Gerät nicht gespeichert werden. Versuche es erneut.",
+    "passwordsDiffer": "Die Passwörter stimmen nicht überein."
+  },
+  "errorCode": {
+    "hetzner_create_uncertain": "Hetzner hat den Server {{server}} vielleicht erstellt. Prüfe die Hetzner Cloud Console, bevor du es erneut versuchst.",
+    "hetzner_provision_pending": "Der Server {{name}} wurde nicht fertig eingerichtet. Setze die Einrichtung fort oder lösche ihn, bevor du einen weiteren erstellst.",
+    "hetzner_host_key_replacement": "Der neue Server {{name}} hat einen anderen SSH-Host-Schlüssel gezeigt als erwartet. Fahre nicht fort, außer du kannst den Schlüssel in der Hetzner Cloud Console bestätigen.",
+    "install_phase_failed": "Ein Schritt auf dem VPS ist fehlgeschlagen.",
+    "install_ssh_failed": "Die Anmeldung am VPS per SSH ist fehlgeschlagen. Prüfe den Host-Schlüssel und die Anmeldedaten. Auf dem VPS wurde nichts geändert.",
+    "install_incompatible": "Dieser VPS kann nicht verwendet werden: Er ist nicht kompatibel oder betreibt bereits eine andere Installation. Auf dem VPS wurde nichts geändert.",
+    "backup_wrong_password": "Das Backup-Passwort ist falsch.",
+    "invitation_expired": "Dieser Beitrittscode ist abgelaufen. Bitte um einen neuen.",
+    "invitation_used": "Dieser Beitrittscode wurde bereits verwendet oder abgebrochen. Bitte um einen neuen.",
+    "invitation_invalid": "Dieser Beitrittscode ist ungültig. Prüfe ihn und versuche es erneut.",
+    "port_forward_public_port": "Dieser öffentliche Port ist reserviert, schon belegt oder ungültig. Wähle einen anderen.",
+    "operation_in_progress": "Eine andere Änderung an diesem Server läuft. Warte, bis sie fertig ist, und versuche es dann erneut.",
+    "maintenance_blocked": "Diese Änderung kann noch nicht starten: {{steps}}.",
+    "maintenance_blocked_unnamed": "Diese Änderung kann noch nicht starten.",
+    "install_outcome_unknown": "Das Ergebnis auf {{host}} ist unbekannt: Der VPS hat die Änderung vielleicht angewendet, aber die Bestätigung ging verloren. Dieses Gerät hat seine Schlüssel behalten. Prüfe die Änderung erneut, sobald der VPS erreichbar ist.",
+    "install_rolled_back": "Der VPS hat die Änderung zurückgesetzt, daher hat sich nichts geändert.",
+    "person_has_join_codes": "Diese Person hat noch Beitrittscodes für Geräte. Brich sie zuerst ab.",
+    "person_name_taken": "Eine andere Person auf diesem Server verwendet diesen Namen bereits. Wähle einen anderen Namen.",
+    "transaction_unresolved": "Eine frühere Änderung an {{host}} von diesem Gerät ist offen. Schließe sie ab oder verwirf sie, bevor du eine neue startest."
+  },
+  "maintenanceBlocker": {
+    "not_owner": "nur das Gerät des Besitzers kann diesen VPS warten",
+    "connected": "trenne zuerst die Verbindung zu diesem VPS",
+    "persistent_policy": "schalte zuerst den Kill-Switch und die automatische Wiederverbindung aus",
+    "pending_key_rotation": "schließe den offenen Schlüsselwechsel dieses Geräts zuerst ab oder stelle ihn wieder her",
+    "unresolved_transaction": "löse zuerst die unterbrochene Änderung am VPS auf"
+  }
+}

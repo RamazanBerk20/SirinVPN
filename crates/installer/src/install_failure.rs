@@ -2,11 +2,14 @@
 
 const PREFIX: &str = "SIRINVPN_INSTALL_STEP=";
 
+const OWNER_PREFIX: &str = "SIRINVPN_TRANSACTION_OWNER=";
+
 #[derive(Debug, thiserror::Error)]
-#[error("The VPS operation failed while {step} (exit {exit_status}).")]
+#[error("The VPS operation failed while {step} (exit {exit_status}).{holder}")]
 pub(super) struct InstallFailure {
     step: &'static str,
     exit_status: i32,
+    holder: String,
 }
 
 impl InstallFailure {
@@ -41,9 +44,36 @@ impl InstallFailure {
             "restart_dns_proxy" => "updating the private DNS proxy service",
             "restart_dns" => "restarting the private DNS resolver",
             "restart_server" => "restarting the VPS management service",
+            "busy" => "waiting for another device's maintenance transaction",
             _ => return None,
         };
-        Some(Self { step, exit_status })
+        let holder = if marker == "busy" {
+            // Only a 16-digit hex certificate label is shown; anything else is dropped.
+            let owner = std::str::from_utf8(output)
+                .ok()?
+                .lines()
+                .filter_map(|line| line.strip_prefix(OWNER_PREFIX))
+                .next_back()
+                .filter(|owner| {
+                    owner.len() == 16
+                        && owner
+                            .bytes()
+                            .all(|byte| matches!(byte, b'0'..=b'9' | b'a'..=b'f'))
+                })
+                .map_or_else(String::new, |owner| {
+                    format!(" by the Owner certificate {owner}")
+                });
+            format!(
+                " A transaction started{owner} is in progress on this VPS; it commits or rolls back automatically within 5 minutes, then retry."
+            )
+        } else {
+            String::new()
+        };
+        Some(Self {
+            step,
+            exit_status,
+            holder,
+        })
     }
 }
 
@@ -65,6 +95,27 @@ mod tests {
             InstallFailure::from_output(b"prefix SIRINVPN_INSTALL_STEP=initialize\n", 1).is_none()
         );
         assert!(InstallFailure::from_output(b"SIRINVPN_INSTALL_STEP=initialize\n", 0).is_none());
+    }
+
+    #[test]
+    fn a_busy_vps_names_only_a_valid_owner_label() {
+        let busy = |owner: &str| {
+            InstallFailure::from_output(
+                format!("SIRINVPN_TRANSACTION_OWNER={owner}\nSIRINVPN_INSTALL_STEP=busy\n")
+                    .as_bytes(),
+                75,
+            )
+            .unwrap()
+            .to_string()
+        };
+        let named = busy("0123456789abcdef");
+        assert!(
+            named.contains("by the Owner certificate 0123456789abcdef"),
+            "{named}"
+        );
+        assert!(named.contains("rolls back automatically within 5 minutes"));
+        let unnamed = busy("$(reboot)");
+        assert!(!unnamed.contains("reboot") && !unnamed.contains("certificate"));
     }
 
     #[test]

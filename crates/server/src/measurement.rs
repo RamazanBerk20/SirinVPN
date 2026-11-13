@@ -16,7 +16,7 @@ impl Lease {
     pub(crate) fn active(&self, document: &AuthorizationDocument, now: u64) -> bool {
         self.expires > now
             && Instant::now() < self.deadline
-            && !document.endpoint_transition_source
+            && !document.endpoint.is_handoff_source()
             && document.devices.iter().any(|device| {
                 device.id == self.device
                     && device.wireguard_public_key == self.owner_key
@@ -37,6 +37,7 @@ pub(super) async fn create(
         .map_err(|_| ApiError::invalid("invalid probe key"))?;
     let authorization = require_authorization(&state)?;
     let mut current = authorization.write().await;
+    limit_mutation(&state, &current, &caller)?;
     let authorized = authorize_current(&current, &caller, false)?;
     let device = current
         .devices
@@ -45,7 +46,7 @@ pub(super) async fn create(
         .ok_or_else(ApiError::forbidden)?
         .clone();
     let now = unix_time();
-    if current.endpoint_transition_source
+    if current.endpoint.is_handoff_source()
         || current
             .desired_peers(now)
             .iter()
@@ -91,6 +92,7 @@ pub(super) async fn remove(
 ) -> Result<Json<ApiEnvelope<()>>, ApiError> {
     let authorization = require_authorization(&state)?;
     let mut current = authorization.write().await;
+    limit_mutation(&state, &current, &caller)?;
     let authorized = authorize_current(&current, &caller, false)?;
     let mut next = current.clone();
     next.measurement_leases.retain(|lease| {

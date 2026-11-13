@@ -46,7 +46,8 @@ def package_source(path):
 def collect(appdir, output):
     own = {'usr/bin/sirinvpn', 'usr/bin/sirinvpn-desktop',
            'usr/lib/sirinvpn/sirinvpn-helper', 'usr/lib/sirinvpn/sirinvpn-server',
-           'usr/lib/sirinvpn/sirinvpn-release', 'usr/lib/sirinvpn/sirinvpn-release-fetch'}
+           'usr/lib/sirinvpn/sirinvpn-release', 'usr/lib/sirinvpn/sirinvpn-release-fetch',
+           'usr/lib/sirinvpn/sirinvpn-server-x86_64', 'usr/lib/sirinvpn/sirinvpn-server-aarch64'}
     report = {'scope': __doc__.strip(), 'files': [], 'packages': {}, 'separate_inputs': []}
     for path in sorted(appdir.rglob('*')):
         if not path.is_file() or path.is_symlink() or path.is_relative_to(output):

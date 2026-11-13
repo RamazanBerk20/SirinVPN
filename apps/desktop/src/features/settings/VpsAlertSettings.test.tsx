@@ -53,8 +53,7 @@ it("saves HTTPS addresses and tests only what is saved", async () => {
   expect(await screen.findByText(t("vps.alerts.saved"))).toBeTruthy();
   fireEvent.click(await screen.findByRole("button", { name: t("vps.alerts.test") }));
   // A 4xx answer adds what to check, next to the test button.
-  expect(await screen.findByText(t("vps.alerts.failure.rejectedStatus", { status: 403 }), { exact: false })).toBeTruthy();
-  expect(screen.getByText(t("settings.alerts.rejectedHint"), { exact: false })).toBeTruthy();
+  expect(await screen.findByText(t("vps.alerts.failure.rejectedClient", { status: "403" }), { exact: false })).toBeTruthy();
 });
 
 it("reports what the VPS check last saw", async () => {

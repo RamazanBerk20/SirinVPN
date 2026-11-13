@@ -7,7 +7,7 @@ use std::{
 };
 
 #[derive(Default)]
-struct MemorySecretStore {
+pub(super) struct MemorySecretStore {
     values: Mutex<HashMap<String, SecretIdentity>>,
 }
 
@@ -35,7 +35,7 @@ impl SecretStore for MemorySecretStore {
     }
 }
 
-fn profile(identity: &LocalIdentity, server_id: ServerId) -> ServerProfile {
+pub(super) fn profile(identity: &LocalIdentity, server_id: ServerId) -> ServerProfile {
     ServerProfile {
         favorite: false,
         schema_version: 1,

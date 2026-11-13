@@ -20,6 +20,9 @@ fn legacy_configuration_defaults_new_capability_flags_off() {
     assert!(!configuration.port_forwarding_enabled);
     assert!(!configuration.member_lifecycle_enabled);
     assert!(!configuration.leak_test_enabled);
+    assert!(!configuration.named_join_codes_enabled);
+    assert!(!configuration.person_rename_enabled);
+    assert!(!configuration.admin_own_devices_enabled);
     assert_eq!(configuration.obfuscated_udp, None);
     assert_eq!(configuration.tcp_fallback, None);
     assert_eq!(configuration.dns_upstream, DnsUpstream::Recursive);
@@ -31,6 +34,9 @@ fn legacy_configuration_defaults_new_capability_flags_off() {
     assert!(serialized.get("port_forwarding_enabled").is_none());
     assert!(serialized.get("member_lifecycle_enabled").is_none());
     assert!(serialized.get("leak_test_enabled").is_none());
+    assert!(serialized.get("named_join_codes_enabled").is_none());
+    assert!(serialized.get("person_rename_enabled").is_none());
+    assert!(serialized.get("admin_own_devices_enabled").is_none());
 
     let member: MemberSummary = serde_json::from_value(serde_json::json!({
         "id": MemberId::new(), "name": "Legacy member", "role": "member", "devices": []

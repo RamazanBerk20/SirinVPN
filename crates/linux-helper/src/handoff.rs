@@ -2,16 +2,10 @@
 use super::*;
 
 fn peer_endpoint(request: &TunnelConnectRequest, endpoint: IpAddr) -> String {
-    let port = match request.transport {
-        TransportKind::DirectUdp => {
-            return SocketAddr::new(endpoint, request.endpoint_port).to_string();
-        }
-        TransportKind::ObfuscatedUdp => CLIENT_RELAY_PORT,
-        TransportKind::TcpFallback => TCP_CLIENT_RELAY_PORT,
-        TransportKind::TlsLike => TLS_LIKE_CLIENT_RELAY_PORT,
-        TransportKind::Quic => QUIC_CLIENT_RELAY_PORT,
-    };
-    format!("127.0.0.1:{port}")
+    if request.transport == TransportKind::DirectUdp {
+        return SocketAddr::new(endpoint, request.endpoint_port).to_string();
+    }
+    format!("127.0.0.1:{}", cleanup::carrier_port(request.transport))
 }
 
 impl<R: CommandRunner> LinuxNetworkHelper<R> {
@@ -91,6 +85,8 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
         }
         let result = (|| -> Result<()> {
             if next.transport != TransportKind::DirectUdp {
+                // The relay accepts WireGuard only from its fixed port.
+                self.pin_wireguard_port(true)?;
                 self.start_transport(next, desired.endpoint)?;
             }
             if safe_mtu != previous_mtu {
@@ -123,7 +119,7 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
                     let since = verified_since.get_or_insert_with(std::time::Instant::now);
                     if since.elapsed() >= Duration::from_millis(300) {
                         state.transport = next.transport;
-                        state.reconnecting = false;
+                        state.confirm_handshake();
                         state.mtu = mtu::initial_mtu(next).map(|mut mtu| {
                             mtu.configured = safe_mtu;
                             mtu
@@ -146,7 +142,7 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
             }
             bail!("prepared carrier did not deliver tunnel traffic")
         })();
-        if result.is_err() {
+        if let Err(error) = result {
             *state = original;
             // Rollback keeps the same WireGuard session and all application routes.
             self.set_carrier_endpoint(&previous, desired.endpoint)
@@ -179,9 +175,15 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
             self.observe_policy(state, &previous, desired.endpoint);
             self.write_state(state)
                 .map_err(|_| HelperError::NetworkOperationFailed)?;
-            return Err(HelperError::NetworkOperationFailed);
+            return Err(cleanup::CarrierPortInUse::helper_error(&error)
+                .unwrap_or(HelperError::NetworkOperationFailed));
         }
         self.stop_carrier(previous.transport);
+        if next.transport == TransportKind::DirectUdp {
+            // Only after the old relay is no longer the rollback path. A fixed privileged
+            // source port on the outer path is a fingerprint; a failure only keeps it.
+            let _ = self.pin_wireguard_port(false);
+        }
         if self.transport_config_path().exists() {
             let _ = self
                 .runner

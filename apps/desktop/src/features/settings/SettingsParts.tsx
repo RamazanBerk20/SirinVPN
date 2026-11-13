@@ -45,8 +45,8 @@ export function CardSaveRow({ dirty, saving, problem, saved, saveLabel, onSave, 
  * The one disclosure style in the app: a full-width row with a chevron. `boxed` draws it as its
  * own card where it stands alone in a form; `open` opens it initially.
  */
-export function SettingsDisclosure({ summary, className, boxed, open, children }: { summary: ReactNode; className?: string; boxed?: boolean; open?: boolean; children: ReactNode }) {
-  return <details className={`settings-disclosure${boxed ? " boxed" : ""}${className ? ` ${className}` : ""}`} open={open || undefined}>
+export function SettingsDisclosure({ summary, className, boxed, open, onToggle, children }: { summary: ReactNode; className?: string; boxed?: boolean; open?: boolean; onToggle?: (open: boolean) => void; children: ReactNode }) {
+  return <details className={`settings-disclosure${boxed ? " boxed" : ""}${className ? ` ${className}` : ""}`} open={open || undefined} onToggle={onToggle && ((event) => onToggle(event.currentTarget.open))}>
     <summary>{summary}<CaretDown className="disclosure-chevron" size={17} aria-hidden /></summary>
     <div className="settings-disclosure-body">{children}</div>
   </details>;

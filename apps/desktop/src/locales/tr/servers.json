@@ -1,0 +1,38 @@
+{
+  "count": "{count, plural, one {# sunucu} other {# sunucu}}",
+  "add": "Sunucu ekle",
+  "open": "{{name}} sunucusunu aç",
+  "favorite": "Favori",
+  "addressOf": "{{name}} adresi",
+  "search": {
+    "label": "Sunucularda ara",
+    "placeholder": "Ad veya adres",
+    "empty": "Aramanızla eşleşen sunucu yok."
+  },
+  "actions": {
+    "label": "{{name}} için işlemler",
+    "rename": "Yeniden adlandır",
+    "favorite": "Favorilere ekle",
+    "unfavorite": "Favorilerden kaldır",
+    "maintain": "VPS bakımı"
+  },
+  "rename": {
+    "title": "Sunucuyu yeniden adlandır",
+    "description": "Yeni ad yalnızca bu cihazda kaydedilir.",
+    "label": "Sunucu adı",
+    "save": "Adı kaydet"
+  },
+  "picker": {
+    "eyebrow": "Sunucu",
+    "trigger": "Sunucu: {{name}}. Sunucuyu değiştir",
+    "title": "Bir sunucu seçin",
+    "manage": "Sunucuları yönet"
+  },
+  "renamed": "“{{name}}” olarak yeniden adlandırıldı.",
+  "favorited": "{{name}} favorilere eklendi",
+  "unfavorited": "{{name}} favorilerden kaldırıldı",
+  "manageHint": "Kenar çubuğundan sunucular arasında geçiş yapın. Sunucuları buradan yeniden adlandırabilir, favorilere ekleyebilir veya bakımını yapabilirsiniz.",
+  "manageHintNarrow": "Sunucularınızı buradan değiştirin, yeniden adlandırın, favorilere ekleyin veya bakımını yapın.",
+  "switch": "Değiştir",
+  "switchTo": "{{name}} sunucusuna geç"
+}

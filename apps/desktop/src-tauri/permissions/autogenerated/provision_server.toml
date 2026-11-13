@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-provision-server"
+description = "Enables the provision_server command without any pre-configured scope."
+commands.allow = ["provision_server"]
+
+[[permission]]
+identifier = "deny-provision-server"
+description = "Denies the provision_server command without any pre-configured scope."
+commands.deny = ["provision_server"]

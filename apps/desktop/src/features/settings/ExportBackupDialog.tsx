@@ -15,6 +15,12 @@ import { errorMessage } from "../../lib/errors";
 import { t } from "../../i18n";
 import { Rich } from "../../i18n/Rich";
 
+/** The suggested file name keeps letters of every script, so differently named servers get different names. */
+export function backupFileName(serverName: string): string {
+  const safe = serverName.trim().replace(/[^\p{L}\p{N}_-]+/gu, "-").replace(/^-+|-+$/g, "");
+  return `${safe || "sirinvpn-device"}.sirinvpn-backup`;
+}
+
 export function ExportBackupDialog({
   profile,
   open: dialogOpen,
@@ -57,14 +63,10 @@ export function ExportBackupDialog({
 
   const chooseDestination = async () => {
     try {
-      const safeName =
-        profile.name
-          .trim()
-          .replace(/[^a-zA-Z0-9_-]+/g, "-")
-          .replace(/^-+|-+$/g, "") || "sirinvpn-device";
       const selected = await save({
+        purpose: "backup_export",
         title: t("settings.backup.dialogTitle"),
-        defaultPath: await preferredBackupPath(`${safeName}.sirinvpn-backup`),
+        defaultPath: await preferredBackupPath(backupFileName(profile.name)),
         filters: [
           {
             name: t("settings.backup.fileType"),
@@ -160,7 +162,7 @@ export function ExportBackupDialog({
                 </Field>
                 <div className="field-grid two-column backup-passwords">
                   <Field label={t("settings.backup.password.label")} hint={t("settings.backup.password.hint")}>
-                    <SecretInput
+                    <SecretInput field="password"
                       type="password"
                       value={password}
                       onChange={(event) => setPassword(event.target.value)}
@@ -170,7 +172,7 @@ export function ExportBackupDialog({
                   <Field label={t("settings.backup.password.repeat")}
                     hint={passwordValid ? t("vps.common.passwordsMatch") : undefined}
                     error={passwordConfirmation && passwordConfirmation !== password ? t("common.error.passwordsDiffer") : undefined}>
-                    <SecretInput
+                    <SecretInput field="password"
                       type="password"
                       value={passwordConfirmation}
                       onChange={(event) =>

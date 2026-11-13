@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-forget-ssh-login"
+description = "Enables the forget_ssh_login command without any pre-configured scope."
+commands.allow = ["forget_ssh_login"]
+
+[[permission]]
+identifier = "deny-forget-ssh-login"
+description = "Denies the forget_ssh_login command without any pre-configured scope."
+commands.deny = ["forget_ssh_login"]

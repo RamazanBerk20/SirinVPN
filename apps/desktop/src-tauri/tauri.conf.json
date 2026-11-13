@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "SirinVPN",
-  "version": "0.1.1",
+  "version": "1.0.0-rc.1",
   "identifier": "org.sirinvpn.client",
   "build": {
     "beforeDevCommand": "pnpm dev",
@@ -29,6 +29,9 @@
   "bundle": {
     "active": true,
     "targets": ["deb", "appimage"],
+    "android": {
+      "versionCode": 999901
+    },
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -54,20 +57,7 @@
           "polkitd",
           "systemd-resolved",
           "wireguard-tools"
-        ],
-        "files": {
-          "/usr/bin/sirinvpn": "binaries/sirinvpn",
-          "/usr/lib/sirinvpn/sirinvpn-helper": "binaries/sirinvpn-helper",
-          "/usr/lib/sirinvpn/sirinvpn-release": "binaries/sirinvpn-release",
-          "/usr/lib/sirinvpn/sirinvpn-release-fetch": "binaries/sirinvpn-release-fetch",
-          "/usr/lib/sirinvpn/sirinvpn-server": "binaries/sirinvpn-server",
-          "/usr/share/polkit-1/actions/org.sirinvpn.network.policy": "../../../packaging/polkit/org.sirinvpn.network.policy",
-          "/usr/lib/NetworkManager/conf.d/90-sirinvpn-probe.conf": "../../../packaging/networkmanager/90-sirinvpn-probe.conf",
-          "/usr/lib/systemd/system/sirinvpn-killswitch.service": "../../../packaging/systemd/sirinvpn-killswitch.service",
-          "/usr/lib/systemd/system/sirinvpn-reconnect.service": "../../../packaging/systemd/sirinvpn-reconnect.service",
-          "/usr/lib/systemd/system/sirinvpn-transport.service": "../../../packaging/systemd/sirinvpn-transport.service",
-          "/usr/lib/systemd/system/sirinvpn-transport@.service": "../../../packaging/systemd/sirinvpn-transport@.service"
-        }
+        ]
       },
       "appimage": {
         "files": {

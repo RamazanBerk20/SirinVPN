@@ -1,0 +1,370 @@
+{
+  "layout": {
+    "categories": "Catégories des paramètres"
+  },
+  "category": {
+    "general": {
+      "label": "Général",
+      "hint": "Wi-Fi, commandes, notifications"
+    },
+    "connection": {
+      "label": "Connexion",
+      "hint": "Méthode, coupe-circuit, reconnexion"
+    },
+    "network": {
+      "label": "Réseau",
+      "hint": "Routage des applications, DNS, blocage"
+    },
+    "recovery": {
+      "label": "Clés et récupération",
+      "hint": "Clés, sauvegardes, récupération"
+    },
+    "maintenance": {
+      "label": "Maintenance du VPS",
+      "shortLabel": "Diagnostic",
+      "hint": "État, diagnostic, mises à jour"
+    },
+    "advanced": {
+      "label": "Avancé",
+      "hint": "Ports, rotation des clés, alertes, planifications"
+    }
+  },
+  "general": {
+    "startup": {
+      "title": "Démarrage et fenêtre",
+      "startOnLogin": {
+        "label": "Démarrer à la connexion",
+        "summary": "Ouvre SirinVPN lorsque vous vous connectez",
+        "unavailable": "Non disponible sur ce système"
+      },
+      "launchMinimized": {
+        "label": "Démarrer réduit",
+        "summary": "S’ouvre dans la barre des tâches, ou dans la zone de notification si « Fermer dans la zone de notification » est activé"
+      },
+      "closeToTray": {
+        "label": "Fermer dans la zone de notification",
+        "summary": "Continue de fonctionner dans la zone de notification à la fermeture de la fenêtre",
+        "unavailable": "Aucune zone de notification dans cette session de bureau"
+      },
+      "note": "Fermer ou quitter l’application ne déconnecte pas le VPN."
+    },
+    "android": {
+      "title": "Commandes VPN",
+      "summary": "Le VPN toujours actif et le blocage des connexions sans VPN se règlent dans Android.",
+      "vpnSettings": "Paramètres VPN Android",
+      "addTile": "Ajouter une tuile de réglages rapides",
+      "addTileManually": "Ouvrez les réglages rapides, appuyez sur Modifier et ajoutez SirinVPN."
+    },
+    "quickServer": {
+      "label": "Serveur des réglages rapides",
+      "placeholder": "Choisir un serveur",
+      "loadFailed": "Impossible de charger vos serveurs.",
+      "saveFailed": "Impossible d’enregistrer le serveur des réglages rapides.",
+      "saved": "Les réglages rapides utilisent {{name}}."
+    },
+    "notifications": {
+      "title": "Notifications et interface",
+      "infoLabel": "À propos des notifications",
+      "infoDesktop": "Les alertes n’incluent jamais les noms de serveur, les adresses ni les clés.",
+      "infoAndroid": "Les alertes n’incluent jamais les noms de serveur, les adresses ni les clés. Android gère la notification VPN permanente.",
+      "connection": {
+        "label": "Notifications de connexion",
+        "summary": "Alerte lorsque le VPN se connecte, se coupe ou se reconnecte"
+      },
+      "test": "Notification de test",
+      "testing": "Envoi…",
+      "androidSettings": "Ouvrir les paramètres de notification",
+      "blockedAndroid": "Les notifications sont bloquées pour SirinVPN dans Android. Autorisez-les dans les paramètres de notification ; jusque-là, contrôlez le VPN depuis l’application ou sa tuile de réglages rapides.",
+      "animations": {
+        "label": "Animations de l’interface",
+        "summary": "Transitions de page ; la réduction des animations de votre système s’applique toujours"
+      },
+      "theme": {
+        "label": "Thème",
+        "summary": "Système suit le réglage clair ou sombre de votre appareil",
+        "system": "Système",
+        "light": "Clair",
+        "dark": "Sombre"
+      },
+      "testNeedsNotifications": "Activez les notifications de connexion pour envoyer un test.",
+      "blocked": "Les notifications sont bloquées pour SirinVPN. Autorisez-les dans les paramètres système pour recevoir les alertes de connexion."
+    },
+    "language": {
+      "label": "Langue",
+      "summary": "Utilisée aussi pour le menu de la zone de notification et les notifications",
+      "system": "Par défaut du système",
+      "devExpanded": "Pseudo : texte élargi",
+      "devRtl": "Pseudo : de droite à gauche"
+    },
+    "updates": {
+      "title": "Mises à jour de l’application",
+      "check": "Rechercher des mises à jour"
+    },
+    "component": {
+      "title": "Composant VPN local",
+      "summary": "Garde le service VPN de cet appareil aligné sur l’application",
+      "review": "Vérifier le composant"
+    },
+    "loading": "Chargement des préférences de l’application…"
+  },
+  "preferences": {
+    "loadFailed": "Impossible de charger les préférences.",
+    "saveFailed": "Impossible d’enregistrer ce réglage. Votre choix précédent reste appliqué.",
+    "testSent": "Notification de test envoyée ; vérifiez les paramètres système si elle n’apparaît pas.",
+    "testFailed": "Impossible d’envoyer la notification de test.",
+    "notificationsUnknown": "Impossible de confirmer l’accès aux notifications. Réessayez, ou autorisez les notifications pour SirinVPN dans les paramètres système."
+  },
+  "wifi": {
+    "title": "Connexion automatique Wi-Fi",
+    "infoLabel": "À propos de la connexion automatique Wi-Fi",
+    "infoDesktop": "Le Wi-Fi de confiance est une exception à la connexion automatique, pas une évaluation de sécurité. Les noms des réseaux Wi-Fi sont seulement affichés, jamais enregistrés ni envoyés. La connexion automatique fonctionne pendant que l’application est dans la zone de notification et s’arrête à votre sortie.",
+    "infoAndroid": "Le Wi-Fi de confiance est une exception à la connexion automatique, pas une évaluation de sécurité. Les noms des réseaux Wi-Fi sont seulement affichés, jamais enregistrés ni envoyés. Android ne les montre qu’aux applications ayant accès à la position précise ; SirinVPN ne lit jamais où vous vous trouvez. Lorsque vous êtes sur le Wi-Fi avec le VPN désactivé, Android exige un avis indiquant que la connexion automatique est active. Son bouton « Masquer l’avis » la désactive définitivement, mais la connexion automatique continue de fonctionner.",
+    "toggle": {
+      "label": "Connexion automatique sur le Wi-Fi",
+      "summary": "Utilise le serveur ci-dessous, sauf sur les Wi-Fi de confiance"
+    },
+    "server": {
+      "label": "Serveur de connexion automatique",
+      "empty": "Ajoutez d’abord un serveur",
+      "offHint": "Activez la connexion automatique pour choisir son serveur."
+    },
+    "network": {
+      "unavailable": "Aucun réseau actif",
+      "otherNetwork": "Le réseau actuel n’est pas le Wi-Fi",
+      "trusted": "Le Wi-Fi actuel est de confiance",
+      "untrusted": "Le Wi-Fi actuel n’est pas de confiance",
+      "named": "{{status}} — <strong>{{name}}</strong>",
+      "heading": "Réseau actuel"
+    },
+    "status": {
+      "disabled": "La connexion automatique est désactivée.",
+      "starting": "Démarrage de la connexion automatique…",
+      "waitingForWifi": "En attente d’un Wi-Fi qui n’est pas de confiance.",
+      "trusted": "Sur un Wi-Fi de confiance. Un VPN actif reste connecté.",
+      "connecting": "Connexion…",
+      "sessionActive": "Le VPN ou le coupe-circuit est déjà activé.",
+      "paused": "Suspendue sur ce réseau jusqu’à son changement. Vous pouvez toujours vous connecter manuellement.",
+      "needsAttention": "La connexion automatique n’a pas pu aboutir. Connectez-vous depuis Accueil pour voir pourquoi.",
+      "needsAuthorization": "Connectez-vous une fois depuis Accueil pour autoriser la connexion automatique."
+    },
+    "access": {
+      "unidentified": "Ce Wi-Fi ne peut pas être identifié de façon fiable, il ne peut donc pas être considéré comme de confiance.",
+      "permission": "Android masque les noms des Wi-Fi tant que SirinVPN n’a pas accès à la position précise : chaque Wi-Fi est donc considéré comme non fiable, et la connexion automatique se connecte sur tous.",
+      "locationOff": "La localisation est désactivée : Android masque les noms des Wi-Fi, et chaque Wi-Fi est considéré comme non fiable.",
+      "background": "Le Wi-Fi de confiance ne fonctionne que lorsque SirinVPN est ouvert. Lorsqu’il est fermé, Android masque le nom du Wi-Fi : la connexion automatique se connecte donc sur chaque Wi-Fi.",
+      "restricted": "L’utilisation de la batterie pour SirinVPN est réglée sur Restreinte : la connexion automatique ne peut pas démarrer le VPN lorsque l’application est fermée.",
+      "allow": "Autoriser la localisation",
+      "allowAlways": "Autoriser tout le temps",
+      "locationSettings": "Activer la localisation",
+      "appSettings": "Paramètres de l’application",
+      "changed": "Le réseau a changé. Vérifiez son nom avant de lui faire confiance.",
+      "changedUnnamed": "Le réseau a changé, et cet appareil ne signale pas son nom. Vérifiez dans les paramètres Wi-Fi de votre système le réseau auquel vous êtes connecté avant de lui faire confiance."
+    },
+    "trust": {
+      "label": "Libellé (facultatif)",
+      "placeholder": "Par exemple, Maison",
+      "action": "Faire confiance à ce Wi-Fi",
+      "trusted": "{{name}} est maintenant de confiance. La connexion automatique l’ignore."
+    },
+    "trusted": {
+      "title": "Wi-Fi de confiance",
+      "unnamed": "Réseau sans nom {{number}}",
+      "label": "Libellé : {{label}}",
+      "current": "Réseau actuel",
+      "saved": "Enregistré",
+      "namesHidden": "Cet appareil n’a pas partagé les noms des Wi-Fi. Sous Windows, activer l’accès à la position les affiche.",
+      "namesHiddenAndroid": "Android n’affiche que le nom du Wi-Fi actuel. Donnez un libellé à un réseau lorsque vous lui faites confiance pour le reconnaître ici.",
+      "remove": "Retirer la confiance",
+      "removing": "Suppression…",
+      "removeLabel": "Retirer la confiance pour {{name}}",
+      "removed": "{{name}} n’est plus de confiance."
+    },
+    "refresh": "Actualiser le réseau",
+    "loadFailed": "Impossible de charger les paramètres Wi-Fi.",
+    "refreshFailed": "Impossible d’actualiser l’état du réseau.",
+    "saveFailed": "Impossible de modifier le paramètre Wi-Fi."
+  },
+  "credentials": {
+    "title": "Stockage des identifiants",
+    "summary": "S’applique aux nouvelles clés. Les clés existantes restent où elles sont jusqu’à ce que vous les déplaciez.",
+    "policy": {
+      "secure": "Les nouvelles clés doivent utiliser le trousseau système.",
+      "fileAllowed": "Les nouvelles clés peuvent utiliser un fichier non chiffré si le trousseau est indisponible."
+    },
+    "consent": "J’accepte les fichiers de clés non chiffrés lorsque le trousseau est indisponible",
+    "allowFile": "Autoriser le repli sur fichier",
+    "requireKeyring": "Exiger le trousseau",
+    "protection": {
+      "keyring": "Trousseau système",
+      "file": "Fichier non chiffré",
+      "unverified": "Stockage non vérifié"
+    },
+    "availability": {
+      "available": "Disponible",
+      "absent": "Manquant",
+      "invalid": "Illisible",
+      "unavailable": "Verrouillé ou indisponible"
+    },
+    "cleanupIncomplete": "Nettoyage incomplet",
+    "move": "Déplacer vers le trousseau",
+    "pendingCleanup": "Certaines clés supprimées sont encore sur cet appareil. Déverrouillez le trousseau et relancez le nettoyage.",
+    "refresh": "Actualiser le stockage",
+    "retryCleanup": "Relancer le nettoyage",
+    "loadFailed": "Impossible de lire le réglage de stockage des identifiants.",
+    "checking": "Vérification de l’emplacement des clés…",
+    "changed": "Stockage des identifiants mis à jour."
+  },
+  "recovery": {
+    "title": "Récupération du Propriétaire",
+    "summary": "Retrouvez l’accès Propriétaire si tous les appareils Propriétaire sont perdus",
+    "infoLabel": "À propos de la récupération du Propriétaire",
+    "info": "Sur un nouvel appareil, choisissez Ajouter un serveur, puis Clé de récupération. Aucun autre appareil Propriétaire ni connexion VPN n’est nécessaire : seulement l’accès à votre serveur.",
+    "unsupported": "Mettez à jour le logiciel du serveur pour utiliser les clés de récupération.",
+    "registered": "Une clé de récupération est configurée.",
+    "none": "Pas encore de clé de récupération.",
+    "cannotIssue": "Seul le Propriétaire, et les Administrateurs qu’il a choisis pour la récupération, peut créer une clé de récupération.",
+    "finishing": "Finalisation de la clé de récupération précédente… Cette page vérifie à nouveau d’elle-même.",
+    "accept": "Je comprends que quiconque possède cette clé peut remplacer chaque appareil Propriétaire. Une nouvelle clé annule l’ancienne.",
+    "create": "Créer une clé de récupération",
+    "replace": "Remplacer la clé de récupération",
+    "revoke": "Révoquer la clé de récupération",
+    "revokeConfirm": {
+      "title": "Révoquer la clé de récupération ?",
+      "message": "Les copies enregistrées de cette clé cessent immédiatement de fonctionner.",
+      "confirm": "Révoquer"
+    },
+    "admins": {
+      "title": "Récupération par les Administrateurs",
+      "summary": "Les Administrateurs choisis peuvent émettre une nouvelle clé de récupération du Propriétaire à tout moment. Une récupération terminée efface cette liste.",
+      "suspended": "Suspendu",
+      "none": "Pas encore d’Administrateur : la récupération par les Administrateurs est désactivée.",
+      "entry": "{{name}} ({{id}})",
+      "save": "Enregistrer la récupération par les Administrateurs",
+      "saved": "Récupération par les Administrateurs enregistrée.",
+      "confirm": {
+        "title": "Modifier la récupération par les Administrateurs ?",
+        "message": "Autoriser {{names}} à émettre des clés de récupération du Propriétaire ? Les autres Administrateurs perdent cette autorisation.",
+        "confirm": "Enregistrer"
+      },
+      "confirmNone": {
+        "title": "Désactiver la récupération par les Administrateurs ?",
+        "message": "Aucun Administrateur ne pourra émettre de clés de récupération du Propriétaire.",
+        "confirm": "Désactiver"
+      },
+      "saving": "Enregistrement…"
+    },
+    "key": {
+      "warning": "Conservez cette clé hors ligne dès maintenant. Elle fonctionne une seule fois et ne peut plus être affichée une fois la configuration terminée.",
+      "label": "Clé de récupération",
+      "copy": "Copier la clé de récupération",
+      "copied": "Clé de récupération copiée. Conservez-la hors ligne avant de terminer.",
+      "qr": "Code QR de récupération",
+      "password": "Mot de passe du fichier",
+      "passwordHint": "Utilisez au moins 12 caractères.",
+      "repeat": "Répéter le mot de passe du fichier",
+      "save": "Enregistrer le fichier de clé de récupération",
+      "fileType": "Clé de récupération SirinVPN",
+      "saved": "Fichier de clé de récupération enregistré. Conservez son mot de passe ailleurs.",
+      "retained": "J’ai conservé cette clé ou le fichier de clé de récupération hors ligne, et je peux y accéder",
+      "finish": "Terminer la configuration",
+      "finished": "Terminé. La clé n’est plus affichée ici.",
+      "title": "Votre nouvelle clé de récupération",
+      "saving": "Enregistrement du fichier…"
+    },
+    "loadFailed": "Impossible de charger les paramètres de récupération.",
+    "actionFailed": "Impossible d’achever l’action de récupération.",
+    "update": "Mettre à jour le VPS",
+    "creating": "Création de la clé…",
+    "revoked": "Clé de récupération révoquée. Les copies enregistrées ne fonctionnent plus."
+  },
+  "keyRotation": {
+    "title": "Renouveler les clés de l’appareil",
+    "resumeTitle": "Reprendre la rotation des clés",
+    "doneTitle": "Clés renouvelées",
+    "description": "Crée de nouvelles clés pour cet appareil. Son accès, son adresse VPN et son nom restent identiques.",
+    "presharedKeyDescription": "Crée de nouvelles clés pour cet appareil, y compris une clé pré-partagée qui protège le trafic VPN enregistré contre les futurs ordinateurs quantiques. Son accès, son adresse VPN et son nom restent identiques. Les sauvegardes d’appareil exportées auparavant ne se connecteront plus : exportez-en une nouvelle ensuite.",
+    "done": {
+      "title": "Les nouvelles clés sont actives",
+      "summary": "Votre serveur les a acceptées, et les anciennes clés ont été supprimées de cet appareil."
+    },
+    "progress": {
+      "rotating": "Renouvellement des clés…",
+      "resuming": "Finalisation de la rotation interrompue…",
+      "summary": "Le VPN se reconnecte brièvement. Gardez l’application ouverte."
+    },
+    "confirmation": {
+      "title": "Seul cet appareil change",
+      "resumeTitle": "Une rotation a été interrompue",
+      "warning": "Les clés privées sont créées sur cet appareil et ne sont jamais envoyées au serveur. Rien d’autre sur le serveur ne change.",
+      "resumeWarning": "SirinVPN a conservé les nouvelles clés pour pouvoir terminer en toute sécurité. Reprenez au lieu de supprimer ou d’ajouter à nouveau ce serveur.",
+      "accept": "Je comprends que le VPN se reconnectera brièvement",
+      "acceptHint": "Le coupe-circuit et la reconnexion automatique reprennent une fois les nouvelles clés vérifiées.",
+      "rotate": "Renouveler les clés",
+      "resume": "Reprendre la rotation"
+    },
+    "failed": "La rotation des clés s’est arrêtée en toute sécurité. Si elle attend de reprendre, réessayez lorsque vous êtes en ligne."
+  },
+  "backup": {
+    "title": "Sauvegarde chiffrée de l’appareil",
+    "description": "Enregistre le profil de ce serveur et les clés de cet appareil dans un fichier chiffré. Rien n’est envoyé en ligne.",
+    "dialogTitle": "Enregistrer la sauvegarde chiffrée",
+    "fileType": "Sauvegarde chiffrée SirinVPN",
+    "warning": "<strong>Ce fichier peut se faire passer pour cet appareil.</strong> Toute personne qui le possède et connaît le mot de passe peut se connecter jusqu’à la révocation de l’appareil.",
+    "destination": {
+      "label": "Enregistrer dans",
+      "hint": "Les fichiers existants ne sont jamais écrasés.",
+      "placeholder": "Aucun fichier choisi",
+      "choose": "Choisir un fichier"
+    },
+    "password": {
+      "label": "Mot de passe",
+      "hint": "Utilisez au moins 12 caractères.",
+      "repeat": "Répéter le mot de passe"
+    },
+    "accept": {
+      "label": "Je comprends que ce fichier contient les clés privées de cet appareil",
+      "hint": "Un mot de passe perdu ne peut pas être récupéré."
+    },
+    "create": "Créer la sauvegarde",
+    "creating": "Chiffrement…",
+    "done": {
+      "title": "Sauvegarde enregistrée",
+      "summary": "Conservez le fichier et son mot de passe à des endroits séparés."
+    },
+    "pickerFailed": "Impossible d’ouvrir le sélecteur de fichiers. Réessayez.",
+    "failed": "Impossible de créer la sauvegarde. Réessayez."
+  },
+  "alerts": {
+    "testNeedsAddress": "Enregistrez une adresse d’alerte pour envoyer un test.",
+    "testing": "Envoi…",
+    "allowPrivateSummary": "Uniquement pour un moniteur de votre propre réseau ou du VPN"
+  },
+  "dnsBlocking": {
+    "invalidSources": "Ce n’est pas une adresse HTTPS complète : {{values}}",
+    "invalidDomains": "Ce n’est pas un nom de domaine : {{values}}",
+    "needsList": "Choisissez au moins une liste de blocage pour activer le blocage.",
+    "serverStatus": "Sur le serveur actuellement"
+  },
+  "parts": {
+    "connect": "Se connecter",
+    "repair": "Mettre à jour le VPS"
+  },
+  "diagnostics": {
+    "allPassed": "{count, plural, one {Le # contrôle a réussi.} many {Les # contrôles ont réussi.} other {Les # contrôles ont réussi.}}",
+    "empty": "Aucun contrôle n’a été effectué. Connectez-vous à ce serveur, puis relancez le diagnostic.",
+    "runAgain": "Relancer"
+  },
+  "speedTest": {
+    "phase": {
+      "idle": "Mesure de la latence",
+      "download": "Mesure du téléchargement",
+      "upload": "Mesure de l’envoi",
+      "finishing": "Finalisation"
+    },
+    "left": "{seconds, plural, one {{{phase}} · environ {{seconds}} seconde restante.} many {{{phase}} · environ {{seconds}} secondes restantes.} other {{{phase}} · environ {{seconds}} secondes restantes.}}",
+    "finishingLine": "{{phase}}…",
+    "cancel": "Annuler le test de débit",
+    "cancelled": "Test de débit annulé.",
+    "cancelledWait": "{seconds, plural, one {Test de débit annulé. Le VPS lance le prochain test dans {{seconds}} seconde.} many {Test de débit annulé. Le VPS lance le prochain test dans {{seconds}} secondes.} other {Test de débit annulé. Le VPS lance le prochain test dans {{seconds}} secondes.}}"
+  }
+}

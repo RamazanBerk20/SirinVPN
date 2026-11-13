@@ -36,6 +36,16 @@ const H3_NO_ERROR: u32 = 0x100;
 const CONTROL_STREAM: &[u8] = &[0x00, 0x04, 0x00];
 /// A HEADERS frame whose QPACK field section is the static-table entry `:status 404`.
 const NOT_FOUND: &[u8] = &[0x01, 0x03, 0x00, 0x00, 0xdb];
+const BINDING_LABEL: &[u8] = b"EXPORTER-SirinVPN-QUIC-device-binding";
+
+/// A secret only the two ends of this QUIC connection share (RFC 5705 exporter).
+fn channel_binding(connection: &Connection) -> Option<[u8; 32]> {
+    let mut binding = [0_u8; 32];
+    connection
+        .export_keying_material(&mut binding, BINDING_LABEL, b"")
+        .ok()?;
+    Some(binding)
+}
 
 pub async fn run_quic_client_relay<F>(
     config: TlsLikeClientRelayConfig,
@@ -74,6 +84,7 @@ where
 {
     run_quic_client_inner(
         config,
+        None,
         before_remote_socket,
         after_remote_socket,
         |_| Ok(()),
@@ -93,6 +104,30 @@ where
 {
     run_quic_client_inner(
         config,
+        None,
+        || async { Ok(()) },
+        || async { Ok(()) },
+        protect,
+        ready,
+    )
+    .await
+}
+
+/// Like `run_quic_client_relay_with_socket_protector`, for a caller that fixed
+/// WireGuard's local address; see `run_client_relay_pinned`.
+pub async fn run_quic_client_relay_pinned<F, Protect>(
+    config: TlsLikeClientRelayConfig,
+    wireguard: SocketAddr,
+    protect: Protect,
+    ready: F,
+) -> Result<(), RelayError>
+where
+    F: FnOnce(),
+    Protect: FnOnce(&Socket) -> Result<(), RelayError>,
+{
+    run_quic_client_inner(
+        config,
+        Some(wireguard),
         || async { Ok(()) },
         || async { Ok(()) },
         protect,
@@ -103,6 +138,7 @@ where
 
 async fn run_quic_client_inner<F, Before, BeforeFuture, After, AfterFuture, Protect>(
     config: TlsLikeClientRelayConfig,
+    wireguard: Option<SocketAddr>,
     before_remote_socket: Before,
     after_remote_socket: After,
     protect: Protect,
@@ -121,6 +157,7 @@ where
     {
         return Err(RelayError::InvalidConfiguration);
     }
+    let mut local_peer = LocalPeer::new(wireguard)?;
     let (client_private, server_public, certificate_sha256) = config.decoded_material()?;
     let local_socket = crate::socket_policy::bind_loopback(config.local_listen)?;
     before_remote_socket().await?;
@@ -152,8 +189,12 @@ where
             .await
             .map_err(|_| RelayError::HandshakeFailed)?;
         let mut handshake = initiator_handshake(&client_private, &server_public, PROLOGUE)?;
+        let payload = channel_binding(&connection)
+            .map_or_else(client_handshake_payload, |binding| {
+                client_handshake_payload_bound(&binding)
+            });
         let mut request = [0_u8; HANDSHAKE_MAX_LENGTH];
-        let length = handshake.write_message(&client_handshake_payload(), &mut request)?;
+        let length = handshake.write_message(&payload, &mut request)?;
         write_frame(&mut send, &request[..length]).await?;
         let response = read_frame(&mut recv, HANDSHAKE_MAX_LENGTH).await?;
         handshake.read_message(&response, &mut [0_u8; HANDSHAKE_MAX_LENGTH])?;
@@ -164,7 +205,8 @@ where
     ready();
 
     let mut local_buffer = [0_u8; MAX_INNER_PACKET_LENGTH];
-    let mut local_peer = None;
+    let mut carrier = CarrierSession::established();
+    let mut health_interval = tokio::time::interval(Duration::from_secs(5));
     loop {
         tokio::select! {
             received = local_socket.recv_from(&mut local_buffer) => {
@@ -174,16 +216,24 @@ where
                     Err(error) if error.kind() == io::ErrorKind::ConnectionReset => continue,
                     Err(error) => return Err(error.into()),
                 };
-                if !peer.ip().is_loopback() {
+                if !local_peer.admit(peer) {
                     continue;
                 }
-                local_peer = Some(peer);
                 send_packet(&connection, &local_buffer[..length])?;
+                carrier.sent();
             }
             datagram = connection.read_datagram() => {
                 let datagram = datagram.map_err(io::Error::from)?;
-                if let (Some(inner), Some(peer)) = (unpadded(&datagram), local_peer) {
+                carrier.received();
+                if let (Some(inner), Some(peer)) = (unpadded(&datagram), local_peer.target()) {
                     local_socket.send_to(inner, peer).await?;
+                }
+            }
+            // QUIC keeps the connection alive by itself, so it cannot tell that the server
+            // relay stopped forwarding; end the carrier so the service restarts it.
+            _ = health_interval.tick() => {
+                if carrier.phase() == CarrierPhase::Stale {
+                    return Err(RelayError::HandshakeFailed);
                 }
             }
         }
@@ -364,8 +414,13 @@ pub async fn run_quic_server_relay(
     }
 }
 
-/// A device's newest connections win. A carrier that stopped without closing, such as a
-/// killed process or a lost network, must not hold one of its slots until the idle timeout.
+/// A device's newest proven connections win. A carrier that stopped without closing, such as
+/// a killed process or a lost network, must not hold one of its slots until the idle timeout.
+/// Only a connection whose Noise payload carries this QUIC connection's exporter secret is
+/// admitted: the payload is encrypted under the device key (IK `ss`), and the exporter is
+/// fresh per connection, so a replayed initiator message never carries it. Older clients
+/// send no binding; their connections hold no slot and end nothing, and QUIC's idle timeout
+/// closes them once dead.
 #[derive(Clone, Default)]
 struct DeviceConnections(Arc<Mutex<HashMap<[u8; 32], VecDeque<Connection>>>>);
 
@@ -439,7 +494,7 @@ async fn serve_connection(
         ),
     )
     .await;
-    let Ok(Ok((client_static, response, mut send))) = accepted else {
+    let Ok(Ok((client_static, response, mut send, proven))) = accepted else {
         // Like a web server ending an idle connection: GOAWAY first, then close.
         let _ = timeout(CLOSE_DRAIN, async {
             let _ = control.write_all(&goaway(next_request)).await;
@@ -449,7 +504,9 @@ async fn serve_connection(
         close(&connection);
         return Ok(());
     };
-    devices.admit(client_static, &connection);
+    if proven {
+        devices.admit(client_static, &connection);
+    }
     let result = async {
         write_frame(&mut send, &response).await?;
         let _ = send.finish();
@@ -470,7 +527,8 @@ async fn authenticate(
     authorized: &AuthorizedPeers,
     replay_cache: &Mutex<HandshakeReplayCache>,
     next_request: &mut u64,
-) -> Result<([u8; 32], Vec<u8>, SendStream), RelayError> {
+) -> Result<([u8; 32], Vec<u8>, SendStream, bool), RelayError> {
+    let binding = channel_binding(connection);
     let mut attempted = false;
     loop {
         let (mut send, mut recv): (SendStream, RecvStream) = connection
@@ -481,14 +539,21 @@ async fn authenticate(
         let accepted = if std::mem::replace(&mut attempted, true) {
             None
         } else if let Ok(request) = read_frame(&mut recv, HANDSHAKE_MAX_LENGTH).await {
-            accept_handshake_message(&request, config, authorized, replay_cache, PROLOGUE)?
+            accept_bound_handshake_message(
+                &request,
+                config,
+                authorized,
+                replay_cache,
+                PROLOGUE,
+                binding.as_ref(),
+            )?
         } else {
             None
         };
         // An answered request's remaining body may go unread (RFC 9114, section 4.1).
         let _ = recv.stop(VarInt::from_u32(H3_NO_ERROR));
-        if let Some((_, client_static, response)) = accepted {
-            return Ok((client_static, response, send));
+        if let Some(((_, client_static, response), proven)) = accepted {
+            return Ok((client_static, response, send, proven));
         }
         let _ = send.write_all(NOT_FOUND).await;
         let _ = send.finish();

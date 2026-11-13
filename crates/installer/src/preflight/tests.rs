@@ -174,6 +174,13 @@ fn occupied_ports_are_protocol_specific_and_preserve_managed_listeners() {
         .collect::<Vec<_>>();
     assert_eq!(blocked.len(), 1);
     assert!(blocked[0].message.starts_with("TCP port 443"));
+    assert_eq!(
+        blocked[0].params,
+        std::collections::BTreeMap::from([
+            ("protocol", "tcp".to_owned()),
+            ("port", "443".to_owned())
+        ])
+    );
     assert!(report.require_compatible().is_err());
     discovery.ssh_server_port = 7443;
     let report = analyze(
@@ -188,7 +195,8 @@ fn occupied_ports_are_protocol_specific_and_preserve_managed_listeners() {
         report
             .issues
             .iter()
-            .any(|issue| issue.code == "ssh_port_conflict")
+            .any(|issue| issue.code == "ssh_port_conflict"
+                && issue.params == std::collections::BTreeMap::from([("port", "7443".to_owned())]))
     );
 }
 
@@ -225,7 +233,25 @@ fn specific_route_conflicts_block_while_broader_private_routes_remain_reviewable
         report
             .issues
             .iter()
-            .any(|issue| issue.code == "tunnel_route_conflict" && !issue.blocking)
+            .any(|issue| issue.code == "tunnel_route_conflict"
+                && !issue.blocking
+                && issue.params
+                    == std::collections::BTreeMap::from([
+                        ("interface", "eth0".to_owned()),
+                        ("route", "10.0.0.0/8".to_owned())
+                    ]))
+    );
+    // An issue without values leaves `params` out, as older clients expect.
+    let existing_vpn = report
+        .issues
+        .iter()
+        .find(|issue| issue.code == "existing_vpn")
+        .unwrap();
+    assert!(
+        serde_json::to_value(existing_vpn)
+            .unwrap()
+            .get("params")
+            .is_none()
     );
     assert!(sections(&(raw.clone() + "\x1eend\n")).is_err());
     assert!(sections(&raw.replace("\x1elisteners\n\n", "")).is_err());
@@ -280,6 +306,10 @@ fn private_management_and_dns_conflicts_do_not_override_existing_resolvers() {
         .collect::<Vec<_>>();
     assert_eq!(blocked.len(), 1);
     assert!(blocked[0].message.contains("management API"));
+    assert_eq!(
+        blocked[0].params,
+        std::collections::BTreeMap::from([("port", "8443".to_owned())])
+    );
 }
 
 #[test]
@@ -377,4 +407,32 @@ fn kernel_preflight_reads_real_addresses_routes_and_listeners_without_modificati
             .any(|issue| issue.code == "tunnel_route_conflict" && issue.blocking)
     );
     assert_eq!(run("ip", &["-j", "address", "show"]), before);
+}
+
+#[test]
+fn a_tunnel_address_conflict_names_the_interface_and_address() {
+    let raw = output(
+        serde_json::json!([{"ifname":"wg-old","addr_info":[{"local":"10.77.0.5","prefixlen":24}]}]),
+        serde_json::json!([]),
+        serde_json::json!([]),
+        "",
+        "",
+    );
+    let report = analyze(
+        &discovery(),
+        "8.8.8.8",
+        vec!["8.8.8.8".parse().unwrap()],
+        required_ports(&TransportSetup::default(), None),
+        &raw,
+    )
+    .unwrap();
+    let conflict = report
+        .issues
+        .iter()
+        .find(|issue| issue.code == "tunnel_address_conflict")
+        .unwrap();
+    assert_eq!(
+        serde_json::to_value(conflict).unwrap()["params"],
+        serde_json::json!({"interface": "wg-old", "address": "10.77.0.5"})
+    );
 }

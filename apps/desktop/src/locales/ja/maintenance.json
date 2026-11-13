@@ -1,0 +1,270 @@
+{
+  "tools": {
+    "deviceTitle": "デバイスのバックアップ",
+    "vpsTitle": "VPS のバックアップと復旧",
+    "serverTitle": "{{name}} のメンテナンス",
+    "finishRotationFirst": "先に鍵の更新を完了してください",
+    "exportBackup": {
+      "label": "デバイスのバックアップを書き出す",
+      "summary": "このデバイスの鍵の暗号化されたコピー"
+    },
+    "restoreBackup": {
+      "label": "デバイスのバックアップを復元",
+      "summary": "暗号化されたバックアップファイルからデバイスの鍵を読み込みます"
+    },
+    "rotateKeys": {
+      "label": "デバイスの鍵を更新",
+      "resumeLabel": "鍵の更新を再開",
+      "summary": "このデバイスの鍵を置き換えます",
+      "resumeSummary": "中断されたこのデバイスの鍵の更新を完了します",
+      "needsConnection": "先にこのサーバーに接続してください"
+    },
+    "endpoint": {
+      "ownerLabel": "新しいアドレスに移行",
+      "ownerSummary": "すべてのデバイスを、サーバーの新しいアドレスに向けます",
+      "memberLabel": "アドレスの更新を適用",
+      "memberSummary": "署名された更新を使用して、サーバーの新しいアドレスに接続します",
+      "otherConnected": "先に、別のサーバーから切断してください"
+    },
+    "remove": {
+      "label": "削除またはアンインストール",
+      "summary": "このデバイスから削除するか、VPS からアンインストールします"
+    },
+    "deviceKeysTitle": "デバイスの鍵",
+    "vpsScheduleTitle": "VPS の自動バックアップ"
+  },
+  "operation": {
+    "interruption": "サービスが再起動するため、他のデバイスが一時的に切断される場合があります。",
+    "backup": {
+      "title": "VPS をバックアップ",
+      "summary": "サーバーの設定とアクセス権の暗号化されたコピー",
+      "steps": {
+        "read": "サーバーの設定とアクセス権は、検証済みの SSH 経由で読み取られます。",
+        "encrypt": "バックアップはパスワードで暗号化され、このデバイスに保存されます。"
+      }
+    },
+    "restore": {
+      "title": "VPS を復元または移行",
+      "summary": "このデバイスの VPS または新しい VPS にバックアップを復元します",
+      "steps": {
+        "choose": "VPS のバックアップを選択し、SSH 経由で移行先の VPS を確認します。",
+        "review": "何かが変更される前に、置き換えられる内容を確認できます。"
+      }
+    },
+    "update": {
+      "title": "VPS のソフトウェアを更新",
+      "summary": "VPS に新しい SirinVPN のリリースをインストールします",
+      "steps": {
+        "review": "インストールされる前に、署名されたリリースを確認できます。",
+        "rollback": "現在のリリースは、ロールバック用に保持されます。"
+      }
+    },
+    "repair": {
+      "title": "VPS の構成を修復",
+      "summary": "VPS のネットワークとサービスを再適用します",
+      "steps": {
+        "reapply": "ネットワーク、サービス、DNS を再適用し、サーバーソフトウェアを再インストールします。",
+        "preserve": "デバイスとアクセス権は保持されます。DNS の変更は先に確認できます。"
+      }
+    },
+    "dns": {
+      "title": "VPS の DNS を設定",
+      "steps": {
+        "choose": "このサーバーのすべてのデバイスに使う DNS サーバーまたはプライベートレコードを選択します。",
+        "apply": "変更は修復によって適用されます。サーバーソフトウェアが再インストールされます。"
+      }
+    },
+    "security": {
+      "title": "VPS のセキュリティアップデートをオンにする",
+      "steps": {
+        "enable": "修復によって、オペレーティングシステムの自動セキュリティアップデートがオンになり、サーバーソフトウェアが再インストールされます。"
+      }
+    }
+  },
+  "review": {
+    "description": "{{name}} で行われること",
+    "close": "確認を閉じる",
+    "rotationFirst": "先に、このデバイスの鍵の更新を完了してください。",
+    "reviewRotation": "鍵の更新を確認",
+    "refreshFirst": "先に、このデバイスの VPN の状態を更新してください。",
+    "disconnectFirst": "先に、このデバイスの VPN を切断してください。他のデバイスには影響しません。",
+    "disconnectFirstKillSwitch": "先に、このデバイスの VPN を切断してください。これによりキルスイッチが解除され、自動再接続が停止します。",
+    "disconnect": "このデバイスを切断",
+    "disconnecting": "切断中…",
+    "refresh": "状態を更新",
+    "disconnectFailed": "VPN を切断できませんでした。",
+    "blocked": "続行するには、上の手順を行ってください。"
+  },
+  "health": {
+    "title": "システムの状態",
+    "connection": "接続",
+    "killSwitch": "キルスイッチ",
+    "autoReconnect": "自動再接続",
+    "autoReconnectOther": "接続中のサーバーを確認",
+    "management": "サーバーの管理",
+    "managementResponding": "応答中",
+    "managementUnavailable": "利用できません · VPN は引き続き接続中",
+    "notChecked": "未確認",
+    "serverVpn": "サーバーの VPN",
+    "serverVpnUp": "稼働中",
+    "serverVpnDown": "停止中",
+    "serverDns": "サーバーの DNS",
+    "serverDnsRunning": "動作中",
+    "serverDnsDown": "応答なし",
+    "diagnosticsSummary": "このデバイスを確認し、接続中は DNS、通信の漏えい、サーバーも確認します。",
+    "runDiagnostics": "診断を実行"
+  },
+  "diagnostics": {
+    "title": "診断",
+    "description": "このデバイスとサーバーの現在の状態です。結果は保存されません。",
+    "checking": "このデバイスとサーバーを確認しています…",
+    "copy": "レポートをコピー",
+    "openNetwork": "ネットワークの設定を開く",
+    "turnOnUpdates": "オンにする",
+    "copied": "レポートをコピーしました。置き換えるまでクリップボードに残ります。",
+    "copyFailed": "レポートをコピーできませんでした。クリップボードへのアクセスを確認して、もう一度お試しください。",
+    "summary": {
+      "attention": "{count, plural, other {#件要対応}}",
+      "review": "{count, plural, other {#件確認が必要}}",
+      "unavailable": "{count, plural, other {#件未確認}}",
+      "passed": "{count, plural, other {#件合格}}",
+      "line": "{{attention}} · {{review}} · {{passed}}",
+      "withUnavailable": "{{attention}} · {{review}} · {{unavailable}} · {{passed}}"
+    },
+    "group": {
+      "attention": "要対応",
+      "review": "確認が必要",
+      "unavailable": "未確認",
+      "passed": "合格"
+    },
+    "passedChecks": "合格した確認 · {{count}}",
+    "passedNote": "確認に合格しても、考えられるすべての漏えいを否定するものではありません。",
+    "checkTitle": {
+      "local_backend": "ローカルの VPN サービス",
+      "local_tunnel": "選択中の VPN 接続",
+      "local_protection": "現在の通信の保護",
+      "local_transport": "現在の接続方式",
+      "local_routes": "設定された VPN ルーティング",
+      "local_ipv6": "設定された IPv6 の処理",
+      "local_mtu": "現在のパス MTU",
+      "local_quality": "現在のプライベートトンネルのプローブ",
+      "local_dns": "このデバイス経由のプライベート DNS",
+      "local_identity": "デバイス ID の保存",
+      "management": "VPS の認証と接続",
+      "server_report_format": "VPS の診断の互換性",
+      "interface": "VPS の VPN インターフェース",
+      "wireguard": "VPS の WireGuard",
+      "dns": "VPS のプライベート DNS サービス",
+      "forwarding": "VPS の IPv4 転送",
+      "ipv6": "VPS の IPv6 トンネル",
+      "server_process": "VPS のシステムサービス",
+      "server_routes": "VPS のルート",
+      "server_firewall": "VPS のファイアウォール構成",
+      "server_nat4": "VPS の IPv4 NAT",
+      "server_nat6": "VPS の IPv6 NAT",
+      "server_ports": "VPS の待ち受けポート",
+      "server_mtu": "VPS のインターフェース MTU",
+      "server_cpu": "VPS の CPU",
+      "server_memory": "VPS のメモリ",
+      "server_disk": "VPS のディスク",
+      "external_reachability": "プロバイダーのファイアウォールと公開アクセス",
+      "dns_blocklist": "VPS の DNS ブロック",
+      "os_security_updates": "VPS のセキュリティアップデート",
+      "os_reboot_required": "VPS の再起動",
+      "diagnostics_busy": "VPS の現在の診断",
+      "dns_probe_busy": "VPS の DNS 応答の確認",
+      "dns_resolver_response": "VPS のプライベートリゾルバーの応答",
+      "leak_ipv4": "IPv4 の漏えいテスト",
+      "leak_ipv6": "IPv6 の漏えいテスト",
+      "leak_dns": "DNS の漏えいテスト",
+      "authorization_transaction": "アクセス権の変更",
+      "authorization_containment": "アクセス権の変更中の通信ブロック",
+      "authorization_intent": "アクセス権の復旧記録",
+      "authorization_peers": "適用中のデバイス"
+    },
+    "evidence": {
+      "configuration": "設定を確認済み",
+      "service": "サービスからの報告",
+      "observed": "テスト済み",
+      "notChecked": "未確認",
+      "notApplicable": "対象外",
+      "reported": "報告あり"
+    },
+    "report": {
+      "title": "SirinVPN の診断",
+      "scope": "現在の状態のみ。アクティビティの履歴はありません。",
+      "evidence": "根拠: {{evidence}}",
+      "check": "[{{level}}] {{label}}",
+      "level": {
+        "pass": "合格",
+        "warning": "警告",
+        "fail": "失敗",
+        "not_applicable": "対象外"
+      }
+    },
+    "progress": {
+      "device": {
+        "label": "このデバイス",
+        "detail": "VPN サービス、トンネル、キルスイッチ、ルーティング、MTU"
+      },
+      "identity": {
+        "label": "保存済みのサーバー ID",
+        "detail": "サーバーのピン留めとこのデバイスの証明書"
+      },
+      "server": {
+        "label": "VPS",
+        "detail": "サインイン、DNS、ネットワーク、ファイアウォール、リソース"
+      },
+      "leaks": {
+        "label": "漏えいテスト",
+        "detail": "IPv4、IPv6、DNS"
+      },
+      "disconnected": "VPS の確認と漏えいテストを行うには、このサーバーに接続してください。"
+    },
+    "cause": {
+      "not_measured": "現在の測定値はありません。",
+      "mtu_pending": "パス MTU はまだ測定中です。",
+      "management_clock": "VPS との安全な接続に失敗しました。このデバイスと VPS の時計を確認してください。",
+      "management_credentials_invalid": "保存済みのサーバー ID、またはこのデバイスの証明書が無効です。",
+      "management_device_rejected": "VPS がこのデバイスの証明書を拒否しました。",
+      "management_access_rejected": "VPS がこのデバイスの現在のアクセス権を拒否しました。",
+      "management_unreachable": "VPN 経由で VPS の管理サービスに接続できませんでした。"
+    },
+    "numberedCheck": {
+      "dnsTls": "VPS の TLS リゾルバー {{number}}",
+      "dnsHttps": "VPS の HTTPS リゾルバー {{number}}",
+      "dnsZone": "VPS のスプリット DNS ゾーン {{zone}}",
+      "dnsZoneUpstream": "VPS のスプリット DNS ゾーン {{zone}}、上位 {{upstream}}"
+    }
+  },
+  "speedTest": {
+    "title": "VPS への速度テスト",
+    "description": "VPN 経由で自分の VPS へ、1 本の接続でダウンロード、アップロード、遅延を測定します。インターネット全体の速度ではありません。約 20 秒かかり、全員の VPN が一時的に遅くなります。結果はこのデバイスに保存されます。",
+    "run": "速度テストを実行",
+    "again": "速度テストをもう一度実行",
+    "running": "VPS へのトンネルを測定しています…",
+    "download": "ダウンロード",
+    "upload": "アップロード",
+    "idleLatency": "遅延（アイドル時）",
+    "downloadLatency": "ダウンロード中の遅延",
+    "uploadLatency": "アップロード中の遅延",
+    "rate": "{{value}} Mbit/秒",
+    "latency": "{{value}} ms",
+    "notMeasured": "未測定",
+    "failed": "速度テストが完了しませんでした。このデバイスが接続されていることを確認してから、もう一度お試しください。"
+  },
+  "workspace": {
+    "metric": {
+      "needsUpdate": "サーバーを更新",
+      "sampling": "測定中…"
+    },
+    "error": {
+      "unsavedSettings": "設定で変更を保存するか破棄してから、接続してください。",
+      "settingsNotLoaded": "接続の設定はまだ読み込まれていません。設定を開いて、もう一度お試しください。",
+      "connectionChange": "接続は変わりませんでした。状態を更新して、もう一度お試しください。",
+      "stopUnconfirmed": "VPN が停止したことを確認できませんでした。状態を確認してください。",
+      "resume": "再開できませんでした。通信の設定は変更されていません。",
+      "diagnostics": "診断を実行できませんでした。状態を更新して、もう一度お試しください。"
+    }
+  }
+}

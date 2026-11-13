@@ -33,6 +33,7 @@ export function ImportBackupFlow({
     try {
       const defaultPath = await preferredBackupDirectory();
       const selected = await open({
+        purpose: "backup_import",
         title: t("onboarding.backup.pickerTitle"),
         multiple: false,
         directory: false,
@@ -112,7 +113,7 @@ export function ImportBackupFlow({
         <small id="backup-file-hint">{t("onboarding.backup.fileHint")}</small>
       </div>
       <Field label={t("onboarding.backup.password")}>
-        <SecretInput
+        <SecretInput field="password"
           type="password"
           value={password}
           onChange={(event) => setPassword(event.target.value)}

@@ -20,10 +20,9 @@ class AutomationReceiver : BroadcastReceiver() {
         val link = ServiceLink(context)
         val finished = AtomicBoolean()
         fun finish() { if (finished.compareAndSet(false, true)) { link.close(); pending.finish() } }
-        link.bind()
         // Stay inside the receiver budget; the controller completes accepted commands on its own.
         android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ finish() }, 9000)
-        link.ready.whenComplete { control, error ->
+        link.control(9000).whenComplete { control, error ->
             if (error != null) return@whenComplete finish()
             fun run(command: String, arguments: JSONObject, next: (JSONObject) -> Unit) =
                 control.execute(command, arguments.toString(), UUID.randomUUID().toString(), -1, object : IResult.Stub() {
@@ -34,7 +33,7 @@ class AutomationReceiver : BroadcastReceiver() {
                 when (action) {
                     DISCONNECT -> run("disconnect_server", JSONObject()) { finish() }
                     // Repeated triggers must not interrupt a connection that already uses the chosen server.
-                    CONNECT -> if (state.getString("phase") in RUNNING &&
+                    CONNECT -> if (Session.fromWire(state.getString("phase"))?.running == true &&
                         state.getJSONObject("status").opt("server_id") == state.opt("quick_profile")) finish()
                         else { run("connect_saved", JSONObject()) {}; finish() }
                     else -> run("list_servers", JSONObject()) { result ->
@@ -52,6 +51,5 @@ class AutomationReceiver : BroadcastReceiver() {
         const val CONNECT = "org.sirinvpn.action.CONNECT"
         const val DISCONNECT = "org.sirinvpn.action.DISCONNECT"
         const val SELECT_SERVER = "org.sirinvpn.action.SELECT_SERVER"
-        private val RUNNING = setOf("connected", "connecting", "reconnecting", "waiting_for_network", "degraded")
     }
 }

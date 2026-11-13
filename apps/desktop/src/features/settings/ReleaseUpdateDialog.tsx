@@ -1,4 +1,5 @@
 import { useReleaseUpdateSession } from "./ReleaseUpdateSession";
+import { disconnectTunnel } from "../connection/connectionCommands";
 import { DialogContent } from "../../components/DialogContent";
 import { ConfirmationRow } from "../../components/ConfirmationRow";
 import { HashValue } from "../../components/CopyValue";
@@ -11,7 +12,7 @@ import {
   ShieldCheck,
   Warning,
 } from "@phosphor-icons/react";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId } from "react";
 import { api } from "../../api";
 import { formatBytes, formatTarget } from "../../format";
 import { Field, InlineError } from "../../components/ui";
@@ -19,6 +20,8 @@ import { errorMessage } from "../../lib/errors";
 import { ReleaseRecovery } from "./ReleaseRecovery";
 import { completeReleaseSource, rememberAppReleaseSource, rememberedAppReleaseSource, validReleaseSource } from "./vpsRelease";
 import { SettingsDisclosure } from "./SettingsParts";
+import { notify } from "../../components/Toasts";
+import { releaseBusy } from "./releaseUpdateMachine";
 import { t } from "../../i18n";
 
 export function ReleaseUpdateDialog({
@@ -33,15 +36,20 @@ export function ReleaseUpdateDialog({
   onReviewPrerequisites?: () => void;
 }) {
   const formId = useId();
-  const { source, setSource, channel, setChannel, candidate, setCandidate, installed, setInstalled } = useReleaseUpdateSession();
-  const [confirmed, setConfirmed] = useState(false);
-  const [busy, setBusy] = useState<"checking" | "installing" | "disconnecting" | "restarting" | null>(null);
-  const [error, setError] = useState<{ message: string; retry?: () => void } | null>(null);
-  const [recoveryBusy, setRecoveryBusy] = useState(false);
-  const [restored, setRestored] = useState(false);
+  const { source, setSource, channel, setChannel, state, dispatch } = useReleaseUpdateSession();
+  const candidate = state.kind === "reviewing" || state.kind === "installing" || state.kind === "installed" ? state.candidate : null;
+  const installed = state.kind === "installed" ? state : null;
+  const confirmed = state.kind === "reviewing" && state.confirmed;
+  // Legacy names for the one running step, read by the markup below.
+  const busy = state.kind === "checking" ? "checking" : state.kind === "installing" ? "installing"
+    : state.kind === "form" && state.busy === "recovering" ? null : "busy" in state ? state.busy : null;
+  const restored = state.kind === "form" && state.restored;
+  const locked = releaseBusy(state);
   const android = candidate?.installer_kind === "android";
   const windows = candidate?.installer_kind === "windows";
   const appimage = candidate?.installer_kind === "appimage";
+  // pacman (the AUR packages) owns the files: show the version, leave installing it to pacman.
+  const packageManager = candidate?.installer_kind === "package_manager";
   const binding = Boolean(candidate?.baseline_bind_available);
   const ready = android || windows || appimage || binding || installationReady;
   const nativeAvailable = Boolean(candidate && (candidate.debian_install_available || candidate.windows_install_available
@@ -52,132 +60,127 @@ export function ReleaseUpdateDialog({
   const sourceValid = validReleaseSource(releaseSource);
 
   useEffect(() => {
-    if (!ready) setConfirmed(false);
-  }, [ready]);
+    if (!ready) dispatch({ type: "confirm", value: false });
+  }, [ready, dispatch]);
 
   const reset = () => {
     // Back to the remembered address, not an empty field: discarding a download isn't forgetting the source.
     setSource(rememberedAppReleaseSource());
     setChannel("stable");
-    setCandidate(null);
-    setConfirmed(false);
-    setBusy(null);
-    setInstalled(false);
-    setError(null);
+    dispatch({ type: "reset" });
   };
 
   const changeOpen = (next: boolean) => {
-    if (!next && (busy || recoveryBusy)) return;
+    if (!next && locked) return;
     if (!next && installed) {
-      if(android && !candidate?.baseline_bound) {reset();onOpenChange(false);return;}
-      void discard(); return;
+      // Android keeps its install pending until the system installer finishes or the user cancels it.
+      const keepPending = android && installed.restart !== "bound";
+      reset();
+      onOpenChange(false);
+      // The dialog closes either way; a failed discard only leaves the downloaded file for the next check to replace.
+      if (!keepPending) void api.discardReleaseUpdate().catch((reason) => notify(errorMessage(reason, t("release.error.discard")), "error"));
+      return;
     }
-    if (!next) setConfirmed(false);
+    if (!next) dispatch({ type: "closed" });
     onOpenChange(next);
   };
 
   const discard = async () => {
-    try { await api.discardReleaseUpdate(); reset(); onOpenChange(false); }
-    catch (reason) { setError({ message: errorMessage(reason, t("release.error.discard")), retry: () => void discard() }); }
+    dispatch({ type: "discard" });
+    try { await api.discardReleaseUpdate(); reset(); }
+    catch (reason) { dispatch({ type: "discardFailed", error: { message: errorMessage(reason, t("release.error.discard")), retry: "discard" } }); }
   };
 
   const check = async () => {
-    if (!sourceValid || busy || recoveryBusy) return;
-    setBusy("checking");
-    setCandidate(null);
-    setConfirmed(false);
-    setInstalled(false);
-    setError(null);
+    if (!sourceValid || locked) return;
+    dispatch({ type: "check" });
     try {
-      setCandidate(await api.checkReleaseUpdate(releaseSource, channel));
+      dispatch({ type: "checked", candidate: await api.checkReleaseUpdate(releaseSource, channel) });
       // Only an address that served a signed release is worth offering next time.
       rememberAppReleaseSource(releaseSource);
     } catch (reason) {
       // The footer's Check release button is the retry.
-      setError({ message: errorMessage(reason, t("release.error.check")) });
-    } finally {
-      setBusy(null);
+      dispatch({ type: "checkFailed", message: errorMessage(reason, t("release.error.check")) });
     }
   };
 
   // After the installed version is verified, the next step is always a check for a newer release.
   const checkAfterBinding = async () => {
+    dispatch({ type: "checkAfterBinding" });
     try { await api.discardReleaseUpdate(); }
-    catch (reason) { setError({ message: errorMessage(reason, t("release.error.discard")), retry: () => void checkAfterBinding() }); return; }
-    await check();
+    catch (reason) { dispatch({ type: "discardFailed", error: { message: errorMessage(reason, t("release.error.discard")), retry: "checkAfterBinding" } }); return; }
+    dispatch({ type: "check" });
+    try {
+      dispatch({ type: "checked", candidate: await api.checkReleaseUpdate(releaseSource, channel) });
+    } catch (reason) {
+      dispatch({ type: "checkFailed", message: errorMessage(reason, t("release.error.check")) });
+    }
   };
 
   const install = async () => {
-    if (!candidate || !confirmed || !ready || busy) return;
-    setBusy("installing");
-    setError(null);
+    if (!candidate || !confirmed || !ready || locked) return;
+    dispatch({ type: "install" });
     try {
-      setCandidate(await (android && binding ? api.installReleaseUpdate(true, true) : api.installReleaseUpdate(true)));
-      setInstalled(true);
-      setConfirmed(false);
+      dispatch({ type: "installed", candidate: await (android && binding ? api.installReleaseUpdate(true, true) : api.installReleaseUpdate(true)) });
     } catch (reason) {
-      setConfirmed(false);
-      setError({ message: errorMessage(
+      dispatch({ type: "installFailed", message: errorMessage(
         reason,
         binding ? t("release.error.bind")
           : windows ? t("release.error.installWindows")
           : appimage ? t("release.error.installAppImage")
           : t("release.error.installDebian"),
       ) });
-    } finally {
-      setBusy(null);
     }
   };
 
   // Fixes the readiness blocker here, so the reviewed release stays on screen.
   const disconnect = async () => {
-    setBusy("disconnecting");
-    setError(null);
-    try { await api.disconnect(); }
-    catch (reason) { setError({ message: errorMessage(reason, t("maintenance.review.disconnectFailed")), retry: () => void disconnect() }); }
-    finally { setBusy(null); }
+    dispatch({ type: "disconnect" });
+    try { await disconnectTunnel(null); dispatch({ type: "disconnected" }); }
+    catch (reason) { dispatch({ type: "disconnected", error: { message: errorMessage(reason, t("maintenance.review.disconnectFailed")), retry: "disconnect" } }); }
   };
 
   // The VPN runs in its own service, so only the window restarts. On success the app exits and stays busy until then.
   const restart = async () => {
-    setBusy("restarting");
-    setError(null);
+    dispatch({ type: "restart" });
     try { await api.restartApp(); }
-    catch { setBusy(null); setError({ message: t("release.done.restartFailed") }); }
+    catch { dispatch({ type: "restartFailed", message: t("release.done.restartFailed") }); }
   };
 
+  const retries = { discard, checkAfterBinding, disconnect };
+  const error = "error" in state ? state.error : null;
   const installable = Boolean((candidate?.newer_than_running || binding) && nativeAvailable);
   const installAvailable = installable && ready;
-  const failure = error ? <InlineError message={error.message} onRetry={error.retry} retryDisabled={Boolean(busy)} /> : null;
+  const failure = error ? <InlineError message={error.message} onRetry={error.retry && (() => void retries[error.retry!]())} retryDisabled={locked} /> : null;
 
   const footer = installed && candidate
-    ? candidate.baseline_bound
+    ? installed.restart === "bound"
       ? <>
-          <button className="secondary-button" type="button" onClick={() => changeOpen(false)}>{t("common.action.close")}</button>
-          <button className="primary-button" type="button" disabled={Boolean(busy)} onClick={() => void checkAfterBinding()}>
+          <button className="secondary-button" type="button" disabled={locked} onClick={() => changeOpen(false)}>{t("common.action.close")}</button>
+          <button className="primary-button" type="button" disabled={locked} onClick={() => void checkAfterBinding()}>
             {busy === "checking" ? <Busy label={t("release.form.checking")} /> : t("release.done.checkNewer")}
           </button>
         </>
-      : android || windows
+      : installed.restart === "external"
         ? <button className="primary-button" type="button" onClick={() => changeOpen(false)}>{t("common.action.close")}</button>
         : <>
-            <button className="secondary-button" type="button" disabled={Boolean(busy)} onClick={() => changeOpen(false)}>{t("release.done.closeLater")}</button>
-            <button className="primary-button" type="button" disabled={Boolean(busy)} onClick={() => void restart()}>
+            <button className="secondary-button" type="button" disabled={locked} onClick={() => changeOpen(false)}>{t("release.done.closeLater")}</button>
+            <button className="primary-button" type="button" disabled={locked} onClick={() => void restart()}>
               {busy === "restarting" ? <Busy label={t("release.done.restarting")} /> : t("release.done.restartNow")}
             </button>
           </>
-    : busy === "installing" ? null
+    : state.kind === "installing" ? null
     : candidate
       ? <>
-          <button className="secondary-button" type="button" disabled={Boolean(busy)} onClick={() => void discard()}>{t("release.candidate.discard")}</button>
-          {installable && <button className="primary-button" type="button" disabled={!confirmed || !installAvailable || Boolean(busy)} onClick={() => void install()}>
+          <button className="secondary-button" type="button" disabled={locked} onClick={() => void discard()}>{t("release.candidate.discard")}</button>
+          {installable && <button className="primary-button" type="button" disabled={!confirmed || !installAvailable || locked} onClick={() => void install()}>
             <ShieldCheck size={18} /> {binding ? t("release.candidate.verify") : t("release.candidate.install")}
           </button>}
         </>
-      : <button className="primary-button release-check-button" type="submit" form={formId} disabled={!sourceValid || Boolean(busy) || recoveryBusy}>
+      : <button className="primary-button release-check-button" type="submit" form={formId} disabled={!sourceValid || locked}>
           {busy === "checking" ? <Busy label={t("release.form.checking")} /> : <><ShieldCheck size={18} />{t("release.form.check")}</>}
         </button>;
-  const footerNote = busy || installed || recoveryBusy || restored ? null
+  const footerNote = locked || installed || restored ? null
     : candidate ? installable ? !ready ? t("release.candidate.readyFirst") : !confirmed ? t("release.candidate.confirmFirst") : null : null
     : releaseSource ? null : t("release.form.sourceFirst");
 
@@ -187,25 +190,25 @@ export function ReleaseUpdateDialog({
         <Dialog.Overlay className="dialog-overlay" />
         <DialogContent className="dialog-content release-update-dialog"
           heading={t("release.dialog.title")}
-          description={installed && candidate ? candidate.baseline_bound ? t("release.done.titleVerified") : android ? t("release.done.titleAndroid")
+          description={installed && candidate ? installed.restart === "bound" ? t("release.done.titleVerified") : android ? t("release.done.titleAndroid")
             : windows ? t("release.done.titleWindows") : t("release.done.titleInstalled") : t("release.dialog.description")}
-          closeDisabled={Boolean(busy) || recoveryBusy} closeLabel={t("release.dialog.close")}
+          data-flow-state={state.kind} closeDisabled={locked} closeLabel={t("release.dialog.close")}
           footerNote={footerNote}
           footer={footer}>
 
           {installed && candidate ? (
-            <OperationResult title={candidate.baseline_bound ? t("release.done.headingVerified", { version: candidate.release_version })
+            <OperationResult title={installed.restart === "bound" ? t("release.done.headingVerified", { version: candidate.release_version })
                 : windows ? t("release.done.headingWindows", { version: candidate.release_version })
                 : t("release.done.headingInstalled", { version: candidate.release_version })}>
               <p>
-                {candidate.baseline_bound ? t("release.done.bodyVerified")
+                {installed.restart === "bound" ? t("release.done.bodyVerified")
                   : android ? t("release.done.bodyAndroid") : windows ? t("release.done.bodyWindows")
                   : appimage ? t("release.done.bodyAppImage")
                   : t("release.done.bodyDebian")}
               </p>
               {failure}
             </OperationResult>
-          ) : busy === "installing" ? (
+          ) : state.kind === "installing" ? (
             <OperationProgress
               title={binding ? t("release.progress.verifying") : t("release.progress.installing")}
               note={binding ? t("release.progress.verifyingBody")
@@ -235,7 +238,7 @@ export function ReleaseUpdateDialog({
               </div>
               {/* Signed notes are plain text; React renders them without markup. */}
               {/* "What's new" only for a release that would be installed; a verify or the current version just has notes. */}
-              {candidate.release_notes && <p className="release-notes"><strong>{t(installable && !binding ? "release.candidate.whatsNew" : "release.candidate.notes")}</strong> {candidate.release_notes}</p>}
+              {candidate.release_notes && <p className="release-notes"><strong>{t(installable && !binding ? "release.candidate.whatsNew" : "release.candidate.notes")}</strong> <span lang="en" dir="auto">{candidate.release_notes}</span></p>}
               <p>{t("release.candidate.package", { size: formatBytes(candidate.artifact_size_bytes) })}</p>
               <p className="settings-note">{t("release.candidate.source", { source })}</p>
 
@@ -244,6 +247,8 @@ export function ReleaseUpdateDialog({
                   <Warning size={18} weight="fill" />
                   <span>{t("release.candidate.notNewer")}</span>
                 </div>
+              ) : packageManager ? (
+                <p className="settings-note">{t("release.candidate.packageManager", { version: candidate.release_version })}</p>
               ) : !nativeAvailable ? (
                 <div className="warning-note replacement-warning">
                   <Warning size={18} weight="fill" />
@@ -259,14 +264,14 @@ export function ReleaseUpdateDialog({
                 <div>
                   <p>{t("release.candidate.notReady")}</p>
                   <div className="update-blocker-actions">
-                    <button type="button" className="secondary-button" disabled={Boolean(busy)} onClick={() => void disconnect()}>
+                    <button type="button" className="secondary-button" disabled={locked} onClick={() => void disconnect()}>
                       {busy === "disconnecting" ? <Busy label={t("maintenance.review.disconnecting")} /> : t("maintenance.review.disconnect")}
                     </button>
                     <button type="button" className="text-button" onClick={() => { changeOpen(false); onReviewPrerequisites?.(); }}>{t("release.candidate.openConnection")}</button>
                   </div>
                 </div>
               </div>}
-              {installable && <ConfirmationRow checked={confirmed} disabled={!installAvailable} onChange={setConfirmed}>
+              {installable && <ConfirmationRow checked={confirmed} disabled={!installAvailable || locked} onChange={value => dispatch({ type: "confirm", value })}>
                 <strong>{binding ? t("release.candidate.confirmVerify") : installConfirmation}</strong>
                 <small>{t("release.candidate.confirmNote")}</small>
               </ConfirmationRow>}
@@ -276,7 +281,7 @@ export function ReleaseUpdateDialog({
                   <div><dt>{t("release.candidate.detailSize")}</dt><dd>{formatBytes(candidate.artifact_size_bytes)}</dd></div>
                   <div><dt>{t("release.candidate.detailTarget")}</dt><dd>{formatTarget(candidate.artifact_target)}</dd></div>
                   <div><dt>{t("release.candidate.detailRelease")}</dt><dd>{candidate.release_sequence}</dd></div>
-                  <div><dt>{t("release.candidate.detailPolicy")}</dt><dd>{t("release.candidate.detailPolicyValue", { sequence: candidate.trust_policy_sequence })}</dd></div>
+                  <div><dt>{t("release.candidate.detailPolicy")}</dt><dd>{t("release.candidate.detailPolicyValue", { sequence: String(candidate.trust_policy_sequence) })}</dd></div>
                 </dl>
                 <HashValue label={t("release.candidate.digest")} value={candidate.artifact_sha256} />
                 <HashValue label={t("release.candidate.detailRoot")} value={candidate.root_key_id_sha256} />
@@ -293,7 +298,7 @@ export function ReleaseUpdateDialog({
                 <button
                   type="button"
                   aria-pressed={channel === "stable"}
-                  disabled={Boolean(busy)}
+                  disabled={locked}
                   onClick={() => setChannel("stable")}
                 >
                   {t("release.form.stable")}
@@ -301,7 +306,7 @@ export function ReleaseUpdateDialog({
                 <button
                   type="button"
                   aria-pressed={channel === "preview"}
-                  disabled={Boolean(busy)}
+                  disabled={locked}
                   onClick={() => setChannel("preview")}
                 >
                   {t("release.form.preview")}
@@ -322,7 +327,7 @@ export function ReleaseUpdateDialog({
                   autoCapitalize="none"
                   autoCorrect="off"
                   spellCheck={false}
-                  disabled={Boolean(busy)}
+                  disabled={locked}
                   required
                 />
               </Field>
@@ -337,7 +342,7 @@ export function ReleaseUpdateDialog({
               <p className="form-footnote">
                 <GlobeHemisphereWest size={15} /> {t("release.form.privacy")}
               </p>
-              <ReleaseRecovery busy={Boolean(busy) || recoveryBusy} setBusy={setRecoveryBusy} onRestored={() => setRestored(true)}
+              <ReleaseRecovery busy={locked} setBusy={running => dispatch({ type: "recovery", running })} onRestored={() => dispatch({ type: "recovery", running: false, restored: true })}
                 onRestart={() => void restart()} restarting={busy === "restarting"} />
             </form>
           )}

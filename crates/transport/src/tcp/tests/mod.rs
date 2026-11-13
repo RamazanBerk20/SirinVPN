@@ -46,3 +46,4 @@ mod handshake_freshness;
 mod https_camouflage;
 mod quic_carrier;
 mod server_relay_preserves_a_fragmented_inbound_frame_during_outbound_traffic;
+mod stream_carrier_sessions;

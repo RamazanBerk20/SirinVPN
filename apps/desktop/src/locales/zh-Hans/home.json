@@ -1,0 +1,249 @@
+{
+  "consoleLabel": "VPN 连接",
+  "status": {
+    "unknown": "状态未知",
+    "restoringAccess": "正在恢复服务器访问权限",
+    "monitorUnavailable": "VPN 监视器无响应",
+    "reconnecting": "正在重新连接",
+    "connected": "已连接",
+    "connecting": "正在连接",
+    "interrupted": "连接已中断",
+    "disconnected": "已断开连接",
+    "changing": "正在更改连接…",
+    "checking": "正在检查 VPN 状态…",
+    "connectingTo": "正在连接到 {{name}}…",
+    "disconnecting": "正在断开连接…"
+  },
+  "action": {
+    "showActive": "前往已连接的服务器",
+    "refresh": "刷新状态",
+    "disconnectAndUnblock": "断开连接并关闭断网保护阻止",
+    "disconnect": "断开连接",
+    "connect": "连接",
+    "changing": "正在更改连接",
+    "wait": "请稍候…",
+    "vpnSettings": "VPN 设置",
+    "androidVpnSettings": "Android VPN 设置",
+    "cancelConnection": "取消",
+    "reconnect": "重新连接",
+    "reconnectHint": "使用当前设置恢复连接",
+    "stop": "停止 VPN",
+    "connecting": "正在连接…",
+    "disconnecting": "正在断开连接…",
+    "checkAgain": "再次检查"
+  },
+  "routing": {
+    "unknown": "未知",
+    "inactive": "未启用",
+    "selectedApps": "所选应用",
+    "selectedRoutes": "所选路由",
+    "fullTunnelLan": "全隧道 · 允许局域网",
+    "fullTunnel": "全隧道"
+  },
+  "killSwitch": {
+    "unknown": "未知",
+    "otherServer": "查看活动服务器",
+    "nextConnection": "下次连接时开启",
+    "off": "关",
+    "inactive": "未启用",
+    "armed": "开",
+    "blocking": "正在阻止流量",
+    "failed": "无法正常工作",
+    "unverified": "开 · 未验证"
+  },
+  "isolation": {
+    "verified": "已验证",
+    "unverified": "未验证"
+  },
+  "summary": {
+    "unknown": "无法读取 VPN 状态。请刷新以检查。",
+    "restoringAccess": "在服务器访问权限恢复之前，请勿依赖此连接。",
+    "monitorUnavailable": "VPN 监视器没有响应，因此无法确定断网保护的状态。",
+    "otherServer": "已连接到另一台服务器。请前往该服务器断开连接。",
+    "androidApps": "仅所选应用使用 VPN。",
+    "windowsApps": "所选应用使用 VPN。系统 DNS 通过服务器解析。",
+    "launchedApps": "从 SirinVPN 启动的应用使用 VPN。",
+    "selectedRoutes": "所选网络使用 VPN，其他网络不使用。",
+    "fullTunnelLan": "互联网流量使用 VPN，局域网流量不使用。",
+    "fullTunnel": "所有互联网流量都通过 VPN。",
+    "fullTunnelIpv4": "IPv4 流量通过 VPN。IPv6 既不经过隧道，也不被阻止。",
+    "interrupted": "连接已断开。在你重新连接之前，你的流量未受保护。",
+    "interruptedBlocked": "连接已断开。断网保护会阻止流量，直到你重新连接或断开连接。",
+    "waitingAndroidLockdown": "在你重新连接之前，Android 会阻止流量。",
+    "waitingBlocked": "流量已被阻止。请重新连接，或断开连接以解除阻止。",
+    "waiting": "自动重新连接已关闭。准备好后请重新连接。",
+    "reconnecting": "正在尝试恢复连接。",
+    "connecting": "正在建立安全连接。",
+    "disconnected": "你的流量未使用 VPN。",
+    "disconnecting": "正在关闭 VPN。"
+  },
+  "warning": {
+    "accessContained": "正在恢复服务器访问权限。VPN 流量将被保留，直到恢复完成。",
+    "accessUnenforced": "服务器访问检查无法正常工作。在恢复之前，请勿依赖此服务器。",
+    "androidLockdown": "断开连接后，Android 的“没有 VPN 时阻止连接”仍保持开启。",
+    "killSwitchFailed": "无法验证断网保护。在此问题解决之前，请勿依赖它。",
+    "androidAppsUnverified": "无法验证应用路由。请在依赖它之前检查连接。",
+    "appsUnverified": "无法验证应用路由。新启动的应用已关闭路由。",
+    "dnsDown": "服务器的 DNS 没有响应，因此网站可能无法加载。",
+    "ipv6": "IPv6 流量既不经过隧道，也不被阻止，因此可能绕过 VPN。",
+    "serverInterfaceDown": "服务器报告其 VPN 接口已关闭。流量可能随时中断。"
+  },
+  "componentUpdate": {
+    "needed": "请更新 VPN 组件以连接。",
+    "review": "查看更新"
+  },
+  "presharedKey": {
+    "missing": "此设备没有预共享密钥，因此已记录的 VPN 流量无法抵御未来量子计算机的破解。",
+    "add": "添加预共享密钥"
+  },
+  "health": {
+    "idle": "最近没有握手。连接可能只是处于空闲状态。",
+    "managementUnavailable": "服务器管理不可用。",
+    "reachability": {
+      "notChecked": "未检查",
+      "replied": "正在响应",
+      "noReply": "无回应"
+    }
+  },
+  "protection": {
+    "ipv6NotVerified": "IPv6 未验证",
+    "ipv6": {
+      "tunneled": "经过 VPN",
+      "blocked": "已阻止",
+      "unknown": "未知",
+      "blockedLanAllowed": "已阻止 · 允许局域网",
+      "blockedVerified": "已阻止 · 已验证",
+      "selectedRoutes": "仅所选路由",
+      "blockedUnverified": "已阻止 · 未验证",
+      "bypassesOutsideRoutes": "所选路由以外的流量绕过 VPN",
+      "unverified": "未验证"
+    },
+    "android": {
+      "unverified": "无法验证 Android 的路由或阻止设置。",
+      "packages": "所选应用使用 VPN 及其 DNS。其他应用绕过 VPN，除非 Android 将其阻止。",
+      "lockdown": "Android 的“没有 VPN 时阻止连接”已对所有应用开启。"
+    },
+    "apps": {
+      "ipv6Unverified": "应用路由未验证",
+      "ipv6Tunneled": "已启动的应用：经过 VPN",
+      "ipv6Blocked": "已启动的应用：已阻止",
+      "notReady": "应用路由尚未就绪。新启动的应用已关闭路由。",
+      "windows": "所选应用的 IPv4 流量使用 VPN，其 IPv6 被阻止。DNS 通过服务器解析。",
+      "launched": "已启动的应用及其 DNS 使用 VPN。其他应用使用你的正常网络。"
+    },
+    "firewall": {
+      "verifiedSelectedRoutes": "已验证所选路由和 DNS 的防火墙。",
+      "verifiedLanAllowed": "已验证 IPv4、IPv6 和 DNS 的防火墙。允许局域网。",
+      "verified": "已验证 IPv4、IPv6 和 DNS 的防火墙。",
+      "unverified": "无法验证防火墙。"
+    }
+  },
+  "details": {
+    "connection": "连接",
+    "status": "状态",
+    "method": "连接方式",
+    "routing": "路由",
+    "killSwitch": "断网保护",
+    "appIsolation": "应用隔离",
+    "reachability": "服务器可访问",
+    "serverResponse": "服务器响应",
+    "serverResponseInfo": "服务器响应状态请求所需的时间。这不是 VPN 延迟。",
+    "addresses": "地址",
+    "serverAddress": "服务器地址",
+    "vpnAddress": "VPN 地址",
+    "thisDevice": "此设备",
+    "mtu": "数据包大小（MTU）",
+    "server": "服务器",
+    "blockWithoutVpn": "无 VPN 时阻止",
+    "alwaysOn": "始终开启的 VPN",
+    "mtuValue": "{value, plural, other {{{value}} 字节}}",
+    "mtuPending": "{value, plural, other {{{value}} 字节（已测得）· 将在下次连接时生效}}"
+  },
+  "traffic": {
+    "label": "此设备的流量",
+    "session": "当前会话",
+    "countersUnavailable": "计数器不可用",
+    "notConnected": "未连接到此服务器",
+    "download": "下载",
+    "upload": "上传",
+    "duration": "已连接时长",
+    "measuring": "正在测量…",
+    "received": "已接收 {{amount}}",
+    "sent": "已发送 {{amount}}",
+    "counterFailed": "无法读取计数器",
+    "needsUpdate": "需要更新 VPN 组件",
+    "durationFailed": "无法读取会话时间",
+    "updateNeeded": "此设备的流量计数器和会话时间需要更新 VPN 组件。"
+  },
+  "device": {
+    "summary": "设备详情",
+    "receivedPackets": "已接收数据包",
+    "sentPackets": "已发送数据包",
+    "latency": "延迟",
+    "latencyInfo": "通过 VPN 到服务器的平均往返时间。这不是互联网速度。",
+    "noMeasurement": "尚未测量",
+    "probes": "探测回复",
+    "probesValue": "{{received}}/{{sent}} · 抖动 {{jitter}}",
+    "ipv6": "IPv6",
+    "autoReconnect": "自动重新连接",
+    "fallback": "备用方式",
+    "countersNote": "重新连接时计数器会重置。不保留任何历史记录。"
+  },
+  "server": {
+    "title": "服务器",
+    "freshness": {
+      "unavailable": "不可用",
+      "live": "实时",
+      "polling": "定期刷新",
+      "connecting": "正在加载统计信息…",
+      "reconnecting": "统计信息正在重新连接…"
+    },
+    "unavailable": "服务器统计信息不可用。将自动恢复显示。",
+    "connectToSee": "连接后即可查看服务器统计信息。",
+    "pollingNote": "实时服务器统计信息需要更新服务器。",
+    "noMeasurement": "未测量",
+    "usedOf": "已用 {{used}}，共 {{total}}",
+    "cpu": "CPU",
+    "cpuDetail": "所有核心的平均值",
+    "memory": "内存",
+    "storage": "存储",
+    "uptime": "运行时间",
+    "devices": "设备",
+    "devicesActive": "{{active}}/{{total}} 活动",
+    "devicesAuthorized": "{count, plural, other {# 台设备}}",
+    "activityUnavailable": "活动信息不可用",
+    "activityUnreadable": "无法从服务器读取设备活动。",
+    "activityUnsupported": "此服务器无法报告设备活动。请将其更新后再开启此功能。",
+    "reviewHealth": "检查服务器健康状况",
+    "reviewUpdate": "查看更新",
+    "detailsSummary": "服务器详情",
+    "inbound": "入站",
+    "outbound": "出站",
+    "received": "已接收",
+    "sent": "已发送",
+    "receivedPackets": "已接收数据包",
+    "sentPackets": "已发送数据包",
+    "dns": "DNS",
+    "dnsRunning": "正在运行",
+    "dnsDown": "无响应",
+    "totalsInfo": "总计涵盖自服务器 VPN 启动以来的所有设备。",
+    "pollingNoteMember": "实时服务器统计信息需要更新服务器。服务器所有者可以安装该更新。"
+  },
+  "alwaysOnNote": "已开启始终开启的 VPN，因此由 Android 决定 VPN 何时停止。请在 Android 的 VPN 设置中断开连接。",
+  "method": {
+    "https": "HTTPS",
+    "automatic": "自动 · {{method}}"
+  },
+  "alert": {
+    "label": "提醒",
+    "runDiagnostics": "运行诊断",
+    "checkServer": "检查服务器健康状况",
+    "unstable": "{sent, plural, other {连接不稳定：最近 # 次检查中有 {{lost}} 次未收到回复。}}",
+    "storage": "服务器存储已使用 {{percent}}。请在它停止工作之前释放一些空间。",
+    "rotationPending": "密钥轮换未完成。请完成轮换，以便此设备保持访问权限。",
+    "finishRotation": "完成密钥轮换"
+  },
+  "consequence": {
+    "desktop": "断开连接也会关闭断网保护阻止和自动重新连接。"
+  }
+}

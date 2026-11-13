@@ -2,7 +2,8 @@
 //! Preserve only display credentials, a Wayland socket and the local audio socket.
 //! This is process routing, not a sandbox for malicious programs using arbitrary IPC.
 use super::*;
-use std::os::unix::fs::FileTypeExt;
+use std::os::fd::AsRawFd;
+use std::os::unix::fs::{FileTypeExt, OpenOptionsExt};
 
 struct CarriedFiles {
     directory: tempfile::TempDir,
@@ -10,9 +11,20 @@ struct CarriedFiles {
 }
 impl CarriedFiles {
     fn bind(&mut self, source: &Path) -> Result<PathBuf> {
+        self.bind_with(&[], source)
+    }
+    /// Binds exactly the file this descriptor holds. libmount must not canonicalize the
+    /// magic link back into a path that could have been replaced since the check.
+    fn bind_file(&mut self, file: &fs::File) -> Result<PathBuf> {
+        let source = format!("/proc/{}/fd/{}", std::process::id(), file.as_raw_fd());
+        self.bind_with(&["--no-canonicalize"], Path::new(&source))
+    }
+    fn bind_with(&mut self, options: &[&str], source: &Path) -> Result<PathBuf> {
         let path = self.directory.path().join(self.mounts.len().to_string());
         fs::File::create(&path)?;
-        mount(&["--bind", path_string(source)?, path_string(&path)?])?;
+        let mut arguments = options.to_vec();
+        arguments.extend(["--bind", path_string(source)?, path_string(&path)?]);
+        mount(&arguments)?;
         self.mounts.push(path.clone());
         Ok(path)
     }
@@ -46,6 +58,22 @@ fn mount(arguments: &[&str]) -> Result<()> {
     Ok(())
 }
 
+/// Root resolves and bind-mounts a caller-named path, so only the caller's own regular
+/// file is carried: never another account's file that the caller could not open itself.
+/// The returned descriptor is what was checked, so the bind cannot race a swapped path.
+pub(super) fn owned_display_authority(path: &Path, uid: u32) -> Result<fs::File> {
+    let file = fs::OpenOptions::new()
+        .read(true)
+        .custom_flags(nix::fcntl::OFlag::O_PATH.bits() | nix::fcntl::OFlag::O_NOFOLLOW.bits())
+        .open(path)?;
+    let metadata = file.metadata()?;
+    anyhow::ensure!(
+        metadata.is_file() && metadata.uid() == uid,
+        "invalid display authority"
+    );
+    Ok(file)
+}
+
 pub(super) fn isolate(
     request: &mut ApplicationLaunchRequest,
     user: &nix::unistd::User,
@@ -77,12 +105,9 @@ pub(super) fn isolate(
     if let Some(authority) = request.environment.get("XAUTHORITY") {
         let source = fs::canonicalize(authority)?;
         if source.starts_with("/run") {
-            anyhow::ensure!(
-                fs::metadata(&source)?.is_file(),
-                "invalid display authority"
-            );
+            let file = owned_display_authority(&source, user.uid.as_raw())?;
             let destination = runtime.join("sirinvpn-xauthority");
-            destinations.push((carried.bind(&source)?, destination.clone()));
+            destinations.push((carried.bind_file(&file)?, destination.clone()));
             request
                 .environment
                 .insert("XAUTHORITY".into(), path_string(&destination)?.to_owned());

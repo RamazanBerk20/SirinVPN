@@ -195,11 +195,6 @@
       "stale": "Last backup {{age}} · overdue",
       "failed": "Last attempt didn’t finish"
     },
-    "age": {
-      "today": "today",
-      "days_one": "{{count}} day ago",
-      "days_other": "{{count}} days ago"
-    },
     "notice": {
       "failed": "The last scheduled VPS backup didn’t finish.",
       "stale": "Last VPS backup: {{age}}.",
@@ -224,7 +219,7 @@
     "title": "Restore {{name}}",
     "titleDone": "Restore complete",
     "description": "Restore this server’s identity onto the same or a new VPS.",
-    "warning": "<strong>An old backup can bring back access you’ve since revoked.</strong> Review members and devices afterward.",
+    "warning": "<strong>An old backup can bring back access you’ve since revoked.</strong> Review people and devices afterward.",
     "openDialogTitle": "Open VPS backup",
     "file": "Backup file",
     "host": "VPS address",
@@ -248,7 +243,7 @@
     "consequence": {
       "replace": "The SirinVPN install on this VPS is replaced by the one in the backup.",
       "install": "SirinVPN is installed on this VPS from the backup.",
-      "access": "Members and devices you removed after this backup was made get access again.",
+      "access": "People and devices you removed after this backup was made get access again.",
       "device": "This device switches to {{host}}. Services restart briefly."
     },
     "step": "Sign in, restore and verify the VPS"
@@ -272,7 +267,7 @@
       "apply": "Apply changes",
       "home": "Return to Home"
     },
-    "reviewTarget": "{{name}} · SSH {{host}}:{{port}}",
+    "reviewTarget": "{{name}} · SSH {{address}}",
     "progress": "Updating and checking the server…",
     "error": {
       "repair": "Repair stopped. Identities are unchanged and partial changes roll back automatically.",
@@ -302,8 +297,7 @@
     "dnsValue": "Verified · {{policy}}",
     "records": "Private records",
     "recordsNone": "None",
-    "recordsValue_one": "{{count}} record verified",
-    "recordsValue_other": "{{count}} records verified",
+    "recordsValue": "{count, plural, one {# record verified} other {# records verified}}",
     "preserved": "Preserved",
     "identities": "Server and device identities, and access",
     "dnsPolicy": "Private DNS settings",
@@ -337,7 +331,7 @@
       "review": "Review uninstall",
       "action": "Uninstall SirinVPN",
       "confirmTitle": "Uninstall SirinVPN from {{host}}?",
-      "confirmMessage": "All devices and invitations for this server stop working. Docker and other services on the VPS are kept.",
+      "confirmMessage": "All devices and join codes for this server stop working. Docker and other services on the VPS are kept.",
       "confirm": "Uninstall",
       "progress": "Uninstalling SirinVPN…",
       "error": "Uninstall didn’t finish. The VPS rolls back partial changes and this device keeps the server.",
@@ -432,7 +426,8 @@
       "address": "The address didn’t resolve, or it resolved to a private address that isn’t allowed.",
       "connection": "The VPS couldn’t reach the address over HTTPS.",
       "rejected": "The address refused the request.",
-      "rejectedStatus": "The address answered with HTTP status {{status}}."
+      "rejectedStatus": "The address answered with HTTP status {{status}}.",
+      "rejectedClient": "The address answered with HTTP status {{status}}. Check the address and any access token it needs."
     }
   },
   "rotation": {
@@ -443,5 +438,32 @@
   },
   "deviceBackup": {
     "confirmFirst": "Tick the box above to confirm."
+  },
+  "change": {
+    "blocked": "This change can’t start yet:",
+    "rolledBack": "The server rolled the change back, so nothing changed. You can try again.",
+    "unknown": {
+      "message": "The change on {{host}} may have been applied, but its confirmation was lost. This device kept its keys.",
+      "checkAgain": "Check again",
+      "checking": "Checking…",
+      "checkFailed": "Couldn’t check the server. Try again when it’s reachable.",
+      "committed": "The change on {{host}} was applied.",
+      "forget": "Forget this change…",
+      "forgetTitle": "Forget the change on {{host}}?",
+      "forgetMessage": "This device stops tracking the change without asking the server. The server may have applied it or rolled it back. The saved Owner key is kept. You may need to repair the server afterwards.",
+      "forgetConfirm": "Forget change",
+      "forgetting": "Forgetting…",
+      "forgetFailed": "Couldn’t forget the change. Try again.",
+      "forgotten": "This device no longer tracks the change on {{host}}. If the server doesn’t work as expected, repair it."
+    },
+    "plan": {
+      "show": "Show what will be done",
+      "loading": "Preparing the plan…",
+      "error": "Couldn’t prepare the plan.",
+      "commands": "Commands",
+      "asRoot": "(as root)",
+      "upload": "Upload {{path}} (mode {{mode}})",
+      "files": "Files changed"
+    }
   }
 }

@@ -1,5 +1,5 @@
 import { confirmNavigation } from "../lib/navigationGuard";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Page } from "../components/Navigation";
 import { pageScrollPort } from "../lib/scrolling";
 
@@ -16,6 +16,8 @@ function readRoute(): [Page, string] {
 /** History contains only screen names, never profiles or secret material. */
 export function usePageNavigation(): [Page, (next: Page, detail?: string) => void, string, () => void] {
   const [[page, detail], setRoute] = useState(readRoute);
+  const shown = useRef(`#${page}${detail ? `/${detail}` : ""}`);
+  shown.current = `#${page}${detail ? `/${detail}` : ""}`;
   useEffect(() => {
     if (window.history.state?.sirinDepth === undefined)
       window.history.replaceState({ ...window.history.state, sirinDepth: 0 }, "");
@@ -28,7 +30,12 @@ export function usePageNavigation(): [Page, (next: Page, detail?: string) => voi
       port.scrollTo({ top: 0, behavior: "instant" });
   }, [page, detail]);
   useEffect(() => {
+    // Browser and mouse Back arrive here after the URL already changed: a guard that refuses puts the shown page back.
     const onBack = () => {
+      if (!confirmNavigation()) {
+        window.history.pushState({ sirinDepth: (window.history.state?.sirinDepth ?? 0) + 1 }, "", shown.current);
+        return;
+      }
       setRoute(readRoute());
     };
     window.addEventListener("popstate", onBack);

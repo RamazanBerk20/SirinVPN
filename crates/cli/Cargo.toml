@@ -24,8 +24,14 @@ sirinvpn-transport = { path = "../transport" }
 tokio.workspace = true
 zeroize.workspace = true
 
+[dev-dependencies]
+# Already in the workspace lock (used by core's tests); no new crate.
+tempfile.workspace = true
+
 [target.'cfg(target_os = "linux")'.dependencies]
 nix.workspace = true
+# Already in the workspace lock (installer, core); hashes a helper before it is installed as root.
+sha2.workspace = true
 sirinvpn-linux-helper = { path = "../linux-helper" }
 
 [target.'cfg(windows)'.dependencies]

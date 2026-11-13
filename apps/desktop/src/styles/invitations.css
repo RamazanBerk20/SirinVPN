@@ -111,14 +111,14 @@
   border-color: color-mix(in srgb, var(--danger) 60%, var(--line));
 }
 .weekly-interval > legend {
-  float: left;
+  float: inline-start;
   padding: 0;
   font-weight: 650;
 }
 .weekly-interval-heading {
   position: absolute;
   top: 6px;
-  right: 6px;
+  inset-inline-end: 6px;
 }
 .weekly-interval-fields {
   clear: both;
@@ -349,7 +349,7 @@
   align-items: center;
   gap: 10px;
   min-height: 48px;
-  padding: 6px 6px 6px 14px;
+  padding-block: 6px 6px; padding-inline: 14px 6px;
   border: 1px solid color-mix(in srgb, var(--success) 40%, var(--line));
   border-radius: var(--radius);
   background: color-mix(in srgb, var(--success) 6%, transparent);

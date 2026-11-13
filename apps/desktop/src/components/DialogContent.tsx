@@ -63,7 +63,7 @@ export function DialogContent({ heading, description, footer, footerNote, closeD
           <Dialog.Close asChild>
             <button type="button" className="dialog-close" aria-label={closeLabel} disabled={closeDisabled}
               title={closeDisabled ? t("app.dialog.waitToClose") : closeLabel}>
-              {isAndroid && !props.className?.includes("mobile-action-sheet") ? <ArrowLeft size={22} /> : <X size={20} />}
+              {isAndroid && !props.className?.includes("mobile-action-sheet") ? <ArrowLeft size={22} className="mirror-rtl" /> : <X size={20} />}
             </button>
           </Dialog.Close>
         </header>
@@ -81,6 +81,6 @@ export function DialogContent({ heading, description, footer, footerNote, closeD
 /** Returns to the previous step of a dialog. On Android the app bar's arrow closes the dialog, so this names the step. */
 export function DialogBack({ onClick, disabled }: { onClick: () => void; disabled?: boolean }) {
   return <button type="button" className="secondary-button dialog-back" disabled={disabled} onClick={onClick}>
-    <ArrowLeft size={16} />{isAndroid ? t("vps.common.previousStep") : t("common.action.back")}
+    <ArrowLeft size={16} className="mirror-rtl" />{isAndroid ? t("vps.common.previousStep") : t("common.action.back")}
   </button>;
 }

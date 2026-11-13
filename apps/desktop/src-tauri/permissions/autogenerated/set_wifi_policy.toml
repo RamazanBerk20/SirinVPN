@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-set-wifi-policy"
+description = "Enables the set_wifi_policy command without any pre-configured scope."
+commands.allow = ["set_wifi_policy"]
+
+[[permission]]
+identifier = "deny-set-wifi-policy"
+description = "Denies the set_wifi_policy command without any pre-configured scope."
+commands.deny = ["set_wifi_policy"]

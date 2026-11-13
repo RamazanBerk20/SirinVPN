@@ -14,7 +14,7 @@
     "next": "Next",
     "previous": "Previous step",
     "stepsLabel": "Troubleshooting steps",
-    "seen": "What we saw: {{detail}}",
+    "seen": "What we saw:",
     "settingsSummary": "Can’t connect? Go through the usual causes one at a time, with a fix where the app has one.",
     "settingsAction": "Troubleshoot",
     "connectionSettings": "Open connection settings",
@@ -30,7 +30,7 @@
       "transport": "Blocked connection method",
       "clock": "Date and time",
       "enrollment": "Device keys and enrollment",
-      "membership": "Membership",
+      "membership": "Your access",
       "service": "VPN service on the VPS"
     },
     "network": {
@@ -62,14 +62,14 @@
     },
     "enrollment": {
       "rotation": "A key change for this device didn’t finish. Finish it before connecting.",
-      "problem": "This device’s saved keys can’t be used. Restore a device backup, or ask the Owner for a new invitation.",
-      "check": "If this device was removed, or its keys were replaced or restored on another device, it can’t connect. Restore a device backup, or ask the Owner for a new invitation.",
+      "problem": "This device’s saved keys can’t be used. Restore a device backup, or ask the Owner for a new join code.",
+      "check": "If this device was removed, or its keys were replaced or restored on another device, it can’t connect. Restore a device backup, or ask the Owner for a new join code.",
       "ok": "Your VPS accepted this device’s keys."
     },
     "membership": {
       "owner": "You’re the Owner, so your access can’t expire or be suspended.",
-      "problem": "Your VPS refused this device’s access. Your membership may have expired, been suspended, or be outside its allowed hours. Ask the Owner to check it.",
-      "check": "If your membership expired, was suspended or has allowed hours, the VPS stops accepting this device. Ask the Owner to check your access.",
+      "problem": "Your VPS refused this device’s access. Your access may have expired, been suspended, or be outside its allowed hours. Ask the Owner to check it.",
+      "check": "If your access expired, was suspended or has allowed hours, the VPS stops accepting this device. Ask the Owner to check your access.",
       "ok": "Your VPS accepted this device’s current access."
     },
     "service": {

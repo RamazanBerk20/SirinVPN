@@ -70,7 +70,59 @@ pub struct EndpointIdentity {
     pub descriptor: EndpointDescriptor,
 }
 
+/// The Owner's VPS-migration handoff. On disk it stays the two legacy optional profile
+/// fields, so older readers and saved profiles are unchanged; this is their only reader.
+#[derive(Clone, Debug, Eq, PartialEq)]
+// Short-lived values read once per operation; boxing would only complicate matching.
+#[allow(clippy::large_enum_variant)]
+pub enum EndpointHandoff {
+    /// No migration awaits publication.
+    Current,
+    /// An Owner restored onto a new VPS; the old endpoint must still publish the handoff.
+    /// Profiles from before transport descriptors carry only the previous endpoint.
+    AwaitingPublication {
+        previous_endpoint: ServerEndpoint,
+        previous_transports: Option<EndpointDescriptor>,
+    },
+}
+
 impl ServerProfile {
+    /// The handoff state, refusing the combinations the two legacy fields allow but no
+    /// writer produces: transports without an endpoint, mismatched ones, or a non-Owner.
+    pub fn endpoint_handoff(&self) -> Result<EndpointHandoff, ValidationError> {
+        match (
+            &self.pending_previous_endpoint,
+            &self.pending_previous_transports,
+        ) {
+            (None, None) => Ok(EndpointHandoff::Current),
+            (Some(previous_endpoint), previous_transports)
+                if self.role == ServerRole::Owner
+                    && previous_transports
+                        .as_ref()
+                        .is_none_or(|previous| &previous.endpoint == previous_endpoint) =>
+            {
+                Ok(EndpointHandoff::AwaitingPublication {
+                    previous_endpoint: previous_endpoint.clone(),
+                    previous_transports: previous_transports.clone(),
+                })
+            }
+            _ => Err(ValidationError::InvalidEndpointHandoff),
+        }
+    }
+
+    pub fn set_endpoint_handoff(&mut self, handoff: EndpointHandoff) {
+        (
+            self.pending_previous_endpoint,
+            self.pending_previous_transports,
+        ) = match handoff {
+            EndpointHandoff::Current => (None, None),
+            EndpointHandoff::AwaitingPublication {
+                previous_endpoint,
+                previous_transports,
+            } => (Some(previous_endpoint), previous_transports),
+        };
+    }
+
     pub fn endpoint_identity(&self) -> EndpointIdentity {
         EndpointIdentity {
             server_id: self.id,
@@ -119,7 +171,11 @@ impl EndpointTransitionClaims {
 
 impl InvitationClaims {
     pub fn required_schema_version(&self) -> u16 {
-        if !self.alternate_endpoint_hosts.is_empty() || self.endpoint_discovery_port.is_some() {
+        if self.fixed_member_name {
+            4
+        } else if !self.alternate_endpoint_hosts.is_empty()
+            || self.endpoint_discovery_port.is_some()
+        {
             3
         } else if self.max_uses != 1 || !self.member_policy.is_default() {
             2

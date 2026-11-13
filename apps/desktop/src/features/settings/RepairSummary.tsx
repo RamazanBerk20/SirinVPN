@@ -13,7 +13,8 @@ export function RepairSummary({ profile, result, dnsPreserved, recordsPreserved 
   recordsPreserved: boolean;
 }) {
   const fingerprint = result.server_identity_fingerprint;
-  const records = result.private_dns_records.length;
+  // Absent when the VPS confirmed the repair only after its reply was lost.
+  const records = result.private_dns_records?.length;
   return <div className="repair-result">
     <OperationResult title={t("vps.summary.title", { name: profile.name })} />
     <section className="result-section" aria-labelledby="repair-completed-heading">
@@ -21,8 +22,8 @@ export function RepairSummary({ profile, result, dnsPreserved, recordsPreserved 
       <dl className="result-facts">
         <div><dt>{t("vps.summary.software")}</dt><dd>{t("vps.summary.softwareValue")}</dd></div>
         <div><dt>{t("vps.summary.services")}</dt><dd>{t("vps.summary.servicesValue")}</dd></div>
-        <div><dt>{t("vps.summary.dns")}</dt><dd>{t("vps.summary.dnsValue", { policy: formatDnsPolicy(result.dns_upstream) })}</dd></div>
-        <div><dt>{t("vps.summary.records")}</dt><dd>{records === 0 ? t("vps.summary.recordsNone") : t("vps.summary.recordsValue", { count: records })}</dd></div>
+        {result.dns_upstream && <div><dt>{t("vps.summary.dns")}</dt><dd>{t("vps.summary.dnsValue", { policy: formatDnsPolicy(result.dns_upstream) })}</dd></div>}
+        {records !== undefined && <div><dt>{t("vps.summary.records")}</dt><dd>{records === 0 ? t("vps.summary.recordsNone") : t("vps.summary.recordsValue", { count: records })}</dd></div>}
       </dl>
     </section>
     <section className="result-section" aria-labelledby="repair-preserved-heading">
@@ -39,9 +40,9 @@ export function RepairSummary({ profile, result, dnsPreserved, recordsPreserved 
       <p className="settings-note">{t("vps.summary.networkNote")}</p>
       <ServerNetworkPreflight report={result.network_preflight} />
     </SettingsDisclosure>}
-    <SettingsDisclosure className="result-disclosure" summary={t("vps.common.softwareDetails")}>
+    {result.artifact_sha256 && <SettingsDisclosure className="result-disclosure" summary={t("vps.common.softwareDetails")}>
       <HashValue label={t("vps.common.softwareHash")} value={result.artifact_sha256} />
-    </SettingsDisclosure>
+    </SettingsDisclosure>}
     <p className="result-next-step">{t("vps.summary.next")}</p>
   </div>;
 }

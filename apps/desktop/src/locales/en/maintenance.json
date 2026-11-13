@@ -124,14 +124,10 @@
     "copied": "Report copied. It stays in your clipboard until replaced.",
     "copyFailed": "Couldn’t copy the report. Check clipboard access and try again.",
     "summary": {
-      "attention_one": "{{count}} needs attention",
-      "attention_other": "{{count}} need attention",
-      "review_one": "{{count}} to review",
-      "review_other": "{{count}} to review",
-      "unavailable_one": "{{count}} not checked",
-      "unavailable_other": "{{count}} not checked",
-      "passed_one": "{{count}} passed",
-      "passed_other": "{{count}} passed",
+      "attention": "{count, plural, one {# needs attention} other {# need attention}}",
+      "review": "{count, plural, one {# to review} other {# to review}}",
+      "unavailable": "{count, plural, one {# not checked} other {# not checked}}",
+      "passed": "{count, plural, one {# passed} other {# passed}}",
       "line": "{{attention}} · {{review}} · {{passed}}",
       "withUnavailable": "{{attention}} · {{review}} · {{unavailable}} · {{passed}}"
     },
@@ -143,6 +139,49 @@
     },
     "passedChecks": "Passed checks · {{count}}",
     "passedNote": "Passing checks don’t rule out every possible leak.",
+    "checkTitle": {
+      "local_backend": "Local VPN service",
+      "local_tunnel": "Selected VPN connection",
+      "local_protection": "Current traffic protection",
+      "local_transport": "Current transport",
+      "local_routes": "Configured VPN routing",
+      "local_ipv6": "Configured IPv6 handling",
+      "local_mtu": "Current path MTU",
+      "local_quality": "Current private-tunnel probes",
+      "local_dns": "Private DNS through this device",
+      "local_identity": "Device identity storage",
+      "management": "VPS authentication and connectivity",
+      "server_report_format": "VPS diagnostic compatibility",
+      "interface": "VPS VPN interface",
+      "wireguard": "VPS WireGuard",
+      "dns": "VPS private DNS service",
+      "forwarding": "VPS IPv4 forwarding",
+      "ipv6": "VPS IPv6 tunnel",
+      "server_process": "VPS system service",
+      "server_routes": "VPS routes",
+      "server_firewall": "VPS firewall structure",
+      "server_nat4": "VPS IPv4 NAT",
+      "server_nat6": "VPS IPv6 NAT",
+      "server_ports": "VPS listening ports",
+      "server_mtu": "VPS interface MTU",
+      "server_cpu": "VPS CPU",
+      "server_memory": "VPS memory",
+      "server_disk": "VPS disk",
+      "external_reachability": "Provider firewall and public reachability",
+      "dns_blocklist": "VPS DNS blocking",
+      "os_security_updates": "VPS security updates",
+      "os_reboot_required": "VPS restart",
+      "diagnostics_busy": "VPS current diagnostics",
+      "dns_probe_busy": "VPS DNS response checks",
+      "dns_resolver_response": "VPS private resolver response",
+      "leak_ipv4": "IPv4 leak test",
+      "leak_ipv6": "IPv6 leak test",
+      "leak_dns": "DNS leak test",
+      "authorization_transaction": "Access changes",
+      "authorization_containment": "Traffic block during access changes",
+      "authorization_intent": "Access recovery record",
+      "authorization_peers": "Enforced devices"
+    },
     "evidence": {
       "configuration": "Configuration checked",
       "service": "Reported by service",
@@ -154,7 +193,14 @@
     "report": {
       "title": "SirinVPN diagnostics",
       "scope": "Current state only. No activity history.",
-      "evidence": "Evidence: {{evidence}}"
+      "evidence": "Evidence: {{evidence}}",
+      "check": "[{{level}}] {{label}}",
+      "level": {
+        "pass": "PASS",
+        "warning": "WARNING",
+        "fail": "FAIL",
+        "not_applicable": "NOT APPLICABLE"
+      }
     },
     "progress": {
       "device": {
@@ -174,6 +220,21 @@
         "detail": "IPv4, IPv6 and DNS"
       },
       "disconnected": "Connect to this server to also check the VPS and test for leaks."
+    },
+    "cause": {
+      "not_measured": "No current measurement is available.",
+      "mtu_pending": "The path MTU is still being measured.",
+      "management_clock": "The secure connection to the VPS failed. Check the clocks on this device and the VPS.",
+      "management_credentials_invalid": "The saved server identity or this device’s certificate is invalid.",
+      "management_device_rejected": "The VPS rejected this device’s certificate.",
+      "management_access_rejected": "The VPS rejected this device’s current access.",
+      "management_unreachable": "The VPS management service couldn’t be reached through the VPN."
+    },
+    "numberedCheck": {
+      "dnsTls": "VPS TLS resolver {{number}}",
+      "dnsHttps": "VPS HTTPS resolver {{number}}",
+      "dnsZone": "VPS split DNS zone {{zone}}",
+      "dnsZoneUpstream": "VPS split DNS zone {{zone}}, upstream {{upstream}}"
     }
   },
   "speedTest": {

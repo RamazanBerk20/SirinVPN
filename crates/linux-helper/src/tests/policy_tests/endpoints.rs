@@ -23,6 +23,9 @@ impl CommandRunner for EndpointRunner {
     fn output(&self, p: &str, a: &[&str]) -> Result<Vec<u8>> {
         self.policy.output(p, a)
     }
+    fn output_with_timeout(&self, p: &str, a: &[&str], timeout: Duration) -> Result<Vec<u8>> {
+        self.policy.output_with_timeout(p, a, timeout)
+    }
     fn endpoint_checkpoint(
         &self,
         _: &EndpointIdentity,
@@ -508,4 +511,40 @@ fn quic_reaches_the_vps_on_udp_without_the_cdn_name() {
     assert!(rule(&vps.to_string(), "udp"));
     assert!(rule(CDN_ADDRESS, "tcp"));
     assert!(!rule(CDN_ADDRESS, "udp"));
+}
+
+/// `switch-session` saves only the helper's own resolvers for endpoint names, as connect
+/// does; a caller's list never reaches root's resolution or the guard.
+#[test]
+fn switch_session_replaces_caller_endpoint_resolvers() {
+    let directory = tempfile::tempdir().unwrap();
+    let runner = EndpointRunner {
+        policy: runner(),
+        ..Default::default()
+    };
+    *runner.policy.resolvers.lock().unwrap() = b"Global: 192.0.2.53\n".to_vec();
+    let helper = LinuxNetworkHelper::new(runner.clone(), directory.path().into());
+    let (request, _) = fixture(true);
+    helper.connect(&request).unwrap();
+    let helper_resolvers = vec!["192.0.2.53:53".parse::<SocketAddr>().unwrap()];
+    assert_eq!(
+        helper
+            .read_persistent()
+            .unwrap()
+            .request
+            .endpoint_dns_servers,
+        helper_resolvers
+    );
+    let (mut next, _) = fixture(true);
+    next.endpoint_dns_servers = vec!["198.51.100.66:53".parse().unwrap()];
+    helper
+        .switch_session(&SwitchConnectRequest {
+            expected_server_id: request.server_id,
+            request: next.clone(),
+        })
+        .unwrap();
+    let saved = helper.read_persistent().unwrap();
+    assert_eq!(saved.request.server_id, next.server_id);
+    assert_eq!(saved.request.endpoint_dns_servers, helper_resolvers);
+    assert!(helper.guard_is_verified(&saved.request, saved.endpoint));
 }

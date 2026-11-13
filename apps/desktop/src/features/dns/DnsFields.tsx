@@ -2,7 +2,7 @@ import { dnsEndpointAddressIsUsable, dnsOverHttpsPathIsValid, privateDnsDraftIsV
 import { validateHost } from "../../format";
 import { type DnsUpstream } from "../../types";
 import { Field } from "../../components/ui";
-import { formatNumber, t } from "../../i18n";
+import { t } from "../../i18n";
 
 export type DnsPolicyChoice =
   "preserve" | "recursive" | "dns_over_tls" | "dns_over_https";
@@ -285,7 +285,7 @@ export function DnsPolicyFields({
           {endpoints.map((endpoint, index) => { const errors = endpointErrors(choice, endpoints, index); return (
             <div className="dns-endpoint" key={index}>
               <strong>
-                {t(index === 1 ? "dns.resolver.endpointOptional" : "dns.resolver.endpoint", { number: formatNumber(index + 1) })}
+                {t(index === 1 ? "dns.resolver.endpointOptional" : "dns.resolver.endpoint", { number: index + 1 })}
               </strong>
               <div
                 className={`field-grid dns-endpoint-fields ${choice === "dns_over_https" ? "with-path" : ""}`}

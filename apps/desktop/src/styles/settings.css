@@ -27,7 +27,7 @@
   border-radius: 8px;
   background: transparent;
   color: var(--muted);
-  text-align: left;
+  text-align: start;
 }
 .settings-tabs button[aria-selected="true"] {
   background: var(--surface-3);
@@ -126,7 +126,7 @@
   content: "";
   position: absolute;
   top: 3px;
-  left: 3px;
+  inset-inline-start: 3px;
   border-radius: 50%;
   background: color-mix(in srgb, var(--quiet) 55%, var(--text));
   transition:
@@ -138,7 +138,7 @@
   border-color: var(--cyan);
 }
 .preference-row input[role="switch"]:checked::after {
-  transform: translateX(16px);
+  transform: translateX(calc(var(--dir) * 16px));
   background: var(--switch-knob-on);
 }
 .preference-row:has(input:disabled) {
@@ -190,7 +190,7 @@
   border: 0;
   border-bottom: 1px solid color-mix(in srgb, var(--quiet) 20%, var(--surface-2));
   background: transparent;
-  text-align: left;
+  text-align: start;
 }
 .settings-action > svg {
   color: var(--cyan);
@@ -244,7 +244,7 @@
 }
 .initialization-shell .settings-layout {
   grid-template-columns: minmax(0, 1fr);
-  text-align: left;
+  text-align: start;
 }
 .initialization-shell .settings-tabs {
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -351,7 +351,7 @@
   line-height: 1.6;
 }
 .maintenance-plan {
-  padding-left: 22px;
+  padding-inline-start: 22px;
   display: grid;
   gap: 12px;
   font-size: 0.9375rem;
@@ -390,8 +390,9 @@ select {
   border-radius: 7px;
 }
 .port-forward-form select,
-.field select {
-  padding-right: 2.2em;
+.field select,
+select.language-select {
+  padding-inline-end: 2.2em;
   background-image:
     linear-gradient(45deg, transparent 50%, color-mix(in srgb, var(--muted) 60%, var(--text)) 50%),
     linear-gradient(135deg, color-mix(in srgb, var(--muted) 60%, var(--text)) 50%, transparent 50%);
@@ -400,6 +401,11 @@ select {
     calc(100% - 15px) center,
     calc(100% - 10px) center;
   background-size: 5px 5px;
+}
+:root[dir="rtl"] :is(.port-forward-form select, .field select, select.language-select) {
+  background-position:
+    15px center,
+    10px center;
 }
 @media (max-width: 520px) {
   .condition-choices {
@@ -466,7 +472,7 @@ select {
 
 .health-checks dd {
   margin: 0;
-  text-align: right;
+  text-align: end;
   overflow-wrap: anywhere;
 }
 @media (max-width: 600px) {
@@ -475,7 +481,7 @@ select {
     gap: 5px;
   }
   .health-checks dd {
-    text-align: left;
+    text-align: start;
   }
   .settings-tabs button {
     flex-direction: row;
@@ -545,7 +551,7 @@ select {
   display: inline-block;
   width: 8px;
   height: 8px;
-  margin-right: 8px;
+  margin-inline-end: 8px;
   border-radius: 50%;
   background: var(--warning);
   vertical-align: 1px;
@@ -737,7 +743,8 @@ select {
 }
 .android-apps .preference-row > button {
   flex-shrink: 0;
-  white-space: nowrap;
+  max-width: 50%;
+  overflow-wrap: anywhere;
 }
 
 /* Wi-Fi: the current network with its refresh, the trust form, then the trusted list. */
@@ -867,4 +874,20 @@ select {
 }
 .android .android-system-row > button {
   flex: 1 1 100%;
+}
+
+/* Language choice: in Settings, and the small control on the first onboarding screen. */
+select.language-select {
+  min-height: 36px;
+  max-width: 100%;
+  padding-inline-start: 12px;
+  font: inherit;
+  font-size: 13px;
+}
+.preference-row select.language-select { min-width: min(220px, 100%); }
+.language-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
 }

@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-prepare-vps-baseline"
+description = "Enables the prepare_vps_baseline command without any pre-configured scope."
+commands.allow = ["prepare_vps_baseline"]
+
+[[permission]]
+identifier = "deny-prepare-vps-baseline"
+description = "Denies the prepare_vps_baseline command without any pre-configured scope."
+commands.deny = ["prepare_vps_baseline"]

@@ -1,5 +1,5 @@
 use super::*;
-use sirinvpn_protocol::MemberPolicy;
+use sirinvpn_protocol::{InvitationCreateRequest, MemberPolicy};
 
 pub(super) async fn probe(configuration: serde_json::Value) {
     let mut command = Command::new("python3")
@@ -78,7 +78,7 @@ async fn member_invitation_authority_and_scope_are_checked_before_mutation() {
     let result = create_invitation_handler(
         State(state.clone()),
         Extension(ordinary),
-        Json(request(&document, &bootstrap, 2)),
+        Json(request(&document, &bootstrap, 2).into()),
     )
     .await;
     assert_eq!(result.err().unwrap().status, StatusCode::FORBIDDEN);
@@ -87,7 +87,7 @@ async fn member_invitation_authority_and_scope_are_checked_before_mutation() {
     let result = create_invitation_handler(
         State(state.clone()),
         Extension(identity(&document.devices[1])),
-        Json(admin_request),
+        Json(admin_request.into()),
     )
     .await;
     assert_eq!(result.err().unwrap().status, StatusCode::FORBIDDEN);
@@ -129,7 +129,7 @@ async fn kernel_reusable_enrollment_quarantines_bootstrap_and_enforces_limits_at
     let grant = create_invitation_handler(
         State(state.clone()),
         Extension(identity(&document.devices[0])),
-        Json(request(&document, &bootstrap, 3)),
+        Json(request(&document, &bootstrap, 3).into()),
     )
     .await
     .unwrap()
@@ -347,7 +347,7 @@ async fn kernel_reusable_enrollment_quarantines_bootstrap_and_enforces_limits_at
     let own_grant = create_invitation_handler(
         State(state.clone()),
         Extension(first_caller),
-        Json(own_request),
+        Json(own_request.into()),
     )
     .await
     .unwrap()

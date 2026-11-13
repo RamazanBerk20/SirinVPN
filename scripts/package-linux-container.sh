@@ -44,6 +44,24 @@ if [ -n "${SIRINVPN_TAURI_CACHE:-}" ]; then
   set -- "$@" --volume "$SIRINVPN_TAURI_CACHE:/root/.cache/tauri"
 fi
 trap restore_generated_ownership 0
+# Linux packages carry both VPS payloads, as Android and Windows do, so the
+# desktop and CLI can set up arm64 VPSes too.
+PAYLOAD_IMAGE=${SIRINVPN_PAYLOAD_BUILD_IMAGE:-sirinvpn-server-payload-builder}
+if [ "${SIRINVPN_REUSE_BUILD_IMAGE:-0}" != 1 ]; then
+  docker build --memory 8g --memory-swap 8g --cpu-period 100000 --cpu-quota 400000 \
+    -f "$PROJECT_ROOT/packaging/Dockerfile.server-payloads" -t "$PAYLOAD_IMAGE" "$PROJECT_ROOT"
+fi
+docker run --rm \
+  --cpus 4 --memory 8g --memory-swap 8g --pids-limit 512 \
+  --user "$HOST_UID:$HOST_GID" \
+  --volume "$PROJECT_ROOT:/workspace" \
+  --workdir /workspace \
+  --env CARGO_HOME=/workspace/.cache/payload-cargo \
+  --env CARGO_TARGET_DIR=/workspace/target/server-payloads \
+  --env CARGO_BUILD_JOBS=4 \
+  "$PAYLOAD_IMAGE" \
+  cargo build --locked --release -p sirinvpn-server \
+    --target x86_64-unknown-linux-gnu --target aarch64-unknown-linux-gnu
 docker run --rm \
   --cpus 4 --memory 8g --memory-swap 8g --pids-limit 512 \
   --volume "$PROJECT_ROOT:/workspace" \

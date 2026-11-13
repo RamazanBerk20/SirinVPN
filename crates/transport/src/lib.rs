@@ -25,22 +25,25 @@ use zeroize::Zeroizing;
 
 pub use relay::{
     ActiveTransportRegistry, AuthorizedPeers, ClientRelayConfig, EndpointPublicationRequest,
-    RelayError, ServerRelayConfig, run_client_relay, run_client_relay_with_remote_socket_setup,
-    run_client_relay_with_socket_protector, run_server_relay,
+    RelayError, ServerRelayConfig, run_client_relay, run_client_relay_pinned,
+    run_client_relay_with_remote_socket_setup, run_client_relay_with_socket_protector,
+    run_server_relay,
 };
 pub use tcp::{
     EndpointDiscoveryConfig, TcpClientRelayConfig, TcpServerRelayConfig, TlsLikeClientRelayConfig,
     fetch_endpoint_checkpoint, fetch_endpoint_checkpoint_with_socket_protector,
     offer_endpoint_checkpoint, offer_endpoint_checkpoint_with_socket_protector,
-    run_endpoint_discovery_server, run_tcp_client_relay,
+    run_endpoint_discovery_server, run_tcp_client_relay, run_tcp_client_relay_pinned,
     run_tcp_client_relay_with_remote_socket_setup, run_tcp_client_relay_with_socket_protector,
     run_tcp_server_relay, run_tcp_server_relay_with_https, run_tcp_server_relay_with_tls,
-    run_tls_like_client_relay, run_tls_like_client_relay_with_remote_socket_setup,
+    run_tls_like_client_relay, run_tls_like_client_relay_pinned,
+    run_tls_like_client_relay_with_remote_socket_setup,
     run_tls_like_client_relay_with_socket_protector,
 };
 pub use tcp::{
-    run_quic_client_relay, run_quic_client_relay_with_remote_socket_setup,
-    run_quic_client_relay_with_socket_protector, run_quic_server_relay,
+    run_quic_client_relay, run_quic_client_relay_pinned,
+    run_quic_client_relay_with_remote_socket_setup, run_quic_client_relay_with_socket_protector,
+    run_quic_server_relay,
 };
 
 pub const CLIENT_RELAY_PORT: u16 = 51_821;

@@ -55,26 +55,17 @@ enum Operation {
 
 pub(super) fn run(paths: &ClientPaths, arguments: Arguments, json: bool) -> Result<()> {
     let profile = resolve_profile(&paths.profile_store(), &arguments.server)?;
-    if profile.role != ServerRole::Owner {
+    let maintenance = match &arguments.operation {
+        Operation::Bootstrap { .. } => Some(OwnerMaintenance::SignedBaseline),
+        Operation::Install { .. } | Operation::Rollback { .. } | Operation::Recover => {
+            Some(OwnerMaintenance::ReleaseInstall)
+        }
+        _ => None,
+    };
+    if let Some(operation) = maintenance {
+        ensure_maintenance_ready(paths, &profile, operation)?;
+    } else if profile.role != ServerRole::Owner {
         bail!("only the Owner can manage signed VPS releases");
-    }
-    if matches!(
-        arguments.operation,
-        Operation::Install { .. }
-            | Operation::Rollback { .. }
-            | Operation::Recover
-            | Operation::Bootstrap { .. }
-    ) {
-        let status = invoke_helper("status", None)?;
-        if status.state != ConnectionState::Disconnected
-            || status.kill_switch_enabled
-            || status.auto_reconnect_enabled
-        {
-            bail!("disconnect this computer before restarting the VPS services");
-        }
-        if has_pending_key_rotation(paths, profile.id)? {
-            bail!("finish the pending device key rotation first");
-        }
     }
     let bootstrap = match &arguments.operation {
         Operation::Bootstrap {
@@ -138,10 +129,13 @@ pub(super) fn run(paths: &ClientPaths, arguments: Arguments, json: bool) -> Resu
             bail!("the selected bundle differs from the reviewed signed manifest");
         }
         let profile = request.profile.clone();
-        let outcome = Provisioner::install_signed_baseline(request, bundle)?;
-        paths
-            .profile_store()
-            .upsert(outcome.repair.updated_profile(&profile))?;
+        let outcome =
+            Provisioner::install_signed_baseline(request, bundle, &transaction_journal(paths))?;
+        // Apply the installer's endpoint changes to the profile as it is now.
+        paths.profile_store().update(profile.id, |current| {
+            *current = outcome.repair.updated_profile(current);
+            Ok(())
+        })?;
         outcome.release
     } else {
         Provisioner::manage_server_release(request)?

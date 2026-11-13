@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-unsubscribe-server-status"
+description = "Enables the unsubscribe_server_status command without any pre-configured scope."
+commands.allow = ["unsubscribe_server_status"]
+
+[[permission]]
+identifier = "deny-unsubscribe-server-status"
+description = "Denies the unsubscribe_server_status command without any pre-configured scope."
+commands.deny = ["unsubscribe_server_status"]

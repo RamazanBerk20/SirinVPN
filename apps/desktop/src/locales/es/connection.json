@@ -1,0 +1,276 @@
+{
+  "options": {
+    "title": "Método de conexión",
+    "automatic": {
+      "label": "Elegir el método automáticamente",
+      "summary": "Elige un método que funcione en tu red"
+    },
+    "conditions": {
+      "legend": "Tipo de red",
+      "automatic": {
+        "title": "Auto",
+        "summary": "Prueba cada método por turnos"
+      },
+      "normal": {
+        "title": "Normal",
+        "summary": "Red doméstica o móvil"
+      },
+      "restricted": {
+        "title": "Restringida",
+        "summary": "Bloquea el tráfico VPN habitual"
+      },
+      "extreme": {
+        "title": "Muy restringida",
+        "summary": "Cuando fallan los demás modos"
+      },
+      "hint": "Ayuda a que la elección automática empiece con un método adecuado."
+    },
+    "methods": {
+      "legend": "Elige un método",
+      "unavailable": "Requiere un servidor más reciente",
+      "summary": {
+        "direct_udp": "WireGuard estándar",
+        "obfuscated_udp": "UDP disfrazado para redes que bloquean WireGuard",
+        "tls_like": "Usa TLS 1.3, como el tráfico web",
+        "tcp_fallback": "Último recurso cuando se bloquea UDP",
+        "quic": "Parece tráfico web HTTP/3 sobre UDP"
+      },
+      "unsupported": {
+        "owner": "{count, plural, one {{{methods}} requiere una versión más reciente del software del servidor. Actualiza el VPS para usarlo.} many {{{methods}} requieren una versión más reciente del software del servidor. Actualiza el VPS para usarlos.} other {{{methods}} requieren una versión más reciente del software del servidor. Actualiza el VPS para usarlos.}}",
+        "member": "{count, plural, one {{{methods}} requiere una versión más reciente del software del servidor. Pide al propietario que actualice el VPS.} many {{{methods}} requieren una versión más reciente del software del servidor. Pide al propietario que actualice el VPS.} other {{{methods}} requieren una versión más reciente del software del servidor. Pide al propietario que actualice el VPS.}}",
+        "update": "Actualizar VPS"
+      }
+    },
+    "policy": {
+      "kill_switch": {
+        "label": "Interruptor de corte",
+        "summary": "Bloquea Internet si la VPN se cae, hasta que te desconectes",
+        "nextConnection": "Guardado, pero todavía no está activo. Se activa al reconectarte; hasta entonces, el tráfico no se bloquea si la VPN se cae."
+      },
+      "automatic_reconnect": {
+        "label": "Reconexión automática",
+        "summary": "Reintenta si la conexión se cae",
+        "summaryAndroid": "Reintenta si la conexión se cae. Se aplica de inmediato.",
+        "info": "Cuando está desactivada, una conexión caída permanece caída hasta que te reconectes. El interruptor de corte sigue bloqueando en cualquier caso.",
+        "infoAndroid": "Cuando está desactivada, una conexión caída permanece caída hasta que te reconectes. Al cambiar entre Wi-Fi y datos móviles, sigue haciéndose un intento de reconexión.",
+        "infoLabel": "Acerca de la reconexión automática"
+      },
+      "connect_on_startup": {
+        "label": "Conectar al iniciar el sistema",
+        "summary": "Se conecta cuando se inicia este dispositivo"
+      }
+    },
+    "android": {
+      "label": "Bloquear conexiones sin VPN",
+      "summary": "La VPN siempre activa y el bloqueo se configuran en Android. Si el bloqueo está activado, Internet sigue bloqueada después de desconectarte.",
+      "open": "Abrir ajustes de VPN",
+      "on": "Activado en Android",
+      "off": "Desactivado en Android",
+      "unknown": "Android no lo informa",
+      "status": "Estado: {{value}}"
+    },
+    "notes": {
+      "selectedRoutes": "Solo tus rutas seleccionadas y el DNS del sistema usan la VPN.",
+      "windowsApps": "El enrutamiento de apps de Windows requiere que el interruptor de corte esté activado y el acceso a la red local desactivado.",
+      "launchedApps": "Las apps abiertas se bloquean siempre que la VPN esté caída; las demás apps usan tu red normal."
+    },
+    "status": {
+      "title": "Estado actual",
+      "method": "Método de conexión",
+      "killSwitch": "Interruptor de corte",
+      "routing": "Enrutamiento",
+      "blocking": "Bloquear conexiones sin VPN"
+    },
+    "protection": {
+      "title": "Protección",
+      "titleAndroid": "Reconexión y bloqueo",
+      "note": "El interruptor de corte y la reconexión automática se aplican desde tu próxima conexión."
+    }
+  },
+  "routing": {
+    "title": "Enrutamiento del tráfico",
+    "legend": "Modo de enrutamiento",
+    "modes": {
+      "full_tunnel": {
+        "label": "Túnel completo",
+        "summary": "Todo el tráfico de Internet usa la VPN"
+      },
+      "selected_routes": {
+        "label": "Rutas seleccionadas",
+        "summary": "Solo los rangos IP que indiques usan la VPN"
+      },
+      "selected_applications": {
+        "label": "Apps seleccionadas",
+        "summaryAndroid": "Elige qué apps usan la VPN",
+        "summaryWindows": "Solo las apps que elijas usan la VPN",
+        "summaryLinux": "Solo las apps abiertas desde SirinVPN usan la VPN"
+      }
+    },
+    "unsupported": "El enrutamiento por app no está disponible en este dispositivo. Las rutas seleccionadas siguen funcionando.",
+    "unsupportedWindows": "El enrutamiento por app no está disponible porque su controlador de Windows no está en ejecución. Reinstala o actualiza SirinVPN para restaurarlo.",
+    "windowsKillSwitch": "El enrutamiento de apps de Windows requiere que el interruptor de corte esté activado. Actívalo en los ajustes de conexión antes de conectarte.",
+    "android": {
+      "blockNote": "Si “Bloquear conexiones sin VPN” está activado, las apps que no usan la VPN no tienen Internet.",
+      "choose": "Elegir apps",
+      "chooseError": "No se pudo abrir la lista de apps.",
+      "none": "No hay apps elegidas",
+      "all": "Todas las apps usan la VPN",
+      "include": "{count, plural, one {# app usa la VPN} many {# apps usan la VPN} other {# apps usan la VPN}}",
+      "exclude": "{count, plural, one {# app se salta la VPN} many {# apps se saltan la VPN} other {# apps se saltan la VPN}}"
+    },
+    "routes": {
+      "label": "Rangos IP (CIDR), uno por línea",
+      "hint": "{max, plural, one {Hasta # rango. El DNS del sistema siempre usa la VPN.} many {Hasta # rangos. El DNS del sistema siempre usa la VPN.} other {Hasta # rangos. El DNS del sistema siempre usa la VPN.}}",
+      "empty": "Añade al menos un rango. Sin ninguno, ningún tráfico usaría la VPN.",
+      "invalid": "{{routes}}: no es una red en formato CIDR. Escribe rangos como 198.51.100.0/24.",
+      "hostBits": "{{route}} no es el inicio de su red. Usa {{network}}.",
+      "placeholder": "Por ejemplo, {{example}}"
+    },
+    "localNetwork": {
+      "label": "Permitir la red local",
+      "summary": "Alcanza impresoras y otros dispositivos locales fuera de la VPN",
+      "summaryLaunched": "Permite que las apps abiertas accedan a los dispositivos de tu red local",
+      "summaryWindows": "Desactívalo: el enrutamiento de apps de Windows requiere que el acceso a la red local esté desactivado"
+    }
+  },
+  "launcher": {
+    "legend": "Abrir una app en la VPN",
+    "summaryLinux": "Solo las apps que abras desde aquí usan la VPN. Cierra antes las copias abiertas.",
+    "summaryWindows": "Las apps que elijas aquí usan la VPN. Cierra antes las copias abiertas.",
+    "infoLinux": "Elige un programa nativo. Es posible que las apps Flatpak y Snap, y las apps que dependen de un servicio en segundo plano, no funcionen.",
+    "infoWindows": "Elige un .exe en una unidad local y añade cada app que use la red; los auxiliares y servicios no se añaden automáticamente. Las apps seleccionadas no pueden usar IPv6, y el DNS del sistema pasa por la VPN.",
+    "infoLabel": "Acerca de abrir apps",
+    "notReady": "Guarda las apps seleccionadas y conéctate a este servidor para abrir apps.",
+    "executable": "Programa",
+    "placeholderLinux": "Por ejemplo, /usr/bin/firefox",
+    "placeholderWindows": "Por ejemplo, C:\\Program Files\\App\\app.exe",
+    "browse": "Examinar…",
+    "dialogTitle": "Elige una app",
+    "dialogFilter": "Apps (.exe)",
+    "chooserError": "No se pudo abrir el selector de archivos. Inténtalo de nuevo.",
+    "arguments": {
+      "summary": "Argumentos de inicio",
+      "label": "Un argumento por línea",
+      "hint": "No hacen falta comillas, ni siquiera con espacios. Los argumentos no se guardan."
+    },
+    "safetyLinux": "Las apps abiertas nunca usan Internet fuera de la VPN, aunque el interruptor de corte esté desactivado. Tras desconectarte, siguen abiertas pero sin conexión.",
+    "safetyWindows": "Las apps seleccionadas siguen bloqueadas fuera de la VPN si se cae o se pausa. Al desconectarte se desbloquean y se borra la selección.",
+    "launch": "Abrir en la VPN",
+    "launching": "Abriendo…",
+    "launched": "{{name}} se abrió en la VPN.",
+    "exited": "Se abrió {{name}}, pero se cerró enseguida. Si ya estaba abierta, ciérrala e inténtalo de nuevo.",
+    "launchError": "No se pudo abrir la app en la VPN.",
+    "needsProgram": "Elige un programa con Examinar."
+  },
+  "mtu": {
+    "title": "Tamaño de paquete (MTU)",
+    "automatic": {
+      "label": "Tamaño de paquete automático",
+      "summary": "Mide y ajusta el tamaño del paquete mientras estás conectado"
+    },
+    "manual": {
+      "label": "MTU manual",
+      "hint": "{max, plural, one {{{min}}–{{max}} byte. UDP ofuscado usa como máximo {{obfuscatedMax}} y QUIC como máximo {{quicMax}}.} many {{{min}}–{{max}} bytes. UDP ofuscado usa como máximo {{obfuscatedMax}} y QUIC como máximo {{quicMax}}.} other {{{min}}–{{max}} bytes. UDP ofuscado usa como máximo {{obfuscatedMax}} y QUIC como máximo {{quicMax}}.}}",
+      "invalid": "Introduce un número entero de {{min}} a {{max}}.",
+      "invalidIpv6": "Con IPv6 activado, introduce un número entero de {{min}} a {{max}}."
+    },
+    "notConnected": "Conéctate para medir el tamaño del paquete.",
+    "unsupported": "El tamaño de paquete no se puede medir hasta que se actualice el componente VPN de este dispositivo. Revísalo en los ajustes generales, en Componente VPN local.",
+    "unsupportedAction": "El tamaño de paquete no se puede medir hasta que se actualice el componente VPN de este dispositivo.",
+    "details": {
+      "current": "MTU actual",
+      "recommended": "Recomendado",
+      "notMeasured": "Aún sin medir",
+      "pending": "Cambio pendiente",
+      "bytes": "{value, plural, one {{{value}} byte} many {{{value}} bytes} other {{{value}} bytes}}",
+      "pendingValue": "{value, plural, one {{{value}} byte · aún no aplicado} many {{{value}} bytes · aún no aplicados} other {{{value}} bytes · aún no aplicados}}"
+    },
+    "outcome": {
+      "pending": "Esperando a medir el tamaño del paquete.",
+      "incomplete": "La medición aún no ha terminado.",
+      "verified": "{value, plural, one {Verificado en {{value}} byte.} many {Verificado en {{value}} bytes.} other {Verificado en {{value}} bytes.}}",
+      "smaller": "Se midió un tamaño de paquete menor y se aplicará.",
+      "manual": "Hay una recomendación lista. Tu MTU manual sigue en uso.",
+      "noReply": "El servidor no respondió a la medición. La MTU actual sigue en uso.",
+      "noUsable": "Los paquetes grandes no pasan en esta red. Prueba {{tls}} o {{tcp}}.",
+      "applyFailed": "{value, plural, one {No se pudo aplicar el tamaño medido. La MTU sigue en {{value}} byte.} many {No se pudo aplicar el tamaño medido. La MTU sigue en {{value}} bytes.} other {No se pudo aplicar el tamaño medido. La MTU sigue en {{value}} bytes.}}"
+    }
+  },
+  "quality": {
+    "label": "Calidad de la conexión",
+    "sample": "Latencia de {{latency}} · jitter de {{jitter}} · pérdida de {{loss}}",
+    "selection": {
+      "pending": "Esperando la primera comprobación de calidad.",
+      "observing": "Medido dentro de la VPN, no es una prueba de velocidad.",
+      "waiting_for_idle": "Comparará los métodos de conexión cuando no haya tráfico.",
+      "comparing": "Comparando métodos de conexión…",
+      "selected": "Usando el mejor método de conexión medido.",
+      "icmp_unavailable": "El servidor no respondió a las comprobaciones de calidad, así que la latencia y la pérdida no están disponibles.",
+      "protection_required": "Activa el interruptor de corte para que SirinVPN pueda comparar los métodos de conexión."
+    },
+    "reason": {
+      "confirmed_failure": "Se cambió de método de conexión después de que fallara el anterior.",
+      "quality_improvement": "Se cambió a un método de conexión que funciona de forma constante mejor.",
+      "rollback": "Se mantuvo el método de conexión actual; la alternativa no se conectó."
+    }
+  },
+  "startup": {
+    "unknown": "No se pudo comprobar la conexión al iniciar.",
+    "otherServer": "Guardado, pero ahora hay otro servidor conectado. Conéctate a este servidor para usarlo al iniciar.",
+    "serviceUnknown": "Guardado. Estado del servicio de inicio no disponible.",
+    "inactive": "Guardado, pero todavía no está activo.",
+    "activateHint": "Selecciona Conectar y activar para encenderlo.",
+    "nextConnection": "Se activa la próxima vez que te conectes a este servidor.",
+    "active": "Se conecta a este servidor cuando se inicia este dispositivo.",
+    "unconfirmed": "El servicio de inicio está activado, pero todavía no está configurado para este servidor.",
+    "activate": "Conectar y activar"
+  },
+  "saveBar": {
+    "unsaved": "Cambios sin guardar",
+    "discard": "Descartar",
+    "save": "Guardar preferencias",
+    "pending": "<strong>Guardado para tu próxima conexión.</strong> Conexión actual: {{differences}}.",
+    "invalid": "Corrige los valores marcados para guardar."
+  },
+  "differences": {
+    "mtu": {
+      "automatic": "MTU {{value}} (automática)",
+      "manual": "MTU {{value}} (manual)"
+    },
+    "method": "Método de conexión: {{method}}",
+    "policy": {
+      "kill_switch": {
+        "on": "Interruptor de corte: activado",
+        "off": "Interruptor de corte: desactivado"
+      },
+      "automatic_reconnect": {
+        "on": "Reconexión automática: activada",
+        "off": "Reconexión automática: desactivada"
+      },
+      "connect_on_startup": {
+        "on": "Conectar al iniciar: activado",
+        "off": "Conectar al iniciar: desactivado"
+      }
+    },
+    "routing": {
+      "full_tunnel": "Enrutamiento: túnel completo",
+      "selected_routes": "Enrutamiento: rutas seleccionadas",
+      "selected_applications": "Enrutamiento: apps seleccionadas"
+    },
+    "localNetwork": {
+      "on": "Acceso a la red local: activado",
+      "off": "Acceso a la red local: desactivado"
+    },
+    "routes": "Rangos IP diferentes"
+  },
+  "preferences": {
+    "loadError": "No se pudieron cargar las preferencias de conexión.",
+    "loading": "Cargando las preferencias de conexión…",
+    "saved": "Preferencias de conexión guardadas. Se aplican desde tu próxima conexión.",
+    "saveError": "No se pudo guardar. Tus preferencias anteriores siguen vigentes.",
+    "reconnectOn": "La reconexión automática está activada.",
+    "reconnectOff": "La reconexión automática está desactivada.",
+    "reconnectError": "No se pudo cambiar la reconexión automática."
+  },
+  "nextConnection": "Se aplica desde tu próxima conexión."
+}

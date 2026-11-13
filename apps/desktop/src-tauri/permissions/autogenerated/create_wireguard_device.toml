@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-create-wireguard-device"
+description = "Enables the create_wireguard_device command without any pre-configured scope."
+commands.allow = ["create_wireguard_device"]
+
+[[permission]]
+identifier = "deny-create-wireguard-device"
+description = "Denies the create_wireguard_device command without any pre-configured scope."
+commands.deny = ["create_wireguard_device"]

@@ -54,11 +54,12 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
             dns_address: request.routing.allow_lan.then_some(request.dns_address),
         })
         .map_err(|_| HelperError::NetworkOperationFailed)?;
-        if self.apply(request, endpoint, false).is_err() {
+        if let Err(error) = self.apply(request, endpoint, false) {
             if self.cleanup_tunnel_owned().is_ok() {
                 let _ = fs::remove_file(self.state_path());
             }
-            return Err(HelperError::NetworkOperationFailed);
+            return Err(cleanup::CarrierPortInUse::helper_error(&error)
+                .unwrap_or(HelperError::NetworkOperationFailed));
         }
         self.status()
     }
@@ -143,7 +144,7 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
         }
         remove_file_if_exists(&self.state_path())
             .map_err(|_| HelperError::NetworkOperationFailed)?;
-        remove_file_if_exists(&self.persistent_path())
+        self.remove_persistent()
             .map_err(|_| HelperError::NetworkOperationFailed)?;
         if persistent {
             let _ = self
@@ -168,7 +169,14 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
         let state = match self.read_state() {
             Ok(state) => state,
             Err(HelperError::InvalidState) if !self.state_path().exists() => {
-                return Ok(disconnected_status());
+                // /run is wiped at reboot; saved intent that did not restart is still a
+                // session the user must resume or end, never "Disconnected".
+                return Ok(match (self.session(), self.read_guard_spec()) {
+                    (session @ session::Session::SavedIntent { .. }, Some(spec)) => {
+                        saved_session_status(&spec).with_phase(session.phase(true))
+                    }
+                    _ => disconnected_status(),
+                });
             }
             Err(error) => return Err(error),
         };
@@ -205,22 +213,16 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
                     mtu
                 }),
                 connection_control_supported: true,
-                recovery_in_progress: state.has_connected
-                    && state.reconnecting
-                    && !state.waiting_for_user,
                 startup_service_enabled: None,
                 supervisor_status_known: state.policy.map(|_| state.observation_is_fresh()),
                 policy: state.policy,
                 independent_policy_supported: true,
                 kill_switch_state: Some(enforcement),
                 connect_on_startup: state.connection_policy().connect_on_startup,
-                waiting_for_user: state.waiting_for_user,
                 traffic_metrics_supported: true,
                 byte_counters_available: Some(false),
                 included_routes: Some(state.routing.included_routes.clone()),
-                state: ConnectionState::Degraded,
                 interface_name: INTERFACE_NAME.to_owned(),
-                server_id: Some(state.server_id),
                 rx_bytes: 0,
                 tx_bytes: 0,
                 rx_packets: None,
@@ -240,7 +242,10 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
                 transport_fallback_enabled: state.transport_fallback_enabled,
                 routing_mode: state.routing.mode,
                 allow_lan: state.routing.allow_lan,
-            });
+                ..disconnected_status()
+            }
+            // Without its interface the helper cannot vouch for a running session.
+            .with_phase(state.session().phase(false)));
         }
         let rx_bytes = interface_packet_counter("rx_bytes");
         let tx_bytes = interface_packet_counter("tx_bytes");
@@ -279,30 +284,16 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
                 .and_then(|monitor| monitor.accepted.clone()),
             mtu: state.mtu,
             connection_control_supported: true,
-            recovery_in_progress: state.has_connected
-                && state.reconnecting
-                && !state.waiting_for_user,
             startup_service_enabled: None,
             supervisor_status_known: state.policy.map(|_| state.observation_is_fresh()),
             policy: state.policy,
             independent_policy_supported: true,
             kill_switch_state: Some(state.effective_kill_switch()),
             connect_on_startup: state.connection_policy().connect_on_startup,
-            waiting_for_user: state.waiting_for_user,
             traffic_metrics_supported: true,
             byte_counters_available: Some(rx_bytes.is_some() && tx_bytes.is_some()),
             included_routes: Some(state.routing.included_routes.clone()),
-            state: if state.waiting_for_user
-                || (state.policy.is_some() && !state.observation_is_fresh())
-            {
-                ConnectionState::Degraded
-            } else if state.reconnecting {
-                ConnectionState::Connecting
-            } else {
-                ConnectionState::Connected
-            },
             interface_name: INTERFACE_NAME.to_owned(),
-            server_id: Some(state.server_id),
             rx_bytes: rx_bytes.unwrap_or_default(),
             tx_bytes: tx_bytes.unwrap_or_default(),
             rx_packets: interface_packet_counter("rx_packets"),
@@ -329,7 +320,46 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
             transport_fallback_enabled: state.transport_fallback_enabled,
             routing_mode: state.routing.mode,
             allow_lan: state.routing.allow_lan,
-        })
+            ..disconnected_status()
+        }
+        .with_phase(
+            state
+                .session()
+                .phase(state.policy.is_none() || state.observation_is_fresh()),
+        ))
+    }
+}
+
+/// A saved session that is not running: paused until Resume, Connect or Disconnect.
+/// Only the boot guard can be in place, and status cannot inspect it without privilege.
+fn saved_session_status(spec: &enforcement::GuardSpec) -> LocalTunnelStatus {
+    LocalTunnelStatus {
+        policy: Some(spec.policy),
+        supervisor_status_known: Some(false),
+        // A boot guard, or one left by an interrupted transition, cannot be ruled out.
+        kill_switch_state: Some(if spec.policy.kill_switch {
+            KillSwitchState::Unknown
+        } else {
+            KillSwitchState::Off
+        }),
+        kill_switch_enabled: spec.policy.kill_switch,
+        auto_reconnect_enabled: spec.policy.automatic_reconnect,
+        connect_on_startup: spec.policy.connect_on_startup,
+        routing_mode: spec.routing_mode,
+        allow_lan: spec.allow_lan,
+        ..disconnected_status()
+    }
+}
+
+trait WithPhase {
+    fn with_phase(self, phase: TunnelPhase) -> Self;
+}
+
+impl WithPhase for LocalTunnelStatus {
+    /// The lifecycle fields are set only from the session's phase.
+    fn with_phase(mut self, phase: TunnelPhase) -> Self {
+        self.set_phase(phase);
+        self
     }
 }
 

@@ -1,0 +1,469 @@
+{
+  "common": {
+    "backupFileType": "SirinVPN VPS yedeği",
+    "backupPassword": "Yedek parolası",
+    "checking": "VPS denetleniyor…",
+    "chooseFile": "Dosya seç",
+    "disconnectFirst": "Devam etmek için bu cihazın bağlantısını kesin.",
+    "keepOpen": "Bu tamamlanana kadar uygulamayı açık tutun.",
+    "noFile": "Dosya seçilmedi",
+    "softwareDetails": "Yazılım ayrıntıları",
+    "softwareHash": "Yazılım SHA-256",
+    "error": {
+      "picker": "Dosya seçici açılamadı. Tekrar deneyin.",
+      "unreachable": "VPS’e SSH ile ulaşılamadı. Oturum açma bilgisini kontrol edip tekrar deneyin."
+    },
+    "previousStep": "Önceki adım",
+    "passwordsMatch": "Parolalar eşleşiyor.",
+    "step": {
+      "identity": "VPS kimliğini onaylayın",
+      "refresh": "Bu sunucunun durumunu yenile"
+    }
+  },
+  "update": {
+    "title": "{{name}} sunucusunu güncelle",
+    "description": {
+      "login": "Bu sunucunun sürümünü denetlemek için SSH ile oturum açın.",
+      "configured": "İmzalı bir sürüm arayın ve kurmadan önce inceleyin.",
+      "setup": "Bu sunucu için güncellemeler henüz ayarlanmadı."
+    },
+    "busy": {
+      "reading": "Sunucu sürümü okunuyor…",
+      "verifyingKey": "SSH anahtarı denetleniyor…",
+      "verifying": "Sürüm doğrulanıyor…",
+      "installing": "Güncelleme kuruluyor…",
+      "installingSetup": "Kuruluyor ve kurulum tamamlanıyor…",
+      "recovering": "Güncelleme kurtarılıyor…",
+      "rollingBack": "Önceki sürüm geri yükleniyor…",
+      "saving": "Takvim kaydediliyor…",
+      "finishing": "Kurulum tamamlanıyor…"
+    },
+    "action": {
+      "check": "Güncellemeleri denetle",
+      "verify": "Sürümü doğrula",
+      "install": "{{version}} sürümünü kur",
+      "installAndFinish": "Kur ve kurulumu tamamla",
+      "finishSetup": "Kurulumu tamamla",
+      "changeLogin": "SSH oturum açma bilgisini değiştir",
+      "repair": "VPS’i onar…"
+    },
+    "steps": {
+      "label": "Kurulum adımları",
+      "source": "Kaynağı seç",
+      "verify": "Sürümü doğrula",
+      "finish": "Kurulumu tamamla"
+    },
+    "statusUnknown": "Kurulu sürüm okunamadı. Kurulum yine de doğrulanmış sunucu yazılımını kurabilir.",
+    "versions": {
+      "installed": "Kurulu sürüm",
+      "available": "Kullanılabilir sürüm",
+      "notChecked": "Henüz denetlenmedi"
+    },
+    "warning": {
+      "mismatch": "Kurulu sunucu yazılımı, imzalı kaydıyla eşleşmiyor. Güncellemeden önce sunucuyu onarın.",
+      "automaticFailed": "Son otomatik güvenlik güncellemesi başarısız oldu. Sürüm kaynağını kontrol edin, sonra güncellemeleri denetleyin."
+    },
+    "recovery": {
+      "needed": "Yarım kalan bir güncellemenin önce kurtarılması gerekiyor.",
+      "action": "Güncellemeyi kurtar"
+    },
+    "source": {
+      "label": "Sürüm kaynağı",
+      "placeholder": "HTTPS klasör adresi",
+      "help": "Sürümlerinizin yayınlandığı HTTPS klasörü; bu sunucuyu kuran kişiden alın",
+      "change": "Kaynağı değiştir",
+      "invalid": "Kullanıcı adı, ? veya # içermeyen bir HTTPS adresi kullanın."
+    },
+    "channel": {
+      "label": "Sürüm kanalı",
+      "stable": "Kararlı",
+      "preview": "Önizleme",
+      "previewHint": "Daha az kararlı olabilecek erken sürümler. Yalnızca yeni özellikleri denemek için kullanın."
+    },
+    "review": {
+      "label": "Doğrulanmış sürüm",
+      "title": "Sürüm {{version}}",
+      "alreadyInstalled": "Bu sürüm zaten kurulu.",
+      "baseline": "Bu sürümü kurar ve sunucunun kimliğini ve erişimini korur. Hizmetler kısa süreliğine yeniden başlar.",
+      "register": "Kurulu yazılımla eşleşiyor. Güncellemeler için kaydetmek üzere kurulumu tamamlayın.",
+      "upgrade": "Hizmetler kısa süreliğine yeniden başlar. Sağlık denetimi başarısız olursa önceki sürüm geri yüklenir.",
+      "verification": "Doğrulama",
+      "verified": "İmza ve karma doğrulandı",
+      "compatibility": "Uyumluluk",
+      "compatible": "Uyumlu",
+      "incompatible": "Sunucunun mevcut durumunda kurulamaz",
+      "type": "Sürüm türü",
+      "security": "Güvenlik güncellemesi. Yakında kurun.",
+      "standard": "Standart sürüm"
+    },
+    "schedule": {
+      "toggle": "Güvenlik güncellemelerini otomatik kur",
+      "help": "Yukarıdaki sürüm kaynağından her gün denetlenir. İmza ve geri alma denetimleri yine uygulanır.",
+      "enabled": "Otomatik güvenlik güncellemeleri açıldı.",
+      "disabled": "Otomatik güvenlik güncellemeleri kapatıldı.",
+      "otherSource": "Otomatik güncellemeler yine {{source}} adresini denetler.",
+      "useSource": "Yukarıdaki kaynağı kullan"
+    },
+    "rollback": {
+      "title": "Önceki sürüm",
+      "kept": "{{version}} sürümü, bu sürüm sorun çıkarırsa geri dönebilmeniz için saklanır.",
+      "action": "{{version}} sürümüne geri al…",
+      "confirmTitle": "{{version}} sürümüne geri dönülsün mü?",
+      "confirmMessage": "Hizmetler yeniden başlar ve cihazlar kısa süreliğine yeniden bağlanır. Bu yalnızca o sürüm hâlâ güvenilir ve uyumluysa çalışır.",
+      "confirm": "Geri al"
+    },
+    "privacy": {
+      "summary": "Gizlilik ve doğrulama",
+      "identifiers": "İstekler hiçbir cihaz, sunucu veya kullanıcı tanımlayıcısı taşımaz.",
+      "signing": "Kaynak ne olursa olsun yalnızca SirinVPN’e gömülü anahtarlarla imzalanmış sürümler kabul edilir."
+    },
+    "disconnectFirst": "Kurmak, kurtarmak veya geri almak için bu cihazın bağlantısını kesin.",
+    "done": {
+      "installed": "{{version}} sürümü kuruldu.",
+      "setUp": "Güncellemeler ayarlandı. {{version}} sürümü kuruldu.",
+      "recovered": "Yarım kalan güncelleme kurtarıldı.",
+      "rolledBack": "{{version}} sürümü geri yüklendi."
+    },
+    "error": {
+      "notVerified": "Önce sunucunun SSH anahtarını doğrulayın.",
+      "cancelled": "İşlem iptal edildi.",
+      "status": "Sunucunun güncelleme durumu okunamadı.",
+      "check": "Bu sürüm doğrulanamadı. Kaynağı ve kanalı kontrol edin.",
+      "notConfirmed": "Sunucu yeni sürümü onaylamadı. Tekrar denemeden önce durumunu kontrol edin.",
+      "stopped": "İşlem durdu. Tekrar denemeden önce sunucunun durumunu kontrol edin.",
+      "scheduleNotConfirmed": "Sunucu yeni takvimi onaylamadı. Tekrar denemeden önce ayarlarını kontrol edin.",
+      "schedule": "Otomatik güncellemeler kaydedilemedi."
+    },
+    "blocked": {
+      "mismatch": "Güncellemeleri denetlemeden veya kurmadan önce VPS’i onarın.",
+      "recovery": "Önce yarım kalan güncellemeyi kurtarın.",
+      "source": "Denetlemek için bir sürüm kaynağı girin."
+    }
+  },
+  "backup": {
+    "title": "{{name}} sunucusunu yedekle",
+    "titleDone": "Yedekleme tamamlandı",
+    "description": "Sunucunun kimliğini ve ayarlarını, daha sonra geri yüklemek veya taşımak için kaydedin.",
+    "warning": "<strong>Bu dosyaya ve parolasına sahip herkes sunucuyu klonlayabilir.</strong> Bunları ayrı yerlerde saklayın.",
+    "saveDialogTitle": "VPS yedeğini kaydet",
+    "destination": "Kaydet",
+    "destinationHint": "Mevcut dosyaların üzerine asla yazılmaz.",
+    "passwordHint": "En az 12 karakter kullanın.",
+    "repeatPassword": "Parolayı tekrarla",
+    "create": "Yedek oluştur",
+    "progress": "VPS yedekleniyor…",
+    "done": "Şifreli yedek kaydedildi",
+    "doneNote": "Dosyayı ve parolasını ayrı yerlerde saklayın.",
+    "error": "Yedek oluşturulamadı.",
+    "missing": {
+      "file": "Yedeğin kaydedileceği yeri seçin.",
+      "password": "En az 12 karakterlik bir yedek parolası girin.",
+      "repeat": "Aynı parolayı tekrar girin."
+    },
+    "step": "Oturum açın ve şifreli yedeği dışa aktarın"
+  },
+  "schedule": {
+    "action": "Zamanlanmış yedekler",
+    "title": "Zamanlanmış VPS yedekleri",
+    "description": "Şifreli yedekler bir takvime göre kaydedilir. En yeniler, seçtiğiniz bir klasörde kalır.",
+    "folder": "Yedek klasörü",
+    "folderHint": "Sınırı aşan eski yedekler bu klasörden silinir.",
+    "chooseFolder": "Klasör seç",
+    "folderDialogTitle": "VPS yedekleri için bir klasör seçin",
+    "frequency": "Sıklık",
+    "daily": "Günlük",
+    "weekly": "Haftalık",
+    "monthly": "Her 30 günde bir",
+    "keep": "Saklanacak yedekler",
+    "keepHint": "1 ile 30 arasında",
+    "passwordHint": "En az 12 karakter kullanın. Bu cihazın güvenli depolamasında saklanır.",
+    "passwordKeepHint": "Kayıtlı parolayı korumak için boş bırakın",
+    "loginMissing": "Yedekler bu VPS’in kayıtlı SSH oturum açma bilgisini kullanır. Oturum açma bilgisini hatırla açıkken VPS’i bir kez yedekleyin.",
+    "disconnected": "Yedekler, SirinVPN açıkken ve bu cihazın bağlantısı kesikken çalışır.",
+    "save": "Takvimi kaydet",
+    "runNow": "Şimdi yedekle",
+    "running": "Yedekleniyor…",
+    "turnOff": "Kapat",
+    "lastBackup": "Son yedek: {{age}}",
+    "noBackup": "Henüz yedek yok",
+    "failed": "Son deneme tamamlanmadı: {{message}}",
+    "stale": "Yedekler gecikti. SirinVPN açıkken bu cihazın bağlantısını kesin veya Şimdi yedekle’yi seçin.",
+    "summary": {
+      "off": "Kapalı",
+      "pending": "Açık · ilk yedek bekleniyor",
+      "ok": "Son yedek {{age}}",
+      "stale": "Son yedek {{age}} · gecikti",
+      "failed": "Son deneme tamamlanmadı"
+    },
+    "notice": {
+      "failed": "Son zamanlanmış VPS yedeği tamamlanmadı.",
+      "stale": "Son VPS yedeği: {{age}}.",
+      "none": "Henüz zamanlanmış VPS yedeği yok.",
+      "review": "İncele"
+    },
+    "error": {
+      "save": "Takvim kaydedilemedi.",
+      "run": "Yedek çalıştırılamadı.",
+      "off": "Zamanlanmış yedekler kapatılamadı."
+    },
+    "saving": "Kaydediliyor…",
+    "turningOff": "Kapatılıyor…",
+    "saved": "Zamanlanmış yedekler kaydedildi.",
+    "backedUp": "VPS yedeği kaydedildi.",
+    "turnedOff": "Zamanlanmış yedekler kapatıldı.",
+    "missing": {
+      "folder": "Bir yedek klasörü seçin."
+    }
+  },
+  "restore": {
+    "title": "{{name}} sunucusunu geri yükle",
+    "titleDone": "Geri yükleme tamamlandı",
+    "description": "Bu sunucunun kimliğini aynı veya yeni bir VPS’e geri yükleyin.",
+    "warning": "<strong>Eski bir yedek, sonradan iptal ettiğiniz erişimi geri getirebilir.</strong> Sonrasında kişileri ve cihazları gözden geçirin.",
+    "openDialogTitle": "VPS yedeğini aç",
+    "file": "Yedek dosyası",
+    "host": "VPS adresi",
+    "hostHint": "Kurtarmak için mevcut adresi koruyun veya sunucuyu taşımak için yeni bir adres girin.",
+    "replace": "Mevcut bir SirinVPN kurulumunu değiştir",
+    "replaceHint": "SirinVPN o VPS’te zaten varsa kullanın. Diğer hizmetlere dokunulmaz.",
+    "action": "VPS’i geri yükle",
+    "progress": "Sunucu geri yükleniyor ve doğrulanıyor…",
+    "done": "Sunucu kimliği geri yüklendi",
+    "doneNote": "Bu cihaz artık {{host}} adresini kullanıyor. Adres değiştiyse eski VPS’i kapatmadan önce diğer cihazlarınızı taşıyın.",
+    "reviewAccess": "Erişimi incele",
+    "moveDevices": "Cihazları taşı",
+    "error": "Geri yükleme durdu. VPS önceki durumuna döner ve bu cihaz değişmez.",
+    "review": "Geri yüklemeyi incele",
+    "reviewTitle": "Bu yedek geri yüklensin mi?",
+    "missing": {
+      "file": "Bir yedek dosyası seçin.",
+      "password": "Yedeğin parolasını girin (en az 12 karakter).",
+      "host": "VPS adresini ana bilgisayar adı veya IP adresi olarak girin."
+    },
+    "consequence": {
+      "replace": "Bu VPS’teki SirinVPN kurulumu, yedekteki kurulumla değiştirilir.",
+      "install": "SirinVPN bu VPS’e yedekten kurulur.",
+      "access": "Bu yedekten sonra kaldırdığınız kişiler ve cihazlar yeniden erişim kazanır.",
+      "device": "Bu cihaz {{host}} adresine geçer. Hizmetler kısa süreliğine yeniden başlar."
+    },
+    "step": "VPS’e oturum açın, geri yükleyin ve doğrulayın"
+  },
+  "repair": {
+    "title": "{{name}} sunucusunu onar",
+    "titleDns": "{{name}} için DNS’i yapılandır",
+    "titleDone": "Onarım tamamlandı",
+    "titleDoneDns": "DNS ayarları uygulandı",
+    "description": {
+      "repair": "Kimlikleri veya erişimi değiştirmeden sunucu yazılımını yeniden kurun.",
+      "dns": "Değiştirmediğiniz her şey olduğu gibi kalır.",
+      "running": "VPN kısa süreliğine kullanılamaz."
+    },
+    "note": "Sunucu yeniden başlarken VPN kısa süreliğine kullanılamaz.",
+    "securityUpdates": "Otomatik güvenlik güncellemelerini aç",
+    "securityUpdatesNote": "VPS bundan sonra işletim sisteminin güvenlik düzeltmelerini her gün kurar. Kapalı bırakılırsa Onar, yalnızca daha önce hiç kurulmamış yerlerde bunları açar.",
+    "action": {
+      "repair": "VPS’i onar",
+      "review": "Değişiklikleri incele",
+      "apply": "Değişiklikleri uygula",
+      "home": "Ana sayfaya dön"
+    },
+    "reviewTarget": "{{name}} · SSH {{address}}",
+    "progress": "Sunucu güncelleniyor ve denetleniyor…",
+    "error": {
+      "repair": "Onarım durdu. Kimlikler değişmedi ve kısmi değişiklikler otomatik olarak geri alındı.",
+      "dns": "DNS değişiklikleri durdu. Kısmi değişiklikler otomatik olarak geri alınır."
+    },
+    "options": "Sunucu ayarlarını değiştir (isteğe bağlı)",
+    "optionsNote": "Burada değiştirmediğiniz sürece adresler, portlar, DNS ve NAT64 olduğu gibi kalır.",
+    "signIn": "VPS’e oturum açın",
+    "progressDns": "DNS ayarları uygulanıyor ve sunucu denetleniyor…",
+    "blocked": {
+      "dns": "Yukarıdaki DNS çözümleyicisini düzeltin.",
+      "split": "Yukarıdaki bölünmüş DNS bölgelerini düzeltin.",
+      "records": "Yukarıdaki özel DNS kayıtlarını düzeltin.",
+      "nat64": "Yukarıdaki NAT64 önekini düzeltin."
+    },
+    "step": "VPS’e oturum açın, güncelleyin ve denetleyin",
+    "stepDns": "Oturum açın ve DNS ayarlarını uygulayın"
+  },
+  "summary": {
+    "title": "{{name}} yeniden bağlanmaya hazır",
+    "completed": "Tamamlandı",
+    "software": "Sunucu yazılımı",
+    "softwareValue": "Kuruldu ve doğrulandı",
+    "services": "VPN hizmetleri",
+    "servicesValue": "Yeniden başlatıldı ve denetlendi",
+    "dns": "Özel DNS",
+    "dnsValue": "Doğrulandı · {{policy}}",
+    "records": "Özel kayıtlar",
+    "recordsNone": "Yok",
+    "recordsValue": "{count, plural, one {# kayıt doğrulandı} other {# kayıt doğrulandı}}",
+    "preserved": "Korunanlar",
+    "identities": "Sunucu ve cihaz kimlikleri ile erişim",
+    "dnsPolicy": "Özel DNS ayarları",
+    "dnsRecords": "Özel DNS kayıtları",
+    "fingerprint": "Sunucu kimliği parmak izi",
+    "fingerprintSaved": "Bu cihazdaki sunucu profilinde sabitlendi",
+    "network": "Ağ gereksinimleri",
+    "networkNote": "Güvenlik duvarı erişimi denetlenmedi. Bağlantı başarısız olursa bunları gözden geçirin.",
+    "next": "Bu cihazın bağlantısını test etmek için Ana sayfa’dan bağlanın."
+  },
+  "remove": {
+    "title": "{{name}} kaldır",
+    "description": {
+      "owner": "Bunu bu cihazdan kaldırın veya VPS’ten SirinVPN’i kaldırın.",
+      "member": "VPS’ten SirinVPN’i yalnızca Sahip kaldırabilir.",
+      "running": "VPS’ten SirinVPN kaldırılıyor."
+    },
+    "local": {
+      "title": "Bu cihazdan kaldır",
+      "summary": "Buradaki anahtarını siler; sunucu kurulu kalır",
+      "confirmTitle": "{{name}} bu cihazdan kaldırılsın mı?",
+      "confirmOwner": "Bu cihazdaki Sahip anahtarı silinir. Sunucu kurulu ve sahiplenilmiş kalır.",
+      "confirmMember": "Bu cihazın anahtarı silinir. Sunucu değiştirilmez.",
+      "error": "Sunucu bu cihazdan kaldırılamadı.",
+      "done": "{{name}} bu cihazdan kaldırıldı.",
+      "removing": "Kaldırılıyor…"
+    },
+    "uninstall": {
+      "title": "VPS’ten kurulumu kaldır",
+      "summary": "SirinVPN’i önce VPS’ten, sonra bu cihazdan kaldırır",
+      "review": "Kaldırmayı incele",
+      "action": "SirinVPN’i kaldır",
+      "confirmTitle": "SirinVPN {{host}} adresinden kaldırılsın mı?",
+      "confirmMessage": "Bu sunucunun tüm cihazları ve katılım kodları çalışmayı durdurur. VPS’teki Docker ve diğer hizmetler korunur.",
+      "confirm": "Kaldır",
+      "progress": "SirinVPN kaldırılıyor…",
+      "error": "Kaldırma tamamlanmadı. VPS kısmi değişiklikleri geri alır ve bu cihaz sunucuyu tutar.",
+      "done": "SirinVPN {{host}} adresinden kaldırıldı.",
+      "step": "Oturum açın ve SirinVPN’i VPS’ten kaldırın",
+      "stepLocal": "Sunucuyu bu cihazdan kaldırın"
+    }
+  },
+  "endpoint": {
+    "titleShare": "Yeni bir adrese taşı",
+    "titleApply": "Adres güncellemesini uygula",
+    "description": "İmzalı güncellemeler cihazları sunucunun yeni adresine ve ayarlarına taşır.",
+    "tab": {
+      "label": "Adres güncelleme görevi",
+      "share": "Yeni adresi paylaş",
+      "apply": "Yeni adresi kullan"
+    },
+    "pending": "Hâlâ {{host}} adresini kullanan cihazlar, bu VPS’i kapatmadan önce bu güncellemeye ihtiyaç duyar.",
+    "create": {
+      "title": "Adres güncellemesini oluştur",
+      "action": "Güncelleme oluştur"
+    },
+    "retrieve": {
+      "title": "En son güncellemeyi al",
+      "action": "Güncellemeyi al"
+    },
+    "intro": "Yeni VPS güncellemeyi imzalar. Ardından cihazlarınız için eski VPS’te yayımlayın.",
+    "connectFirst": "Önce yeni VPS’e bağlanın.",
+    "number": "Güncelleme {{number}}",
+    "code": "Güncelleme kodu",
+    "codeHint": "Erişim anahtarı içermez; imzası kurcalamayı engeller",
+    "copy": "Kodu kopyala",
+    "publish": "Eski VPS’te yayımla",
+    "published": "Eski VPS’te yayımlandı",
+    "publishNote": "Hâlâ eski VPS’e bağlanan cihazlar güncellemeyi orada alır.",
+    "applied": "Adres güncellendi",
+    "appliedNote": "Bağlantının yeni adreste çalıştığını kontrol edin.",
+    "applyIntro": "Sunucunun Sahibinden aldığınız kodu yapıştırın veya sunucudan alın.",
+    "getFromServer": "Sunucudan al",
+    "verify": "Doğrula ve geç",
+    "identityNote": "Yeni adres yine aynı sunucu kimliğini kanıtlamalıdır.",
+    "error": {
+      "create": "Güncelleme oluşturulamadı. Eski VPS’i çalışır tutun ve bağlıyken tekrar deneyin.",
+      "retrieve": "Bu sunucudan adres güncellemesi alınamadı.",
+      "publish": "Eski VPS’te yayımlanamadı. Değişmedi; tekrar deneyebilirsiniz.",
+      "apply": "Güncelleme uygulanamadı. Bağlantınızı kontrol edin."
+    },
+    "showCode": "Güncelleme kodunu göster",
+    "to": "şuraya taşınır",
+    "working": "Güncelleme alınıyor…",
+    "publishing": "Yayımlanıyor…",
+    "applying": "Doğrulanıyor…",
+    "pasteFirst": "Doğrulamak için bir kod yapıştırın.",
+    "none": "Bu sunucuda bekleyen bir adres güncellemesi yok."
+  },
+  "alerts": {
+    "title": "VPS uyarıları",
+    "summary": "Bu VPS’in dikkat gerektirdiğinde bildirim alın; sessizleştiğinde dışarıdaki bir izleyicinin fark etmesini sağlayın. Bir adres ekleyene kadar kapalıdır. Bildirimler yalnızca sabit metin içerir: ad, adres veya trafik yok.",
+    "unsupported": "VPS uyarılarını kullanmak için bu sunucuyu güncel uygulamayla onarın.",
+    "format": "Uyarı biçimi",
+    "formats": {
+      "ntfy": {
+        "label": "ntfy konusu",
+        "hint": "Başlıklı düz metin; seçtiğiniz bir ntfy sunucusu için"
+      },
+      "webhook": {
+        "label": "Webhook",
+        "hint": "Başlık, ileti ve metin içeren küçük bir JSON nesnesi"
+      }
+    },
+    "alertUrl": "Uyarı adresi",
+    "alertUrlHint": "İsteğe bağlı. Konunuzun veya webhook’unuzun tam HTTPS adresi. VPS her beş dakikada denetler ve bir sorun başladığında veya düzeldiğinde gönderir.",
+    "heartbeatUrl": "Kalp atışı adresi",
+    "heartbeatHint": "İsteğe bağlı. VPS bunu her beş dakikada bir çağırır. VPS’in ne zaman kapandığını veya çevrimdışı kaldığını öğrenmek için kaçırılan kalp atışı izleyicisine yöneltin.",
+    "invalid": "Kullanıcı adı içermeyen tam bir HTTPS adresi kullanın.",
+    "allowPrivate": "Özel, döngü ve VPN adreslerine izin ver",
+    "save": "Uyarıları kaydet",
+    "saved": "Kaydedildi. VPS bunu bir sonraki denetiminde kullanır.",
+    "test": "Test uyarısı gönder",
+    "testSent": "VPS bir test uyarısı iletti.",
+    "loadFailed": "Uyarı ayarları yüklenemedi.",
+    "saveFailed": "Uyarı ayarları kaydedilemedi.",
+    "testFailed": "Test uyarısı gönderilemedi.",
+    "status": {
+      "notChecked": "VPS henüz denetlemedi. Her beş dakikada bir denetler.",
+      "checked": "Son VPS denetimi: {{time}}.",
+      "alertFailed": "Son uyarı iletilemedi. {{reason}} VPS bir sonraki denetiminde yeniden dener.",
+      "heartbeat": "Son kalp atışı: {{time}}.",
+      "heartbeatFailed": "Son kalp atışı başarısız oldu. {{reason}}"
+    },
+    "failure": {
+      "address": "Adres çözümlenemedi veya izin verilmeyen bir özel adrese çözümlendi.",
+      "connection": "VPS adrese HTTPS üzerinden ulaşamadı.",
+      "rejected": "Adres isteği reddetti.",
+      "rejectedStatus": "Adres HTTP {{status}} durum koduyla yanıt verdi.",
+      "rejectedClient": "Adres HTTP {{status}} durum koduyla yanıt verdi. Adresi ve ihtiyaç duyduğu erişim belirtecini kontrol edin."
+    }
+  },
+  "rotation": {
+    "confirmFirst": "Devam etmek için yukarıdaki kutuyu işaretleyin.",
+    "fingerprint": "Yeni cihaz kimliği parmak izi",
+    "unchanged": "Hiçbir şey değişmedi. Mevcut anahtarlarınız hâlâ çalışıyor.",
+    "interrupted": "Değişim kesildi. Tamamlamak için sürdürün; o zamana kadar bu cihaz bağlanamaz."
+  },
+  "deviceBackup": {
+    "confirmFirst": "Onaylamak için yukarıdaki kutuyu işaretleyin."
+  },
+  "change": {
+    "blocked": "Bu değişiklik henüz başlatılamaz:",
+    "rolledBack": "Sunucu değişikliği geri aldı, bu yüzden hiçbir şey değişmedi. Tekrar deneyebilirsiniz.",
+    "unknown": {
+      "message": "{{host}} üzerindeki değişiklik uygulanmış olabilir, ancak onayı kaybolmuş olabilir. Bu cihaz anahtarlarını korudu.",
+      "checkAgain": "Yeniden denetle",
+      "checking": "Denetleniyor…",
+      "checkFailed": "Sunucu denetlenemedi. Ulaşılabilir olduğunda tekrar deneyin.",
+      "committed": "{{host}} üzerindeki değişiklik uygulandı.",
+      "forget": "Bu değişikliği unut…",
+      "forgetTitle": "{{host}} üzerindeki değişiklik unutulsun mu?",
+      "forgetMessage": "Bu cihaz, sunucuya sormadan değişikliği izlemeyi bırakır. Sunucu değişikliği uygulamış ya da geri almış olabilir. Kayıtlı Sahip anahtarı korunur. Bundan sonra sunucuyu onarmanız gerekebilir.",
+      "forgetConfirm": "Değişikliği unut",
+      "forgetting": "Unutuluyor…",
+      "forgetFailed": "Değişiklik unutulamadı. Tekrar deneyin.",
+      "forgotten": "Bu cihaz artık {{host}} üzerindeki değişikliği izlemiyor. Sunucu beklendiği gibi çalışmazsa onarın."
+    },
+    "plan": {
+      "show": "Ne yapılacağını göster",
+      "loading": "Plan hazırlanıyor…",
+      "error": "Plan hazırlanamadı.",
+      "commands": "Komutlar",
+      "asRoot": "(root olarak)",
+      "upload": "{{path}} yükle (mod {{mode}})",
+      "files": "Değişen dosyalar"
+    }
+  }
+}

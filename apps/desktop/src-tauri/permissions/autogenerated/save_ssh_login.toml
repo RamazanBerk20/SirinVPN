@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-save-ssh-login"
+description = "Enables the save_ssh_login command without any pre-configured scope."
+commands.allow = ["save_ssh_login"]
+
+[[permission]]
+identifier = "deny-save-ssh-login"
+description = "Denies the save_ssh_login command without any pre-configured scope."
+commands.deny = ["save_ssh_login"]

@@ -19,34 +19,28 @@ class SirinTileService : TileService() {
         super.onStartListening()
         link?.close()
         link = ServiceLink(this,lost={ mainExecutor.execute { snapshot = null; render() } },
-            connected={ it.subscribe(listener) }).also { it.bind() }
+            connected={ it.subscribe(listener) }).also { it.control(LISTEN_TIMEOUT_MS) }
     }
     override fun onStopListening() {
-        link?.ready?.getNow(null)?.let { try { it.unsubscribe(listener) } catch (_: Exception) {} }
+        link?.current()?.let { try { it.unsubscribe(listener) } catch (_: Exception) {} }
         link?.close(); link = null; snapshot = null
         super.onStopListening()
     }
     private fun render() {
         val state = snapshot
+        // Not this service's own context: a bound tile outlives a language change on Android 12/12L.
+        val text = AppLanguage.wrap(applicationContext)
         qsTile?.apply {
-            label = getString(R.string.app_name)
-            val phase = state?.optString("phase")
-            this.state = when (phase) {
-                "connected" -> Tile.STATE_ACTIVE
-                "disconnected", "paused", "failed", "permission_required", "connecting", "reconnecting", "waiting_for_network", "degraded" -> Tile.STATE_INACTIVE
-                else -> Tile.STATE_UNAVAILABLE
+            label = text.getString(R.string.app_name)
+            val session = Session.fromWire(state?.optString("phase"))
+            this.state = when (session) {
+                Session.Connected -> Tile.STATE_ACTIVE
+                null, Session.Unhealthy(false) -> Tile.STATE_UNAVAILABLE
+                else -> Tile.STATE_INACTIVE
             }
-            val status = getString(when (phase) {
-                "connected" -> if (state?.optBoolean("always_on") == true) R.string.tile_status_always_on else R.string.status_connected
-                "connecting" -> R.string.status_connecting
-                "reconnecting" -> R.string.status_reconnecting
-                "waiting_for_network" -> R.string.tile_status_no_network
-                "degraded" -> R.string.status_interrupted
-                "disconnected", "paused" -> R.string.status_disconnected
-                else -> R.string.tile_status_open_app
-            })
+            val status = text.getString(VpnNotifications.statusText(session, state?.optBoolean("always_on") == true, compact = true))
             subtitle = status
-            contentDescription = getString(R.string.tile_description, status)
+            contentDescription = text.getString(R.string.tile_description, status)
             updateTile()
         }
     }
@@ -58,11 +52,7 @@ class SirinTileService : TileService() {
         // Active tiles stop listening after one update. A tap owns a fresh,
         // short binding; absence of a listening binding is not missing setup.
         val actionLink=ServiceLink(this)
-        actionLink.bind()
-        android.os.Handler(mainLooper).postDelayed({
-            actionLink.ready.completeExceptionally(java.util.concurrent.TimeoutException())
-        },5000)
-        actionLink.ready.whenComplete {control,error -> mainExecutor.execute {
+        actionLink.control(5000).whenComplete {control,error -> mainExecutor.execute {
             try {
                 if(error==null) act(control) else {snapshot=null;render()}
             } catch (_:Exception) {snapshot=null;render()}
@@ -72,7 +62,7 @@ class SirinTileService : TileService() {
     private fun act(control:IControl) {
         val current = JSONObject(control.snapshot())
         if (current.optBoolean("always_on")) return launch(Intent(android.provider.Settings.ACTION_VPN_SETTINGS))
-        val command = if (current.getString("phase") in setOf("connected", "connecting", "reconnecting", "waiting_for_network", "degraded")) "disconnect_server" else "connect_saved"
+        val command = if (Session.fromWire(current.getString("phase"))?.running == true) "disconnect_server" else "connect_saved"
         if(command=="connect_saved" && current.isNull("quick_profile")) return openApp()
         if(command=="connect_saved" && VpnService.prepare(this)!=null) return launch(Intent(this,ControlActionActivity::class.java)
             .putExtra("command",command).putExtra("generation",current.getLong("generation")))
@@ -84,6 +74,7 @@ class SirinTileService : TileService() {
         })
     }
     private fun openApp() = launch(Intent(this, MainActivity::class.java))
+    private companion object { const val LISTEN_TIMEOUT_MS = 10000L }
     // Android 12–13 have no PendingIntent overload; Android 14+ uses it below.
     @android.annotation.SuppressLint("StartActivityAndCollapseDeprecated")
     private fun launch(intent: Intent) {

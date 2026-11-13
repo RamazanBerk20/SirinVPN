@@ -49,3 +49,49 @@ object WifiRule {
     fun identifier(ssid: String?, security: String?): String? =
         if (ssid.isNullOrBlank() || ssid == "<unknown ssid>" || security == null) null else "android-wifi:v2:$security:$ssid"
 }
+
+/**
+ * What Wi-Fi auto-connect has armed to see the next network, as one value. WifiRule.Watch is what a
+ * check wants; this is what runs. Null until the first check after a process start re-applies it.
+ */
+sealed interface WifiWatch {
+    data object None : WifiWatch
+    /** The one-shot Wi-Fi join callback whose PendingIntent URI carries number [n] (saved as `wifi_join`). */
+    data class JoinCallback(val n: Long) : WifiWatch
+    /** WifiWatchService runs; it reports its own start and stop. */
+    data object Monitor : WifiWatch
+
+    /** One transition's side effects, applied in field order: cancel, register, then start or stop the monitor. */
+    data class Step(val next: WifiWatch?, val cancelJoin: Long? = null, val registerJoin: Long? = null, val monitor: Boolean? = null)
+
+    companion object {
+        /**
+         * Moves [current] towards [wanted]. Android releases a join callback after one delivery, so every
+         * arming uses a new number above [lastJoin]. A monitor counts as running only once it reports it.
+         */
+        fun arm(current: WifiWatch?, wanted: WifiRule.Watch, lastJoin: Long): Step {
+            val join = wanted == WifiRule.Watch.WIFI_JOIN
+            val register = if (join && current !is JoinCallback) lastJoin + 1 else null
+            val cancel = if (current == null || register != null || current is JoinCallback && !join) lastJoin else null
+            val monitor = when {
+                wanted == WifiRule.Watch.MONITOR && current != Monitor -> true
+                wanted != WifiRule.Watch.MONITOR && current == Monitor -> false
+                // Unknown after a process start: nothing of ours runs, so there is nothing to stop.
+                else -> null
+            }
+            val next = when {
+                register != null -> JoinCallback(register)
+                join -> current
+                wanted == WifiRule.Watch.MONITOR && current == Monitor -> Monitor
+                else -> None
+            }
+            return Step(next, cancel, register, monitor)
+        }
+        /** A running monitor replaces any join callback; the check it triggers re-arms what is wanted. */
+        fun monitorStarted(current: WifiWatch?, lastJoin: Long) =
+            Step(Monitor, cancelJoin = if (current == null) lastJoin else (current as? JoinCallback)?.n)
+        fun monitorStopped(current: WifiWatch?) = if (current == Monitor) None else current
+        /** Android delivered the join callback and released it. */
+        fun joinDelivered(current: WifiWatch?) = if (current is JoinCallback || current == null) None else current
+    }
+}

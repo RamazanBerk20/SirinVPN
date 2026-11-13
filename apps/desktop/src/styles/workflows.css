@@ -141,7 +141,7 @@ html[data-window-chrome="custom"] .dialog-content.dialog-layout {
   gap: 8px;
   list-style: disc;
   margin: 0;
-  padding-left: 20px;
+  padding-inline-start: 20px;
 }
 .result-identity {
   display: grid;
@@ -155,7 +155,7 @@ html[data-window-chrome="custom"] .dialog-content.dialog-layout {
 .network-preflight {
   display: grid;
   gap: 14px;
-  text-align: left;
+  text-align: start;
   min-width: 0;
   margin-top: 16px;
 }
@@ -200,7 +200,7 @@ html[data-window-chrome="custom"] .dialog-content.dialog-layout {
 .network-address-list {
   display: grid;
   gap: 12px;
-  padding-left: 20px;
+  padding-inline-start: 20px;
   margin: 0;
   list-style: disc;
   font-size: var(--text-secondary);
@@ -242,7 +242,7 @@ html[data-window-chrome="custom"] .dialog-content.dialog-layout {
 .speed-test { display: grid; gap: 12px; justify-items: start; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--line); }
 .speed-test h3, .speed-test .settings-note { margin: 0; }
 .speed-test .result-facts { justify-self: stretch; }
-.wifi-paused { padding: 12px 14px; border-left: 2px solid var(--warning); background: color-mix(in srgb, var(--warning) 5%, transparent); font-size: var(--text-secondary); line-height: 1.5; }
+.wifi-paused { padding: 12px 14px; border-inline-start: 2px solid var(--warning); background: color-mix(in srgb, var(--warning) 5%, transparent); font-size: var(--text-secondary); line-height: 1.5; }
 .port-forward-form select { font-family: inherit; }
 .mtu-details { margin-top: 18px; }
 .recovery-target { display: grid; gap: 10px; min-width: 0; padding: 16px; border: 1px solid var(--line); border-radius: 8px; overflow-wrap: anywhere; }
@@ -261,7 +261,7 @@ html[data-window-chrome="custom"] .dialog-content.dialog-layout {
 .dialog-footer:has(> button:nth-of-type(3)) .dialog-footer-note { flex-basis: 100%; order: -2; }
 .dialog-footer .dialog-back { order: -1; }
 .dialog-back { min-height: 40px; padding-inline: 12px; }
-.dialog-footer .text-button.dialog-back { margin-right: auto; }
+.dialog-footer .text-button.dialog-back { margin-inline-end: auto; }
 .dialog-body > .inline-error { margin-bottom: 16px; }
 .dialog-layout button .spin { flex: 0 0 auto; }
 
@@ -306,7 +306,7 @@ html[data-window-chrome="custom"] .dialog-content.dialog-layout {
 .operation-progress strong { color: var(--text); font-size: var(--text-section); }
 .operation-progress p { max-width: 44ch; margin: 0; font-size: var(--text-secondary); line-height: 1.55; }
 /* With steps the list is the progress: left-aligned, each step marked done, running or waiting. */
-.operation-progress.with-steps { min-height: 0; align-items: stretch; justify-content: flex-start; padding: 8px 0; text-align: left; }
+.operation-progress.with-steps { min-height: 0; align-items: stretch; justify-content: flex-start; padding: 8px 0; text-align: start; }
 .operation-steps { display: grid; gap: 12px; margin: 4px 0; padding: 0; list-style: none; }
 .operation-steps li { display: grid; grid-template-columns: 24px minmax(0, 1fr); align-items: start; gap: 12px; color: var(--muted); font-size: var(--text-body); line-height: 1.5; }
 .operation-steps li[data-state="running"] { color: var(--text); font-weight: var(--weight-semibold); }
@@ -323,7 +323,7 @@ html[data-window-chrome="custom"] .dialog-content.dialog-layout {
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
-  padding: 8px 8px 8px 12px;
+  padding-block: 8px 8px; padding-inline: 12px 8px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--bg);
@@ -347,7 +347,7 @@ html[data-window-chrome="custom"] .dialog-content.dialog-layout {
 .info-note > svg { flex: 0 0 auto; margin-top: 2px; }
 .danger-note > svg { color: var(--danger); }
 .info-note > svg { color: var(--cyan); }
-.danger-note ul { display: grid; gap: 6px; margin: 0; padding-left: 18px; list-style: disc; }
+.danger-note ul { display: grid; gap: 6px; margin: 0; padding-inline-start: 18px; list-style: disc; }
 .confirmation-row.danger {
   --checkbox-accent: var(--danger);
   padding: 12px 14px;
@@ -438,7 +438,7 @@ html[data-window-chrome="custom"] .dialog-content.dialog-layout {
   color: var(--muted);
   font: inherit;
   font-weight: 500;
-  text-align: left;
+  text-align: start;
 }
 .android .native-secret-input > .native-secret-field.entered { color: var(--text); }
 .android .native-secret-input > .native-secret-field.entered > svg { color: var(--success); }

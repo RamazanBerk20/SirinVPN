@@ -30,8 +30,8 @@ class ControlActionActivity : Activity() {
     }
     private fun performCommand() {
         val command=intent.getStringExtra("command").takeIf { it == "connect_saved" } ?: "disconnect_server"
-        val link = ServiceLink(this); link.bind()
-        link.ready.whenComplete { service, error ->
+        val link = ServiceLink(this)
+        link.control(10000).whenComplete { service, error ->
             if (error == null) service.execute(command, "{}", UUID.randomUUID().toString(), intent.getLongExtra("generation", -2),
                 object : IResult.Stub() { override fun complete(result: String) { runOnUiThread { link.close(); finish() } } })
             else { link.close(); finish() }

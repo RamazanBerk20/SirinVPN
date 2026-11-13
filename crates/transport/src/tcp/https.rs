@@ -25,8 +25,10 @@ fn websocket_configuration() -> WebSocketConfig {
         .accept_unmasked_frames(false)
 }
 
+#[allow(clippy::too_many_arguments)]
 pub(super) async fn client<S, F>(
     local_socket: UdpSocket,
+    local_peer: LocalPeer,
     stream: S,
     https: &HttpsTransport,
     port: u16,
@@ -71,7 +73,7 @@ where
     .map_err(|_| RelayError::HandshakeFailed)??;
     let (stream, bridge) = tokio::io::duplex(8_192);
     tokio::select! {
-        result = relay_client_session(local_socket, stream, noise, ready) => result,
+        result = relay_client_session(local_socket, local_peer, stream, noise, ready) => result,
         result = bridge_records(websocket, bridge) => result,
     }
 }
@@ -126,7 +128,6 @@ where
             &config,
             &authorized,
             &replay_cache,
-            &client_connections,
         )
         .await?
     {
@@ -140,7 +141,6 @@ where
             &config,
             &authorized,
             &replay_cache,
-            &client_connections,
         )
         .await?
     {
@@ -190,9 +190,7 @@ where
     let Some((noise, client_static, response)) = authenticated else {
         return cover_response(&mut stream, 404, head_only).await;
     };
-    let Some(_client_permit) = client_connections.acquire(client_static) else {
-        return cover_response(&mut stream, 404, head_only).await;
-    };
+    let permit = client_connections.acquire(client_static);
     let replayed = PrefixedStream {
         prefix: header,
         consumed: 0,
@@ -211,7 +209,7 @@ where
         .map_err(|_| RelayError::HandshakeFailed)?;
     let (stream, bridge) = tokio::io::duplex(8_192);
     tokio::select! {
-        result = relay_server_session(stream, config, authorized, activity, noise, client_static, TcpOuterProtocol::TlsLike) => result,
+        result = relay_server_session(stream, config, authorized, activity, noise, client_static, TcpOuterProtocol::TlsLike, permit) => result,
         result = bridge_records(websocket, bridge) => result,
     }
 }

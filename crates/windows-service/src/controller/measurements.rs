@@ -5,7 +5,7 @@ use windows_sys::Win32::Networking::WinSock::{AF_INET, AF_INET6};
 
 impl Controller {
     pub(super) async fn inspect_measurements(&mut self) -> io::Result<()> {
-        let Some(active) = &self.active else {
+        let Some(active) = self.link.active() else {
             return Ok(());
         };
         if active
@@ -31,7 +31,7 @@ impl Controller {
                 _ = cancel.changed(epoch) => return Err(io::ErrorKind::Interrupted.into()),
                 result = detect_mtu(source, destination, ipv6, current) => result,
             };
-            let active = self.active.as_mut().expect("measured adapter");
+            let active = self.link.active_mut().expect("measured adapter");
             active.mtu = result;
             if result.policy == MtuPolicy::Automatic
                 && let Some(value) = result.suggested
@@ -96,15 +96,12 @@ impl Controller {
             .iter()
             .position(|candidate| candidate.transport == kind)
             .ok_or(io::ErrorKind::InvalidInput)?;
-        let index = self.attempt_index / count.max(1) * count + offset;
+        let index = self.link.attempt() / count.max(1) * count + offset;
         self.close_guard()?;
-        self.stop_active().await?;
+        self.transition(Event::Select { index }).await;
         self.cleanup_routes()?;
         self.saved.as_mut().expect("saved session").phase = SessionPhase::Connecting;
         self.persist()?;
-        self.attempt_index = index;
-        self.next_attempt = Instant::now();
-        self.pass_started = Instant::now();
         self.quality.changing();
         Ok(())
     }

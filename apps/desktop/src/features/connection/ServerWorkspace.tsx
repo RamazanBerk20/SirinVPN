@@ -16,10 +16,9 @@ const MaintenanceTools = lazy(() => import("./MaintenanceTools").then(m => ({ de
 const WorkspaceDialogs = lazy(() => import("./WorkspaceDialogs").then(m => ({ default: m.WorkspaceDialogs })));
 const Troubleshooter = lazy(() => import("./Troubleshooter").then(m => ({ default: m.Troubleshooter })));
 import type { Page } from "../../components/Navigation";
-const AccessPanel = lazy(() => import("../devices/AccessPanel").then(m => ({ default: m.AccessPanel })));
+const DevicesPage = lazy(() => import("../devices/DevicesPage").then(m => ({ default: m.DevicesPage })));
 const VpsAlertSettings = lazy(() => import("../settings/VpsAlertSettings").then(m => ({ default: m.VpsAlertSettings })));
 const DnsBlocklistSettings = lazy(() => import("../dns/DnsBlocklistSettings").then(m => ({ default: m.DnsBlocklistSettings })));
-const PortForwardSettings = lazy(() => import("../devices/PortForwardSettings").then(m => ({ default: m.PortForwardSettings })));
 import { formatDnsPolicy } from "../../format";
 import { useServerWorkspace } from "./useServerWorkspace";
 import { PreferenceSaveBar } from "./PreferenceSaveBar";
@@ -89,15 +88,17 @@ export function ServerWorkspace(
   // Runs outside the lazy boundary and before the tray effect, so a tray request that changes the view keeps its dialog open.
   const { setDiagnosticsOpen } = model;
   useEffect(() => { setDiagnosticsOpen(false); }, [props.view, setDiagnosticsOpen]);
+  const { trayRequest, onTrayRequestHandled } = props;
+  const { runDiagnostics } = model;
   useEffect(() => {
-    const request = props.trayRequest;
+    const request = trayRequest;
     if (!request || handledTrayRequest.current === request.sequence) return;
     handledTrayRequest.current = request.sequence;
-    if (request.destination === "diagnostics") void model.runDiagnostics();
+    if (request.destination === "diagnostics") void runDiagnostics();
     if (request.destination === "component_update")
       setComponentUpdateOpen(true);
-    props.onTrayRequestHandled?.();
-  }, [props.trayRequest, model.runDiagnostics]);
+    onTrayRequestHandled?.();
+  }, [trayRequest, runDiagnostics, onTrayRequestHandled]);
   const { profile, connected, accessLevel, onAccessChanged } =
     model;
   const { view, category, onCategoryChange } = props;
@@ -118,7 +119,7 @@ export function ServerWorkspace(
       hidden={view === "servers"}
     >
       {isAndroid && view === "home" && (mobileSubpage ?
-        <header className="mobile-page-header"><button className="icon-button" autoFocus={dpadOnly} aria-label={t("common.action.back")} onClick={props.onBack}><ArrowLeft size={24} /></button><h1>{t(mobileDetails ? "app.home.detailsTitle" : "app.home.connectionTitle")}</h1></header> :
+        <header className="mobile-page-header"><button className="icon-button" autoFocus={dpadOnly} aria-label={t("common.action.back")} onClick={props.onBack}><ArrowLeft className="mirror-rtl" size={24} /></button><h1>{t(mobileDetails ? "app.home.detailsTitle" : "app.home.connectionTitle")}</h1></header> :
         <header className="mobile-home-header"><Brand compact /></header>)}
       {(!isAndroid || view === "devices" || view === "settings" && !props.detail) && <header className="workspace-header">
         <div>
@@ -157,8 +158,8 @@ export function ServerWorkspace(
             address={profile.client_tunnel_address}
           />}
           {isAndroid && !mobileSubpage && <div className="mobile-choice-list home-links">
-            <ListRow icon={<SlidersHorizontal size={22} />} title={t("app.home.connectionTitle")} subtitle={t("app.home.connectionSummary", { method: model.selectedTransport === "automatic" ? t("app.home.automatic") : formatTransport(model.selectedTransport) })} trailing={<CaretRight size={18} />} onClick={() => props.onNavigate("home", "connection")} />
-            <ListRow icon={<Info size={22} />} title={t("app.home.detailsTitle")} subtitle={t(accessLevel === "member" ? "app.home.detailsSummaryMember" : "app.home.detailsSummary")} trailing={<CaretRight size={18} />} onClick={() => props.onNavigate("home", "details")} />
+            <ListRow icon={<SlidersHorizontal size={22} />} title={t("app.home.connectionTitle")} subtitle={t("app.home.connectionSummary", { method: model.selectedTransport === "automatic" ? t("app.home.automatic") : formatTransport(model.selectedTransport) })} trailing={<CaretRight className="mirror-rtl" size={18} />} onClick={() => props.onNavigate("home", "connection")} />
+            <ListRow icon={<Info size={22} />} title={t("app.home.detailsTitle")} subtitle={t(accessLevel === "member" ? "app.home.detailsSummaryMember" : "app.home.detailsSummary")} trailing={<CaretRight className="mirror-rtl" size={18} />} onClick={() => props.onNavigate("home", "details")} />
           </div>}
           {/* VPS resources are for those who manage the server: a Member can't act on them. */}
           {!isAndroid && <>{accessLevel !== "member" && <ServerMetrics
@@ -200,7 +201,7 @@ export function ServerWorkspace(
                   <dl className="health-checks">
                     {model.serverStatus.private_dns_records.map((record) => (
                       <div key={record.name}>
-                        <dt>{record.name}</dt>
+                        <dt dir="auto">{record.name}</dt>
                         <dd className="mono">{record.address}</dd>
                       </div>
                     ))}
@@ -252,19 +253,11 @@ export function ServerWorkspace(
                 category="advanced"
                 onRestoreDevice={props.onRestoreDevice}
               />
-              {accessLevel !== "member" && <section className="settings-card settings-action-row">
-                <div><h2>{t("app.advanced.devicesTitle")}</h2><p>{t(accessLevel === "owner" ? "app.advanced.devicesSummaryOwner" : "app.advanced.devicesSummaryAdmin")}
-                  {/* Android has no WireGuard export yet. */}
-                  {!isAndroid && <> {t("app.advanced.devicesWireguard")}</>}</p></div>
+              {/* Device network features live on each device's panel; this only points there. */}
+              <section className="settings-card settings-action-row">
+                <div><h2>{t("app.advanced.devicesTitle")}</h2><p>{t("app.advanced.devicesSummary")}</p></div>
                 <button className="secondary-button" onClick={() => props.onNavigate("devices")}>{t("app.advanced.openDevices")}</button>
-              </section>}
-              <PortForwardSettings
-                onManageDevices={() => props.onNavigate("devices")}
-                profile={profile}
-                connected={connected}
-                accessLevel={accessLevel}
-                onAccessChanged={onAccessChanged}
-              />
+              </section>
               <VpsAlertSettings profile={profile} connected={connected} onConnect={connectHere} onRepair={reviewUpdate} />
             </div>
           )}
@@ -276,7 +269,7 @@ export function ServerWorkspace(
         </SettingsLayout>
       )}
       {view === "devices" && (
-          <AccessPanel
+          <DevicesPage
             profile={profile}
             connected={connected}
             accessLevel={accessLevel}
@@ -284,9 +277,6 @@ export function ServerWorkspace(
             onOpenHome={() => props.onNavigate("home")}
             // Connecting shows its progress on Home, so the button goes there too.
             onConnect={connectHere && (() => { props.onNavigate("home"); connectHere(); })}
-            onNetwork={() => {
-              props.onOpenSettings("advanced");
-            }}
           />
         )}
       {!isAndroid && <LocalComponentUpdate

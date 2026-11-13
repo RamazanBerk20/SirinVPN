@@ -170,7 +170,15 @@ fn current_selection_survives_recovery_but_cannot_downgrade_its_state_schema() {
     let mut restored: SavedConnection = serde_json::from_slice(&bytes).unwrap();
     restored.validate().unwrap();
     assert_eq!(restored.applications, saved.applications);
-    assert!(restored.authorize("S-1-5-21-100-200-300-1002").is_err());
+    assert!(
+        authorize(
+            Some(&restored.owner_sid),
+            "S-1-5-21-100-200-300-1002",
+            false,
+            &Operation::Status
+        )
+        .is_err()
+    );
     restored.schema_version = 1;
     assert!(restored.validate().is_err());
     restored.schema_version = 2;

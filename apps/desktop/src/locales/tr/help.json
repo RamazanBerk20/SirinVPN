@@ -1,0 +1,81 @@
+{
+  "demo": {
+    "enter": "Demoyu incele",
+    "enterHint": "Önce örnek verilerle göz atın. Hiçbir şey bağlanmaz ve hiçbir şey kaydedilmez.",
+    "banner": "Demo · Yalnızca örnek veriler. Hiçbir şey bağlanmaz ve hiçbir şey kaydedilmez.",
+    "exit": "Demodan çık"
+  },
+  "troubleshoot": {
+    "open": "Bağlanamıyor musunuz? Nedenini öğrenin",
+    "title": "Bağlanamıyor musunuz?",
+    "description": "Olağan nedenleri sırayla inceleyin. Her adım neyin kontrol edileceğini söyler ve uygulama düzeltebiliyorsa düzeltmeyi sunar.",
+    "checking": "Bu cihaz ve bağlantı denetleniyor…",
+    "progress": "Adım {{current}} / {{total}}",
+    "next": "İleri",
+    "previous": "Önceki adım",
+    "stepsLabel": "Sorun giderme adımları",
+    "seen": "Gördüklerimiz:",
+    "settingsSummary": "Bağlanamıyor musunuz? Olağan nedenleri tek tek inceleyin; uygulamanın düzeltebildiği yerlerde düzeltmeyle birlikte.",
+    "settingsAction": "Sorun gider",
+    "connectionSettings": "Bağlantı ayarlarını aç",
+    "status": {
+      "problem": "Olası neden",
+      "check": "Kontrol etmeye değer",
+      "ok": "Sorun görünmüyor"
+    },
+    "step": {
+      "network": "Yerel ağ",
+      "dns": "Ad çözümleme (DNS)",
+      "reachability": "VPS’inize ulaşma",
+      "transport": "Engellenen bağlantı yöntemi",
+      "clock": "Tarih ve saat",
+      "enrollment": "Cihaz anahtarları ve kayıt",
+      "membership": "Erişiminiz",
+      "service": "VPS üzerindeki VPN hizmeti"
+    },
+    "network": {
+      "offline": "Bu cihazın ağ bağlantısı yok. Wi-Fi’yi veya mobil veriyi açın, sonra tekrar deneyin.",
+      "check": "VPN kapalıyken bir web sitesi açın. Otel, havalimanı veya kafe Wi-Fi’sinde olduğu gibi bir oturum açma sayfası çıkarsa önce orada oturum açın. Hiçbir şey yüklenmezse başka bir ağ deneyin.",
+      "ok": "Bu cihazın ağı VPS’inize ulaşıyor."
+    },
+    "dns": {
+      "vps": "VPS’inizin özel DNS’i yanıt vermiyor, bu yüzden web siteleri VPN üzerinden açılmaz. Sahip, bunu VPS yapılandırmasını onar ile geri yükleyebilir.",
+      "check": "Bu cihaz, bağlanmadan önce sunucunuzun adını çözümler. Bu ağ çözemiyorsa başka bir ağ deneyin ya da adın hâlâ VPS’i gösterip göstermediğini Sahipten öğrenin.",
+      "address": "Sunucunuza IP adresiyle ulaşılır; bu yüzden bağlanmak için ad çözümleme gerekmez.",
+      "ok": "VPS’inizin özel DNS’i yanıt veriyor."
+    },
+    "reachability": {
+      "check": "VPS’in sağlayıcınızın panelinde çalıştığından ve genel adresinin değişmediğinden emin olun. Adres değiştiyse burada güncelleyin.",
+      "ok": "VPS’iniz bu cihaza yanıt verdi."
+    },
+    "transport": {
+      "fixed": "Bu sunucu tek bir bağlantı yöntemine ayarlı ve ağlar genellikle tek yöntemleri engeller. Uygulamanın diğerlerine geçebilmesi için Otomatik’i seçin.",
+      "owner": "Otomatik zaten bu sunucunun sunduğu her yöntemi dener. Bu ağ VPN’leri engelliyorsa VPS yapılandırmasını onar ile 443 numaralı portta HTTPS’i açın; VPS adresinizin kendisi engelliyse CDN modunu da açın.",
+      "member": "Otomatik zaten bu sunucunun sunduğu her yöntemi dener. Bu ağ hepsini engelliyorsa başka bir ağ deneyin ya da Sahipten HTTPS veya CDN modunu açmasını isteyin.",
+      "automatic": "Otomatik zaten bu sunucunun sunduğu her yöntemi, CDN üzerinden HTTPS dahil, dener. Bu ağ yine de engelliyorsa başka bir ağ deneyin.",
+      "ok": "Geçerli bağlantı yöntemi bu ağdan geçiyor."
+    },
+    "clock": {
+      "problem": "VPS’iniz güvenli bağlantıyı reddetti; bu genellikle bu cihazın saatinin yanlış olduğu anlamına gelir. Sistem ayarlarında otomatik tarih ve saati açın, sonra tekrar deneyin.",
+      "check": "Bu cihazın tarih, saat ve saat dilimi ayarlarının otomatik olduğunu kontrol edin. Yanlış saat, VPS’inizin sertifikasını geçersiz gösterir.",
+      "ok": "VPS’iniz güvenli bağlantıyı kabul etti; bu cihazın saati doğru."
+    },
+    "enrollment": {
+      "rotation": "Bu cihaz için bir anahtar değişikliği tamamlanmadı. Bağlanmadan önce bunu tamamlayın.",
+      "problem": "Bu cihazın kayıtlı anahtarları kullanılamıyor. Bir cihaz yedeğini geri yükleyin veya Sahipten yeni bir katılım kodu isteyin.",
+      "check": "Bu cihaz kaldırıldıysa ya da anahtarları başka bir cihazda değiştirilip geri yüklendiyse bağlanamaz. Bir cihaz yedeğini geri yükleyin veya Sahipten yeni bir katılım kodu isteyin.",
+      "ok": "VPS’iniz bu cihazın anahtarlarını kabul etti."
+    },
+    "membership": {
+      "owner": "Sahip sizsiniz; bu yüzden erişiminiz sona eremez veya askıya alınamaz.",
+      "problem": "VPS’iniz bu cihazın erişimini reddetti. Erişiminiz sona ermiş, askıya alınmış ya da izin verilen saatlerin dışında olabilir. Sahipten kontrol etmesini isteyin.",
+      "check": "Erişiminiz sona erdiyse, askıya alındıysa veya izinli saatleri varsa VPS bu cihazı kabul etmeyi durdurur. Sahipten erişiminizi kontrol etmesini isteyin.",
+      "ok": "VPS’iniz bu cihazın mevcut erişimini kabul etti."
+    },
+    "service": {
+      "problem": "VPS’inizdeki VPN hizmeti düzgün çalışmıyor. Sahip, cihazları ve ayarları koruyarak VPS yapılandırmasını onar ile onarabilir.",
+      "check": "VPS yeniden başlatıldıysa veya güncellendiyse VPN hizmeti durmuş olabilir. Sahip, cihazları ve ayarları koruyan VPS yapılandırmasını onar ile onarabilir.",
+      "ok": "VPS’inizdeki VPN hizmeti çalışıyor."
+    }
+  }
+}

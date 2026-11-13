@@ -102,7 +102,7 @@ pub async fn collect_diagnostics(configuration: &ServerConfiguration) -> Diagnos
     report(checks)
 }
 
-fn report(checks: Vec<DiagnosticCheck>) -> DiagnosticReport {
+pub(crate) fn report(checks: Vec<DiagnosticCheck>) -> DiagnosticReport {
     DiagnosticReport {
         api_version: API_VERSION.into(),
         checks,
@@ -117,12 +117,18 @@ pub(crate) fn flag(path: &str) -> Option<bool> {
     }
 }
 
-fn check(code: &str, label: &str, level: DiagnosticLevel, message: &str) -> DiagnosticCheck {
+pub(crate) fn check(
+    code: &str,
+    label: &str,
+    level: DiagnosticLevel,
+    message: &str,
+) -> DiagnosticCheck {
     DiagnosticCheck {
         code: code.into(),
         label: label.into(),
         level,
         message: message.into(),
+        cause: None,
     }
 }
 
@@ -146,6 +152,22 @@ fn condition(
 }
 
 pub(super) async fn output(program: &str, arguments: &[&str]) -> Option<String> {
+    output_within(program, arguments, Duration::from_secs(1)).await
+}
+
+/// Kernel changes and the reads that decide them get a longer bound than status reads: killing
+/// `wg set` under load can leave peers half-applied. Re-applying a document is idempotent.
+pub(crate) const MUTATION_TIMEOUT: Duration = Duration::from_secs(10);
+
+pub(crate) async fn mutation_output(program: &str, arguments: &[&str]) -> Option<String> {
+    output_within(program, arguments, MUTATION_TIMEOUT).await
+}
+
+pub(crate) async fn output_within(
+    program: &str,
+    arguments: &[&str],
+    timeout: Duration,
+) -> Option<String> {
     let mut child = Command::new(program)
         .args(arguments)
         .env("LC_ALL", "C")
@@ -155,7 +177,7 @@ pub(super) async fn output(program: &str, arguments: &[&str]) -> Option<String> 
         .kill_on_drop(true)
         .spawn()
         .ok()?;
-    let result = tokio::time::timeout(Duration::from_secs(1), async {
+    let result = tokio::time::timeout(timeout, async {
         let mut bytes = Vec::new();
         child
             .stdout
@@ -403,5 +425,17 @@ mod tests {
             usage("server_disk", "Disk", Some((2, 1)), 90).level,
             DiagnosticLevel::Warning
         );
+    }
+
+    #[tokio::test]
+    async fn kernel_mutations_outlive_the_status_read_bound() {
+        // A slow `wg set` must finish instead of being killed after one second.
+        let slow = ["-c", "sleep 1.5; echo applied"];
+        assert_eq!(output("sh", &slow).await, None);
+        assert_eq!(
+            mutation_output("sh", &slow).await.as_deref(),
+            Some("applied\n")
+        );
+        assert!(MUTATION_TIMEOUT >= Duration::from_secs(5));
     }
 }

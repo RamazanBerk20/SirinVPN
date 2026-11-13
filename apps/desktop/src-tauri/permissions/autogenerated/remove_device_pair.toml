@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-remove-device-pair"
+description = "Enables the remove_device_pair command without any pre-configured scope."
+commands.allow = ["remove_device_pair"]
+
+[[permission]]
+identifier = "deny-remove-device-pair"
+description = "Denies the remove_device_pair command without any pre-configured scope."
+commands.deny = ["remove_device_pair"]

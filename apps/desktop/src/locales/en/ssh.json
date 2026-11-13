@@ -31,6 +31,7 @@
     "picker": "Couldn’t open the file picker. Try again.",
     "readSaved": "Couldn’t read the saved login from this device’s keyring. Unlock the keyring and try again, or enter the login below.",
     "forget": "Couldn’t remove the saved login. Try again.",
+    "save": "It worked, but the login couldn’t be saved to this device’s keyring. Enter it again next time.",
     "cancelled": "Cancelled because the server address changed. Try again.",
     "invalidLogin": "Enter a valid SSH login.",
     "hostChanged": "The server address changed. Verify it again.",
@@ -70,7 +71,24 @@
     "port": "{{protocol}} port {{port}}",
     "otherNotes": "Other network notes",
     "addresses": "Server addresses",
-    "address": "<code>{{address}}/{{prefix}}</code> on {{interface}}"
+    "address": "<code>{{address}}/{{prefix}}</code> on {{interface}}",
+    "issue": {
+      "endpointResolution": "The public VPN address doesn’t resolve from this device. Correct it before installing.",
+      "natOrProxy": "The public VPN address isn’t on a server interface, so a provider NAT mapping or proxy may be in between. Forward the listed ports to this server with the same port numbers: working SSH access doesn’t mean the VPN is reachable.",
+      "privateEndpoint": "The VPN address is private or local, so it works only from networks that can reach it. Set a public VPN address for access from the Internet.",
+      "ipv6Only": "This server has no IPv4. Devices can connect only from networks with IPv6, or through a CDN in HTTPS CDN mode. IPv4-only websites fail unless you set a NAT64 prefix, and that NAT64 gateway’s operator then sees which IPv4 addresses people visit. The server’s DNS must use DNS-over-TLS or DNS-over-HTTPS with IPv6 resolver addresses.",
+      "tunnelAddressConflict": "{{interface}} already uses {{address}}, inside SirinVPN’s 10.77.0.0/24 network. Move that network before installing.",
+      "privateServicePort": "Port {{port}} is already in use on an address SirinVPN needs for a private service. Move that service before installing.",
+      "sshPortConflict": "TCP port {{port}} is used by SSH. Choose a different TCP or TLS port.",
+      "portInUse": "{{protocol}} port {{port}} is already used by another service. Choose a free port or move that service.",
+      "tunnelRouteConflict": "The route {{route}} on {{interface}} overlaps SirinVPN’s 10.77.0.0/24 network. Check that network before installing.",
+      "reservedInterface": "A network interface named sirinvpn0 already exists, but no SirinVPN server is installed. Find out what created it before installing.",
+      "existingVpn": "Another VPN interface is already on this server. Its routes and firewall rules are kept; check that it works alongside SirinVPN.",
+      "existingFirewall": "Other firewall rules are active. SirinVPN keeps them, but they may also need to allow the listed ports and the tunnel network.",
+      "firewallDropPolicy": "A firewall on this server drops traffic by default. If the ports are open at the provider but VPN traffic is still blocked, allow it in that firewall.",
+      "firewallService": "A firewall service is active on this server. SirinVPN keeps its configuration; check that it allows the listed ports and VPN traffic.",
+      "other": "The server check found something to review."
+    }
   },
   "transport": {
     "summary": "Addresses, ports and HTTPS",
@@ -101,7 +119,7 @@
     "certificatePlaceholder": "/etc/letsencrypt/live/vpn.example.org/fullchain.pem",
     "privateKey": "Certificate key path (optional)",
     "privateKeyPlaceholder": "/etc/letsencrypt/live/vpn.example.org/privkey.pem",
-    "existingNote": "Before changing ports or certificates, cancel open invitations and finish key rotations.",
+    "existingNote": "Before changing ports or certificates, cancel waiting join codes and finish key rotations.",
     "invalid": "Check the ports, hostname, path and certificate paths."
   },
   "missing": {

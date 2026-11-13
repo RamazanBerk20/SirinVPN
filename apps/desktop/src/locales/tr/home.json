@@ -1,0 +1,249 @@
+{
+  "consoleLabel": "VPN bağlantısı",
+  "status": {
+    "unknown": "Durum bilinmiyor",
+    "restoringAccess": "Sunucu erişimi geri yükleniyor",
+    "monitorUnavailable": "VPN izleyicisi yanıt vermiyor",
+    "reconnecting": "Yeniden bağlanılıyor",
+    "connected": "Bağlı",
+    "connecting": "Bağlanılıyor",
+    "interrupted": "Bağlantı kesintiye uğradı",
+    "disconnected": "Bağlı değil",
+    "changing": "Bağlantı değiştiriliyor…",
+    "checking": "VPN durumu denetleniyor…",
+    "connectingTo": "{{name}} sunucusuna bağlanılıyor…",
+    "disconnecting": "Bağlantı kesiliyor…"
+  },
+  "action": {
+    "showActive": "Bağlı sunucuya git",
+    "refresh": "Durumu yenile",
+    "disconnectAndUnblock": "Bağlantıyı kes ve kill switch engelini kapat",
+    "disconnect": "Bağlantıyı kes",
+    "connect": "Bağlan",
+    "changing": "Bağlantı değiştiriliyor",
+    "wait": "Lütfen bekleyin…",
+    "vpnSettings": "VPN ayarları",
+    "androidVpnSettings": "Android VPN ayarları",
+    "cancelConnection": "İptal",
+    "reconnect": "Yeniden bağlan",
+    "reconnectHint": "Geçerli ayarlarla devam et",
+    "stop": "VPN’i durdur",
+    "connecting": "Bağlanılıyor…",
+    "disconnecting": "Bağlantı kesiliyor…",
+    "checkAgain": "Yeniden denetle"
+  },
+  "routing": {
+    "unknown": "Bilinmiyor",
+    "inactive": "Etkin değil",
+    "selectedApps": "Seçilen uygulamalar",
+    "selectedRoutes": "Seçilen yollar",
+    "fullTunnelLan": "Tam tünel · yerel ağa izin verildi",
+    "fullTunnel": "Tam tünel"
+  },
+  "killSwitch": {
+    "unknown": "Bilinmiyor",
+    "otherServer": "Etkin sunucuya bak",
+    "nextConnection": "Bir sonraki bağlantı için açık",
+    "off": "Kapalı",
+    "inactive": "Etkin değil",
+    "armed": "Açık",
+    "blocking": "Trafik engelleniyor",
+    "failed": "Çalışmıyor",
+    "unverified": "Açık · doğrulanmadı"
+  },
+  "isolation": {
+    "verified": "Doğrulandı",
+    "unverified": "Doğrulanmadı"
+  },
+  "summary": {
+    "unknown": "VPN durumu okunamadı. Denetlemek için yenileyin.",
+    "restoringAccess": "Sunucu erişimi geri gelene kadar bu bağlantıya güvenmeyin.",
+    "monitorUnavailable": "VPN izleyicisi yanıt vermiyor, bu yüzden kill switch durumu bilinmiyor.",
+    "otherServer": "Başka bir sunucu bağlı. Bağlantıyı kesmek için ona gidin.",
+    "androidApps": "Yalnızca seçilen uygulamalar VPN’i kullanır.",
+    "windowsApps": "Seçilen uygulamalar VPN’i kullanır. Sistem DNS’i sunucudan geçer.",
+    "launchedApps": "SirinVPN’den başlatılan uygulamalar VPN’i kullanır.",
+    "selectedRoutes": "Seçilen ağlar VPN’i kullanır. Diğer her şey kullanmaz.",
+    "fullTunnelLan": "İnternet trafiği VPN’i kullanır. Yerel ağ trafiği kullanmaz.",
+    "fullTunnel": "Tüm internet trafiği VPN üzerinden geçer.",
+    "fullTunnelIpv4": "IPv4 trafiği VPN üzerinden geçer. IPv6 ne tünellenir ne de engellenir.",
+    "interrupted": "Bağlantı koptu. Yeniden bağlanana kadar trafiğiniz korunmaz.",
+    "interruptedBlocked": "Bağlantı koptu. Kill switch, yeniden bağlanana veya bağlantı kesilene kadar trafiği engeller.",
+    "waitingAndroidLockdown": "Android, yeniden bağlanana kadar trafiği engeller.",
+    "waitingBlocked": "Trafik engellendi. Yeniden bağlanın veya engeli kaldırmak için bağlantıyı kesin.",
+    "waiting": "Otomatik yeniden bağlanma kapalı. Hazır olduğunuzda yeniden bağlanın.",
+    "reconnecting": "Bağlantı geri yüklenmeye çalışılıyor.",
+    "connecting": "Güvenli bir bağlantı kuruluyor.",
+    "disconnected": "Trafiğiniz VPN’i kullanmıyor.",
+    "disconnecting": "VPN kapatılıyor."
+  },
+  "warning": {
+    "accessContained": "Sunucu erişimi geri yükleniyor. Bitene kadar VPN trafiği bekletiliyor.",
+    "accessUnenforced": "Sunucu erişim denetimleri çalışmıyor. Geri yüklenene kadar bu sunucuya güvenmeyin.",
+    "androidLockdown": "Android’in “VPN olmadan bağlantıları engelle” seçeneği, bağlantıyı kestikten sonra da açık kalır.",
+    "killSwitchFailed": "Kill switch doğrulanamadı. Bu düzelene kadar ona güvenmeyin.",
+    "androidAppsUnverified": "Uygulama yönlendirmesi doğrulanamadı. Güvenmeden önce bağlantıyı kontrol edin.",
+    "appsUnverified": "Uygulama yönlendirmesi doğrulanamadı. Yeni uygulama başlatmaları kapalı.",
+    "dnsDown": "Sunucunun DNS’i yanıt vermiyor, bu yüzden web siteleri açılmayabilir.",
+    "ipv6": "IPv6 trafiği ne tünellenir ne de engellenir, bu yüzden VPN’i atlayabilir.",
+    "serverInterfaceDown": "Sunucu, VPN arayüzünün kapalı olduğunu bildiriyor. Trafik her an durabilir."
+  },
+  "componentUpdate": {
+    "needed": "Bağlanmak için VPN bileşenini güncelleyin.",
+    "review": "Güncellemeyi incele"
+  },
+  "presharedKey": {
+    "missing": "Bu cihazda önceden paylaşılmış anahtar yok; bu yüzden kaydedilmiş VPN trafiği gelecekteki kuantum bilgisayarlara karşı korunmuyor.",
+    "add": "Önceden paylaşılmış anahtar ekle"
+  },
+  "health": {
+    "idle": "Yakın zamanda el sıkışma yok. Bağlantı yalnızca boşta olabilir.",
+    "managementUnavailable": "Sunucu yönetimi kullanılamıyor.",
+    "reachability": {
+      "notChecked": "Denetlenmedi",
+      "replied": "Yanıt veriyor",
+      "noReply": "Yanıt yok"
+    }
+  },
+  "protection": {
+    "ipv6NotVerified": "IPv6 doğrulanmadı",
+    "ipv6": {
+      "tunneled": "VPN üzerinden",
+      "blocked": "Engellendi",
+      "unknown": "Bilinmiyor",
+      "blockedLanAllowed": "Engellendi · yerel ağa izin verildi",
+      "blockedVerified": "Engellendi · doğrulandı",
+      "selectedRoutes": "Yalnızca seçilen yollar",
+      "blockedUnverified": "Engellendi · doğrulanmadı",
+      "bypassesOutsideRoutes": "Seçilen yollar dışında VPN’i atlar",
+      "unverified": "Doğrulanmadı"
+    },
+    "android": {
+      "unverified": "Android’in yönlendirmesi veya engellemesi doğrulanamadı.",
+      "packages": "Seçilen uygulamalar VPN’i ve onun DNS’ini kullanır. Android engellemediği sürece diğer uygulamalar VPN’i atlar.",
+      "lockdown": "Android’in “VPN olmadan bağlantıları engelle” seçeneği tüm uygulamalar için açık."
+    },
+    "apps": {
+      "ipv6Unverified": "Uygulama yönlendirmesi doğrulanmadı",
+      "ipv6Tunneled": "Başlatılan uygulamalar: VPN üzerinden",
+      "ipv6Blocked": "Başlatılan uygulamalar: engellendi",
+      "notReady": "Uygulama yönlendirmesi hazır değil. Yeni başlatmalar kapalı.",
+      "windows": "Seçilen uygulamalar IPv4 için VPN’i kullanır; IPv6’ları engellenir. DNS sunucuyu kullanır.",
+      "launched": "Başlatılan uygulamalar ve DNS’leri VPN’i kullanır. Diğer uygulamalar normal ağınızı kullanır."
+    },
+    "firewall": {
+      "verifiedSelectedRoutes": "Güvenlik duvarı seçilen yollar ve DNS için doğrulandı.",
+      "verifiedLanAllowed": "Güvenlik duvarı IPv4, IPv6 ve DNS için doğrulandı. Yerel ağa izin verildi.",
+      "verified": "Güvenlik duvarı IPv4, IPv6 ve DNS için doğrulandı.",
+      "unverified": "Güvenlik duvarı doğrulanamadı."
+    }
+  },
+  "details": {
+    "connection": "Bağlantı",
+    "status": "Durum",
+    "method": "Yöntem",
+    "routing": "Yönlendirme",
+    "killSwitch": "Kill switch",
+    "appIsolation": "Uygulama yalıtımı",
+    "reachability": "Sunucuya erişilebilir",
+    "serverResponse": "Sunucu yanıtı",
+    "serverResponseInfo": "Sunucunun bir durum isteğini yanıtlaması ne kadar sürer. Bu VPN gecikmesi değildir.",
+    "addresses": "Adresler",
+    "serverAddress": "Sunucu adresi",
+    "vpnAddress": "VPN adresi",
+    "thisDevice": "Bu cihaz",
+    "mtu": "Paket boyutu (MTU)",
+    "server": "Sunucu",
+    "blockWithoutVpn": "VPN olmadan engelle",
+    "alwaysOn": "Her zaman açık VPN",
+    "mtuValue": "{value, plural, one {{{value}} bayt} other {{{value}} bayt}}",
+    "mtuPending": "{value, plural, one {{{value}} bayt ölçüldü · bir sonraki bağlantınızda uygulanır} other {{{value}} bayt ölçüldü · bir sonraki bağlantınızda uygulanır}}"
+  },
+  "traffic": {
+    "label": "Bu cihazın trafiği",
+    "session": "Geçerli oturum",
+    "countersUnavailable": "Sayaçlar kullanılamıyor",
+    "notConnected": "Bu sunucuya bağlı değil",
+    "download": "İndirme",
+    "upload": "Yükleme",
+    "duration": "Bağlı süre",
+    "measuring": "Ölçülüyor…",
+    "received": "{{amount}} alındı",
+    "sent": "{{amount}} gönderildi",
+    "counterFailed": "Sayaçlar okunamadı",
+    "needsUpdate": "VPN bileşeni güncellemesi gerekli",
+    "durationFailed": "Oturum süresi okunamadı",
+    "updateNeeded": "Bu cihazın trafik sayaçları ve oturum süresi için VPN bileşeni güncellemesi gerekiyor."
+  },
+  "device": {
+    "summary": "Cihaz ayrıntıları",
+    "receivedPackets": "Alınan paketler",
+    "sentPackets": "Gönderilen paketler",
+    "latency": "Gecikme",
+    "latencyInfo": "VPN üzerinden sunucuya ortalama gidiş dönüş süresi. İnternet hızı değildir.",
+    "noMeasurement": "Henüz ölçülmedi",
+    "probes": "Yoklama yanıtları",
+    "probesValue": "{{received}} / {{sent}} · {{jitter}} titreme",
+    "ipv6": "IPv6",
+    "autoReconnect": "Otomatik yeniden bağlanma",
+    "fallback": "Yedek yöntemler",
+    "countersNote": "Sayaçlar yeniden bağlandığınızda sıfırlanır. Geçmiş tutulmaz."
+  },
+  "server": {
+    "title": "Sunucu",
+    "freshness": {
+      "unavailable": "Kullanılamıyor",
+      "live": "Canlı",
+      "polling": "Periyodik olarak yenilenir",
+      "connecting": "İstatistikler yükleniyor…",
+      "reconnecting": "İstatistikler yeniden bağlanıyor…"
+    },
+    "unavailable": "Sunucu istatistikleri kullanılamıyor. Otomatik olarak geri gelecek.",
+    "connectToSee": "Sunucu istatistiklerini görmek için bağlanın.",
+    "pollingNote": "Canlı sunucu istatistikleri için sunucu güncellemesi gerekir.",
+    "noMeasurement": "Ölçülmedi",
+    "usedOf": "{{used}} / {{total}}",
+    "cpu": "CPU",
+    "cpuDetail": "Tüm çekirdeklerin ortalaması",
+    "memory": "Bellek",
+    "storage": "Depolama",
+    "uptime": "Çalışma süresi",
+    "devices": "Cihazlar",
+    "devicesActive": "{{total}} cihazdan {{active}} tanesi etkin",
+    "devicesAuthorized": "{count, plural, one {# cihaz} other {# cihaz}}",
+    "activityUnavailable": "Etkinlik kullanılamıyor",
+    "activityUnreadable": "Cihaz etkinliği sunucudan okunamadı.",
+    "activityUnsupported": "Bu sunucu cihaz etkinliğini bildiremiyor. Bunu açmak için güncelleyin.",
+    "reviewHealth": "Sunucu sağlığını denetle",
+    "reviewUpdate": "Güncellemeyi incele",
+    "detailsSummary": "Sunucu ayrıntıları",
+    "inbound": "Gelen",
+    "outbound": "Giden",
+    "received": "Alınan",
+    "sent": "Gönderilen",
+    "receivedPackets": "Alınan paketler",
+    "sentPackets": "Gönderilen paketler",
+    "dns": "DNS",
+    "dnsRunning": "Çalışıyor",
+    "dnsDown": "Yanıt vermiyor",
+    "totalsInfo": "Toplamlar, sunucunun VPN’i başladığı andan itibaren tüm cihazları kapsar.",
+    "pollingNoteMember": "Canlı sunucu istatistikleri için sunucu güncellemesi gerekir. Sunucunun sahibi bunu yükleyebilir."
+  },
+  "alwaysOnNote": "Her zaman açık VPN açık, bu yüzden VPN’in ne zaman duracağına Android karar verir. Bağlantıyı Android’in VPN ayarlarından kesin.",
+  "method": {
+    "https": "HTTPS",
+    "automatic": "Otomatik · {{method}}"
+  },
+  "alert": {
+    "label": "Uyarılar",
+    "runDiagnostics": "Tanılamayı çalıştır",
+    "checkServer": "Sunucu sağlığını denetle",
+    "unstable": "{sent, plural, one {Kararsız bağlantı: son # denetimden {{lost}} tanesi yanıt alamadı.} other {Kararsız bağlantı: son # denetimden {{lost}} tanesi yanıt alamadı.}}",
+    "storage": "Sunucunun depolama alanı {{percent}} dolu. Çalışmayı durdurmadan önce biraz alan açın.",
+    "rotationPending": "Bir anahtar değişimi tamamlanmadı. Bu cihazın erişimini korumak için tamamlayın.",
+    "finishRotation": "Anahtar değişimini tamamla"
+  },
+  "consequence": {
+    "desktop": "Bağlantıyı kesmek, kill switch engelini ve otomatik yeniden bağlanmayı da kapatır."
+  }
+}

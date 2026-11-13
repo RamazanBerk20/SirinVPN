@@ -1,0 +1,42 @@
+{
+  "unavailable": "不可用",
+  "bytes": {
+    "B": "{{value}} B",
+    "KB": "{{value}} kB",
+    "MB": "{{value}} MB",
+    "GB": "{{value}} GB",
+    "TB": "{{value}} TB"
+  },
+  "rate": "{{value}}/秒",
+  "memoryUsage": "{{percent}} · {{used}}",
+  "latency": "{{value}} 毫秒",
+  "latencyBelowOne": "<1 毫秒",
+  "uptimeDays": "{{days}} 天 {{hours}} 小时",
+  "uptimeHours": "{{hours}} 小时 {{minutes}} 分钟",
+  "transport": {
+    "direct_udp": "直接 UDP",
+    "obfuscated_udp": "混淆 UDP",
+    "tls_like": "TLS 备用",
+    "tcp_fallback": "TCP 备用",
+    "quic": "QUIC（HTTP/3）"
+  },
+  "dnsPolicy": {
+    "recursive": "递归 DNS",
+    "dnsOverTls": "{count, plural, other {DNS over TLS · # 个服务器}}",
+    "dnsOverHttps": "{count, plural, other {DNS over HTTPS · # 个服务器}}",
+    "split": "{count, plural, other {分流 DNS · # 个区域 · {{fallback}}}}"
+  },
+  "os": {
+    "android": "Android",
+    "windows": "Windows",
+    "linux": "Linux"
+  },
+  "arch": {
+    "x86_64": "64 位 x86",
+    "aarch64": "64 位 ARM"
+  },
+  "clock": {
+    "minutes": "{{minutes}}:{{seconds}}",
+    "hours": "{{hours}}:{{minutes}}:{{seconds}}"
+  }
+}

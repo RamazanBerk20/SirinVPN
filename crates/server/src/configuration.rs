@@ -175,7 +175,7 @@ pub fn validate_state(paths: &ServerPaths) -> Result<()> {
     let client_certificates = match fs::metadata(&paths.authorization) {
         Ok(_) => {
             let authorization = load_authorization(&paths.authorization)?;
-            if let Some(transition) = &authorization.endpoint_transition {
+            if let Some(transition) = authorization.endpoint.head() {
                 verify_endpoint_transition_signature(&paths.tls_private_key, transition)?;
             }
             authorization.client_certificates(unix_time())

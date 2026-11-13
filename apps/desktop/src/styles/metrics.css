@@ -51,7 +51,7 @@
   box-shadow: none;
 }
 .device-traffic .metric + .metric {
-  border-left: 1px solid var(--line);
+  border-inline-start: 1px solid var(--line);
 }
 .device-traffic .metric > span {
   display: none;

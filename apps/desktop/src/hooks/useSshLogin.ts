@@ -1,229 +1,142 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useReducer, useRef } from "react";
 import { api } from "../api";
+import { notify } from "../components/Toasts";
 import { validateHost } from "../format";
 import { errorMessage } from "../lib/errors";
 import { t } from "../i18n";
-import type { SavedSshLogin, SshCredentials } from "../types";
+import type { SshCredentials, SshLoginInput } from "../types";
+import { initialSshLogin, sshLoginReducer, type SshLoginDraft } from "./sshLoginMachine";
+
+export interface PreparedSshLogin {
+  credentials: SshCredentials;
+  /** Remembers the login, if asked to; call it only after the operation that used it succeeded. */
+  save: () => Promise<void>;
+}
+const noSave = async () => {};
 
 export function useSshLogin(host: string, active = true) {
   const destination = host.trim();
-  const context = `${active}:${destination}`;
-  const current = useRef(context);
-  current.current = context;
-  const generation = useRef(0);
-  const [loadedFor, setLoadedFor] = useState("");
-  const [checkingFor, setCheckingFor] = useState("");
-  const [saved, setSaved] = useState<SavedSshLogin | null>(null);
-  const [useSaved, setUseSaved] = useState(true);
-  const [username, setUsername] = useState("root");
-  const [port, setPort] = useState("22");
-  const [auth, setAuth] =
-    useState<SavedSshLogin["authentication"]>("password");
-  const [password, setPassword] = useState("");
-  const [keyPath, setKeyPath] = useState("");
-  const [keyPassphrase, setKeyPassphrase] = useState("");
-  const [sudoPassword, setSudoPassword] = useState("");
-  const [remember, setRemember] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [forgetting, setForgetting] = useState(false);
-  const [attempt, setAttempt] = useState(0);
-  const clearSecrets = () => {
-    setPassword("");
-    setKeyPassphrase("");
-    setSudoPassword("");
-  };
-
+  const target = active && validateHost(destination) ? destination : null;
+  const [state, dispatch] = useReducer(sshLoginReducer, initialSshLogin);
+  const latest = useRef(state);
+  latest.current = state;
   useEffect(() => {
-    clearSecrets();
-    setSaved(null);
-    setUseSaved(true);
-    setRemember(true);
-    setUsername("root");
-    setPort("22");
-    setAuth("password");
-    setKeyPath("");
-    setForgetting(false);
-  }, [context]);
+    dispatch({ type: "destination", host: target });
+  }, [target]);
 
-  // Reading the saved login again (Try again after a locked keyring) keeps what was typed.
+  // Avoid asking the wallet about each partial hostname while typing; announce only a slow read.
+  const lookupHost = state.kind === "looking" ? state.host : null;
+  const lookupSeq = state.kind === "looking" ? state.seq : 0;
   useEffect(() => {
-    const epoch = ++generation.current;
-    const validContext = () =>
-      current.current === context && generation.current === epoch;
-    setError(null);
-    setLoadedFor("");
-    setCheckingFor("");
-    if (!active || !validateHost(destination)) return;
-    // Avoid asking the wallet about each partial hostname while typing.
+    if (lookupHost === null) return;
+    const seq = lookupSeq;
     let progressTimer: number | undefined;
     const timer = window.setTimeout(() => {
-      // Fast wallet reads stay quiet. Announce only a lookup that remains slow
-      // after the user has paused typing; credential validation still waits.
-      progressTimer = window.setTimeout(() => {
-        if (validContext()) setCheckingFor(context);
-      }, 500);
-      void api
-        .getSshLogin(destination)
-        .then((login) => {
-          if (!validContext()) return;
-          setSaved(login);
-          if (login) {
-            setUsername(login.username);
-            setPort(String(login.ssh_port));
-            setAuth(login.authentication);
-            setKeyPath(login.private_key_path ?? "");
-          }
-        })
-        .catch((reason) => {
-          if (validContext())
-            setError(errorMessage(reason, t("ssh.error.readSaved")));
-        })
-        .finally(() => {
-          window.clearTimeout(progressTimer);
-          if (validContext()) setLoadedFor(context);
-        });
+      progressTimer = window.setTimeout(() => dispatch({ type: "slow", seq }), 500);
+      void api.getSshLogin(lookupHost)
+        .then(login => dispatch({ type: "found", seq, login }))
+        .catch(reason => dispatch({ type: "lookupFailed", seq, message: errorMessage(reason, t("ssh.error.readSaved")) }))
+        .finally(() => window.clearTimeout(progressTimer));
     }, 250);
-    return () => {
-      window.clearTimeout(timer);
-      window.clearTimeout(progressTimer);
-      generation.current++;
-    };
-  }, [context, attempt]);
+    return () => { window.clearTimeout(timer); window.clearTimeout(progressTimer); };
+  }, [lookupHost, lookupSeq]);
 
-  const loading = active && validateHost(destination) && loadedFor !== context;
-  const usingSaved = loadedFor === context && saved !== null && useSaved;
-  const parsedPort = Number(port);
-  const valid =
-    active &&
-    !loading &&
-    !forgetting &&
-    validateHost(destination) &&
-    username.trim().length > 0 &&
-    Number.isInteger(parsedPort) &&
-    parsedPort > 0 &&
-    parsedPort <= 65_535 &&
-    (usingSaved ||
-      auth === "agent" ||
-      (auth === "password" && password.length > 0) ||
-      (auth === "private_key" && keyPath.trim().length > 0));
+  const { draft } = state;
+  const loading = state.kind === "looking";
+  const forgetting = state.kind === "forgetting";
+  const usingSaved = state.kind === "saved" || state.kind === "forgetting" && state.from === "saved";
+  const parsedPort = Number(draft.port);
+  const portValid = Number.isInteger(parsedPort) && parsedPort > 0 && parsedPort <= 65_535;
+  const valid = target !== null && !loading && !forgetting && state.kind !== "idle" &&
+    draft.username.trim().length > 0 && portValid &&
+    (usingSaved || draft.auth === "agent" ||
+      (draft.auth === "password" && draft.password.length > 0) ||
+      (draft.auth === "private_key" && draft.keyPath.trim().length > 0));
 
   /** What is still missing, for the line beside a disabled Continue. */
   const missing = valid || loading || forgetting || !active ? null
-    : !username.trim() ? t("ssh.missing.username")
-    : !(Number.isInteger(parsedPort) && parsedPort > 0 && parsedPort <= 65_535) ? t("ssh.missing.port")
-    : auth === "password" ? t("ssh.missing.password")
-    : auth === "private_key" ? t("ssh.missing.key")
+    : !draft.username.trim() ? t("ssh.missing.username")
+    : !portValid ? t("ssh.missing.port")
+    : draft.auth === "password" ? t("ssh.missing.password")
+    : draft.auth === "private_key" ? t("ssh.missing.key")
     : null;
 
-  const prepare = async (fingerprint: string): Promise<SshCredentials> => {
-    const epoch = generation.current;
-    const ensureCurrent = () => {
-      if (
-        !active ||
-        current.current !== context ||
-        generation.current !== epoch
-      )
-        throw new Error(t("ssh.error.cancelled"));
-    };
-    ensureCurrent();
+  /**
+   * The credentials for one operation, and the save of a new login to remember. The caller calls
+   * `save` only once that operation worked, so a login that failed is never stored.
+   */
+  const prepare = (fingerprint: string): PreparedSshLogin => {
+    const current = latest.current;
+    if (target === null || current.kind === "idle") throw new Error(t("ssh.error.cancelled"));
     if (!valid) throw new Error(t("ssh.error.invalidLogin"));
+    if (usingSaved) {
+      return { credentials: { username: draft.username.trim(), ssh_port: parsedPort, authentication: "saved", password: null,
+        private_key_path: null, private_key_passphrase: null, sudo_password: null, host_key_sha256: fingerprint }, save: noSave };
+    }
     const credentials: SshCredentials = {
-      username: username.trim(),
+      username: draft.username.trim(),
       ssh_port: parsedPort,
-      authentication: auth,
-      password: auth === "password" ? password : null,
-      private_key_path: auth === "private_key" ? keyPath.trim() : null,
-      private_key_passphrase:
-        auth === "private_key" && keyPassphrase ? keyPassphrase : null,
-      sudo_password:
-        username.trim() === "root" || !sudoPassword ? null : sudoPassword,
+      authentication: draft.auth,
+      password: draft.auth === "password" ? draft.password : null,
+      private_key_path: draft.auth === "private_key" ? draft.keyPath.trim() : null,
+      private_key_passphrase: draft.auth === "private_key" && draft.keyPassphrase ? draft.keyPassphrase : null,
+      sudo_password: draft.username.trim() === "root" || !draft.sudoPassword ? null : draft.sudoPassword,
       host_key_sha256: fingerprint,
     };
-    if (!usingSaved && remember) {
-      const login = await api.saveSshLogin({
-        host: destination,
-        ...credentials,
-      });
-      ensureCurrent();
-      setSaved(login);
-      setUseSaved(true);
-      clearSecrets();
-    }
-    ensureCurrent();
-    if (usingSaved || remember)
-      return {
-        ...credentials,
-        authentication: "saved",
-        password: null,
-        private_key_path: null,
-        private_key_passphrase: null,
-        sudo_password: null,
-      };
-    return credentials;
+    if (!draft.remember) return { credentials, save: noSave };
+    const input: SshLoginInput = { host: target, ...credentials };
+    let saved = false;
+    // A failed save never fails the operation that already worked.
+    const save = async () => {
+      if (saved) return;
+      saved = true;
+      try {
+        dispatch({ type: "committed", seq: current.seq, login: await api.saveSshLogin(input) });
+      } catch (reason) {
+        notify(errorMessage(reason, t("ssh.error.save")), "error");
+      }
+    };
+    return { credentials, save };
   };
 
   const forget = async () => {
-    const epoch = generation.current;
-    setForgetting(true);
-    setError(null);
+    const current = latest.current;
+    if (current.kind === "idle") return;
+    dispatch({ type: "forget" });
     try {
-      await api.forgetSshLogin(destination);
-      if (current.current !== context || generation.current !== epoch) return;
-      setSaved(null);
-      setUseSaved(false);
-      clearSecrets();
+      await api.forgetSshLogin(current.host);
+      dispatch({ type: "forgotten", seq: current.seq });
     } catch (reason) {
-      if (current.current === context && generation.current === epoch)
-        setError(errorMessage(reason, t("ssh.error.forget")));
-    } finally {
-      if (current.current === context && generation.current === epoch)
-        setForgetting(false);
+      dispatch({ type: "forgetFailed", seq: current.seq, message: errorMessage(reason, t("ssh.error.forget")) });
     }
   };
 
+  const set = <K extends keyof SshLoginDraft>(key: K) => (value: SshLoginDraft[K]) => dispatch({ type: "change", patch: { [key]: value } });
+  const clearSecrets = useCallback(() => dispatch({ type: "clearSecrets" }), []);
+
   return {
-    username,
-    setUsername,
-    port,
-    setPort,
-    auth,
-    setAuth,
-    password,
-    setPassword,
-    keyPath,
-    setKeyPath,
-    keyPassphrase,
-    setKeyPassphrase,
-    sudoPassword,
-    setSudoPassword,
-    remember,
-    setRemember,
-    saved: loadedFor === context ? saved : null,
+    state: state.kind,
+    username: draft.username, setUsername: set("username"),
+    port: draft.port, setPort: set("port"),
+    auth: draft.auth, setAuth: set("auth"),
+    password: draft.password, setPassword: set("password"),
+    keyPath: draft.keyPath, setKeyPath: set("keyPath"),
+    keyPassphrase: draft.keyPassphrase, setKeyPassphrase: set("keyPassphrase"),
+    sudoPassword: draft.sudoPassword, setSudoPassword: set("sudoPassword"),
+    remember: draft.remember, setRemember: set("remember"),
+    saved: state.kind === "saved" || state.kind === "editing" || state.kind === "forgetting" ? state.login : null,
     usingSaved,
     loading,
-    checkingSavedLogin: loading && checkingFor === context,
+    checkingSavedLogin: state.kind === "looking" && state.slow,
     forgetting,
-    error,
+    error: state.kind === "lookupFailed" ? state.message : state.kind === "saved" || state.kind === "editing" ? state.error : null,
     valid,
     missing,
-    retry: () => setAttempt((value) => value + 1),
+    retry: () => dispatch({ type: "retry" }),
     prepare,
     clearSecrets,
     forget,
-    edit: () => {
-      setUseSaved(false);
-      setError(null);
-      clearSecrets();
-    },
-    reuse: () => {
-      if (!saved) return;
-      setUsername(saved.username);
-      setPort(String(saved.ssh_port));
-      setAuth(saved.authentication);
-      setKeyPath(saved.private_key_path ?? "");
-      setUseSaved(true);
-      setError(null);
-      clearSecrets();
-    },
+    edit: () => dispatch({ type: "edit" }),
+    reuse: () => dispatch({ type: "reuse" }),
   };
 }

@@ -1,0 +1,129 @@
+{
+  "example": "Örneğin {{value}}",
+  "resolver": {
+    "legend": "DNS çözümleyici",
+    "mode": {
+      "preserve": "Mevcut olanı koru",
+      "recursive": "Özyinelemeli",
+      "dnsOverTls": "DNS over TLS",
+      "dnsOverHttps": "DNS over HTTPS"
+    },
+    "note": {
+      "preserve": "Mevcut çözümleyici ve bölünmüş DNS bölgeleri olduğu gibi kalır",
+      "recursive": "Sunucunuz ad sorgularını DNSSEC doğrulamasıyla kendisi yapar",
+      "dnsOverTls": "Sorgular 853 numaralı portta TLS üzerinden iletilir; düz metin yedeği yoktur",
+      "dnsOverHttps": "Sorgular 443 numaralı portta HTTPS üzerinden iletilir; düz metin yedeği yoktur"
+    },
+    "endpoint": "Çözümleyici {{number}}",
+    "endpointOptional": "Çözümleyici {{number}} (isteğe bağlı)",
+    "address": "IP adresi",
+    "tlsName": "TLS ana bilgisayar adı",
+    "httpsPath": "HTTPS yolu",
+    "error": {
+      "address": "Çözümleyicinin IP adresini girin, örneğin 9.9.9.9.",
+      "duplicate": "Bu, çözümleyici 1 ile aynı.",
+      "name": "Çözümleyicinin sertifikasındaki ana bilgisayar adını girin, örneğin dns.quad9.net.",
+      "path": "/ ile başlayın ve yalnızca harf, rakam ve - _ . ~ kullanın"
+    }
+  },
+  "records": {
+    "legend": "Özel DNS kayıtları",
+    "mode": {
+      "preserve": "Mevcut olanı koru",
+      "replace": "Değiştir",
+      "clear": "Temizle"
+    },
+    "note": {
+      "preserve": "Mevcut kayıtlar olduğu gibi kalır",
+      "replace": "Yalnızca VPN’iniz içinde çözümlenen adlar",
+      "clear": "Sunucudaki tüm özel DNS kayıtlarını, tüm cihazlar için kaldırır"
+    },
+    "label": "Kayıtlar",
+    "hint": "Her satırda bir ad=IP, en fazla 64",
+    "invalidLine": "“{{line}}” bir kayıt değil. ad=IP biçiminde yazın, örneğin nas.home=10.20.30.40.",
+    "invalid": "En fazla 64 kayıt girin."
+  },
+  "nat64": {
+    "legend": "NAT64 üzerinden IPv4 web siteleri",
+    "mode": {
+      "preserve": "Mevcut olanı koru",
+      "replace": "Önek kullan",
+      "clear": "Kapat"
+    },
+    "note": {
+      "setup": "İsteğe bağlı. Bu VPS’in IPv4 adresi yok; bu yüzden üyeler bir NAT64 ağ geçidi üzerinden erişmedikçe yalnızca IPv4 kullanan web siteleri açılmaz. Ağ geçidinin işletmecisi hangi IPv4 adreslerini ziyaret ettiklerini görür.",
+      "preserve": "VPS, mevcut NAT64 ayarını korur",
+      "replace": "Yalnızca IPv4’ü olmayan bir VPS için. NAT64 ağ geçidinin işletmecisi üyelerin hangi IPv4 adreslerini ziyaret ettiğini görür.",
+      "clear": "VPS’te IPv4 olmadığında üyeler yalnızca IPv6 web sitelerine erişir"
+    },
+    "label": "NAT64 öneki",
+    "hint": "VPS sağlayıcınızdan veya herkese açık bir NAT64 hizmetinden",
+    "invalid": "Bir IPv6 öneki girin, örneğin 64:ff9b::/96."
+  },
+  "split": {
+    "label": "Bölünmüş DNS bölgeleri",
+    "summary": "İsteğe bağlı. Bir alan adını kendi çözümleyicisine gönderin: her satırda alan=IP.",
+    "infoLabel": "Bölünmüş DNS bölgeleri hakkında",
+    "info": "Özel IP’li çözümleyiciler DNSSEC olmadan güvenilir kabul edilir. IP#TLS-adı, DNSSEC ile DNS over TLS kullanır. Yedek çözümleyicileri virgülle ayırın; bölgeler hiçbir zaman ana çözümleyiciye geri dönmez.",
+    "invalid": "Her alan adını bir kez listeleyin; en fazla 16 bölge.",
+    "invalidLine": "“{{line}}” bir bölge değil. Özel bir çözümleyici adresiyle alan=IP veya IP#TLS-adı yazın.",
+    "localSuffix": "{{zone}}, kendi ağınızdaki cihazlara ait olan .local ile bitiyor. Bu bölge için başka bir ad kullanın.",
+    "publicResolver": "{{resolver}} herkese açık bir adres. Bir bölge bunu yalnızca TLS üzerinden kullanabilir: {{resolver}}#TLS-adı yazın."
+  },
+  "review": {
+    "label": "DNS değişikliği incelemesi",
+    "title": "DNS değişikliklerini incele",
+    "resolver": {
+      "term": "Çözümleyici",
+      "preserve": "Mevcut çözümleyici ve bölünmüş DNS bölgelerini koru",
+      "recursive": "DNSSEC ile özyinelemeli DNS",
+      "dnsOverTls": "DNS over TLS, düz metin yedeği yok",
+      "dnsOverHttps": "DNS over HTTPS, düz metin yedeği yok"
+    },
+    "addresses": "Çözümleyici adresleri",
+    "split": {
+      "term": "Bölünmüş DNS bölgeleri",
+      "none": "Yok. Mevcut bölgeler kaldırılır."
+    },
+    "records": {
+      "term": "Özel DNS kayıtları",
+      "preserve": "Mevcut kayıtları koru",
+      "clear": "Tüm kayıtları kaldır",
+      "replace": "Tüm kayıtları şunlarla değiştir:"
+    },
+    "impact": "Bu sunucudaki her cihazı etkiler ve VPN kısa süre yeniden başlar. VPN adresleri, portlar, cihazlar ve erişim aynı kalır."
+  },
+  "blocklist": {
+    "title": "Reklam ve izleyici engelleme",
+    "summary": "Bu sunucunun DNS’ini kullanan her cihaz için reklam ve izleyici alan adlarını engeller. Sunucu sorgu kaydı tutmaz.",
+    "unsupported": "DNS engellemeyi kullanmak için bu sunucuyu güncel uygulamayla onarın.",
+    "enable": "Reklamları ve izleyicileri engelle",
+    "lists": "Engelleme listeleri",
+    "custom": "Diğer engelleme listeleri",
+    "customHint": "İsteğe bağlı. Her satırda bir HTTPS adresi; hosts veya alan listesi biçiminde.",
+    "customInvalid": "Her adres tam bir HTTPS adresi olmalı ve en fazla 8 liste olabilir.",
+    "allowlist": "Hiçbir zaman engelleme",
+    "allowlistHint": "Her satırda bir alan adı. Alt alan adlarına da izin verilir.",
+    "allowlistInvalid": "Geçerli alan adları kullanın, en fazla 512.",
+    "save": "Engellemeyi kaydet",
+    "refresh": "Durumu yenile",
+    "saved": "Kaydedildi. Sunucu bunu bir dakika içinde uygular.",
+    "loadFailed": "DNS engelleme ayarları yüklenemedi.",
+    "saveFailed": "DNS engelleme ayarları kaydedilemedi.",
+    "status": {
+      "off": "DNS engelleme kapalı.",
+      "pending": "Sunucunun en son değişikliği uygulaması bekleniyor.",
+      "active": "{count, plural, one {# alan adı engelleniyor. Liste {{time}} itibarıyla güncellendi.} other {# alan adı engelleniyor. Liste {{time}} itibarıyla güncellendi.}}"
+    },
+    "member": {
+      "on": "Açık. Yalnızca Sahip veya Yönetici değiştirebilir.",
+      "off": "Kapalı. Yalnızca Sahip veya Yönetici değiştirebilir."
+    },
+    "failure": {
+      "download": "Bir engelleme listesi indirilemedi. Son başarılı liste geçerli kalır.",
+      "format": "Bir engelleme listesi hosts veya alan listesi biçiminde değil. Son başarılı liste geçerli kalır.",
+      "too_many_domains": "Seçilen listeler 300.000’den fazla alan adı içeriyor. Daha az liste seçin; son başarılı liste geçerli kalır.",
+      "resolver": "DNS hizmeti yeni listeyi reddetti. Son başarılı liste geçerli kalır."
+    }
+  }
+}

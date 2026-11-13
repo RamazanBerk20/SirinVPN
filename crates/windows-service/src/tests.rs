@@ -1,7 +1,8 @@
 use crate::{
+    Operation, ServiceError, StatusWait,
     firewall_plan::{Condition, FirewallPlan, Layer},
     network_plan::tunnel_routes,
-    state::{SavedConnection, SessionPhase},
+    state::{SavedConnection, SessionPhase, authorize},
 };
 use sirinvpn_tunnel_model::{ConnectionPolicy, TunnelConnectRequest, TunnelRoutingPolicy};
 use std::net::IpAddr;
@@ -159,8 +160,17 @@ fn startup_and_service_recovery_are_independent_and_session_owner_is_enforced() 
         applications: Vec::new(),
     };
     saved.validate().unwrap();
-    assert!(saved.authorize(&saved.owner_sid).is_ok());
-    assert!(saved.authorize("S-1-5-21-100-200-300-1002").is_err());
+    let owner = Some(saved.owner_sid.as_str());
+    assert!(authorize(owner, &saved.owner_sid, false, &Operation::Disconnect).is_ok());
+    assert!(
+        authorize(
+            owner,
+            "S-1-5-21-100-200-300-1002",
+            false,
+            &Operation::Status
+        )
+        .is_err()
+    );
     assert!(saved.may_resume_after_restart(boot));
     assert!(!saved.may_resume_after_restart(next_boot));
     saved.request.policy = Some(ConnectionPolicy {
@@ -262,4 +272,94 @@ fn reachable_subnet_routes_stay_in_the_tunnel_above_lan_access() {
     // Windows consumes routes; it never forwards a LAN.
     request.subnet_routes.announced = vec!["192.168.9.0/24".into()];
     assert!(crate::network_plan::validate(&request).is_err());
+}
+
+/// The idle snapshot shape the service publishes, for tests of status logic.
+pub(crate) fn idle_status() -> sirinvpn_tunnel_model::LocalTunnelStatus {
+    serde_json::from_value(serde_json::json!({
+        "state":"disconnected", "interface_name":"SirinVPN",
+        "rx_bytes":0, "tx_bytes":0, "ipv6_blocked":false, "ipv6_tunneled":false,
+        "kill_switch_enabled":false, "auto_reconnect_enabled":false,
+        "transport_fallback_enabled":false, "routing_mode":"full_tunnel", "allow_lan":false
+    }))
+    .unwrap()
+}
+
+#[test]
+fn administrators_may_inspect_or_end_another_users_session_but_not_take_it_over() {
+    let owner = "S-1-5-21-100-200-300-1001";
+    let other = "S-1-5-21-100-200-300-1002";
+    let server = sirinvpn_protocol::ServerId::new();
+    let wait = StatusWait {
+        after: None,
+        timeout_ms: 1000,
+    };
+    let observe_or_end = [
+        Operation::Status,
+        Operation::WaitForChange(wait),
+        Operation::Disconnect,
+        Operation::DisconnectSession(server),
+    ];
+    let control = [
+        Operation::Connect(request()),
+        Operation::Resume(server),
+        Operation::PauseSession(server),
+        Operation::PauseForKeyRotation(server),
+        Operation::ReconnectSession(server),
+    ];
+    for operation in observe_or_end.iter().chain(&control) {
+        // No session: anyone may start or query; the owner may do anything.
+        assert!(authorize(None, other, false, operation).is_ok());
+        assert!(authorize(Some(owner), owner, false, operation).is_ok());
+        assert!(matches!(
+            authorize(Some(owner), other, false, operation),
+            Err(ServiceError::OwnedByAnotherUser)
+        ));
+    }
+    for operation in &observe_or_end {
+        assert!(authorize(Some(owner), other, true, operation).is_ok());
+    }
+    for operation in &control {
+        assert!(matches!(
+            authorize(Some(owner), other, true, operation),
+            Err(ServiceError::OwnedByAnotherUser)
+        ));
+    }
+}
+
+#[test]
+fn relay_sessions_pin_a_fixed_wireguard_port_and_report_it_when_taken() {
+    use crate::network_plan::{require_free_port, uses_fixed_port, wireguard_listen_port};
+    use sirinvpn_protocol::TransportKind;
+    assert_eq!(wireguard_listen_port(TransportKind::DirectUdp), None);
+    for kind in [
+        TransportKind::ObfuscatedUdp,
+        TransportKind::TcpFallback,
+        TransportKind::TlsLike,
+        TransportKind::Quic,
+    ] {
+        assert_eq!(
+            wireguard_listen_port(kind),
+            Some(crate::WIREGUARD_LISTEN_PORT)
+        );
+    }
+    assert_eq!(crate::WIREGUARD_LISTEN_PORT, 1023);
+    let direct = request();
+    assert_eq!(direct.transport, TransportKind::DirectUdp);
+    assert!(!uses_fixed_port(&direct));
+
+    let mut probed = None;
+    let taken = require_free_port(|port| {
+        probed = Some(port);
+        Err(std::io::ErrorKind::AddrInUse.into())
+    });
+    assert_eq!(probed, Some(1023));
+    let message = taken.unwrap_err().to_string();
+    assert_eq!(
+        message,
+        "Another program is using the local port SirinVPN needs (127.0.0.1:1023). Close it and try again."
+    );
+    assert!(require_free_port(|_| Ok(())).is_ok());
+    // Other probe failures (for example access denied) are not misreported.
+    assert!(require_free_port(|_| Err(std::io::ErrorKind::PermissionDenied.into())).is_ok());
 }

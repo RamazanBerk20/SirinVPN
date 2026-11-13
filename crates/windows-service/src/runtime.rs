@@ -1,7 +1,8 @@
 use crate::{
     Operation, ServiceError,
-    controller::{Cancellation, Controller, SharedStatus},
+    controller::{Cancellation, Controller},
     ipc,
+    published::{SharedStatus, wait_for_change},
 };
 use sirinvpn_tunnel_model::LocalTunnelStatus;
 use std::{
@@ -21,9 +22,15 @@ const PIPE_SLOTS: usize = 8;
 /// leaving the rest for others such as the session owner. Connections that
 /// have not identified their caller yet are bounded by ipc's read deadline.
 const CLIENT_SLOTS: usize = PIPE_SLOTS / 2;
+/// Status waiters release their request slot and hold one of these instead, so
+/// long polls never starve commands. With the request slots and the listening
+/// instance this stays below the pipe's 16 instances.
+const WAIT_SLOTS: usize = 6;
+const CLIENT_WAIT_SLOTS: usize = 2;
 
 struct Command {
     owner: String,
+    administrator: bool,
     operation: Operation,
     response: oneshot::Sender<Result<LocalTunnelStatus, ServiceError>>,
 }
@@ -46,7 +53,9 @@ pub(crate) async fn serve(
             biased;
             _ = stop.changed() => break Ok(()),
             Some(command) = requests.recv() => {
-                let response = controller.handle(&command.owner, command.operation).await;
+                let response = controller
+                    .handle(&command.owner, command.administrator, command.operation)
+                    .await;
                 let _ = command.response.send(response);
             }
             result = &mut clients.0 => break result.map_err(io::Error::other).and_then(|result| result),
@@ -72,7 +81,9 @@ async fn accept(
     sender: mpsc::Sender<Command>,
 ) -> io::Result<()> {
     let limit = Arc::new(Semaphore::new(PIPE_SLOTS));
-    let clients = ClientSlots::default();
+    let clients = ClientSlots::new(CLIENT_SLOTS);
+    let waiting = Arc::new(Semaphore::new(WAIT_SLOTS));
+    let waiters = ClientSlots::new(CLIENT_WAIT_SLOTS);
     let mut tasks = JoinSet::new();
     loop {
         while tasks.try_join_next().is_some() {}
@@ -81,28 +92,61 @@ async fn accept(
             .await
             .map_err(io::Error::other)?;
         let mut connection = listener.accept().await?;
-        let status = Arc::clone(&status);
+        let status = status.clone();
         let cancel = Arc::clone(&cancel);
         let sender = sender.clone();
         let clients = clients.clone();
+        let waiting = Arc::clone(&waiting);
+        let waiters = waiters.clone();
         tasks.spawn(async move {
-            let _permit = permit;
-            // The caller's slot is held until its reply is written.
-            let (result, _slot) = match connection.read().await {
-                Ok(request) => match clients.admit(&request.owner_sid) {
-                    Some(slot) => (dispatch(request, status, cancel, sender).await, Some(slot)),
-                    None => (Err(ServiceError::Busy), None),
-                },
-                Err(error) => (Err(error), None),
+            let request = match connection.read().await {
+                Ok(request) => request,
+                Err(error) => {
+                    let _ = connection.reply(Err(error), None).await;
+                    return;
+                }
             };
-            let _ = connection.reply(result).await;
+            // Slots are held until the reply is written.
+            if let Operation::WaitForChange(wait) = request.operation {
+                let slots = (
+                    waiting.try_acquire_owned().ok(),
+                    waiters.admit(&request.owner_sid),
+                );
+                let (result, sequence) = match slots {
+                    (Some(_), Some(_)) => {
+                        // An admitted waiter's pipe instance is counted by WAIT_SLOTS.
+                        drop(permit);
+                        match wait_for_change(&request.owner_sid, request.is_admin, wait, status)
+                            .await
+                        {
+                            Ok((sequence, current)) => (Ok(current), Some(sequence)),
+                            Err(error) => (Err(error), None),
+                        }
+                    }
+                    _ => (Err(ServiceError::Busy), None),
+                };
+                let _ = connection.reply(result, sequence).await;
+                drop(slots);
+                return;
+            }
+            let _permit = permit;
+            let slot = clients.admit(&request.owner_sid);
+            let result = match slot {
+                Some(_) => dispatch(request, status, cancel, sender).await,
+                None => Err(ServiceError::Busy),
+            };
+            let _ = connection.reply(result, None).await;
+            drop(slot);
         });
     }
 }
 
-/// In-flight requests per authenticated caller SID.
-#[derive(Clone, Default)]
-struct ClientSlots(Arc<Mutex<HashMap<String, usize>>>);
+/// In-flight requests per authenticated caller SID, up to `limit` each.
+#[derive(Clone)]
+struct ClientSlots {
+    active: Arc<Mutex<HashMap<String, usize>>>,
+    limit: usize,
+}
 
 struct ClientSlot {
     slots: ClientSlots,
@@ -110,10 +154,17 @@ struct ClientSlot {
 }
 
 impl ClientSlots {
+    fn new(limit: usize) -> Self {
+        Self {
+            active: Arc::default(),
+            limit,
+        }
+    }
+
     fn admit(&self, owner: &str) -> Option<ClientSlot> {
-        let mut active = self.0.lock().unwrap_or_else(PoisonError::into_inner);
+        let mut active = self.active.lock().unwrap_or_else(PoisonError::into_inner);
         let count = active.entry(owner.to_owned()).or_default();
-        if *count >= CLIENT_SLOTS {
+        if *count >= self.limit {
             return None;
         }
         *count += 1;
@@ -126,7 +177,11 @@ impl ClientSlots {
 
 impl Drop for ClientSlot {
     fn drop(&mut self) {
-        let mut active = self.slots.0.lock().unwrap_or_else(PoisonError::into_inner);
+        let mut active = self
+            .slots
+            .active
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner);
         if let Some(count) = active.get_mut(&self.owner) {
             *count -= 1;
             if *count == 0 {
@@ -142,10 +197,10 @@ async fn dispatch(
     cancel: Arc<Cancellation>,
     sender: mpsc::Sender<Command>,
 ) -> Result<LocalTunnelStatus, ServiceError> {
-    let current = status
-        .read()
-        .map_err(|_| ServiceError::NetworkOperation)?
-        .for_user(&request.owner_sid)?;
+    let current =
+        status
+            .borrow()
+            .for_user(&request.owner_sid, request.is_admin, &request.operation)?;
     if matches!(request.operation, Operation::Status) {
         return Ok(current);
     }
@@ -170,6 +225,7 @@ async fn dispatch(
     let (response, received) = oneshot::channel();
     slot.send(Command {
         owner: request.owner_sid,
+        administrator: request.is_admin,
         operation: request.operation,
         response,
     });
@@ -185,7 +241,7 @@ mod tests {
 
     #[test]
     fn one_caller_cannot_hold_every_pipe_slot() {
-        let clients = ClientSlots::default();
+        let clients = ClientSlots::new(CLIENT_SLOTS);
         let held = (0..CLIENT_SLOTS)
             .map(|_| clients.admit("S-1-5-21-1").unwrap())
             .collect::<Vec<_>>();
@@ -195,6 +251,6 @@ mod tests {
         drop(held);
         assert!(clients.admit("S-1-5-21-1").is_some());
         drop(owner);
-        assert!(clients.0.lock().unwrap().is_empty());
+        assert!(clients.active.lock().unwrap().is_empty());
     }
 }

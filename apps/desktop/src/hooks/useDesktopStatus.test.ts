@@ -265,4 +265,30 @@ describe("desktop status stream", () => {
     expect(mocked.watchServerStatus).not.toHaveBeenCalled();
   });
 
+  it("stops showing a refresh that never answers, and still applies its late reading", async () => {
+    const { result } = await setup();
+    vi.useFakeTimers();
+    let answer!: (status: typeof emptyLocalStatus) => void;
+    mocked.localStatus.mockReturnValue(new Promise(resolve => { answer = resolve; }));
+    let refresh!: Promise<void>;
+    act(() => { refresh = result.current.refreshStatus(); });
+    expect(result.current.freshness.refreshing).toBe(true);
+    await act(() => vi.advanceTimersByTimeAsync(10_000));
+    expect(result.current.freshness.refreshing).toBe(false);
+    expect(result.current.localStatus.state).toBe("connected");
+    await act(async () => { answer(emptyLocalStatus); await refresh; });
+    expect(result.current.localStatus.state).toBe("disconnected");
+  });
+
+  it("drops events from a cancelled local watch", async () => {
+    let hidden = false;
+    vi.spyOn(document, "hidden", "get").mockImplementation(() => hidden);
+    let receive!: (event: LocalStatusEvent) => void;
+    mocked.watchLocalStatus = callback => { receive = callback; return vi.fn(); };
+    const { result } = renderHook(() => useDesktopStatus("desktop", vi.fn()));
+    act(() => { hidden = true; document.dispatchEvent(new Event("visibilitychange")); });
+    act(() => receive({ status: { ...emptyLocalStatus, state: "connected", server_id: "first" }, stale: false, phase: "connected", generation: 1, sequence: 1 }));
+    expect(result.current.localStatus.state).toBe("unknown");
+    expect(mocked.watchServerStatus).not.toHaveBeenCalled();
+  });
 });

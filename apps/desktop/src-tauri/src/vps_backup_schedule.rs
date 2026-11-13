@@ -94,6 +94,11 @@ fn set_blocking(
     mut input: VpsBackupScheduleInput,
 ) -> Result<VpsBackupScheduleStatus, String> {
     let profile = owner(paths, &input.server_id)?;
+    // Rotation later deletes old backups there, so only the saved folder or a newly chosen one.
+    let saved = paths.vps_backup_schedule_store().get(profile.id).map_err(safe_error)?;
+    if saved.is_none_or(|schedule| schedule.folder != input.folder) {
+        crate::picked_files::granted(crate::picked_files::Purpose::VpsBackupFolder, &input.folder)?;
+    }
     let folder = Path::new(&input.folder);
     if !folder.is_absolute() || !folder.is_dir() {
         return Err("Choose an existing folder for the VPS backups.".to_owned());
@@ -152,7 +157,8 @@ fn run_blocking(
             |profile| crate::ssh_login::saved_login_target(&profile.endpoint.host, interactive),
             folder.join(vps_backup_file_name(profile.id, unix_now())),
             password,
-        )?;
+        )
+        .map_err(crate::CommandError::into_message)?;
         rotate_vps_backup_folder(&folder, profile.id, schedule.keep).map_err(|_| {
             "The backup was saved, but older backups couldn’t be removed from the folder."
                 .to_owned()

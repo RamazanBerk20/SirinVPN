@@ -1,22 +1,17 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type Dispatch,
-  type SetStateAction,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { api } from "../api";
 import { withTrafficRates, type TrafficSample } from "./trafficSample";
 import type {
   ClientPlatform,
   LocalTunnelStatus,
   ServerProfile,
-  ServerStatus,
 } from "../types";
 
-import { TrafficStore, localControlKey } from "./trafficStore";
+import { TrafficStore } from "./trafficStore";
+import { feedFreshness, initialStatusFeed, statusFeedReducer, type StatusFeedAction } from "./statusFeed";
+
+/** How long a requested local reading may take before the UI stops showing "Checking". */
+const LOCAL_READ_TIMEOUT_MS = 10_000;
 
 export const emptyLocalStatus: LocalTunnelStatus = {
   state: "disconnected",
@@ -48,132 +43,84 @@ export function useDesktopStatus(
   platform: ClientPlatform | null,
   setServers: Dispatch<SetStateAction<ServerProfile[]>>,
 ) {
-  const [snapshot, setSnapshot] = useState<{
-    local: LocalTunnelStatus;
-    remote: ServerStatus | null;
-  }>({ local: { ...emptyLocalStatus, state: "unknown" }, remote: null });
-  const [freshness, setFreshness] = useState<StatusFreshness>({
-    refreshing: true,
-    updatedAt: null,
-    management: "idle",
-  });
+  const [feed, setFeed] = useState(() => initialStatusFeed({ ...emptyLocalStatus, state: "unknown" }));
+  // Mirrors `feed` synchronously, so a stream callback can drop an event the moment its subscription is replaced.
+  const feedRef = useRef(feed);
+  const send = useCallback((action: StatusFeedAction) => {
+    const next = statusFeedReducer(feedRef.current, action);
+    if (next === feedRef.current) return;
+    feedRef.current = next;
+    setFeed(next);
+  }, []);
   const traffic = useRef<TrafficSample | null>(null);
   const trafficUpdates = useMemo(() => new TrafficStore<LocalTunnelStatus>(), []);
+  // Numbers local reads; a read answered after a newer one started (or after hiding) is dropped.
   const generation = useRef(0);
   const endpointCheckpoint = useRef("");
-  const activeServer = useRef<string | null>(null);
-  const streamGeneration = useRef(0);
-  const [streamEpoch, setStreamEpoch] = useState(0);
-  const refreshStatus = useCallback(async (supplied?: LocalTunnelStatus, stale = false) => {
-    const request = ++generation.current;
-    if (!supplied) setFreshness((previous) => ({ ...previous, refreshing: true }));
-    try {
-      const raw = supplied ?? await api.localStatus();
-      if (stale) throw new Error("The last local status is stale");
-      if (request !== generation.current) return;
-      if (raw.endpoint_checkpoint) {
-        const key = `${raw.endpoint_checkpoint.claims.server_id}:${raw.endpoint_checkpoint.claims.generation}`;
-        if (endpointCheckpoint.current !== key) {
-          endpointCheckpoint.current = key;
-          // Profile metadata must not delay publishing an already-read tunnel state.
-          void api.listServers().then(profiles => { if (endpointCheckpoint.current === key) setServers(favoritesFirst(profiles)); }).catch(() => { endpointCheckpoint.current = ""; });
-        }
-      }
-      const at = performance.now();
-      const local = withTrafficRates(raw, at, traffic.current);
-      traffic.current = { local, at };
-      trafficUpdates.publish(local);
-      const serverId = local.state === "connected" ? local.server_id : null;
-      const changed = activeServer.current !== serverId;
-      if (changed) {
-        activeServer.current = serverId;
-        ++streamGeneration.current;
-        setStreamEpoch((previous) => previous + 1);
-      }
-      setFreshness((previous) => {
-        if (!previous.refreshing && !changed) return previous;
-        return {
-        ...previous,
-        refreshing: false,
-        management: serverId
-          ? changed
-            ? "refreshing"
-            : previous.management
-          : "idle",
-        updatedAt: serverId && !changed ? previous.updatedAt : null,
-        mode: serverId && !changed ? previous.mode : undefined,
-      }; });
-      setSnapshot((previous) => localControlKey(previous.local) === localControlKey(local) ? previous : ({
-        local,
-        remote:
-          local.state === "connected" &&
-          local.server_id === previous.local.server_id
-            ? previous.remote
-            : null,
-      }));
-    } catch {
-      if (request === generation.current) {
-        traffic.current = null;
-        activeServer.current = null;
-        ++streamGeneration.current;
-        setStreamEpoch((previous) => previous + 1);
-        setSnapshot((previous) => ({
-          local: {
-            ...previous.local,
-            state: "unknown",
-            rx_bytes_per_second: undefined,
-            tx_bytes_per_second: undefined,
-          },
-          remote: null,
-        }));
-        setFreshness({
-          refreshing: false,
-          management: "unavailable",
-          updatedAt: null,
-        });
+
+  const receiveLocal = useCallback((request: number, raw: LocalTunnelStatus | null) => {
+    if (request !== generation.current) return;
+    if (!raw) {
+      traffic.current = null;
+      send({ type: "localEvent", event: { kind: "failed" } });
+      return;
+    }
+    if (raw.endpoint_checkpoint) {
+      const key = `${raw.endpoint_checkpoint.claims.server_id}:${raw.endpoint_checkpoint.claims.generation}`;
+      if (endpointCheckpoint.current !== key) {
+        endpointCheckpoint.current = key;
+        // Profile metadata must not delay publishing an already-read tunnel state.
+        void api.listServers().then(profiles => { if (endpointCheckpoint.current === key) setServers(favoritesFirst(profiles)); }).catch(() => { endpointCheckpoint.current = ""; });
       }
     }
-  }, []);
+    const at = performance.now();
+    const local = withTrafficRates(raw, at, traffic.current);
+    traffic.current = { local, at };
+    trafficUpdates.publish(local);
+    send({ type: "localEvent", event: { kind: "reading", local } });
+  }, [send, setServers, trafficUpdates]);
 
-  const connectedServerId =
-    snapshot.local.state === "connected" ? snapshot.local.server_id : null;
+  const refreshStatus = useCallback(async (supplied?: LocalTunnelStatus) => {
+    const request = ++generation.current;
+    if (supplied) { receiveLocal(request, supplied); return; }
+    send({ type: "refresh" });
+    // A read that never answers must not leave "Checking" up forever.
+    const timer = window.setTimeout(() => { if (request === generation.current) send({ type: "timer" }); }, LOCAL_READ_TIMEOUT_MS);
+    try {
+      receiveLocal(request, await api.localStatus());
+    } catch {
+      receiveLocal(request, null);
+    } finally {
+      window.clearTimeout(timer);
+    }
+  }, [receiveLocal, send]);
+
+  const streamServer = feed.serverFeed.state === "off" ? null : feed.serverFeed.serverId;
+  const streamEpoch = feed.serverFeed.state === "off" ? null : feed.serverFeed.epoch;
   useEffect(() => {
-    if ((platform !== "desktop" && platform !== "android") || !connectedServerId || document.hidden ||
-      activeServer.current !== connectedServerId) return;
-    const stream = ++streamGeneration.current;
-    const stop = api.watchServerStatus(connectedServerId, (event) => {
-      if (
-        stream !== streamGeneration.current ||
-        activeServer.current !== connectedServerId
-      )
-        return;
+    if ((platform !== "desktop" && platform !== "android") || !streamServer || streamEpoch === null) return;
+    let open = true;
+    // Closed by cleanup, and already stale the moment a reading replaces this subscription.
+    const current = () => {
+      const server = feedRef.current.serverFeed;
+      return open && server.state !== "off" && server.epoch === streamEpoch;
+    };
+    const stop = api.watchServerStatus(streamServer, (event) => {
+      if (!current()) return;
       if (event.kind === "state") {
-        setSnapshot((previous) => ({ ...previous, remote: null }));
-        setFreshness((previous) => ({
-          ...previous,
-          management:
-            event.state === "connecting" ? "refreshing" : "reconnecting",
-          updatedAt: null,
-          mode: undefined,
-        }));
+        send({ type: "serverEvent", epoch: streamEpoch, event });
         return;
       }
       const remote = {
         ...event.status,
         management_latency_ms: event.management_latency_ms ?? undefined,
       };
-      setSnapshot((previous) => ({ ...previous, remote }));
-      setFreshness((previous) => ({
-        ...previous,
-        management: "ready",
-        updatedAt: Date.now(),
-        mode: event.mode,
-      }));
+      send({ type: "serverEvent", epoch: streamEpoch, event: { kind: "status", remote, mode: event.mode, at: Date.now() } });
       if (remote.caller_role) {
         setServers((profiles) => {
           let changed = false;
           const next = profiles.map((profile) => {
-            if (profile.id !== connectedServerId) return profile;
+            if (profile.id !== streamServer) return profile;
             const administrator = Boolean(remote.caller_administrator);
             const deviceId = remote.caller_device_id ?? profile.device_id;
             if (
@@ -194,11 +141,8 @@ export function useDesktopStatus(
         });
       }
     });
-    return () => {
-      ++streamGeneration.current;
-      stop();
-    };
-  }, [platform, connectedServerId, streamEpoch, setServers]);
+    return () => { open = false; stop(); };
+  }, [platform, streamServer, streamEpoch, send, setServers]);
 
   useEffect(() => {
     if ((platform !== "desktop" && platform !== "android")) return;
@@ -207,8 +151,6 @@ export function useDesktopStatus(
       stop?.();
       stop = undefined;
       ++generation.current;
-      ++streamGeneration.current;
-      activeServer.current = null;
       traffic.current = null;
     };
     const resume = () => {
@@ -216,18 +158,20 @@ export function useDesktopStatus(
         if (!stop) return;
         cancel();
         trafficUpdates.publish(null);
-        setStreamEpoch((previous) => previous + 1);
-        setSnapshot((previous) => ({ local: { ...previous.local, state: "unknown" }, remote: null }));
-        setFreshness((previous) => ({ ...previous, management: "idle", updatedAt: null, mode: undefined }));
+        send({ type: "visibility", visible: false });
         return;
       }
       if (stop) return;
-      // A fresh local reading must select the VPS stream after every resume.
-      activeServer.current = null;
+      send({ type: "visibility", visible: true });
       if (api.watchLocalStatus) {
-        stop = api.watchLocalStatus(event => {
-          void refreshStatus(event.status as LocalTunnelStatus | undefined ?? { ...emptyLocalStatus, state: "unknown" }, event.stale);
+        let open = true;
+        const timer = window.setTimeout(() => send({ type: "timer" }), LOCAL_READ_TIMEOUT_MS);
+        const unwatch = api.watchLocalStatus(event => {
+          if (!open) return; // a late event from a cancelled watch
+          window.clearTimeout(timer);
+          receiveLocal(++generation.current, event.stale ? null : event.status);
         });
+        stop = () => { open = false; window.clearTimeout(timer); unwatch(); };
       } else {
         let active = true;
         let timer: number | undefined;
@@ -247,12 +191,14 @@ export function useDesktopStatus(
       window.removeEventListener("focus", resume);
       document.removeEventListener("visibilitychange", resume);
     };
-  }, [platform, refreshStatus, trafficUpdates]);
+  }, [platform, refreshStatus, receiveLocal, send, trafficUpdates]);
 
+  const { localFeed, serverFeed } = feed;
+  const freshness: StatusFreshness = useMemo(() => feedFreshness({ localFeed, serverFeed }), [localFeed, serverFeed]);
   return {
     trafficUpdates,
-    localStatus: snapshot.local,
-    serverStatus: snapshot.remote,
+    localStatus: feed.local,
+    serverStatus: feed.remote,
     refreshStatus,
     freshness,
   };

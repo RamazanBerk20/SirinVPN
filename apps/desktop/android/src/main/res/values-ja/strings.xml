@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Connection status, shared by the VPN notification and the Quick Settings tile.
+         Match home.status in the WebView catalog. -->
+    <string name="status_connected">接続済み</string>
+    <string name="status_connecting">接続中…</string>
+    <string name="status_reconnecting">再接続中…</string>
+    <string name="status_interrupted">接続が中断されました</string>
+    <string name="status_disconnected">切断済み</string>
+    <string name="status_unknown">状態不明</string>
+
+    <!-- Notification channels, shown in Android notification settings. -->
+    <string name="notification_channel_vpn">VPN 接続</string>
+    <string name="notification_channel_vpn_description">接続の状態と操作</string>
+    <string name="notification_channel_maintenance">サーバーの作業</string>
+    <string name="notification_channel_maintenance_description">開始したサーバー作業の進行状況</string>
+    <string name="notification_channel_updates">アプリのアップデート</string>
+    <string name="notification_channel_updates_description">SirinVPN のアップデートの承認を求める通知</string>
+    <string name="notification_channel_wifi">Wi-Fi の自動接続</string>
+    <string name="notification_channel_wifi_description">VPN がオフの状態で、信頼されていない Wi-Fi を自動接続が監視している間に表示されます。オフにしても、自動接続は停止しません。</string>
+
+    <!-- Ongoing VPN notification. %1$s is the download rate and %2$s the upload rate. -->
+    <string name="notification_status_connected_traffic">接続済み · ↓ %1$s · ↑ %2$s</string>
+    <string name="notification_status_waiting_for_network">ネットワークを待っています</string>
+    <string name="notification_status_failed">接続できませんでした</string>
+    <!-- Transfer rates. %1$s is a formatted number. -->
+    <string name="notification_rate_bytes">%1$s B/秒</string>
+    <string name="notification_rate_kilobytes">%1$s KB/秒</string>
+    <string name="notification_rate_megabytes">%1$s MB/秒</string>
+    <string name="notification_rate_gigabytes">%1$s GB/秒</string>
+    <string name="notification_rate_terabytes">%1$s TB/秒</string>
+    <!-- Notification actions: 1–3 words, verb first. -->
+    <string name="notification_action_vpn_settings">VPN の設定</string>
+    <string name="notification_action_disconnect">切断</string>
+    <string name="notification_action_stop_connecting">接続を停止</string>
+    <string name="notification_action_hide">通知を非表示</string>
+    <string name="notification_action_retry">再試行</string>
+    <!-- Dismissible alert after a connection attempt fails. -->
+    <string name="notification_failure_text">接続できませんでした。原因を確認するには、SirinVPN を開いてください。</string>
+    <string name="notification_maintenance_title">サーバー作業を実行中</string>
+    <string name="notification_maintenance_text">結果を確認するには、SirinVPN を開き直してください。</string>
+    <string name="notification_wifi_watch_text">自動接続が、信頼されていない Wi-Fi を監視しています</string>
+    <string name="notification_update_title">SirinVPN のアップデートを承認</string>
+    <string name="notification_update_text">タップして、確認済みのアップデートを確認してインストールします。</string>
+    <string name="notification_test_text">通知は正常に動作しています。</string>
+
+    <!-- Quick Settings tile. Subtitles are short; the tile shows about 15 characters. -->
+    <string name="tile_status_always_on">常時接続 VPN</string>
+    <string name="tile_status_no_network">ネットワークなし</string>
+    <string name="tile_status_open_app">SirinVPN を開く</string>
+    <!-- Spoken description of the tile. %1$s is its status, for example “Connected”. -->
+    <string name="tile_description">SirinVPN、%1$s</string>
+    <!-- Shown on Android 12 and older, which can’t add the tile from the app. -->
+    <string name="tile_add_instructions">クイック設定を開き、「編集」をタップして SirinVPN を追加してください。</string>
+
+    <!-- Home-screen widget. Its button reuses the notification action labels. -->
+    <string name="widget_description">接続ボタンと切断ボタンがある接続状態</string>
+    <string name="widget_no_server">クイック設定のサーバーを選択</string>
+    <string name="widget_action_connect">接続</string>
+    <string name="widget_action_open">開く</string>
+
+    <!-- Permission an automation app (Tasker, Automate) asks for. Android shows the label
+         as “Allow <app> to <label>?”, so it starts lowercase. -->
+    <string name="automation_permission_label">SirinVPN を接続または切断する</string>
+    <string name="automation_permission_description">SirinVPN を開かずに、アプリが SirinVPN への接続や切断を行い、クイック設定のサーバーを選択できるようにします。</string>
+
+    <!-- QR code scanner. -->
+    <string name="scanner_title">QR コードをスキャン</string>
+    <string name="scanner_back">戻る</string>
+    <string name="scanner_guidance">コード全体が映るようにしてください。細かいコードは、もう一方の画面で拡大し、端末を動かさないでください。</string>
+    <string name="scanner_flashlight_on">ライトをオン</string>
+    <string name="scanner_flashlight_off">ライトをオフ</string>
+    <string name="scanner_refocus">ピントを合わせ直す</string>
+    <string name="scanner_refocused">ピントをリセットしました。コード全体が映るように、端末を近づけるか遠ざけてください。</string>
+    <string name="scanner_camera_error">カメラを利用できません。「ピントを合わせ直す」をタップしてもう一度お試しいただくか、戻ってコードを入力してください。</string>
+
+    <!-- Protected value viewer and secure entry. -->
+    <string name="protected_value_title">保護された値</string>
+    <string name="protected_value_qr_description">保護された QR コード</string>
+    <string name="protected_value_close">閉じる</string>
+    <string name="protected_value_copy">1 分間コピー</string>
+    <string name="protected_value_show">表示</string>
+    <string name="protected_value_confirm_show">この保護された値を画面に表示しますか？</string>
+    <string name="protected_value_confirm_copy">この保護された値を 1 分間クリップボードにコピーしますか？</string>
+    <!-- Clipboard label; some keyboards and clipboard previews show it. -->
+    <string name="protected_value_clip_label">SirinVPN の保護された値</string>
+    <string name="secret_input_use">値を使用</string>
+    <string name="secret_input_clear">値を消去</string>
+    <plurals name="secret_input_minimum_length">
+        <item quantity="other">%1$d 文字以上を使用してください。</item>
+    </plurals>
+
+    <!-- Native confirmation dialog. -->
+    <string name="dialog_confirm">確認</string>
+    <string name="dialog_cancel">キャンセル</string>
+
+    <!-- App routing picker. Match connection.routing in the WebView catalog. -->
+    <string name="routing_title">アプリを選択</string>
+    <string name="routing_mode_include">選択したアプリのみが VPN を使用します</string>
+    <string name="routing_mode_exclude">選択したアプリは VPN を経由しません</string>
+    <string name="routing_include_title">VPN を使用するアプリ</string>
+    <string name="routing_exclude_title">VPN を経由しないアプリ</string>
+    <string name="routing_use_selection">選択を使用</string>
+
+    <!-- Sharing an encrypted backup or recovery file. -->
+    <string name="share_chooser_title">暗号化されたファイルを共有</string>
+    <string name="share_clip_label">暗号化された SirinVPN のファイル</string>
+
+    <!-- Shown instead of the app when the system WebView is too old. %1$d is the minimum version. -->
+    <string name="webview_update_message">Android System WebView を更新してください\n\nSirinVPN には WebView %1$d 以降が必要です。更新してから、SirinVPN を開き直してください。</string>
+    <string name="webview_update_action">WebView の設定を開く</string>
+
+    <!-- Errors shown in the app. What happened, then what to do. -->
+    <string name="error_choose_document">先に、暗号化されたファイルを選択してください。</string>
+    <string name="error_service_unavailable">VPN サービスに接続できませんでした。もう一度お試しください。</string>
+    <string name="error_service_interrupted">VPN サービスとの通信が途切れました。状態を確認してから、もう一度お試しください。</string>
+    <string name="error_share_expired">このファイルは共有できなくなりました。もう一度書き出してから、共有してください。</string>
+    <string name="error_share_failed">ファイルを共有できませんでした。もう一度お試しください。</string>
+    <string name="error_install_permission">SirinVPN に不明なアプリのインストールを許可してから、アップデートをもう一度お試しください。</string>
+    <string name="error_protected_value_unavailable">保護された値を開けませんでした。もう一度お試しください。</string>
+    <string name="error_protected_value_expired">この保護された値は期限切れです。もう一度入力または作成してください。</string>
+    <string name="error_protected_input">保護された値を保持できませんでした。現在の作業を完了してから、もう一度お試しください。</string>
+    <string name="error_entry_cancelled">入力をキャンセルしました。</string>
+    <string name="error_notifications_blocked">通知がブロックされています。Android の設定で SirinVPN の通知を許可してから、もう一度お試しください。</string>
+    <string name="error_camera_denied">カメラへのアクセスが許可されませんでした。代わりに、コードを安全に入力することができます。</string>
+    <string name="error_scanner_open">スキャナーはすでに開いています。</string>
+    <string name="error_scan_cancelled">スキャンをキャンセルしました。代わりに、コードを安全に入力することができます。</string>
+    <string name="error_code_too_large">このコードは大きすぎます。SirinVPN のコードをスキャンしてください。</string>
+    <string name="error_vpn_permission_denied">VPN の許可が与えられませんでした。もう一度接続して、許可してください。</string>
+    <string name="error_vpn_permission_required">VPN の許可が必要です。許可するには、もう一度接続してください。</string>
+    <string name="error_vpn_start_failed">Android で VPN を開始できませんでした。もう一度接続をお試しください。</string>
+    <string name="error_vpn_recovery_deferred">Android による VPN の復元が遅れました。もう一度接続してください。</string>
+    <string name="error_always_on">この接続は常時接続 VPN で制御されています。Android の VPN の設定で変更してください。</string>
+    <string name="error_connection_changed">接続が変わりました。状態を確認してから、もう一度お試しください。</string>
+    <string name="error_busy_disconnect">別の作業を実行中です。完了した後に切断してください。</string>
+    <string name="error_busy">別の作業を実行中です。完了してから、もう一度お試しください。</string>
+    <string name="error_switching_method">接続方式を切り替えています。少し待ってから、もう一度お試しください。</string>
+    <string name="error_queue_full">待機中のリクエストが多すぎます。現在のリクエストが完了してから、もう一度お試しください。</string>
+    <string name="error_request_too_large">このリクエストは大きすぎます。短くしてから、もう一度お試しください。</string>
+    <string name="error_preferences">アプリの設定を読み書きできませんでした。もう一度お試しください。</string>
+    <string name="error_server_task_background">Android がサーバー作業をブロックしました。SirinVPN を開いたままにして、もう一度お試しください。</string>
+    <string name="error_server_task_interrupted">サーバー作業が完了しませんでした。もう一度お試しになる前に、サーバーまたはファイルを確認してください。</string>
+    <string name="error_missing_command">リクエストが不完全でした。SirinVPN を更新してから、もう一度お試しください。</string>
+    <string name="error_native_only">この操作は、SirinVPN 独自の安全なダイアログでのみ利用できます。</string>
+    <string name="error_operation_failed">リクエストを完了できませんでした。権限、設定、ネットワークを確認してから、もう一度お試しください。</string>
+</resources>

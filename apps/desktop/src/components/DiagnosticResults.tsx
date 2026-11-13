@@ -2,22 +2,45 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowClockwise, Check, CheckCircle, Copy, Info, Warning } from "@phosphor-icons/react";
 import type { DiagnosticCheck, DiagnosticReport } from "../types";
 import { t } from "../i18n";
+import { en } from "../i18n/en";
+import { diagnosticCause } from "../lib/errors";
 import { diagnosticEvidence, diagnosticGroup, groupDiagnostics } from "./diagnosticEvidence";
 import { InlineError } from "./ui";
 import { SettingsDisclosure, SettingsNotice } from "../features/settings/SettingsParts";
 import { OperationProgress } from "./OperationResult";
 
 const evidenceLabel = (check: DiagnosticCheck) => t(`maintenance.diagnostics.evidence.${diagnosticEvidence(check)}`);
-/** The workspace reports a run that never produced a report as this single synthetic check. */
-const RUN_FAILED = "local_diagnostics_unavailable";
+const titles = en.maintenance.diagnostics.checkTitle;
+type TitleCode = keyof typeof titles;
+
+/** The check's name in the interface language, or null for a code this version doesn't know. */
+export function checkTitle(code: string): string | null {
+  if (Object.hasOwn(titles, code)) return t(`maintenance.diagnostics.checkTitle.${code as TitleCode}`);
+  // Numbered DNS checks (dns_label in crates/core/src/diagnostics/remote.rs): indices are 0-based there, shown 1-based.
+  const n = (value: string) => Number(value) + 1;
+  let match = /^dns_(tls|https)_(\d+)$/.exec(code);
+  if (match) return t(match[1] === "tls" ? "maintenance.diagnostics.numberedCheck.dnsTls" : "maintenance.diagnostics.numberedCheck.dnsHttps", { number: n(match[2]) });
+  match = /^dns_zone_(\d+)(?:_(\d+))?$/.exec(code);
+  if (match) return match[2] === undefined ? t("maintenance.diagnostics.numberedCheck.dnsZone", { zone: n(match[1]) })
+    : t("maintenance.diagnostics.numberedCheck.dnsZoneUpstream", { zone: n(match[1]), upstream: n(match[2]) });
+  return null;
+}
+// An unknown check keeps the backend's (English) label.
+const checkLabel = (check: DiagnosticCheck) => checkTitle(check.code) ?? check.label;
+const causeText = (check: DiagnosticCheck) => {
+  const cause = diagnosticCause(check);
+  return cause ? t(`maintenance.diagnostics.cause.${cause}`) : null;
+};
 
 export function diagnosticText(report: DiagnosticReport): string {
   return [t("maintenance.diagnostics.report.title"), t("maintenance.diagnostics.report.scope"), "",
     ...Object.values(groupDiagnostics(report.checks)).flat().map((check) => [
-      `[${check.level.toUpperCase()}] ${check.label}`,
+      t("maintenance.diagnostics.report.check", { level: t(`maintenance.diagnostics.report.level.${check.level}`), label: checkLabel(check) }),
       t("maintenance.diagnostics.report.evidence", { evidence: evidenceLabel(check) }),
+      causeText(check),
+      // The copied report is for support: the backend's own (English) message is kept verbatim.
       check.message,
-    ].join("\n"))].join("\n\n");
+    ].filter(Boolean).join("\n"))].join("\n\n");
 }
 
 /**
@@ -41,10 +64,18 @@ function DiagnosticRows({ checks, fixes = {} }: { checks: DiagnosticCheck[]; fix
       <span aria-label={t(`maintenance.diagnostics.group.${group}`)}>
         {group === "passed" ? <Check weight="bold" /> : group === "unavailable" ? <Info /> : <Warning weight="fill" />}
       </span>
-      <div><strong>{check.label}</strong><p>{check.message}</p><span className="diagnostic-evidence">{evidenceLabel(check)}</span>
+      <div><strong lang={checkTitle(check.code) ? undefined : "en"} dir={checkTitle(check.code) ? undefined : "auto"}>{checkLabel(check)}</strong>
+        {causeText(check) && <p>{causeText(check)}</p>}
+        {/* The native diagnostics word their findings in English only: secondary detail under the translated name. */}
+        <p className="error-detail" lang="en" dir="auto">{check.message}</p><span className="diagnostic-evidence">{evidenceLabel(check)}</span>
         {fix && <button type="button" className="secondary-button diagnostic-fix" onClick={fix.run}>{fix.label}</button>}</div>
     </div>;
   })}</div>;
+}
+
+/** A run that produced no report at all: no counters that could read as "all clear". */
+export function DiagnosticRunFailed({ onRunAgain }: { onRunAgain?: () => void }) {
+  return <InlineError message={t("maintenance.workspace.error.diagnostics")} onRetry={onRunAgain} retryLabel={t("settings.diagnostics.runAgain")} />;
 }
 
 export function DiagnosticResults({ report, onRunAgain, onConnect, fixes }: { report: DiagnosticReport; onRunAgain?: () => void; onConnect?: () => void; fixes?: DiagnosticFixes }) {
@@ -55,9 +86,7 @@ export function DiagnosticResults({ report, onRunAgain, onConnect, fixes }: { re
     setCopyState("idle");
     return () => { generation.current += 1; };
   }, [report]);
-  // A failed run or an empty one is not a result: no counters that could read as "all clear".
-  if (report.checks.length === 1 && report.checks[0].code === RUN_FAILED)
-    return <InlineError message={report.checks[0].message} onRetry={onRunAgain} retryLabel={t("settings.diagnostics.runAgain")} />;
+  // An empty run is not a result: no counters that could read as "all clear".
   if (!report.checks.length)
     // Nothing ran because nothing is connected: the next step is connecting, not another run.
     return <SettingsNotice action={onConnect ? { label: t("settings.parts.connect"), onClick: onConnect }

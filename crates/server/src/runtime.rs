@@ -35,6 +35,7 @@ pub async fn serve(paths: &ServerPaths) -> Result<()> {
         && leak_test::install(&configuration, server_ipv6)
             .await
             .is_ok();
+    let ipv6_listener = guarded_ipv6_listener(ipv6_listener, leak_test_ready);
     let transport_activity = ActiveTransportRegistry::default();
     let state = AppState {
         recovery: Default::default(),
@@ -49,8 +50,11 @@ pub async fn serve(paths: &ServerPaths) -> Result<()> {
         transport_peers: transport_peers.clone(),
         transport_activity: transport_activity.clone(),
         speed_test: Default::default(),
+        throttle: Default::default(),
     };
     if let Some(authorization) = &state.authorization {
+        // Startup containment is installed; recovery enforces the durable document.
+        authorization_transaction::journal::discard_stale(paths)?;
         let mut current = authorization.write().await;
         authorization_transaction::recover(
             &authorization_transaction::Host(&state),
@@ -73,13 +77,11 @@ pub async fn serve(paths: &ServerPaths) -> Result<()> {
         tokio::spawn(async move {
             let mut interval = tokio::time::interval(Duration::from_secs(1));
             interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
-            let mut applied = None;
-            let mut failures = 0u32;
-            let mut retry_at = Instant::now();
             let mut route_retry_at = Instant::now();
+            let host = authorization_transaction::Host(&cleanup_state);
             loop {
                 interval.tick().await;
-                if Instant::now() < retry_at {
+                if !authorization_transaction::retry_due(&cleanup_state.recovery) {
                     continue;
                 }
                 let Some(authorization) = &cleanup_state.authorization else {
@@ -87,24 +89,26 @@ pub async fn serve(paths: &ServerPaths) -> Result<()> {
                 };
                 let mut current = authorization.write().await;
                 let result = if authorization_transaction::needs_recovery(&cleanup_state.recovery) {
-                    authorization_transaction::recover(
-                        &authorization_transaction::Host(&cleanup_state),
-                        &cleanup_state.recovery,
-                        &mut current,
-                    )
-                    .await
+                    authorization_transaction::recover(&host, &cleanup_state.recovery, &mut current)
+                        .await
                 } else {
                     let mut next = current.clone();
                     next.prune_expired(unix_time());
-                    let key = (next.clone(), next.desired_peers(unix_time()));
-                    if applied.as_ref() == Some(&key) {
+                    // A handler's commit already recorded what it enforced; only expiry,
+                    // schedules or pruning give this loop something to apply.
+                    if authorization_transaction::is_applied(
+                        &host,
+                        &cleanup_state.recovery,
+                        &current,
+                        &next,
+                    ) {
                         // A range blocked by another VPS route returns once that route is gone.
                         if Instant::now() >= route_retry_at && !inactive_subnet_routes().is_empty()
                         {
                             route_retry_at = Instant::now() + Duration::from_secs(10);
                             let _ = sync_subnet_kernel_routes(
                                 &cleanup_state.configuration.interface_name,
-                                &key.1,
+                                &next.desired_peers(unix_time()),
                             )
                             .await;
                         }
@@ -114,13 +118,7 @@ pub async fn serve(paths: &ServerPaths) -> Result<()> {
                         .await
                         .map_err(|_| anyhow!("authorization reconciliation pending"))
                 };
-                if result.is_ok() {
-                    applied = Some((current.clone(), current.desired_peers(unix_time())));
-                    failures = 0;
-                } else {
-                    failures = failures.saturating_add(1).min(5);
-                    retry_at = Instant::now() + Duration::from_secs(1 << failures);
-                }
+                authorization_transaction::record_attempt(&cleanup_state.recovery, result.is_ok());
             }
         });
     }
@@ -300,13 +298,19 @@ pub async fn serve(paths: &ServerPaths) -> Result<()> {
     }
 }
 
+/// Only the leak test installs the rule that drops this listener's traffic arriving from
+/// outside the tunnel; without it the mTLS handshake would be reachable on-link.
+pub(super) fn guarded_ipv6_listener<T>(listener: Option<T>, leak_test_ready: bool) -> Option<T> {
+    listener.filter(|_| leak_test_ready)
+}
+
 pub(super) fn load_runtime_authorization(
     paths: &ServerPaths,
 ) -> Result<Option<AuthorizationDocument>> {
     match fs::metadata(&paths.authorization) {
         Ok(_) => {
             let document = load_authorization(&paths.authorization)?;
-            if let Some(transition) = &document.endpoint_transition {
+            if let Some(transition) = document.endpoint.head() {
                 verify_endpoint_transition_signature(&paths.tls_private_key, transition)?;
             }
             Ok(Some(document))

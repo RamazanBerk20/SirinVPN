@@ -44,6 +44,14 @@ import type {
   VpsBackupScheduleInput,
 } from "./types";
 
+/** A status channel; the demo answers with a plain object, since a Tauri `Channel` needs the native bridge. */
+function channel<T>(onmessage: (event: T) => void): Channel<T> | { onmessage: (event: T) => void } {
+  if (isDemo) return { onmessage };
+  const native = new Channel<T>();
+  native.onmessage = onmessage;
+  return native;
+}
+
 export const api = {
   watchLocalStatus: (onEvent: (event: import("./types").LocalStatusEvent) => void): (() => void) => {
     // The native Android watch is off in the demo, which uses the routed subscription.
@@ -52,9 +60,8 @@ export const api = {
     let active = true;
     let timer: ReturnType<typeof setTimeout> | undefined;
     const start = (): Promise<void> => {
-      const channel = new Channel<import("./types").LocalStatusEvent>();
-      channel.onmessage = event => { if (active) onEvent(event); };
-      return invoke<void>("subscribe_local_status", { subscriptionId, onEvent: channel }).catch(() => {
+      const onMessage = channel<import("./types").LocalStatusEvent>(event => { if (active) onEvent(event); });
+      return invoke<void>("subscribe_local_status", { subscriptionId, onEvent: onMessage }).catch(() => {
         if (!active) return;
         onEvent({ status: null, sequence: 0, generation: 0, phase: "unknown", stale: true });
         timer = setTimeout(() => { ready = start(); }, 1_000);
@@ -137,6 +144,9 @@ export const api = {
     invoke<CreatedHetznerServer>("create_hetzner_server", { apiToken, request }),
   waitHetznerServer: (apiToken: string, server: HetznerServer) =>
     invoke<HetznerReady>("wait_hetzner_server", { apiToken, server }),
+  /** After an uncertain create: the server SirinVPN named `name`, with the login key kept for it, or null if Hetzner has none. */
+  findHetznerServer: (apiToken: string, name: string) =>
+    invoke<CreatedHetznerServer | null>("find_hetzner_server", { apiToken, name }),
   cancelHetznerWait: () => invoke<void>("cancel_hetzner_wait"),
   deleteHetznerServer: (apiToken: string, server: HetznerServer) =>
     invoke<void>("delete_hetzner_server", { apiToken, server }),
@@ -229,14 +239,15 @@ export const api = {
     let active = true;
     let retry: ReturnType<typeof setTimeout> | undefined;
     const start = (): Promise<void> => {
-      const channel = new Channel<ServerStatusEvent>();
-      channel.onmessage = (event) => {
+      // `stopped` is final: the server was removed, so the native watch ended.
+      const onMessage = channel<ServerStatusEvent | { kind: "state"; state: "stopped" }>((event) => {
+        if (event.kind === "state" && event.state === "stopped") return;
         if (active) onEvent(event);
-      };
+      });
       return invoke<void>("subscribe_server_status", {
         serverId,
         subscriptionId,
-        onEvent: channel,
+        onEvent: onMessage,
       }).catch(() => {
         if (!active) return;
         onEvent({ kind: "state", state: "reconnecting" });
@@ -289,9 +300,12 @@ export const api = {
     maxUses = 1,
     memberPolicy?: import("./types").MemberPolicy,
     recipientNames = true,
+    /** Only for servers with `named_join_codes_enabled`: the code keeps `memberName` for the new person. */
+    fixedMemberName = false,
   ) =>
     invoke<InvitationResult>("create_invitation", {
       input: {
+        ...(fixedMemberName ? { fixed_member_name: true } : {}),
         server_id: serverId,
         member_name: memberName,
         device_name: deviceName,
@@ -325,6 +339,10 @@ export const api = {
     invoke<void>("cancel_invitation", { serverId, invitationId }),
   updateMemberPolicy: (serverId: string, memberId: string, policy: import("./types").MemberPolicy) =>
     invoke<MembershipSnapshot>("update_member_policy", { input: { server_id: serverId, member_id: memberId, policy } }),
+  renamePerson: (serverId: string, memberId: string, name: string) =>
+    invoke<MembershipSnapshot>("rename_member", {
+      input: { server_id: serverId, member_id: memberId, name },
+    }),
   renameDevice: (serverId: string, deviceId: string, name: string) =>
     invoke<MembershipSnapshot>("rename_device", {
       input: { server_id: serverId, device_id: deviceId, name },
@@ -411,4 +429,60 @@ export const api = {
   previewInvitation: (code: string) => invoke<import("./types").InvitationPreview>("preview_invitation", { code }),
   joinServer: (code: string, names: import("./types").InvitationNames = {}) =>
     invoke<ServerProfile>("join_server", { input: { code, ...names } }),
+  /**
+   * The VPS change this device left unresolved (on `host`, else the first one), or null. With a login it
+   * also asks the VPS (`state`). Android reads `host` inside `input`; the desktop takes it beside it.
+   */
+  installTransactionStatus: (login: TransactionLogin | null = null, host?: string) =>
+    invoke<InstallTransaction | null>("install_transaction_status", transactionArgs(login, host)),
+  /** Keeps a committed change (`profile`) or rolls an uncommitted one back; null when nothing is unresolved. */
+  resolveInstallTransaction: (login: TransactionLogin, host?: string) =>
+    invoke<(InstallTransaction & { profile?: ServerProfile }) | null>("resolve_install_transaction", transactionArgs(login, host)),
+  /** Forgets the unresolved change on `host` without asking the VPS; every key is kept. Null when none was recorded. */
+  abandonInstallTransaction: (host: string) =>
+    invoke<{ host: string; state: "abandoned"; keys_kept: boolean } | null>("abandon_install_transaction", { host }),
+  /** Dry run: what the operation would run and change on the VPS. Nothing changes. */
+  planServerOperation: (input: PlanServerOperationInput) =>
+    invoke<InstallPlan>("plan_server_operation", { input }),
 };
+
+function transactionArgs(login: TransactionLogin | null, host: string | undefined): Record<string, unknown> {
+  if (!host) return { input: login };
+  return isAndroid ? { input: { ...login, host } } : { input: login, host };
+}
+
+/** A fresh SSH login for the VPS a transaction names; `authentication` defaults to the saved login. */
+export type TransactionLogin = Partial<Pick<UninstallInput,
+  "username" | "authentication" | "password" | "private_key_path" | "private_key_passphrase" | "sudo_password">>;
+
+export interface InstallTransaction {
+  transaction: string;
+  host: string;
+  port: number;
+  operation: "install" | "uninstall";
+  step: "staged" | "armed" | "initialized" | "verified" | "commit_sent" | "committed" | "rolled_back";
+  server_id: string | null;
+  /** The VPS's answer; null when no login was given. */
+  state: "preparing" | "armed" | "committed" | "rolled_back" | "unknown" | null;
+}
+
+export type PlanServerOperationInput =
+  | ({ operation: "install" } & ProvisionInput)
+  | ({ operation: "repair" } & RepairInput)
+  | ({ operation: "restore" } & VpsRestoreInput)
+  | ({ operation: "uninstall" } & UninstallInput);
+
+export type PlanStep =
+  | { kind: "run"; privileged: boolean; command: string; stdin_bytes: number | null }
+  | { kind: "upload"; path: string; mode: string; size_bytes: number; sha256: string; content: string | null }
+  | { kind: "deferred"; description: string };
+
+export interface InstallPlan {
+  operation: "install" | "repair" | "restore" | "uninstall";
+  host: string;
+  nonce: string;
+  discovery: unknown;
+  network_preflight: NetworkPreflight | null;
+  managed_paths: string[];
+  steps: PlanStep[];
+}

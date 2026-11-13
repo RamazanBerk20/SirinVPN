@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-android-call"
+description = "Enables the android_call command without any pre-configured scope."
+commands.allow = ["android_call"]
+
+[[permission]]
+identifier = "deny-android-call"
+description = "Denies the android_call command without any pre-configured scope."
+commands.deny = ["android_call"]

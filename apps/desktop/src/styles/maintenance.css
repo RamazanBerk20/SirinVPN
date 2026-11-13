@@ -31,7 +31,7 @@
   width: fit-content;
   max-width: min(420px, 100%);
   margin: 24px auto 16px;
-  text-align: left;
+  text-align: start;
 }
 
 .install-state small {
@@ -191,7 +191,7 @@
   background: var(--surface-2);
   color: var(--text);
   cursor: pointer;
-  text-align: left;
+  text-align: start;
 }
 
 .removal-choice:hover:not(:disabled) {

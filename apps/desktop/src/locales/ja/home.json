@@ -1,0 +1,249 @@
+{
+  "consoleLabel": "VPN 接続",
+  "status": {
+    "unknown": "状態不明",
+    "restoringAccess": "サーバーへのアクセスを復元しています",
+    "monitorUnavailable": "VPN の監視が応答していません",
+    "reconnecting": "再接続中",
+    "connected": "接続済み",
+    "connecting": "接続中",
+    "interrupted": "接続が中断されました",
+    "disconnected": "切断済み",
+    "changing": "接続を変更中…",
+    "checking": "VPN の状態を確認中…",
+    "connectingTo": "{{name}} に接続中…",
+    "disconnecting": "切断中…"
+  },
+  "action": {
+    "showActive": "接続中のサーバーに移動",
+    "refresh": "状態を更新",
+    "disconnectAndUnblock": "切断してキルスイッチのブロックをオフにする",
+    "disconnect": "切断",
+    "connect": "接続",
+    "changing": "接続を変更中",
+    "wait": "しばらくお待ちください…",
+    "vpnSettings": "VPN の設定",
+    "androidVpnSettings": "Android の VPN の設定",
+    "cancelConnection": "キャンセル",
+    "reconnect": "再接続",
+    "reconnectHint": "現在の設定で再開します",
+    "stop": "VPN を停止",
+    "connecting": "接続中…",
+    "disconnecting": "切断中…",
+    "checkAgain": "もう一度確認"
+  },
+  "routing": {
+    "unknown": "不明",
+    "inactive": "無効",
+    "selectedApps": "選択したアプリ",
+    "selectedRoutes": "選択したルート",
+    "fullTunnelLan": "フルトンネル · ローカルネットワークを許可",
+    "fullTunnel": "フルトンネル"
+  },
+  "killSwitch": {
+    "unknown": "不明",
+    "otherServer": "接続中のサーバーを確認",
+    "nextConnection": "次回の接続でオン",
+    "off": "オフ",
+    "inactive": "無効",
+    "armed": "オン",
+    "blocking": "通信をブロック中",
+    "failed": "動作していません",
+    "unverified": "オン · 未確認"
+  },
+  "isolation": {
+    "verified": "確認済み",
+    "unverified": "未確認"
+  },
+  "summary": {
+    "unknown": "VPN の状態を読み取れませんでした。状態を更新して確認してください。",
+    "restoringAccess": "サーバーへのアクセスが復元されるまで、この接続に依存しないでください。",
+    "monitorUnavailable": "VPN の監視が応答していないため、キルスイッチの状態は不明です。",
+    "otherServer": "別のサーバーに接続しています。切断するには、そのサーバーに移動してください。",
+    "androidApps": "選択したアプリのみが VPN を使用します。",
+    "windowsApps": "選択したアプリが VPN を使用します。システムの DNS はサーバーを経由します。",
+    "launchedApps": "SirinVPN から起動したアプリが VPN を使用します。",
+    "selectedRoutes": "選択したネットワークが VPN を使用します。それ以外は使用しません。",
+    "fullTunnelLan": "インターネットの通信は VPN を使用します。ローカルネットワークの通信は使用しません。",
+    "fullTunnel": "すべてのインターネット通信が VPN を経由します。",
+    "fullTunnelIpv4": "IPv4 の通信は VPN を経由します。IPv6 はトンネルされず、ブロックもされません。",
+    "interrupted": "接続が切れました。再接続するまで、通信は保護されません。",
+    "interruptedBlocked": "接続が切れました。キルスイッチは、再接続または切断するまで通信をブロックします。",
+    "waitingAndroidLockdown": "Android は、再接続するまで通信をブロックします。",
+    "waitingBlocked": "通信はブロックされています。再接続するか、切断してブロックを解除してください。",
+    "waiting": "自動再接続はオフです。準備ができたら再接続してください。",
+    "reconnecting": "接続を復元しようとしています。",
+    "connecting": "安全な接続を設定しています。",
+    "disconnected": "通信は VPN を使用していません。",
+    "disconnecting": "VPN をオフにしています。"
+  },
+  "warning": {
+    "accessContained": "サーバーへのアクセスを復元しています。完了するまで、VPN の通信は保留されます。",
+    "accessUnenforced": "サーバーへのアクセス確認が動作していません。復元されるまで、このサーバーに依存しないでください。",
+    "androidLockdown": "切断後も、Android の「VPN なしの接続をブロック」がオンのままです。",
+    "killSwitchFailed": "キルスイッチを確認できませんでした。修正されるまで、キルスイッチに依存しないでください。",
+    "androidAppsUnverified": "アプリのルーティングを確認できませんでした。依存する前に、接続を確認してください。",
+    "appsUnverified": "アプリのルーティングを確認できませんでした。新しいアプリの起動は無効です。",
+    "dnsDown": "サーバーの DNS が応答していないため、Web サイトが読み込まれない場合があります。",
+    "ipv6": "IPv6 の通信はトンネルされず、ブロックもされないため、VPN を経由しない場合があります。",
+    "serverInterfaceDown": "サーバーの VPN インターフェースが停止していると報告されています。通信はいつでも止まる可能性があります。"
+  },
+  "componentUpdate": {
+    "needed": "接続するには、VPN コンポーネントを更新してください。",
+    "review": "アップデートを確認"
+  },
+  "presharedKey": {
+    "missing": "このデバイスには事前共有鍵がないため、記録された VPN の通信は将来の量子コンピューターに対して保護されません。",
+    "add": "事前共有鍵を追加"
+  },
+  "health": {
+    "idle": "最近のハンドシェイクはありません。接続がアイドル状態なだけかもしれません。",
+    "managementUnavailable": "サーバーの管理を利用できません。",
+    "reachability": {
+      "notChecked": "未確認",
+      "replied": "応答あり",
+      "noReply": "応答なし"
+    }
+  },
+  "protection": {
+    "ipv6NotVerified": "IPv6 は未確認",
+    "ipv6": {
+      "tunneled": "VPN を経由",
+      "blocked": "ブロック中",
+      "unknown": "不明",
+      "blockedLanAllowed": "ブロック中 · ローカルネットワークを許可",
+      "blockedVerified": "ブロック中 · 確認済み",
+      "selectedRoutes": "選択したルートのみ",
+      "blockedUnverified": "ブロック中 · 未確認",
+      "bypassesOutsideRoutes": "選択したルート以外は VPN を経由しません",
+      "unverified": "未確認"
+    },
+    "android": {
+      "unverified": "Android のルーティングまたはブロックを確認できませんでした。",
+      "packages": "選択したアプリは VPN とその DNS を使用します。Android がブロックしない限り、他のアプリは VPN を経由しません。",
+      "lockdown": "Android の「VPN なしの接続をブロック」が、すべてのアプリでオンになっています。"
+    },
+    "apps": {
+      "ipv6Unverified": "アプリのルーティングは未確認",
+      "ipv6Tunneled": "起動したアプリ: VPN を経由",
+      "ipv6Blocked": "起動したアプリ: ブロック中",
+      "notReady": "アプリのルーティングの準備ができていません。新しい起動は無効です。",
+      "windows": "選択したアプリは IPv4 に VPN を使用します。IPv6 はブロックされています。DNS はサーバーを使用します。",
+      "launched": "起動したアプリとその DNS は VPN を使用します。他のアプリは通常のネットワークを使用します。"
+    },
+    "firewall": {
+      "verifiedSelectedRoutes": "選択したルートと DNS について、ファイアウォールを確認しました。",
+      "verifiedLanAllowed": "IPv4、IPv6、DNS についてファイアウォールを確認しました。ローカルネットワークを許可しています。",
+      "verified": "IPv4、IPv6、DNS についてファイアウォールを確認しました。",
+      "unverified": "ファイアウォールを確認できませんでした。"
+    }
+  },
+  "details": {
+    "connection": "接続",
+    "status": "状態",
+    "method": "接続方式",
+    "routing": "ルーティング",
+    "killSwitch": "キルスイッチ",
+    "appIsolation": "アプリの分離",
+    "reachability": "サーバーへの接続",
+    "serverResponse": "サーバーの応答",
+    "serverResponseInfo": "サーバーが状態の要求に応答するまでの時間です。VPN の遅延ではありません。",
+    "addresses": "アドレス",
+    "serverAddress": "サーバーのアドレス",
+    "vpnAddress": "VPN のアドレス",
+    "thisDevice": "このデバイス",
+    "mtu": "パケットサイズ (MTU)",
+    "server": "サーバー",
+    "blockWithoutVpn": "VPN なしの通信をブロック",
+    "alwaysOn": "常時接続 VPN",
+    "mtuValue": "{value, plural, other {{{value}} バイト}}",
+    "mtuPending": "{value, plural, other {{{value}} バイトで測定済み · 次回の接続から適用されます}}"
+  },
+  "traffic": {
+    "label": "このデバイスの通信",
+    "session": "現在のセッション",
+    "countersUnavailable": "カウンターを利用できません",
+    "notConnected": "このサーバーに接続していません",
+    "download": "ダウンロード",
+    "upload": "アップロード",
+    "duration": "接続時間",
+    "measuring": "測定中…",
+    "received": "{{amount}} 受信",
+    "sent": "{{amount}} 送信",
+    "counterFailed": "カウンターを読み取れませんでした",
+    "needsUpdate": "VPN コンポーネントの更新が必要です",
+    "durationFailed": "セッションの時間を読み取れませんでした",
+    "updateNeeded": "このデバイスの通信カウンターとセッション時間には、VPN コンポーネントの更新が必要です。"
+  },
+  "device": {
+    "summary": "デバイスの詳細",
+    "receivedPackets": "受信パケット",
+    "sentPackets": "送信パケット",
+    "latency": "遅延",
+    "latencyInfo": "VPN を経由したサーバーとの往復の平均時間です。インターネットの速度ではありません。",
+    "noMeasurement": "まだ測定していません",
+    "probes": "プローブの応答",
+    "probesValue": "{{received}} / {{sent}} · ジッター {{jitter}}",
+    "ipv6": "IPv6",
+    "autoReconnect": "自動再接続",
+    "fallback": "フォールバックの方式",
+    "countersNote": "再接続するとカウンターはリセットされます。履歴は保持されません。"
+  },
+  "server": {
+    "title": "サーバー",
+    "freshness": {
+      "unavailable": "利用できません",
+      "live": "リアルタイム",
+      "polling": "定期的に更新",
+      "connecting": "統計を読み込み中…",
+      "reconnecting": "統計を再接続中…"
+    },
+    "unavailable": "サーバーの統計を利用できません。自動的に再表示されます。",
+    "connectToSee": "サーバーの統計を見るには、接続してください。",
+    "pollingNote": "リアルタイムのサーバー統計には、サーバーの更新が必要です。",
+    "noMeasurement": "未測定",
+    "usedOf": "{{total}} 中 {{used}}",
+    "cpu": "CPU",
+    "cpuDetail": "すべてのコアの平均",
+    "memory": "メモリ",
+    "storage": "ストレージ",
+    "uptime": "稼働時間",
+    "devices": "デバイス",
+    "devicesActive": "{{total}} 台中 {{active}} 台が有効",
+    "devicesAuthorized": "{count, plural, other {#台のデバイス}}",
+    "activityUnavailable": "アクティビティを利用できません",
+    "activityUnreadable": "サーバーからデバイスのアクティビティを読み取れませんでした。",
+    "activityUnsupported": "このサーバーはデバイスのアクティビティを報告できません。有効にするには、サーバーを更新してください。",
+    "reviewHealth": "サーバーの状態を確認",
+    "reviewUpdate": "アップデートを確認",
+    "detailsSummary": "サーバーの詳細",
+    "inbound": "受信",
+    "outbound": "送信",
+    "received": "受信",
+    "sent": "送信",
+    "receivedPackets": "受信パケット",
+    "sentPackets": "送信パケット",
+    "dns": "DNS",
+    "dnsRunning": "動作中",
+    "dnsDown": "応答なし",
+    "totalsInfo": "合計は、サーバーの VPN が起動してからのすべてのデバイスを対象とします。",
+    "pollingNoteMember": "リアルタイムのサーバー統計には、サーバーの更新が必要です。サーバーのオーナーがインストールできます。"
+  },
+  "alwaysOnNote": "常時接続 VPN がオンのため、VPN が停止するタイミングは Android が決めます。Android の VPN の設定から切断してください。",
+  "method": {
+    "https": "HTTPS",
+    "automatic": "自動 · {{method}}"
+  },
+  "alert": {
+    "label": "アラート",
+    "runDiagnostics": "診断を実行",
+    "checkServer": "サーバーの状態を確認",
+    "unstable": "{sent, plural, other {接続が不安定です: 直近 # 回の確認のうち {{lost}} 回で応答がありませんでした。}}",
+    "storage": "サーバーのストレージが {{percent}} 使用されています。停止する前に、空き容量を確保してください。",
+    "rotationPending": "鍵の更新が完了していません。完了させると、このデバイスのアクセス権が維持されます。",
+    "finishRotation": "鍵の更新を完了"
+  },
+  "consequence": {
+    "desktop": "切断すると、キルスイッチのブロックと自動再接続もオフになります。"
+  }
+}

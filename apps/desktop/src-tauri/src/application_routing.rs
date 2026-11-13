@@ -1,6 +1,6 @@
 //! Explicit launches as the ordinary desktop user. Arguments are never saved.
 use sirinvpn_tunnel_model::{ApplicationLaunchRequest, ApplicationLaunchResult};
-use std::{collections::BTreeMap, path::PathBuf};
+use std::collections::BTreeMap;
 
 #[tauri::command]
 pub async fn launch_vpn_application(
@@ -24,7 +24,8 @@ pub async fn launch_vpn_application(
     .collect();
     let launch = ApplicationLaunchRequest {
         server_id,
-        executable: PathBuf::from(executable),
+        // Only a program the person chose in the native chooser; arguments are their own input.
+        executable: crate::picked_files::granted(crate::picked_files::Purpose::Program, &executable)?,
         arguments,
         environment,
     };

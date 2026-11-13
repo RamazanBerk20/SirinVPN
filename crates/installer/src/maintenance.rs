@@ -1,6 +1,8 @@
 //! Persistent rollback guards for the multi-request SSH installer. A committed
 //! marker is synced before cleanup; boot recovery runs before the VPN network.
 
+use sha2::{Digest, Sha256};
+
 pub(super) const DIRECTORY: &str = "/var/lib/sirinvpn-maintenance";
 
 pub(super) fn rollback_path(nonce: &str, uninstall: bool) -> String {
@@ -8,10 +10,23 @@ pub(super) fn rollback_path(nonce: &str, uninstall: bool) -> String {
     format!("{DIRECTORY}/sirinvpn-{operation}rollback-{nonce}.sh")
 }
 
+/// Durable result of an install transaction after its backup is cleaned up, so
+/// a client whose commit reply was lost can still learn what happened. Uninstall
+/// keeps none (it must leave no trace); its result is whether the server remains.
+pub(super) fn outcome_path(nonce: &str) -> String {
+    format!("{DIRECTORY}/sirinvpn-install-{nonce}.outcome")
+}
+
 fn state_variables(nonce: &str, uninstall: bool) -> String {
     let operation = if uninstall { "uninstall" } else { "install" };
+    let outcome = if uninstall {
+        String::new()
+    } else {
+        outcome_path(nonce)
+    };
     format!(
         r#"BACKUP_DIR={DIRECTORY}/sirinvpn-{operation}-{nonce}.backup
+OUTCOME={outcome}
 ROLLBACK_SCRIPT={rollback}
 ROLLBACK_SERVICE=sirinvpn-{operation}-rollback-{nonce}
 LIVE_MARKER=/run/sirinvpn-{operation}-{nonce}.live
@@ -22,6 +37,15 @@ DEPENDENCY=/etc/systemd/system/sirinvpn-network.service.d/sirinvpn-maintenance.c
 
 fn cleanup_function() -> &'static str {
     r#"cleanup_transaction() {
+  if [ -n "$OUTCOME" ] && [ ! -f "$OUTCOME" ]; then
+    if [ -f "$BACKUP_DIR/committed" ]; then
+      printf 'committed\n' >"$OUTCOME.preparing"
+    else
+      printf 'rolled_back\n' >"$OUTCOME.preparing"
+    fi
+    sync -f "$OUTCOME.preparing"
+    mv "$OUTCOME.preparing" "$OUTCOME"
+  fi
   if [ -f "$BACKUP_DIR/committed" ]; then
     if [ -f "$BACKUP_DIR/remove-user" ]; then
       userdel sirinvpn >/dev/null 2>&1 || true
@@ -95,7 +119,68 @@ done
 cleanup_transaction"#
 }
 
-pub(super) fn arm(nonce: &str, uninstall: bool) -> String {
+/// Short public identifier of the Owner certificate that started a transaction,
+/// shown to another device that finds it in progress.
+pub(super) fn owner_label(certificate_pem: &str) -> String {
+    hex::encode(Sha256::digest(certificate_pem.as_bytes()))[..16].to_owned()
+}
+
+/// Runs before a new transaction takes the maintenance lock. A transaction that
+/// is still live in this boot with its safety timer running belongs to another
+/// client between SSH requests; it must not be rolled back from under it. Only
+/// interrupted ones (previous boot, or timer gone) are recovered here.
+pub(super) fn recover_pending() -> String {
+    format!(
+        r#"for pending in /run/sirinvpn-rollback-*.sh /run/sirinvpn-uninstall-rollback-*.sh {DIRECTORY}/sirinvpn-rollback-*.sh {DIRECTORY}/sirinvpn-uninstall-rollback-*.sh; do
+  [ -f "$pending" ] || continue
+  pending_name=${{pending##*/}}
+  pending_name=${{pending_name%.sh}}
+  case "$pending_name" in
+    sirinvpn-uninstall-rollback-*) pending_operation=uninstall; pending_nonce=${{pending_name#sirinvpn-uninstall-rollback-}} ;;
+    *) pending_operation=install; pending_nonce=${{pending_name#sirinvpn-rollback-}} ;;
+  esac
+  if [ -f "/run/sirinvpn-$pending_operation-$pending_nonce.live" ] &&
+    systemctl is-active --quiet "sirinvpn-$pending_operation-rollback-$pending_nonce.timer"; then
+    pending_owner=$(cat "{DIRECTORY}/sirinvpn-$pending_operation-$pending_nonce.backup/owner" 2>/dev/null || true)
+    printf 'SIRINVPN_TRANSACTION_OWNER=%s
+' "$pending_owner"
+    printf '%s
+' 'SIRINVPN_INSTALL_STEP=busy'
+    exit 75
+  fi
+  /bin/sh "$pending"
+done"#
+    )
+}
+
+/// Read-only probe of one transaction's state on the VPS; see `RemoteTransactionState`.
+pub(super) fn state_command(nonce: &str, uninstall: bool) -> String {
+    let operation = if uninstall { "uninstall" } else { "install" };
+    let finished = if uninstall {
+        "if [ -e /usr/local/lib/sirinvpn/sirinvpn-server ]; then echo rolled_back; else echo committed; fi".to_owned()
+    } else {
+        format!(
+            "if [ -f {outcome} ]; then cat {outcome}; else echo unknown; fi",
+            outcome = outcome_path(nonce)
+        )
+    };
+    format!(
+        r#"BACKUP_DIR={DIRECTORY}/sirinvpn-{operation}-{nonce}.backup
+if [ -f "$BACKUP_DIR/committed" ]; then echo committed
+elif [ -d "$BACKUP_DIR" ] || [ -d "$BACKUP_DIR.preparing" ]; then
+  # A held lock means a script (the install, a commit or a rollback) is still
+  # running; otherwise it stopped either after arming (rollback is due) or
+  # before arming (nothing was changed).
+  if ! (flock -n 9) 9>/run/sirinvpn-maintenance.lock; then echo preparing
+  elif [ -d "$BACKUP_DIR" ]; then echo armed
+  else echo rolled_back
+  fi
+else {finished}
+fi"#
+    )
+}
+
+pub(super) fn arm(nonce: &str, uninstall: bool, owner: &str) -> String {
     let operation = if uninstall { "uninstall" } else { "install" };
     format!(
         r#"chmod 0700 "$ROLLBACK_SCRIPT.preparing"
@@ -103,6 +188,7 @@ sync -f "$ROLLBACK_SCRIPT.preparing"
 mv "$ROLLBACK_SCRIPT.preparing" "$ROLLBACK_SCRIPT"
 mv "$BACKUP_DIR" {DIRECTORY}/sirinvpn-{operation}-{nonce}.backup
 {variables}
+printf '%s\n' '{owner}' >"$BACKUP_DIR/owner"
 : >"$LIVE_MARKER"
 cat >/etc/systemd/system/$ROLLBACK_SERVICE.service <<EOF
 [Unit]

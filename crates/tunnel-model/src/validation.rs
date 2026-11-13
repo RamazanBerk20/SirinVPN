@@ -164,8 +164,15 @@ pub fn validate_request(request: &TunnelConnectRequest) -> Result<(), HelperErro
             ));
         }
     }
-    validate_host(&request.endpoint_host)
-        .map_err(|error| HelperError::InvalidConfiguration(error.to_string()))?;
+    // The helper resolves and compares this host as sent, so it must already be normalised.
+    if validate_host(&request.endpoint_host)
+        .map_err(|error| HelperError::InvalidConfiguration(error.to_string()))?
+        != request.endpoint_host
+    {
+        return Err(HelperError::InvalidConfiguration(
+            "the endpoint host must not contain surrounding whitespace".into(),
+        ));
+    }
     let minimum = if request.schema_version < 8 || request.client_ipv6_address.is_some() {
         1280
     } else {
@@ -405,31 +412,12 @@ pub fn request_for_reconnect_candidate(
 ) -> TunnelConnectRequest {
     let mut request = base.clone();
     request.https = candidate.https.clone();
-    request.schema_version = if request.routing.mode == TunnelRoutingMode::SelectedApplications {
-        11
-    } else if request.endpoint_identity.is_some() {
-        10
-    } else if request.requires_https_support() {
-        9
-    } else if request.mtu_policy.is_some() {
-        8
-    } else if request.policy.is_some() {
-        7
-    } else if request.routing.is_legacy_default() {
-        match candidate.transport {
-            TransportKind::DirectUdp => 2,
-            TransportKind::ObfuscatedUdp => 3,
-            TransportKind::TcpFallback => 4,
-            TransportKind::TlsLike | TransportKind::Quic => 5,
-        }
-    } else {
-        6
-    };
     request.endpoint_port = candidate.endpoint_port;
     request.transport = candidate.transport;
     request.server_transport_public_key = candidate.server_transport_public_key.clone();
     request.server_certificate_sha256 = candidate.server_certificate_sha256.clone();
     request.mtu = candidate.mtu;
+    request.schema_version = request.required_schema();
     request
 }
 

@@ -22,7 +22,7 @@ export function SshLoginFields({
 }) {
   const [pickerError, setPickerError] = useState("");
   return (
-    <div className="ssh-login-fields" aria-busy={login.loading}>
+    <div className="ssh-login-fields" data-state={login.state} aria-busy={login.loading}>
       <p className="ssh-login-status settings-note" role="status">
         {login.checkingSavedLogin ? t("ssh.login.checking") : ""}
       </p>
@@ -39,7 +39,7 @@ export function SshLoginFields({
           <div>
             <strong>{t("ssh.login.savedTitle")}</strong>
             <p>
-              {t("ssh.login.savedSummary", { username: login.username, port: login.port, method: t(authLabels[login.auth]) })}
+              {t("ssh.login.savedSummary", { username: login.username, port: String(login.port), method: t(authLabels[login.auth]) })}
             </p>
           </div>
           <div className="saved-ssh-actions">
@@ -92,11 +92,15 @@ export function SshLoginFields({
           </fieldset>
           {login.auth === "private_key" && (
             <div className="field-grid two-column key-fields">
-              <Field label={t("ssh.login.keyPath")} error={isAndroid && pickerError ? pickerError : undefined}>
-                {isAndroid ? <button type="button" className="secondary-button" onClick={() => { setPickerError(""); void open({ multiple: false }).then(path => { if (typeof path === "string") login.setKeyPath(path); }).catch(reason => setPickerError(errorMessage(reason, t("ssh.error.picker")))); }}>{login.keyPath ? t("ssh.login.changeKey") : t("ssh.login.chooseKey")}</button> : <input value={login.keyPath} onChange={(e) => login.setKeyPath(e.target.value)} placeholder={t("ssh.login.keyPathPlaceholder")} />}
+              <Field label={t("ssh.login.keyPath")} error={pickerError || undefined}>
+                {/* Desktop native code only reads a key chosen in its own file chooser, so the path isn't typed. */}
+                <div className={isAndroid ? undefined : "field-with-button"}>
+                  {!isAndroid && <input className="mono" value={login.keyPath} readOnly placeholder={t("ssh.login.keyPathPlaceholder")} />}
+                  <button type="button" className="secondary-button" onClick={() => { setPickerError(""); void open({ purpose: "ssh_key", multiple: false }).then(path => { if (typeof path === "string") login.setKeyPath(path); }).catch(reason => setPickerError(errorMessage(reason, t("ssh.error.picker")))); }}>{login.keyPath ? t("ssh.login.changeKey") : t("ssh.login.chooseKey")}</button>
+                </div>
               </Field>
               <Field label={t("ssh.login.keyPassphrase")} hint={t("ssh.login.keyPassphraseHint")}>
-                <SecretInput
+                <SecretInput field="private_key_passphrase"
                   type="password"
                   value={login.keyPassphrase}
                   onChange={(e) => login.setKeyPassphrase(e.target.value)}
@@ -107,7 +111,7 @@ export function SshLoginFields({
           )}
           {login.auth === "password" && (
             <Field label={t("ssh.login.password")}>
-              <SecretInput
+              <SecretInput field="password"
                 type="password"
                 value={login.password}
                 onChange={(e) => login.setPassword(e.target.value)}
@@ -120,7 +124,7 @@ export function SshLoginFields({
               label={t("ssh.login.sudoPassword")}
               hint={t("ssh.login.sudoPasswordHint")}
             >
-              <SecretInput
+              <SecretInput field="sudo_password"
                 type="password"
                 value={login.sudoPassword}
                 onChange={(e) => login.setSudoPassword(e.target.value)}

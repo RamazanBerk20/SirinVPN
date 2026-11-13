@@ -26,6 +26,11 @@ pub const MAX_TRUST_SIGNATURE_BYTES: u64 = 8 * 1024;
 pub const BUNDLED_RELEASE_TRUST_ROOT_PEM: &str =
     include_str!("../../../release/release-trust-root.pub");
 
+/// The release owner's root-signed policy from `release/` at build time, or
+/// `None` when that build had none (the build prints "no embedded floor").
+const EMBEDDED_TRUST_FLOOR: Option<(&[u8], &[u8])> =
+    include!(concat!(env!("OUT_DIR"), "/embedded_trust_floor.rs"));
+
 const TRUST_FILE_NAME: &str = "trust.json";
 const TRUST_SIGNATURE_DOMAIN: &[u8] = b"SirinVPN release trust policy signature v1\0";
 const MAX_ACTIVE_RELEASE_KEYS: usize = 16;
@@ -95,6 +100,48 @@ pub struct InstalledReleaseTrustSummary {
 pub struct TrustPolicyDecision {
     pub action: TrustPolicyAction,
     pub state: InstalledReleaseTrustSummary,
+}
+
+/// Policy sequence of the trust floor compiled into this binary, if any. An
+/// embedded policy that does not verify under the bundled root is an error.
+pub fn embedded_trust_floor_sequence() -> Result<Option<u64>, ReleaseError> {
+    Ok(embedded_trust_floor(BUNDLED_RELEASE_TRUST_ROOT_PEM)?.map(|trust| trust.policy.sequence))
+}
+
+/// The embedded floor binds only the bundled root; other roots exist in tests.
+fn embedded_trust_floor(root: &str) -> Result<Option<InstalledReleaseTrust>, ReleaseError> {
+    if root != BUNDLED_RELEASE_TRUST_ROOT_PEM {
+        return Ok(None);
+    }
+    trust_floor_record(EMBEDDED_TRUST_FLOOR, root)
+}
+
+fn trust_floor_record(
+    floor: Option<(&[u8], &[u8])>,
+    root: &str,
+) -> Result<Option<InstalledReleaseTrust>, ReleaseError> {
+    floor
+        .map(|(policy, signature)| {
+            Ok(InstalledReleaseTrust {
+                schema_version: INSTALLED_RELEASE_TRUST_SCHEMA_VERSION,
+                policy: verify_trust_policy(policy, signature, root)?.policy,
+                signature: parse_trust_signature(signature)?,
+            })
+        })
+        .transpose()
+}
+
+/// A candidate must satisfy both the installed record and the compiled-in
+/// floor, so a fresh installation never adopts a policy older than its binary.
+fn evaluate_trust_update_with_floor(
+    current: Option<&InstalledReleaseTrust>,
+    candidate: &InstalledReleaseTrust,
+    floor: Option<&InstalledReleaseTrust>,
+) -> Result<TrustPolicyAction, ReleaseError> {
+    if floor.is_some() {
+        evaluate_trust_update(floor, candidate)?;
+    }
+    evaluate_trust_update(current, candidate)
 }
 
 pub fn bundled_release_trust_root_id() -> Result<String, ReleaseError> {
@@ -374,7 +421,11 @@ impl crate::InstalledReleaseStore {
                     return Err(ReleaseError::InstalledTrustDoesNotAuthorizeCurrentKey);
                 }
             }
-            let action = evaluate_trust_update(current.as_ref(), &candidate)?;
+            let action = evaluate_trust_update_with_floor(
+                current.as_ref(),
+                &candidate,
+                embedded_trust_floor(root_public_key_pem)?.as_ref(),
+            )?;
             if action != TrustPolicyAction::AlreadyCurrent {
                 self.write_trust_unlocked_with_root(&candidate, root_public_key_pem)?;
             }

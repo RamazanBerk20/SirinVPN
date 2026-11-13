@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-install-transaction-status"
+description = "Enables the install_transaction_status command without any pre-configured scope."
+commands.allow = ["install_transaction_status"]
+
+[[permission]]
+identifier = "deny-install-transaction-status"
+description = "Denies the install_transaction_status command without any pre-configured scope."
+commands.deny = ["install_transaction_status"]

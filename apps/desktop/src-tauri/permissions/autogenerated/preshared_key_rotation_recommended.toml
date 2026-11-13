@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-preshared-key-rotation-recommended"
+description = "Enables the preshared_key_rotation_recommended command without any pre-configured scope."
+commands.allow = ["preshared_key_rotation_recommended"]
+
+[[permission]]
+identifier = "deny-preshared-key-rotation-recommended"
+description = "Denies the preshared_key_rotation_recommended command without any pre-configured scope."
+commands.deny = ["preshared_key_rotation_recommended"]

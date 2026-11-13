@@ -1,5 +1,8 @@
 //! State-machine tests use command doubles. Packet tests are separate and opt-in.
 use super::*;
+mod boot_and_saved_intent;
+mod carrier_ports;
+mod crash_at_every_step;
 mod endpoints;
 mod https;
 mod route_metadata;
@@ -14,12 +17,38 @@ struct PolicyRunner {
     inspection_failed: Arc<AtomicBool>,
     transaction_failed: Arc<AtomicBool>,
     physical_route: Arc<Mutex<Option<String>>>,
+    /// Another program holds every carrier relay's loopback port.
+    squatted: Arc<AtomicBool>,
+    /// Another program holds WireGuard's fixed listen port.
+    wireguard_port_taken: Arc<AtomicBool>,
+    /// Resolvers `resolvectl dns` reports to the helper.
+    resolvers: Arc<Mutex<Vec<u8>>>,
 }
 impl CommandRunner for PolicyRunner {
     fn tunnel_probe(&self, _: Ipv4Addr, _: Ipv4Addr) -> bool {
         self.base.latest_handshake_unix.load(Ordering::SeqCst) > 0
     }
+    fn output_with_timeout(&self, p: &str, a: &[&str], _: Duration) -> Result<Vec<u8>> {
+        if p == "resolvectl" && a == ["dns"] {
+            return Ok(self.resolvers.lock().unwrap().clone());
+        }
+        self.output(p, a)
+    }
     fn run(&self, p: &str, a: &[&str], input: Option<&[u8]>) -> Result<()> {
+        if self.squatted.load(Ordering::SeqCst)
+            && p == "systemctl"
+            && a.first() == Some(&"start")
+            && a.get(1)
+                .is_some_and(|unit| unit.starts_with("sirinvpn-transport@"))
+        {
+            bail!("relay exited before it was ready");
+        }
+        if self.wireguard_port_taken.load(Ordering::SeqCst)
+            && p == "wg"
+            && a.contains(&"listen-port")
+        {
+            bail!("Address already in use");
+        }
         if p == "nft" && a == ["-j", "-f", "-"] {
             if self.transaction_failed.load(Ordering::SeqCst) {
                 bail!("injected atomic failure");
@@ -41,6 +70,20 @@ impl CommandRunner for PolicyRunner {
         self.base.run(p, a, input)
     }
     fn output(&self, p: &str, a: &[&str]) -> Result<Vec<u8>> {
+        if p == "ss" {
+            return Ok(if self.wireguard_port_taken.load(Ordering::SeqCst) {
+                format!("UNCONN 0 0 0.0.0.0:{WIREGUARD_LISTEN_PORT} 0.0.0.0:*\n").into_bytes()
+            } else {
+                Vec::new()
+            });
+        }
+        if p == "systemctl" && a.starts_with(&["show", "--property=ExecMainStatus"]) {
+            return Ok(if self.squatted.load(Ordering::SeqCst) {
+                b"98\n".to_vec()
+            } else {
+                b"0\n".to_vec()
+            });
+        }
         if p == "ip" && a == ["-4", "route", "show", "table", "main", "default"] {
             return Ok(self
                 .physical_route
@@ -112,6 +155,39 @@ fn expire(helper: &LinuxNetworkHelper<PolicyRunner>, connected: bool) {
     state.applied_at_unix = now_unix().saturating_sub(300);
     state.has_connected = connected;
     helper.write_state(&state).unwrap();
+}
+
+/// A third-party `flush ruleset` during a long reconnect backoff (the VPS is unreachable)
+/// removes the guard. The wait ends within about a second and the next pass reinstalls it.
+#[test]
+fn a_guard_flushed_during_reconnect_backoff_is_reinstalled_promptly() {
+    let dir = tempfile::tempdir().unwrap();
+    let runner = runner();
+    let helper = LinuxNetworkHelper::new(runner.clone(), dir.path().join("run"));
+    let request = independent(true, true, false);
+    helper.connect(&request).unwrap();
+    let desired = helper.read_persistent().unwrap();
+    assert!(helper.guard_is_verified(&desired.request, desired.endpoint));
+    let started = std::time::Instant::now();
+    thread::scope(|scope| {
+        scope.spawn(|| {
+            thread::sleep(Duration::from_millis(200));
+            runner.base.guard_exists.store(false, Ordering::SeqCst);
+            *runner.guard.lock().unwrap() = None;
+        });
+        assert_eq!(
+            helper.wait_for_network_or_handshake(
+                Duration::from_secs(MAX_RECONNECT_BACKOFF_SECONDS),
+                helper.physical_default_route_fingerprint(),
+                None,
+                true
+            ),
+            Wake::GuardMissing
+        );
+    });
+    assert!(started.elapsed() < Duration::from_secs(3));
+    helper.reconcile_persistent_once(true).unwrap();
+    assert!(helper.guard_is_verified(&desired.request, desired.endpoint));
 }
 
 #[test]
@@ -333,11 +409,15 @@ fn boot_waits_for_network_without_attempts_then_connects_without_transition_grac
                 *runner.physical_route.lock().unwrap() =
                     Some("default via 192.0.2.1 dev wlan0 metric 100\n".into());
             });
-            assert!(helper.wait_for_network_or_handshake(
-                Duration::from_secs(60),
-                Some(None),
-                None
-            ));
+            assert_eq!(
+                helper.wait_for_network_or_handshake(
+                    Duration::from_secs(60),
+                    Some(None),
+                    None,
+                    kill
+                ),
+                Wake::NetworkChanged
+            );
         });
         assert!(
             started.elapsed() < Duration::from_secs(1),
@@ -363,11 +443,15 @@ fn boot_waits_for_network_without_attempts_then_connects_without_transition_grac
             .latest_handshake_unix
             .store(now_unix(), Ordering::SeqCst);
         let started = std::time::Instant::now();
-        assert!(!helper.wait_for_network_or_handshake(
-            Duration::from_secs(5),
-            helper.physical_default_route_fingerprint(),
-            Some(Some(0))
-        ));
+        assert_eq!(
+            helper.wait_for_network_or_handshake(
+                Duration::from_secs(5),
+                helper.physical_default_route_fingerprint(),
+                Some(Some(0)),
+                kill
+            ),
+            Wake::Handshake
+        );
         assert!(started.elapsed() < Duration::from_secs(1));
     }
 }

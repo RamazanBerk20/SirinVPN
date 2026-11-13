@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-apply-endpoint-update"
+description = "Enables the apply_endpoint_update command without any pre-configured scope."
+commands.allow = ["apply_endpoint_update"]
+
+[[permission]]
+identifier = "deny-apply-endpoint-update"
+description = "Denies the apply_endpoint_update command without any pre-configured scope."
+commands.deny = ["apply_endpoint_update"]

@@ -1,0 +1,152 @@
+{
+  "skipToContent": "本文へスキップ",
+  "nav": {
+    "label": "メインナビゲーション",
+    "mobileLabel": "下部ナビゲーション",
+    "home": "ホーム",
+    "servers": "サーバー",
+    "devices": "デバイス",
+    "settings": "設定"
+  },
+  "sidebar": {
+    "servers": "サーバー",
+    "serverList": "保存済みのサーバー",
+    "manage": "管理",
+    "manageLabel": "サーバーを管理",
+    "privacy": "アカウント不要 · テレメトリなし"
+  },
+  "addServer": {
+    "title": "サーバーを追加",
+    "description": "接続方法を選択してください。"
+  },
+  "home": {
+    "connectionTitle": "接続",
+    "connectionSummary": "接続方式: {{method}}",
+    "automatic": "自動",
+    "detailsTitle": "接続の詳細",
+    "detailsSummary": "状態、アドレス、サーバーの統計",
+    "detailsSummaryMember": "状態とアドレス"
+  },
+  "settingsScope": {
+    "general": "このデバイスの設定",
+    "connection": "{{name}} · このデバイス",
+    "network": "{{name}} · ルーティングと DNS",
+    "recovery": "{{name}} · 鍵とバックアップ",
+    "maintenance": "{{name}} · サーバーのメンテナンス",
+    "advanced": "{{name}} · 詳細機能"
+  },
+  "network": {
+    "dnsTitle": "DNS",
+    "dnsRefresh": "状態を更新すると、DNS の設定を確認できます。",
+    "dnsUnavailable": "DNS の設定は現在利用できません。",
+    "dnsNeedsConnection": "DNS の状態を確認するには、接続してください。",
+    "dnsChange": "変更はこのサーバーのすべてのデバイスに適用されます。",
+    "dnsConfigure": "DNS を設定"
+  },
+  "onboarding": {
+    "settings": "アプリの設定",
+    "settingsDescription": "このデバイスの設定です。",
+    "checkUpdates": "アップデートを確認",
+    "welcome": "SirinVPN へようこそ",
+    "headlineFirst": "あなたの VPN。",
+    "headlineSecond": "あなたのやり方で。",
+    "androidIntro": "非公開のサーバーに接続します。鍵はあなたの手元に残ります。",
+    "desktopIntro": "自分のサーバーを設定するか、参加コードで既存のサーバーに参加するか、バックアップまたは復旧キーでこのデバイスを復元します。",
+    "firstServer": "最初のサーバーを追加",
+    "storeTitle": "保存済みのサーバーを利用できません",
+    "storeHelpDesktop": "システムのキーリングがロックされている可能性があります。いったんサインアウトしてから再度サインインするなどしてロックを解除し、もう一度お試しください。",
+    "storeHelpAndroid": "スマートフォンのロックを解除してから、もう一度お試しください。それまで保存済みのサーバーは暗号化されたままです。"
+  },
+  "errors": {
+    "profiles": "このデバイスに保存されているサーバーを開けませんでした。",
+    "platform": "SirinVPN は保護されたサービスを開始できませんでした。",
+    "trayServer": "そのサーバーはこのデバイスに保存されなくなりました。"
+  },
+  "unavailable": {
+    "title": "SirinVPN を起動できません",
+    "copy": "詳細をコピー",
+    "report": "SirinVPN を起動できませんでした: {{message}} VPN の操作は行われていません。",
+    "helpDesktop": "SirinVPN のサービスがインストールされ、実行中であることを確認してから、もう一度お試しください。保存済みのサーバーは安全です。",
+    "helpAndroid": "スマートフォンのロックを解除してから、もう一度お試しください。保存済みのサーバーは安全です。"
+  },
+  "dialog": {
+    "waitToClose": "現在の処理が終わるまでお待ちください"
+  },
+  "operation": {
+    "result": "結果",
+    "running": "処理を実行中です。この画面を離れて、後で戻ることができます。",
+    "completed": "処理が完了しました。ページを開き直すと結果を確認できます。",
+    "interrupted": "処理が完了しませんでした。再試行する前に、サーバーまたはファイルを確認してください。",
+    "dismiss": "閉じる",
+    "dismissFailed": "この通知を閉じられませんでした。もう一度お試しください。",
+    "step": {
+      "done": "完了",
+      "running": "実行中",
+      "todo": "未開始"
+    }
+  },
+  "copy": {
+    "label": "{{label}} をコピー",
+    "failed": "コピーできませんでした",
+    "failedManual": "コピーできませんでした。テキストを選択して、手動でコピーしてください。",
+    "showAll": "すべて表示",
+    "showLess": "簡易表示"
+  },
+  "secret": {
+    "value": "保護された値",
+    "code": "秘密のコード",
+    "enterLabel": "{{label}} を入力",
+    "enter": "安全に入力",
+    "entered": "入力済み · 変更",
+    "unchanged": "何も変更されていません。",
+    "scan": "QR コードをスキャン",
+    "scanFailed": "コードをスキャンできませんでした。代わりに入力することもできます。",
+    "codeReady": "確認できるコードの準備ができました"
+  },
+  "share": {
+    "button": "暗号化されたファイルを共有",
+    "failed": "ファイルを共有できませんでした。"
+  },
+  "brand": {
+    "tagline": "究極のプライバシー。セルフホスト型。",
+    "keysLocal": "鍵はお使いのデバイスに残ります",
+    "noHistory": "アクティビティの履歴はありません",
+    "noCloud": "SirinVPN のクラウドはありません"
+  },
+  "metric": {
+    "usage": "{{label}} の使用量"
+  },
+  "window": {
+    "label": "アプリケーションウィンドウ",
+    "minimize": "最小化",
+    "maximize": "最大化",
+    "restore": "元に戻す",
+    "closeToTray": "閉じるとトレイに格納 · VPN は動作を続けます",
+    "quit": "アプリを終了 · VPN は動作を続けます",
+    "actionFailed": "操作できませんでした。デスクトップのウィンドウ操作を使用してください。",
+    "resizeFailed": "ここではサイズを変更できません。デスクトップのサイズ変更ショートカットを使用してください。"
+  },
+  "recoveryKeyGuard": "この復旧キーは再度表示できません。保存せずに離れますか？",
+  "settingsIndex": {
+    "app": "このアプリ",
+    "server": "このサーバー",
+    "serverNote": "これらの設定はこのサーバーにのみ適用されます。",
+    "scope": "これらの設定は {{name}} にのみ適用されます。",
+    "general": "テーマ、通知、クイック設定",
+    "automaticMethod": "自動の接続方式",
+    "reconnectOn": "自動的に再接続します",
+    "reconnectOff": "自動的には再接続しません",
+    "attention": "要対応: 鍵の更新が完了しませんでした",
+    "serverHealthy": "サーバーは正常に動作しています",
+    "recoveryKeySaved": "オフラインの復旧キーを保存済み",
+    "recoveryKeyMissing": "オフラインの復旧キーはまだありません",
+    "serverFault": "要対応: サーバーが障害を報告しています",
+    "advancedAdmin": "鍵の更新",
+    "advancedMember": "鍵の更新"
+  },
+  "advanced": {
+    "devicesTitle": "デバイスのネットワーク機能",
+    "devicesSummary": "ポート転送、デバイス間アクセス、デバイスのペア、ローカルネットワークは各デバイスで設定します。変更するには、「デバイス」で各デバイスを開いてください。",
+    "openDevices": "デバイスを開く"
+  }
+}

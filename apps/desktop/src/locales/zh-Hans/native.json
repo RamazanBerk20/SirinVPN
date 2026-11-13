@@ -1,0 +1,110 @@
+{
+  "tray": {
+    "status": {
+      "unknown": "状态未知",
+      "connected": "已连接",
+      "connectedTo": "已连接到 {{name}}",
+      "paused": "连接已暂停",
+      "pausedOn": "连接已暂停 · {{name}}",
+      "reconnecting": "正在重新连接…",
+      "reconnectingTo": "正在重新连接到 {{name}}…",
+      "connecting": "正在连接…",
+      "connectingTo": "正在连接到 {{name}}…",
+      "interrupted": "连接已中断",
+      "interruptedOn": "连接已中断 · {{name}}",
+      "disconnected": "已断开连接",
+      "serversUnavailable": "{{status}} · 无法加载服务器",
+      "busy": "正在更改连接…",
+      "legacySession": "下次连接时可使用更多控件"
+    },
+    "killSwitch": {
+      "on": "断网保护：开",
+      "onIpv6Unverified": "断网保护：开 · 未验证 IPv6",
+      "blocking": "断网保护：正在阻止流量",
+      "blockingIpv6Unverified": "断网保护：正在阻止流量 · 未验证 IPv6",
+      "off": "断网保护：关",
+      "failed": "断网保护：未正常工作",
+      "unknown": "断网保护：未知"
+    },
+    "menu": {
+      "open": "打开 SirinVPN",
+      "connectTo": "连接到 {{name}}",
+      "addServer": "添加服务器…",
+      "disconnect": "断开连接…",
+      "resume": "恢复",
+      "reconnect": "重新连接",
+      "stopReconnecting": "停止重新连接…",
+      "stopConnecting": "停止连接…",
+      "updateComponent": "更新 VPN 组件…",
+      "switchServer": "切换服务器",
+      "connectServer": "连接到服务器",
+      "manageServers": "管理服务器",
+      "connectionSettings": "连接设置",
+      "settings": "设置",
+      "diagnostics": "诊断",
+      "disconnectQuit": "断开连接并退出…"
+    },
+    "quit": {
+      "plain": "退出应用",
+      "statusUnknown": "退出应用 · 状态未知…",
+      "paused": "退出应用 · VPN 保持暂停",
+      "reconnecting": "退出应用 · VPN 将继续重新连接",
+      "connected": "退出应用 · VPN 保持运行",
+      "service": "退出应用 · VPN 服务保持运行",
+      "blocking": "退出应用 · 流量保持阻止",
+      "killSwitchUnknown": "退出应用 · 断网保护状态未知…"
+    },
+    "confirm": {
+      "cancel": "取消",
+      "switch": {
+        "title": "切换到 {{name}}？",
+        "messageKillSwitchOn": "当前设置将保留。切换期间断网保护保持开启。",
+        "messageKillSwitchOff": "当前设置将保留。断网保护已关闭，因此切换期间流量可能绕过 VPN。",
+        "confirm": "切换"
+      },
+      "stop": {
+        "title": "停止连接尝试？",
+        "messageKillSwitchOn": "断网保护会持续阻止流量，直到你重新连接或断开连接。",
+        "messageKillSwitchOff": "断网保护已关闭，因此在你重新连接之前，流量将绕过 VPN。",
+        "confirm": "停止尝试"
+      },
+      "disconnect": {
+        "title": "断开 VPN 连接？",
+        "message": "所有流量阻止都会解除，VPN 将保持关闭，直到你再次连接。其他设备保持连接。",
+        "confirm": "断开连接"
+      },
+      "disconnectQuit": {
+        "title": "断开连接并退出？",
+        "confirm": "断开连接并退出"
+      },
+      "quit": {
+        "title": "退出 SirinVPN？",
+        "message": "{{status}}\n关闭应用不会停止 VPN、重新连接或断网保护。",
+        "confirm": "退出"
+      }
+    },
+    "error": {
+      "title": "无法更改连接",
+      "alreadyConnected": "已有另一个连接处于活动状态。请改用“切换服务器”。",
+      "statusUnverified": "无法验证连接状态。请打开 SirinVPN 并重试。",
+      "updateToSwitch": "请更新 VPN 组件以切换服务器。",
+      "serverUnconfirmed": "VPN 未确认所选服务器。请检查其状态。",
+      "connectionChanged": "连接已发生变化。请重新打开托盘菜单。",
+      "stopUnconfirmed": "VPN 未确认已停止尝试。请检查其状态。",
+      "disconnectUnconfirmed": "VPN 未确认已断开连接。请检查其状态和断网保护。",
+      "quitUnconfirmed": "VPN 未确认已断开连接，因此应用将保持打开。请检查其状态。",
+      "selectionUnavailable": "无法更新托盘菜单。请重试。"
+    }
+  },
+  "notification": {
+    "test": "通知已就绪。连接提醒将显示在此处。",
+    "connected": "VPN 已连接",
+    "disconnected": "VPN 已断开",
+    "reconnecting": "连接已中断。正在重新连接…",
+    "statusUnknown": "无法读取 VPN 状态。请打开 SirinVPN 进行检查。",
+    "error": {
+      "disabled": "请先开启通知。",
+      "failed": "无法显示通知。请检查系统的通知设置。"
+    }
+  }
+}

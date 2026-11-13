@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-key-rotation-pending"
+description = "Enables the key_rotation_pending command without any pre-configured scope."
+commands.allow = ["key_rotation_pending"]
+
+[[permission]]
+identifier = "deny-key-rotation-pending"
+description = "Denies the key_rotation_pending command without any pre-configured scope."
+commands.deny = ["key_rotation_pending"]

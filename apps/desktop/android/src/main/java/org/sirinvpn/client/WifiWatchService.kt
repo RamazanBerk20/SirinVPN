@@ -3,6 +3,7 @@ package org.sirinvpn.client
 import android.app.Notification
 import android.app.PendingIntent
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
@@ -14,6 +15,7 @@ import android.provider.Settings
  * offers no way to hear about the next Wi-Fi network from a stopped app. Off Wi-Fi, a one-shot callback does.
  */
 class WifiWatchService : Service() {
+    override fun attachBaseContext(base: Context) { super.attachBaseContext(AppLanguage.wrap(base)) }
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         // As MaintenanceService: a stop arriving before startForeground must not stop a foreground start.
         if (intent?.action == STOP) { stopSelf(startId); return START_NOT_STICKY }
@@ -29,18 +31,17 @@ class WifiWatchService : Service() {
             .setVisibility(Notification.VISIBILITY_PRIVATE).setCategory(Notification.CATEGORY_SERVICE)
             .setContentIntent(VpnNotifications.openApp(this))
             .addAction(Notification.Action.Builder(null, getString(R.string.notification_action_hide), hide).build()).build()
-        if (Build.VERSION.SDK_INT >= 34) startForeground(ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SYSTEM_EXEMPTED)
-        else startForeground(ID, notification)
-        WifiAutomation.monitoring = true
+        if (Build.VERSION.SDK_INT >= 34) startForeground(VpnNotifications.WIFI_WATCH_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SYSTEM_EXEMPTED)
+        else startForeground(VpnNotifications.WIFI_WATCH_ID, notification)
         // A sticky restart after Android reclaimed :vpn checks again whether it is still needed.
         Controller.initialize(this)
+        WifiAutomation.monitorStarted()
         WifiAutomation.changed()
         return START_STICKY
     }
     override fun onBind(intent: Intent): IBinder? = null
-    override fun onDestroy() { WifiAutomation.monitoring = false; stopForeground(STOP_FOREGROUND_REMOVE); super.onDestroy() }
+    override fun onDestroy() { WifiAutomation.monitorStopped(); stopForeground(STOP_FOREGROUND_REMOVE); super.onDestroy() }
     companion object {
         const val STOP = "org.sirinvpn.WIFI_WATCH_STOP"
-        private const val ID = 74
     }
 }

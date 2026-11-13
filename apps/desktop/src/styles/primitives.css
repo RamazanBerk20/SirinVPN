@@ -5,7 +5,7 @@
   place-items: center;
   width: 22px;
   height: 22px;
-  margin: -2px 0 -2px 4px;
+  margin-block: -2px -2px; margin-inline: 4px 0;
   padding: 0;
   border: 0;
   border-radius: 999px;
@@ -20,8 +20,9 @@
 .info-panel {
   margin: 8px 0 0;
   padding: 10px 12px;
-  border-left: 2px solid var(--line-strong);
-  border-radius: 0 8px 8px 0;
+  border-inline-start: 2px solid var(--line-strong);
+  border-start-end-radius: 8px;
+  border-end-end-radius: 8px;
   background: color-mix(in srgb, var(--surface) 70%, transparent);
   color: var(--muted);
   font-size: .8125rem;
@@ -66,8 +67,8 @@ p, small, .inline-error, .warning-note {
 .inline-error { scroll-margin: 16px 0 120px; }
 
 /* Bottom left on desktop, over the sidebar footer: page headers and dialog footers keep their actions in view. */
-.toast-region { position: fixed; bottom: 16px; left: 16px; z-index: 200; display: grid; gap: 8px; width: min(420px, calc(100vw - 32px)); pointer-events: none; }
-.toast { display: flex; align-items: center; gap: 10px; padding: 10px 8px 10px 14px; border: 1px solid var(--line-strong); border-radius: 12px; background: var(--surface); color: var(--text); box-shadow: 0 12px 32px color-mix(in srgb, var(--bg) 60%, transparent); pointer-events: auto; animation: toast-in 160ms ease-out; }
+.toast-region { position: fixed; bottom: 16px; inset-inline-start: 16px; z-index: 200; display: grid; gap: 8px; width: min(420px, calc(100vw - 32px)); pointer-events: none; }
+.toast { display: flex; align-items: center; gap: 10px; padding-block: 10px 10px; padding-inline: 14px 8px; border: 1px solid var(--line-strong); border-radius: 12px; background: var(--surface); color: var(--text); box-shadow: 0 12px 32px color-mix(in srgb, var(--bg) 60%, transparent); pointer-events: auto; animation: toast-in 160ms ease-out; }
 .toast > p { flex: 1 1 auto; margin: 0; line-height: 1.45; }
 .toast > svg { flex: 0 0 auto; }
 .toast.success > svg { color: var(--success); }
@@ -76,7 +77,7 @@ p, small, .inline-error, .warning-note {
 .toast.error > svg { color: var(--danger); }
 .toast > .icon-button { flex: 0 0 auto; width: 32px; height: 32px; }
 /* Android: above the bottom navigation, where a snackbar sits. */
-.android .toast-region { right: 16px; bottom: 92px; width: auto; }
+.android .toast-region { inset-inline-end: 16px; bottom: 92px; width: auto; }
 .android .toast { min-height: 56px; border-radius: 16px; }
 .android .toast > .icon-button { width: 44px; height: 44px; }
 @keyframes toast-in { from { opacity: 0; transform: translateY(8px); } }
@@ -89,4 +90,4 @@ p, small, .inline-error, .warning-note {
 .confirmation-row:focus-within { border-radius: 4px; }
 /* A dialog moves focus to its heading while its controls are busy; keyboard users must see where it went. */
 [role="dialog"] :is(h1, h2)[tabindex]:focus-visible { outline: 2px solid var(--cyan); outline-offset: 4px; border-radius: 4px; }
-p > svg.spin { display: inline-block; margin-right: 6px; vertical-align: -3px; }
+p > svg.spin { display: inline-block; margin-inline-end: 6px; vertical-align: -3px; }

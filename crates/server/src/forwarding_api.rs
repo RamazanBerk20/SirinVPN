@@ -13,6 +13,7 @@ pub(super) async fn update_device_peer_communication_handler(
         .map_err(|_| ApiError::invalid("device identifier is invalid"))?;
     let authorization = require_authorization(&state)?;
     let mut current = authorization.write().await;
+    limit_mutation(&state, &current, &caller)?;
     let caller = authorize_current(&current, &caller, false)?;
     ensure_active_endpoint_authority(&current)?;
     let target = peer_communication_target(&current, caller, device_id)?;
@@ -76,6 +77,7 @@ pub(super) async fn set_device_pair_handler(
     }
     let authorization = require_authorization(&state)?;
     let mut current = authorization.write().await;
+    limit_mutation(&state, &current, &caller)?;
     let caller = authorize_current(&current, &caller, false)?;
     ensure_active_endpoint_authority(&current)?;
     peer_communication_target(&current, caller, pair.device_id)?;
@@ -110,6 +112,7 @@ pub(super) async fn delete_device_pair_handler(
     );
     let authorization = require_authorization(&state)?;
     let mut current = authorization.write().await;
+    limit_mutation(&state, &current, &caller)?;
     let caller = authorize_current(&current, &caller, false)?;
     ensure_active_endpoint_authority(&current)?;
     peer_communication_target(&current, caller, device_id)?;
@@ -147,6 +150,7 @@ pub(super) async fn update_device_subnet_routes_handler(
     routes.sort();
     let authorization = require_authorization(&state)?;
     let mut current = authorization.write().await;
+    limit_mutation(&state, &current, &caller)?;
     let caller = authorize_current(&current, &caller, false)?;
     if !caller.is_owner() {
         return Err(ApiError::forbidden());
@@ -206,6 +210,7 @@ pub(super) async fn create_port_forward_handler(
 
     let authorization = require_authorization(&state)?;
     let mut current = authorization.write().await;
+    limit_mutation(&state, &current, &caller)?;
     let caller = authorize_current(&current, &caller, false)?;
     ensure_active_endpoint_authority(&current)?;
     let target = current
@@ -273,6 +278,7 @@ pub(super) async fn delete_port_forward_handler(
         .map_err(|_| ApiError::invalid("public port is invalid"))?;
     let authorization = require_authorization(&state)?;
     let mut current = authorization.write().await;
+    limit_mutation(&state, &current, &caller)?;
     let caller = authorize_current(&current, &caller, false)?;
     ensure_active_endpoint_authority(&current)?;
     let forward = current

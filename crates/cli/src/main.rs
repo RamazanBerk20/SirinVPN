@@ -35,8 +35,11 @@ use sirinvpn_core::{
     publish_endpoint_transition, rotate_current_device_keys_with_policy,
 };
 use sirinvpn_installer::{
-    InstallRequest, Provisioner, RepairRequest, ServerBackupRequest, ServerRestoreRequest,
-    SshAuthentication, SshTarget, UninstallRequest, new_identity_for_server,
+    InstallPlan, InstallRequest, InstallerError, JournalEntry, MaintenanceBlocker,
+    OwnerDeviceState, OwnerMaintenance, Provisioner, RemoteTransactionState, RepairRequest,
+    ResolvedTransaction, ServerBackupRequest, ServerRestoreRequest, SshAuthentication, SshTarget,
+    TransactionJournal, TransactionOperation, UninstallRequest, new_identity_for_server,
+    owner_maintenance_ready,
 };
 use sirinvpn_protocol::{
     ConnectionState, DeviceId, DevicePair, DiagnosticReport, DnsOverHttpsEndpoint,
@@ -48,7 +51,7 @@ use sirinvpn_transport::{
     AutomaticAttempt, TransportEngine, TransportSelection, establish_automatic,
 };
 use sirinvpn_tunnel_model::{
-    ConnectionPolicy, LocalTunnelStatus, TunnelConnectRequest, TunnelRoutingPolicy,
+    ConnectionPolicy, LocalTunnelStatus, TunnelConnectRequest, TunnelPhase, TunnelRoutingPolicy,
     automatic_reconnect_candidates,
 };
 use std::{
@@ -96,6 +99,10 @@ async fn run() -> Result<()> {
             ServerCommand::BackupVps(arguments) => backup_vps(&paths, arguments, cli.json),
             ServerCommand::BackupStatus => backup_status(&paths, cli.json),
             ServerCommand::RestoreVps(arguments) => restore_vps(&paths, arguments, cli.json),
+            ServerCommand::TransactionStatus(arguments) => {
+                transaction_status(&paths, arguments, cli.json)
+            }
+            ServerCommand::Resolve(arguments) => resolve_transaction(&paths, arguments, cli.json),
             ServerCommand::CreateEndpointUpdate(selector) => {
                 create_endpoint_update(&paths, selector, cli.json).await
             }
@@ -244,7 +251,8 @@ async fn run() -> Result<()> {
             print_value(&result, cli.json, message)
         }
         Commands::Disconnect => disconnect(cli.json),
-        Commands::Status => status(&paths, cli.json).await,
+        Commands::Status(arguments) if arguments.watch => watch_status(cli.json).await,
+        Commands::Status(_) => status(&paths, cli.json).await,
         Commands::Diagnose(selector) => diagnose(&paths, &selector.server, cli.json).await,
         Commands::SpeedTest(selector) => speed_test(&paths, &selector.server, cli.json).await,
     }

@@ -1,0 +1,468 @@
+{
+  "page": {
+    "mine": "Cihazlarım",
+    "you": "Siz",
+    "add": "Cihaz ekle",
+    "addMine": "Cihazımı ekle",
+    "addFor": "{{name}} için cihaz ekle",
+    "cannotAdd": "Cihaz ekleyemezsiniz. Sizin için bir cihaz eklemesini bir Sahipten veya Yöneticiden isteyin.",
+    "refresh": "Yenile",
+    "loading": "Kişiler ve cihazlar yükleniyor…",
+    "connect": "Bağlan",
+    "openHome": "Ana sayfayı aç",
+    "disconnected": "Bağlı değil. Herkesin cihazlarını görmek ve değişiklik yapmak için bağlanın.",
+    "disconnectedSaved": "Bağlı değil. Kişiler ve cihazlar {{time}} itibarıyla kaydedildiği gibi gösteriliyor; değişiklik yapmak için bağlanın.",
+    "stale": "Kişiler ve cihazlar {{time}} itibarıyla kaydedildiği gibi gösteriliyor. Liste yenilenene kadar değişiklikler kapalıdır.",
+    "unsupported": "Bu sunucu, kişileri ve cihazları burada yönetmek için çok eski.",
+    "unsupportedOwner": "Bu sunucu, kişileri ve cihazları burada yönetmek için çok eski. Ayarlar’dan VPS yazılımını güncelleyin.",
+    "search": "Kişi ve cihaz ara",
+    "searchPlaceholder": "Ad veya VPN adresiyle ara",
+    "clearSearch": "Aramayı temizle",
+    "noMatches": "“{{query}}” ile eşleşen kişi veya cihaz yok.",
+    "adminOwnDevices": "Kendi cihazlarınızı eklemek için Sahipten Limitler ve izinler bölümünde buna izin vermesini isteyin.",
+    "unnamed": "Ad henüz yüklenmedi"
+  },
+  "empty": {
+    "title": "Şimdilik yalnızca bu cihaz",
+    "body": "Bu sunucudaki her kişinin bir rolü vardır ve birden fazla cihazı olabilir. Kendinize ait başka bir cihaz veya başka biri için bir cihaz ekleyin.",
+    "mine": "Kendime ait başka bir cihaz ekle",
+    "someone": "Başka biri için cihaz ekle"
+  },
+  "count": {
+    "people": "{count, plural, one {# kişi} other {# kişi}}",
+    "devices": "{count, plural, one {# cihaz} other {# cihaz}}",
+    "forwards": "{count, plural, one {# port yönlendirme} other {# port yönlendirme}}",
+    "pairs": "{count, plural, one {# cihaz eşleşmesi} other {# cihaz eşleşmesi}}",
+    "codes": "{count, plural, one {# katılım kodu} other {# katılım kodu}}"
+  },
+  "role": {
+    "title": "Rol",
+    "description": {
+      "owner": "Sunucunun tam denetimi. Tam olarak bir Sahip vardır.",
+      "admin": "Kişi ekleyebilir ve Üyeleri yönetebilir, ancak Yöneticileri veya Sahibi yönetemez.",
+      "member": "VPN’i kullanır; izin verilmedikçe hiçbir şeyi yönetmez."
+    },
+    "change": "{{role}} yap",
+    "codesWaiting": "{count, plural, one {{{name}} için veya onun adına oluşturulmuş # katılım kodu bekliyor. İptal edilene kadar sunucu rolü değiştiremez.} other {{{name}} için veya onun adına oluşturulmuş # katılım kodu bekliyor. İptal edilene kadar sunucu rolü değiştiremez.}}",
+    "cancelAndChange": "{count, plural, one {Kodları iptal et ve rolü değiştir} other {Kodları iptal et ve rolü değiştir}}",
+    "createdCodes": "{{name}} tarafından oluşturulan katılım kodları da iptal edilir."
+  },
+  "presence": {
+    "active": "Şu anda etkin",
+    "idle": "Yakın zamanda etkin değil",
+    "unknown": "Etkinlik bilinmiyor",
+    "suspended": "Askıya alındı"
+  },
+  "summary": {
+    "sirinApp": "SirinVPN uygulaması",
+    "wireguardApp": "WireGuard uygulaması",
+    "reachesOthers": "diğer cihazlara ulaşır",
+    "paired": "{count, plural, one {# cihazla eşleşmiş} other {# cihazla eşleşmiş}}",
+    "internetOnly": "yalnızca internet",
+    "sharesNetwork": "{{network}} ağını paylaşır",
+    "sharesNetworks": "{count, plural, one {# yerel ağı paylaşır} other {# yerel ağı paylaşır}}",
+    "forwards": "{count, plural, one {# yönlendirilmiş port} other {# yönlendirilmiş port}}"
+  },
+  "gate": {
+    "resumeFirst": "Önce {{name}} kişisinin erişimini devam ettirin.",
+    "limitReached": "{count, plural, one {Cihaz limitine ulaşıldı (#). Bunu Limitler ve izinler bölümünden yükseltin.} other {Cihaz limitine ulaşıldı (#). Bunu Limitler ve izinler bölümünden yükseltin.}}",
+    "needsAppDevice": "SirinVPN uygulaması çalıştıran bir cihaz gerekir; yalnızca WireGuard yeterli değil.",
+    "lastOwnerDevice": "Bu, Sahibin SirinVPN çalıştıran son cihazı olduğu için kaldırılamaz. Önce başka bir cihaz ekleyin."
+  },
+  "panel": {
+    "readOnly": "Liste yenilenene kadar yalnızca okunabilir."
+  },
+  "person": {
+    "youTitle": "{{name}} (siz)",
+    "summary": "{count, plural, one {{{role}} · # cihaz} other {{{role}} · # cihaz}}",
+    "name": "Ad",
+    "devices": "{count, plural, one {Cihaz} other {Cihaz}}",
+    "devicesOfLimit": "{limit, plural, one {{{count}} / # cihaz} other {{{count}} / # cihaz}}",
+    "noDevices": "Henüz cihaz yok.",
+    "noDevicesSuspended": "Cihaz yok. Askıya alınmış bir kişi cihaz ekleyemez.",
+    "suspended": "Askıya alındı",
+    "limitedHours": "Sınırlı saatler",
+    "expires": "Erişim {{date}} tarihine kadar",
+    "expired": "Erişim {{date}} tarihinde sona erdi",
+    "dangerZone": "Duraklat veya kaldır",
+    "suspend": "Askıya al",
+    "resume": "Devam ettir",
+    "suspendHint": "Tüm cihazlarını duraklatır. Hiçbir şey silinmez; Devam ettir erişimi geri verir.",
+    "resumeHint": "Cihazları duraklatıldı. Devam ettir, kayıtlı ayarlarıyla erişimlerini yeniden verir.",
+    "renameCodesWaiting": "{count, plural, one {{{name}} için bekleyen # katılım kodu var. İptal edilene kadar sunucu bunların adını değiştiremez.} other {{{name}} için bekleyen # katılım kodu var. İptal edilene kadar sunucu bunların adını değiştiremez.}}",
+    "cancelAndRename": "{count, plural, one {Kodları iptal et ve yeniden adlandır} other {Kodları iptal et ve yeniden adlandır}}",
+    "remove": "Kişiyi kaldır",
+    "removeHint": "Kişiyi, {{devices}}, {{forwards}}, {{pairs}} ve {{codes}} ile birlikte siler. Geri dönebilmesi için yeni bir katılım kodu gerekir."
+  },
+  "device": {
+    "summary": "{{name}} · {{presence}}",
+    "name": "Cihaz adı",
+    "owner": "Ait olduğu kişi",
+    "connection": "Bağlanma yöntemi",
+    "sirinApp": "SirinVPN uygulaması",
+    "wireguardApp": "WireGuard uygulaması veya yönlendirici, yalnızca Doğrudan UDP",
+    "address": "VPN adresi",
+    "activity": "Etkinlik",
+    "fingerprint": "Kimlik parmak izi",
+    "fingerprintLabel": "{{name}} parmak izi",
+    "removeTitle": "Kaldır",
+    "remove": "Cihazı kaldır",
+    "removeThis": "Bu cihazı kaldır",
+    "removeHint": "Anahtarları iptal edilir: VPN ve yönetim erişimi hemen durur.",
+    "removeThisHint": "Bu, kullandığınız cihaz. Kaldırılırsa bu uygulamanın {{server}} sunucusuna erişimi sona erer."
+  },
+  "network": {
+    "title": "Ağ",
+    "peer": "Cihazlar arası erişim",
+    "peerOn": "Bunu açık tutan diğer cihazlara ulaşır.",
+    "peerOff": "Kapalı: yalnızca internet, artı varsa cihaz eşleşmeleri.",
+    "suspended": "{{name}} askıdayken duraklatıldı."
+  },
+  "pairs": {
+    "title": "Cihaz eşleşmeleri",
+    "description": "Eşleşme, cihazlar arası erişim kapalı olsa bile iki cihazın birbirine ulaşmasını sağlar.",
+    "bothWays": "{{name}} ile iki yönlü",
+    "starts": "{{name}} cihazına bağlantı başlatır",
+    "answers": "Yalnızca {{name}} cihazına yanıt verir",
+    "otherDevice": "başka bir kişinin cihazı",
+    "peer": "Cihaz",
+    "direction": "Yön",
+    "directionHint": "Tek yön: yalnızca ilk cihaz bağlantı başlatır; diğeri yalnızca yanıt verir. Yerel ağları paylaşan bir cihaza bağlantı başlatmak onlara da ulaşır.",
+    "option": {
+      "both": "İki yönlü",
+      "starts": "Yalnızca {{from}} başlatır, hedef {{to}}"
+    },
+    "add": "Eşleşme ekle",
+    "remove": "Kaldır"
+  },
+  "networks": {
+    "title": "Yerel ağlar",
+    "description": "{{name}} arkasındaki özel ağları, örneğin ev ağını, ona ulaşan cihazlarla paylaşın.",
+    "label": "Ağlar",
+    "hint": "Her satırda bir özel IPv4 ağı, /20 veya daha küçük. Paylaşımı durdurmak için boş bırakın.",
+    "invalid": "/20 veya daha küçük bir özel IPv4 ağı değil: {{networks}}",
+    "hostBits": "{{network}}, ağının başlangıcı değil. {{canonical}} kullanın.",
+    "inactive": "Şu anda yönlendirilmiyor, çünkü VPS bunlara başka bir ağ üzerinden ulaşıyor: {{networks}}",
+    "linux": "{{name}}, IPv4 yönlendirmesi açık olarak Linux üzerinde SirinVPN çalıştırmalı:",
+    "copyCommand": "Komutu kopyala",
+    "save": "Ağları kaydet"
+  },
+  "ports": {
+    "title": "Port yönlendirme",
+    "none": "Bu cihaza yönlendirilmiş port yok.",
+    "paused": "Askıdayken duraklatıldı",
+    "exposure": "İnternetteki herkes yönlendirilmiş bir hizmete ulaşabilir.",
+    "protocol": "Protokol",
+    "publicPort": "Genel port",
+    "publicPortHint": "VPS adresinizde açılır.",
+    "devicePort": "Cihaz portu",
+    "devicePortHint": "Hizmetin dinlediği port.",
+    "publicPortLow": "1024 ile 65535 arasında bir port kullanın. Daha düşük portlar ayrılmıştır.",
+    "publicPortRange": "1024 ile 65535 arasında bir port kullanın.",
+    "devicePortRange": "1 ile 65535 arasında bir port kullanın.",
+    "preview": "Genel {{protocol}} portu <strong>{{publicPort}}</strong> yönlendirilir: hedef <strong>{{device}}</strong>, port <strong>{{devicePort}}</strong>",
+    "used": "{max, plural, one {{{count}} / # sunucu portu kullanımda} other {{{count}} / # sunucu portu kullanımda}}",
+    "full": "{count, plural, one {Tüm # sunucu portu kullanımda. Yeni port açmak için birini kapatın.} other {Tüm # sunucu portu kullanımda. Yeni port açmak için birini kapatın.}}",
+    "open": "Port aç",
+    "close": "Kapat",
+    "closeLabel": "{{protocol}} {{publicPort}} portundan cihaz portu {{devicePort}} yönlendirmesini kapat",
+    "visitorAddress": "Hizmet ziyaretçileri <address>{{address}}</address> olarak görür, gerçek IP’leri olarak değil."
+  },
+  "policy": {
+    "title": "Limitler ve izinler",
+    "limits": "Limitler",
+    "deviceLimit": "Cihaz limiti",
+    "deviceLimitHint": "Sınır olmasın istiyorsanız boş bırakın. Düşürmeden önce fazla cihazları kaldırın.",
+    "deviceLimitHintNew": "Sınır olmasın istiyorsanız boş bırakın.",
+    "expires": "Erişim sona erer",
+    "expiresHint": "Yerel saatinizle. Hiç bitmemesi için boş bırakın.",
+    "expiresPast": "Bu zaman geçti. Kaydettiğinizde erişimleri hemen sona erer.",
+    "permissions": "İzinler",
+    "permission": {
+      "addPeople": "Yeni kişi ekleme",
+      "addOwnDevices": "Kendi cihazlarını ekleme",
+      "deviceToDevice": "Cihazları için cihazlar arası erişimi ve eşleşmeleri değiştirme",
+      "portForwards": "Cihazlarına genel internet portları açma"
+    },
+    "save": "Limitleri kaydet",
+    "appliesToAll": "Tüm cihazları için geçerlidir.",
+    "cancelsCodes": "{count, plural, one {Kaydetmek, onlar için veya onlar tarafından oluşturulmuş # bekleyen katılım kodunu iptal eder.} other {Kaydetmek, onlar için veya onlar tarafından oluşturulmuş # bekleyen katılım kodunu iptal eder.}}",
+    "cancelsCreated": "Kaydetmek, {{name}} tarafından oluşturulan katılım kodlarını iptal eder.",
+    "error": {
+      "limit": "1 ile 222 arasında bir limit girin veya boş bırakın.",
+      "expires": "Geçerli bir tarih ve saat girin.",
+      "noHours": "En az bir saat seçin veya saat sınırını kapatın.",
+      "tooManyRanges": "{count, plural, one {Haftada en fazla # ayrı zaman aralığı kullanın.} other {Haftada en fazla # ayrı zaman aralığı kullanın.}}"
+    }
+  },
+  "hours": {
+    "title": "Haftalık saatler",
+    "limit": "Belirli saatlerle sınırla",
+    "allWeek": "Erişime her zaman izin verilir.",
+    "localTime": "Saat diliminiz ({{zone}}) için. Yaz saati uygulaması bunları bir saat kaydırabilir.",
+    "inexact": "Kaydedilen bazı saatler tam saatte başlamıyor. Tabloyu düzenlemek bunları tam saatlere yuvarlar.",
+    "cell": "{{day}}, {{hour}}",
+    "toggleDay": "{{day}} gününün tamamı",
+    "toggleHour": "Her gün {{hour}}"
+  },
+  "codes": {
+    "title": "{count, plural, one {Katılması beklenen (#)} other {Katılması beklenen (#)}}",
+    "forPerson": "{{name}} için cihaz",
+    "newPerson": "Yeni biri",
+    "newNamed": "{{name}}, yeni kişi",
+    "severalPeople": "Birkaç yeni kişi",
+    "row": "{{role}} · {{uses}} · Sona erme: {{date}}",
+    "singleUse": "Tek kullanımlık",
+    "usesLeft": "{max, plural, one {{{count}} / # kullanım kaldı} other {{{count}} / # kullanım kaldı}}",
+    "cancel": "Kodu iptal et",
+    "cancelling": "İptal ediliyor…"
+  },
+  "add": {
+    "whose": {
+      "title": "Cihaz kimin?",
+      "description": "Her cihaz bir kişiye aittir.",
+      "mine": "Bana ait",
+      "mineHint": "Size ait başka bir telefon veya bilgisayar.",
+      "person": "Zaten burada olan biri",
+      "personHint": "Bu sunucudaki bir kişiye cihaz ekler.",
+      "pick": "Kişi",
+      "option": "{{name}} · {{role}}",
+      "new": "Yeni biri",
+      "newHint": "İlk cihazıyla birlikte yeni bir kişi ekler."
+    },
+    "new": {
+      "name": "Adı",
+      "nameHint": "Bu sunucuyu yöneten herkese gösterilir.",
+      "several": "Bu kodu birkaç yeni kişi kullanacak",
+      "people": "Kişi sayısı",
+      "peopleHint": "Her kişi katılırken kendi adını girer ve Üye olur.",
+      "peopleInvalid": "2 ile 100 arasında bir tam sayı girin.",
+      "nameHintRename": "Bu sunucuyu yöneten herkese gösterilir. Adı daha sonra değiştirebilirsiniz."
+    },
+    "connect": {
+      "title": "Nasıl bağlanacak?",
+      "app": "SirinVPN uygulaması",
+      "appHint": "Önerilir. Cihaz bir katılım kodu alır ve kendi anahtarlarını oluşturur.",
+      "wireguard": "WireGuard uygulaması",
+      "wireguardHint": "Gelişmiş. iPhone, iPad, Mac veya yönlendirici için. Yalnızca Doğrudan UDP; sunucuyu yönetemez."
+    },
+    "forYou": "Sizin için",
+    "forPerson": "{{name}} için",
+    "severalPeople": "birkaç yeni kişi",
+    "deviceName": "Cihaz adı",
+    "deviceNameFixed": "Bu sunucu, katılırken adlandırmalarına izin vermez. Sunucuyu yöneten herkes bunu daha sonra yeniden adlandırabilir.",
+    "lifetime": "Kodun sona ereceği süre",
+    "hours": "{count, plural, one {# saat} other {# saat}}",
+    "days": "{count, plural, one {# gün} other {# gün}}",
+    "uses": "Bu kodla eklenebilecek cihazlar",
+    "usesHint": "Her cihaz kendi anahtarlarıyla katılır. Cihaz limitleri yine geçerlidir.",
+    "usesInvalid": "1 ile 100 arasında bir tam sayı girin.",
+    "ownerWarningTitle": "Bu kodu kullanan herkes sunucunun tam denetimini alır.",
+    "ownerWarning": "Bir Sahip cihazı ekler. Yalnızca kendinizle, özel olarak paylaşın.",
+    "next": "İleri",
+    "creating": "Oluşturuluyor…",
+    "createCode": "Katılım kodu oluştur",
+    "createWireguard": "Yapılandırma oluştur",
+    "copyCode": "Kodu kopyala",
+    "copyFailed": "Kod kopyalanamadı. Kodu seçip elle kopyalayın.",
+    "copyFailedAndroid": "Kod kopyalanamadı. Bunun yerine katılım kodunu görüntüle veya paylaş seçeneğini kullanın.",
+    "done": "Tamam",
+    "closeUnshared": {
+      "title": "Kod paylaşılmadan kapatılsın mı?",
+      "message": "Kod bir daha gösterilemez. Kopyalamadıysanız, taramadıysanız veya paylaşmadıysanız, Katılması beklenenler bölümünden kodu iptal edip cihazı yeniden ekleyin.",
+      "action": "Kapat"
+    },
+    "handover": {
+      "title": "Kodu aktarın"
+    },
+    "code": {
+      "instructionSelf": "Diğer cihazınızda SirinVPN’i açın, Katılım kodu kullan’ı seçin, sonra bu QR kodunu tarayın veya kodu yapıştırın.",
+      "instructionSelfAndroid": "Diğer cihazınızda SirinVPN’i açın, Katılım kodu kullan’ı seçin, sonra buradan paylaştığınız kodu tarayın veya yapıştırın.",
+      "instructionPerson": "Bunu özel olarak {{name}} ile paylaşın. Kişi SirinVPN’i açar, Katılım kodu kullan’ı seçer ve kodu tarayabilir veya yapıştırabilir.",
+      "instructionSeveral": "Bunu katılacak kişilere özel olarak gönderin. Her biri SirinVPN’i açar, Katılım kodu kullan’ı seçer ve tarar veya yapıştırır.",
+      "once": "Bu kod yalnızca bir kez gösterilir",
+      "secret": "Kodu bilen herkes, kullanılana, iptal edilene veya {{date}} tarihinde sona erene kadar katılabilir."
+    },
+    "wireguard": {
+      "instruction": "Cihazda WireGuard uygulamasını açın ve bu QR kodunu tarayın veya kayıtlı dosyayı içe aktarın.",
+      "secret": "Bu QR kodu ve dosya cihazın özel anahtarını içerir. Bunlara sahip olan herkes bu VPN’i kullanabilir. İçe aktardıktan sonra dosyayı silin.",
+      "limits": "WireGuard cihazı yalnızca Doğrudan UDP üzerinden bağlanır; sunucuyu yönetemez ve adres değişikliklerini izleyemez.",
+      "file": "Yapılandırma dosyası",
+      "fileHint": "İsteğe bağlı. Bir yönlendirici için veya daha sonra içe aktarmak için .conf dosyası kaydedin.",
+      "fileType": "WireGuard yapılandırması",
+      "chooseFile": "Dosya seç",
+      "noFile": "Dosya yok; yalnızca QR kodu",
+      "saved": "<path>{{path}}</path> konumuna kaydedildi"
+    },
+    "state": {
+      "waiting": "Cihazın katılması bekleniyor…",
+      "joined": "{count, plural, one {{{name}} katıldı.} other {{{name}} katıldı.}}",
+      "connected": "Cihaz bağlandı.",
+      "expired": "Kod, kimse kullanmadan sona erdi.",
+      "cancelled": "Kod iptal edildi.",
+      "ended": "Kod artık beklemiyor: kullanıldı veya iptal edildi."
+    }
+  },
+  "share": {
+    "showInvitation": "Katılım kodunu görüntüle veya paylaş",
+    "showRecovery": "Kurtarma anahtarını görüntüle veya paylaş",
+    "qrNote": "Kodu kopyalamak yerine bunu tarayın.",
+    "code": "Kod",
+    "codeLabel": "Katılım kodu",
+    "enlarge": "QR kodunu büyüt",
+    "enlargeInvitation": "Katılım kodu QR kodunu büyüt",
+    "enlargeRecovery": "Kurtarma anahtarı QR kodunu büyüt",
+    "scanInvitation": "Katılım kodunu tara",
+    "scanRecovery": "Kurtarma anahtarını tara",
+    "closeQr": "QR kodunu kapat",
+    "copyRecovery": "Kurtarma anahtarını kopyala",
+    "altInvitation": "Katılım kodu QR kodu",
+    "altInvitationEnlarged": "Büyütülmüş katılım kodu QR kodu",
+    "altRecovery": "Kurtarma anahtarı QR kodu",
+    "altRecoveryEnlarged": "Büyütülmüş kurtarma anahtarı QR kodu",
+    "altWireguard": "WireGuard yapılandırma QR kodu",
+    "copyCode": "Kodu kopyala"
+  },
+  "name": {
+    "save": "Adı kaydet",
+    "empty": "Bir ad girin.",
+    "tooLong": "{count, plural, one {En fazla # karakter kullanın.} other {En fazla # karakter kullanın.}}",
+    "invalid": "Satır sonlarını ve diğer denetim karakterlerini kaldırın."
+  },
+  "owner": {
+    "title": "{{name}} kişisini Sahip yap",
+    "open": "Sahip yap…",
+    "effect": "{{name}} sunucunun tam denetimini alır. Siz Yönetici olursunuz ve bu buradan geri alınamaz.",
+    "device": "Sahip olacak cihaz",
+    "wireguardExcluded": "WireGuard cihazları sunucuyu yönetemez, bu yüzden listelenmez.",
+    "codesWaiting": "{count, plural, one {Önce # katılım kodu iptal edilmelidir.} other {Önce # katılım kodu iptal edilmelidir.}}",
+    "cancelCode": "{{name}} için kodu iptal et",
+    "confirm": "{{name}} kişisini Sahip yap"
+  },
+  "confirm": {
+    "removeDevice": {
+      "title": "{{name}} kaldırılsın mı?",
+      "message": "Anahtarları iptal edilir ve VPN ile yönetim erişimi hemen durur. Geri dönebilmesi için yeni bir katılım kodu gerekir.",
+      "action": "Cihazı kaldır"
+    },
+    "removeThis": {
+      "title": "Bu cihaz kaldırılsın mı?",
+      "message": "Bu uygulama {{server}} sunucusuna erişimini hemen kaybeder. Geri dönmek için başka bir cihazdan yeni bir katılım kodu gerekir.",
+      "action": "Bu cihazı kaldır"
+    },
+    "removePerson": {
+      "title": "{{name}} kişisi kaldırılsın mı?",
+      "message": "{{name}}, {{devices}}, {{forwards}}, {{pairs}} ve {{codes}} silinir. Bu geri alınamaz.",
+      "action": "Kişiyi kaldır"
+    },
+    "suspend": {
+      "title": "{{name}} kişisi askıya alınsın mı?",
+      "message": "{count, plural, one {# cihaz, siz erişimini devam ettirene kadar erişimini kaybeder. Bekleyen katılım kodları ve anahtar değişiklikleri iptal edilir.} other {# cihaz, siz erişimini devam ettirene kadar erişimini kaybeder. Bekleyen katılım kodları ve anahtar değişiklikleri iptal edilir.}}",
+      "action": "Askıya al"
+    },
+    "resume": {
+      "title": "{{name}} kişisinin erişimi devam ettirilsin mi?",
+      "message": "Cihazları kayıtlı ayarlarla erişimini geri kazanır. İptal edilen katılım kodları geri gelmez.",
+      "action": "Devam ettir"
+    },
+    "role": {
+      "title": "{{name}} kişisinin rolü {{role}} yapılsın mı?",
+      "toAdmin": "Kişi ekleyebilir ve Üyeleri yönetebilir.",
+      "toMember": "Cihazlarını korur, ancak izin verilmedikçe hiçbir şeyi yönetmez.",
+      "toAdminCancels": "{count, plural, one {Kişi ekleyebilir ve Üyeleri yönetebilir. # bekleyen katılım kodu önce iptal edilir.} other {Kişi ekleyebilir ve Üyeleri yönetebilir. # bekleyen katılım kodu önce iptal edilir.}}",
+      "toMemberCancels": "{count, plural, one {Cihazlarını korur, ancak izin verilmedikçe hiçbir şeyi yönetmez. # bekleyen katılım kodu önce iptal edilir.} other {Cihazlarını korur, ancak izin verilmedikçe hiçbir şeyi yönetmez. # bekleyen katılım kodu önce iptal edilir.}}",
+      "action": "Rolü değiştir"
+    },
+    "limits": {
+      "title": "{{name}} için limitler kaydedilsin mi?",
+      "message": "{count, plural, one {Onlar için veya onlar adına oluşturulmuş # bekleyen katılım kodu iptal edilir.} other {Onlar için veya onlar adına oluşturulmuş # bekleyen katılım kodu iptal edilir.}}",
+      "action": "Kaydet"
+    },
+    "makeOwner": {
+      "title": "{{name}} kişisi Sahip yapılsın mı?",
+      "message": "{{device}} ({{fingerprint}}) ve kişinin diğer SirinVPN cihazları tam denetim alır. Bu cihaz bir Yönetici cihazı olur.",
+      "action": "Sahip yap"
+    },
+    "cancelCode": {
+      "title": "“{{name}}” kodu iptal edilsin mi?",
+      "message": "Kod hemen çalışmayı durdurur. Zaten katılmış cihazlar erişimlerini korur.",
+      "action": "Kodu iptal et"
+    },
+    "openPort": {
+      "title": "{{publicPort}} genel portu açılsın mı?",
+      "message": "{{protocol}} {{publicPort}} portu yönlendirilir: hedef {{device}}, port {{devicePort}}. İnternetteki herkes buna ulaşmayı deneyebilir.",
+      "action": "Port aç"
+    },
+    "closePort": {
+      "title": "{{protocol}} {{publicPort}} portu kapatılsın mı?",
+      "message": "Bu port üzerinden yapılan bağlantılar hemen durur.",
+      "action": "Portu kapat"
+    },
+    "removePair": {
+      "title": "{{name}} ile bu eşleşme kaldırılsın mı?",
+      "message": "İki cihaz, her ikisinde de cihazlar arası erişim açık olmadıkça birbirine ulaşamaz.",
+      "action": "Eşleşmeyi kaldır"
+    }
+  },
+  "notice": {
+    "abandoned": "Değişiklik gönderilmedi: sunucuya bağlantı değişti. Tekrar deneyin.",
+    "personRenamed": "“{{name}}” olarak yeniden adlandırıldı.",
+    "deviceRenamed": "“{{name}}” olarak yeniden adlandırıldı.",
+    "deviceRemoved": "{{name}} kaldırıldı.",
+    "personRemoved": "{{name}} kaldırıldı.",
+    "suspended": "{{name}} askıya alındı.",
+    "resumed": "{{name}} yeniden etkin.",
+    "roleChanged": "{{name}} artık {{role}}.",
+    "ownerChanged": "{{name}} artık Sahip. Bu cihaz bir Yönetici cihazı.",
+    "limitsSaved": "{{name}} için limitler kaydedildi.",
+    "codeCancelled": "Katılım kodu iptal edildi.",
+    "peerOn": "{{name}} artık cihazlar arası erişime sahip.",
+    "peerOff": "{{name}} artık cihazlar arası erişime sahip değil.",
+    "pairAdded": "{{name}} ile eşleştirildi.",
+    "pairRemoved": "Eşleşme kaldırıldı.",
+    "networksSaved": "{{name}} üzerindeki yerel ağlar kaydedildi.",
+    "networksCleared": "{{name}} artık yerel ağları paylaşmıyor.",
+    "portOpened": "{{port}} portu açık.",
+    "portClosed": "{{port}} portu kapalı."
+  },
+  "join": {
+    "codeAccepted": "Katılım kodu kabul edildi",
+    "codeEntered": "Katılım kodu girildi",
+    "changeCode": "Kodu değiştir",
+    "rejected": {
+      "expired": "Bu katılım kodunun süresi doldu. Yeni bir kod isteyin.",
+      "used": "Bu katılım kodu zaten kullanıldı veya iptal edildi. Yeni bir kod isteyin.",
+      "invalid": "Bu geçerli bir katılım kodu değil. Kodun tamamını kopyaladığınızı kontrol edin veya yeni bir kod isteyin."
+    },
+    "ownerDevice": "Bu cihazı Sahip olan {{name}} kişisine ekler.",
+    "ownerPower": "Sahip cihazları sunucunun, her kişinin ve her cihazın tam denetimine sahiptir. Bunu beklediyseniz katılın.",
+    "addsDevice": "Bu cihazı {{name}} kişisine ekler.",
+    "namedPerson": "<strong>{{name}}</strong> olarak katılıyorsunuz.",
+    "personName": "Adınız",
+    "personNameHint": "Bu sunucuyu yönetene gösterilir.",
+    "deviceName": "Bu cihazın adı",
+    "deviceNameHint": "Örneğin telefonun veya bilgisayarın modeli. Daha sonra yeniden adlandırabilirsiniz.",
+    "presetDevice": "Bu cihaz <strong>{{name}}</strong> olarak adlandırılacak.",
+    "renameLater": "Daha sonra Cihazlar bölümünden yeniden adlandırılabilir."
+  },
+  "error": {
+    "load": "Kişiler ve cihazlar sunucudan yüklenemedi.",
+    "features": "Bu sunucunun neleri desteklediği denetlenemedi.",
+    "renamePerson": "Kişinin adı değiştirilemedi. Tekrar deneyin.",
+    "renameDevice": "Cihazın adı değiştirilemedi. Tekrar deneyin.",
+    "removeDevice": "Cihaz kaldırılamadı. Tekrar deneyin.",
+    "removePerson": "Kişi kaldırılamadı. Güncel durumunu görmek için yenileyin.",
+    "suspension": "Askıya alınma durumu değiştirilemedi. Güncel durumunu görmek için yenileyin.",
+    "role": "Rol değiştirilemedi. Tekrar deneyin.",
+    "makeOwner": "Sahip değiştirilemedi. Tekrar deneyin.",
+    "limits": "Limitler kaydedilemedi. Tekrar deneyin.",
+    "peer": "Cihazlar arası erişim değiştirilemedi. Tekrar deneyin.",
+    "pair": "Eşleşme değiştirilemedi. Tekrar deneyin.",
+    "networks": "Yerel ağlar kaydedilemedi. Tekrar deneyin.",
+    "openPort": "Port açılamadı. Tekrar deneyin.",
+    "closePort": "Port kapatılamadı. Tekrar deneyin.",
+    "cancelCode": "Katılım kodu iptal edilemedi. Tekrar deneyin.",
+    "createCode": "Katılım kodu oluşturulamadı. Tekrar deneyin.",
+    "wireguard": "WireGuard cihazı eklenemedi. Tekrar deneyin."
+  }
+}

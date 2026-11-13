@@ -13,9 +13,9 @@ use. This replaced a layout that showed every feature at the same level (2026-11
 | Connect and see the state | Home: the status card is the focus | Home |
 | Switch servers | the sidebar's **Servers** list, with a search field from six servers | Home: the **Server** row opens a sheet |
 | Manage servers (rename, favorites, maintenance, add) | sidebar → **Manage** (the Servers page) | the **Servers** tab, or the sheet's **Manage servers** |
-| Add a device or invite someone | Devices → **Add device** | Devices → **Add device** |
-| A device's details and actions | the device's ⋯ menu → **Details** | the device's ⋮ sheet |
-| A member's actions, including adding a device for them | the member's ⋯ menu | the member's ⋮ sheet |
+| Add a device, for yourself or anyone else | Devices → **Add device** (or a person's **Add device for …**) | the same |
+| A device: name, network, port forwarding, removal | Devices → select the device (its panel) | the same, full screen |
+| A person: name, role, limits and permissions, suspend, remove | Devices → select the person's name (their panel) | the same, full screen |
 | Protection: method, kill switch, reconnect | Settings → Connection | Settings → Connection |
 | Recovery: recovery key, device and VPS backups | Settings → Keys & recovery | Settings → Keys & recovery |
 | Health, diagnostics, VPS update and repair, remove | Settings → VPS maintenance | Settings → Diagnostics |
@@ -42,17 +42,17 @@ name. Android keeps its four tabs: a phone has no sidebar.
 
 | Feature | Where |
 | --- | --- |
-| Port forwarding | Settings → Advanced; also a device's menu → Advanced → Port forwarding |
+| Port forwarding | Devices → the device's panel → Network |
 | VPS alerts | Settings → Advanced (Owner) |
 | Scheduled VPS backups | Settings → Advanced → Automatic VPS backups (Owner) |
 | Device key rotation | Settings → Advanced. An unfinished rotation also stays in Keys & recovery and on Home. |
-| WireGuard configurations | Devices → Add device → Advanced; a member's menu → Advanced (desktop) |
-| Mutual access, device pairs, local networks | a device's menu → Advanced |
+| WireGuard configurations | Devices → Add device → “How will it connect?” → WireGuard app (desktop) |
+| Device-to-device access, device pairs, local networks | Devices → the device's panel → Network |
 | Creating a Hetzner server | Add a server → Advanced (the row says it holds Hetzner Cloud) |
 
 On Android's settings index the Advanced row lists what that role finds there.
-Settings → Advanced also points Owners and Admins to the Advanced group of
-each device's menu. Release sources stay in the update dialogs: SirinVPN ships
+Settings → Advanced also says that device network features, port forwarding
+included, are on each device's panel in Devices. Release sources stay in the update dialogs: SirinVPN ships
 no built-in address, so the first check needs one, and a saved source shows as
 one line with **Change**.
 
@@ -61,26 +61,52 @@ one line with **Change**.
 - **Members** see no VPS resource stats, which they can't act on. The desktop
   Home has no server health row, and Android's Connection details has no Server
   group; Android's Home keeps its Server picker row for every role. Their
-  Advanced page holds key rotation, plus port forwarding when their policy
-  allows it.
+  Advanced page holds key rotation; port forwarding, when their permissions
+  allow it, is on their device's panel in Devices.
 - **Owners and Admins** see one compact server row under Home's status card:
   CPU, memory, storage, uptime and active devices. The used and total amounts
   are under Server details. This device's traffic is one strip, not three tiles.
 
 ## Devices
 
-The page has one add action. **Add device** opens a menu when there is a choice
-(**One of my devices**, **Invite member**, and under Advanced **Add WireGuard
-device**). When there is only one choice, the button does it directly and is
-named for it (**Invite member** when inviting is all the caller may do). Member
-cards have no add button of their own: **Add device for …** is the first item of
-the member's menu, and when it is unavailable the reason also shows on the card.
-Device rows have no expand chevron: **Details** is the first item of the row's
-menu and opens a dialog; **Revoke** ends the menu, after the Advanced group.
-Every control is a named button or menu item, a disabled item's reason is its
-description for screen readers, and closing a dialog returns focus to the menu
-that opened it. On Android a menu is a sheet; with a TV remote the D-pad starts on
-its first item, and an item's dialog returns focus to the ⋮ button when it closes.
+Redesigned 2026-11-12, after the Owner found the tab confusing: **Add device**
+mostly created members, and five words named the same role.
+
+- **One word per thing.** People have a role (Owner, Admin, Member) and devices.
+  A join code brings a device, for a new person or an existing one. See the
+  terminology in [Interface text](ui-text.md#terminology).
+- **The page** lists devices grouped by person. **My devices** comes first and
+  marks **This device**; then the Owner, Admins and Members. Each group shows the
+  role, Suspended and limit chips and the device count. Each device row says in
+  one line what the device can do (app, device-to-device access or pairs, shared
+  networks, forwarded ports) and its activity, with one rule for every device.
+  Codes not yet used are listed under **Waiting to join (N)**.
+- **Add device always adds a device**: one wizard asks whose device it is
+  (Mine, someone already here, Someone new with their name, role and, for a
+  Member, limits and permissions), how it connects (SirinVPN app, or the
+  WireGuard app on the desktop), then hands over the join code and follows it
+  until the device joins, the code expires or is cancelled. A person's group has
+  **Add device for …** with the person chosen. Options the caller can't use are
+  absent; with nothing to offer, the button is replaced by one line saying why.
+- **One place per thing.** Selecting a person opens their panel: name, role
+  (with **Make Owner…**, which lets the Owner pick the receiving device), their
+  devices, **Limits and permissions**, and Suspend or Remove person. Selecting a
+  device opens its panel: name, owner, connection, address, activity, the
+  Network section (device-to-device access, pairs, local networks, port
+  forwards) and Remove device. There are no ⋯ menus.
+- **Couplings are said where they bite**: a role change while a join code waits
+  offers to cancel it first; saving limits says how many waiting codes it cancels.
+- **Weekly hours** are a grid in the viewer's local time, stored as the UTC
+  windows the VPS expects.
+- **Disconnected**, the page shows the last list read in this session, read only
+  and dated, with **Connect**; with nothing read yet, this device alone.
+- **For tests and agents**, the page root and the wizard carry `data-state`, and
+  the main actions a `data-testid` (`add-device`, `add-device-for`, `open-person`,
+  `open-device`, `wizard-next`, `wizard-create`, `wizard-done`, `remove-device`,
+  `remove-person`, `change-role`, `save-limits`, `make-owner`, `cancel-code`).
+  The demo's people follow `sessionStorage["sirin.demo.role"]` (owner, admin,
+  member); `sessionStorage["sirin.demo.future"] = "1"` adds the server features
+  not released yet.
 
 ## Long operations
 

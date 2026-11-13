@@ -469,8 +469,13 @@ fn obfuscated_transport_is_ready_before_wireguard_and_removed_on_disconnect() {
         fs::metadata(&transport_path).unwrap().permissions().mode() & 0o777,
         0o600
     );
-    let config: ClientRelayConfig =
-        serde_json::from_slice(&fs::read(&transport_path).unwrap()).unwrap();
+    let ClientTransportConfig::Pinned(PinnedClientTransportConfig {
+        carrier: CurrentClientTransportConfig::ObfuscatedUdp(config),
+        ..
+    }) = serde_json::from_slice(&fs::read(&transport_path).unwrap()).unwrap()
+    else {
+        panic!("the obfuscated relay must be pinned to WireGuard's port");
+    };
     assert_eq!(config.server_address, "203.0.113.8:443".parse().unwrap());
     assert_eq!(config.socket_mark, Some(51_820));
 

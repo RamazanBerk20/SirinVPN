@@ -81,16 +81,31 @@ impl ManagementSession {
         if self.profile.role == role && self.profile.administrator == administrator {
             return Ok(());
         }
-        let mut next = self.profile.clone();
-        next.role = role;
-        next.administrator = administrator;
-        app.state::<crate::AppState>()
-            .paths
-            .profile_store()
-            .upsert(next)
-            .map_err(crate::safe_error)?;
-        Ok(())
+        retain_role(
+            &app.state::<crate::AppState>().paths.profile_store(),
+            &self.profile,
+            role,
+            administrator,
+        )
+        .map_err(crate::safe_error)
     }
+}
+
+/// Owns only the role and Admin flag the VPS reported, on the profile as saved now.
+/// A report made with an identity that has since been rotated away is not applied.
+fn retain_role(
+    store: &sirinvpn_core::ProfileStore,
+    reported_for: &ServerProfile,
+    role: sirinvpn_protocol::ServerRole,
+    administrator: bool,
+) -> Result<(), sirinvpn_core::ProfileStoreError> {
+    store.update(reported_for.id, |current| {
+        if current.identity_reference == reported_for.identity_reference {
+            current.role = role;
+            current.administrator = administrator;
+        }
+        Ok(())
+    })
 }
 
 pub(crate) async fn connected(
@@ -198,5 +213,28 @@ mod tests {
         assert!(read_generation(generation, async { Ok(()) }).await.is_err());
         let current = *GENERATION.borrow();
         assert!(read_generation(current, async { Ok(()) }).await.is_ok());
+    }
+
+    #[test]
+    fn a_new_role_keeps_a_concurrent_rename() {
+        let mut stale: ServerProfile = serde_json::from_value(serde_json::json!({
+            "schema_version": 1, "id": sirinvpn_protocol::ServerId::new(), "name": "Home",
+            "endpoint": {"host": "203.0.113.1", "wireguard_port": 51820},
+            "client_tunnel_address": "10.0.0.2", "server_tunnel_address": "10.0.0.1",
+            "server_wireguard_public_key": "key", "pinned_server_certificate_pem": "cert",
+            "client_management_certificate_pem": "client-cert", "identity_reference": "identity",
+            "role": "owner",
+        }))
+        .unwrap();
+        let (_directory, paths) = crate::vps_transaction::tests::store_with_rename(&stale);
+        let store = paths.profile_store();
+        retain_role(&store, &stale, sirinvpn_protocol::ServerRole::Member, true).unwrap();
+        let saved = store.load().unwrap().remove(0);
+        assert_eq!((saved.name.as_str(), saved.favorite), ("Renamed", true));
+        assert_eq!((saved.role, saved.administrator), (sirinvpn_protocol::ServerRole::Member, true));
+        // A report made before a key rotation is ignored.
+        stale.identity_reference = "rotated-away".into();
+        retain_role(&store, &stale, sirinvpn_protocol::ServerRole::Owner, false).unwrap();
+        assert_eq!(store.load().unwrap()[0].role, sirinvpn_protocol::ServerRole::Member);
     }
 }

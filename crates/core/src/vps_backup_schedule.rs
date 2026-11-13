@@ -63,19 +63,31 @@ pub struct VpsBackupScheduleStatus {
 }
 
 impl VpsBackupSchedule {
+    /// A time recorded while the clock was ahead says nothing about when that happened;
+    /// treat it as unknown so a corrected clock cannot pause backups silently.
+    fn known(at: i64, now: i64) -> Option<i64> {
+        (at <= now).then_some(at)
+    }
+
     pub fn due(&self, now: i64) -> bool {
         let interval = i64::from(self.interval_days) * DAY;
         self.last_success
+            .and_then(|at| Self::known(at, now))
             .is_none_or(|at| now >= at.saturating_add(interval))
             && self
                 .last_failure
                 .as_ref()
-                .is_none_or(|failure| now >= failure.at.saturating_add(VPS_BACKUP_RETRY_SECONDS))
+                .and_then(|failure| Self::known(failure.at, now))
+                .is_none_or(|at| now >= at.saturating_add(VPS_BACKUP_RETRY_SECONDS))
     }
 
     /// One missed interval plus a day of grace. Failures are reported on their own.
+    /// A success "in the future" counts as unknown, so the warning still appears.
     pub fn stale(&self, now: i64) -> bool {
-        let since = self.last_success.unwrap_or(self.enabled_at);
+        let since = self
+            .last_success
+            .and_then(|at| Self::known(at, now))
+            .unwrap_or(self.enabled_at.min(now));
         now > since.saturating_add((i64::from(self.interval_days) + 1) * DAY)
     }
 
@@ -265,11 +277,23 @@ pub fn vps_backup_file_name(id: ServerId, now: i64) -> String {
 }
 
 /// This server's scheduled backups beyond the newest `keep`. Other files never match.
+/// A backup stamped within the last day, or later, is never returned: with a clock
+/// that was set back, the backup just written sorts before older ones.
 pub fn expired_vps_backups<'a>(
     id: ServerId,
     names: impl IntoIterator<Item = &'a str>,
     keep: u8,
 ) -> Vec<&'a str> {
+    expired_vps_backups_at(id, names, keep, unix_now())
+}
+
+fn expired_vps_backups_at<'a>(
+    id: ServerId,
+    names: impl IntoIterator<Item = &'a str>,
+    keep: u8,
+    now: i64,
+) -> Vec<&'a str> {
+    let recent = utc_stamp(now.saturating_sub(DAY));
     let prefix = format!("{FILE_PREFIX}{id}-");
     let mut ours: Vec<&str> = names
         .into_iter()
@@ -280,11 +304,24 @@ pub fn expired_vps_backups<'a>(
         })
         .collect();
     ours.sort_unstable_by(|a, b| b.cmp(a));
-    ours.into_iter().skip(keep.into()).collect()
+    ours.into_iter()
+        .skip(keep.into())
+        .filter(|name| name[prefix.len()..prefix.len() + 16] < *recent)
+        .collect()
 }
 
-/// Deletes this server's regular-file backups beyond the newest `keep`.
+/// Deletes this server's regular-file backups beyond the newest `keep`, never one
+/// written within the last day (see [`expired_vps_backups`]).
 pub fn rotate_vps_backup_folder(folder: &Path, id: ServerId, keep: u8) -> io::Result<usize> {
+    rotate_vps_backup_folder_at(folder, id, keep, unix_now())
+}
+
+fn rotate_vps_backup_folder_at(
+    folder: &Path,
+    id: ServerId,
+    keep: u8,
+    now: i64,
+) -> io::Result<usize> {
     let mut names = Vec::new();
     for entry in fs::read_dir(folder)? {
         let entry = entry?;
@@ -295,7 +332,7 @@ pub fn rotate_vps_backup_folder(folder: &Path, id: ServerId, keep: u8) -> io::Re
             names.push(name);
         }
     }
-    let expired = expired_vps_backups(id, names.iter().map(String::as_str), keep);
+    let expired = expired_vps_backups_at(id, names.iter().map(String::as_str), keep, now);
     for name in &expired {
         fs::remove_file(folder.join(name))?;
     }

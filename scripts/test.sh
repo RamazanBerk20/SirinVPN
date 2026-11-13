@@ -13,7 +13,8 @@ for tool in python3 cargo node pnpm rg shellcheck xmllint; do
   command -v "$tool" >/dev/null 2>&1 || { echo "Required validation tool missing: $tool" >&2; exit 1; }
 done
 expected_pnpm=$(node -p "require('./apps/desktop/package.json').packageManager.split('@')[1]")
-[ "$(pnpm --version)" = "$expected_pnpm" ] || { echo "Use repository-pinned pnpm $expected_pnpm" >&2; exit 1; }
+# pnpm switches itself to apps/desktop's packageManager pin there, so check what the gates actually run.
+[ "$(cd apps/desktop && pnpm --version)" = "$expected_pnpm" ] || { echo "Use repository-pinned pnpm $expected_pnpm" >&2; exit 1; }
 python3 "$PROJECT_ROOT/scripts/check-maintainability.py"
 python3 "$PROJECT_ROOT/scripts/check-remediation-contracts.py"
 python3 "$PROJECT_ROOT/scripts/check-vendored.py"

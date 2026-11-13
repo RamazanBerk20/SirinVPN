@@ -1,0 +1,469 @@
+{
+  "common": {
+    "backupFileType": "Sauvegarde VPS SirinVPN",
+    "backupPassword": "Mot de passe de la sauvegarde",
+    "checking": "Vérification du VPS…",
+    "chooseFile": "Choisir un fichier",
+    "disconnectFirst": "Déconnectez cet appareil pour continuer.",
+    "keepOpen": "Gardez l’application ouverte jusqu’à la fin.",
+    "noFile": "Aucun fichier choisi",
+    "softwareDetails": "Détails du logiciel",
+    "softwareHash": "SHA-256 du logiciel",
+    "error": {
+      "picker": "Impossible d’ouvrir le sélecteur de fichiers. Réessayez.",
+      "unreachable": "Impossible de joindre le VPS en SSH. Vérifiez la connexion, puis réessayez."
+    },
+    "previousStep": "Étape précédente",
+    "passwordsMatch": "Les mots de passe correspondent.",
+    "step": {
+      "identity": "Confirmer l’identité du VPS",
+      "refresh": "Actualiser l’état de ce serveur"
+    }
+  },
+  "update": {
+    "title": "Mettre à jour {{name}}",
+    "description": {
+      "login": "Connectez-vous en SSH pour vérifier la version de ce serveur.",
+      "configured": "Recherchez une version signée et examinez-la avant l’installation.",
+      "setup": "Les mises à jour ne sont pas encore configurées pour ce serveur."
+    },
+    "busy": {
+      "reading": "Lecture de la version du serveur…",
+      "verifyingKey": "Vérification de la clé SSH…",
+      "verifying": "Vérification de la version…",
+      "installing": "Installation de la mise à jour…",
+      "installingSetup": "Installation et finalisation de la configuration…",
+      "recovering": "Récupération de la mise à jour…",
+      "rollingBack": "Restauration de la version précédente…",
+      "saving": "Enregistrement de la planification…",
+      "finishing": "Finalisation de la configuration…"
+    },
+    "action": {
+      "check": "Rechercher des mises à jour",
+      "verify": "Vérifier la version",
+      "install": "Installer {{version}}",
+      "installAndFinish": "Installer et finaliser la configuration",
+      "finishSetup": "Finaliser la configuration",
+      "changeLogin": "Modifier la connexion SSH",
+      "repair": "Réparer le VPS…"
+    },
+    "steps": {
+      "label": "Étapes de configuration",
+      "source": "Choisir la source",
+      "verify": "Vérifier la version",
+      "finish": "Finaliser la configuration"
+    },
+    "statusUnknown": "Impossible de lire la version installée. La configuration peut quand même installer un logiciel de serveur vérifié.",
+    "versions": {
+      "installed": "Version installée",
+      "available": "Version disponible",
+      "notChecked": "Pas encore vérifiée"
+    },
+    "warning": {
+      "mismatch": "Le logiciel de serveur installé ne correspond pas à son enregistrement signé. Réparez le serveur avant la mise à jour.",
+      "automaticFailed": "La dernière mise à jour de sécurité automatique a échoué. Vérifiez la source de la version, puis recherchez des mises à jour."
+    },
+    "recovery": {
+      "needed": "Une mise à jour interrompue doit d’abord être récupérée.",
+      "action": "Récupérer la mise à jour"
+    },
+    "source": {
+      "label": "Source des versions",
+      "placeholder": "URL du dossier HTTPS",
+      "help": "Le dossier HTTPS où vos versions sont publiées, communiqué par la personne qui a installé ce serveur",
+      "change": "Changer la source",
+      "invalid": "Utilisez une adresse HTTPS sans nom d’utilisateur, ni ? ni #."
+    },
+    "channel": {
+      "label": "Canal des versions",
+      "stable": "Stable",
+      "preview": "Préversion",
+      "previewHint": "Versions précoces, potentiellement moins stables. Utilisez-les seulement pour essayer de nouvelles fonctions."
+    },
+    "review": {
+      "label": "Version vérifiée",
+      "title": "Version {{version}}",
+      "alreadyInstalled": "Cette version est déjà installée.",
+      "baseline": "Installe cette version et conserve l’identité et l’accès du serveur. Les services redémarrent brièvement.",
+      "register": "Correspond au logiciel installé. Finalisez la configuration pour l’enregistrer pour les mises à jour.",
+      "upgrade": "Les services redémarrent brièvement. Si le contrôle de santé échoue, la version précédente est restaurée.",
+      "verification": "Vérification",
+      "verified": "Signature et empreinte vérifiées",
+      "compatibility": "Compatibilité",
+      "compatible": "Compatible",
+      "incompatible": "Ne peut pas être installée dans l’état actuel du serveur",
+      "type": "Type de version",
+      "security": "Mise à jour de sécurité. À installer rapidement.",
+      "standard": "Version standard"
+    },
+    "schedule": {
+      "toggle": "Installer automatiquement les mises à jour de sécurité",
+      "help": "Vérifié chaque jour depuis la source de version ci-dessus. Les contrôles de signature et de retour arrière s’appliquent toujours.",
+      "enabled": "Mises à jour de sécurité automatiques activées.",
+      "disabled": "Mises à jour de sécurité automatiques désactivées.",
+      "otherSource": "Les mises à jour automatiques vérifient toujours {{source}}.",
+      "useSource": "Utiliser la source ci-dessus"
+    },
+    "rollback": {
+      "title": "Version précédente",
+      "kept": "La version {{version}} est conservée pour pouvoir revenir en arrière si celle-ci pose problème.",
+      "action": "Revenir à {{version}}…",
+      "confirmTitle": "Revenir à la version {{version}} ?",
+      "confirmMessage": "Les services redémarrent et les appareils se reconnectent brièvement. Cela ne fonctionne que si cette version est toujours approuvée et compatible.",
+      "confirm": "Revenir en arrière"
+    },
+    "privacy": {
+      "summary": "Confidentialité et vérification",
+      "identifiers": "Les requêtes ne contiennent aucun identifiant d’appareil, de serveur ou d’utilisateur.",
+      "signing": "Seules les versions signées par les clés intégrées à SirinVPN sont acceptées, quelle que soit la source."
+    },
+    "disconnectFirst": "Déconnectez cet appareil pour installer, récupérer ou revenir en arrière.",
+    "done": {
+      "installed": "La version {{version}} est installée.",
+      "setUp": "Les mises à jour sont configurées. La version {{version}} est installée.",
+      "recovered": "La mise à jour interrompue a été récupérée.",
+      "rolledBack": "La version {{version}} est restaurée."
+    },
+    "error": {
+      "notVerified": "Vérifiez d’abord la clé SSH du serveur.",
+      "cancelled": "L’opération a été annulée.",
+      "status": "Impossible de lire l’état des mises à jour du serveur.",
+      "check": "Impossible de vérifier cette version. Vérifiez la source et le canal.",
+      "notConfirmed": "Le serveur n’a pas confirmé la nouvelle version. Vérifiez son état avant de réessayer.",
+      "stopped": "L’opération s’est arrêtée. Vérifiez l’état du serveur avant de réessayer.",
+      "scheduleNotConfirmed": "Le serveur n’a pas confirmé la nouvelle planification. Vérifiez ses paramètres avant de réessayer.",
+      "schedule": "Impossible d’enregistrer les mises à jour automatiques."
+    },
+    "blocked": {
+      "mismatch": "Réparez le VPS avant de rechercher ou d’installer des mises à jour.",
+      "recovery": "Récupérez d’abord la mise à jour interrompue.",
+      "source": "Saisissez une source de version pour la vérifier."
+    }
+  },
+  "backup": {
+    "title": "Sauvegarder {{name}}",
+    "titleDone": "Sauvegarde terminée",
+    "description": "Enregistrez l’identité et les paramètres du serveur pour le restaurer ou le déplacer plus tard.",
+    "warning": "<strong>Quiconque possède ce fichier et son mot de passe peut cloner le serveur.</strong> Conservez-les séparément.",
+    "saveDialogTitle": "Enregistrer la sauvegarde du VPS",
+    "destination": "Enregistrer dans",
+    "destinationHint": "Les fichiers existants ne sont jamais écrasés.",
+    "passwordHint": "Utilisez au moins 12 caractères.",
+    "repeatPassword": "Répéter le mot de passe",
+    "create": "Créer la sauvegarde",
+    "progress": "Sauvegarde du VPS en cours…",
+    "done": "Sauvegarde chiffrée enregistrée",
+    "doneNote": "Conservez le fichier et son mot de passe séparément.",
+    "error": "Impossible de créer la sauvegarde.",
+    "missing": {
+      "file": "Choisissez où enregistrer la sauvegarde.",
+      "password": "Saisissez un mot de passe de sauvegarde d’au moins 12 caractères.",
+      "repeat": "Répétez le même mot de passe."
+    },
+    "step": "Connectez-vous et exportez la sauvegarde chiffrée"
+  },
+  "schedule": {
+    "action": "Sauvegardes planifiées",
+    "title": "Sauvegardes planifiées du VPS",
+    "description": "Une sauvegarde chiffrée est enregistrée selon un calendrier. Les plus récentes restent dans un dossier que vous choisissez.",
+    "folder": "Dossier de sauvegarde",
+    "folderHint": "Les sauvegardes plus anciennes au-delà de la limite sont supprimées de ce dossier.",
+    "chooseFolder": "Choisir le dossier",
+    "folderDialogTitle": "Choisir un dossier pour les sauvegardes du VPS",
+    "frequency": "Fréquence",
+    "daily": "Quotidienne",
+    "weekly": "Hebdomadaire",
+    "monthly": "Tous les 30 jours",
+    "keep": "Sauvegardes à conserver",
+    "keepHint": "Entre 1 et 30",
+    "passwordHint": "Utilisez au moins 12 caractères. Il est enregistré dans le stockage sécurisé de cet appareil.",
+    "passwordKeepHint": "Laissez vide pour conserver le mot de passe enregistré",
+    "loginMissing": "Les sauvegardes utilisent la connexion SSH enregistrée de ce VPS. Sauvegardez le VPS une fois avec Mémoriser la connexion activé.",
+    "disconnected": "Les sauvegardes s’exécutent pendant que SirinVPN est ouvert et que cet appareil est déconnecté.",
+    "save": "Enregistrer la planification",
+    "runNow": "Sauvegarder maintenant",
+    "running": "Sauvegarde en cours…",
+    "turnOff": "Désactiver",
+    "lastBackup": "Dernière sauvegarde : {{age}}",
+    "noBackup": "Pas encore de sauvegarde",
+    "failed": "La dernière tentative ne s’est pas terminée : {{message}}",
+    "stale": "Les sauvegardes sont en retard. Déconnectez cet appareil pendant que SirinVPN est ouvert, ou choisissez Sauvegarder maintenant.",
+    "summary": {
+      "off": "Désactivées",
+      "pending": "Activées · première sauvegarde en attente",
+      "ok": "Dernière sauvegarde {{age}}",
+      "stale": "Dernière sauvegarde {{age}} · en retard",
+      "failed": "La dernière tentative ne s’est pas terminée"
+    },
+    "notice": {
+      "failed": "La dernière sauvegarde planifiée du VPS ne s’est pas terminée.",
+      "stale": "Dernière sauvegarde du VPS : {{age}}.",
+      "none": "Pas encore de sauvegarde planifiée du VPS.",
+      "review": "Vérifier"
+    },
+    "error": {
+      "save": "Impossible d’enregistrer la planification.",
+      "run": "Impossible de lancer la sauvegarde.",
+      "off": "Impossible de désactiver les sauvegardes planifiées."
+    },
+    "saving": "Enregistrement…",
+    "turningOff": "Désactivation…",
+    "saved": "Sauvegardes planifiées enregistrées.",
+    "backedUp": "Sauvegarde du VPS enregistrée.",
+    "turnedOff": "Sauvegardes planifiées désactivées.",
+    "missing": {
+      "folder": "Choisissez un dossier de sauvegarde."
+    }
+  },
+  "restore": {
+    "title": "Restaurer {{name}}",
+    "titleDone": "Restauration terminée",
+    "description": "Restaurez l’identité de ce serveur sur le même VPS ou sur un nouveau.",
+    "warning": "<strong>Une ancienne sauvegarde peut rétablir un accès que vous avez révoqué depuis.</strong> Vérifiez ensuite les personnes et les appareils.",
+    "openDialogTitle": "Ouvrir la sauvegarde du VPS",
+    "file": "Fichier de sauvegarde",
+    "host": "Adresse du VPS",
+    "hostHint": "Conservez l’adresse actuelle pour récupérer, ou saisissez-en une nouvelle pour déplacer le serveur.",
+    "replace": "Remplacer une installation SirinVPN existante",
+    "replaceHint": "À utiliser si SirinVPN est déjà présent sur ce VPS. Les autres services ne sont pas touchés.",
+    "action": "Restaurer le VPS",
+    "progress": "Restauration et vérification du serveur…",
+    "done": "Identité du serveur restaurée",
+    "doneNote": "Cet appareil utilise maintenant {{host}}. Si l’adresse a changé, déplacez vos autres appareils avant d’arrêter l’ancien VPS.",
+    "reviewAccess": "Vérifier les accès",
+    "moveDevices": "Déplacer les appareils",
+    "error": "La restauration s’est arrêtée. Le VPS revient à son état précédent et cet appareil n’est pas modifié.",
+    "review": "Vérifier la restauration",
+    "reviewTitle": "Restaurer cette sauvegarde ?",
+    "missing": {
+      "file": "Choisissez un fichier de sauvegarde.",
+      "password": "Saisissez le mot de passe de la sauvegarde (au moins 12 caractères).",
+      "host": "Saisissez l’adresse du VPS sous forme de nom d’hôte ou d’adresse IP."
+    },
+    "consequence": {
+      "replace": "L’installation SirinVPN de ce VPS est remplacée par celle de la sauvegarde.",
+      "install": "SirinVPN est installé sur ce VPS à partir de la sauvegarde.",
+      "access": "Les personnes et appareils que vous avez supprimés après la création de cette sauvegarde retrouvent l’accès.",
+      "device": "Cet appareil passe à {{host}}. Les services redémarrent brièvement."
+    },
+    "step": "Connectez-vous, restaurez et vérifiez le VPS"
+  },
+  "repair": {
+    "title": "Réparer {{name}}",
+    "titleDns": "Configurer le DNS de {{name}}",
+    "titleDone": "Réparation terminée",
+    "titleDoneDns": "Paramètres DNS appliqués",
+    "description": {
+      "repair": "Réinstalle le logiciel du serveur sans modifier les identités ni les accès.",
+      "dns": "Ce que vous ne modifiez pas reste en l’état.",
+      "running": "Le VPN est brièvement indisponible."
+    },
+    "note": "Le VPN est brièvement indisponible pendant le redémarrage du serveur.",
+    "securityUpdates": "Activer les mises à jour de sécurité automatiques",
+    "securityUpdatesNote": "Le VPS installe alors chaque jour les correctifs de sécurité de son système d’exploitation. Si l’option reste désactivée, la réparation ne les active que là où ils n’ont jamais été installés.",
+    "action": {
+      "repair": "Réparer le VPS",
+      "review": "Vérifier les modifications",
+      "apply": "Appliquer les modifications",
+      "home": "Retour à Accueil"
+    },
+    "reviewTarget": "{{name}} · SSH {{address}}",
+    "progress": "Mise à jour et vérification du serveur…",
+    "error": {
+      "repair": "La réparation s’est arrêtée. Les identités sont inchangées et les modifications partielles sont annulées automatiquement.",
+      "dns": "Les modifications DNS se sont arrêtées. Les modifications partielles sont annulées automatiquement."
+    },
+    "options": "Modifier les paramètres du serveur (facultatif)",
+    "optionsNote": "Les adresses, ports, DNS et NAT64 restent identiques sauf si vous les modifiez ici.",
+    "signIn": "Se connecter au VPS",
+    "progressDns": "Application des paramètres DNS et vérification du serveur…",
+    "blocked": {
+      "dns": "Corrigez le résolveur DNS ci-dessus.",
+      "split": "Corrigez les zones DNS fractionnées ci-dessus.",
+      "records": "Corrigez les enregistrements DNS privés ci-dessus.",
+      "nat64": "Corrigez le préfixe NAT64 ci-dessus."
+    },
+    "step": "Connectez-vous, mettez à jour et vérifiez le VPS",
+    "stepDns": "Connectez-vous et appliquez les paramètres DNS"
+  },
+  "summary": {
+    "title": "{{name}} est prêt à se reconnecter",
+    "completed": "Terminé",
+    "software": "Logiciel du serveur",
+    "softwareValue": "Installé et vérifié",
+    "services": "Services VPN",
+    "servicesValue": "Redémarrés et contrôlés",
+    "dns": "DNS privé",
+    "dnsValue": "Vérifié · {{policy}}",
+    "records": "Enregistrements privés",
+    "recordsNone": "Aucun",
+    "recordsValue": "{count, plural, one {# enregistrement vérifié} many {# enregistrements vérifiés} other {# enregistrements vérifiés}}",
+    "preserved": "Conservé",
+    "identities": "Identités du serveur et des appareils, et accès",
+    "dnsPolicy": "Paramètres DNS privés",
+    "dnsRecords": "Enregistrements DNS privés",
+    "fingerprint": "Empreinte d’identité du serveur",
+    "fingerprintSaved": "Épinglée dans le profil de serveur de cet appareil",
+    "network": "Exigences réseau",
+    "networkNote": "L’accès au pare-feu n’a pas été vérifié. Vérifiez ces points si la connexion échoue.",
+    "next": "Connectez-vous depuis Accueil pour tester la connexion de cet appareil."
+  },
+  "remove": {
+    "title": "Supprimer {{name}}",
+    "description": {
+      "owner": "Supprimez-le de cet appareil, ou désinstallez SirinVPN du VPS.",
+      "member": "Seul le Propriétaire peut désinstaller SirinVPN du VPS.",
+      "running": "Suppression de SirinVPN du VPS."
+    },
+    "local": {
+      "title": "Supprimer de cet appareil",
+      "summary": "Supprime sa clé ici ; le serveur reste installé",
+      "confirmTitle": "Supprimer {{name}} de cet appareil ?",
+      "confirmOwner": "La clé Propriétaire de cet appareil est supprimée. Le serveur reste installé et rattaché.",
+      "confirmMember": "La clé de cet appareil est supprimée. Le serveur n’est pas modifié.",
+      "error": "Impossible de supprimer le serveur de cet appareil.",
+      "done": "{{name}} a été supprimé de cet appareil.",
+      "removing": "Suppression…"
+    },
+    "uninstall": {
+      "title": "Désinstaller du VPS",
+      "summary": "Supprime SirinVPN du VPS, puis de cet appareil",
+      "review": "Vérifier la désinstallation",
+      "action": "Désinstaller SirinVPN",
+      "confirmTitle": "Désinstaller SirinVPN de {{host}} ?",
+      "confirmMessage": "Tous les appareils et codes d’adhésion de ce serveur cessent de fonctionner. Docker et les autres services du VPS sont conservés.",
+      "confirm": "Désinstaller",
+      "progress": "Désinstallation de SirinVPN…",
+      "error": "La désinstallation ne s’est pas terminée. Le VPS annule les modifications partielles et cet appareil conserve le serveur.",
+      "done": "SirinVPN a été désinstallé de {{host}}.",
+      "step": "Connectez-vous et supprimez SirinVPN du VPS",
+      "stepLocal": "Supprimer le serveur de cet appareil"
+    }
+  },
+  "endpoint": {
+    "titleShare": "Passer à une nouvelle adresse",
+    "titleApply": "Appliquer la mise à jour d’adresse",
+    "description": "Les mises à jour signées déplacent les appareils vers la nouvelle adresse et les nouveaux paramètres du serveur.",
+    "tab": {
+      "label": "Tâche de mise à jour d’adresse",
+      "share": "Partager la nouvelle adresse",
+      "apply": "Utiliser la nouvelle adresse"
+    },
+    "pending": "Les appareils qui utilisent encore {{host}} ont besoin de cette mise à jour avant que vous ne mettiez ce VPS hors service.",
+    "create": {
+      "title": "Créer la mise à jour d’adresse",
+      "action": "Créer la mise à jour"
+    },
+    "retrieve": {
+      "title": "Obtenir la dernière mise à jour",
+      "action": "Obtenir la mise à jour"
+    },
+    "intro": "Le nouveau VPS signe la mise à jour. Publiez-la ensuite sur l’ancien VPS pour vos appareils.",
+    "connectFirst": "Connectez-vous d’abord au nouveau VPS.",
+    "number": "Mise à jour {{number}}",
+    "code": "Code de mise à jour",
+    "codeHint": "Ne contient aucune clé d’accès ; sa signature empêche toute altération",
+    "copy": "Copier le code",
+    "publish": "Publier sur l’ancien VPS",
+    "published": "Publiée sur l’ancien VPS",
+    "publishNote": "Les appareils qui se connectent encore à l’ancien VPS reçoivent la mise à jour à cet endroit.",
+    "applied": "Adresse mise à jour",
+    "appliedNote": "Vérifiez que la connexion fonctionne à la nouvelle adresse.",
+    "applyIntro": "Collez le code fourni par le Propriétaire du serveur, ou récupérez-le depuis le serveur.",
+    "getFromServer": "Récupérer depuis le serveur",
+    "verify": "Vérifier et basculer",
+    "identityNote": "La nouvelle adresse doit toujours prouver la même identité de serveur.",
+    "error": {
+      "create": "Impossible de créer la mise à jour. Gardez l’ancien VPS en marche et réessayez pendant que vous êtes connecté.",
+      "retrieve": "Impossible d’obtenir une mise à jour d’adresse depuis ce serveur.",
+      "publish": "Impossible de publier sur l’ancien VPS. Il n’a pas changé : vous pouvez réessayer.",
+      "apply": "Impossible d’appliquer la mise à jour. Vérifiez votre connexion."
+    },
+    "showCode": "Afficher le code de mise à jour",
+    "to": "passe à",
+    "working": "Récupération de la mise à jour…",
+    "publishing": "Publication…",
+    "applying": "Vérification…",
+    "pasteFirst": "Collez un code pour le vérifier.",
+    "none": "Ce serveur n’a aucune mise à jour d’adresse en attente."
+  },
+  "alerts": {
+    "title": "Alertes du VPS",
+    "summary": "Recevez une notification lorsque ce VPS a besoin d’attention, et laissez un moniteur externe signaler son silence. Désactivé tant que vous n’ajoutez pas d’adresse. Les notifications ne contiennent qu’un texte fixe : aucun nom, adresse ni trafic.",
+    "unsupported": "Réparez ce serveur avec l’application actuelle pour utiliser les alertes du VPS.",
+    "format": "Format des alertes",
+    "formats": {
+      "ntfy": {
+        "label": "Sujet ntfy",
+        "hint": "Texte brut avec un titre, pour un serveur ntfy de votre choix"
+      },
+      "webhook": {
+        "label": "Webhook",
+        "hint": "Un petit objet JSON avec un titre, un message et un texte"
+      }
+    },
+    "alertUrl": "Adresse d’alerte",
+    "alertUrlHint": "Facultatif. L’adresse HTTPS complète de votre sujet ou de votre webhook. Le VPS vérifie toutes les cinq minutes et envoie lorsqu’un problème apparaît ou disparaît.",
+    "heartbeatUrl": "Adresse de signal de vie",
+    "heartbeatHint": "Facultatif. Le VPS la sollicite toutes les cinq minutes. Indiquez un moniteur de signaux manqués pour savoir quand le VPS est arrêté ou hors ligne.",
+    "invalid": "Utilisez une adresse HTTPS complète sans nom d’utilisateur.",
+    "allowPrivate": "Autoriser les adresses privées, de boucle locale et VPN",
+    "save": "Enregistrer les alertes",
+    "saved": "Enregistré. Le VPS l’utilise lors de sa prochaine vérification.",
+    "test": "Envoyer une alerte de test",
+    "testSent": "Le VPS a livré une alerte de test.",
+    "loadFailed": "Impossible de charger les paramètres d’alerte.",
+    "saveFailed": "Impossible d’enregistrer les paramètres d’alerte.",
+    "testFailed": "Impossible d’envoyer l’alerte de test.",
+    "status": {
+      "notChecked": "Le VPS n’a pas encore vérifié. Il vérifie toutes les cinq minutes.",
+      "checked": "Dernière vérification du VPS : {{time}}.",
+      "alertFailed": "La dernière alerte n’a pas été livrée. {{reason}} Le VPS réessaie lors de sa prochaine vérification.",
+      "heartbeat": "Dernier signal de vie : {{time}}.",
+      "heartbeatFailed": "Le dernier signal de vie a échoué. {{reason}}"
+    },
+    "failure": {
+      "address": "L’adresse n’a pas pu être résolue, ou elle correspond à une adresse privée non autorisée.",
+      "connection": "Le VPS n’a pas pu joindre l’adresse en HTTPS.",
+      "rejected": "L’adresse a refusé la requête.",
+      "rejectedStatus": "L’adresse a répondu avec le statut HTTP {{status}}.",
+      "rejectedClient": "L’adresse a répondu avec le statut HTTP {{status}}. Vérifiez l’adresse et tout jeton d’accès qu’elle exige."
+    }
+  },
+  "rotation": {
+    "confirmFirst": "Cochez la case ci-dessus pour continuer.",
+    "fingerprint": "Empreinte de la nouvelle identité de l’appareil",
+    "unchanged": "Rien n’a changé. Vos clés actuelles fonctionnent toujours.",
+    "interrupted": "La rotation a été interrompue. Reprenez-la pour la terminer ; jusque-là, cet appareil ne peut pas se connecter."
+  },
+  "deviceBackup": {
+    "confirmFirst": "Cochez la case ci-dessus pour confirmer."
+  },
+  "change": {
+    "blocked": "Cette modification ne peut pas encore démarrer :",
+    "rolledBack": "Le serveur a annulé la modification, donc rien n’a changé. Vous pouvez réessayer.",
+    "unknown": {
+      "message": "La modification sur {{host}} a peut-être été appliquée, mais sa confirmation a été perdue. Cet appareil a conservé ses clés.",
+      "checkAgain": "Vérifier à nouveau",
+      "checking": "Vérification…",
+      "checkFailed": "Impossible de vérifier le serveur. Réessayez lorsqu’il sera joignable.",
+      "committed": "La modification sur {{host}} a été appliquée.",
+      "forget": "Oublier cette modification…",
+      "forgetTitle": "Oublier la modification sur {{host}} ?",
+      "forgetMessage": "Cet appareil cesse de suivre la modification sans interroger le serveur. Le serveur peut l’avoir appliquée ou annulée. La clé Propriétaire enregistrée est conservée. Vous devrez peut-être réparer le serveur ensuite.",
+      "forgetConfirm": "Oublier la modification",
+      "forgetting": "Suppression du suivi…",
+      "forgetFailed": "Impossible d’oublier la modification. Réessayez.",
+      "forgotten": "Cet appareil ne suit plus la modification sur {{host}}. Si le serveur ne fonctionne pas comme prévu, réparez-le."
+    },
+    "plan": {
+      "show": "Afficher ce qui sera fait",
+      "loading": "Préparation du plan…",
+      "error": "Impossible de préparer le plan.",
+      "commands": "Commandes",
+      "asRoot": "(en root)",
+      "upload": "Envoyer {{path}} (mode {{mode}})",
+      "files": "Fichiers modifiés"
+    }
+  }
+}

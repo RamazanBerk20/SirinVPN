@@ -15,10 +15,10 @@ import {
 describe("desktop formatting", () => {
   it("formats live byte counters without fake precision", () => {
     expect(formatBytes(0)).toBe("0 B");
-    expect(formatBytes(1536)).toBe("1.5 KB");
-    expect(formatBytes(12 * 1024 * 1024)).toBe("12 MB");
+    expect(formatBytes(1500)).toBe("1.5 kB");
+    expect(formatBytes(12_000_000)).toBe("12 MB");
     expect(formatBytes(0.3)).toBe("0 B");
-    expect(formatBytes(1024 * 1024 - 1)).toBe("1.0 MB");
+    expect(formatBytes(999_999)).toBe("1.0 MB");
   });
 
   it("rejects command-shaped hosts", () => {
@@ -43,11 +43,11 @@ describe("desktop formatting", () => {
   });
 
   it("formats ephemeral server samples without inventing missing values", () => {
-    expect(formatRate(1536)).toBe("1.5 KB/s");
+    expect(formatRate(1500)).toBe("1.5 kB/s");
     expect(formatRate(undefined)).toBe("Unavailable");
     expect(formatCpuUsage(3750)).toBe("37.5%");
     expect(formatCpuUsage(undefined)).toBe("Unavailable");
-    expect(formatMemoryUsage(512 * 1024 * 1024, 2 * 1024 * 1024 * 1024)).toBe("25% · 512 MB");
+    expect(formatMemoryUsage(512_000_000, 2_048_000_000)).toBe("25% · 512 MB");
     expect(formatMemoryUsage(undefined, undefined)).toBe("Unavailable");
     expect(formatLatency(0.4)).toBe("<1 ms");
     expect(formatLatency(18.6)).toBe("19 ms");

@@ -1,0 +1,276 @@
+{
+  "options": {
+    "title": "Verbindungsmethode",
+    "automatic": {
+      "label": "Methode automatisch wählen",
+      "summary": "Wählt eine Methode, die in deinem Netzwerk funktioniert"
+    },
+    "conditions": {
+      "legend": "Netzwerktyp",
+      "automatic": {
+        "title": "Auto",
+        "summary": "Probiert jede Methode nacheinander aus"
+      },
+      "normal": {
+        "title": "Normal",
+        "summary": "Heim- oder Mobilfunknetz"
+      },
+      "restricted": {
+        "title": "Eingeschränkt",
+        "summary": "Blockiert normalen VPN-Verkehr"
+      },
+      "extreme": {
+        "title": "Stark eingeschränkt",
+        "summary": "Wenn andere Modi scheitern"
+      },
+      "hint": "Hilft der automatischen Wahl, mit einer passenden Methode zu beginnen."
+    },
+    "methods": {
+      "legend": "Methode wählen",
+      "unavailable": "Braucht einen neueren Server",
+      "summary": {
+        "direct_udp": "Standard-WireGuard",
+        "obfuscated_udp": "Getarntes UDP für Netzwerke, die WireGuard blockieren",
+        "tls_like": "Nutzt TLS 1.3, wie Webverkehr",
+        "tcp_fallback": "Letzte Möglichkeit, wenn UDP blockiert ist",
+        "quic": "Sieht aus wie HTTP/3-Webverkehr über UDP"
+      },
+      "unsupported": {
+        "owner": "{count, plural, one {{{methods}} braucht eine neuere Version der Serversoftware. Aktualisiere den VPS, um sie zu nutzen.} other {{{methods}} brauchen eine neuere Version der Serversoftware. Aktualisiere den VPS, um sie zu nutzen.}}",
+        "member": "{count, plural, one {{{methods}} braucht eine neuere Version der Serversoftware. Bitte den Besitzer, den VPS zu aktualisieren.} other {{{methods}} brauchen eine neuere Version der Serversoftware. Bitte den Besitzer, den VPS zu aktualisieren.}}",
+        "update": "VPS aktualisieren"
+      }
+    },
+    "policy": {
+      "kill_switch": {
+        "label": "Kill-Switch",
+        "summary": "Blockiert das Internet, wenn das VPN abbricht, bis du die Verbindung trennst",
+        "nextConnection": "Gespeichert, aber noch nicht aktiv. Er schaltet sich beim nächsten Verbinden ein; bis dahin wird der Datenverkehr bei einem Abbruch des VPN nicht blockiert."
+      },
+      "automatic_reconnect": {
+        "label": "Automatische Wiederverbindung",
+        "summary": "Versucht es erneut, wenn die Verbindung abbricht",
+        "summaryAndroid": "Versucht es erneut, wenn die Verbindung abbricht. Gilt sofort.",
+        "info": "Ist sie aus, bleibt eine abgebrochene Verbindung unterbrochen, bis du dich erneut verbindest. Der Kill-Switch blockiert in beiden Fällen weiter.",
+        "infoAndroid": "Ist sie aus, bleibt eine abgebrochene Verbindung unterbrochen, bis du dich erneut verbindest. Beim Wechsel zwischen WLAN und mobilen Daten wird trotzdem einmal erneut verbunden.",
+        "infoLabel": "Über die automatische Wiederverbindung"
+      },
+      "connect_on_startup": {
+        "label": "Beim Systemstart verbinden",
+        "summary": "Verbindet sich, wenn dieses Gerät startet"
+      }
+    },
+    "android": {
+      "label": "Verbindungen ohne VPN blockieren",
+      "summary": "Dauerhaftes VPN und Blockierung werden in Android eingestellt. Ist die Blockierung an, bleibt das Internet nach dem Trennen blockiert.",
+      "open": "VPN-Einstellungen öffnen",
+      "on": "In Android an",
+      "off": "In Android aus",
+      "unknown": "Von Android nicht gemeldet",
+      "status": "Status: {{value}}"
+    },
+    "notes": {
+      "selectedRoutes": "Nur deine ausgewählten Routen und das System-DNS nutzen das VPN.",
+      "windowsApps": "Die App-Weiterleitung unter Windows braucht den eingeschalteten Kill-Switch und ausgeschalteten Zugriff auf das lokale Netzwerk.",
+      "launchedApps": "Gestartete Apps werden immer blockiert, wenn das VPN nicht läuft; andere Apps nutzen dein normales Netzwerk."
+    },
+    "status": {
+      "title": "Aktueller Status",
+      "method": "Verbindungsmethode",
+      "killSwitch": "Kill-Switch",
+      "routing": "Routing",
+      "blocking": "Verbindungen ohne VPN blockieren"
+    },
+    "protection": {
+      "title": "Schutz",
+      "titleAndroid": "Wiederverbindung und Blockierung",
+      "note": "Kill-Switch und automatische Wiederverbindung gelten ab deiner nächsten Verbindung."
+    }
+  },
+  "routing": {
+    "title": "Datenverkehr-Routing",
+    "legend": "Routing-Modus",
+    "modes": {
+      "full_tunnel": {
+        "label": "Voller Tunnel",
+        "summary": "Der gesamte Internetverkehr nutzt das VPN"
+      },
+      "selected_routes": {
+        "label": "Ausgewählte Routen",
+        "summary": "Nur die IP-Bereiche, die du angibst, nutzen das VPN"
+      },
+      "selected_applications": {
+        "label": "Ausgewählte Apps",
+        "summaryAndroid": "Wähle, welche Apps das VPN nutzen",
+        "summaryWindows": "Nur die Apps, die du wählst, nutzen das VPN",
+        "summaryLinux": "Nur Apps, die über SirinVPN gestartet werden, nutzen das VPN"
+      }
+    },
+    "unsupported": "App-Routing ist auf diesem Gerät nicht verfügbar. Ausgewählte Routen funktionieren weiterhin.",
+    "unsupportedWindows": "App-Routing ist nicht verfügbar, weil sein Windows-Treiber nicht läuft. Installiere SirinVPN neu oder aktualisiere es, um es wiederherzustellen.",
+    "windowsKillSwitch": "App-Routing unter Windows braucht den eingeschalteten Kill-Switch. Schalte ihn vor dem Verbinden in den Verbindungseinstellungen ein.",
+    "android": {
+      "blockNote": "Ist „Verbindungen ohne VPN blockieren“ an, haben Apps, die das VPN nicht nutzen, kein Internet.",
+      "choose": "Apps wählen",
+      "chooseError": "Die App-Liste konnte nicht geöffnet werden.",
+      "none": "Keine Apps gewählt",
+      "all": "Alle Apps nutzen das VPN",
+      "include": "{count, plural, one {# App nutzt das VPN} other {# Apps nutzen das VPN}}",
+      "exclude": "{count, plural, one {# App umgeht das VPN} other {# Apps umgehen das VPN}}"
+    },
+    "routes": {
+      "label": "IP-Bereiche (CIDR), einer pro Zeile",
+      "hint": "{max, plural, one {Bis zu # Bereich. Das System-DNS nutzt immer das VPN.} other {Bis zu # Bereiche. Das System-DNS nutzt immer das VPN.}}",
+      "empty": "Füge mindestens einen Bereich hinzu. Ohne Bereich würde kein Datenverkehr das VPN nutzen.",
+      "invalid": "{{routes}}: kein Netzwerk in CIDR-Form. Schreibe Bereiche wie 198.51.100.0/24.",
+      "hostBits": "{{route}} ist nicht der Anfang seines Netzwerks. Verwende {{network}}.",
+      "placeholder": "Zum Beispiel {{example}}"
+    },
+    "localNetwork": {
+      "label": "Lokales Netzwerk erlauben",
+      "summary": "Drucker und andere Geräte im lokalen Netzwerk außerhalb des VPN erreichen",
+      "summaryLaunched": "Erlaubt gestarteten Apps, Geräte in deinem lokalen Netzwerk zu erreichen",
+      "summaryWindows": "Schalte das aus: App-Routing unter Windows braucht ausgeschalteten Zugriff auf das lokale Netzwerk"
+    }
+  },
+  "launcher": {
+    "legend": "Eine App im VPN starten",
+    "summaryLinux": "Nur Apps, die du hier startest, nutzen das VPN. Schließe vorher alle geöffneten Kopien.",
+    "summaryWindows": "Apps, die du hier wählst, nutzen das VPN. Schließe vorher alle geöffneten Kopien.",
+    "infoLinux": "Wähle ein natives Programm. Flatpak- und Snap-Apps sowie Apps, die auf einen Hintergrunddienst angewiesen sind, funktionieren eventuell nicht.",
+    "infoWindows": "Wähle eine .exe auf einem lokalen Laufwerk und füge jede App hinzu, die das Netzwerk nutzt; Hilfsprogramme und Dienste werden nicht automatisch hinzugefügt. Ausgewählte Apps können kein IPv6 nutzen, und das System-DNS läuft über das VPN.",
+    "infoLabel": "Über das Starten von Apps",
+    "notReady": "Speichere die ausgewählten Apps und verbinde dich mit diesem Server, um Apps zu starten.",
+    "executable": "Programm",
+    "placeholderLinux": "Zum Beispiel /usr/bin/firefox",
+    "placeholderWindows": "Zum Beispiel C:\\Program Files\\App\\app.exe",
+    "browse": "Durchsuchen…",
+    "dialogTitle": "App wählen",
+    "dialogFilter": "Apps (.exe)",
+    "chooserError": "Die Dateiauswahl konnte nicht geöffnet werden. Versuche es erneut.",
+    "arguments": {
+      "summary": "Startargumente",
+      "label": "Ein Argument pro Zeile",
+      "hint": "Keine Anführungszeichen nötig, auch nicht bei Leerzeichen. Argumente werden nicht gespeichert."
+    },
+    "safetyLinux": "Gestartete Apps nutzen nie das Internet außerhalb des VPN, auch nicht, wenn der Kill-Switch aus ist. Nach dem Trennen bleiben sie geöffnet, aber offline.",
+    "safetyWindows": "Ausgewählte Apps bleiben außerhalb des VPN blockiert, wenn es abbricht oder pausiert ist. Beim Trennen werden sie freigegeben und die Auswahl wird gelöscht.",
+    "launch": "Im VPN starten",
+    "launching": "Wird gestartet…",
+    "launched": "{{name}} im VPN gestartet.",
+    "exited": "{{name}} wurde gestartet, aber sofort wieder beendet. War sie schon geöffnet, schließe sie und versuche es erneut.",
+    "launchError": "Die App konnte nicht im VPN gestartet werden.",
+    "needsProgram": "Wähle mit „Durchsuchen“ ein Programm."
+  },
+  "mtu": {
+    "title": "Paketgröße (MTU)",
+    "automatic": {
+      "label": "Automatische Paketgröße",
+      "summary": "Misst und passt die Paketgröße während der Verbindung an"
+    },
+    "manual": {
+      "label": "Manuelle MTU",
+      "hint": "{max, plural, one {{{min}}–{{max}} Byte. Verschleiertes UDP nutzt höchstens {{obfuscatedMax}}, QUIC höchstens {{quicMax}}.} other {{{min}}–{{max}} Byte. Verschleiertes UDP nutzt höchstens {{obfuscatedMax}}, QUIC höchstens {{quicMax}}.}}",
+      "invalid": "Gib eine ganze Zahl von {{min}} bis {{max}} ein.",
+      "invalidIpv6": "Bei eingeschaltetem IPv6 gib eine ganze Zahl von {{min}} bis {{max}} ein."
+    },
+    "notConnected": "Verbinde dich, um die Paketgröße zu messen.",
+    "unsupported": "Die Paketgröße kann erst gemessen werden, wenn die VPN-Komponente dieses Geräts aktualisiert ist. Prüfe sie in den allgemeinen Einstellungen unter Lokale VPN-Komponente.",
+    "unsupportedAction": "Die Paketgröße kann erst gemessen werden, wenn die VPN-Komponente dieses Geräts aktualisiert ist.",
+    "details": {
+      "current": "Aktuelle MTU",
+      "recommended": "Empfohlen",
+      "notMeasured": "Noch nicht gemessen",
+      "pending": "Ausstehende Änderung",
+      "bytes": "{value, plural, one {{{value}} Byte} other {{{value}} Byte}}",
+      "pendingValue": "{value, plural, one {{{value}} Byte · noch nicht angewendet} other {{{value}} Byte · noch nicht angewendet}}"
+    },
+    "outcome": {
+      "pending": "Warte auf die Messung der Paketgröße.",
+      "incomplete": "Messung noch nicht abgeschlossen.",
+      "verified": "{value, plural, one {Geprüft bei {{value}} Byte.} other {Geprüft bei {{value}} Byte.}}",
+      "smaller": "Eine kleinere Paketgröße wurde gemessen und wird angewendet.",
+      "manual": "Eine Empfehlung liegt vor. Deine manuelle MTU bleibt in Verwendung.",
+      "noReply": "Der Server hat auf die Messung nicht geantwortet. Die aktuelle MTU bleibt in Verwendung.",
+      "noUsable": "Große Pakete kommen in diesem Netzwerk nicht durch. Versuche {{tls}} oder {{tcp}}.",
+      "applyFailed": "{value, plural, one {Die gemessene Größe konnte nicht angewendet werden. MTU bleibt bei {{value}} Byte.} other {Die gemessene Größe konnte nicht angewendet werden. MTU bleibt bei {{value}} Byte.}}"
+    }
+  },
+  "quality": {
+    "label": "Verbindungsqualität",
+    "sample": "{{latency}} Latenz · {{jitter}} Jitter · {{loss}} Verlust",
+    "selection": {
+      "pending": "Warte auf die erste Qualitätsprüfung.",
+      "observing": "Im VPN gemessen, kein Geschwindigkeitstest.",
+      "waiting_for_idle": "Vergleicht Verbindungsmethoden, wenn kein Datenverkehr fließt.",
+      "comparing": "Verbindungsmethoden werden verglichen…",
+      "selected": "Die beste gemessene Verbindungsmethode wird verwendet.",
+      "icmp_unavailable": "Der Server hat auf die Qualitätsprüfungen nicht geantwortet, daher sind Latenz und Verlust nicht verfügbar.",
+      "protection_required": "Schalte den Kill-Switch ein, damit SirinVPN Verbindungsmethoden vergleichen kann."
+    },
+    "reason": {
+      "confirmed_failure": "Verbindungsmethode gewechselt, nachdem die vorherige fehlgeschlagen ist.",
+      "quality_improvement": "Zu einer dauerhaft besseren Verbindungsmethode gewechselt.",
+      "rollback": "Die aktuelle Verbindungsmethode beibehalten; die Alternative hat sich nicht verbunden."
+    }
+  },
+  "startup": {
+    "unknown": "Die Verbindung beim Start konnte nicht geprüft werden.",
+    "otherServer": "Gespeichert, aber gerade ist ein anderer Server verbunden. Verbinde dich mit diesem Server, um ihn beim Start zu nutzen.",
+    "serviceUnknown": "Gespeichert. Der Status des Startdienstes ist nicht verfügbar.",
+    "inactive": "Gespeichert, aber noch nicht aktiv.",
+    "activateHint": "Wähle Verbinden und aktivieren, um sie einzuschalten.",
+    "nextConnection": "Sie schaltet sich beim nächsten Verbinden mit diesem Server ein.",
+    "active": "Verbindet sich mit diesem Server, wenn dieses Gerät startet.",
+    "unconfirmed": "Der Startdienst ist an, aber noch nicht auf diesen Server eingestellt.",
+    "activate": "Verbinden und aktivieren"
+  },
+  "saveBar": {
+    "unsaved": "Ungespeicherte Änderungen",
+    "discard": "Verwerfen",
+    "save": "Einstellungen speichern",
+    "pending": "<strong>Für deine nächste Verbindung gespeichert.</strong> Aktuelle Verbindung: {{differences}}.",
+    "invalid": "Korrigiere die markierten Werte, um zu speichern."
+  },
+  "differences": {
+    "mtu": {
+      "automatic": "MTU {{value}} (automatisch)",
+      "manual": "MTU {{value}} (manuell)"
+    },
+    "method": "Verbindungsmethode: {{method}}",
+    "policy": {
+      "kill_switch": {
+        "on": "Kill-Switch: an",
+        "off": "Kill-Switch: aus"
+      },
+      "automatic_reconnect": {
+        "on": "Automatische Wiederverbindung: an",
+        "off": "Automatische Wiederverbindung: aus"
+      },
+      "connect_on_startup": {
+        "on": "Beim Start verbinden: an",
+        "off": "Beim Start verbinden: aus"
+      }
+    },
+    "routing": {
+      "full_tunnel": "Routing: voller Tunnel",
+      "selected_routes": "Routing: ausgewählte Routen",
+      "selected_applications": "Routing: ausgewählte Apps"
+    },
+    "localNetwork": {
+      "on": "Zugriff auf das lokale Netzwerk: an",
+      "off": "Zugriff auf das lokale Netzwerk: aus"
+    },
+    "routes": "Andere IP-Bereiche"
+  },
+  "preferences": {
+    "loadError": "Die Verbindungseinstellungen konnten nicht geladen werden.",
+    "loading": "Verbindungseinstellungen werden geladen…",
+    "saved": "Verbindungseinstellungen gespeichert. Sie gelten ab deiner nächsten Verbindung.",
+    "saveError": "Konnte nicht gespeichert werden. Deine vorherigen Einstellungen bleiben erhalten.",
+    "reconnectOn": "Automatische Wiederverbindung ist an.",
+    "reconnectOff": "Automatische Wiederverbindung ist aus.",
+    "reconnectError": "Die automatische Wiederverbindung konnte nicht geändert werden."
+  },
+  "nextConnection": "Gilt ab deiner nächsten Verbindung."
+}

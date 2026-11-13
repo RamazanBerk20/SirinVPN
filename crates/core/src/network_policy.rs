@@ -67,16 +67,22 @@ impl NetworkContext {
         let routes = fs::read_to_string("/proc/net/route").ok()?;
         let route = parse_default_route(&routes)?;
         let uuid = network_manager_connection_uuid(&route.interface);
-        let trustable = uuid.is_some();
         let wifi = Path::new("/sys/class/net")
             .join(&route.interface)
             .join("wireless")
             .exists();
-        let identifier = uuid
-            .map(|uuid| format!("networkmanager:v1:{uuid}"))
-            .unwrap_or_else(|| {
-                format!("default-route:v1:{}:{:08x}", route.interface, route.gateway)
-            });
+        let (identifier, trustable) = match uuid {
+            Some(uuid) => {
+                let key_management = wifi
+                    .then(|| network_manager_key_management(&uuid))
+                    .flatten();
+                network_manager_identity(&uuid, wifi, key_management.as_deref())
+            }
+            None => (
+                format!("default-route:v1:{}:{:08x}", route.interface, route.gateway),
+                false,
+            ),
+        };
         let mut context = Self::from_stable_identifier(identifier)?;
         context.wifi = wifi;
         context.trustable = wifi && trustable;
@@ -182,6 +188,58 @@ fn network_manager_connection_uuid(interface: &str) -> Option<String> {
     let uuid = String::from_utf8(output.stdout).ok()?;
     let uuid = uuid.lines().next()?.trim();
     valid_uuid(uuid).then(|| uuid.to_ascii_lowercase())
+}
+
+/// The profile's `802-11-wireless-security.key-mgmt`: empty for an open profile,
+/// `None` when it cannot be read.
+#[cfg(not(windows))]
+fn network_manager_key_management(uuid: &str) -> Option<String> {
+    let output = Command::new("nmcli")
+        .args([
+            "--wait",
+            "2",
+            "--terse",
+            "--get-values",
+            "802-11-wireless-security.key-mgmt",
+            "connection",
+            "show",
+            "uuid",
+            uuid,
+        ])
+        .env("LC_ALL", "C")
+        .stdin(Stdio::null())
+        .stderr(Stdio::null())
+        .output()
+        .ok()?;
+    if !output.status.success() || output.stdout.len() > 64 {
+        return None;
+    }
+    let value = String::from_utf8(output.stdout).ok()?;
+    Some(value.lines().next().unwrap_or_default().trim().to_owned())
+}
+
+/// Binds Wi-Fi trust to the security class as well as the profile, as Android does:
+/// NetworkManager joins any access point whose name matches an open profile, so an
+/// open network is a different identity from a secured one and is trusted only if it
+/// was open when trusted. Secured profiles keep their earlier identity, so existing
+/// trust survives; an unreadable or unknown security type is never trustable.
+#[cfg(any(not(windows), test))]
+fn network_manager_identity(
+    uuid: &str,
+    wifi: bool,
+    key_management: Option<&str>,
+) -> (String, bool) {
+    let secured = format!("networkmanager:v1:{uuid}");
+    if !wifi {
+        return (secured, false);
+    }
+    match key_management {
+        Some("" | "owe") => (format!("networkmanager:v2:open:{uuid}"), true),
+        Some("none" | "ieee8021x" | "wpa-psk" | "sae" | "wpa-eap" | "wpa-eap-suite-b-192") => {
+            (secured, true)
+        }
+        _ => (secured, false),
+    }
 }
 
 #[cfg(any(not(windows), test))]
@@ -473,6 +531,51 @@ fn current_utc_day() -> u64 {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn linux_wifi_trust_follows_the_security_type_as_well_as_the_profile() {
+        let directory = tempfile::tempdir().unwrap();
+        let store = NetworkPolicyStore::new(directory.path().join("network.json"));
+        let uuid = "12345678-1234-1234-1234-123456789abc";
+        let context = |key_management: Option<&str>| {
+            let (identifier, trustable) = network_manager_identity(uuid, true, key_management);
+            let mut context = NetworkContext::from_stable_identifier(identifier).unwrap();
+            context.wifi = true;
+            context.trustable = trustable;
+            context
+        };
+        let secured = context(Some("wpa-psk"));
+        store.trust_wifi(&secured, "Cafe".into()).unwrap();
+        // The same profile, now open (or an evil twin it auto-joins), is not trusted.
+        for other in [context(Some("")), context(Some("owe"))] {
+            assert_eq!(
+                store.wifi_snapshot(Some(&other)).unwrap().current_network,
+                WifiNetworkStatus::UntrustedWifi
+            );
+        }
+        // An unreadable or unknown security type cannot be trusted or match.
+        for unknown in [context(None), context(Some("future-mode"))] {
+            assert!(!unknown.can_trust());
+            assert!(store.trust_wifi(&unknown, "x".into()).is_err());
+            assert_eq!(
+                store.wifi_snapshot(Some(&unknown)).unwrap().current_network,
+                WifiNetworkStatus::UntrustedWifi
+            );
+        }
+        // An open network trusted while open stays trusted while it stays open.
+        let open = context(Some(""));
+        store.trust_wifi(&open, "Library".into()).unwrap();
+        assert_eq!(
+            store.wifi_snapshot(Some(&open)).unwrap().current_network,
+            WifiNetworkStatus::TrustedWifi
+        );
+        // Secured profiles keep the identifier earlier versions saved trust under.
+        assert_eq!(
+            network_manager_identity(uuid, true, Some("sae")).0,
+            format!("networkmanager:v1:{uuid}")
+        );
+        assert!(!network_manager_identity(uuid, false, Some("wpa-psk")).1);
+    }
 
     #[test]
     fn default_route_parser_chooses_the_lowest_metric_physical_route() {

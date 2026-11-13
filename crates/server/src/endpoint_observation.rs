@@ -90,10 +90,10 @@ fn observed_update(
     current: &AuthorizationDocument,
     addresses: &[IpAddr],
 ) -> Result<Option<AuthorizationDocument>> {
-    if current.endpoint_transition_source {
+    if current.endpoint.is_handoff_source() {
         return Ok(None);
     }
-    let Some(head) = &current.endpoint_transition else {
+    let Some(head) = current.endpoint.head() else {
         return Ok(None);
     };
     let Ok(endpoint) = head.claims.endpoint.host.parse::<IpAddr>() else {
@@ -104,17 +104,17 @@ fn observed_update(
     }
     let mut next = current.clone();
     if addresses.contains(&endpoint) {
-        if current.endpoint_observed_address == Some(endpoint) {
+        if current.endpoint.observed() == Some(endpoint) {
             return Ok(None);
         }
-        next.endpoint_observed_address = Some(endpoint);
+        next.endpoint.observe(endpoint);
         next.schema_version = next.required_schema_version();
         next.validate()?;
         return Ok(Some(next));
     }
     // Never infer a NAT gateway's public mapping from the VPS's private address,
     // nor replace a manually configured endpoint that was never assigned here.
-    if current.endpoint_observed_address != Some(endpoint) {
+    if current.endpoint.observed() != Some(endpoint) {
         return Ok(None);
     }
     let candidates = addresses
@@ -134,9 +134,10 @@ fn observed_update(
         return Ok(None);
     };
     next.prune_expired(unix_time());
-    if !next.enrollment_receipts.is_empty()
-        || !next.key_rotations.is_empty()
-        || next.recovery_receipt.is_some()
+    // Invitations and an armed recovery key embed the current endpoint, as in
+    // `ensure_transition_quiescent`; keep observing until they are gone.
+    if endpoint_transition::ensure_transition_quiescent(&next).is_err()
+        || next.owner_recovery.key().is_some()
     {
         return Ok(None);
     }
@@ -157,7 +158,7 @@ fn observed_update(
     )?;
     let signature = sign_endpoint_transition(&paths.tls_private_key, &claims)?;
     next.accept_endpoint_transition(EndpointTransitionResponse { claims, signature })?;
-    next.endpoint_observed_address = Some(*replacement);
+    next.endpoint.observe(*replacement);
     next.validate()?;
     Ok(Some(next))
 }
@@ -228,14 +229,108 @@ mod tests {
             updated.endpoint_generation(),
             original.endpoint_generation() + 1
         );
-        assert_eq!(updated.endpoint_observed_address, Some(new));
-        let head = updated.endpoint_transition.unwrap();
+        assert_eq!(updated.endpoint.observed(), Some(new));
+        let head = updated.endpoint.head().cloned().unwrap();
         assert_eq!(head.claims.previous_endpoint.host, old.to_string());
         assert_eq!(head.claims.endpoint.host, new.to_string());
         sirinvpn_core::DecodedEndpointTransition::from_response(head).unwrap();
         assert_eq!(
             original.endpoint_authorization_fingerprint().unwrap(),
             observed.endpoint_authorization_fingerprint().unwrap()
+        );
+    }
+
+    #[test]
+    fn an_outstanding_invitation_holds_back_the_automatic_endpoint_follow_up() {
+        let directory = tempfile::tempdir().unwrap();
+        let paths = ServerPaths::under(directory.path());
+        let owner = sirinvpn_core::LocalIdentity::generate("Observation owner").unwrap();
+        initialize_with_transport_capabilities(
+            &paths,
+            "Observation",
+            &owner.public.management_certificate_pem,
+            ServerId::new(),
+            &owner.public.wireguard_public_key,
+            51820,
+            ServerCapabilities {
+                public_host: Some("8.8.8.8".into()),
+                ..Default::default()
+            },
+        )
+        .unwrap();
+        let configuration = load_configuration(&paths).unwrap();
+        let original = load_authorization(&paths.authorization).unwrap();
+        let mut observed = observed_update(
+            &paths,
+            &configuration,
+            &original,
+            &["8.8.8.8".parse().unwrap()],
+        )
+        .unwrap()
+        .unwrap();
+        let bootstrap = sirinvpn_core::LocalIdentity::generate("Invitation bootstrap").unwrap();
+        let head = observed.endpoint.head().cloned().unwrap().claims;
+        observed.invitations.push(InvitationRecord {
+            issued_by: None,
+            uses_consumed: 0,
+            signature: "test signature".into(),
+            claims: InvitationClaims {
+                recipient_names: false,
+                fixed_member_name: false,
+                alternate_endpoint_hosts: Vec::new(),
+                endpoint_discovery_port: None,
+                max_uses: 1,
+                member_policy: Default::default(),
+                schema_version: 1,
+                invitation_id: InvitationId::new(),
+                server_id: observed.server_id,
+                server_name: "Observation".into(),
+                endpoint: head.endpoint.clone(),
+                endpoint_generation: head.generation,
+                server_tunnel_address: head.server_tunnel_address,
+                management_port: head.management_port,
+                server_wireguard_public_key: head.server_wireguard_public_key.clone(),
+                pinned_server_certificate_pem: head.pinned_server_certificate_pem.clone(),
+                obfuscated_udp: None,
+                tcp_fallback: None,
+                tls_like: None,
+                member_id: MemberId::new(),
+                target_member_id: None,
+                target_role: None,
+                device_id: DeviceId::new(),
+                member_name: "Guest".into(),
+                device_name: "Phone".into(),
+                role: ServerRole::Member,
+                administrator: false,
+                client_tunnel_address: observed.allocate_member_address().unwrap(),
+                bootstrap_tunnel_address: observed.allocate_bootstrap_address().unwrap(),
+                expires_at_unix: unix_time() + 3600,
+                token_hash: "00".repeat(32),
+                bootstrap_wireguard_public_key: bootstrap.public.wireguard_public_key,
+                bootstrap_management_certificate_pem: bootstrap.public.management_certificate_pem,
+            },
+        });
+        // The invitation still names 8.8.8.8, so the VPS must not sign 9.9.9.9 yet.
+        assert!(
+            observed_update(
+                &paths,
+                &configuration,
+                &observed,
+                &["9.9.9.9".parse().unwrap()]
+            )
+            .unwrap()
+            .is_none()
+        );
+        observed.invitations.clear();
+        assert!(
+            observed_update(
+                &paths,
+                &configuration,
+                &observed,
+                &["9.9.9.9".parse().unwrap()]
+            )
+            .unwrap()
+            .is_some()
         );
     }
 }

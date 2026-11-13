@@ -100,3 +100,60 @@ pub(super) async fn revoke_member_devices(
         .await
         .map_err(safe_error)
 }
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(super) struct MemberRenameInput {
+    server_id: String,
+    member_id: String,
+    name: String,
+}
+
+/// `person_has_join_codes` when the VPS refuses because the person still has device join
+/// codes, which carry their signed name: the UI can cancel those codes and retry.
+#[tauri::command]
+pub(super) async fn rename_member(
+    app: tauri::AppHandle,
+    input: MemberRenameInput,
+) -> Result<MembershipSnapshot, CommandError> {
+    let member_id = input
+        .member_id
+        .parse::<MemberId>()
+        .map_err(|_| "The member ID is invalid.")?;
+    sirinvpn_protocol::validate_server_name(&input.name)
+        .map_err(|_| "Enter a name with 1 to 64 visible characters.")?;
+    let client = crate::management_session::connected(&app, &input.server_id).await?;
+    if !client
+        .configuration()
+        .await
+        .map_err(safe_error)?
+        .person_rename_enabled
+    {
+        return Err("Update this server to rename people.".into());
+    }
+    match client.rename_member(member_id, input.name).await {
+        Err(
+            error @ ManagementError::RequestRejected {
+                code: sirinvpn_protocol::ErrorCode::ConflictDetected,
+                ..
+            },
+        ) => {
+            // A conflict has other causes too; only outstanding codes for this person mean this.
+            let has_codes = client.membership().await.is_ok_and(|snapshot| {
+                snapshot
+                    .active_invitations
+                    .iter()
+                    .any(|invitation| invitation.target_member_id == Some(member_id))
+            });
+            Err(if has_codes {
+                command_error(crate::command_error::Rejected {
+                    refused: crate::command_error::Refused::PersonHasJoinCodes,
+                    error,
+                })
+            } else {
+                command_error(error)
+            })
+        }
+        result => result.map_err(command_error),
+    }
+}

@@ -143,13 +143,59 @@ pub(crate) fn saved_login_target(host: &str, prompt: bool) -> Result<SshTarget, 
     target(login)
 }
 
-pub(crate) fn resolve_target(login: SshLoginInput) -> Result<SshTarget, String> {
+pub(crate) fn resolve_target(mut login: SshLoginInput) -> Result<SshTarget, String> {
     if login.authentication == "saved" {
         saved_target(&login.host, login.ssh_port, &login.host_key_sha256)
     } else {
+        check_key_path(&mut login)?;
         validate(&login)?;
         target(login)
     }
+}
+
+/// A key path from the WebView is read and used to sign in, so it must be one the
+/// person chose in the file chooser, a key this app generated, or this host's saved
+/// login's key (checked when it was saved). Other sign-in methods carry no path.
+fn check_key_path(login: &mut SshLoginInput) -> Result<(), String> {
+    if login.authentication != "private_key" {
+        login.private_key_path = None;
+        return Ok(());
+    }
+    let Some(path) = login.private_key_path.as_deref().filter(|path| !path.is_empty()) else {
+        return Ok(());
+    };
+    let generated = sirinvpn_core::ClientPaths::discover()
+        .map(|paths| paths.configuration_directory.join("ssh-keys"))
+        .ok();
+    let saved = || {
+        read(&login.host, false)
+            .ok()
+            .flatten()
+            .and_then(|saved| saved.private_key_path.clone())
+    };
+    if key_path_allowed(path, generated.as_deref(), saved) {
+        Ok(())
+    } else {
+        Err("Choose the SSH private key with Browse.".into())
+    }
+}
+
+fn key_path_allowed(
+    path: &str,
+    generated: Option<&std::path::Path>,
+    saved: impl FnOnce() -> Option<String>,
+) -> bool {
+    let inside_generated = || {
+        let (Some(directory), Ok(key)) = (generated, std::path::Path::new(path).canonicalize()) else {
+            return false;
+        };
+        directory
+            .canonicalize()
+            .is_ok_and(|directory| key.starts_with(directory) && key.is_file())
+    };
+    crate::picked_files::granted(crate::picked_files::Purpose::SshKey, path).is_ok()
+        || inside_generated()
+        || saved().as_deref() == Some(path)
 }
 
 #[tauri::command]
@@ -162,8 +208,9 @@ pub(crate) async fn get_ssh_login(host: String) -> Result<Option<SavedSshLogin>,
 }
 
 #[tauri::command]
-pub(crate) async fn save_ssh_login(input: SshLoginInput) -> Result<SavedSshLogin, String> {
+pub(crate) async fn save_ssh_login(mut input: SshLoginInput) -> Result<SavedSshLogin, String> {
     tauri::async_runtime::spawn_blocking(move || {
+        check_key_path(&mut input)?;
         let store = entry(&input.host, true)?;
         save_entry(input, &store, |target| {
             Provisioner::verify_ssh_login(target).map_err(|error| error.to_string())

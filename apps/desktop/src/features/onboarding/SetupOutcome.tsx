@@ -1,7 +1,8 @@
 import { ArrowLeft, ArrowClockwise, Check, Key, ShieldCheck, Warning } from "@phosphor-icons/react";
 import { CopyButton } from "../../components/CopyButton";
 import { OperationSteps } from "../../components/OperationResult";
-import { InlineError } from "../../components/ui";
+import { ServerChangeFailure } from "../../components/ServerChange";
+import { errorMessage, type AppError } from "../../lib/errors";
 import { t } from "../../i18n";
 import { isAndroid } from "../../platform";
 import type { ProvisionResult } from "../../types";
@@ -11,31 +12,26 @@ export type InstallStage = "connect" | "check" | "upload" | "configure";
 /** What a failed install left on the server: nothing, changes the installer rolled back, or not known. */
 export type ServerChange = "unchanged" | "rolledBack" | "unknown";
 
-// The installer reports "server transaction failed during <phase>: …" (crates/installer); it
-// rolls back from "server configuration" on, and earlier phases only use a temporary directory.
+// The installer's phase names (crates/installer); it rolls back from "server configuration" on,
+// and earlier phases only use a temporary directory.
 const phases: Record<string, InstallStage> = {
   connection: "connect", "host key": "connect",
   discovery: "check", "network preflight": "check", "existing installation inspection": "check", "existing authorization inspection": "check",
   staging: "upload", artifact: "upload", "artifact upload": "upload", "owner identity upload": "upload", "artifact verification": "upload", "installer upload": "upload",
   "server configuration": "configure", "owner enrollment": "configure", "operational configuration": "configure", "health verification": "configure", commit: "configure",
 };
-// Installer errors raised before anything is written to the server.
-const early: [RegExp, InstallStage][] = [
-  [/SSH host key|SSH authentication failed/i, "connect"],
-  [/server is incompatible|already installed with a different/i, "check"],
-];
-
-export function describeInstallFailure(message: string): { stage: InstallStage | null; change: ServerChange } {
-  const phase = /failed during ([a-z ]+):/.exec(message)?.[1];
-  const stage = phase ? phases[phase] : early.find(([pattern]) => pattern.test(message))?.[1];
-  if (!stage) return { stage: null, change: "unknown" };
+export function describeInstallFailure(error: AppError): { stage: InstallStage | null; change: ServerChange } {
+  // SSH and compatibility failures are raised before anything is written to the server.
+  const stage = error.code === "install_phase_failed" ? phases[error.params.phase as string]
+    : error.code === "install_ssh_failed" ? "connect" : error.code === "install_incompatible" ? "check" : undefined;
+  if (!stage) return { stage: null, change: error.code === "install_rolled_back" ? "rolledBack" : "unknown" };
   return { stage, change: stage === "configure" ? "rolledBack" : "unchanged" };
 }
 
 /** Back to the previous setup step; on Android the app bar's arrow already leaves the flow. */
 export function StepBack({ onClick, disabled }: { onClick: () => void; disabled?: boolean }) {
   return <button type="button" className="text-button flow-back" disabled={disabled} onClick={onClick}>
-    <ArrowLeft size={16} aria-hidden="true" /> {t(isAndroid ? "onboarding.setup.previousStep" : "common.action.back")}
+    <ArrowLeft className="mirror-rtl" size={16} aria-hidden="true" /> {t(isAndroid ? "onboarding.setup.previousStep" : "common.action.back")}
   </button>;
 }
 
@@ -66,8 +62,8 @@ export function InstallProgress({ host, steps }: { host: string; steps: boolean 
 }
 
 /** A failed install stays on the install step: what stopped, what it left on the server, and both ways on. */
-export function InstallFailure({ error, fingerprint, steps, canRetry, onRetry, onBack }: {
-  error: string; fingerprint: string; steps: boolean; canRetry: boolean; onRetry: () => void; onBack: () => void;
+export function InstallFailure({ error, fallback, fingerprint, steps, canRetry, onRetry, onBack }: {
+  error: AppError; fallback: string; fingerprint: string; steps: boolean; canRetry: boolean; onRetry: () => void; onBack: () => void;
 }) {
   const { stage, change } = describeInstallFailure(error);
   return <div className="install-failure">
@@ -79,7 +75,7 @@ export function InstallFailure({ error, fingerprint, steps, canRetry, onRetry, o
       <div><dt>{t("onboarding.setup.failed.server")}</dt><dd>{t(`onboarding.setup.failed.change.${change}`)}</dd></div>
       <div><dt>{t("onboarding.setup.failed.fingerprint")}</dt><dd><code>{fingerprint}</code></dd></div>
     </dl>
-    <InlineError message={error} />
+    <ServerChangeFailure reason={error} message={errorMessage(error.detail, fallback)} />
     {!canRetry && <p className="settings-note">{t("onboarding.setup.failed.signInAgain")}</p>}
     <div className="install-failure-actions">
       <button type="button" className="secondary-button" onClick={onBack}>{t("onboarding.setup.failed.back")}</button>

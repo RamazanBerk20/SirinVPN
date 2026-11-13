@@ -33,7 +33,11 @@ pub(super) async fn create_wireguard_device(
     app: tauri::AppHandle,
     input: WireGuardDeviceInput,
 ) -> Result<WireGuardDeviceResult, String> {
-    let path = input.path.filter(|path| !path.trim().is_empty()).map(PathBuf::from);
+    let chosen = input.path.filter(|path| !path.trim().is_empty());
+    let path = chosen
+        .as_deref()
+        .map(|path| crate::picked_files::granted(crate::picked_files::Purpose::WireguardExport, path))
+        .transpose()?;
     // Checked first so a taken path cannot leave a device whose key was never saved.
     if path.as_ref().is_some_and(|path| path.symlink_metadata().is_ok()) {
         return Err("That file already exists. Choose a new file name.".into());
@@ -70,6 +74,9 @@ pub(super) async fn create_wireguard_device(
             "The device was added, but its file could not be saved. Revoke it and add it again."
                 .to_owned()
         })?;
+        if let Some(chosen) = &chosen {
+            crate::picked_files::release(crate::picked_files::Purpose::WireguardExport, chosen);
+        }
     }
     Ok(WireGuardDeviceResult {
         device_id: config.device().id,

@@ -1,0 +1,110 @@
+{
+  "tray": {
+    "status": {
+      "unknown": "État inconnu",
+      "connected": "Connecté",
+      "connectedTo": "Connecté à {{name}}",
+      "paused": "Connexion suspendue",
+      "pausedOn": "Connexion suspendue · {{name}}",
+      "reconnecting": "Reconnexion…",
+      "reconnectingTo": "Reconnexion à {{name}}…",
+      "connecting": "Connexion…",
+      "connectingTo": "Connexion à {{name}}…",
+      "interrupted": "Connexion interrompue",
+      "interruptedOn": "Connexion interrompue · {{name}}",
+      "disconnected": "Déconnecté",
+      "serversUnavailable": "{{status}} · Impossible de charger les serveurs",
+      "busy": "Modification de la connexion…",
+      "legacySession": "Plus de commandes à la prochaine connexion"
+    },
+    "killSwitch": {
+      "on": "Coupe-circuit : activé",
+      "onIpv6Unverified": "Coupe-circuit : activé · IPv6 non vérifié",
+      "blocking": "Coupe-circuit : blocage du trafic",
+      "blockingIpv6Unverified": "Coupe-circuit : blocage du trafic · IPv6 non vérifié",
+      "off": "Coupe-circuit : désactivé",
+      "failed": "Coupe-circuit : ne fonctionne pas",
+      "unknown": "Coupe-circuit : inconnu"
+    },
+    "menu": {
+      "open": "Ouvrir SirinVPN",
+      "connectTo": "Se connecter à {{name}}",
+      "addServer": "Ajouter un serveur…",
+      "disconnect": "Se déconnecter…",
+      "resume": "Reprendre",
+      "reconnect": "Se reconnecter",
+      "stopReconnecting": "Arrêter la reconnexion…",
+      "stopConnecting": "Arrêter la connexion…",
+      "updateComponent": "Mettre à jour le composant VPN…",
+      "switchServer": "Changer de serveur",
+      "connectServer": "Se connecter au serveur",
+      "manageServers": "Gérer les serveurs",
+      "connectionSettings": "Paramètres de connexion",
+      "settings": "Paramètres",
+      "diagnostics": "Diagnostic",
+      "disconnectQuit": "Se déconnecter et quitter…"
+    },
+    "quit": {
+      "plain": "Quitter l’application",
+      "statusUnknown": "Quitter l’application · État inconnu…",
+      "paused": "Quitter l’application · Le VPN reste suspendu",
+      "reconnecting": "Quitter l’application · Le VPN continue de se reconnecter",
+      "connected": "Quitter l’application · Le VPN reste actif",
+      "service": "Quitter l’application · Le service VPN reste actif",
+      "blocking": "Quitter l’application · Le trafic reste bloqué",
+      "killSwitchUnknown": "Quitter l’application · Coupe-circuit inconnu…"
+    },
+    "confirm": {
+      "cancel": "Annuler",
+      "switch": {
+        "title": "Passer à {{name}} ?",
+        "messageKillSwitchOn": "Vos paramètres actuels sont conservés. Le coupe-circuit reste activé pendant le changement.",
+        "messageKillSwitchOff": "Vos paramètres actuels sont conservés. Le coupe-circuit est désactivé : le trafic peut contourner le VPN pendant le changement.",
+        "confirm": "Changer"
+      },
+      "stop": {
+        "title": "Arrêter les tentatives de connexion ?",
+        "messageKillSwitchOn": "Le coupe-circuit continue de bloquer le trafic jusqu’à ce que vous vous reconnectiez ou vous déconnectiez.",
+        "messageKillSwitchOff": "Le coupe-circuit est désactivé : le trafic contourne le VPN jusqu’à ce que vous vous reconnectiez.",
+        "confirm": "Arrêter les tentatives"
+      },
+      "disconnect": {
+        "title": "Se déconnecter du VPN ?",
+        "message": "Tout blocage du trafic est levé, et le VPN reste désactivé jusqu’à une nouvelle connexion. Les autres appareils restent connectés.",
+        "confirm": "Se déconnecter"
+      },
+      "disconnectQuit": {
+        "title": "Se déconnecter et quitter ?",
+        "confirm": "Se déconnecter et quitter"
+      },
+      "quit": {
+        "title": "Quitter SirinVPN ?",
+        "message": "{{status}}\nFermer l’application n’arrête pas le VPN, la reconnexion ni le coupe-circuit.",
+        "confirm": "Quitter"
+      }
+    },
+    "error": {
+      "title": "Impossible de modifier la connexion",
+      "alreadyConnected": "Une autre connexion est active. Utilisez plutôt Changer de serveur.",
+      "statusUnverified": "Impossible de vérifier l’état de la connexion. Ouvrez SirinVPN et réessayez.",
+      "updateToSwitch": "Mettez à jour le composant VPN pour changer de serveur.",
+      "serverUnconfirmed": "Le VPN n’a pas confirmé le serveur sélectionné. Vérifiez son état.",
+      "connectionChanged": "La connexion a changé. Ouvrez à nouveau le menu de la zone de notification.",
+      "stopUnconfirmed": "Le VPN n’a pas confirmé qu’il a arrêté les tentatives. Vérifiez son état.",
+      "disconnectUnconfirmed": "Le VPN n’a pas confirmé la déconnexion. Vérifiez son état et le coupe-circuit.",
+      "quitUnconfirmed": "Le VPN n’a pas confirmé la déconnexion, donc l’application reste ouverte. Vérifiez son état.",
+      "selectionUnavailable": "Impossible de mettre à jour le menu de la zone de notification. Réessayez."
+    }
+  },
+  "notification": {
+    "test": "Les notifications sont prêtes. Les alertes de connexion apparaîtront ici.",
+    "connected": "VPN connecté",
+    "disconnected": "VPN déconnecté",
+    "reconnecting": "Connexion interrompue. Reconnexion…",
+    "statusUnknown": "Impossible de lire l’état du VPN. Ouvrez SirinVPN pour vérifier.",
+    "error": {
+      "disabled": "Activez d’abord les notifications.",
+      "failed": "Impossible d’afficher la notification. Vérifiez les paramètres de notification de votre système."
+    }
+  }
+}

@@ -48,7 +48,7 @@ export function SecretQr({ source, kind, code, onShown }: {
     </button></Dialog.Trigger>
     <Dialog.Portal><Dialog.Overlay className="dialog-overlay invitation-qr-overlay" />
       <DialogContent className="dialog-content invitation-qr-dialog" heading={t(recovery ? "devices.share.scanRecovery" : "devices.share.scanInvitation")} aria-describedby={undefined} closeLabel={t("devices.share.closeQr")}
-        footer={<CopyButton value={code} className="secondary-button">{t(recovery ? "devices.share.copyRecovery" : "devices.invite.copyCode")}</CopyButton>}>
+        footer={<CopyButton value={code} className="secondary-button">{t(recovery ? "devices.share.copyRecovery" : "devices.share.copyCode")}</CopyButton>}>
         <InvitationQr source={source} kind={kind} enlarged />
       </DialogContent>
     </Dialog.Portal>

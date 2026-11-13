@@ -110,9 +110,9 @@ export function EndpointUpdateDialog({
 
   const transition = (value: EndpointUpdateCodeResult) => <div className="endpoint-transition-summary">
     <code>{endpointLabel(value.previous_endpoint)}</code>
-    <ArrowRight size={18} aria-label={t("vps.endpoint.to")} />
+    <ArrowRight className="mirror-rtl" size={18} aria-label={t("vps.endpoint.to")} />
     <code>{endpointLabel(value.endpoint)}</code>
-    <span>{t("vps.endpoint.number", { number: value.generation })}</span>
+    <span>{t("vps.endpoint.number", { number: String(value.generation) })}</span>
   </div>;
 
   const failure = error && <InlineError message={error.message} />;

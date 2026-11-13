@@ -1,0 +1,264 @@
+{
+  "choice": {
+    "listLabel": "Comment ajouter un serveur",
+    "back": "Retour aux options",
+    "privacy": "Sans compte. Sans télémétrie.",
+    "join": {
+      "title": "Utiliser un code d’adhésion",
+      "summary": "Scannez un code QR ou saisissez votre code"
+    },
+    "provision": {
+      "title": "Configurer mon VPS",
+      "summary": "Créer un VPN sur votre propre serveur"
+    },
+    "backup": {
+      "title": "Restaurer une sauvegarde",
+      "summary": "Importer une sauvegarde chiffrée d’appareil"
+    },
+    "recovery": {
+      "title": "Utiliser une clé de récupération",
+      "summary": "Retrouver l’accès à votre serveur"
+    },
+    "hetzner": {
+      "title": "Créer un serveur Hetzner",
+      "summary": "Louer un nouveau VPS qui se configure seul"
+    },
+    "advanced": "Avancé",
+    "advancedHint": "Créer un serveur avec un compte Hetzner Cloud"
+  },
+  "backup": {
+    "title": "Restaurer cet appareil",
+    "summary": "Ajoute un serveur à cet appareil. Le serveur lui-même n’est pas contacté.",
+    "file": "Fichier de sauvegarde",
+    "fileHint": "Un fichier .sirinvpn-backup. Les serveurs déjà présents sur cet appareil ne sont jamais écrasés.",
+    "choose": "Choisir un fichier",
+    "pickerTitle": "Ouvrir une sauvegarde SirinVPN",
+    "fileType": "Sauvegarde SirinVPN",
+    "password": "Mot de passe de la sauvegarde",
+    "submit": "Restaurer la sauvegarde",
+    "submitting": "Restauration…",
+    "error": {
+      "picker": "Impossible d’ouvrir le sélecteur de fichiers. Réessayez.",
+      "restore": "Impossible de restaurer la sauvegarde. Vérifiez le fichier et le mot de passe."
+    },
+    "change": "Changer de fichier",
+    "restored": "{{name}} a été restauré sur cet appareil."
+  },
+  "invitation": {
+    "expires": "Expire le {{date}}",
+    "identity": "Identité du serveur vérifiée",
+    "trust": "Rejoignez seulement si vous attendiez ce code d’adhésion de la part d’une personne de confiance.",
+    "error": "Impossible de vérifier ce code d’adhésion. Demandez-en un nouveau."
+  },
+  "join": {
+    "title": "Rejoindre un serveur",
+    "summary": "Votre clé privée est créée sur cet appareil et ne le quitte jamais.",
+    "code": "Code d’adhésion",
+    "codeHint": "Gardez-le privé, comme un mot de passe",
+    "review": "Vérifier le code d’adhésion",
+    "submit": "Rejoindre le serveur",
+    "submitting": "Adhésion…",
+    "error": "Ce code d’adhésion n’a pas fonctionné. Il a peut-être expiré, été utilisé ou annulé. Demandez-en un nouveau."
+  },
+  "recover": {
+    "title": "Utiliser une clé de récupération",
+    "summary": "Redevenir Propriétaire de ce serveur depuis cet appareil.",
+    "key": "Clé de récupération",
+    "keyHint": "Commence par sirr1. Rien n’est envoyé avant votre confirmation.",
+    "file": {
+      "toggle": "Ouvrir un fichier de clé de récupération",
+      "choose": "Choisir un fichier",
+      "password": "Mot de passe du fichier",
+      "open": "Ouvrir le fichier",
+      "opening": "Ouverture du fichier…",
+      "loaded": "Clé de récupération chargée depuis le fichier.",
+      "pickerError": "Impossible d’ouvrir le sélecteur de fichiers.",
+      "openError": "Impossible d’ouvrir le fichier de clé de récupération. Vérifiez le fichier et son mot de passe.",
+      "type": "Clé de récupération SirinVPN"
+    },
+    "serverIdentity": "Identité du serveur",
+    "deviceName": "Nom de l’appareil Propriétaire",
+    "defaultDeviceName": "Appareil Propriétaire récupéré",
+    "confirmRevoke": "Supprimer tous les appareils Propriétaire précédents et utiliser cette clé jusqu’au bout. Les autres personnes gardent leur accès ; les Administrateurs perdent leurs droits de récupération.",
+    "replaceProfile": "Remplacer le profil enregistré sur cet appareil pour {{name}}",
+    "review": "Vérifier la clé de récupération",
+    "submit": "Récupérer l’accès Propriétaire",
+    "error": "La récupération ne s’est pas terminée. Réessayez avec la même clé.",
+    "disconnectFirst": "Déconnectez d’abord le VPN. La récupération ne peut pas démarrer tant que cet appareil est connecté.",
+    "reviewing": "Vérification de la clé de récupération…",
+    "submitting": "Récupération de l’accès Propriétaire…",
+    "done": "Vous êtes de nouveau Propriétaire de {{name}}. Votre ancienne clé de récupération est utilisée : créez-en une nouvelle dans Clés et récupération."
+  },
+  "setup": {
+    "title": "Connecter votre serveur",
+    "summary": "Connectez-vous à votre serveur en SSH pour installer SirinVPN.",
+    "defaultName": "Mon serveur",
+    "name": "Nom du serveur",
+    "nameHint": "Enregistré uniquement sur cet appareil",
+    "host": "Adresse IP ou nom d’hôte",
+    "advanced": "Paramètres avancés",
+    "replace": {
+      "title": "Remplacer l’installation existante",
+      "summary": "Seulement si tous les appareils Propriétaire et toutes les clés de récupération sont perdus"
+    },
+    "verify": "Vérifier le serveur",
+    "verifying": "Connexion à {{host}}…",
+    "fingerprint": {
+      "title": "Vérifier votre serveur",
+      "summary": "Vérifiez cette empreinte dans la console web de votre hébergeur.",
+      "copy": "Copier l’empreinte",
+      "mismatch": "Si elle ne correspond pas, ne continuez pas : la connexion pourrait être interceptée.",
+      "replaceWarning": "Remplacer supprime chaque appareil, code d’adhésion et clé de récupération de ce serveur.",
+      "matches": "L’empreinte correspond",
+      "checkAgain": "Vérifier à nouveau le réseau",
+      "checking": "Vérification du réseau…",
+      "install": "Installer SirinVPN",
+      "replace": "Remplacer SirinVPN",
+      "pinnedTitle": "Clé SSH de votre serveur",
+      "pinned": "SirinVPN a créé cette clé sur cet appareil et l’a placée sur le serveur avant son premier démarrage : il n’y a donc rien à comparer.",
+      "checkNetwork": "Vérifier le réseau",
+      "confirmed": "Vous avez confirmé que cette empreinte correspond à votre serveur.",
+      "changePort": "Changer de port"
+    },
+    "confirmReplace": {
+      "title": "Remplacer l’installation existante ?",
+      "message": "Chaque appareil, code d’adhésion et clé de récupération de ce serveur cessera de fonctionner. Les autres logiciels du serveur ne sont pas concernés.",
+      "confirm": "Remplacer"
+    },
+    "installing": {
+      "title": "Configuration de votre serveur",
+      "summary": "Installation de SirinVPN sur {{host}}. Cela prend généralement quelques minutes.",
+      "keepOpen": "Gardez SirinVPN ouvert jusqu’à la fin.",
+      "stepChecked": "Confirmer l’identité et le réseau du VPS",
+      "stepInstall": "Installer SirinVPN sur le VPS",
+      "stepInstallDetail": "Connexion, vérification du serveur, envoi et contrôle du logiciel, puis configuration du VPN"
+    },
+    "success": {
+      "title": "Votre VPN est prêt",
+      "summary": "{{name}} a été ajouté, et cet appareil en est le Propriétaire.",
+      "recoveryTitle": "Enregistrez une clé de récupération",
+      "recoverySummary": "Seul cet appareil peut gérer le serveur. Si vous le perdez, une clé de récupération est le seul moyen de revenir. Vous pourrez en créer une une fois connecté.",
+      "recoveryKey": "Enregistrer une clé de récupération",
+      "open": "Ouvrir le serveur"
+    },
+    "error": {
+      "unreachable": "Impossible de joindre le serveur en SSH. Vérifiez l’adresse et le port.",
+      "network": "Impossible de vérifier le réseau du serveur. Réessayez.",
+      "install": "Impossible d’installer SirinVPN."
+    },
+    "hostPlaceholder": "par ex. 203.0.113.10",
+    "continue": "Continuer",
+    "previousStep": "Étape précédente",
+    "progress": {
+      "label": "Étapes de configuration",
+      "server": "Serveur",
+      "verify": "Vérification",
+      "install": "Installation"
+    },
+    "failed": {
+      "title": "L’installation ne s’est pas terminée",
+      "stage": "Arrêtée pendant",
+      "server": "Votre serveur",
+      "fingerprint": "Empreinte vérifiée",
+      "stages": {
+        "connect": "Connexion au serveur",
+        "check": "Vérification du serveur",
+        "upload": "Envoi de SirinVPN",
+        "configure": "Configuration du serveur"
+      },
+      "change": {
+        "unchanged": "Rien n’a été modifié sur le serveur.",
+        "rolledBack": "SirinVPN a modifié le serveur, puis a annulé ces modifications.",
+        "unknown": "SirinVPN n’a pas pu confirmer si le serveur a été modifié. Une nouvelle installation vérifie d’abord le serveur."
+      },
+      "signInAgain": "Le mot de passe SSH n’a pas été conservé. Revenez aux paramètres pour le saisir à nouveau.",
+      "back": "Retour aux paramètres",
+      "retry": "Relancer l’installation"
+    },
+    "created": {
+      "title": "{{name}} est prêt",
+      "summary": "Il fonctionne à {{host}} avec une clé SSH créée par cet appareil : il n’y a donc rien à vérifier. Installez SirinVPN avec les paramètres recommandés, ou examinez-les d’abord.",
+      "settings": "Examiner les paramètres (facultatif)",
+      "address": "Adresse",
+      "key": "Clé SSH root",
+      "copyKey": "Copier le chemin de la clé"
+    }
+  },
+  "hetzner": {
+    "title": "Créer un serveur sur Hetzner Cloud",
+    "summary": "SirinVPN loue un serveur Debian 13 dans votre compte Hetzner et s’installe seul. Vous ne saisissez jamais d’adresse IP ni de mot de passe.",
+    "token": "Jeton API Hetzner Cloud",
+    "tokenHint": "Dans la console Hetzner, ouvrez votre projet et créez un jeton Lecture et écriture sous Sécurité, puis Jetons API. Il n’est envoyé qu’à Hetzner et n’est pas enregistré.",
+    "tokenExpired": "SirinVPN conserve le jeton API pendant 10 minutes seulement. Saisissez-le à nouveau pour continuer.",
+    "loadPlans": "Afficher les prix",
+    "loading": "Récupération des prix auprès de Hetzner…",
+    "location": "Emplacement",
+    "serverType": "Type de serveur",
+    "typeOption": "{{price}}/mois · {{name}} ({{architecture}}) · {{cores}} vCPU · {{memory}} Go de RAM · {{disk}} Go",
+    "price": "{{total}} par mois : serveur {{server}} plus adresse IPv4 {{ipv4}}. Hetzner facture votre compte jusqu’à la suppression du serveur.",
+    "priceNoIpv4": "{{total}} par mois pour le serveur. Hetzner facture votre compte jusqu’à la suppression du serveur.",
+    "create": "Créer le serveur pour {{total}}/mois",
+    "confirm": {
+      "title": "Créer un serveur Hetzner ?",
+      "message": "{{type}} à {{location}} coûte {{total}} par mois jusqu’à sa suppression.",
+      "confirm": "Créer le serveur"
+    },
+    "creating": "Création du serveur…",
+    "waiting": "En attente du démarrage de {{name}}…",
+    "waitingHint": "Cela prend généralement une ou deux minutes.",
+    "cancel": "Arrêter l’attente",
+    "keyPath": "Clé SSH root",
+    "delete": "Supprimer ce serveur",
+    "deleting": "Suppression de {{name}}…",
+    "deleteConfirm": {
+      "title": "Supprimer {{name}} ?",
+      "message": "{{name}}, son adresse IP et tout ce qu’il contient seront supprimés de votre compte Hetzner. Cette action est irréversible.",
+      "confirm": "Supprimer le serveur"
+    },
+    "deleted": "Il n’est plus présent dans votre compte Hetzner, et Hetzner ne vous le facture plus.",
+    "startOver": "Recommencer",
+    "failedTitle": "{{name}} n’est pas encore prêt",
+    "failedSummary": "Le serveur existe dans votre compte Hetzner et est facturé jusqu’à sa suppression. Attendez à nouveau, gardez-le pour le configurer plus tard, ou supprimez-le.",
+    "waitAgain": "Attendre à nouveau",
+    "keep": "Garder le serveur",
+    "keptTitle": "{{name}} reste dans votre compte Hetzner",
+    "kept": "Hetzner le facture jusqu’à sa suppression dans la console Hetzner. Pour le configurer plus tard, choisissez Configurer mon VPS et saisissez son adresse. Sa clé d’hôte SSH est ci-dessous pour vérification.",
+    "leaveWarning": "Un serveur Hetzner a été créé et est facturé jusqu’à sa suppression. Quitter quand même ?",
+    "error": {
+      "catalog": "Impossible de charger les prix Hetzner.",
+      "create": "Impossible de créer le serveur.",
+      "wait": "Le serveur n’est pas devenu prêt.",
+      "delete": "Impossible de supprimer le serveur."
+    },
+    "hostKey": "Clé d’hôte SSH",
+    "dangerLabel": "Supprimer le serveur",
+    "billed": "{{name}} est facturé sur votre compte Hetzner jusqu’à sa suppression.",
+    "deletedTitle": "{{name}} a été supprimé",
+    "locationOption": "{{city}}, {{country}} ({{name}})",
+    "uncertain": {
+      "title": "Hetzner a peut-être créé {{name}}",
+      "summary": "La réponse de Hetzner n’est pas arrivée : {{name}} existe peut-être dans votre compte Hetzner et est facturé. Cherchez un serveur de ce nom dans la console Hetzner, ou vérifiez-le ici. La création d’un autre serveur reste désactivée tant que ce point n’est pas réglé.",
+      "nameLabel": "Nom du serveur",
+      "copyName": "Copier le nom du serveur",
+      "check": "Vérifier s’il existe",
+      "checking": "Vérification auprès de Hetzner…",
+      "checkFailed": "Impossible de vérifier si le serveur existe. Cherchez-le dans la console Hetzner.",
+      "found": "{{name}} existe dans votre compte Hetzner. Configurez-le maintenant, ou supprimez-le dans la console Hetzner.",
+      "notFound": "Hetzner ne liste pas {{name}} pour le moment. Si la console Hetzner ne l’affiche pas non plus, il n’a pas été créé.",
+      "adopt": "Configurer ce serveur",
+      "absent": "Il n’existe pas",
+      "absentConfirm": {
+        "title": "{{name}} n’existe pas ?",
+        "message": "Confirmez seulement après avoir vérifié la console Hetzner. Si {{name}} existe, créer un autre serveur vous facturera les deux.",
+        "confirm": "Il n’existe pas"
+      },
+      "leaveWarning": "Hetzner a peut-être créé {{name}}, facturé jusqu’à sa suppression. Cherchez-le dans la console Hetzner. Quitter quand même ?"
+    }
+  },
+  "port": {
+    "range": "Saisissez un port entre 1 et 65535.",
+    "reserved": "SirinVPN utilise le port {{port}} sur le serveur. Choisissez-en un autre.",
+    "sameAsDirect": "L’UDP direct utilise déjà ce port. Choisissez-en un autre.",
+    "sameAsQuic": "QUIC répond sur ce port UDP, le même numéro que TCP/TLS. Choisissez-en un autre."
+  }
+}

@@ -53,7 +53,7 @@ it("keeps the entered backup password unless the file rejected it", async () => 
   fireEvent.click(await screen.findByRole("button", { name: t("vps.restore.action") }));
   await screen.findByText("SSH connection timed out.", { exact: false });
   expect((screen.getByLabelText(t("vps.common.backupPassword")) as HTMLInputElement).value).toBe(password);
-  vi.mocked(api.restoreVpsBackup).mockRejectedValueOnce(new Error("the backup password is incorrect or the file was modified"));
+  vi.mocked(api.restoreVpsBackup).mockRejectedValueOnce(Object.assign(new Error("the backup password is incorrect or the file was modified"), { code: "backup_wrong_password", params: {} }));
   fireEvent.click(screen.getByRole("button", { name: t("vps.restore.review") }));
   fireEvent.click(await screen.findByRole("button", { name: t("vps.restore.action") }));
   await screen.findByText("the backup password is incorrect", { exact: false });

@@ -10,6 +10,22 @@ fn rejects_command_shaped_hosts() {
 }
 
 #[test]
+fn validated_hosts_are_returned_normalised() {
+    // Callers store and resolve what validation accepted, never the raw input.
+    assert_eq!(validate_host("203.0.113.5\n").ok(), Some("203.0.113.5"));
+    assert_eq!(
+        validate_host(" vpn.example.com").ok(),
+        Some("vpn.example.com")
+    );
+    assert_eq!(validate_host("2001:db8::1").ok(), Some("2001:db8::1"));
+    assert!(matches!(
+        validate_host(" \t "),
+        Err(ValidationError::InvalidHost)
+    ));
+    assert!(validate_host("vpn .example.com").is_err());
+}
+
+#[test]
 fn dns_over_tls_endpoints_are_strict_and_canonical() {
     let endpoint: DnsOverTlsEndpoint = " 1.1.1.1#ONE.ONE.ONE.ONE ".parse().unwrap();
     assert_eq!(endpoint.address, "1.1.1.1".parse::<IpAddr>().unwrap());

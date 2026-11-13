@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-available-endpoint-update"
+description = "Enables the available_endpoint_update command without any pre-configured scope."
+commands.allow = ["available_endpoint_update"]
+
+[[permission]]
+identifier = "deny-available-endpoint-update"
+description = "Denies the available_endpoint_update command without any pre-configured scope."
+commands.deny = ["available_endpoint_update"]

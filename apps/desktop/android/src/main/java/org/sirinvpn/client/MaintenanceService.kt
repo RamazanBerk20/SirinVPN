@@ -9,6 +9,7 @@ import android.os.IBinder
 
 /** Finite, explicitly requested file/SSH work; never a VPN keepalive. */
 class MaintenanceService : Service() {
+    override fun attachBaseContext(base:Context) { super.attachBaseContext(AppLanguage.wrap(base)) }
     override fun onStartCommand(intent:Intent?,flags:Int,startId:Int):Int {
         // Stop requests arrive here, after onCreate, rather than via stopService: an
         // operation that fails within milliseconds must not stop a foreground start
@@ -19,7 +20,7 @@ class MaintenanceService : Service() {
             .setBadgeIconType(Notification.BADGE_ICON_NONE)
             .setContentTitle(getString(R.string.notification_maintenance_title)).setContentText(getString(R.string.notification_maintenance_text))
             .setOngoing(true).setOnlyAlertOnce(true).setContentIntent(VpnNotifications.openApp(this)).build()
-        startForeground(72,notification,ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+        startForeground(VpnNotifications.MAINTENANCE_ID,notification,ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
         return START_NOT_STICKY
     }
     override fun onBind(intent:Intent):IBinder?=null

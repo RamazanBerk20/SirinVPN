@@ -1,0 +1,38 @@
+{
+  "count": "{count, plural, other {# 个服务器}}",
+  "add": "添加服务器",
+  "open": "打开 {{name}}",
+  "favorite": "收藏",
+  "addressOf": "{{name}} 的地址",
+  "search": {
+    "label": "搜索服务器",
+    "placeholder": "名称或地址",
+    "empty": "没有与搜索匹配的服务器。"
+  },
+  "actions": {
+    "label": "{{name}} 的操作",
+    "rename": "重命名",
+    "favorite": "添加到收藏",
+    "unfavorite": "从收藏中移除",
+    "maintain": "VPS 维护"
+  },
+  "rename": {
+    "title": "重命名服务器",
+    "description": "新名称仅保存在此设备上。",
+    "label": "服务器名称",
+    "save": "保存名称"
+  },
+  "picker": {
+    "eyebrow": "服务器",
+    "trigger": "服务器：{{name}}。更改服务器",
+    "title": "选择服务器",
+    "manage": "管理服务器"
+  },
+  "renamed": "已重命名为“{{name}}”。",
+  "favorited": "{{name}} 已添加到收藏",
+  "unfavorited": "{{name}} 已从收藏中移除",
+  "manageHint": "在侧边栏中切换服务器。可在此处重命名、收藏或维护它们。",
+  "manageHintNarrow": "在此切换、重命名、收藏或维护你的服务器。",
+  "switch": "切换",
+  "switchTo": "切换到 {{name}}"
+}

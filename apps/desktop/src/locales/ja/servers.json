@@ -1,0 +1,38 @@
+{
+  "count": "{count, plural, other {#台のサーバー}}",
+  "add": "サーバーを追加",
+  "open": "{{name}} を開く",
+  "favorite": "お気に入り",
+  "addressOf": "{{name}} のアドレス",
+  "search": {
+    "label": "サーバーを検索",
+    "placeholder": "名前またはアドレス",
+    "empty": "検索に一致するサーバーはありません。"
+  },
+  "actions": {
+    "label": "{{name}} の操作",
+    "rename": "名前を変更",
+    "favorite": "お気に入りに追加",
+    "unfavorite": "お気に入りから削除",
+    "maintain": "VPS のメンテナンス"
+  },
+  "rename": {
+    "title": "サーバー名を変更",
+    "description": "新しい名前は、このデバイスにのみ保存されます。",
+    "label": "サーバー名",
+    "save": "名前を保存"
+  },
+  "picker": {
+    "eyebrow": "サーバー",
+    "trigger": "サーバー: {{name}}。サーバーを変更",
+    "title": "サーバーを選択",
+    "manage": "サーバーを管理"
+  },
+  "renamed": "「{{name}}」に名前を変更しました。",
+  "favorited": "{{name}} をお気に入りに追加しました",
+  "unfavorited": "{{name}} をお気に入りから削除しました",
+  "manageHint": "サイドバーでサーバーを切り替えます。名前の変更、お気に入りへの登録、メンテナンスはここで行えます。",
+  "manageHintNarrow": "ここでサーバーの切り替え、名前の変更、お気に入りへの登録、メンテナンスを行えます。",
+  "switch": "切り替え",
+  "switchTo": "{{name}} に切り替え"
+}

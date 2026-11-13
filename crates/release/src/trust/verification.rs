@@ -17,6 +17,22 @@ pub(super) fn verify_update_with_root(
     signature: &[u8],
     root: &str,
 ) -> Result<VerifiedReleaseTrustPolicy, ReleaseError> {
+    verify_update_with_floor(
+        installed,
+        policy,
+        signature,
+        root,
+        embedded_trust_floor(root)?.as_ref(),
+    )
+}
+
+pub(super) fn verify_update_with_floor(
+    installed: Option<&[u8]>,
+    policy: &[u8],
+    signature: &[u8],
+    root: &str,
+    floor: Option<&InstalledReleaseTrust>,
+) -> Result<VerifiedReleaseTrustPolicy, ReleaseError> {
     let verified = verify_trust_policy(policy, signature, root)?;
     let current = installed
         .map(|bytes| {
@@ -39,7 +55,7 @@ pub(super) fn verify_update_with_root(
         policy: verified.policy.clone(),
         signature: parse_trust_signature(signature)?,
     };
-    evaluate_trust_update(current.as_ref(), &candidate)?;
+    evaluate_trust_update_with_floor(current.as_ref(), &candidate, floor)?;
     Ok(verified)
 }
 

@@ -7,14 +7,17 @@ import java.util.UUID
 
 /** Ephemeral native form values, bounded and never persisted as an input history. */
 object SecretInputs {
-    /** [field] binds a service-generated secret to the only argument that may consume it. */
-    private data class Entry(val value: CharArray, val expires: Long, val qr: JSONArray?, val field: String?)
+    /** [field] binds every handle, typed or service-generated, to the only argument that may consume it. */
+    private data class Entry(val value: CharArray, val expires: Long, val qr: JSONArray?, val field: String)
     private val entries = LinkedHashMap<String, Entry>()
     // Arguments that carry protected values. A handle anywhere else (a name, a
     // label) could be stored or echoed back, revealing its plaintext to the WebView.
-    private val secretFields = setOf("password", "backup_password", "private_key_passphrase", "sudo_password", "key", "code", "apiToken")
-    @Synchronized fun remember(value: String, qr: JSONArray? = null, field: String? = null): String {
+    val secretFields = setOf("password", "backup_password", "private_key_passphrase", "sudo_password", "key", "code", "apiToken")
+    /** A typed SSH password must not become a sudo password or an API token the WebView sends elsewhere. */
+    fun redeemable(entry: String, field: String?) = field != null && field in secretFields && entry == field
+    @Synchronized fun remember(value: String, qr: JSONArray?, field: String): String {
         require(value.length in 1..131072)
+        require(field in secretFields) { "Protected input is not accepted here" }
         purge()
         val expires = SystemClock.elapsedRealtime() + 600000
         android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ purge() },600001)
@@ -41,7 +44,7 @@ object SecretInputs {
             is String -> if (value.startsWith("native-secret:")) {
                 require(field != null && field in secretFields) { "Protected input is not accepted here" }
                 val entry = entries[value] ?: error("Protected input expired")
-                require(entry.field == null || entry.field == field) { "Protected input is not accepted here" }
+                require(redeemable(entry.field, field)) { "Protected input is not accepted here" }
                 String(entry.value)
             } else value
             is JSONObject -> JSONObject().also { output -> value.keys().forEach { key -> output.put(key,resolve(value.get(key),key)) } }

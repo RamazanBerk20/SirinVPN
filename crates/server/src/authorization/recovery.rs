@@ -10,10 +10,87 @@ pub(crate) struct RecoveryReceipt {
     pub expires_at_unix: u64,
 }
 
+/// The Owner recovery grant. Persisted as the historical `recovery_key` / `recovery_receipt`
+/// fields; a document carrying both no longer loads.
+#[derive(Clone, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(try_from = "StoredOwnerRecovery", into = "StoredOwnerRecovery")]
+pub(crate) enum OwnerRecovery {
+    #[default]
+    Unarmed,
+    /// A signed key waits for the recovering device.
+    Armed(Box<RecoveryKeyResponse>),
+    /// The key was redeemed; the receipt answers an exact retry until it expires.
+    Finishing(Box<RecoveryReceipt>),
+}
+
+impl OwnerRecovery {
+    pub(crate) fn key(&self) -> Option<&RecoveryKeyResponse> {
+        match self {
+            Self::Armed(key) => Some(key),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn receipt(&self) -> Option<&RecoveryReceipt> {
+        match self {
+            Self::Finishing(receipt) => Some(receipt),
+            _ => None,
+        }
+    }
+
+    /// The signed authorization either state carries.
+    pub(crate) fn response(&self) -> Option<&RecoveryKeyResponse> {
+        match self {
+            Self::Unarmed => None,
+            Self::Armed(key) => Some(key),
+            Self::Finishing(receipt) => Some(&receipt.response),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+struct StoredOwnerRecovery {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    recovery_key: Option<RecoveryKeyResponse>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    recovery_receipt: Option<RecoveryReceipt>,
+}
+
+impl TryFrom<StoredOwnerRecovery> for OwnerRecovery {
+    type Error = &'static str;
+    fn try_from(stored: StoredOwnerRecovery) -> Result<Self, Self::Error> {
+        match (stored.recovery_key, stored.recovery_receipt) {
+            (None, None) => Ok(Self::Unarmed),
+            (Some(key), None) => Ok(Self::Armed(Box::new(key))),
+            (None, Some(receipt)) => Ok(Self::Finishing(Box::new(receipt))),
+            (Some(_), Some(_)) => Err("a recovery enrollment is still finishing"),
+        }
+    }
+}
+
+impl From<OwnerRecovery> for StoredOwnerRecovery {
+    fn from(recovery: OwnerRecovery) -> Self {
+        match recovery {
+            OwnerRecovery::Unarmed => Self {
+                recovery_key: None,
+                recovery_receipt: None,
+            },
+            OwnerRecovery::Armed(key) => Self {
+                recovery_key: Some(*key),
+                recovery_receipt: None,
+            },
+            OwnerRecovery::Finishing(receipt) => Self {
+                recovery_key: None,
+                recovery_receipt: Some(*receipt),
+            },
+        }
+    }
+}
+
 impl AuthorizationDocument {
     pub(crate) fn recovery_authorization(&self, now: u64) -> Option<&RecoveryKeyResponse> {
-        self.recovery_key
-            .as_ref()
+        self.owner_recovery
+            .key()
             .filter(|key| {
                 self.members
                     .iter()
@@ -21,8 +98,8 @@ impl AuthorizationDocument {
                     .is_some_and(|member| self.can_issue_recovery(member))
             })
             .or_else(|| {
-                self.recovery_receipt
-                    .as_ref()
+                self.owner_recovery
+                    .receipt()
                     .filter(|receipt| receipt.expires_at_unix > now)
                     .map(|receipt| &receipt.response)
             })
@@ -43,8 +120,8 @@ impl AuthorizationDocument {
         Ok(RecoverySettings {
             policy: self.recovery_policy.clone(),
             key: self
-                .recovery_key
-                .as_ref()
+                .owner_recovery
+                .key()
                 .map(|response| {
                     Ok::<_, anyhow::Error>(RecoveryKeySummary {
                         recovery_id: response.claims.recovery_id,
@@ -55,8 +132,8 @@ impl AuthorizationDocument {
                 })
                 .transpose()?,
             enrollment_finishing: self
-                .recovery_receipt
-                .as_ref()
+                .owner_recovery
+                .receipt()
                 .is_some_and(|receipt| receipt.expires_at_unix > super::super::unix_time()),
             can_issue_key: self.can_issue_recovery(member),
         })
@@ -79,15 +156,7 @@ impl AuthorizationDocument {
         {
             bail!("recovery policy must name unique current administrators");
         }
-        if self.recovery_key.is_some() && self.recovery_receipt.is_some() {
-            bail!("a recovery enrollment is still finishing");
-        }
-        let response = self.recovery_key.as_ref().or_else(|| {
-            self.recovery_receipt
-                .as_ref()
-                .map(|receipt| &receipt.response)
-        });
-        let Some(response) = response else {
+        let Some(response) = self.owner_recovery.response() else {
             return Ok(());
         };
         let c = &response.claims;
@@ -111,7 +180,7 @@ impl AuthorizationDocument {
         {
             bail!("the recovery authorization is inconsistent with this server");
         }
-        if self.recovery_key.is_some()
+        if self.owner_recovery.key().is_some()
             && c.issuer_member_id != c.owner_member_id
             && !self
                 .recovery_policy
@@ -133,7 +202,7 @@ impl AuthorizationDocument {
             bail!("recovery identity material is already in use");
         }
         Signature::from_slice(&STANDARD.decode(&response.signature)?)?;
-        if let Some(receipt) = &self.recovery_receipt {
+        if let Some(receipt) = self.owner_recovery.receipt() {
             let device = self
                 .devices
                 .iter()

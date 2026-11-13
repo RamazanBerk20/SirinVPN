@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-android-unwatch"
+description = "Enables the android_unwatch command without any pre-configured scope."
+commands.allow = ["android_unwatch"]
+
+[[permission]]
+identifier = "deny-android-unwatch"
+description = "Denies the android_unwatch command without any pre-configured scope."
+commands.deny = ["android_unwatch"]

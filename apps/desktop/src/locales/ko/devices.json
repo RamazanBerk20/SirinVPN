@@ -1,0 +1,468 @@
+{
+  "page": {
+    "mine": "내 기기",
+    "you": "나",
+    "add": "기기 추가",
+    "addMine": "내 기기 추가",
+    "addFor": "{{name}}의 기기 추가",
+    "cannotAdd": "기기를 추가할 수 없습니다. 소유자 또는 관리자에게 대신 추가를 요청하세요.",
+    "refresh": "새로 고침",
+    "loading": "사람과 기기를 불러오는 중…",
+    "connect": "연결",
+    "openHome": "홈 열기",
+    "disconnected": "연결되지 않았습니다. 모든 사람의 기기를 보고 변경하려면 연결하세요.",
+    "disconnectedSaved": "연결되지 않았습니다. {{time}}에 저장된 사람과 기기를 표시합니다. 변경하려면 연결하세요.",
+    "stale": "{{time}}에 저장된 사람과 기기를 표시합니다. 목록을 새로 고칠 때까지 변경할 수 없습니다.",
+    "unsupported": "이 서버는 너무 오래되어 여기에서 사람과 기기를 관리할 수 없습니다.",
+    "unsupportedOwner": "이 서버는 너무 오래되어 여기에서 사람과 기기를 관리할 수 없습니다. 설정에서 VPS 소프트웨어를 업데이트하세요.",
+    "search": "사람과 기기 검색",
+    "searchPlaceholder": "이름 또는 VPN 주소로 검색",
+    "clearSearch": "검색 지우기",
+    "noMatches": "“{{query}}”와 일치하는 사람이나 기기가 없습니다.",
+    "adminOwnDevices": "내 기기를 추가하려면 소유자에게 제한 및 권한에서 허용해 달라고 요청하세요.",
+    "unnamed": "이름을 아직 불러오지 않음"
+  },
+  "empty": {
+    "title": "지금은 이 기기만 있습니다",
+    "body": "이 서버의 각 사람은 역할을 가지며 여러 기기를 가질 수 있습니다. 내 다른 기기를 추가하거나 다른 사람의 기기를 추가하세요.",
+    "mine": "내 다른 기기 추가",
+    "someone": "다른 사람의 기기 추가"
+  },
+  "count": {
+    "people": "{count, plural, other {사람 #명}}",
+    "devices": "{count, plural, other {기기 #대}}",
+    "forwards": "{count, plural, other {포트 포워딩 #개}}",
+    "pairs": "{count, plural, other {기기 쌍 #개}}",
+    "codes": "{count, plural, other {참여 코드 #개}}"
+  },
+  "role": {
+    "title": "역할",
+    "description": {
+      "owner": "서버의 모든 권한을 가집니다. 소유자는 정확히 한 명입니다.",
+      "admin": "사람을 추가하고 구성원을 관리할 수 있지만, 관리자나 소유자는 관리할 수 없습니다.",
+      "member": "VPN을 사용하며, 권한을 부여받지 않는 한 아무것도 관리하지 않습니다."
+    },
+    "change": "{{role}}(으)로 지정",
+    "codesWaiting": "{count, plural, other {{{name}}이(가) 만들었거나 {{name}}을(를) 위한 참여 코드 #개가 대기 중입니다. 취소할 때까지 서버에서 역할을 바꿀 수 없습니다.}}",
+    "cancelAndChange": "{count, plural, other {코드를 취소하고 역할 변경}}",
+    "createdCodes": "{{name}}이(가) 만든 참여 코드도 함께 취소됩니다."
+  },
+  "presence": {
+    "active": "지금 활성",
+    "idle": "최근 활동 없음",
+    "unknown": "활동 알 수 없음",
+    "suspended": "일시 중지됨"
+  },
+  "summary": {
+    "sirinApp": "SirinVPN 앱",
+    "wireguardApp": "WireGuard 앱",
+    "reachesOthers": "다른 기기에 접근",
+    "paired": "{count, plural, other {기기 #대와 쌍을 이룸}}",
+    "internetOnly": "인터넷만",
+    "sharesNetwork": "{{network}} 공유",
+    "sharesNetworks": "{count, plural, other {로컬 네트워크 #개 공유}}",
+    "forwards": "{count, plural, other {전달된 포트 #개}}"
+  },
+  "gate": {
+    "resumeFirst": "먼저 {{name}}을(를) 재개하세요.",
+    "limitReached": "{count, plural, other {기기 한도(#)에 도달했습니다. 제한 및 권한에서 한도를 올리세요.}}",
+    "needsAppDevice": "WireGuard만이 아니라 SirinVPN 앱을 실행하는 기기가 필요합니다.",
+    "lastOwnerDevice": "SirinVPN을 실행하는 소유자의 마지막 기기이므로 삭제할 수 없습니다. 먼저 다른 기기를 추가하세요."
+  },
+  "panel": {
+    "readOnly": "목록을 새로 고칠 때까지 읽기 전용입니다."
+  },
+  "person": {
+    "youTitle": "{{name}}(나)",
+    "summary": "{count, plural, other {{{role}} · 기기 #대}}",
+    "name": "이름",
+    "devices": "{count, plural, other {기기}}",
+    "devicesOfLimit": "{limit, plural, other {기기 {{count}}대 / 최대 #대}}",
+    "noDevices": "아직 기기가 없습니다.",
+    "noDevicesSuspended": "기기가 없습니다. 일시 중지된 사람은 기기를 추가할 수 없습니다.",
+    "suspended": "일시 중지됨",
+    "limitedHours": "사용 시간 제한",
+    "expires": "{{date}}까지 접근 가능",
+    "expired": "{{date}}에 접근이 끝남",
+    "dangerZone": "일시 중지 또는 삭제",
+    "suspend": "일시 중지",
+    "resume": "재개",
+    "suspendHint": "이 사람의 모든 기기를 일시 중지합니다. 아무것도 삭제되지 않으며, 재개하면 접근 권한이 복원됩니다.",
+    "resumeHint": "이 사람의 기기는 일시 중지되어 있습니다. 재개하면 저장된 설정으로 다시 접근할 수 있습니다.",
+    "renameCodesWaiting": "{count, plural, other {{{name}}을(를) 위한 참여 코드 #개가 대기 중입니다. 취소할 때까지 서버에서 이름을 바꿀 수 없습니다.}}",
+    "cancelAndRename": "{count, plural, other {코드를 취소하고 이름 변경}}",
+    "remove": "사람 삭제",
+    "removeHint": "이 사람, {{devices}}, {{forwards}}, {{pairs}}, {{codes}}을(를) 삭제합니다. 다시 참여하려면 새 참여 코드가 필요합니다."
+  },
+  "device": {
+    "summary": "{{name}} · {{presence}}",
+    "name": "기기 이름",
+    "owner": "소속",
+    "connection": "연결 방식",
+    "sirinApp": "SirinVPN 앱",
+    "wireguardApp": "WireGuard 앱 또는 라우터, 직접 UDP만 지원",
+    "address": "VPN 주소",
+    "activity": "활동",
+    "fingerprint": "ID 지문",
+    "fingerprintLabel": "{{name}}의 지문",
+    "removeTitle": "삭제",
+    "remove": "기기 삭제",
+    "removeThis": "이 기기 삭제",
+    "removeHint": "이 기기의 키가 폐기되어 VPN과 관리 접근이 즉시 중지됩니다.",
+    "removeThisHint": "지금 사용 중인 기기입니다. 삭제하면 이 앱은 {{server}}에 더 이상 접근할 수 없습니다."
+  },
+  "network": {
+    "title": "네트워크",
+    "peer": "기기 간 접근",
+    "peerOn": "같은 설정이 켜진 다른 기기에 접근합니다.",
+    "peerOff": "꺼짐: 인터넷만 사용하며, 기기 쌍은 예외입니다.",
+    "suspended": "{{name}}이(가) 일시 중지된 동안 중지됩니다."
+  },
+  "pairs": {
+    "title": "기기 쌍",
+    "description": "기기 쌍을 만들면 기기 간 접근이 꺼져 있어도 두 기기가 서로 연결할 수 있습니다.",
+    "bothWays": "{{name}}과(와) 양방향",
+    "starts": "{{name}}에게 연결 시작",
+    "answers": "{{name}}의 요청에만 응답",
+    "otherDevice": "다른 사람의 기기",
+    "peer": "기기",
+    "direction": "방향",
+    "directionHint": "단방향이면 첫 번째 기기만 연결을 시작하고 다른 기기는 응답만 합니다. 로컬 네트워크를 공유하는 기기로 연결을 시작하면 그 네트워크에도 접근할 수 있습니다.",
+    "option": {
+      "both": "양방향",
+      "starts": "{{from}}만 시작, 대상 {{to}}"
+    },
+    "add": "기기 쌍 추가",
+    "remove": "삭제"
+  },
+  "networks": {
+    "title": "로컬 네트워크",
+    "description": "집 네트워크처럼 {{name}} 뒤에 있는 사설 네트워크를 이 네트워크에 접근하는 기기와 공유합니다.",
+    "label": "네트워크",
+    "hint": "한 줄에 사설 IPv4 네트워크 하나, /20 이하. 공유를 중지하려면 비워 두세요.",
+    "invalid": "/20 이하의 사설 IPv4 네트워크가 아닙니다: {{networks}}",
+    "hostBits": "{{network}}은(는) 네트워크의 시작 주소가 아닙니다. {{canonical}}을(를) 사용하세요.",
+    "inactive": "VPS가 다른 네트워크를 통해 이 네트워크에 접근하므로 지금은 라우팅되지 않습니다: {{networks}}",
+    "linux": "{{name}}은(는) IPv4 포워딩을 켠 Linux에서 SirinVPN을 실행해야 합니다:",
+    "copyCommand": "명령 복사",
+    "save": "네트워크 저장"
+  },
+  "ports": {
+    "title": "포트 포워딩",
+    "none": "이 기기로 전달되는 포트가 없습니다.",
+    "paused": "일시 중지된 동안 중지됨",
+    "exposure": "인터넷의 누구나 전달된 서비스에 접근할 수 있습니다.",
+    "protocol": "프로토콜",
+    "publicPort": "공개 포트",
+    "publicPortHint": "VPS 주소에서 열립니다.",
+    "devicePort": "기기 포트",
+    "devicePortHint": "서비스가 수신하는 포트입니다.",
+    "publicPortLow": "1024부터 65535 사이의 포트를 사용하세요. 낮은 포트는 예약되어 있습니다.",
+    "publicPortRange": "1024부터 65535 사이의 포트를 사용하세요.",
+    "devicePortRange": "1부터 65535 사이의 포트를 사용하세요.",
+    "preview": "공개 {{protocol}} 포트 <strong>{{publicPort}}</strong>이(가) <strong>{{device}}</strong>의 포트 <strong>{{devicePort}}</strong>(으)로 전달됩니다",
+    "used": "{max, plural, other {서버 포트 #개 중 {{count}}개 사용 중}}",
+    "full": "{count, plural, other {서버 포트 #개가 모두 사용 중입니다. 하나를 닫아야 다른 포트를 열 수 있습니다.}}",
+    "open": "포트 열기",
+    "close": "닫기",
+    "closeLabel": "{{protocol}} 포트 {{publicPort}}에서 기기 포트 {{devicePort}}로 가는 연결 닫기",
+    "visitorAddress": "서비스는 방문자를 실제 IP가 아니라 <address>{{address}}</address>(으)로 봅니다."
+  },
+  "policy": {
+    "title": "제한 및 권한",
+    "limits": "제한",
+    "deviceLimit": "기기 한도",
+    "deviceLimitHint": "비워 두면 제한이 없습니다. 한도를 낮추기 전에 초과 기기를 삭제하세요.",
+    "deviceLimitHintNew": "비워 두면 제한이 없습니다.",
+    "expires": "접근 종료",
+    "expiresHint": "현지 시간 기준입니다. 비워 두면 종료되지 않습니다.",
+    "expiresPast": "이미 지난 시간입니다. 저장하면 즉시 접근 권한을 잃습니다.",
+    "permissions": "권한",
+    "permission": {
+      "addPeople": "새 사람 추가",
+      "addOwnDevices": "이 사람의 기기 추가",
+      "deviceToDevice": "이 사람의 기기에 대한 기기 간 접근 및 기기 쌍 변경",
+      "portForwards": "이 사람의 기기로 공개 인터넷 포트 열기"
+    },
+    "save": "제한 저장",
+    "appliesToAll": "이 사람의 모든 기기에 적용됩니다.",
+    "cancelsCodes": "{count, plural, other {저장하면 이 사람이 만들었거나 이 사람을 위한 참여 코드 #개가 취소됩니다.}}",
+    "cancelsCreated": "저장하면 {{name}}이(가) 만든 참여 코드가 취소됩니다.",
+    "error": {
+      "limit": "1부터 222 사이의 한도를 입력하거나 비워 두세요.",
+      "expires": "올바른 날짜와 시간을 입력하세요.",
+      "noHours": "시간을 하나 이상 선택하거나 시간 제한을 끄세요.",
+      "tooManyRanges": "{count, plural, other {한 주에 사용할 수 있는 시간 범위는 최대 #개입니다.}}"
+    }
+  },
+  "hours": {
+    "title": "주간 사용 시간",
+    "limit": "특정 시간으로 제한",
+    "allWeek": "언제든지 접근할 수 있습니다.",
+    "localTime": "현지 시간대({{zone}}) 기준입니다. 일광 절약 시간제에 따라 한 시간씩 달라질 수 있습니다.",
+    "inexact": "일부 저장된 시간은 정각에 시작하지 않습니다. 표를 편집하면 정각 단위로 반올림됩니다.",
+    "cell": "{{day}}, {{hour}}",
+    "toggleDay": "{{day}} 전체",
+    "toggleHour": "매일 {{hour}}"
+  },
+  "codes": {
+    "title": "{count, plural, other {참여 대기 중(#)}}",
+    "forPerson": "{{name}}의 기기",
+    "newPerson": "새 사람",
+    "newNamed": "{{name}}, 새 사람",
+    "severalPeople": "여러 명의 새 사람",
+    "row": "{{role}} · {{uses}} · {{date}}에 만료",
+    "singleUse": "1회용",
+    "usesLeft": "{max, plural, other {사용 가능 {{count}}회 / 최대 #회}}",
+    "cancel": "코드 취소",
+    "cancelling": "취소하는 중…"
+  },
+  "add": {
+    "whose": {
+      "title": "누구의 기기인가요?",
+      "description": "각 기기는 한 사람에게 속합니다.",
+      "mine": "내 기기",
+      "mineHint": "내 다른 휴대폰이나 컴퓨터입니다.",
+      "person": "이미 있는 사람",
+      "personHint": "이 서버의 사람에게 기기를 추가합니다.",
+      "pick": "사람",
+      "option": "{{name}} · {{role}}",
+      "new": "새 사람",
+      "newHint": "첫 번째 기기와 함께 새 사람을 추가합니다."
+    },
+    "new": {
+      "name": "이름",
+      "nameHint": "이 서버를 관리하는 모든 사람에게 표시됩니다.",
+      "several": "이 코드를 사용할 여러 명의 새 사람",
+      "people": "사람 수",
+      "peopleHint": "각 사람은 참여할 때 직접 이름을 입력하며 구성원이 됩니다.",
+      "peopleInvalid": "2부터 100 사이의 정수를 입력하세요.",
+      "nameHintRename": "이 서버를 관리하는 모든 사람에게 표시됩니다. 나중에 이름을 바꿀 수 있습니다."
+    },
+    "connect": {
+      "title": "어떻게 연결하나요?",
+      "app": "SirinVPN 앱",
+      "appHint": "권장합니다. 기기가 참여 코드를 받아 스스로 키를 만듭니다.",
+      "wireguard": "WireGuard 앱",
+      "wireguardHint": "고급 옵션입니다. iPhone, iPad, Mac 또는 라우터용입니다. 직접 UDP만 지원하며, 서버를 관리할 수 없습니다."
+    },
+    "forYou": "나를 위해",
+    "forPerson": "{{name}}을(를) 위해",
+    "severalPeople": "여러 명의 새 사람",
+    "deviceName": "기기 이름",
+    "deviceNameFixed": "이 서버에서는 참여할 때 이름을 직접 정할 수 없습니다. 서버를 관리하는 사람은 나중에 이름을 바꿀 수 있습니다.",
+    "lifetime": "코드 만료 기간",
+    "hours": "{count, plural, other {#시간}}",
+    "days": "{count, plural, other {#일}}",
+    "uses": "이 코드로 추가할 수 있는 기기 수",
+    "usesHint": "각 기기는 자체 키로 참여합니다. 기기 한도는 계속 적용됩니다.",
+    "usesInvalid": "1부터 100 사이의 정수를 입력하세요.",
+    "ownerWarningTitle": "이 코드를 사용하는 사람은 서버의 모든 권한을 얻습니다.",
+    "ownerWarning": "소유자 기기가 추가됩니다. 나 자신에게만 비공개로 전달하세요.",
+    "next": "다음",
+    "creating": "만드는 중…",
+    "createCode": "참여 코드 만들기",
+    "createWireguard": "설정 만들기",
+    "copyCode": "코드 복사",
+    "copyFailed": "코드를 복사하지 못했습니다. 코드를 선택해 직접 복사하세요.",
+    "copyFailedAndroid": "코드를 복사하지 못했습니다. 대신 참여 코드 보기 또는 공유를 사용하세요.",
+    "done": "완료",
+    "closeUnshared": {
+      "title": "코드를 공유하지 않고 닫을까요?",
+      "message": "코드는 다시 표시할 수 없습니다. 복사, 스캔 또는 공유하지 않았다면 참여 대기 목록에서 취소한 뒤 기기를 다시 추가하세요.",
+      "action": "닫기"
+    },
+    "handover": {
+      "title": "전달하기"
+    },
+    "code": {
+      "instructionSelf": "다른 기기에서 SirinVPN을 열고 참여 코드 사용을 선택한 뒤 이 QR 코드를 스캔하거나 코드를 붙여넣으세요.",
+      "instructionSelfAndroid": "다른 기기에서 SirinVPN을 열고 참여 코드 사용을 선택한 뒤 여기에서 공유한 코드를 스캔하거나 붙여넣으세요.",
+      "instructionPerson": "{{name}}에게 비공개로 보내세요. 그 사람은 SirinVPN을 열고 참여 코드 사용을 선택한 뒤 스캔하거나 붙여넣습니다.",
+      "instructionSeveral": "참여할 사람들에게 비공개로 보내세요. 각 사람은 SirinVPN을 열고 참여 코드 사용을 선택한 뒤 스캔하거나 붙여넣습니다.",
+      "once": "이 코드는 한 번만 표시됩니다",
+      "secret": "코드를 가진 사람은 사용되거나, 취소되거나, {{date}}에 만료될 때까지 참여할 수 있습니다."
+    },
+    "wireguard": {
+      "instruction": "기기에서 WireGuard 앱을 열고 이 QR 코드를 스캔하거나 저장된 파일을 가져오세요.",
+      "secret": "이 QR 코드와 파일에는 기기의 개인 키가 들어 있습니다. 가진 사람은 누구나 이 VPN을 사용할 수 있습니다. 가져온 뒤에는 파일을 삭제하세요.",
+      "limits": "WireGuard 기기는 직접 UDP로만 연결되며, 서버를 관리하거나 주소 변경을 따라갈 수 없습니다.",
+      "file": "설정 파일",
+      "fileHint": "선택 사항입니다. 라우터용 또는 나중에 가져오기 위해 .conf 파일을 저장하세요.",
+      "fileType": "WireGuard 설정",
+      "chooseFile": "파일 선택",
+      "noFile": "파일 없음. QR 코드만 제공",
+      "saved": "<path>{{path}}</path>에 저장됨"
+    },
+    "state": {
+      "waiting": "기기가 참여하기를 기다리는 중…",
+      "joined": "{count, plural, other {{{name}}이(가) 참여했습니다.}}",
+      "connected": "기기가 연결되었습니다.",
+      "expired": "누구도 사용하기 전에 코드가 만료되었습니다.",
+      "cancelled": "코드를 취소했습니다.",
+      "ended": "코드가 더 이상 대기 중이 아닙니다. 사용되었거나 취소되었습니다."
+    }
+  },
+  "share": {
+    "showInvitation": "참여 코드 보기 또는 공유",
+    "showRecovery": "복구 키 보기 또는 공유",
+    "qrNote": "코드를 복사하는 대신 이 QR 코드를 스캔하세요.",
+    "code": "코드",
+    "codeLabel": "참여 코드",
+    "enlarge": "QR 코드 확대",
+    "enlargeInvitation": "참여 코드 QR 코드 확대",
+    "enlargeRecovery": "복구 키 QR 코드 확대",
+    "scanInvitation": "참여 코드 스캔",
+    "scanRecovery": "복구 키 스캔",
+    "closeQr": "QR 코드 닫기",
+    "copyRecovery": "복구 키 복사",
+    "altInvitation": "참여 코드 QR 코드",
+    "altInvitationEnlarged": "확대된 참여 코드 QR 코드",
+    "altRecovery": "복구 키 QR 코드",
+    "altRecoveryEnlarged": "확대된 복구 키 QR 코드",
+    "altWireguard": "WireGuard 설정 QR 코드",
+    "copyCode": "코드 복사"
+  },
+  "name": {
+    "save": "이름 저장",
+    "empty": "이름을 입력하세요.",
+    "tooLong": "{count, plural, other {최대 #자까지 사용할 수 있습니다.}}",
+    "invalid": "줄 바꿈과 기타 제어 문자를 제거하세요."
+  },
+  "owner": {
+    "title": "{{name}}을(를) 소유자로 지정",
+    "open": "소유자로 지정…",
+    "effect": "{{name}}은(는) 서버의 모든 권한을 얻습니다. 나는 관리자가 되며, 이 작업은 여기에서 되돌릴 수 없습니다.",
+    "device": "소유자가 될 기기",
+    "wireguardExcluded": "WireGuard 기기는 서버를 관리할 수 없으므로 목록에 표시되지 않습니다.",
+    "codesWaiting": "{count, plural, other {참여 코드 #개를 먼저 취소해야 합니다.}}",
+    "cancelCode": "{{name}}의 코드 취소",
+    "confirm": "{{name}}을(를) 소유자로 지정"
+  },
+  "confirm": {
+    "removeDevice": {
+      "title": "{{name}}을(를) 삭제할까요?",
+      "message": "키가 폐기되며 VPN과 관리 접근이 즉시 중지됩니다. 다시 사용하려면 새 참여 코드가 필요합니다.",
+      "action": "기기 삭제"
+    },
+    "removeThis": {
+      "title": "이 기기를 삭제할까요?",
+      "message": "이 앱은 즉시 {{server}}에 접근할 수 없게 됩니다. 다시 사용하려면 다른 기기에서 새 참여 코드를 받아야 합니다.",
+      "action": "이 기기 삭제"
+    },
+    "removePerson": {
+      "title": "{{name}}을(를) 삭제할까요?",
+      "message": "{{name}}, {{devices}}, {{forwards}}, {{pairs}}, {{codes}}을(를) 삭제합니다. 이 작업은 되돌릴 수 없습니다.",
+      "action": "사람 삭제"
+    },
+    "suspend": {
+      "title": "{{name}}을(를) 일시 중지할까요?",
+      "message": "{count, plural, other {재개할 때까지 기기 #대의 접근 권한이 없어집니다. 대기 중인 참여 코드와 키 변경은 취소됩니다.}}",
+      "action": "일시 중지"
+    },
+    "resume": {
+      "title": "{{name}}을(를) 재개할까요?",
+      "message": "기기는 저장된 설정으로 다시 접근할 수 있습니다. 취소된 참여 코드는 복원되지 않습니다.",
+      "action": "재개"
+    },
+    "role": {
+      "title": "{{name}}의 역할을 {{role}}(으)로 바꿀까요?",
+      "toAdmin": "사람을 추가하고 구성원을 관리할 수 있습니다.",
+      "toMember": "기기는 유지되지만, 권한을 부여받지 않는 한 아무것도 관리하지 않습니다.",
+      "toAdminCancels": "{count, plural, other {사람을 추가하고 구성원을 관리할 수 있습니다. 먼저 대기 중인 참여 코드 #개가 취소됩니다.}}",
+      "toMemberCancels": "{count, plural, other {기기는 유지되지만, 권한을 부여받지 않는 한 아무것도 관리하지 않습니다. 먼저 대기 중인 참여 코드 #개가 취소됩니다.}}",
+      "action": "역할 변경"
+    },
+    "limits": {
+      "title": "{{name}}의 제한을 저장할까요?",
+      "message": "{count, plural, other {이 사람이 만들었거나 이 사람을 위한 대기 중인 참여 코드 #개가 취소됩니다.}}",
+      "action": "저장"
+    },
+    "makeOwner": {
+      "title": "{{name}}을(를) 소유자로 지정할까요?",
+      "message": "{{device}}({{fingerprint}})과(와) 그 사람의 다른 SirinVPN 기기가 모든 권한을 얻습니다. 이 기기는 관리자 기기가 됩니다.",
+      "action": "소유자로 지정"
+    },
+    "cancelCode": {
+      "title": "“{{name}}” 코드를 취소할까요?",
+      "message": "코드는 즉시 작동을 멈춥니다. 이미 참여한 기기는 접근 권한을 유지합니다.",
+      "action": "코드 취소"
+    },
+    "openPort": {
+      "title": "공개 포트 {{publicPort}}을(를) 열까요?",
+      "message": "{{protocol}} 포트 {{publicPort}}이(가) {{device}}의 포트 {{devicePort}}로 전달됩니다. 인터넷의 누구나 접속을 시도할 수 있습니다.",
+      "action": "포트 열기"
+    },
+    "closePort": {
+      "title": "{{protocol}} 포트 {{publicPort}}을(를) 닫을까요?",
+      "message": "이 포트를 통한 연결이 즉시 중지됩니다.",
+      "action": "포트 닫기"
+    },
+    "removePair": {
+      "title": "{{name}}의 이 기기 쌍을 삭제할까요?",
+      "message": "두 기기 모두 기기 간 접근이 켜져 있지 않으면 서로 연결할 수 없습니다.",
+      "action": "기기 쌍 삭제"
+    }
+  },
+  "notice": {
+    "abandoned": "변경 사항이 전송되지 않았습니다. 서버와의 연결이 바뀌었습니다. 다시 시도하세요.",
+    "personRenamed": "“{{name}}”(으)로 이름을 바꿨습니다.",
+    "deviceRenamed": "“{{name}}”(으)로 이름을 바꿨습니다.",
+    "deviceRemoved": "{{name}}을(를) 삭제했습니다.",
+    "personRemoved": "{{name}}을(를) 삭제했습니다.",
+    "suspended": "{{name}}이(가) 일시 중지되었습니다.",
+    "resumed": "{{name}}이(가) 다시 활성화되었습니다.",
+    "roleChanged": "{{name}}의 역할은 이제 {{role}}입니다.",
+    "ownerChanged": "{{name}}이(가) 이제 소유자입니다. 이 기기는 관리자 기기입니다.",
+    "limitsSaved": "{{name}}의 제한을 저장했습니다.",
+    "codeCancelled": "참여 코드를 취소했습니다.",
+    "peerOn": "{{name}}에게 이제 기기 간 접근 권한이 있습니다.",
+    "peerOff": "{{name}}에게 더 이상 기기 간 접근 권한이 없습니다.",
+    "pairAdded": "{{name}}과(와) 기기 쌍을 만들었습니다.",
+    "pairRemoved": "기기 쌍을 삭제했습니다.",
+    "networksSaved": "{{name}}의 로컬 네트워크를 저장했습니다.",
+    "networksCleared": "{{name}}은(는) 더 이상 로컬 네트워크를 공유하지 않습니다.",
+    "portOpened": "포트 {{port}}이(가) 열려 있습니다.",
+    "portClosed": "포트 {{port}}이(가) 닫혀 있습니다."
+  },
+  "join": {
+    "codeAccepted": "참여 코드가 확인되었습니다",
+    "codeEntered": "참여 코드를 입력했습니다",
+    "changeCode": "코드 변경",
+    "rejected": {
+      "expired": "이 참여 코드는 만료되었습니다. 새 코드를 요청하세요.",
+      "used": "이 참여 코드는 이미 사용되었거나 취소되었습니다. 새 코드를 요청하세요.",
+      "invalid": "올바른 참여 코드가 아닙니다. 코드 전체를 복사했는지 확인하거나 새 코드를 요청하세요."
+    },
+    "ownerDevice": "소유자인 {{name}}에 이 기기를 추가합니다.",
+    "ownerPower": "소유자 기기는 서버, 모든 사람, 모든 기기에 대한 모든 권한을 가집니다. 이를 원하는 경우에만 참여하세요.",
+    "addsDevice": "{{name}}에 이 기기를 추가합니다.",
+    "namedPerson": "<strong>{{name}}</strong>(으)로 참여합니다.",
+    "personName": "내 이름",
+    "personNameHint": "이 서버를 관리하는 사람에게 표시됩니다.",
+    "deviceName": "이 기기의 이름",
+    "deviceNameHint": "예: 휴대폰 또는 컴퓨터의 모델명. 나중에 이름을 바꿀 수 있습니다.",
+    "presetDevice": "이 기기의 이름은 <strong>{{name}}</strong>(으)로 지정됩니다.",
+    "renameLater": "나중에 기기 메뉴에서 이름을 바꿀 수 있습니다."
+  },
+  "error": {
+    "load": "서버에서 사람과 기기를 불러오지 못했습니다.",
+    "features": "이 서버가 지원하는 기능을 확인하지 못했습니다.",
+    "renamePerson": "사람의 이름을 바꾸지 못했습니다. 다시 시도하세요.",
+    "renameDevice": "기기의 이름을 바꾸지 못했습니다. 다시 시도하세요.",
+    "removeDevice": "기기를 삭제하지 못했습니다. 다시 시도하세요.",
+    "removePerson": "사람을 삭제하지 못했습니다. 현재 상태를 보려면 새로 고치세요.",
+    "suspension": "일시 중지 상태를 변경하지 못했습니다. 현재 상태를 보려면 새로 고치세요.",
+    "role": "역할을 변경하지 못했습니다. 다시 시도하세요.",
+    "makeOwner": "소유자를 변경하지 못했습니다. 다시 시도하세요.",
+    "limits": "제한을 저장하지 못했습니다. 다시 시도하세요.",
+    "peer": "기기 간 접근을 변경하지 못했습니다. 다시 시도하세요.",
+    "pair": "기기 쌍을 변경하지 못했습니다. 다시 시도하세요.",
+    "networks": "로컬 네트워크를 저장하지 못했습니다. 다시 시도하세요.",
+    "openPort": "포트를 열지 못했습니다. 다시 시도하세요.",
+    "closePort": "포트를 닫지 못했습니다. 다시 시도하세요.",
+    "cancelCode": "참여 코드를 취소하지 못했습니다. 다시 시도하세요.",
+    "createCode": "참여 코드를 만들지 못했습니다. 다시 시도하세요.",
+    "wireguard": "WireGuard 기기를 추가하지 못했습니다. 다시 시도하세요."
+  }
+}

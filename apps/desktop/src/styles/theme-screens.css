@@ -49,13 +49,17 @@
   z-index: -1;
   pointer-events: none;
   top: calc(100% - 14rem);
-  left: calc(-1 * var(--onboarding-gutter));
+  inset-inline-start: calc(-1 * var(--onboarding-gutter));
   width: max(50vw, calc(100% + var(--onboarding-gutter) + var(--onboarding-gap)));
   aspect-ratio: 520 / 660;
   min-height: calc(100dvh - var(--titlebar-height, 0px));
   background: url("../assets/mountains.svg") left top / 100% auto no-repeat;
   mask-image: linear-gradient(to right, #000 78%, transparent);
   opacity: 0.65;
+}
+:root[dir="rtl"] .onboarding-copy::before {
+  background-position: right top;
+  mask-image: linear-gradient(to left, #000 78%, transparent);
 }
 /* The bundled landscape is drawn for night; invert it rather than ship a second asset. */
 :root[data-theme="light"] .onboarding-copy::before {
@@ -127,7 +131,7 @@
 .skip-link {
   position: fixed;
   z-index: 100;
-  left: 10px;
+  inset-inline-start: 10px;
   top: -80px;
   padding: 15px;
   background: color-mix(in srgb, var(--surface-3) 45%, var(--surface-2));
@@ -142,11 +146,10 @@
   justify-content: space-around;
   position: fixed;
   bottom: 0;
-  left: 0;
-  right: 0;
+  inset-inline-start: 0;
+  inset-inline-end: 0;
   z-index: 30;
-  padding: 9px max(10px, env(safe-area-inset-right))
-    calc(9px + env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
+  padding: 9px max(10px, env(safe-area-inset-right)) calc(9px + env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left)); /* safe-area insets are physical */
   background: color-mix(in srgb, var(--bg) 96.1%, transparent);
   backdrop-filter: blur(16px);
   border-top: 1px solid color-mix(in srgb, var(--line-strong) 75%, var(--surface));

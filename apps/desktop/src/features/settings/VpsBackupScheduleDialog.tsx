@@ -121,6 +121,7 @@ function ScheduleForm({
   const chooseFolder = () =>
     run("folder", async () => {
       const selected = await openDialog({
+        purpose: "vps_backup_folder",
         directory: true,
         title: t("vps.schedule.folderDialogTitle"),
       });
@@ -236,7 +237,7 @@ function ScheduleForm({
               label={t("vps.common.backupPassword")}
               hint={t(schedule ? "vps.schedule.passwordKeepHint" : "vps.schedule.passwordHint")}
             >
-              <SecretInput
+              <SecretInput field="backup_password"
                 type="password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
@@ -246,7 +247,7 @@ function ScheduleForm({
             <Field label={t("vps.backup.repeatPassword")}
               hint={password && passwordValid ? t("vps.common.passwordsMatch") : undefined}
               error={repeat && repeat !== password ? t("common.error.passwordsDiffer") : undefined}>
-              <SecretInput
+              <SecretInput field="backup_password"
                 type="password"
                 value={repeat}
                 onChange={(event) => setRepeat(event.target.value)}

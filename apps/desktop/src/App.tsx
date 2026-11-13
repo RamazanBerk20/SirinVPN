@@ -3,12 +3,15 @@ import { AndroidOperation } from "./components/AndroidOperation";
 import { ToastRegion } from "./components/Toasts";
 import { useAndroidBack } from "./hooks/useAndroidBack";
 import { describeConnection } from "./features/connection/connectionState";
+import { usePendingCommand } from "./features/connection/connectionCommands";
+import { connectionView, type ConnectionView } from "./features/connection/connectionView";
 import { DesktopTitleBar } from "./components/DesktopTitleBar";
 import { SEARCH_THRESHOLD, ServerCollection } from "./features/servers/ServerCollection";
 import type { SettingsCategory } from "./features/settings/SettingsLayout";
 import type { SetupNext } from "./features/onboarding/SetupFlow";
 import { DialogContent } from "./components/DialogContent";
 import { PreferencesProvider } from "./features/settings/PreferencesProvider";
+import { LanguagePicker } from "./features/settings/LanguagePicker";
 const GeneralSettings = lazy(() => import("./features/settings/GeneralSettings").then(m => ({ default: m.GeneralSettings })));
 import { usePageTransition } from "./hooks/usePageTransition";
 import { usePageNavigation } from "./hooks/usePageNavigation";
@@ -26,11 +29,12 @@ import {
   Plus,
   ShieldCheck,
 } from "@phosphor-icons/react";
-import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useReducer, useState, type SetStateAction } from "react";
 import { api } from "./api";
 import { isAndroid, setDemo } from "./platform";
-import { t } from "./i18n";
-import { type ClientPlatform, type ServerProfile } from "./types";
+import { foldText, t } from "./i18n";
+import { type ServerProfile } from "./types";
+import { bootPlatform, bootReducer, initialBoot } from "./appBoot";
 import { Brand, PrivacyPromises } from "./components/Brand";
 import {
   InlineError,
@@ -42,6 +46,18 @@ const AddServerFlow = lazy(() => import("./features/onboarding/AddServerFlow").t
 const ServerWorkspace = lazy(() => import("./features/connection/ServerWorkspace").then(m => ({ default: m.ServerWorkspace })));
 const ReleaseUpdateDialog = lazy(() => import("./features/settings/ReleaseUpdateDialog").then(m => ({ default: m.ReleaseUpdateDialog })));
 
+/** The sidebar names a command the user sent before the tunnel reports it. */
+function sidebarStatus(view: ConnectionView): string | null {
+  if (view.phase === "stopping") return t("home.status.disconnecting");
+  return view.phase === "starting" && view.by === "user" ? t("home.status.connecting") : null;
+}
+
+const noServers: ServerProfile[] = [];
+/** Lazily loaded parts show this in place; the full-screen loader is for boot only, so a visible screen never disappears. */
+function InlineLoading() {
+  return <p className="inline-loading" role="status">{t("common.state.loading")}</p>;
+}
+
 export default function App() {
   useAndroidBack();
   return (
@@ -52,18 +68,13 @@ export default function App() {
 }
 
 function AppContent() {
-  const [clientPlatform, setClientPlatform] = useState<ClientPlatform | null>(
-    null,
-  );
-  const [platformError, setPlatformError] = useState<string | null>(null);
+  const [boot, dispatch] = useReducer(bootReducer, initialBoot);
   const [initializationAttempt, setInitializationAttempt] = useState(0);
+  const clientPlatform = bootPlatform(boot);
+  const servers = boot.kind === "ready" ? boot.servers : noServers;
   const [page, setPage, detail, goBack] = usePageNavigation();
   const pageContent = usePageTransition<HTMLDivElement>(page);
-  const [servers, setServers] = useState<ServerProfile[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [connectionOperation, setConnectionOperation] = useState<"connecting" | "disconnecting" | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const pendingCommand = usePendingCommand();
   const [settingsCategory, setSettingsCategory] =
     useState<SettingsCategory>("general");
   const [addMode, setAddMode] = useState<"provision" | "backup" | undefined>();
@@ -74,59 +85,43 @@ function AppContent() {
   );
   const [releaseUpdateOpen, setReleaseUpdateOpen] = useState(false);
   const [serverQuery, setServerQuery] = useState("");
+  const setServers = useCallback((update: SetStateAction<ServerProfile[]>) => dispatch({ type: "serversChanged", update }), []);
+  const setSelectedId = useCallback((id: string) => dispatch({ type: "select", id }), []);
   const { localStatus, serverStatus, refreshStatus, freshness, trafficUpdates } =
     useDesktopStatus(clientPlatform, setServers);
 
-  const loadServers = useCallback(async () => {
+  /** `select` picks a server once the list is read, such as the one just added. */
+  const loadServers = useCallback(async (select?: string) => {
     try {
-      const profiles = favoritesFirst(await api.listServers());
-      setServers(profiles);
-      setSelectedId((current) =>
-        profiles.some((profile) => profile.id === current)
-          ? current
-          : (profiles[0]?.id ?? null),
-      );
-      setLoadError(null);
+      dispatch({ type: "serversLoaded", servers: favoritesFirst(await api.listServers()), select });
     } catch {
-      setLoadError(t("app.errors.profiles"));
-    } finally {
-      setLoading(false);
+      dispatch({ type: "serversFailed" });
     }
   }, []);
 
   useEffect(() => {
     let active = true;
-    setLoading(true);
-    setPlatformError(null);
+    dispatch({ type: "detect" });
     void api
       .clientPlatform()
       .then((platform) => {
         if (!active) return;
-        if (platform !== "desktop" && platform !== "android") {
-          throw new Error("Unsupported client platform");
-        }
-        setClientPlatform(platform);
-        if (platform === "desktop" || platform === "android") {
-          void loadServers();
-        } else {
-          setLoading(false);
-        }
+        if (platform !== "desktop" && platform !== "android") throw new Error("Unsupported client platform");
+        dispatch({ type: "platformDetected", platform });
+        void loadServers();
       })
       .catch(() => {
-        if (!active) return;
-        setPlatformError(t("app.errors.platform"));
-        setLoading(false);
+        if (active) dispatch({ type: "platformFailed" });
       });
     return () => {
       active = false;
     };
   }, [loadServers, initializationAttempt]);
+  // Agents and UI tests read the boot phase from the document.
+  useEffect(() => { document.documentElement.dataset.boot = boot.kind; }, [boot.kind]);
 
-  const selected = useMemo(
-    () =>
-      servers.find((server) => server.id === selectedId) ?? servers[0] ?? null,
-    [selectedId, servers],
-  );
+  const selected = boot.kind === "ready" ? boot.servers.find((server) => server.id === boot.selectedId) ?? null : null;
+  const loadError = boot.kind === "ready" && boot.notice ? t(boot.notice === "profiles" ? "app.errors.profiles" : "app.errors.trayServer") : null;
   const releaseInstallReady =
     localStatus.state === "disconnected" &&
     !localStatus.kill_switch_enabled &&
@@ -134,25 +129,25 @@ function AppContent() {
   useScheduledVpsBackups(releaseInstallReady && servers.some((server) => server.role === "owner"));
 
   const openSettings = (category: SettingsCategory) => {
+    // The category is part of the URL on both platforms, so Back returns to the previous tab.
     setSettingsCategory(category);
-    setPage("settings", clientPlatform === "android" ? category : undefined);
+    setPage("settings", category);
   };
   /** `next` lands on the page the finished flow pointed at, such as Keys & recovery after setup. */
   const handleServerAdded = async (profile: ServerProfile, next?: SetupNext) => {
-    await loadServers();
-    setSelectedId(profile.id);
+    await loadServers(profile.id);
     setAddOpen(false);
     if (next === "recovery") openSettings("recovery");
     else setPage("home");
   };
 
   useDesktopTray(
-    clientPlatform === "desktop" && !loading,
+    clientPlatform === "desktop" && boot.kind !== "detecting",
     selected?.id ?? null,
     (request) => {
       if (request.server_id) {
         if (!servers.some((server) => server.id === request.server_id)) {
-          setLoadError(t("app.errors.trayServer"));
+          dispatch({ type: "notice", notice: "trayServer" });
           return;
         }
       }
@@ -172,22 +167,18 @@ function AppContent() {
           setAddOpen(true);
           break;
         case "settings":
-          setSettingsCategory("general");
-          setPage("settings");
+          openSettings("general");
           if (!servers.length) setAppSettingsOpen(true);
           break;
         case "connection":
-          setSettingsCategory("connection");
-          setPage("settings");
+          openSettings("connection");
           break;
         case "diagnostics":
-          setSettingsCategory("maintenance");
-          setPage("settings");
+          openSettings("maintenance");
           setTrayRequest(request);
           break;
         case "component_update":
-          setSettingsCategory("connection");
-          setPage("settings");
+          openSettings("connection");
           setTrayRequest(request);
           break;
       }
@@ -195,7 +186,7 @@ function AppContent() {
   );
 
   // The desktop window is frameless: before the platform is known, only the custom title bar can move or close it.
-  if (loading)
+  if (boot.kind === "detecting")
     return (
       <>
         {!isAndroid && <DesktopTitleBar />}
@@ -203,14 +194,14 @@ function AppContent() {
       </>
     );
 
-  if (platformError || clientPlatform === null) {
+  if (boot.kind === "platformFailed" || clientPlatform === null) {
     return (
       <>
       {!isAndroid && <DesktopTitleBar />}
       <PlatformUnavailable
         onRetry={() => setInitializationAttempt((value) => value + 1)}
         message={
-          platformError ?? t("app.errors.platform")
+          t("app.errors.platform")
         }
       />
       </>
@@ -219,39 +210,40 @@ function AppContent() {
 
 
   // Saved servers that can't be read are a problem to fix, not a first launch: no setup pitch, no demo.
-  if (servers.length === 0 && loadError) {
+  if (boot.kind === "storeFailed") {
     return (
       <>
         {clientPlatform === "desktop" && <DesktopTitleBar />}
         <StartupProblem
           title={t("app.onboarding.storeTitle")}
-          message={loadError}
+          message={t("app.errors.profiles")}
           help={t(clientPlatform === "android" ? "app.onboarding.storeHelpAndroid" : "app.onboarding.storeHelpDesktop")}
-          onRetry={() => { setLoading(true); void loadServers(); }}
+          onRetry={() => { dispatch({ type: "reload" }); void loadServers(); }}
         >
           {/* A locked keyring must not also lock out a fix that comes as an update. */}
           {clientPlatform === "desktop" && <button className="text-button" type="button" onClick={() => setReleaseUpdateOpen(true)}>{t("app.onboarding.checkUpdates")}</button>}
         </StartupProblem>
-        {clientPlatform === "desktop" && <ReleaseUpdateDialog
+        {clientPlatform === "desktop" && <Suspense fallback={null}><ReleaseUpdateDialog
           open={releaseUpdateOpen}
           onOpenChange={setReleaseUpdateOpen}
           installationReady={releaseInstallReady}
           onReviewPrerequisites={() => setReleaseUpdateOpen(false)}
-        />}
+        /></Suspense>}
         <ToastRegion />
       </>
     );
   }
 
-  if (servers.length === 0) {
+  if (boot.kind === "empty") {
     return (
       <>
         {clientPlatform === "desktop" && <DesktopTitleBar />}
-        <main className="onboarding-shell">
+        <main className="onboarding-shell" data-state={boot.kind}>
           <AndroidOperation />
           <header className="onboarding-header">
             <Brand compact={false} />
             <div className="onboarding-actions">
+              <LanguagePicker compact />
               <Dialog.Root
                 open={appSettingsOpen}
                 onOpenChange={setAppSettingsOpen}
@@ -264,7 +256,7 @@ function AppContent() {
                 <Dialog.Portal>
                   <Dialog.Overlay className="dialog-overlay" />
                   <DialogContent className="dialog-content preferences-dialog" heading={t("app.onboarding.settings")} description={t("app.onboarding.settingsDescription")}>
-                    <GeneralSettings platform={clientPlatform} onCheckUpdates={() => setReleaseUpdateOpen(true)} />
+                    <Suspense fallback={<InlineLoading />}><GeneralSettings platform={clientPlatform} onCheckUpdates={() => setReleaseUpdateOpen(true)} /></Suspense>
                   </DialogContent>
                 </Dialog.Portal>
               </Dialog.Root>
@@ -294,7 +286,7 @@ function AppContent() {
             className="onboarding-form-wrap"
             aria-label={t("app.onboarding.firstServer")}
           >
-            <AddServerFlow onAdded={handleServerAdded} />
+            <Suspense fallback={<InlineLoading />}><AddServerFlow onAdded={handleServerAdded} /></Suspense>
           </section>
           {/* On a phone the real ways in come first; the demo is a quiet way to look around. */}
           {clientPlatform === "android" && <div className="onboarding-demo mobile-demo">
@@ -302,21 +294,21 @@ function AppContent() {
             <p>{t("help.demo.enterHint")}</p>
           </div>}
         </main>
-        <ReleaseUpdateDialog
+        <Suspense fallback={null}><ReleaseUpdateDialog
           open={releaseUpdateOpen}
           onOpenChange={setReleaseUpdateOpen}
           installationReady={releaseInstallReady}
           onReviewPrerequisites={() => { setPage("home"); setSettingsCategory("connection"); }}
-        />
+        /></Suspense>
         <ToastRegion />
       </>
     );
   }
 
   const listedServers = servers.length < SEARCH_THRESHOLD ? servers
-    : servers.filter((server) => `${server.name} ${server.endpoint.host}`.toLocaleLowerCase().includes(serverQuery.trim().toLocaleLowerCase()));
+    : servers.filter((server) => foldText(`${server.name} ${server.endpoint.host}`).includes(foldText(serverQuery.trim())));
   return (
-    <div className="app-shell">
+    <div className="app-shell" data-state={boot.kind}>
       {clientPlatform === "desktop" && <DesktopTitleBar />}
       <a className="skip-link" href="#main-content">
         {t("app.skipToContent")}
@@ -376,11 +368,9 @@ function AppContent() {
                   <Database size={18} weight="duotone" />
                 </span>
                 <span>
-                  <strong>{server.name}</strong>
+                  <strong dir="auto">{server.name}</strong>
                   <small>
-                    {selected?.id === server.id && connectionOperation
-                      ? t(connectionOperation === "connecting" ? "home.status.connecting" : "home.status.disconnecting")
-                      : describeConnection(localStatus, server.id, null).status}
+                    {sidebarStatus(connectionView(localStatus, server.id, pendingCommand)) ?? describeConnection(localStatus, server.id, null).status}
                   </small>
                 </span>
               </button>
@@ -419,7 +409,7 @@ function AppContent() {
           )}
           {loadError ? <InlineError message={loadError} /> : null}
           {selected ? (
-            <ServerWorkspace
+            <Suspense fallback={<InlineLoading />}><ServerWorkspace
               key={selected.id}
               onTrayRequestHandled={() => setTrayRequest(null)}
               trayRequest={
@@ -433,8 +423,8 @@ function AppContent() {
               onCheckUpdates={() => setReleaseUpdateOpen(true)}
               profile={selected}
               freshness={freshness}
-              category={clientPlatform === "android" && page === "settings" && detail ? detail as SettingsCategory : settingsCategory}
-              onCategoryChange={clientPlatform === "android" ? openSettings : setSettingsCategory}
+              category={page === "settings" && detail ? detail as SettingsCategory : settingsCategory}
+              onCategoryChange={openSettings}
               onRestoreDevice={() => {
                 setAddMode("backup");
                 setAddOpen(true);
@@ -450,24 +440,23 @@ function AppContent() {
                 await refreshStatus();
               }}
               onRemoved={loadServers}
-              onConnectionOperation={setConnectionOperation}
               servers={servers}
               onSelectServer={setSelectedId}
               onAddServer={() => {
                 setAddMode(undefined);
                 setAddOpen(true);
               }}
-            />
+            /></Suspense>
           ) : null}
         </div>
       </main>
       <Navigation page={page} onChange={setPage} mobile />
-      <ReleaseUpdateDialog
+      <Suspense fallback={null}><ReleaseUpdateDialog
         open={releaseUpdateOpen}
         onOpenChange={setReleaseUpdateOpen}
         installationReady={releaseInstallReady}
           onReviewPrerequisites={() => { setPage("home"); setSettingsCategory("connection"); }}
-      />
+      /></Suspense>
       <ToastRegion />
     </div>
   );

@@ -1,6 +1,7 @@
 import { Check, Database, Plus, Star } from "@phosphor-icons/react";
-import { useState } from "react";
-import { api } from "../../api";
+import { Fragment, useEffect, useState } from "react";
+import { api, type InstallTransaction } from "../../api";
+import { CheckChangeAgain } from "../../components/ServerChange";
 import { ActionMenu } from "../../components/ActionMenu";
 import { CopyValue } from "../../components/CopyValue";
 import { notify } from "../../components/Toasts";
@@ -11,7 +12,7 @@ import { errorMessage } from "../../lib/errors";
 import { isAndroid } from "../../platform";
 import * as Dialog from "@radix-ui/react-dialog";
 import { DialogContent } from "../../components/DialogContent";
-import { t } from "../../i18n";
+import { foldText, t } from "../../i18n";
 
 /** Search appears once a collection is long enough to need it. */
 export const SEARCH_THRESHOLD = 6;
@@ -41,7 +42,11 @@ export function ServerCollection({
   const [query, setQuery] = useState("");
   const [renaming, setRenaming] = useState<ServerProfile | null>(null);
   const [draftName, setDraftName] = useState("");
-  const filtered = servers.filter((server) => `${server.name} ${server.endpoint.host}`.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
+  // A server change whose confirmation was lost stays unresolved until the VPS is asked again.
+  const [unresolved, setUnresolved] = useState<InstallTransaction | null>(null);
+  useEffect(() => { api.installTransactionStatus().then(setUnresolved, () => setUnresolved(null)); }, []);
+  const checkAgain = unresolved && <CheckChangeAgain host={unresolved.host} onResolved={() => { setUnresolved(null); void onChanged(); }} />;
+  const filtered = servers.filter((server) => foldText(`${server.name} ${server.endpoint.host}`).includes(foldText(query.trim())));
   const edit = async (server: ServerProfile, favorite?: boolean, newName?: string) => {
     if (favorite === undefined && newName === undefined) { setRenaming(server); setDraftName(server.name); return; }
     const name = favorite === undefined ? newName?.trim() : null;
@@ -79,10 +84,12 @@ export function ServerCollection({
       {error && <InlineError message={error} />}
       {(servers.length >= SEARCH_THRESHOLD || query) && <label className="field"><span>{t("servers.search.label")}</span><input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t("servers.search.placeholder")} /></label>}
       {!filtered.length && <p role="status">{t("servers.search.empty")}</p>}
+      {unresolved && !servers.some((server) => server.id === unresolved.server_id) && checkAgain}
       <div className="server-collection">
         {filtered.map((server) => {
           const state = describeConnection(local, server.id, null);
           return (
+            <Fragment key={server.id}>
             <article
               key={server.id}
               className="collection-row"
@@ -139,6 +146,8 @@ export function ServerCollection({
                 ]}
               />
             </article>
+            {unresolved?.server_id === server.id && checkAgain}
+            </Fragment>
           );
         })}
       </div>

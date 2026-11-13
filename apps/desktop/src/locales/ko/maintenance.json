@@ -1,0 +1,270 @@
+{
+  "tools": {
+    "deviceTitle": "기기 백업",
+    "vpsTitle": "VPS 백업 및 복구",
+    "serverTitle": "{{name}} 관리",
+    "finishRotationFirst": "먼저 키 교체를 완료하세요",
+    "exportBackup": {
+      "label": "기기 백업 내보내기",
+      "summary": "이 기기의 키를 암호화한 사본"
+    },
+    "restoreBackup": {
+      "label": "기기 백업 복원",
+      "summary": "암호화된 백업 파일에서 기기 키 불러오기"
+    },
+    "rotateKeys": {
+      "label": "기기 키 교체",
+      "resumeLabel": "키 교체 재개",
+      "summary": "이 기기의 키 교체",
+      "resumeSummary": "중단된 이 기기의 키 교체 완료",
+      "needsConnection": "먼저 이 서버에 연결하세요"
+    },
+    "endpoint": {
+      "ownerLabel": "새 주소로 이동",
+      "ownerSummary": "모든 기기가 서버의 새 주소를 사용하도록 설정",
+      "memberLabel": "주소 업데이트 적용",
+      "memberSummary": "서명된 업데이트를 사용해 서버의 새 주소에 연결",
+      "otherConnected": "먼저 다른 서버 연결 끊기"
+    },
+    "remove": {
+      "label": "제거 또는 삭제",
+      "summary": "이 기기에서 잊기 또는 VPS에서 삭제"
+    },
+    "deviceKeysTitle": "기기 키",
+    "vpsScheduleTitle": "자동 VPS 백업"
+  },
+  "operation": {
+    "interruption": "서비스가 다시 시작되므로 다른 기기의 연결이 잠시 끊어질 수 있습니다.",
+    "backup": {
+      "title": "VPS 백업",
+      "summary": "서버 설정과 접근 권한의 암호화된 사본",
+      "steps": {
+        "read": "검증된 SSH를 통해 서버 설정과 접근 권한을 읽습니다.",
+        "encrypt": "백업은 비밀번호로 암호화되어 이 기기에 저장됩니다."
+      }
+    },
+    "restore": {
+      "title": "VPS 복원 또는 이전",
+      "summary": "이 VPS 또는 새 VPS에 백업 복원",
+      "steps": {
+        "choose": "VPS 백업을 선택하고 SSH를 통해 대상 VPS를 확인합니다.",
+        "review": "아무것도 변경하기 전에 교체될 항목을 검토합니다."
+      }
+    },
+    "update": {
+      "title": "VPS 소프트웨어 업데이트",
+      "summary": "VPS에 더 새로운 SirinVPN 릴리스 설치",
+      "steps": {
+        "review": "설치하기 전에 서명된 릴리스를 검토합니다.",
+        "rollback": "롤백을 위해 현재 릴리스를 보관합니다."
+      }
+    },
+    "repair": {
+      "title": "VPS 설정 복구",
+      "summary": "VPS의 네트워킹과 서비스를 다시 적용",
+      "steps": {
+        "reapply": "네트워킹, 서비스, DNS를 다시 적용하고 서버 소프트웨어를 다시 설치합니다.",
+        "preserve": "기기와 접근 권한은 유지됩니다. DNS 변경 사항을 먼저 검토합니다."
+      }
+    },
+    "dns": {
+      "title": "VPS DNS 설정",
+      "steps": {
+        "choose": "이 서버의 모든 기기에 사용할 DNS 서버 또는 비공개 레코드를 선택합니다.",
+        "apply": "변경 사항은 복구를 통해 적용되며, 서버 소프트웨어가 다시 설치됩니다."
+      }
+    },
+    "security": {
+      "title": "VPS 보안 업데이트 켜기",
+      "steps": {
+        "enable": "복구를 통해 운영체제의 자동 보안 업데이트를 켜고 서버 소프트웨어를 다시 설치합니다."
+      }
+    }
+  },
+  "review": {
+    "description": "{{name}}에서 일어나는 일",
+    "close": "검토 닫기",
+    "rotationFirst": "먼저 이 기기의 키 교체를 완료하세요.",
+    "reviewRotation": "키 교체 검토",
+    "refreshFirst": "먼저 이 기기의 VPN 상태를 새로 고치세요.",
+    "disconnectFirst": "먼저 이 기기에서 VPN 연결을 끊으세요. 다른 기기는 영향을 받지 않습니다.",
+    "disconnectFirstKillSwitch": "먼저 이 기기에서 VPN 연결을 끊으세요. 킬 스위치 차단이 해제되고 자동 다시 연결이 중지됩니다.",
+    "disconnect": "이 기기 연결 끊기",
+    "disconnecting": "연결을 끊는 중…",
+    "refresh": "상태 새로 고침",
+    "disconnectFailed": "VPN 연결을 끊지 못했습니다.",
+    "blocked": "계속하려면 위 단계를 완료하세요."
+  },
+  "health": {
+    "title": "시스템 상태",
+    "connection": "연결",
+    "killSwitch": "킬 스위치",
+    "autoReconnect": "자동 다시 연결",
+    "autoReconnectOther": "연결된 서버 보기",
+    "management": "서버 관리",
+    "managementResponding": "응답함",
+    "managementUnavailable": "사용할 수 없음 · VPN은 여전히 연결됨",
+    "notChecked": "확인되지 않음",
+    "serverVpn": "서버 VPN",
+    "serverVpnUp": "실행 중",
+    "serverVpnDown": "중지됨",
+    "serverDns": "서버 DNS",
+    "serverDnsRunning": "실행 중",
+    "serverDnsDown": "응답 없음",
+    "diagnosticsSummary": "이 기기를 확인하며, 연결된 동안에는 DNS, 트래픽 누출, 서버도 확인합니다.",
+    "runDiagnostics": "진단 실행"
+  },
+  "diagnostics": {
+    "title": "진단",
+    "description": "이 기기와 서버의 현재 상태입니다. 결과는 저장되지 않습니다.",
+    "checking": "이 기기와 서버를 확인하는 중…",
+    "copy": "보고서 복사",
+    "openNetwork": "네트워크 설정 열기",
+    "turnOnUpdates": "켜기",
+    "copied": "보고서를 복사했습니다. 다른 내용으로 바뀔 때까지 클립보드에 남아 있습니다.",
+    "copyFailed": "보고서를 복사하지 못했습니다. 클립보드 접근 권한을 확인하고 다시 시도하세요.",
+    "summary": {
+      "attention": "{count, plural, other {확인 필요 #개}}",
+      "review": "{count, plural, other {검토 #개}}",
+      "unavailable": "{count, plural, other {확인 안 됨 #개}}",
+      "passed": "{count, plural, other {통과 #개}}",
+      "line": "{{attention}} · {{review}} · {{passed}}",
+      "withUnavailable": "{{attention}} · {{review}} · {{unavailable}} · {{passed}}"
+    },
+    "group": {
+      "attention": "확인 필요",
+      "review": "검토",
+      "unavailable": "확인 안 됨",
+      "passed": "통과"
+    },
+    "passedChecks": "통과한 검사 · {{count}}",
+    "passedNote": "검사를 통과했다고 해서 모든 누출 가능성이 배제되는 것은 아닙니다.",
+    "checkTitle": {
+      "local_backend": "로컬 VPN 서비스",
+      "local_tunnel": "선택한 VPN 연결",
+      "local_protection": "현재 트래픽 보호",
+      "local_transport": "현재 전송 방식",
+      "local_routes": "설정된 VPN 라우팅",
+      "local_ipv6": "설정된 IPv6 처리",
+      "local_mtu": "현재 경로 MTU",
+      "local_quality": "현재 비공개 터널 프로브",
+      "local_dns": "이 기기를 통한 비공개 DNS",
+      "local_identity": "기기 ID 저장소",
+      "management": "VPS 인증 및 연결",
+      "server_report_format": "VPS 진단 호환성",
+      "interface": "VPS VPN 인터페이스",
+      "wireguard": "VPS WireGuard",
+      "dns": "VPS 비공개 DNS 서비스",
+      "forwarding": "VPS IPv4 포워딩",
+      "ipv6": "VPS IPv6 터널",
+      "server_process": "VPS 시스템 서비스",
+      "server_routes": "VPS 라우트",
+      "server_firewall": "VPS 방화벽 구조",
+      "server_nat4": "VPS IPv4 NAT",
+      "server_nat6": "VPS IPv6 NAT",
+      "server_ports": "VPS 수신 포트",
+      "server_mtu": "VPS 인터페이스 MTU",
+      "server_cpu": "VPS CPU",
+      "server_memory": "VPS 메모리",
+      "server_disk": "VPS 디스크",
+      "external_reachability": "제공업체 방화벽 및 공개 접속",
+      "dns_blocklist": "VPS DNS 차단",
+      "os_security_updates": "VPS 보안 업데이트",
+      "os_reboot_required": "VPS 재시작",
+      "diagnostics_busy": "VPS 현재 진단",
+      "dns_probe_busy": "VPS DNS 응답 확인",
+      "dns_resolver_response": "VPS 비공개 리졸버 응답",
+      "leak_ipv4": "IPv4 누출 테스트",
+      "leak_ipv6": "IPv6 누출 테스트",
+      "leak_dns": "DNS 누출 테스트",
+      "authorization_transaction": "접근 변경",
+      "authorization_containment": "접근 변경 중 트래픽 차단",
+      "authorization_intent": "접근 복구 기록",
+      "authorization_peers": "적용된 기기"
+    },
+    "evidence": {
+      "configuration": "설정 확인됨",
+      "service": "서비스가 보고함",
+      "observed": "테스트됨",
+      "notChecked": "확인되지 않음",
+      "notApplicable": "해당 없음",
+      "reported": "보고됨"
+    },
+    "report": {
+      "title": "SirinVPN 진단",
+      "scope": "현재 상태만 포함합니다. 활동 기록은 없습니다.",
+      "evidence": "근거: {{evidence}}",
+      "check": "[{{level}}] {{label}}",
+      "level": {
+        "pass": "통과",
+        "warning": "경고",
+        "fail": "실패",
+        "not_applicable": "해당 없음"
+      }
+    },
+    "progress": {
+      "device": {
+        "label": "이 기기",
+        "detail": "VPN 서비스, 터널, 킬 스위치, 라우팅, MTU"
+      },
+      "identity": {
+        "label": "저장된 서버 ID",
+        "detail": "서버 고정 값과 이 기기의 인증서"
+      },
+      "server": {
+        "label": "VPS",
+        "detail": "로그인, DNS, 네트워킹, 방화벽, 리소스"
+      },
+      "leaks": {
+        "label": "누출 테스트",
+        "detail": "IPv4, IPv6, DNS"
+      },
+      "disconnected": "VPS를 확인하고 누출을 테스트하려면 이 서버에 연결하세요."
+    },
+    "cause": {
+      "not_measured": "현재 측정값을 사용할 수 없습니다.",
+      "mtu_pending": "경로 MTU를 아직 측정하는 중입니다.",
+      "management_clock": "VPS와의 보안 연결에 실패했습니다. 이 기기와 VPS의 시계를 확인하세요.",
+      "management_credentials_invalid": "저장된 서버 ID 또는 이 기기의 인증서가 올바르지 않습니다.",
+      "management_device_rejected": "VPS가 이 기기의 인증서를 거부했습니다.",
+      "management_access_rejected": "VPS가 이 기기의 현재 접근 권한을 거부했습니다.",
+      "management_unreachable": "VPN을 통해 VPS 관리 서비스에 접속할 수 없습니다."
+    },
+    "numberedCheck": {
+      "dnsTls": "VPS TLS 리졸버 {{number}}",
+      "dnsHttps": "VPS HTTPS 리졸버 {{number}}",
+      "dnsZone": "VPS 분할 DNS 영역 {{zone}}",
+      "dnsZoneUpstream": "VPS 분할 DNS 영역 {{zone}}, 상위 {{upstream}}"
+    }
+  },
+  "speedTest": {
+    "title": "VPS까지 속도 테스트",
+    "description": "하나의 연결로 VPN을 통해 내 VPS까지의 다운로드, 업로드, 지연 시간을 측정합니다. 인터넷 속도가 아닙니다. 약 20초가 걸리며, 그동안 모든 사용자의 VPN 속도가 잠시 느려집니다. 결과는 이 기기에만 남습니다.",
+    "run": "속도 테스트 실행",
+    "again": "속도 테스트 다시 실행",
+    "running": "VPS까지의 터널을 측정하는 중…",
+    "download": "다운로드",
+    "upload": "업로드",
+    "idleLatency": "지연 시간, 유휴 상태",
+    "downloadLatency": "다운로드 중 지연 시간",
+    "uploadLatency": "업로드 중 지연 시간",
+    "rate": "{{value}} Mbit/s",
+    "latency": "{{value}} ms",
+    "notMeasured": "측정되지 않음",
+    "failed": "속도 테스트가 끝나지 않았습니다. 이 기기가 연결되어 있는지 확인한 뒤 다시 시도하세요."
+  },
+  "workspace": {
+    "metric": {
+      "needsUpdate": "서버 업데이트",
+      "sampling": "측정 중…"
+    },
+    "error": {
+      "unsavedSettings": "설정에서 변경 사항을 저장하거나 취소한 뒤 연결하세요.",
+      "settingsNotLoaded": "연결 설정을 아직 불러오지 않았습니다. 설정을 열고 다시 시도하세요.",
+      "connectionChange": "연결이 변경되지 않았습니다. 상태를 새로 고치고 다시 시도하세요.",
+      "stopUnconfirmed": "VPN이 중지되었음을 확인하지 않았습니다. 상태를 확인하세요.",
+      "resume": "재개하지 못했습니다. 트래픽 설정은 변경되지 않았습니다.",
+      "diagnostics": "진단을 실행하지 못했습니다. 상태를 새로 고치고 다시 시도하세요."
+    }
+  }
+}

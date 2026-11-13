@@ -37,21 +37,21 @@ pub(super) async fn preshared_key_rotation_recommended(
 pub(super) async fn rotate_device_keys(
     state: State<'_, AppState>,
     input: KeyRotationInput,
-) -> Result<KeyRotationResult, String> {
+) -> Result<KeyRotationResult, CommandError> {
     let _operation = crate::connection_controller::acquire()?;
     if !input.confirmed {
-        return Err("Confirm the key rotation first.".to_owned());
+        return Err("Confirm the key rotation first.".into());
     }
     let profile = find_profile(&state.paths, &input.server_id)?;
     let pending = has_pending_key_rotation(&state.paths, profile.id).map_err(safe_error)?;
     let local = invoke_helper("status", None).map_err(safe_error)?;
     if local.server_id.is_some() && local.server_id != Some(profile.id) {
-        return Err("Disconnect from the other server before rotating keys.".to_owned());
+        return Err("Disconnect from the other server before rotating keys.".into());
     }
     if !pending
         && (local.server_id != Some(profile.id) || local.state == ConnectionState::Disconnected)
     {
-        return Err("Connect to this server before rotating this device’s keys.".to_owned());
+        return Err("Connect to this server before rotating this device’s keys.".into());
     }
     let persistent_protection = local.kill_switch_enabled && local.auto_reconnect_enabled;
     let transport = local.transport.unwrap_or(TransportKind::DirectUdp);
@@ -163,18 +163,24 @@ pub(super) async fn rotate_device_keys(
         },
     )
     .await
-    .map_err(safe_error)
+    .map_err(crate::vps_transaction::operation_error)
 }
 
 #[tauri::command]
 pub(super) async fn join_server(
     state: State<'_, AppState>,
     mut input: JoinInput,
-) -> Result<ServerProfile, String> {
+) -> Result<ServerProfile, CommandError> {
     let _operation = crate::connection_controller::acquire()?;
-    let mut invitation = DecodedInvitation::decode(&input.code).map_err(safe_error)?;
-    invitation.set_recipient_names(input.member_name.as_deref(), input.device_name.as_deref())
-        .map_err(|_| "Enter valid member and device names. An existing member keeps its name.".to_owned())?;
+    let mut invitation = DecodedInvitation::decode(&input.code).map_err(command_error)?;
+    // A named join code already names the person; only the device name is sent.
+    let member_name = if invitation.member_name_fixed() {
+        None
+    } else {
+        input.member_name.as_deref()
+    };
+    invitation.set_recipient_names(member_name, input.device_name.as_deref())
+        .map_err(|_| "Enter valid member and device names. An existing member keeps its name.")?;
     input.code.zeroize();
     if state
         .paths
@@ -184,11 +190,11 @@ pub(super) async fn join_server(
         .iter()
         .any(|profile| profile.id == invitation.server_id())
     {
-        return Err("This server is already saved on this device.".to_owned());
+        return Err("This server is already saved on this device.".into());
     }
     let local = invoke_helper("status", None).map_err(safe_error)?;
     if local.state != ConnectionState::Disconnected {
-        return Err("Disconnect before joining a server.".to_owned());
+        return Err("Disconnect before joining a server.".into());
     }
 
     let secrets = state.paths.secret_store();
@@ -222,9 +228,10 @@ pub(super) async fn join_server(
             let client = ManagementClient::new(&bootstrap_profile, invitation.bootstrap_secret())?;
             let request = invitation.enrollment_request(&pending.identity);
             let result = match client.enroll(&request).await {
-                Err(ManagementError::ConnectionFailed) => client.enroll(&request).await?,
-                result => result?,
-            };
+                Err(ManagementError::ConnectionFailed) => client.enroll(&request).await,
+                result => result,
+            }
+            .map_err(enrollment_refusal)?;
             pending.confirm_preshared_key(&secrets, result.preshared_key)?;
             invitation.permanent_profile(
                 &result,
@@ -245,8 +252,23 @@ pub(super) async fn join_server(
         Ok(profile) => Ok(profile),
         Err(error) => {
             let _ = disconnect_candidate(invitation.server_id());
-            Err(safe_error(error))
+            Err(command_error(error))
         }
+    }
+}
+
+/// The VPS knows no invitation for this bootstrap identity: the code was used up or cancelled.
+fn enrollment_refusal(error: ManagementError) -> anyhow::Error {
+    match error {
+        ManagementError::RequestRejected {
+            code: sirinvpn_protocol::ErrorCode::AuthorizationFailed,
+            ..
+        } => crate::command_error::Rejected {
+            refused: crate::command_error::Refused::InvitationUsed,
+            error,
+        }
+        .into(),
+        error => error.into(),
     }
 }
 

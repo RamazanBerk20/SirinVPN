@@ -1,0 +1,81 @@
+{
+  "demo": {
+    "enter": "Découvrir la démo",
+    "enterHint": "Parcourez d’abord l’application avec des données d’exemple. Rien ne se connecte et rien n’est enregistré.",
+    "banner": "Démo · Données d’exemple uniquement. Rien ne se connecte et rien n’est enregistré.",
+    "exit": "Quitter la démo"
+  },
+  "troubleshoot": {
+    "open": "Impossible de se connecter ? Découvrez pourquoi",
+    "title": "Impossible de se connecter ?",
+    "description": "Passez en revue les causes habituelles, dans l’ordre. Chaque étape indique quoi vérifier et, lorsque l’application peut le corriger, propose la solution.",
+    "checking": "Vérification de cet appareil et de la connexion…",
+    "progress": "Étape {{current}} sur {{total}}",
+    "next": "Suivant",
+    "previous": "Étape précédente",
+    "stepsLabel": "Étapes de dépannage",
+    "seen": "Ce que nous avons constaté :",
+    "settingsSummary": "Impossible de se connecter ? Passez en revue les causes habituelles, une à une, avec une solution lorsque l’application en propose une.",
+    "settingsAction": "Dépanner",
+    "connectionSettings": "Ouvrir les paramètres de connexion",
+    "status": {
+      "problem": "Cause probable",
+      "check": "À vérifier",
+      "ok": "Semble correct"
+    },
+    "step": {
+      "network": "Réseau local",
+      "dns": "Résolution de noms (DNS)",
+      "reachability": "Accès à votre VPS",
+      "transport": "Méthode de connexion bloquée",
+      "clock": "Date et heure",
+      "enrollment": "Clés de l’appareil et enregistrement",
+      "membership": "Votre accès",
+      "service": "Service VPN sur le VPS"
+    },
+    "network": {
+      "offline": "Cet appareil n’a pas de connexion réseau. Activez le Wi-Fi ou les données mobiles, puis réessayez.",
+      "check": "Ouvrez un site Web avec le VPN désactivé. Si une page de connexion apparaît, comme sur le Wi-Fi d’un hôtel, d’un aéroport ou d’un café, connectez-vous-y d’abord. Si rien ne se charge, essayez un autre réseau.",
+      "ok": "Le réseau de cet appareil atteint votre VPS."
+    },
+    "dns": {
+      "vps": "Le DNS privé de votre VPS ne répond pas, donc les sites ne s’ouvrent pas via le VPN. Le Propriétaire peut le rétablir avec Réparer la configuration du VPS.",
+      "check": "Cet appareil recherche le nom de votre serveur avant de se connecter. Si ce réseau n’y parvient pas, essayez un autre réseau, ou demandez au Propriétaire si le nom pointe toujours vers le VPS.",
+      "address": "Votre serveur est joint par son adresse IP, donc la connexion ne nécessite aucune résolution de nom.",
+      "ok": "Le DNS privé de votre VPS répond."
+    },
+    "reachability": {
+      "check": "Vérifiez que le VPS est démarré dans la console de votre hébergeur et que son adresse publique n’a pas changé. Si elle a changé, mettez-la à jour ici.",
+      "ok": "Votre VPS a répondu à cet appareil."
+    },
+    "transport": {
+      "fixed": "Ce serveur utilise une seule méthode de connexion, et les réseaux bloquent souvent les méthodes isolées. Choisissez Automatique pour que l’application puisse basculer sur les autres.",
+      "owner": "Automatique essaie déjà toutes les méthodes proposées par ce serveur. Si ce réseau bloque les VPN, activez HTTPS sur le port 443 avec Réparer la configuration du VPS, et le mode CDN si l’adresse de votre VPS est elle-même bloquée.",
+      "member": "Automatique essaie déjà toutes les méthodes proposées par ce serveur. Si ce réseau les bloque toutes, essayez un autre réseau, ou demandez au Propriétaire d’activer HTTPS ou le mode CDN.",
+      "automatic": "Automatique essaie déjà toutes les méthodes proposées par ce serveur, y compris HTTPS via un CDN. Si ce réseau les bloque encore, essayez un autre réseau.",
+      "ok": "La méthode de connexion actuelle passe sur ce réseau."
+    },
+    "clock": {
+      "problem": "Votre VPS a refusé la connexion sécurisée, ce qui signifie généralement que l’horloge de cet appareil est fausse. Activez la date et l’heure automatiques dans les paramètres système, puis réessayez.",
+      "check": "Vérifiez que la date, l’heure et le fuseau horaire de cet appareil sont réglés automatiquement. Une horloge fausse fait apparaître le certificat de votre VPS comme invalide.",
+      "ok": "Votre VPS a accepté la connexion sécurisée : l’horloge de cet appareil est correcte."
+    },
+    "enrollment": {
+      "rotation": "Un changement de clé pour cet appareil ne s’est pas terminé. Terminez-le avant de vous connecter.",
+      "problem": "Les clés enregistrées de cet appareil ne peuvent pas être utilisées. Restaurez une sauvegarde de l’appareil, ou demandez au Propriétaire un nouveau code d’adhésion.",
+      "check": "Si cet appareil a été supprimé, ou si ses clés ont été remplacées ou restaurées sur un autre appareil, il ne peut pas se connecter. Restaurez une sauvegarde de l’appareil, ou demandez au Propriétaire un nouveau code d’adhésion.",
+      "ok": "Votre VPS a accepté les clés de cet appareil."
+    },
+    "membership": {
+      "owner": "Vous êtes le Propriétaire : votre accès ne peut ni expirer, ni être suspendu.",
+      "problem": "Votre VPS a refusé l’accès de cet appareil. Votre accès a peut-être expiré, été suspendu ou être en dehors des heures autorisées. Demandez au Propriétaire de le vérifier.",
+      "check": "Si votre accès a expiré, a été suspendu ou a des heures autorisées, le VPS n’accepte plus cet appareil. Demandez au Propriétaire de vérifier votre accès.",
+      "ok": "Votre VPS a accepté l’accès actuel de cet appareil."
+    },
+    "service": {
+      "problem": "Le service VPN de votre VPS ne fonctionne pas correctement. Le Propriétaire peut le rétablir avec Réparer la configuration du VPS, qui conserve les appareils et les paramètres.",
+      "check": "Si le VPS a redémarré ou a été mis à jour, son service VPN a peut-être cessé. Le Propriétaire peut le rétablir avec Réparer la configuration du VPS, qui conserve les appareils et les paramètres.",
+      "ok": "Le service VPN de votre VPS fonctionne."
+    }
+  }
+}

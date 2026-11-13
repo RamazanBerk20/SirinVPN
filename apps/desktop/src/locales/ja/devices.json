@@ -1,0 +1,468 @@
+{
+  "page": {
+    "mine": "自分のデバイス",
+    "you": "自分",
+    "add": "デバイスを追加",
+    "addMine": "自分のデバイスを追加",
+    "addFor": "{{name}} のデバイスを追加",
+    "cannotAdd": "デバイスを追加できません。オーナーまたは管理者に、代わりに追加を依頼してください。",
+    "refresh": "更新",
+    "loading": "人とデバイスを読み込んでいます…",
+    "connect": "接続",
+    "openHome": "ホームを開く",
+    "disconnected": "接続していません。接続すると、すべての人のデバイスを確認して変更できます。",
+    "disconnectedSaved": "接続していません。{{time}} に保存された人とデバイスを表示しています。変更するには接続してください。",
+    "stale": "{{time}} に保存された人とデバイスを表示しています。一覧が更新されるまで、変更はできません。",
+    "unsupported": "このサーバーは古いため、ここで人とデバイスを管理できません。",
+    "unsupportedOwner": "このサーバーは古いため、ここで人とデバイスを管理できません。設定で VPS のソフトウェアを更新してください。",
+    "search": "人とデバイスを検索",
+    "searchPlaceholder": "名前または VPN のアドレスで検索",
+    "clearSearch": "検索をクリア",
+    "noMatches": "「{{query}}」に一致する人またはデバイスはありません。",
+    "adminOwnDevices": "自分のデバイスを追加するには、オーナーに「制限と権限」で許可してもらってください。",
+    "unnamed": "名前はまだ読み込まれていません"
+  },
+  "empty": {
+    "title": "今のところ、このデバイスのみです",
+    "body": "このサーバーの各人には役割があり、複数のデバイスを持てます。自分の別のデバイス、または他の人のデバイスを追加してください。",
+    "mine": "自分の別のデバイスを追加",
+    "someone": "他の人のデバイスを追加"
+  },
+  "count": {
+    "people": "{count, plural, other {#人}}",
+    "devices": "{count, plural, other {#台のデバイス}}",
+    "forwards": "{count, plural, other {#件のポート転送}}",
+    "pairs": "{count, plural, other {#組のデバイスペア}}",
+    "codes": "{count, plural, other {#件の参加コード}}"
+  },
+  "role": {
+    "title": "役割",
+    "description": {
+      "owner": "サーバーのすべてを管理できます。オーナーは 1 人だけです。",
+      "admin": "人を追加し、メンバーを管理できます。ただし、管理者やオーナーは管理できません。",
+      "member": "VPN を使用します。権限を与えられない限り、何も管理できません。"
+    },
+    "change": "{{role}} にする",
+    "codesWaiting": "{count, plural, other {{{name}} が発行した、または {{name}} 向けの参加コード #件が待機中です。取り消されるまで、サーバーは役割を変更できません。}}",
+    "cancelAndChange": "{count, plural, other {コードを取り消して役割を変更}}",
+    "createdCodes": "{{name}} が作成した参加コードも取り消されます。"
+  },
+  "presence": {
+    "active": "現在アクティブ",
+    "idle": "最近アクティブではありません",
+    "unknown": "アクティビティ不明",
+    "suspended": "一時停止中"
+  },
+  "summary": {
+    "sirinApp": "SirinVPN アプリ",
+    "wireguardApp": "WireGuard アプリ",
+    "reachesOthers": "他のデバイスに接続できます",
+    "paired": "{count, plural, other {#台のデバイスとペア}}",
+    "internetOnly": "インターネットのみ",
+    "sharesNetwork": "{{network}} を共有",
+    "sharesNetworks": "{count, plural, other {ローカルネットワーク #件を共有}}",
+    "forwards": "{count, plural, other {転送ポート #件}}"
+  },
+  "gate": {
+    "resumeFirst": "先に {{name}} を再開してください。",
+    "limitReached": "{count, plural, other {デバイス数の上限（#）に達しました。「制限と権限」で上限を引き上げてください。}}",
+    "needsAppDevice": "WireGuard だけでなく、SirinVPN アプリを実行しているデバイスが必要です。",
+    "lastOwnerDevice": "これは、SirinVPN を実行しているオーナーの最後のデバイスのため、削除できません。先に別のデバイスを追加してください。"
+  },
+  "panel": {
+    "readOnly": "一覧が更新されるまで、読み取り専用です。"
+  },
+  "person": {
+    "youTitle": "{{name}}（自分）",
+    "summary": "{count, plural, other {{{role}} · #台のデバイス}}",
+    "name": "名前",
+    "devices": "{count, plural, other {デバイス}}",
+    "devicesOfLimit": "{limit, plural, other {{{count}} / #台のデバイス}}",
+    "noDevices": "まだデバイスはありません。",
+    "noDevicesSuspended": "デバイスはありません。一時停止中の人は、デバイスを追加できません。",
+    "suspended": "一時停止中",
+    "limitedHours": "利用時間の制限あり",
+    "expires": "{{date}} までアクセス可能",
+    "expired": "アクセスは {{date}} に終了しました",
+    "dangerZone": "一時停止または削除",
+    "suspend": "一時停止",
+    "resume": "再開",
+    "suspendHint": "この人のすべてのデバイスを一時停止します。何も削除されず、再開するとアクセスが戻ります。",
+    "resumeHint": "この人のデバイスは一時停止中です。再開すると、保存された設定でアクセスが戻ります。",
+    "renameCodesWaiting": "{count, plural, other {{{name}} 向けの参加コード #件が待機中です。取り消されるまで、サーバーは名前を変更できません。}}",
+    "cancelAndRename": "{count, plural, other {コードを取り消して名前を変更}}",
+    "remove": "人を削除",
+    "removeHint": "この人、{{devices}}、{{forwards}}、{{pairs}}、{{codes}} を削除します。戻るには新しい参加コードが必要です。"
+  },
+  "device": {
+    "summary": "{{name}} · {{presence}}",
+    "name": "デバイス名",
+    "owner": "持ち主",
+    "connection": "接続方法",
+    "sirinApp": "SirinVPN アプリ",
+    "wireguardApp": "WireGuard アプリまたはルーター（直接 UDP のみ）",
+    "address": "VPN のアドレス",
+    "activity": "アクティビティ",
+    "fingerprint": "ID のフィンガープリント",
+    "fingerprintLabel": "{{name}} のフィンガープリント",
+    "removeTitle": "削除",
+    "remove": "デバイスを削除",
+    "removeThis": "このデバイスを削除",
+    "removeHint": "鍵が取り消され、VPN と管理へのアクセスは直ちに停止します。",
+    "removeThisHint": "これはあなたが使用しているデバイスです。削除すると、このアプリから {{server}} へのアクセスがなくなります。"
+  },
+  "network": {
+    "title": "ネットワーク",
+    "peer": "デバイス間アクセス",
+    "peerOn": "同じくオンにしている他のデバイスに接続できます。",
+    "peerOff": "オフ: インターネットのみ。ただし、デバイスペアは利用できます。",
+    "suspended": "{{name}} が一時停止中は停止します。"
+  },
+  "pairs": {
+    "title": "デバイスペア",
+    "description": "デバイス間アクセスがオフでも、ペアにすると 2 台のデバイスが互いに接続できます。",
+    "bothWays": "{{name}} と双方向",
+    "starts": "{{name}} への接続を開始",
+    "answers": "{{name}} からの接続にのみ応答",
+    "otherDevice": "別の人のデバイス",
+    "peer": "デバイス",
+    "direction": "方向",
+    "directionHint": "一方向: 最初のデバイスのみが接続を開始し、もう一方は応答するだけです。ローカルネットワークを共有しているデバイスへの接続を開始すると、そのネットワークにも接続できます。",
+    "option": {
+      "both": "双方向",
+      "starts": "{{from}} から {{to}} へのみ開始"
+    },
+    "add": "ペアを追加",
+    "remove": "削除"
+  },
+  "networks": {
+    "title": "ローカルネットワーク",
+    "description": "{{name}} の背後にある、自宅のネットワークなどのプライベートネットワークを、そのネットワークに接続するデバイスと共有します。",
+    "label": "ネットワーク",
+    "hint": "1 行に 1 つのプライベート IPv4 ネットワーク。/20 以下。共有を停止するには、空欄にします。",
+    "invalid": "/20 以下のプライベート IPv4 ネットワークではありません: {{networks}}",
+    "hostBits": "{{network}} はネットワークの先頭アドレスではありません。{{canonical}} を使用してください。",
+    "inactive": "VPS がこれらに別のネットワーク経由で接続しているため、現在はルーティングされていません: {{networks}}",
+    "linux": "{{name}} は、IPv4 転送をオンにした Linux 上で SirinVPN を実行する必要があります:",
+    "copyCommand": "コマンドをコピー",
+    "save": "ネットワークを保存"
+  },
+  "ports": {
+    "title": "ポート転送",
+    "none": "このデバイスに転送されているポートはありません。",
+    "paused": "一時停止中のため停止しています",
+    "exposure": "インターネット上の誰もが、転送されたサービスに接続できます。",
+    "protocol": "プロトコル",
+    "publicPort": "公開ポート",
+    "publicPortHint": "VPS のアドレスで開きます。",
+    "devicePort": "デバイスのポート",
+    "devicePortHint": "サービスが待ち受けるポートです。",
+    "publicPortLow": "1024 から 65535 までのポートを使用してください。小さいポート番号は予約されています。",
+    "publicPortRange": "1024 から 65535 までのポートを使用してください。",
+    "devicePortRange": "1 から 65535 までのポートを使用してください。",
+    "preview": "公開 {{protocol}} ポート <strong>{{publicPort}}</strong> は、<strong>{{device}}</strong> のポート <strong>{{devicePort}}</strong> に転送されます",
+    "used": "{max, plural, other {サーバーポート # 件中 {{count}} 件を使用中}}",
+    "full": "{count, plural, other {サーバーポート #件がすべて使用中です。別のポートを開くには、1 つ閉じてください。}}",
+    "open": "ポートを開く",
+    "close": "閉じる",
+    "closeLabel": "{{protocol}} ポート {{publicPort}}（デバイスのポート {{devicePort}} へ）を閉じる",
+    "visitorAddress": "サービスからは、訪問者は実際の IP アドレスではなく <address>{{address}}</address> として見えます。"
+  },
+  "policy": {
+    "title": "制限と権限",
+    "limits": "制限",
+    "deviceLimit": "デバイス数の上限",
+    "deviceLimitHint": "無制限にする場合は空欄にします。上限を下げる前に、余分なデバイスを削除してください。",
+    "deviceLimitHintNew": "無制限にする場合は空欄にします。",
+    "expires": "アクセスの終了",
+    "expiresHint": "お使いのデバイスの時刻です。無期限にする場合は空欄にします。",
+    "expiresPast": "この時刻は過ぎています。保存するとすぐにアクセスが失われます。",
+    "permissions": "権限",
+    "permission": {
+      "addPeople": "新しい人を追加",
+      "addOwnDevices": "自分のデバイスを追加",
+      "deviceToDevice": "この人のデバイスのデバイス間アクセスとペアを変更",
+      "portForwards": "この人のデバイスに、インターネットの公開ポートを開く"
+    },
+    "save": "制限を保存",
+    "appliesToAll": "この人のすべてのデバイスに適用されます。",
+    "cancelsCodes": "{count, plural, other {保存すると、この人が発行した、またはこの人向けの待機中の参加コード #件が取り消されます。}}",
+    "cancelsCreated": "保存すると、{{name}} が作成した参加コードはすべて取り消されます。",
+    "error": {
+      "limit": "1 から 222 までの上限を入力するか、空欄にしてください。",
+      "expires": "有効な日付と時刻を入力してください。",
+      "noHours": "少なくとも 1 時間を選ぶか、利用時間の制限をオフにしてください。",
+      "tooManyRanges": "{count, plural, other {1 週間に設定できる時間帯は最大 #件までです。}}"
+    }
+  },
+  "hours": {
+    "title": "週ごとの利用時間",
+    "limit": "特定の時間帯に制限",
+    "allWeek": "いつでもアクセスできます。",
+    "localTime": "お使いのタイムゾーン（{{zone}}）の時刻です。夏時間の切り替えにより、1 時間ずれる場合があります。",
+    "inexact": "保存済みの時刻の中には、正時に始まらないものがあります。グリッドを編集すると、正時に切り捨てられます。",
+    "cell": "{{day}}、{{hour}}",
+    "toggleDay": "{{day}} すべて",
+    "toggleHour": "毎日 {{hour}}"
+  },
+  "codes": {
+    "title": "{count, plural, other {参加待ち（#件）}}",
+    "forPerson": "{{name}} 向けのデバイス",
+    "newPerson": "新しい人",
+    "newNamed": "{{name}}（新しい人）",
+    "severalPeople": "複数の新しい人",
+    "row": "{{role}} · {{uses}} · {{date}} に期限切れ",
+    "singleUse": "1 回限り",
+    "usesLeft": "{max, plural, other {残り {{count}} / #回}}",
+    "cancel": "コードを取り消す",
+    "cancelling": "取り消し中…"
+  },
+  "add": {
+    "whose": {
+      "title": "誰のデバイスですか？",
+      "description": "各デバイスは 1 人に属します。",
+      "mine": "自分",
+      "mineHint": "自分の別のスマートフォンやコンピューター。",
+      "person": "すでにいる人",
+      "personHint": "このサーバーにいる人にデバイスを追加します。",
+      "pick": "人",
+      "option": "{{name}} · {{role}}",
+      "new": "新しい人",
+      "newHint": "最初のデバイスを持つ人を追加します。"
+    },
+    "new": {
+      "name": "その人の名前",
+      "nameHint": "このサーバーを管理するすべての人に表示されます。",
+      "several": "複数の新しい人がこのコードを使用します",
+      "people": "人数",
+      "peopleHint": "各人は参加時に自分の名前を入力し、メンバーになります。",
+      "peopleInvalid": "2 から 100 までの整数を入力してください。",
+      "nameHintRename": "このサーバーを管理するすべての人に表示されます。後で名前を変更できます。"
+    },
+    "connect": {
+      "title": "どのように接続しますか？",
+      "app": "SirinVPN アプリ",
+      "appHint": "推奨です。デバイスは参加コードを受け取り、独自の鍵を作成します。",
+      "wireguard": "WireGuard アプリ",
+      "wireguardHint": "上級者向けです。iPhone、iPad、Mac、ルーター向けです。直接 UDP のみで、サーバーを管理することはできません。"
+    },
+    "forYou": "自分用",
+    "forPerson": "{{name}} 用",
+    "severalPeople": "複数の新しい人",
+    "deviceName": "デバイス名",
+    "deviceNameFixed": "このサーバーでは、参加時に名前を入力できません。サーバーを管理する人が後で名前を変更できます。",
+    "lifetime": "コードの有効期限",
+    "hours": "{count, plural, other {#時間}}",
+    "days": "{count, plural, other {#日}}",
+    "uses": "このコードで追加できるデバイス数",
+    "usesHint": "各デバイスは独自の鍵で参加します。デバイス数の上限は引き続き適用されます。",
+    "usesInvalid": "1 から 100 までの整数を入力してください。",
+    "ownerWarningTitle": "このコードを使う人は、サーバーのすべてを管理できるようになります。",
+    "ownerWarning": "オーナーのデバイスを追加します。自分だけに、非公開で共有してください。",
+    "next": "次へ",
+    "creating": "作成中…",
+    "createCode": "参加コードを作成",
+    "createWireguard": "設定を作成",
+    "copyCode": "コードをコピー",
+    "copyFailed": "コードをコピーできませんでした。コードを選択して、手動でコピーしてください。",
+    "copyFailedAndroid": "コードをコピーできませんでした。代わりに「参加コードを表示または共有」を使用してください。",
+    "done": "完了",
+    "closeUnshared": {
+      "title": "コードを共有せずに閉じますか？",
+      "message": "コードは再表示できません。まだコピー、スキャン、共有をしていない場合は、「参加待ち」でコードを取り消してから、デバイスを再度追加してください。",
+      "action": "閉じる"
+    },
+    "handover": {
+      "title": "コードを渡す"
+    },
+    "code": {
+      "instructionSelf": "もう一方のデバイスで SirinVPN を開き、「参加コードを使用」を選択してから、この QR コードをスキャンするか、コードを貼り付けてください。",
+      "instructionSelfAndroid": "もう一方のデバイスで SirinVPN を開き、「参加コードを使用」を選択してから、ここから共有するコードをスキャンまたは貼り付けてください。",
+      "instructionPerson": "{{name}} に非公開で送ってください。その人は SirinVPN を開き、「参加コードを使用」を選択して、スキャンまたは貼り付けます。",
+      "instructionSeveral": "参加する人に非公開で送ってください。各人は SirinVPN を開き、「参加コードを使用」を選択して、スキャンまたは貼り付けます。",
+      "once": "このコードは一度だけ表示されます",
+      "secret": "使用、取り消し、または {{date}} に期限切れになるまで、このコードを持つ人は参加できます。"
+    },
+    "wireguard": {
+      "instruction": "デバイスで WireGuard アプリを開き、この QR コードをスキャンするか、保存したファイルをインポートしてください。",
+      "secret": "この QR コードとファイルには、デバイスの秘密鍵が含まれています。それらを持つ人は、この VPN を使用できます。インポート後にファイルを削除してください。",
+      "limits": "WireGuard のデバイスは直接 UDP のみで接続し、サーバーを管理したり、アドレスの変更に追従したりすることはできません。",
+      "file": "設定ファイル",
+      "fileHint": "任意です。ルーター用、または後でインポートするための .conf ファイルを保存します。",
+      "fileType": "WireGuard の設定",
+      "chooseFile": "ファイルを選択",
+      "noFile": "ファイルなし。QR コードのみ",
+      "saved": "<path>{{path}}</path> に保存しました"
+    },
+    "state": {
+      "waiting": "デバイスの参加を待っています…",
+      "joined": "{count, plural, other {{{name}} が参加しました。}}",
+      "connected": "デバイスが接続しました。",
+      "expired": "誰も使用する前に、コードの期限が切れました。",
+      "cancelled": "コードは取り消されました。",
+      "ended": "このコードは、もう参加待ちではありません。使用されたか、取り消されました。"
+    }
+  },
+  "share": {
+    "showInvitation": "参加コードを表示または共有",
+    "showRecovery": "復旧キーを表示または共有",
+    "qrNote": "コードをコピーする代わりに、これをスキャンしてください。",
+    "code": "コード",
+    "codeLabel": "参加コード",
+    "enlarge": "QR コードを拡大",
+    "enlargeInvitation": "参加コードの QR コードを拡大",
+    "enlargeRecovery": "復旧キーの QR コードを拡大",
+    "scanInvitation": "参加コードをスキャン",
+    "scanRecovery": "復旧キーをスキャン",
+    "closeQr": "QR コードを閉じる",
+    "copyRecovery": "復旧キーをコピー",
+    "altInvitation": "参加コードの QR コード",
+    "altInvitationEnlarged": "拡大した参加コードの QR コード",
+    "altRecovery": "復旧キーの QR コード",
+    "altRecoveryEnlarged": "拡大した復旧キーの QR コード",
+    "altWireguard": "WireGuard 設定の QR コード",
+    "copyCode": "コードをコピー"
+  },
+  "name": {
+    "save": "名前を保存",
+    "empty": "名前を入力してください。",
+    "tooLong": "{count, plural, other {#文字以内で入力してください。}}",
+    "invalid": "改行や制御文字を削除してください。"
+  },
+  "owner": {
+    "title": "{{name}} をオーナーにする",
+    "open": "オーナーにする…",
+    "effect": "{{name}} はサーバーのすべてを管理できるようになります。あなたは管理者になり、ここからは元に戻せません。",
+    "device": "オーナーになるデバイス",
+    "wireguardExcluded": "WireGuard のデバイスはサーバーを管理できないため、表示されません。",
+    "codesWaiting": "{count, plural, other {#件の参加コードを先に取り消す必要があります。}}",
+    "cancelCode": "{{name}} のコードを取り消す",
+    "confirm": "{{name}} をオーナーにする"
+  },
+  "confirm": {
+    "removeDevice": {
+      "title": "{{name}} を削除しますか？",
+      "message": "鍵が取り消され、VPN と管理へのアクセスは直ちに停止します。戻るには新しい参加コードが必要です。",
+      "action": "デバイスを削除"
+    },
+    "removeThis": {
+      "title": "このデバイスを削除しますか？",
+      "message": "このアプリは直ちに {{server}} へのアクセスを失います。戻るには、別のデバイスから新しい参加コードを取得する必要があります。",
+      "action": "このデバイスを削除"
+    },
+    "removePerson": {
+      "title": "{{name}} を削除しますか？",
+      "message": "{{name}}、{{devices}}、{{forwards}}、{{pairs}}、{{codes}} を削除します。この操作は元に戻せません。",
+      "action": "人を削除"
+    },
+    "suspend": {
+      "title": "{{name}} を一時停止しますか？",
+      "message": "{count, plural, other {#台のデバイスは、再開されるまでアクセスできなくなります。待機中の参加コードと鍵の更新は取り消されます。}}",
+      "action": "一時停止"
+    },
+    "resume": {
+      "title": "{{name}} を再開しますか？",
+      "message": "デバイスは保存された設定で再びアクセスできるようになります。取り消された参加コードは復元されません。",
+      "action": "再開"
+    },
+    "role": {
+      "title": "{{name}} を {{role}} にしますか？",
+      "toAdmin": "この人は、人を追加してメンバーを管理できるようになります。",
+      "toMember": "この人はデバイスを保持しますが、権限を与えられない限り何も管理できません。",
+      "toAdminCancels": "{count, plural, other {この人は、人を追加してメンバーを管理できるようになります。待機中の参加コード #件が先に取り消されます。}}",
+      "toMemberCancels": "{count, plural, other {この人はデバイスを保持しますが、権限を与えられない限り何も管理できません。待機中の参加コード #件が先に取り消されます。}}",
+      "action": "役割を変更"
+    },
+    "limits": {
+      "title": "{{name}} の制限を保存しますか？",
+      "message": "{count, plural, other {この人が発行した、またはこの人向けの待機中の参加コード #件が取り消されます。}}",
+      "action": "保存"
+    },
+    "makeOwner": {
+      "title": "{{name}} をオーナーにしますか？",
+      "message": "{{device}}（{{fingerprint}}）と、この人の他の SirinVPN デバイスは、すべてを管理できるようになります。このデバイスは管理者のデバイスになります。",
+      "action": "オーナーにする"
+    },
+    "cancelCode": {
+      "title": "「{{name}}」を取り消しますか？",
+      "message": "コードは直ちに使用できなくなります。すでに参加したデバイスは、アクセスを維持します。",
+      "action": "コードを取り消す"
+    },
+    "openPort": {
+      "title": "公開ポート {{publicPort}} を開きますか？",
+      "message": "{{protocol}} ポート {{publicPort}} は、{{device}} のポート {{devicePort}} に転送されます。インターネット上の誰もが接続を試みられます。",
+      "action": "ポートを開く"
+    },
+    "closePort": {
+      "title": "{{protocol}} ポート {{publicPort}} を閉じますか？",
+      "message": "このポートを経由する接続は直ちに停止します。",
+      "action": "ポートを閉じる"
+    },
+    "removePair": {
+      "title": "{{name}} からこのペアを削除しますか？",
+      "message": "両方のデバイスでデバイス間アクセスがオンでない限り、2 台のデバイスは互いに接続できなくなります。",
+      "action": "ペアを削除"
+    }
+  },
+  "notice": {
+    "abandoned": "変更は送信されませんでした。サーバーへの接続が変わりました。もう一度お試しください。",
+    "personRenamed": "「{{name}}」に名前を変更しました。",
+    "deviceRenamed": "「{{name}}」に名前を変更しました。",
+    "deviceRemoved": "{{name}} を削除しました。",
+    "personRemoved": "{{name}} を削除しました。",
+    "suspended": "{{name}} は一時停止中です。",
+    "resumed": "{{name}} は再びアクティブです。",
+    "roleChanged": "{{name}} は {{role}} になりました。",
+    "ownerChanged": "{{name}} がオーナーになりました。このデバイスは管理者のデバイスです。",
+    "limitsSaved": "{{name}} の制限を保存しました。",
+    "codeCancelled": "参加コードを取り消しました。",
+    "peerOn": "{{name}} はデバイス間アクセスを持つようになりました。",
+    "peerOff": "{{name}} はデバイス間アクセスを持たなくなりました。",
+    "pairAdded": "{{name}} とペアにしました。",
+    "pairRemoved": "ペアを削除しました。",
+    "networksSaved": "{{name}} のローカルネットワークを保存しました。",
+    "networksCleared": "{{name}} はローカルネットワークを共有しなくなりました。",
+    "portOpened": "ポート {{port}} を開きました。",
+    "portClosed": "ポート {{port}} を閉じました。"
+  },
+  "join": {
+    "codeAccepted": "参加コードを受け付けました",
+    "codeEntered": "参加コードを入力しました",
+    "changeCode": "コードを変更",
+    "rejected": {
+      "expired": "この参加コードは期限切れです。新しいコードを発行してもらってください。",
+      "used": "この参加コードはすでに使用済みか、取り消されています。新しいコードを発行してもらってください。",
+      "invalid": "有効な参加コードではありません。すべてをコピーしたか確認するか、新しいコードを発行してもらってください。"
+    },
+    "ownerDevice": "このデバイスを、オーナーの {{name}} に追加します。",
+    "ownerPower": "オーナーのデバイスは、サーバー、すべての人、すべてのデバイスを完全に管理できます。意図した場合にのみ参加してください。",
+    "addsDevice": "このデバイスを {{name}} に追加します。",
+    "namedPerson": "<strong>{{name}}</strong> として参加します。",
+    "personName": "あなたの名前",
+    "personNameHint": "このサーバーを管理する人に表示されます。",
+    "deviceName": "このデバイスの名前",
+    "deviceNameHint": "例: スマートフォンやコンピューターの機種名。後で名前を変更できます。",
+    "presetDevice": "このデバイスは <strong>{{name}}</strong> という名前になります。",
+    "renameLater": "名前は後で「デバイス」から変更できます。"
+  },
+  "error": {
+    "load": "サーバーから人とデバイスを読み込めませんでした。",
+    "features": "このサーバーの対応機能を確認できませんでした。",
+    "renamePerson": "人の名前を変更できませんでした。もう一度お試しください。",
+    "renameDevice": "デバイスの名前を変更できませんでした。もう一度お試しください。",
+    "removeDevice": "デバイスを削除できませんでした。もう一度お試しください。",
+    "removePerson": "人を削除できませんでした。最新の状態を確認するには、更新してください。",
+    "suspension": "一時停止の状態を変更できませんでした。最新の状態を確認するには、更新してください。",
+    "role": "役割を変更できませんでした。もう一度お試しください。",
+    "makeOwner": "オーナーを変更できませんでした。もう一度お試しください。",
+    "limits": "制限を保存できませんでした。もう一度お試しください。",
+    "peer": "デバイス間アクセスを変更できませんでした。もう一度お試しください。",
+    "pair": "ペアを変更できませんでした。もう一度お試しください。",
+    "networks": "ローカルネットワークを保存できませんでした。もう一度お試しください。",
+    "openPort": "ポートを開けませんでした。もう一度お試しください。",
+    "closePort": "ポートを閉じられませんでした。もう一度お試しください。",
+    "cancelCode": "参加コードを取り消せませんでした。もう一度お試しください。",
+    "createCode": "参加コードを作成できませんでした。もう一度お試しください。",
+    "wireguard": "WireGuard デバイスを追加できませんでした。もう一度お試しください。"
+  }
+}

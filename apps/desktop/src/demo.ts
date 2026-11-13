@@ -1,8 +1,9 @@
 import { isAndroid } from "./platform";
+import { demoCaller, demoDevices } from "./features/devices/demoDevices";
 
 type FixtureInvoke = (command: string, args: Record<string, unknown>) => Promise<unknown>;
 declare global {
-  interface Window { __sirinDemo?: { invoke?: FixtureInvoke }; __sirinPlatform?: string }
+  interface Window { __sirinDemo?: { invoke?: FixtureInvoke }; __sirinPlatform?: string; __sirinServerOverride?: Record<string, unknown> }
 }
 
 // Demo and fixture writes stay in memory, so leaving the demo (a reload) leaves nothing behind in the real browser storage.
@@ -21,5 +22,13 @@ window.__sirinDemo = {};
 // @ts-expect-error A plain script with no exports or types.
 const fixture = import("../../../tests/ui/fixtures.js").then(() => window.__sirinDemo!.invoke!);
 
-export const demoInvoke = <T>(command: string, args: Record<string, unknown>) =>
-  fixture.then((invoke) => invoke(command, args) as Promise<T>);
+// People and devices come from their own demo server, which follows the role chosen for the demo.
+window.__sirinServerOverride = { ...demoCaller, ...window.__sirinServerOverride };
+
+export const demoInvoke = <T>(command: string, args: Record<string, unknown>) => {
+  try {
+    const devices = demoDevices(command, args);
+    if (devices.handled) return Promise.resolve(devices.value as T);
+  } catch (reason) { return Promise.reject(reason); }
+  return fixture.then((invoke) => invoke(command, args) as Promise<T>);
+};

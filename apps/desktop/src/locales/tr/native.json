@@ -1,0 +1,110 @@
+{
+  "tray": {
+    "status": {
+      "unknown": "Durum bilinmiyor",
+      "connected": "Bağlı",
+      "connectedTo": "{{name}} sunucusuna bağlı",
+      "paused": "Bağlantı duraklatıldı",
+      "pausedOn": "Bağlantı duraklatıldı · {{name}}",
+      "reconnecting": "Yeniden bağlanılıyor…",
+      "reconnectingTo": "{{name}} sunucusuna yeniden bağlanılıyor…",
+      "connecting": "Bağlanılıyor…",
+      "connectingTo": "{{name}} sunucusuna bağlanılıyor…",
+      "interrupted": "Bağlantı kesintiye uğradı",
+      "interruptedOn": "Bağlantı kesintiye uğradı · {{name}}",
+      "disconnected": "Bağlı değil",
+      "serversUnavailable": "{{status}} · Sunucular yüklenemedi",
+      "busy": "Bağlantı değiştiriliyor…",
+      "legacySession": "Sonraki bağlantıda daha fazla denetim"
+    },
+    "killSwitch": {
+      "on": "Kill switch: açık",
+      "onIpv6Unverified": "Kill switch: açık · IPv6 doğrulanmadı",
+      "blocking": "Kill switch: trafik engelleniyor",
+      "blockingIpv6Unverified": "Kill switch: trafik engelleniyor · IPv6 doğrulanmadı",
+      "off": "Kill switch: kapalı",
+      "failed": "Kill switch: çalışmıyor",
+      "unknown": "Kill switch: bilinmiyor"
+    },
+    "menu": {
+      "open": "SirinVPN’i aç",
+      "connectTo": "{{name}} sunucusuna bağlan",
+      "addServer": "Sunucu ekle…",
+      "disconnect": "Bağlantıyı kes…",
+      "resume": "Devam ettir",
+      "reconnect": "Yeniden bağlan",
+      "stopReconnecting": "Yeniden bağlanmayı durdur…",
+      "stopConnecting": "Bağlanmayı durdur…",
+      "updateComponent": "VPN bileşenini güncelle…",
+      "switchServer": "Sunucu değiştir",
+      "connectServer": "Sunucuya bağlan",
+      "manageServers": "Sunucuları yönet",
+      "connectionSettings": "Bağlantı ayarları",
+      "settings": "Ayarlar",
+      "diagnostics": "Tanılama",
+      "disconnectQuit": "Bağlantıyı kes ve çık…"
+    },
+    "quit": {
+      "plain": "Uygulamadan çık",
+      "statusUnknown": "Uygulamadan çık · Durum bilinmiyor…",
+      "paused": "Uygulamadan çık · VPN duraklatılmış kalır",
+      "reconnecting": "Uygulamadan çık · VPN yeniden bağlanmaya devam eder",
+      "connected": "Uygulamadan çık · VPN çalışmaya devam eder",
+      "service": "Uygulamadan çık · VPN hizmeti çalışmaya devam eder",
+      "blocking": "Uygulamadan çık · Trafik engelli kalır",
+      "killSwitchUnknown": "Uygulamadan çık · Kill switch bilinmiyor…"
+    },
+    "confirm": {
+      "cancel": "İptal",
+      "switch": {
+        "title": "{{name}} sunucusuna geçilsin mi?",
+        "messageKillSwitchOn": "Geçerli ayarlarınız korunur. Geçiş sırasında kill switch açık kalır.",
+        "messageKillSwitchOff": "Geçerli ayarlarınız korunur. Kill switch kapalı olduğundan geçiş sırasında trafik VPN’i atlayabilir.",
+        "confirm": "Geçiş yap"
+      },
+      "stop": {
+        "title": "Bağlantı denemeleri durdurulsun mu?",
+        "messageKillSwitchOn": "Yeniden bağlanana veya bağlantı kesilene kadar kill switch trafiği engellemeye devam eder.",
+        "messageKillSwitchOff": "Kill switch kapalı olduğundan, yeniden bağlanana kadar trafik VPN’i atlar.",
+        "confirm": "Denemeleri durdur"
+      },
+      "disconnect": {
+        "title": "VPN’in bağlantısı kesilsin mi?",
+        "message": "Varsa trafik engeli kaldırılır ve tekrar bağlanana kadar VPN kapalı kalır. Diğer cihazlar bağlı kalır.",
+        "confirm": "Bağlantıyı kes"
+      },
+      "disconnectQuit": {
+        "title": "Bağlantı kesilsin ve uygulamadan çıkılsın mı?",
+        "confirm": "Bağlantıyı kes ve çık"
+      },
+      "quit": {
+        "title": "SirinVPN kapatılsın mı?",
+        "message": "{{status}}\nUygulamayı kapatmak VPN’i, yeniden bağlanmayı veya kill switch’i durdurmaz.",
+        "confirm": "Çık"
+      }
+    },
+    "error": {
+      "title": "Bağlantı değiştirilemedi",
+      "alreadyConnected": "Başka bir bağlantı etkin. Bunun yerine Sunucu değiştir’i kullanın.",
+      "statusUnverified": "Bağlantı durumu doğrulanamadı. SirinVPN’i açıp tekrar deneyin.",
+      "updateToSwitch": "Sunucu değiştirmek için VPN bileşenini güncelleyin.",
+      "serverUnconfirmed": "VPN, seçilen sunucuyu onaylamadı. Durumunu kontrol edin.",
+      "connectionChanged": "Bağlantı değişti. Sistem tepsisi menüsünü yeniden açın.",
+      "stopUnconfirmed": "VPN, denemeleri durdurduğunu onaylamadı. Durumunu kontrol edin.",
+      "disconnectUnconfirmed": "VPN, bağlantının kesildiğini onaylamadı. Durumunu ve kill switch’i kontrol edin.",
+      "quitUnconfirmed": "VPN, bağlantının kesildiğini onaylamadı, bu yüzden uygulama açık kalır. Durumunu kontrol edin.",
+      "selectionUnavailable": "Sistem tepsisi menüsü güncellenemedi. Tekrar deneyin."
+    }
+  },
+  "notification": {
+    "test": "Bildirimler hazır. Bağlantı uyarıları burada görünür.",
+    "connected": "VPN bağlandı",
+    "disconnected": "VPN bağlantısı kesildi",
+    "reconnecting": "Bağlantı kesintiye uğradı. Yeniden bağlanılıyor…",
+    "statusUnknown": "VPN durumu okunamadı. Denetlemek için SirinVPN’i açın.",
+    "error": {
+      "disabled": "Önce bildirimleri açın.",
+      "failed": "Bildirim gösterilemedi. Sisteminizin bildirim ayarlarını kontrol edin."
+    }
+  }
+}

@@ -5,12 +5,13 @@ use sirinvpn_protocol::{
     API_VERSION, ApiEnvelope, ApiErrorBody, CurrentConfiguration, DeviceId, DevicePair,
     DevicePeerCommunicationUpdateRequest, DevicePlatformUpdateRequest,
     EndpointTransitionCreateRequest, EndpointTransitionResponse, EnrollmentRequest,
-    EnrollmentResult, ErrorCode, InvitationCreateRequest, InvitationCreateResponse, InvitationId,
-    KeyRotationCommitResponse, KeyRotationId, KeyRotationPrepareRequest,
-    KeyRotationPrepareResponse, LeakTestObservation, MANAGEMENT_SERVER_NAME,
-    MemberAccessUpdateRequest, MemberDevicesRevokeRequest, MemberId, MemberSuspensionUpdateRequest,
-    MembershipSnapshot, OwnershipTransferRequest, PortForwardCreateRequest, PortForwardProtocol,
-    RenameDeviceRequest, SPEED_TEST_SECONDS, ServerProfile, ServerStatus, SpeedTestUpload,
+    EnrollmentResult, ErrorCode, InvitationCreateBody, InvitationCreateRequest,
+    InvitationCreateResponse, InvitationId, KeyRotationCommitResponse, KeyRotationId,
+    KeyRotationPrepareRequest, KeyRotationPrepareResponse, LeakTestObservation,
+    MANAGEMENT_SERVER_NAME, MemberAccessUpdateRequest, MemberDevicesRevokeRequest, MemberId,
+    MemberSuspensionUpdateRequest, MembershipSnapshot, OwnershipTransferRequest,
+    PortForwardCreateRequest, PortForwardProtocol, RenameDeviceRequest, RenameMemberRequest,
+    SPEED_TEST_SECONDS, ServerProfile, ServerStatus, SpeedTestUpload,
 };
 use std::{
     net::{IpAddr, SocketAddr},
@@ -441,10 +442,19 @@ impl ManagementClient {
         &self,
         request: &InvitationCreateRequest,
     ) -> Result<InvitationCreateResponse, ManagementError> {
+        self.create_invitation_body(&InvitationCreateBody::from(request.clone()))
+            .await
+    }
+
+    /// `InvitationDraft::body`; with every option off it is sent exactly as the plain request.
+    pub async fn create_invitation_body(
+        &self,
+        body: &InvitationCreateBody,
+    ) -> Result<InvitationCreateResponse, ManagementError> {
         let response = self
             .client
             .post(format!("{}/v1/invitations", self.base_url))
-            .json(request)
+            .json(body)
             .send()
             .await
             .map_err(|_| ManagementError::ConnectionFailed)?;
@@ -528,6 +538,22 @@ impl ManagementClient {
             .client
             .patch(format!("{}/v1/devices/{device_id}", self.base_url))
             .json(&RenameDeviceRequest { name })
+            .send()
+            .await
+            .map_err(|_| ManagementError::ConnectionFailed)?;
+        self.decode(response).await
+    }
+
+    /// `PATCH /v1/members/{id}/name`; needs `CurrentConfiguration::person_rename_enabled`.
+    pub async fn rename_member(
+        &self,
+        member_id: MemberId,
+        name: String,
+    ) -> Result<MembershipSnapshot, ManagementError> {
+        let response = self
+            .client
+            .patch(format!("{}/v1/members/{member_id}/name", self.base_url))
+            .json(&RenameMemberRequest { name })
             .send()
             .await
             .map_err(|_| ManagementError::ConnectionFailed)?;

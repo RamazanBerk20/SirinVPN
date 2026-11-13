@@ -73,20 +73,7 @@ impl CommandRunner for KernelRunner {
                         let ready = || {
                             let _ = send.send(());
                         };
-                        let result = match config {
-                            ClientTransportConfig::LegacyObfuscatedUdp(c) => {
-                                run_client_relay(c, ready).await
-                            }
-                            ClientTransportConfig::Current(
-                                CurrentClientTransportConfig::TcpFallback(c),
-                            ) => run_tcp_client_relay(c, ready).await,
-                            ClientTransportConfig::Current(
-                                CurrentClientTransportConfig::TlsLike(c),
-                            ) => run_tls_like_client_relay(c, ready).await,
-                            ClientTransportConfig::Current(CurrentClientTransportConfig::Quic(
-                                c,
-                            )) => run_quic_client_relay(c, ready).await,
-                        };
+                        let result = crate::system::run_relay(config, ready).await;
                         if let Err(error) = result {
                             eprintln!("carrier stopped: {error}");
                         }

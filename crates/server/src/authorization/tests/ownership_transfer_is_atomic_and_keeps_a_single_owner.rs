@@ -76,6 +76,7 @@ fn targeted_device_enrollment_receipt_resolves_to_existing_member() {
     let server = LocalIdentity::generate("Server").unwrap();
     let claims = InvitationClaims {
         recipient_names: false,
+        fixed_member_name: false,
         alternate_endpoint_hosts: Vec::new(),
         endpoint_discovery_port: None,
         max_uses: 1,

@@ -20,6 +20,8 @@ mod local_component;
 mod native_text;
 mod wifi_automation;
 
+mod command_error;
+use command_error::{CommandError, command_error};
 mod command_types;
 use command_types::*;
 mod hetzner;
@@ -29,6 +31,7 @@ mod ssh_login;
 mod ssh_trust;
 mod vps_baseline;
 mod vps_release;
+mod vps_transaction;
 use provisioning::*;
 mod backups;
 mod credential_storage;
@@ -52,6 +55,9 @@ use recovery::*;
 mod identity;
 use identity::*;
 mod application_routing;
+mod picked_files;
+#[cfg(test)]
+mod command_acl;
 #[cfg_attr(windows, path = "helper_windows.rs")]
 mod helper;
 use helper::*;
@@ -81,8 +87,8 @@ use sirinvpn_installer::{
     InstallRequest, Provisioner, SshAuthentication, SshTarget, UninstallRequest,
 };
 use sirinvpn_installer::{
-    RepairRequest, ServerBackupOutcome, ServerBackupRequest, ServerRestoreOutcome,
-    ServerRestoreRequest, new_identity_for_server, parse_nat64_prefix,
+    RepairRequest, ServerBackupOutcome, ServerBackupRequest, new_identity_for_server,
+    parse_nat64_prefix,
 };
 use sirinvpn_protocol::{
     ConnectionState, NetworkProfile, PrivateDnsRecord, ServerEndpoint, ServerId, ServerProfile,
@@ -167,6 +173,7 @@ fn run_inner() -> tauri::Result<()> {
         .invoke_handler(tauri::generate_handler![
             credential_storage::credential_storage,
             application_routing::launch_vpn_application,
+            picked_files::pick_path,
             local_status_stream::subscribe_local_status,
             local_status_stream::unsubscribe_local_status,
             local_component::local_component_update_status,
@@ -201,6 +208,11 @@ fn run_inner() -> tauri::Result<()> {
             hetzner::wait_hetzner_server,
             hetzner::cancel_hetzner_wait,
             hetzner::delete_hetzner_server,
+            hetzner::find_hetzner_server,
+            vps_transaction::install_transaction_status,
+            vps_transaction::resolve_install_transaction,
+            vps_transaction::abandon_install_transaction,
+            vps_transaction::plan_server_operation,
             server_preflight::inspect_server_network,
             vps_release::manage_vps_release,
             vps_baseline::prepare_vps_baseline,
@@ -263,6 +275,7 @@ fn run_inner() -> tauri::Result<()> {
             update_member_access,
             update_member_suspension,
             update_member_policy,
+            rename_member,
             recovery_settings,
             update_recovery_policy,
             create_recovery_key,

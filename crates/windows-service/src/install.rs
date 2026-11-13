@@ -121,7 +121,7 @@ pub fn install() -> io::Result<()> {
         Handle(raw)
     };
     harden(&service)?;
-    start(&service, false)?;
+    start(&service, None)?;
     wait_for(&service, SERVICE_RUNNING, false)
 }
 
@@ -152,6 +152,30 @@ fn stop_in(directory: &std::path::Path) -> io::Result<()> {
     stop(&service)
 }
 
+/// Elevated way out of a kill switch left by any user's session, for when the
+/// pipe is unusable (for example the service was stopped or cannot load its
+/// session). The service clears routes, filters and the session as LocalSystem
+/// under an SCM start argument, then starts normally. An update stop or crash
+/// keeps the guard; only this, a Disconnect or uninstall release it.
+pub fn release_guard() -> io::Result<()> {
+    let executable = std::env::current_exe()?;
+    let directory = executable.parent().ok_or_else(invalid)?;
+    let manager = manager()?;
+    let service = open(
+        &manager,
+        SERVICE_START | SERVICE_STOP | SERVICE_QUERY_STATUS | SERVICE_QUERY_CONFIG,
+    )?;
+    let program = directory.join("sirinvpn-windows-service.exe");
+    let _protected = open_protected_program(&program)?;
+    let path = program.to_str().ok_or_else(invalid)?;
+    require_owned(&service, &format!("\"{path}\" --service"))?;
+    stop(&service)?;
+    start(&service, Some(crate::service::RELEASE_ARGUMENT))?;
+    wait_for(&service, SERVICE_STOPPED, true)?;
+    start(&service, None)?;
+    wait_for(&service, SERVICE_RUNNING, false)
+}
+
 pub fn uninstall() -> io::Result<()> {
     let executable = std::env::current_exe()?;
     crate::update::uninstall_with_cleanup(|| uninstall_in(executable.parent().ok_or_else(invalid)?))
@@ -172,7 +196,7 @@ fn uninstall_in(directory: &std::path::Path) -> io::Result<()> {
     stop(&service)?;
     // Cleanup must execute as LocalSystem to read the SYSTEM-only DPAPI journal.
     // SERVICE_START belongs only to administrators and SYSTEM in our service DACL.
-    start(&service, true)?;
+    start(&service, Some(crate::service::UNINSTALL_ARGUMENT))?;
     wait_for(&service, SERVICE_STOPPED, true)?;
     application_driver::uninstall_in(directory)?;
     if unsafe { DeleteService(service.0) } == 0 {
@@ -384,23 +408,26 @@ fn bounded_string(value: *const u16, buffer: &[u64]) -> io::Result<String> {
     String::from_utf16(&characters[..length]).map_err(|_| invalid())
 }
 
-fn start(service: &Handle, cleanup: bool) -> io::Result<()> {
-    let argument = security::wide("--uninstall")?;
-    let arguments = [argument.as_ptr()];
+/// A cleanup `argument` must start a stopped service; a normal start tolerates
+/// one that already runs.
+fn start(service: &Handle, argument: Option<&str>) -> io::Result<()> {
+    let wide = argument.map(security::wide).transpose()?;
+    let arguments = wide.iter().map(|value| value.as_ptr()).collect::<Vec<_>>();
     if unsafe {
         StartServiceW(
             service.0,
-            u32::from(cleanup),
-            if cleanup {
-                arguments.as_ptr()
-            } else {
+            arguments.len() as u32,
+            if arguments.is_empty() {
                 ptr::null()
+            } else {
+                arguments.as_ptr()
             },
         )
     } == 0
     {
         let error = io::Error::last_os_error();
-        if cleanup || error.raw_os_error() != Some(ERROR_SERVICE_ALREADY_RUNNING as i32) {
+        if argument.is_some() || error.raw_os_error() != Some(ERROR_SERVICE_ALREADY_RUNNING as i32)
+        {
             return Err(error);
         }
     }

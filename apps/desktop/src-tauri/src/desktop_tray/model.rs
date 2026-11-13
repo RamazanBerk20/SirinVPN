@@ -1,8 +1,9 @@
 //! Pure menu presentation. A selection is never evidence of an active tunnel.
 use super::{Action, Destination};
 use crate::native_text::{self, text, text_with};
-use sirinvpn_protocol::{ConnectionState, ServerId, ServerProfile};
-use sirinvpn_tunnel_model::{KillSwitchState, LocalTunnelStatus};
+use sirinvpn_protocol::{ServerId, ServerProfile};
+use crate::connection_controller::Gate;
+use sirinvpn_tunnel_model::{KillSwitchState, LocalTunnelStatus, TunnelPhase};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum IconState {
@@ -77,7 +78,10 @@ pub struct Model {
     pub needs_update: bool,
     pub legacy_session: bool,
     pub quit: Quit,
+    /// The shared operation gate is taken; the window reads the same gate.
     pub busy: bool,
+    /// A starting connect that Disconnect cancels instead of waiting for.
+    pub cancellable: bool,
     /// Text changes rebuild the menu even when the connection state is unchanged.
     pub text_revision: u64,
 }
@@ -102,7 +106,7 @@ pub fn project(
     local: Option<&LocalTunnelStatus>,
     profiles: Option<&[ServerProfile]>,
     selected: Option<ServerId>,
-    busy: bool,
+    gate: Gate,
 ) -> Model {
     // Read before any text so a concurrent language change is never missed.
     let text_revision = native_text::revision();
@@ -137,7 +141,8 @@ pub fn project(
         needs_update: false,
         legacy_session: false,
         quit: Quit::StatusUnknown,
-        busy,
+        busy: gate != Gate::Idle,
+        cancellable: gate == Gate::Connecting,
         text_revision,
     };
     if let Some(s) = local {
@@ -169,51 +174,59 @@ pub fn project(
         });
         let attention =
             matches!(kill_switch, KillSwitch::Unknown | KillSwitch::Failed) || ipv6_unverified;
+        let phase = s.phase();
         if let Some(id) = active {
             model.needs_update = !s.connection_control_supported;
             model.legacy_session = s.policy.is_none();
-            let connected = s.state == ConnectionState::Connected;
-            model.status = if connected {
-                named(
-                    id,
-                    "native.tray.status.connectedTo",
-                    "native.tray.status.connected",
-                )
-            } else if s.waiting_for_user {
-                named(
-                    id,
-                    "native.tray.status.pausedOn",
-                    "native.tray.status.paused",
-                )
-            } else if s.recovery_in_progress {
-                named(
-                    id,
+            let connected = matches!(phase, Some(TunnelPhase::Connected { .. }));
+            let paused = matches!(phase, Some(TunnelPhase::Paused { .. }));
+            let recovering = matches!(
+                phase,
+                Some(TunnelPhase::Recovering { .. } | TunnelPhase::Unhealthy { recovering: true, .. })
+            );
+            let (with_name, without_name) = match phase {
+                Some(TunnelPhase::Connected { .. }) => {
+                    ("native.tray.status.connectedTo", "native.tray.status.connected")
+                }
+                Some(TunnelPhase::Paused { .. }) => {
+                    ("native.tray.status.pausedOn", "native.tray.status.paused")
+                }
+                Some(
+                    TunnelPhase::Recovering { .. }
+                    | TunnelPhase::Unhealthy {
+                        recovering: true, ..
+                    },
+                ) => (
                     "native.tray.status.reconnectingTo",
                     "native.tray.status.reconnecting",
-                )
-            } else if s.state == ConnectionState::Connecting {
-                named(
-                    id,
+                ),
+                Some(TunnelPhase::Connecting { .. }) => (
                     "native.tray.status.connectingTo",
                     "native.tray.status.connecting",
-                )
-            } else {
-                named(
-                    id,
+                ),
+                Some(TunnelPhase::Unhealthy { .. }) => (
                     "native.tray.status.interruptedOn",
                     "native.tray.status.interrupted",
-                )
+                ),
+                // Contradictory flags from an older component: say so, offer only Disconnect.
+                Some(TunnelPhase::Idle) | None => {
+                    ("native.tray.status.unknown", "native.tray.status.unknown")
+                }
             };
+            model.status = named(id, with_name, without_name);
+            let known = phase.is_some();
             model.icon = if connected {
                 IconState::Connected
-            } else {
+            } else if known {
                 IconState::Progress
+            } else {
+                IconState::Attention
             };
-            let (label, action) = if connected || model.legacy_session {
+            let (label, action) = if connected || model.legacy_session || !known {
                 ("native.tray.menu.disconnect", Action::Disconnect(id))
-            } else if s.waiting_for_user {
+            } else if paused {
                 ("native.tray.menu.resume", Action::Reconnect(id))
-            } else if s.recovery_in_progress {
+            } else if recovering {
                 ("native.tray.menu.stopReconnecting", Action::Pause(id))
             } else {
                 ("native.tray.menu.stopConnecting", Action::Pause(id))
@@ -221,22 +234,24 @@ pub fn project(
             if !model.needs_update {
                 model.primary = Some((text(label), action));
             }
-            model.extra_disconnect = !connected && !model.needs_update && !model.legacy_session;
-            model.reconnect = connected && !model.needs_update && !model.legacy_session;
-            model.can_switch = !model.needs_update && !model.legacy_session && profiles.is_some();
-            model.quit = if s.waiting_for_user {
+            let controls = known && !model.needs_update && !model.legacy_session;
+            model.extra_disconnect = !connected && controls;
+            model.reconnect = connected && controls;
+            model.can_switch = controls && profiles.is_some();
+            model.quit = if !known {
+                Quit::StatusUnknown
+            } else if paused {
                 Quit::Paused
-            } else if s.recovery_in_progress {
+            } else if recovering {
                 Quit::Reconnecting
             } else if connected {
                 Quit::Connected
             } else {
                 Quit::Service
             };
-        } else if s.state == ConnectionState::Disconnected
+        } else if phase == Some(TunnelPhase::Idle)
             && !s.kill_switch_enabled
             && !s.auto_reconnect_enabled
-            && !s.recovery_in_progress
             && s.kill_switch_state == Some(KillSwitchState::Off)
         {
             model.status = text("native.tray.status.disconnected");
@@ -270,6 +285,9 @@ pub fn project(
                 model.quit = Quit::KillSwitchUnknown;
             }
         }
+        if active.is_some() && phase.is_none() && !model.quit.needs_consent() {
+            model.quit = Quit::StatusUnknown;
+        }
     }
     let mut ordered = list
         .iter()
@@ -289,9 +307,8 @@ pub fn project(
         .map(|p| ServerItem {
             id: p.id,
             name: menu_name(&p.name),
-            connected: local.is_some_and(|s| {
-                s.state == ConnectionState::Connected && s.server_id == Some(p.id)
-            }),
+            connected: local.and_then(LocalTunnelStatus::phase)
+                == Some(TunnelPhase::Connected { server_id: p.id }),
         })
         .collect();
     if profiles.is_none() && active.is_none() {

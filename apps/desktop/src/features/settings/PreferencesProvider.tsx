@@ -12,6 +12,7 @@ import { api } from "../../api";
 import { isAndroid } from "../../platform";
 import { errorMessage } from "../../lib/errors";
 import { t } from "../../i18n";
+import { applyLanguage } from "../../i18n/language";
 import type { AppPreferences, PreferencesSnapshot } from "./preferences";
 import { followTheme } from "./theme";
 
@@ -60,7 +61,10 @@ function usePreferencesController() {
     return () => {
       delete document.documentElement.dataset.motion;
     };
-  }, [snapshot?.preferences.animations]);
+  }, [snapshot?.preferences.animations, snapshot?.font_scale]);
+  // A saved change, or on Android a change made in the system's per-app language setting.
+  const language = snapshot?.preferences.language;
+  useEffect(() => { if (snapshot) void applyLanguage(language); }, [snapshot, language]);
   // Before the first paint, so a light system never flashes the dark palette.
   useLayoutEffect(() => followTheme(snapshot?.preferences.theme), [snapshot?.preferences.theme]);
 
@@ -88,6 +92,8 @@ function usePreferencesController() {
         ...snapshot.preferences,
         [key]: value,
       });
+      // The new language first, so "Saved" already appears in it.
+      if (key === "language") await applyLanguage(saved.preferences.language);
       setSnapshot(saved);
       setStatus(t("common.state.saved"));
     } catch (reason) {

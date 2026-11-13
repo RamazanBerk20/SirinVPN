@@ -1,6 +1,7 @@
 import type { MessageKey } from "../../i18n";
 import type { DiagnosticReport, ServerProfile, TransportPreference } from "../../types";
 import { diagnosticGroup } from "../../components/diagnosticEvidence";
+import { diagnosticCause, type DiagnosticCause } from "../../lib/errors";
 
 export type TroubleshootStatus = "problem" | "check" | "ok";
 export type TroubleshootFix = "connectionSettings" | "endpointUpdate" | "repairServer" | "keyRotation" | "restoreDevice";
@@ -13,12 +14,11 @@ export interface TroubleshootStep {
   evidence?: string;
 }
 
-// A failed management check names its cause only in core's fixed text (crates/core/src/diagnostics.rs, management_failure).
-const managementCause = {
-  clock: /^The private TLS handshake failed\./,
-  enrollment: /^(The saved (server certificate pin|device management certificate\/key) is invalid|The VPS rejected device authentication)\./,
-  membership: /^The VPS rejected this device's current access\./,
-  service: /^The private management (request timed out|connection did not complete)\./,
+const managementCause: Record<"clock" | "enrollment" | "membership" | "service", DiagnosticCause[]> = {
+  clock: ["management_clock"],
+  enrollment: ["management_credentials_invalid", "management_device_rejected"],
+  membership: ["management_access_rejected"],
+  service: ["management_unreachable"],
 };
 
 /** The usual causes of a failed connection, in the order to check them, judged only from diagnostic codes and saved settings. */
@@ -32,7 +32,7 @@ export function troubleshootSteps({ report, online, profile, transport, rotation
   const checks = new Map(report.checks.map((check) => [check.code, check]));
   const failed = (...codes: string[]) => codes.some((code) => { const check = checks.get(code); return check !== undefined && diagnosticGroup(check) === "attention"; });
   const passed = (code: string) => { const check = checks.get(code); return check !== undefined && diagnosticGroup(check) === "passed"; };
-  const management = (cause: keyof typeof managementCause) => failed("management") && managementCause[cause].test(checks.get("management")!.message);
+  const management = (cause: keyof typeof managementCause) => failed("management") && managementCause[cause].includes(diagnosticCause(checks.get("management")!));
   const owner = profile.role === "owner";
   const repair = owner ? "repairServer" as const : undefined;
   // A handshake proves the network, address and method; authenticated management also proves the clock, keys and access.

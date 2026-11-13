@@ -1,0 +1,249 @@
+{
+  "consoleLabel": "Connexion VPN",
+  "status": {
+    "unknown": "État inconnu",
+    "restoringAccess": "Rétablissement de l’accès au serveur",
+    "monitorUnavailable": "Le moniteur VPN ne répond pas",
+    "reconnecting": "Reconnexion",
+    "connected": "Connecté",
+    "connecting": "Connexion",
+    "interrupted": "Connexion interrompue",
+    "disconnected": "Déconnecté",
+    "changing": "Modification de la connexion…",
+    "checking": "Vérification de l’état du VPN…",
+    "connectingTo": "Connexion à {{name}}…",
+    "disconnecting": "Déconnexion…"
+  },
+  "action": {
+    "showActive": "Aller au serveur connecté",
+    "refresh": "Actualiser l’état",
+    "disconnectAndUnblock": "Se déconnecter et désactiver le blocage du coupe-circuit",
+    "disconnect": "Se déconnecter",
+    "connect": "Se connecter",
+    "changing": "Modification de la connexion",
+    "wait": "Veuillez patienter…",
+    "vpnSettings": "Paramètres VPN",
+    "androidVpnSettings": "Paramètres VPN Android",
+    "cancelConnection": "Annuler",
+    "reconnect": "Se reconnecter",
+    "reconnectHint": "Reprendre avec les paramètres actuels",
+    "stop": "Arrêter le VPN",
+    "connecting": "Connexion…",
+    "disconnecting": "Déconnexion…",
+    "checkAgain": "Vérifier à nouveau"
+  },
+  "routing": {
+    "unknown": "Inconnu",
+    "inactive": "Non actif",
+    "selectedApps": "Applications sélectionnées",
+    "selectedRoutes": "Routes sélectionnées",
+    "fullTunnelLan": "Tunnel complet · réseau local autorisé",
+    "fullTunnel": "Tunnel complet"
+  },
+  "killSwitch": {
+    "unknown": "Inconnu",
+    "otherServer": "Voir le serveur actif",
+    "nextConnection": "Activé pour la prochaine connexion",
+    "off": "Désactivé",
+    "inactive": "Non actif",
+    "armed": "Activé",
+    "blocking": "Blocage du trafic",
+    "failed": "Ne fonctionne pas",
+    "unverified": "Activé · non vérifié"
+  },
+  "isolation": {
+    "verified": "Vérifiée",
+    "unverified": "Non vérifiée"
+  },
+  "summary": {
+    "unknown": "Impossible de lire l’état du VPN. Actualisez pour vérifier.",
+    "restoringAccess": "Ne vous fiez pas à cette connexion tant que l’accès au serveur n’est pas rétabli.",
+    "monitorUnavailable": "Le moniteur VPN ne répond pas : l’état du coupe-circuit est inconnu.",
+    "otherServer": "Un autre serveur est connecté. Rendez-vous sur celui-ci pour vous déconnecter.",
+    "androidApps": "Seules les applications sélectionnées utilisent le VPN.",
+    "windowsApps": "Les applications sélectionnées utilisent le VPN. Le DNS du système passe par le serveur.",
+    "launchedApps": "Les applications lancées depuis SirinVPN utilisent le VPN.",
+    "selectedRoutes": "Les réseaux sélectionnés utilisent le VPN. Le reste n’est pas concerné.",
+    "fullTunnelLan": "Le trafic Internet utilise le VPN. Le trafic du réseau local ne l’utilise pas.",
+    "fullTunnel": "Tout le trafic Internet passe par le VPN.",
+    "fullTunnelIpv4": "Le trafic IPv4 passe par le VPN. IPv6 n’est ni tunnelisé ni bloqué.",
+    "interrupted": "La connexion a été coupée. Votre trafic n’est pas protégé tant que vous ne vous reconnectez pas.",
+    "interruptedBlocked": "La connexion a été coupée. Le coupe-circuit bloque le trafic jusqu’à ce que vous vous reconnectiez ou vous déconnectiez.",
+    "waitingAndroidLockdown": "Android bloque le trafic jusqu’à ce que vous vous reconnectiez.",
+    "waitingBlocked": "Le trafic est bloqué. Reconnectez-vous, ou déconnectez-vous pour le débloquer.",
+    "waiting": "La reconnexion automatique est désactivée. Reconnectez-vous quand vous le souhaitez.",
+    "reconnecting": "Tentative de rétablissement de la connexion.",
+    "connecting": "Mise en place d’une connexion sécurisée.",
+    "disconnected": "Votre trafic n’utilise pas le VPN.",
+    "disconnecting": "Arrêt du VPN."
+  },
+  "warning": {
+    "accessContained": "L’accès au serveur est en cours de rétablissement. Le trafic VPN est retenu jusqu’à la fin.",
+    "accessUnenforced": "Les contrôles d’accès au serveur ne fonctionnent pas. Ne vous fiez pas à ce serveur tant qu’ils ne sont pas rétablis.",
+    "androidLockdown": "L’option « Bloquer les connexions sans VPN » d’Android reste activée après la déconnexion.",
+    "killSwitchFailed": "Le coupe-circuit n’a pas pu être vérifié. Ne vous y fiez pas tant que ce n’est pas corrigé.",
+    "androidAppsUnverified": "Impossible de vérifier le routage des applications. Vérifiez la connexion avant de vous y fier.",
+    "appsUnverified": "Impossible de vérifier le routage des applications. Le lancement de nouvelles applications est désactivé.",
+    "dnsDown": "Le DNS du serveur ne répond pas : les sites Web peuvent ne pas se charger.",
+    "ipv6": "Le trafic IPv6 n’est ni tunnelisé ni bloqué : il peut contourner le VPN.",
+    "serverInterfaceDown": "Le serveur signale que son interface VPN est arrêtée. Le trafic peut s’interrompre à tout moment."
+  },
+  "componentUpdate": {
+    "needed": "Mettez à jour le composant VPN pour vous connecter.",
+    "review": "Vérifier la mise à jour"
+  },
+  "presharedKey": {
+    "missing": "Cet appareil n’a pas de clé pré-partagée : le trafic VPN enregistré n’est pas protégé contre les futurs ordinateurs quantiques.",
+    "add": "Ajouter une clé pré-partagée"
+  },
+  "health": {
+    "idle": "Pas de poignée de main récente. La connexion est peut-être simplement inactive.",
+    "managementUnavailable": "La gestion du serveur est indisponible.",
+    "reachability": {
+      "notChecked": "Non vérifié",
+      "replied": "Répond",
+      "noReply": "Aucune réponse"
+    }
+  },
+  "protection": {
+    "ipv6NotVerified": "IPv6 non vérifié",
+    "ipv6": {
+      "tunneled": "Via le VPN",
+      "blocked": "Bloqué",
+      "unknown": "Inconnu",
+      "blockedLanAllowed": "Bloqué · réseau local autorisé",
+      "blockedVerified": "Bloqué · vérifié",
+      "selectedRoutes": "Routes sélectionnées uniquement",
+      "blockedUnverified": "Bloqué · non vérifié",
+      "bypassesOutsideRoutes": "Contourne le VPN en dehors des routes sélectionnées",
+      "unverified": "Non vérifié"
+    },
+    "android": {
+      "unverified": "Impossible de vérifier le routage ou le blocage d’Android.",
+      "packages": "Les applications sélectionnées utilisent le VPN et son DNS. Les autres applications le contournent, sauf blocage par Android.",
+      "lockdown": "L’option « Bloquer les connexions sans VPN » d’Android est activée pour toutes les applications."
+    },
+    "apps": {
+      "ipv6Unverified": "Routage des applications non vérifié",
+      "ipv6Tunneled": "Applications lancées : via le VPN",
+      "ipv6Blocked": "Applications lancées : bloquées",
+      "notReady": "Le routage des applications n’est pas prêt. Les nouveaux lancements sont désactivés.",
+      "windows": "Les applications sélectionnées utilisent le VPN pour IPv4 ; leur IPv6 est bloqué. Le DNS passe par le serveur.",
+      "launched": "Les applications lancées et leur DNS utilisent le VPN. Les autres applications utilisent votre réseau habituel."
+    },
+    "firewall": {
+      "verifiedSelectedRoutes": "Pare-feu vérifié pour les routes sélectionnées et le DNS.",
+      "verifiedLanAllowed": "Pare-feu vérifié pour IPv4, IPv6 et DNS. Réseau local autorisé.",
+      "verified": "Pare-feu vérifié pour IPv4, IPv6 et DNS.",
+      "unverified": "Impossible de vérifier le pare-feu."
+    }
+  },
+  "details": {
+    "connection": "Connexion",
+    "status": "État",
+    "method": "Méthode",
+    "routing": "Routage",
+    "killSwitch": "Coupe-circuit",
+    "appIsolation": "Isolation des applications",
+    "reachability": "Serveur joignable",
+    "serverResponse": "Réponse du serveur",
+    "serverResponseInfo": "Le temps que met le serveur à répondre à une demande d’état. Ce n’est pas la latence du VPN.",
+    "addresses": "Adresses",
+    "serverAddress": "Adresse du serveur",
+    "vpnAddress": "Adresse VPN",
+    "thisDevice": "Cet appareil",
+    "mtu": "Taille des paquets (MTU)",
+    "server": "Serveur",
+    "blockWithoutVpn": "Bloquer sans VPN",
+    "alwaysOn": "VPN toujours actif",
+    "mtuValue": "{value, plural, one {{{value}} octet} many {{{value}} octets} other {{{value}} octets}}",
+    "mtuPending": "{value, plural, one {{{value}} octet mesuré · appliqué à votre prochaine connexion} many {{{value}} octets mesurés · appliqués à votre prochaine connexion} other {{{value}} octets mesurés · appliqués à votre prochaine connexion}}"
+  },
+  "traffic": {
+    "label": "Trafic de cet appareil",
+    "session": "Session en cours",
+    "countersUnavailable": "Compteurs indisponibles",
+    "notConnected": "Non connecté à ce serveur",
+    "download": "Téléchargement",
+    "upload": "Envoi",
+    "duration": "Connecté depuis",
+    "measuring": "Mesure…",
+    "received": "{{amount}} reçus",
+    "sent": "{{amount}} envoyés",
+    "counterFailed": "Impossible de lire les compteurs",
+    "needsUpdate": "Mise à jour du composant VPN nécessaire",
+    "durationFailed": "Impossible de lire la durée de la session",
+    "updateNeeded": "Les compteurs de trafic et la durée de session de cet appareil nécessitent une mise à jour du composant VPN."
+  },
+  "device": {
+    "summary": "Détails de l’appareil",
+    "receivedPackets": "Paquets reçus",
+    "sentPackets": "Paquets envoyés",
+    "latency": "Latence",
+    "latencyInfo": "Aller-retour moyen vers le serveur via le VPN. Ce n’est pas le débit Internet.",
+    "noMeasurement": "Pas encore mesuré",
+    "probes": "Réponses aux sondes",
+    "probesValue": "{{received}} sur {{sent}} · gigue {{jitter}}",
+    "ipv6": "IPv6",
+    "autoReconnect": "Reconnexion automatique",
+    "fallback": "Méthodes de repli",
+    "countersNote": "Les compteurs sont remis à zéro à chaque reconnexion. Aucun historique n’est conservé."
+  },
+  "server": {
+    "title": "Serveur",
+    "freshness": {
+      "unavailable": "Indisponible",
+      "live": "En direct",
+      "polling": "Actualisé périodiquement",
+      "connecting": "Chargement des statistiques…",
+      "reconnecting": "Reconnexion des statistiques…"
+    },
+    "unavailable": "Les statistiques du serveur sont indisponibles. Elles reviendront automatiquement.",
+    "connectToSee": "Connectez-vous pour voir les statistiques du serveur.",
+    "pollingNote": "Les statistiques du serveur en direct nécessitent une mise à jour du serveur.",
+    "noMeasurement": "Non mesuré",
+    "usedOf": "{{used}} sur {{total}}",
+    "cpu": "Processeur",
+    "cpuDetail": "Moyenne de tous les cœurs",
+    "memory": "Mémoire",
+    "storage": "Stockage",
+    "uptime": "Durée de fonctionnement",
+    "devices": "Appareils",
+    "devicesActive": "{{active}} sur {{total}} actifs",
+    "devicesAuthorized": "{count, plural, one {# appareil} many {# appareils} other {# appareils}}",
+    "activityUnavailable": "Activité indisponible",
+    "activityUnreadable": "Impossible de lire l’activité des appareils depuis le serveur.",
+    "activityUnsupported": "Ce serveur ne peut pas signaler l’activité des appareils. Mettez-le à jour pour l’activer.",
+    "reviewHealth": "Vérifier l’état du serveur",
+    "reviewUpdate": "Vérifier la mise à jour",
+    "detailsSummary": "Détails du serveur",
+    "inbound": "Entrant",
+    "outbound": "Sortant",
+    "received": "Reçu",
+    "sent": "Envoyé",
+    "receivedPackets": "Paquets reçus",
+    "sentPackets": "Paquets envoyés",
+    "dns": "DNS",
+    "dnsRunning": "En fonctionnement",
+    "dnsDown": "Ne répond pas",
+    "totalsInfo": "Les totaux couvrent tous les appareils depuis le démarrage du VPN du serveur.",
+    "pollingNoteMember": "Les statistiques du serveur en direct nécessitent une mise à jour du serveur. Son Propriétaire peut l’installer."
+  },
+  "alwaysOnNote": "Le VPN toujours actif est activé : Android décide donc quand le VPN s’arrête. Déconnectez-vous depuis les paramètres VPN d’Android.",
+  "method": {
+    "https": "HTTPS",
+    "automatic": "Automatique · {{method}}"
+  },
+  "alert": {
+    "label": "Alertes",
+    "runDiagnostics": "Lancer le diagnostic",
+    "checkServer": "Vérifier l’état du serveur",
+    "unstable": "{sent, plural, one {Connexion instable : {{lost}} de la dernière vérification sans réponse.} many {Connexion instable : {{lost}} des # dernières vérifications sans réponse.} other {Connexion instable : {{lost}} des # dernières vérifications sans réponse.}}",
+    "storage": "Le stockage du serveur est plein à {{percent}}. Libérez de l’espace avant qu’il ne cesse de fonctionner.",
+    "rotationPending": "Une rotation de clé ne s’est pas terminée. Terminez-la pour que cet appareil conserve son accès.",
+    "finishRotation": "Terminer la rotation des clés"
+  },
+  "consequence": {
+    "desktop": "Se déconnecter désactive aussi le blocage du coupe-circuit et la reconnexion automatique."
+  }
+}

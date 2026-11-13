@@ -42,7 +42,7 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
         }
         let now = now_unix();
         if supervisor.physical_route_available == Some(false) {
-            state.reconnecting = true;
+            state.lose_path();
             if let Some(quality) = state.quality.as_mut() {
                 quality.health = Default::default();
             }
@@ -104,8 +104,7 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
             return Ok(outcome);
         }
         if check_handshake && healthy {
-            state.has_connected = true;
-            state.reconnecting = false;
+            state.confirm_handshake();
             self.observe_policy(&mut state, &request, desired.endpoint);
             self.write_state(&state)
                 .map_err(|_| HelperError::NetworkOperationFailed)?;
@@ -119,7 +118,7 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
                 .route_transition
                 .is_some_and(|t| now.saturating_sub(t.detected_at_unix) < HANDSHAKE_GRACE_SECONDS);
         if check_handshake && (grace || transition_grace) {
-            state.reconnecting = true;
+            state.lose_path();
             self.observe_policy(&mut state, &request, desired.endpoint);
             self.write_state(&state)
                 .map_err(|_| HelperError::NetworkOperationFailed)?;
@@ -139,15 +138,14 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
             !state.has_connected && usize::from(state.initial_attempts) < plan_length;
         if !initial_selection_remaining && !policy.automatic_reconnect {
             self.cleanup_tunnel_owned()?; // deliberately retains the guard
-            state.waiting_for_user = true;
-            state.reconnecting = false;
+            state.pause();
             self.observe_policy(&mut state, &request, desired.endpoint);
             self.write_state(&state)
                 .map_err(|_| HelperError::NetworkOperationFailed)?;
             return Ok(ReconcileOutcome::Healthy);
         }
         if supervisor.physical_route_available == Some(false) {
-            state.reconnecting = true;
+            state.lose_path();
             self.observe_policy(&mut state, &request, desired.endpoint);
             self.write_state(&state)
                 .map_err(|_| HelperError::NetworkOperationFailed)?;
@@ -184,6 +182,14 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
                             return Err(HelperError::NetworkOperationFailed);
                         }
                     }
+                    Err(error @ HelperError::InvalidConfiguration(_)) => {
+                        // A squatted carrier port: report it instead of trying the next one.
+                        state.pause();
+                        self.observe_policy(&mut state, &request, desired.endpoint);
+                        self.write_state(&state)
+                            .map_err(|_| HelperError::NetworkOperationFailed)?;
+                        return Err(error);
+                    }
                     Err(error) => return Err(error),
                 }
             }
@@ -205,17 +211,21 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
         state.quality = None;
         state.mtu = mtu::initial_mtu(&next);
         state.mtu_sampled_at_unix = None;
-        state.initial_attempts = state.initial_attempts.saturating_add(1);
+        state.begin_attempt();
         state.applied_at_unix = now;
-        state.reconnecting = true;
         self.observe_policy(&mut state, &next, desired.endpoint);
         self.write_state(&state)
             .map_err(|_| HelperError::NetworkOperationFailed)?;
-        if self
-            .apply(&next, desired.endpoint, policy.kill_switch)
-            .is_err()
-        {
+        if let Err(error) = self.apply(&next, desired.endpoint, policy.kill_switch) {
             self.cleanup_tunnel_owned()?;
+            if let Some(error) = cleanup::CarrierPortInUse::helper_error(&error) {
+                // Not a reason to try the next carrier: wait for the user, guard kept.
+                state.pause();
+                self.observe_policy(&mut state, &next, desired.endpoint);
+                self.write_state(&state)
+                    .map_err(|_| HelperError::NetworkOperationFailed)?;
+                return Err(error);
+            }
             self.observe_policy(&mut state, &next, desired.endpoint);
             self.write_state(&state)
                 .map_err(|_| HelperError::NetworkOperationFailed)?;

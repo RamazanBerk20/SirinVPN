@@ -5,8 +5,10 @@ import { dpadOnly, invoke, isAndroid } from "../../platform";
 import type { Page } from "../../components/Navigation";
 import { formatTransport, formatLatency } from "../../format";
 import { describeConnection } from "./connectionState";
+import { connectionView } from "./connectionView";
 import { protectionEvidence } from "./protectionEvidence";
 import { InfoHint } from "../../components/InfoHint";
+import { ErrorText } from "../../components/ui";
 import { formatNumber, t } from "../../i18n";
 import type { LocalTunnelStatus, ServerProfile } from "../../types";
 import type { ServerWorkspaceModel } from "./useServerWorkspace";
@@ -53,12 +55,14 @@ export function ConnectionHero({
     return () => { current = false; };
   }, [model.localStatus.state]);
   if (view !== "home") return null;
-  const { localStatus, profile, serverStatus, busy, error, connectionOperation: operation } = model;
+  const { localStatus, profile, serverStatus, busy, error } = model;
   const systemControlled = isAndroid && localStatus.always_on === true;
   const state = describeConnection(localStatus, profile.id, serverStatus, model.preferences.saved?.policy);
-  const loading = !state.known && model.freshness.updatedAt === null && model.freshness.refreshing;
-  const waiting = state.active && localStatus.waiting_for_user === true;
-  const autoReconnecting = state.statusState === "reconnecting" && !busy;
+  const connection = connectionView(localStatus, profile.id, model.pending ?? null);
+  const loading = connection.phase === "unknown" && model.freshness.updatedAt === null && model.freshness.refreshing;
+  const userCommand = connection.phase === "stopping" || connection.phase === "starting" && connection.by === "user";
+  const waiting = connection.phase === "interrupted" && connection.waitingForUser;
+  const autoReconnecting = connection.phase === "reconnecting" && !busy;
   const componentUpdateRequired = !isAndroid && state.known && (
     componentCheck ||
     localStatus.mtu_detection_supported === false ||
@@ -68,21 +72,30 @@ export function ConnectionHero({
   const unstable = state.connected && probeLoss(localStatus) >= 0.2;
   const tone = busy || loading || autoReconnecting ? "busy" : unstable && state.tone === "ok" ? "warn" : state.tone;
   const headline = loading ? t("home.status.checking")
-    : operation === "connecting" ? t("home.status.connectingTo", { name: profile.name })
-    : operation === "disconnecting" ? t("home.status.disconnecting")
+    : connection.phase === "stopping" ? t("home.status.disconnecting")
+    : userCommand ? t("home.status.connectingTo", { name: profile.name })
     : busy ? t("home.status.changing")
     : state.status;
-  const summary = loading ? "" : operation === "connecting" ? t("home.summary.connecting")
-    : operation === "disconnecting" ? t("home.summary.disconnecting") : state.summary;
+  const summary = loading ? "" : connection.phase === "stopping" ? t("home.summary.disconnecting")
+    : userCommand ? t("home.summary.connecting") : state.summary;
 
-  const ring: { icon: ReactNode; label: string; aria?: string; run?: () => void; disabled?: boolean } = systemControlled
-    ? { icon: <GearSix size={36} />, label: t("home.action.vpnSettings"), aria: t("home.action.androidVpnSettings"), run: () => void invoke("android_vpn_settings") }
-    : loading ? { icon: <ArrowClockwise size={36} className="spin" />, label: t("common.state.checking"), aria: t("home.status.checking"), disabled: true }
-    : busy || autoReconnecting ? { icon: <ArrowClockwise size={36} className="spin" />, label: operation === "disconnecting" ? t("home.action.disconnecting") : operation === "connecting" ? t("home.action.connecting") : autoReconnecting ? t("home.status.reconnecting") : t("home.action.wait"), aria: t("home.action.changing"), disabled: true }
-    : !state.known ? { icon: <ArrowClockwise size={36} />, label: t("home.action.refresh"), run: () => void model.onRefresh() }
-    : waiting ? { icon: <ArrowClockwise size={36} />, label: t("home.action.reconnect"), run: () => void model.resume() }
-    : componentUpdateRequired && !state.active && onReviewComponentUpdate ? { icon: <Power size={36} />, label: state.action, run: onReviewComponentUpdate }
-    : { icon: <Power size={36} />, label: state.active ? t("home.action.disconnect") : state.action, aria: state.action, run: () => void model.toggle(), disabled: state.other };
+  const spinner = (label: string) => ({ icon: <ArrowClockwise size={36} className="spin" />, label, aria: t("home.action.changing"), disabled: true });
+  const toggle = { icon: <Power size={36} />, label: state.active ? t("home.action.disconnect") : state.action, aria: state.action, run: () => void model.toggle(), disabled: state.other };
+  const ring = ((): { icon: ReactNode; label: string; aria?: string; run?: () => void; disabled?: boolean } => {
+    if (systemControlled) return { icon: <GearSix size={36} />, label: t("home.action.vpnSettings"), aria: t("home.action.androidVpnSettings"), run: () => void invoke("android_vpn_settings") };
+    if (loading) return { icon: <ArrowClockwise size={36} className="spin" />, label: t("common.state.checking"), aria: t("home.status.checking"), disabled: true };
+    switch (connection.phase) {
+      case "stopping": return spinner(t("home.action.disconnecting"));
+      case "starting": if (connection.by === "user") return spinner(t("home.action.connecting")); break;
+      case "reconnecting": if (!busy) return spinner(t("home.status.reconnecting")); break;
+      case "unknown": if (!busy) return { icon: <ArrowClockwise size={36} />, label: t("home.action.refresh"), run: () => void model.onRefresh() }; break;
+      case "interrupted": if (connection.waitingForUser && !busy) return { icon: <ArrowClockwise size={36} />, label: t("home.action.reconnect"), run: () => void model.resume() }; break;
+      case "idle": if (componentUpdateRequired && onReviewComponentUpdate && !busy) return { icon: <Power size={36} />, label: state.action, run: onReviewComponentUpdate }; break;
+      case "up": break;
+    }
+    // A command for another server is still in flight.
+    return busy ? spinner(t("home.action.wait")) : toggle;
+  })();
 
   const alerts: Alert[] = [];
   const diagnose = { label: t("home.alert.runDiagnostics"), run: () => void model.runDiagnostics() };
@@ -110,7 +123,7 @@ export function ConnectionHero({
 
   const troubleshoot = !error && !state.connected && localStatus.server_id === profile.id && localStatus.state === "degraded";
   return (
-    <section className="connection-console" data-tone={tone} aria-label={t("home.consoleLabel")}>
+    <section className="connection-console" data-tone={tone} data-state={connection.phase} aria-label={t("home.consoleLabel")}>
       <div className="hero-panel">
         <button
           className="power-control"
@@ -129,8 +142,8 @@ export function ConnectionHero({
           {!isAndroid && state.connected && localStatus.kill_switch_enabled && <p className="connection-note">{t("home.consequence.desktop")}</p>}
           <ConnectionFacts model={model} />
           <div className="hero-actions">
-            {operation === "connecting" && <button className="secondary-button" type="button" onClick={() => void model.cancelConnection()}>{t("home.action.cancelConnection")}</button>}
-            {!systemControlled && !loading && !state.known && !operation && <button className="secondary-button" type="button" onClick={() => void model.cancelConnection()}>{t("home.action.stop")}</button>}
+            {connection.phase === "starting" && connection.by === "user" && <button className="secondary-button" type="button" onClick={() => void model.cancelConnection()}>{t("home.action.cancelConnection")}</button>}
+            {!systemControlled && !loading && connection.phase === "unknown" && <button className="secondary-button" type="button" onClick={() => void model.cancelConnection()}>{t("home.action.stop")}</button>}
             {!systemControlled && (waiting || autoReconnecting) && <button className="secondary-button" type="button" disabled={busy} onClick={() => void model.toggle()}>{state.action}</button>}
             {state.statusState === "monitorUnavailable" && <button className="secondary-button" type="button" disabled={busy} onClick={() => void model.onRefresh()}>{t("home.action.checkAgain")}</button>}
             {state.other && onShowActive && <button className="secondary-button" type="button" onClick={onShowActive}>{t("home.action.showActive")}</button>}
@@ -141,7 +154,7 @@ export function ConnectionHero({
       {alerts.length > 0 && <ul className="home-alerts" aria-label={t("home.alert.label")}>
         {alerts.map((alert) => <li key={alert.id} className={`home-alert ${alert.tone}`} role={alert.tone === "info" ? undefined : "alert"}>
           {alert.tone === "danger" ? <WarningOctagon size={20} weight="fill" /> : alert.tone === "warn" ? <Warning size={20} weight="fill" /> : <Info size={20} weight="fill" />}
-          <p>{alert.message}</p>
+          <p><ErrorText message={alert.message} /></p>
           {alert.action && <button className="secondary-button" type="button" disabled={busy} onClick={alert.action.run}>{alert.action.label}</button>}
         </li>)}
       </ul>}
@@ -158,7 +171,7 @@ export function ConnectionFacts({ model }: { model: ServerWorkspaceModel }) {
   if (state.active) {
     facts.push({ id: "method", label: t("home.details.method"), value: methodLabel(local, profile, model.preferences.saved?.transport) });
     // Android's hero stays short: full tunnel is the default there, so only a narrower scope earns a chip.
-    if (!isAndroid || state.routing !== t("home.routing.fullTunnel")) facts.push({ id: "routing", label: t("home.details.routing"), value: state.routing });
+    if (!isAndroid || state.routingState !== "fullTunnel") facts.push({ id: "routing", label: t("home.details.routing"), value: state.routing });
   }
   if (isAndroid) {
     if (local.lockdown) facts.push({ id: "lockdown", label: t("home.details.blockWithoutVpn"), value: t("common.state.enabled") });

@@ -314,3 +314,78 @@ async fn a_new_quic_connection_from_a_device_replaces_its_oldest() {
     }
     server.task.abort();
 }
+
+/// An authenticated QUIC handshake that does not carry this connection's exporter secret, as
+/// a message captured from another connection (or sent by an older client) cannot, takes no
+/// slot: it must not close the device's live, bound connection.
+#[tokio::test]
+async fn an_unbound_quic_handshake_does_not_close_a_live_connection() {
+    let server = quic_server().await;
+    let config = client_config(&server, &server.client.private);
+    let local_address = config.local_listen;
+    let ready = Arc::new(AtomicBool::new(false));
+    let ready_clone = ready.clone();
+    let live = tokio::spawn(run_quic_client_relay(config, move || {
+        ready_clone.store(true, Ordering::Release)
+    }));
+    timeout(Duration::from_secs(5), async {
+        while !ready.load(Ordering::Acquire) {
+            tokio::time::sleep(Duration::from_millis(10)).await;
+        }
+    })
+    .await
+    .unwrap();
+    let wireguard = UdpSocket::bind("127.0.0.1:0").await.unwrap();
+    let mut buffer = [0_u8; 64];
+    let mut round_trip = async |body: &[u8]| {
+        wireguard.send_to(body, local_address).await.unwrap();
+        let (length, _) = timeout(
+            Duration::from_secs(2),
+            server.backend.recv_from(&mut buffer),
+        )
+        .await
+        .unwrap()
+        .unwrap();
+        assert_eq!(&buffer[..length], body);
+    };
+    round_trip(b"live").await;
+
+    let client_private = <[u8; 32]>::try_from(server.client.private.as_slice()).unwrap();
+    let server_public = <[u8; 32]>::try_from(server.server.public.as_slice()).unwrap();
+    let mut replays = Vec::new();
+    for _ in 0..=MAX_CONNECTIONS_PER_CLIENT {
+        let (endpoint, connection) = probe(&server).await;
+        let mut handshake = initiator_handshake(
+            &client_private,
+            &server_public,
+            b"SirinVPN QUIC transport v1",
+        )
+        .unwrap();
+        let mut message = [0_u8; HANDSHAKE_MAX_LENGTH];
+        let length = handshake
+            .write_message(&client_handshake_payload(), &mut message)
+            .unwrap();
+        let (mut send, mut recv) = connection.open_bi().await.unwrap();
+        write_frame(&mut send, &message[..length]).await.unwrap();
+        // Authenticated: the server answers with its Noise response, not a 404.
+        let response = timeout(
+            Duration::from_secs(2),
+            read_frame(&mut recv, HANDSHAKE_MAX_LENGTH),
+        )
+        .await
+        .unwrap()
+        .unwrap();
+        handshake
+            .read_message(&response, &mut [0_u8; HANDSHAKE_MAX_LENGTH])
+            .unwrap();
+        replays.push((endpoint, connection, send));
+    }
+    tokio::time::sleep(Duration::from_millis(100)).await;
+    assert!(!live.is_finished());
+    round_trip(b"still live").await;
+    for (_, connection, _) in &replays {
+        assert!(connection.close_reason().is_none());
+    }
+    live.abort();
+    server.task.abort();
+}

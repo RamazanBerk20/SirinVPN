@@ -4,6 +4,7 @@ import { Warning } from "@phosphor-icons/react";
 import { Brand, SirinMark } from "./Brand";
 import { SecretInput, SecretTextarea } from "./SecretInput";
 import { isAndroid } from "../platform";
+import { splitErrorMessage } from "../lib/errors";
 
 export function Field({
   label,
@@ -25,7 +26,7 @@ export function Field({
       <span>{label}</span>
       {control}
       {hint ? <small id={`${id}-hint`}>{hint}</small> : null}
-      {error && <small id={`${id}-error`} className="field-error" role="alert">{error}</small>}
+      {error && <small id={`${id}-error`} className="field-error" role="alert"><ErrorText message={error} /></small>}
     </label>
   );
 }
@@ -73,6 +74,15 @@ export function Metric({
   );
 }
 
+/**
+ * An `errorMessage` string: the translated summary, then the backend's own text (English this
+ * release) as a smaller secondary line marked as English and isolated from the surrounding direction.
+ */
+export function ErrorText({ message }: { message: string }) {
+  const { summary, detail } = splitErrorMessage(message);
+  return <>{summary}{detail && <small className="error-detail" lang="en" dir="auto">{detail}</small>}</>;
+}
+
 /** A failure next to the control that caused it; it scrolls itself into view so it is never off screen. */
 export function InlineError({ message, onRetry, retryLabel, retryDisabled }: { message: string; onRetry?: () => void; retryLabel?: string; retryDisabled?: boolean }) {
   const box = useRef<HTMLDivElement>(null);
@@ -80,7 +90,7 @@ export function InlineError({ message, onRetry, retryLabel, retryDisabled }: { m
   if (!message.trim()) return null;
   return (
     <div className={`inline-error${onRetry ? " with-retry" : ""}`} role="alert" ref={box}>
-      <Warning size={17} weight="fill" /> <span>{message}</span>
+      <Warning size={17} weight="fill" /> <span><ErrorText message={message} /></span>
       {onRetry && <button type="button" className="secondary-button" disabled={retryDisabled} onClick={onRetry}>{retryLabel ?? t("common.action.retry")}</button>}
     </div>
   );
@@ -103,7 +113,7 @@ export function StartupProblem({ title, message, help, onRetry, children }: { ti
       <section role="alert">
         <span className="startup-problem-icon"><Warning size={28} weight="duotone" /></span>
         <h1>{title}</h1>
-        <p className="startup-problem-message">{message}</p>
+        <p className="startup-problem-message"><ErrorText message={message} /></p>
         <p>{help}</p>
         <div className="startup-problem-actions">
           {onRetry && <button className="primary-button" onClick={onRetry}>{t("common.action.retry")}</button>}

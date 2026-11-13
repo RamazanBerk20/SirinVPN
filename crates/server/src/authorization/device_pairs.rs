@@ -41,7 +41,7 @@ impl AuthorizationDocument {
 
     /// Both devices are active and a pair lets `source` start connections to `destination`.
     pub(crate) fn pair_permits(&self, source: &DeviceRecord, destination: &DeviceRecord) -> bool {
-        !self.endpoint_transition_source
+        !self.endpoint.is_handoff_source()
             && self
                 .device_pairs
                 .iter()

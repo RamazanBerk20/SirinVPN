@@ -87,6 +87,9 @@
     <string name="protected_value_qr_description">Protected QR code</string>
     <string name="protected_value_close">Close</string>
     <string name="protected_value_copy">Copy for 1 minute</string>
+    <string name="protected_value_show">Show</string>
+    <string name="protected_value_confirm_show">Show this protected value on screen?</string>
+    <string name="protected_value_confirm_copy">Copy this protected value to the clipboard for 1 minute?</string>
     <!-- Clipboard label; some keyboards and clipboard previews show it. -->
     <string name="protected_value_clip_label">SirinVPN protected value</string>
     <string name="secret_input_use">Use value</string>
@@ -106,8 +109,8 @@
     <string name="routing_mode_exclude">Selected apps bypass the VPN</string>
     <string name="routing_include_title">Apps using the VPN</string>
     <string name="routing_exclude_title">Apps bypassing the VPN</string>
-    <!-- One app in the list: %1$s is its name, %2$s its package name. -->
-    <string name="routing_app_row">%1$s\n%2$s</string>
+    <!-- One app in the list: %1$s is its name, %2$s its package name. Layout only, not translated. -->
+    <string name="routing_app_row" translatable="false">%1$s\n%2$s</string>
     <string name="routing_use_selection">Use selection</string>
 
     <!-- Sharing an encrypted backup or recovery file. -->
@@ -148,5 +151,7 @@
     <string name="error_preferences">Couldn’t read or save app settings. Try again.</string>
     <string name="error_server_task_background">Android blocked the server task. Keep SirinVPN open and try again.</string>
     <string name="error_server_task_interrupted">A server task didn’t finish. Check the server or file before trying again.</string>
+    <string name="error_missing_command">The request was incomplete. Update SirinVPN, then try again.</string>
+    <string name="error_native_only">This action is available only in SirinVPN’s own secure dialogs.</string>
     <string name="error_operation_failed">The request couldn’t finish. Check permissions, settings and your network, then try again.</string>
 </resources>

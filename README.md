@@ -8,16 +8,19 @@
 
 SirinVPN is a self-hosted WireGuard VPN with Linux, Windows, and Android clients.
 Set up a server you control, connect your devices, and share access through signed
-invitations. Server setup, connections, device administration, and recovery live
+join codes. Server setup, connections, device administration, and recovery live
 in the same app.
 
 There is no SirinVPN account or hosted control service. The clients communicate
 directly with your VPS, with no built-in analytics or traffic-history database.
 
-**Version 0.1** · `0.1.1` in package manifests · [AGPL-3.0-only](LICENSE)
+**Version 1.0 release candidate 1** · `1.0.0-rc.1` · [AGPL-3.0-only](LICENSE)
 
-This is an early development version, published as source code. There are no
-published binary releases or AUR packages yet.
+This is the first public release candidate, a preview for testing before 1.0.
+Linux packages (Debian `.deb` and AppImage) are published with the GitHub
+pre-release, and Arch Linux users can install `sirinvpn`, `sirinvpn-bin` or
+`sirinvpn-git` from the AUR. Windows and Android have no release packages yet.
+See the [release notes](docs/release-notes-1.0.0-rc.1.md).
 
 [Getting started](#getting-started) · [Build from source](#build-from-source) ·
 [Platform status](#platform-status) · [Documentation](#documentation)
@@ -48,7 +51,7 @@ Screenshots use fictional profiles and example data.
   TCP fallback. Pick one yourself or let
   SirinVPN choose for your network conditions, with configurable endpoints and
   bounded automatic fallback.
-- **Manage people and devices.** Owner, Admin, and Member roles; signed invitations
+- **Manage people and devices.** Owner, Admin, and Member roles; signed join codes
   and QR enrollment; device revocation, access limits, and delegated permissions.
 - **Control routing and DNS.** Full-tunnel or selected-subnet routing, explicit LAN
   access, platform-specific application routing, recursive, DoT, or DoH DNS
@@ -113,14 +116,14 @@ servers or a VPN subscription.
 3. **Connect** from Home, accepting the operating system's VPN or administrator
    prompt when needed. Run desktop clients as your ordinary user; the native
    service handles privileged networking.
-4. **Add other devices.** On a device that is already set up, open **Devices**,
-   select **Add device** and choose **One of my devices** or **Invite member**. With only
-   one choice the button is named for it: an Admin usually sees **Invite member**.
-   **Add device for …** in a member's menu adds a device for that member. On the new
-   device, choose **Invitation** (**Use an invitation** on Android) and scan the QR
-   code or enter the code. For an iPhone, iPad, Mac or router with the official
-   WireGuard app, choose **Add WireGuard device** under Advanced in the same menu
-   and scan its QR code in that app ([details](docs/wireguard-devices.md)).
+4. **Add other devices.** On a device that is already set up, open **Devices** and
+   select **Add device**. Say whose device it is (**Mine**, someone already on the
+   server, or **Someone new** with their name and role) and how it connects. The
+   wizard shows a join code and QR code and tells you when the device has joined.
+   On the new device, choose **Use a join code** and scan the QR code or paste the
+   code. For an iPhone, iPad, Mac or router with the official WireGuard app, choose
+   **WireGuard app** as the connection (desktop only) and scan its QR code in that
+   app ([details](docs/wireguard-devices.md)).
 
 ### Finding your way around
 
@@ -128,8 +131,8 @@ servers or a VPN subscription.
 | --- | --- |
 | **Home** | Connect and disconnect, the active server, and this device's traffic and connection time. For Owners and Admins the desktop layout also shows one row of live server stats; on Android, **Connection** opens the method, kill switch, and reconnect options, and **Connection details** shows status, addresses, and (for Owners and Admins) server stats. |
 | **Servers** | Your saved servers: search, rename, mark favorites, add a server, and open maintenance. On the desktop the sidebar's server list switches servers and its **Manage** button opens this page; on Android it is a tab, and the server row on Home switches. |
-| **Devices** | Members and devices on the selected server: **Add device**, roles, access policies, and revocation. Each device has one menu: **Details**, then its actions, with mutual access, pairs, local networks and port forwarding under **Advanced**. |
-| **Settings** | **General** (Wi-Fi auto-connect, startup, notifications, app updates, credential storage), **Connection** (method, kill switch, reconnect), **Network** (app routing, DNS, blocking), **Keys & recovery** (recovery keys, device and VPS backups), **VPS maintenance** (health, diagnostics, updates; **Diagnostics** on Android), and **Advanced** (port forwarding, key rotation, VPS alerts, scheduled backups). [How the app is organised](docs/ui-navigation.md). |
+| **Devices** | The people on the selected server and their devices, **My devices** first. **Add device** always adds a device. Select a person to rename them, change their role, set limits and permissions, suspend or remove them; select a device to rename or remove it and to set device-to-device access, pairs, local networks and port forwarding. |
+| **Settings** | **General** (Wi-Fi auto-connect, startup, notifications, app updates, credential storage), **Connection** (method, kill switch, reconnect), **Network** (app routing, DNS, blocking), **Keys & recovery** (recovery keys, device and VPS backups), **VPS maintenance** (health, diagnostics, updates; **Diagnostics** on Android), and **Advanced** (key rotation, VPS alerts, scheduled backups). [How the app is organised](docs/ui-navigation.md). |
 
 On Android, notification permission enables app notifications. Wi-Fi auto-connect
 asks for location permission only because Android hides Wi-Fi names without it;

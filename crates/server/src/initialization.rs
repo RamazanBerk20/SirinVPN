@@ -230,7 +230,7 @@ pub fn initialize_with_transport_capabilities(
                 authorization.invitations.is_empty()
                     && authorization.enrollment_receipts.is_empty()
                     && authorization.key_rotations.is_empty()
-                    && authorization.recovery_receipt.is_none(),
+                    && authorization.owner_recovery.receipt().is_none(),
                 "cancel active invitations and finish enrollment, recovery and key rotation handoffs before changing transport settings"
             );
         }

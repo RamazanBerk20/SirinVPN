@@ -1,0 +1,270 @@
+{
+  "tools": {
+    "deviceTitle": "Sauvegarde de l’appareil",
+    "vpsTitle": "Sauvegarde et récupération du VPS",
+    "serverTitle": "Maintenance de {{name}}",
+    "finishRotationFirst": "Terminez d’abord la rotation des clés",
+    "exportBackup": {
+      "label": "Exporter la sauvegarde de l’appareil",
+      "summary": "Copie chiffrée des clés de cet appareil"
+    },
+    "restoreBackup": {
+      "label": "Restaurer la sauvegarde de l’appareil",
+      "summary": "Charger les clés de l’appareil depuis un fichier de sauvegarde chiffré"
+    },
+    "rotateKeys": {
+      "label": "Renouveler les clés de l’appareil",
+      "resumeLabel": "Reprendre la rotation des clés",
+      "summary": "Remplacer les clés de cet appareil",
+      "resumeSummary": "Terminer la rotation interrompue de cet appareil",
+      "needsConnection": "Connectez-vous d’abord à ce serveur"
+    },
+    "endpoint": {
+      "ownerLabel": "Passer à une nouvelle adresse",
+      "ownerSummary": "Faire pointer tous les appareils vers la nouvelle adresse du serveur",
+      "memberLabel": "Appliquer la mise à jour d’adresse",
+      "memberSummary": "Utiliser une mise à jour signée pour atteindre la nouvelle adresse du serveur",
+      "otherConnected": "Déconnectez d’abord l’autre serveur"
+    },
+    "remove": {
+      "label": "Supprimer ou désinstaller",
+      "summary": "Oublier sur cet appareil ou désinstaller depuis le VPS"
+    },
+    "deviceKeysTitle": "Clés de l’appareil",
+    "vpsScheduleTitle": "Sauvegardes automatiques du VPS"
+  },
+  "operation": {
+    "interruption": "Les services redémarrent : les autres appareils peuvent se déconnecter brièvement.",
+    "backup": {
+      "title": "Sauvegarder le VPS",
+      "summary": "Copie chiffrée des paramètres et des accès du serveur",
+      "steps": {
+        "read": "Les paramètres et les accès du serveur sont lus via une connexion SSH vérifiée.",
+        "encrypt": "La sauvegarde est chiffrée avec votre mot de passe et enregistrée sur cet appareil."
+      }
+    },
+    "restore": {
+      "title": "Restaurer ou migrer le VPS",
+      "summary": "Restaurer une sauvegarde sur ce VPS ou sur un nouveau VPS",
+      "steps": {
+        "choose": "Vous choisissez une sauvegarde du VPS et vérifiez le VPS cible via SSH.",
+        "review": "Vous examinez ce qui sera remplacé avant que quoi que ce soit ne change."
+      }
+    },
+    "update": {
+      "title": "Mettre à jour le logiciel du VPS",
+      "summary": "Installer une version plus récente de SirinVPN sur le VPS",
+      "steps": {
+        "review": "Vous examinez la version signée avant son installation.",
+        "rollback": "La version actuelle est conservée pour un retour en arrière."
+      }
+    },
+    "repair": {
+      "title": "Réparer la configuration du VPS",
+      "summary": "Réappliquer le réseau et les services sur le VPS",
+      "steps": {
+        "reapply": "Le réseau, les services et le DNS sont réappliqués, et le logiciel du serveur est réinstallé.",
+        "preserve": "Les appareils et les accès sont conservés. Vous examinez d’abord les modifications DNS."
+      }
+    },
+    "dns": {
+      "title": "Configurer le DNS du VPS",
+      "steps": {
+        "choose": "Vous choisissez les serveurs DNS ou les enregistrements privés pour tous les appareils de ce serveur.",
+        "apply": "Les modifications sont appliquées par une réparation, qui réinstalle le logiciel du serveur."
+      }
+    },
+    "security": {
+      "title": "Activer les mises à jour de sécurité du VPS",
+      "steps": {
+        "enable": "Une réparation active les mises à jour de sécurité automatiques du système d’exploitation et réinstalle le logiciel du serveur."
+      }
+    }
+  },
+  "review": {
+    "description": "Ce qui se passe sur {{name}}",
+    "close": "Fermer la vérification",
+    "rotationFirst": "Terminez d’abord la rotation des clés de cet appareil.",
+    "reviewRotation": "Vérifier la rotation des clés",
+    "refreshFirst": "Actualisez d’abord l’état VPN de cet appareil.",
+    "disconnectFirst": "Déconnectez d’abord le VPN sur cet appareil. Les autres appareils ne sont pas concernés.",
+    "disconnectFirstKillSwitch": "Déconnectez d’abord le VPN sur cet appareil. Cela lève son coupe-circuit et arrête la reconnexion automatique.",
+    "disconnect": "Déconnecter cet appareil",
+    "disconnecting": "Déconnexion…",
+    "refresh": "Actualiser l’état",
+    "disconnectFailed": "Impossible de déconnecter le VPN.",
+    "blocked": "Effectuez l’étape ci-dessus pour continuer."
+  },
+  "health": {
+    "title": "Santé du système",
+    "connection": "Connexion",
+    "killSwitch": "Coupe-circuit",
+    "autoReconnect": "Reconnexion automatique",
+    "autoReconnectOther": "Voir le serveur connecté",
+    "management": "Gestion du serveur",
+    "managementResponding": "Répond",
+    "managementUnavailable": "Indisponible · VPN toujours connecté",
+    "notChecked": "Non vérifié",
+    "serverVpn": "VPN du serveur",
+    "serverVpnUp": "Actif",
+    "serverVpnDown": "Arrêté",
+    "serverDns": "DNS du serveur",
+    "serverDnsRunning": "En fonctionnement",
+    "serverDnsDown": "Ne répond pas",
+    "diagnosticsSummary": "Vérifie cet appareil et, lorsqu’il est connecté, le DNS, les fuites de trafic et le serveur.",
+    "runDiagnostics": "Lancer le diagnostic"
+  },
+  "diagnostics": {
+    "title": "Diagnostic",
+    "description": "État actuel de cet appareil et du serveur. Les résultats ne sont pas enregistrés.",
+    "checking": "Vérification de cet appareil et du serveur…",
+    "copy": "Copier le rapport",
+    "openNetwork": "Ouvrir les paramètres réseau",
+    "turnOnUpdates": "Activer",
+    "copied": "Rapport copié. Il reste dans le presse-papiers jusqu’à son remplacement.",
+    "copyFailed": "Impossible de copier le rapport. Vérifiez l’accès au presse-papiers et réessayez.",
+    "summary": {
+      "attention": "{count, plural, one {# point à corriger} many {# points à corriger} other {# points à corriger}}",
+      "review": "{count, plural, one {# à vérifier} many {# à vérifier} other {# à vérifier}}",
+      "unavailable": "{count, plural, one {# non vérifié} many {# non vérifiés} other {# non vérifiés}}",
+      "passed": "{count, plural, one {# réussi} many {# réussis} other {# réussis}}",
+      "line": "{{attention}} · {{review}} · {{passed}}",
+      "withUnavailable": "{{attention}} · {{review}} · {{unavailable}} · {{passed}}"
+    },
+    "group": {
+      "attention": "À corriger",
+      "review": "À vérifier",
+      "unavailable": "Non vérifié",
+      "passed": "Réussi"
+    },
+    "passedChecks": "Contrôles réussis · {{count}}",
+    "passedNote": "Des contrôles réussis n’excluent pas toutes les fuites possibles.",
+    "checkTitle": {
+      "local_backend": "Service VPN local",
+      "local_tunnel": "Connexion VPN sélectionnée",
+      "local_protection": "Protection actuelle du trafic",
+      "local_transport": "Méthode de connexion actuelle",
+      "local_routes": "Routage VPN configuré",
+      "local_ipv6": "Gestion d’IPv6 configurée",
+      "local_mtu": "MTU actuelle du chemin",
+      "local_quality": "Sondes actuelles du tunnel privé",
+      "local_dns": "DNS privé via cet appareil",
+      "local_identity": "Stockage de l’identité de l’appareil",
+      "management": "Authentification et connectivité du VPS",
+      "server_report_format": "Compatibilité du diagnostic du VPS",
+      "interface": "Interface VPN du VPS",
+      "wireguard": "WireGuard sur le VPS",
+      "dns": "Service DNS privé du VPS",
+      "forwarding": "Transfert IPv4 du VPS",
+      "ipv6": "Tunnel IPv6 du VPS",
+      "server_process": "Service système du VPS",
+      "server_routes": "Routes du VPS",
+      "server_firewall": "Structure du pare-feu du VPS",
+      "server_nat4": "NAT IPv4 du VPS",
+      "server_nat6": "NAT IPv6 du VPS",
+      "server_ports": "Ports en écoute du VPS",
+      "server_mtu": "MTU de l’interface du VPS",
+      "server_cpu": "Processeur du VPS",
+      "server_memory": "Mémoire du VPS",
+      "server_disk": "Disque du VPS",
+      "external_reachability": "Pare-feu de l’hébergeur et accessibilité publique",
+      "dns_blocklist": "Blocage DNS du VPS",
+      "os_security_updates": "Mises à jour de sécurité du VPS",
+      "os_reboot_required": "Redémarrage du VPS",
+      "diagnostics_busy": "Diagnostic en cours du VPS",
+      "dns_probe_busy": "Contrôles de réponse DNS du VPS",
+      "dns_resolver_response": "Réponse du résolveur privé du VPS",
+      "leak_ipv4": "Test de fuite IPv4",
+      "leak_ipv6": "Test de fuite IPv6",
+      "leak_dns": "Test de fuite DNS",
+      "authorization_transaction": "Modifications d’accès",
+      "authorization_containment": "Blocage du trafic pendant les modifications d’accès",
+      "authorization_intent": "Enregistrement de récupération d’accès",
+      "authorization_peers": "Appareils appliqués"
+    },
+    "evidence": {
+      "configuration": "Configuration vérifiée",
+      "service": "Signalé par le service",
+      "observed": "Testé",
+      "notChecked": "Non vérifié",
+      "notApplicable": "Non applicable",
+      "reported": "Signalé"
+    },
+    "report": {
+      "title": "Diagnostic SirinVPN",
+      "scope": "État actuel uniquement. Aucun historique d’activité.",
+      "evidence": "Preuve : {{evidence}}",
+      "check": "[{{level}}] {{label}}",
+      "level": {
+        "pass": "RÉUSSI",
+        "warning": "AVERTISSEMENT",
+        "fail": "ÉCHEC",
+        "not_applicable": "NON APPLICABLE"
+      }
+    },
+    "progress": {
+      "device": {
+        "label": "Cet appareil",
+        "detail": "Service VPN, tunnel, coupe-circuit, routage et MTU"
+      },
+      "identity": {
+        "label": "Identité du serveur enregistrée",
+        "detail": "Épinglage du serveur et certificat de cet appareil"
+      },
+      "server": {
+        "label": "VPS",
+        "detail": "Connexion, DNS, réseau, pare-feu et ressources"
+      },
+      "leaks": {
+        "label": "Tests de fuite",
+        "detail": "IPv4, IPv6 et DNS"
+      },
+      "disconnected": "Connectez-vous à ce serveur pour aussi vérifier le VPS et tester les fuites."
+    },
+    "cause": {
+      "not_measured": "Aucune mesure actuelle n’est disponible.",
+      "mtu_pending": "La MTU du chemin est encore en cours de mesure.",
+      "management_clock": "La connexion sécurisée au VPS a échoué. Vérifiez les horloges de cet appareil et du VPS.",
+      "management_credentials_invalid": "L’identité du serveur enregistrée ou le certificat de cet appareil est invalide.",
+      "management_device_rejected": "Le VPS a refusé le certificat de cet appareil.",
+      "management_access_rejected": "Le VPS a refusé l’accès actuel de cet appareil.",
+      "management_unreachable": "Le service de gestion du VPS n’a pas pu être joint via le VPN."
+    },
+    "numberedCheck": {
+      "dnsTls": "Résolveur TLS du VPS {{number}}",
+      "dnsHttps": "Résolveur HTTPS du VPS {{number}}",
+      "dnsZone": "Zone DNS fractionnée du VPS {{zone}}",
+      "dnsZoneUpstream": "Zone DNS fractionnée du VPS {{zone}}, amont {{upstream}}"
+    }
+  },
+  "speedTest": {
+    "title": "Test de débit vers votre VPS",
+    "description": "Mesure le téléchargement, l’envoi et la latence via le VPN vers votre propre VPS, sur une seule connexion : ce n’est donc pas le débit de votre accès Internet. Le test dure environ 20 secondes et ralentit brièvement le VPN pour tout le monde. Le résultat reste sur cet appareil.",
+    "run": "Lancer le test de débit",
+    "again": "Relancer le test de débit",
+    "running": "Mesure du tunnel vers votre VPS…",
+    "download": "Téléchargement",
+    "upload": "Envoi",
+    "idleLatency": "Latence au repos",
+    "downloadLatency": "Latence pendant le téléchargement",
+    "uploadLatency": "Latence pendant l’envoi",
+    "rate": "{{value}} Mbit/s",
+    "latency": "{{value}} ms",
+    "notMeasured": "Non mesuré",
+    "failed": "Le test de débit ne s’est pas terminé. Vérifiez que cet appareil est connecté, puis réessayez."
+  },
+  "workspace": {
+    "metric": {
+      "needsUpdate": "Mettre à jour le serveur",
+      "sampling": "Mesure…"
+    },
+    "error": {
+      "unsavedSettings": "Enregistrez ou annulez vos modifications dans Paramètres, puis connectez-vous.",
+      "settingsNotLoaded": "Les paramètres de connexion ne sont pas encore chargés. Ouvrez Paramètres et réessayez.",
+      "connectionChange": "La connexion n’a pas changé. Actualisez l’état et réessayez.",
+      "stopUnconfirmed": "Le VPN n’a pas confirmé son arrêt. Vérifiez son état.",
+      "resume": "Impossible de reprendre. Vos paramètres de trafic sont inchangés.",
+      "diagnostics": "Impossible de lancer le diagnostic. Actualisez l’état et réessayez."
+    }
+  }
+}

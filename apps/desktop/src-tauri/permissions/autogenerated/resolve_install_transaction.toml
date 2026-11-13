@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-resolve-install-transaction"
+description = "Enables the resolve_install_transaction command without any pre-configured scope."
+commands.allow = ["resolve_install_transaction"]
+
+[[permission]]
+identifier = "deny-resolve-install-transaction"
+description = "Denies the resolve_install_transaction command without any pre-configured scope."
+commands.deny = ["resolve_install_transaction"]

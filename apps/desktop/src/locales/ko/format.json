@@ -1,0 +1,42 @@
+{
+  "unavailable": "사용할 수 없음",
+  "bytes": {
+    "B": "{{value}} B",
+    "KB": "{{value}} kB",
+    "MB": "{{value}} MB",
+    "GB": "{{value}} GB",
+    "TB": "{{value}} TB"
+  },
+  "rate": "{{value}}/s",
+  "memoryUsage": "{{percent}} · {{used}}",
+  "latency": "{{value}} ms",
+  "latencyBelowOne": "<1 ms",
+  "uptimeDays": "{{days}}일 {{hours}}시간",
+  "uptimeHours": "{{hours}}시간 {{minutes}}분",
+  "transport": {
+    "direct_udp": "직접 UDP",
+    "obfuscated_udp": "난독화 UDP",
+    "tls_like": "TLS 대체 연결",
+    "tcp_fallback": "TCP 대체 연결",
+    "quic": "QUIC(HTTP/3)"
+  },
+  "dnsPolicy": {
+    "recursive": "재귀 DNS",
+    "dnsOverTls": "{count, plural, other {DNS over TLS · 서버 #개}}",
+    "dnsOverHttps": "{count, plural, other {DNS over HTTPS · 서버 #개}}",
+    "split": "{count, plural, other {분할 DNS · 영역 #개 · {{fallback}}}}"
+  },
+  "os": {
+    "android": "Android",
+    "windows": "Windows",
+    "linux": "Linux"
+  },
+  "arch": {
+    "x86_64": "64비트 x86",
+    "aarch64": "64비트 ARM"
+  },
+  "clock": {
+    "minutes": "{{minutes}}:{{seconds}}",
+    "hours": "{{hours}}:{{minutes}}:{{seconds}}"
+  }
+}

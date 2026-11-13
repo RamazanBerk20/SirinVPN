@@ -1,0 +1,152 @@
+{
+  "skipToContent": "Ir al contenido",
+  "nav": {
+    "label": "Navegación principal",
+    "mobileLabel": "Navegación inferior",
+    "home": "Inicio",
+    "servers": "Servidores",
+    "devices": "Dispositivos",
+    "settings": "Ajustes"
+  },
+  "sidebar": {
+    "servers": "Servidores",
+    "serverList": "Servidores guardados",
+    "manage": "Gestionar",
+    "manageLabel": "Gestionar servidores",
+    "privacy": "Sin cuenta · Sin telemetría"
+  },
+  "addServer": {
+    "title": "Añade un servidor",
+    "description": "Elige cómo quieres conectarte."
+  },
+  "home": {
+    "connectionTitle": "Conexión",
+    "connectionSummary": "Método: {{method}}",
+    "automatic": "Automático",
+    "detailsTitle": "Detalles de la conexión",
+    "detailsSummary": "Estado, direcciones y estadísticas del servidor",
+    "detailsSummaryMember": "Estado y direcciones"
+  },
+  "settingsScope": {
+    "general": "Preferencias de este dispositivo",
+    "connection": "{{name}} · en este dispositivo",
+    "network": "{{name}} · enrutamiento y DNS",
+    "recovery": "{{name}} · claves y copias de seguridad",
+    "maintenance": "{{name}} · mantenimiento del servidor",
+    "advanced": "{{name}} · funciones avanzadas"
+  },
+  "network": {
+    "dnsTitle": "DNS",
+    "dnsRefresh": "Actualiza el estado para ver los ajustes de DNS.",
+    "dnsUnavailable": "Los ajustes de DNS no están disponibles ahora mismo.",
+    "dnsNeedsConnection": "Conéctate para ver el estado del DNS.",
+    "dnsChange": "Los cambios se aplican a todos los dispositivos de este servidor.",
+    "dnsConfigure": "Configurar DNS"
+  },
+  "onboarding": {
+    "settings": "Ajustes de la aplicación",
+    "settingsDescription": "Preferencias de este dispositivo.",
+    "checkUpdates": "Buscar actualizaciones",
+    "welcome": "Bienvenido a SirinVPN",
+    "headlineFirst": "Tu VPN.",
+    "headlineSecond": "A tu manera.",
+    "androidIntro": "Conéctate a un servidor privado. Tus claves permanecen contigo.",
+    "desktopIntro": "Configura tu propio servidor, únete a uno con un código para unirse o restaura este dispositivo desde una copia de seguridad o una clave de recuperación.",
+    "firstServer": "Añade tu primer servidor",
+    "storeTitle": "Servidores guardados no disponibles",
+    "storeHelpDesktop": "Es posible que el llavero del sistema esté bloqueado. Desbloquéalo, por ejemplo cerrando y volviendo a iniciar la sesión, y luego inténtalo de nuevo.",
+    "storeHelpAndroid": "Desbloquea el teléfono y vuelve a intentarlo. Hasta entonces, tus servidores guardados seguirán cifrados."
+  },
+  "errors": {
+    "profiles": "No se pudieron abrir los servidores guardados en este dispositivo.",
+    "platform": "SirinVPN no pudo iniciar sus servicios protegidos.",
+    "trayServer": "Ese servidor ya no está guardado en este dispositivo."
+  },
+  "unavailable": {
+    "title": "SirinVPN no puede iniciarse",
+    "copy": "Copiar detalles",
+    "report": "SirinVPN no pudo iniciarse: {{message}} No se realizó ninguna acción de VPN.",
+    "helpDesktop": "Asegúrate de que el servicio de SirinVPN está instalado y en ejecución, y vuelve a intentarlo. Tus servidores guardados están a salvo.",
+    "helpAndroid": "Desbloquea el teléfono y vuelve a intentarlo. Tus servidores guardados están a salvo."
+  },
+  "dialog": {
+    "waitToClose": "Espera a que termine la tarea actual"
+  },
+  "operation": {
+    "result": "Resultado",
+    "running": "Hay una tarea en curso. Puedes salir de esta pantalla y volver más tarde.",
+    "completed": "La tarea ha terminado. Vuelve a abrir su página para ver el resultado.",
+    "interrupted": "La tarea no ha terminado. Revisa el servidor o el archivo antes de intentarlo de nuevo.",
+    "dismiss": "Descartar",
+    "dismissFailed": "No se pudo descartar este aviso. Inténtalo de nuevo.",
+    "step": {
+      "done": "Hecho",
+      "running": "En curso",
+      "todo": "No iniciado"
+    }
+  },
+  "copy": {
+    "label": "Copiar {{label}}",
+    "failed": "No se pudo copiar",
+    "failedManual": "No se pudo copiar. Selecciona el texto y cópialo manualmente.",
+    "showAll": "Mostrar todo",
+    "showLess": "Mostrar menos"
+  },
+  "secret": {
+    "value": "Valor protegido",
+    "code": "Código secreto",
+    "enterLabel": "Introducir {{label}}",
+    "enter": "Introducir de forma segura",
+    "entered": "Introducido · Cambiar",
+    "unchanged": "No se ha cambiado nada.",
+    "scan": "Escanear código QR",
+    "scanFailed": "No se pudo escanear el código. Puedes introducirlo manualmente.",
+    "codeReady": "Código listo para revisar"
+  },
+  "share": {
+    "button": "Compartir archivo cifrado",
+    "failed": "No se pudo compartir el archivo."
+  },
+  "brand": {
+    "tagline": "Ultra privado. Autoalojado.",
+    "keysLocal": "Las claves permanecen en tus dispositivos",
+    "noHistory": "Sin historial de actividad",
+    "noCloud": "Sin nube de SirinVPN"
+  },
+  "metric": {
+    "usage": "Uso de {{label}}"
+  },
+  "window": {
+    "label": "Ventana de la aplicación",
+    "minimize": "Minimizar",
+    "maximize": "Maximizar",
+    "restore": "Restaurar",
+    "closeToTray": "Cerrar a la bandeja · La VPN sigue funcionando",
+    "quit": "Salir de la aplicación · La VPN sigue funcionando",
+    "actionFailed": "Eso no funcionó. Usa los controles de ventana de tu escritorio.",
+    "resizeFailed": "No se puede redimensionar aquí. Usa el atajo de redimensionado de tu escritorio."
+  },
+  "recoveryKeyGuard": "No podrás volver a ver esta clave de recuperación. ¿Salir sin guardarla?",
+  "settingsIndex": {
+    "app": "Esta aplicación",
+    "server": "Este servidor",
+    "serverNote": "Estos ajustes solo se aplican a este servidor.",
+    "scope": "Estos ajustes solo se aplican a {{name}}.",
+    "general": "Tema, notificaciones, Ajustes rápidos",
+    "automaticMethod": "Método automático",
+    "reconnectOn": "Se vuelve a conectar automáticamente",
+    "reconnectOff": "No se vuelve a conectar automáticamente",
+    "attention": "Requiere atención: una rotación de claves no terminó",
+    "serverHealthy": "El servidor funciona con normalidad",
+    "recoveryKeySaved": "Clave de recuperación sin conexión guardada",
+    "recoveryKeyMissing": "Todavía no hay una clave de recuperación sin conexión",
+    "serverFault": "Requiere atención: el servidor informa de un fallo",
+    "advancedAdmin": "Rotación de claves",
+    "advancedMember": "Rotación de claves"
+  },
+  "advanced": {
+    "devicesTitle": "Funciones de red de los dispositivos",
+    "devicesSummary": "El reenvío de puertos, el acceso entre dispositivos, los pares de dispositivos y las redes locales se configuran en cada dispositivo. Abre un dispositivo en Dispositivos para cambiarlos.",
+    "openDevices": "Abrir Dispositivos"
+  }
+}

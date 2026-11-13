@@ -9,6 +9,7 @@ pub use preflight::{
 pub use transports::TransportSetup;
 use transports::*;
 mod transaction;
+pub use transaction::merge_committed_profile;
 use transaction::*;
 mod ssh;
 use ssh::*;
@@ -28,9 +29,23 @@ use install_script::*;
 mod install_failure;
 mod maintenance;
 mod release_guard;
+pub use release_guard::ServerReleaseState;
 mod release_update;
 mod updates;
 pub use release_update::{ServerReleaseAction, ServerReleaseRequest};
+mod plan;
+use plan::*;
+pub use plan::{InstallPlan, PlanStep};
+mod owner_maintenance;
+pub use owner_maintenance::{
+    MaintenanceBlocker, OwnerDeviceState, OwnerMaintenance, owner_maintenance_ready,
+};
+mod journal;
+use journal::*;
+pub use journal::{
+    JournalEntry, RemoteTransactionState, ResolvedTransaction, TransactionJournal,
+    TransactionOperation, TransactionStep,
+};
 mod signed_baseline;
 pub use signed_baseline::{
     SignedBaselineCandidate, SignedBaselineOutcome, SignedServerBundle, release_target,
@@ -70,7 +85,6 @@ use zeroize::Zeroizing;
 
 const MAX_ARTIFACT_SIZE: u64 = 64 * 1024 * 1024;
 const MAX_SERVER_BACKUP_SNAPSHOT_SIZE: usize = 2 * 1024 * 1024;
-const MAX_SERVER_BACKUP_STDERR_SIZE: usize = 64 * 1024;
 const SSH_OPERATION_TIMEOUT_MS: u32 = 30_000;
 const INSTALL_OPERATION_TIMEOUT_MS: u32 = 10 * 60 * 1_000;
 const MANAGED_SERVER_PATHS: &str = "usr/local/lib/sirinvpn/sirinvpn-server etc/sirinvpn etc/unbound/unbound.conf.d/sirinvpn.conf etc/unbound/unbound.conf.d/sirinvpn-leak-test.conf etc/systemd/system/unbound.service.d/sirinvpn.conf etc/sysctl.d/90-sirinvpn.conf etc/systemd/system/sirinvpn-network.service etc/systemd/system/sirinvpn-firewall.service etc/systemd/system/sirinvpn-doh.service etc/systemd/system/sirinvpn-server.service";
@@ -358,6 +372,20 @@ pub enum InstallerError {
     },
     #[error("invalid installation input: {0}")]
     InvalidInput(String),
+    /// The commit was sent but its reply was lost and the VPS could not be asked.
+    /// The change may be live: keep every key and profile, and resolve the
+    /// transaction (`Provisioner::resolve_transaction` or `transaction_status`)
+    /// before deleting anything.
+    #[error(
+        "the VPS may have applied the change, but its confirmation was lost; keep this device's keys and check the VPS again (transaction {nonce})"
+    )]
+    CommitUncertain { nonce: String },
+    /// This device's journal holds an unresolved transaction for this VPS host;
+    /// resolve it (or abandon it) before starting another there.
+    #[error(
+        "an earlier VPS maintenance transaction on {host} from this device is unresolved; resolve it before starting another"
+    )]
+    TransactionUnresolved { host: String },
     #[error(transparent)]
     ServerBackup(#[from] ServerBackupError),
 }
@@ -401,6 +429,22 @@ impl Provisioner {
     }
 
     pub fn install(request: InstallRequest) -> Result<InstallOutcome, InstallerError> {
+        Self::install_journaled(request, Sink::Execute(None))
+    }
+
+    /// As `install`, journaling each transaction step so an interruption can be
+    /// resolved with `resolve_transaction`.
+    pub fn install_with_journal(
+        request: InstallRequest,
+        journal: &TransactionJournal,
+    ) -> Result<InstallOutcome, InstallerError> {
+        Self::install_journaled(request, Sink::Execute(Some(journal)))
+    }
+
+    fn install_journaled(
+        request: InstallRequest,
+        sink: Sink<'_>,
+    ) -> Result<InstallOutcome, InstallerError> {
         validate_request(&request)?;
         let mut events = vec![event(InstallPhase::Connecting, "Contacting the VPS.")];
         let session =
@@ -450,10 +494,27 @@ impl Provisioner {
                 owner_client_tunnel_address,
                 ipv6_tunnel_enabled: discovery.ipv6_available,
             },
+            sink,
         )
     }
 
     pub fn repair(request: RepairRequest) -> Result<RepairOutcome, InstallerError> {
+        Self::repair_journaled(request, Sink::Execute(None))
+    }
+
+    /// As `repair`, journaling each transaction step so an interruption can be
+    /// resolved with `resolve_transaction`.
+    pub fn repair_with_journal(
+        request: RepairRequest,
+        journal: &TransactionJournal,
+    ) -> Result<RepairOutcome, InstallerError> {
+        Self::repair_journaled(request, Sink::Execute(Some(journal)))
+    }
+
+    fn repair_journaled(
+        request: RepairRequest,
+        sink: Sink<'_>,
+    ) -> Result<RepairOutcome, InstallerError> {
         validate_repair_request(&request)?;
         let mut events = vec![event(InstallPhase::Connecting, "Contacting the VPS.")];
         let session =
@@ -541,6 +602,7 @@ impl Provisioner {
                 owner_client_tunnel_address: request.profile.client_tunnel_address,
                 ipv6_tunnel_enabled: discovery.ipv6_available,
             },
+            sink,
         )?;
         Ok(RepairOutcome {
             network_preflight: outcome.network_preflight,
@@ -617,6 +679,22 @@ impl Provisioner {
 
     pub fn restore_server_backup(
         request: ServerRestoreRequest,
+    ) -> Result<ServerRestoreOutcome, InstallerError> {
+        Self::restore_server_backup_journaled(request, Sink::Execute(None))
+    }
+
+    /// As `restore_server_backup`, journaling each transaction step so an interruption can be
+    /// resolved with `resolve_transaction`.
+    pub fn restore_server_backup_with_journal(
+        request: ServerRestoreRequest,
+        journal: &TransactionJournal,
+    ) -> Result<ServerRestoreOutcome, InstallerError> {
+        Self::restore_server_backup_journaled(request, Sink::Execute(Some(journal)))
+    }
+
+    fn restore_server_backup_journaled(
+        request: ServerRestoreRequest,
+        sink: Sink<'_>,
     ) -> Result<ServerRestoreOutcome, InstallerError> {
         validate_server_restore_request(&request)?;
         let backup = read_encrypted_server_backup(&request.source, request.password.as_str())?;
@@ -703,8 +781,9 @@ impl Provisioner {
                 ipv6_tunnel_enabled: backup.metadata().ipv6_tunnel_enabled
                     || !discovery.ipv4_available,
             },
+            sink,
         )?;
-        let mut profile = restored_local_profile(&request.profile, &outcome.profile);
+        let mut profile = merge_committed_profile(&request.profile, &outcome.profile);
         profile.endpoint_generation = profile
             .endpoint_generation
             .max(backup.metadata().endpoint_generation);
@@ -720,6 +799,22 @@ impl Provisioner {
     }
 
     pub fn uninstall(request: UninstallRequest) -> Result<(), InstallerError> {
+        Self::uninstall_journaled(request, Sink::Execute(None))
+    }
+
+    /// As `uninstall`, journaling each transaction step so an interruption can be
+    /// resolved with `resolve_transaction`.
+    pub fn uninstall_with_journal(
+        request: UninstallRequest,
+        journal: &TransactionJournal,
+    ) -> Result<(), InstallerError> {
+        Self::uninstall_journaled(request, Sink::Execute(Some(journal)))
+    }
+
+    fn uninstall_journaled(
+        request: UninstallRequest,
+        sink: Sink<'_>,
+    ) -> Result<(), InstallerError> {
         validate_uninstall_request(&request)?;
         let session =
             connect_transport(&request.target).map_err(|error| phase_error("connection", error))?;
@@ -727,43 +822,77 @@ impl Provisioner {
         authenticate(&session, &request.target)?;
         verify_uninstall_identity(&session, &request)?;
 
-        let nonce = Uuid::new_v4().simple().to_string();
+        let target = &request.target;
+        let mut tx = Transaction::begin(sink.journal(), TransactionOperation::Uninstall, target)?;
+        let nonce = tx.nonce().to_owned();
         let remote_script = format!("/tmp/sirinvpn-uninstall-{nonce}.sh");
-        let script = uninstall_script(&nonce);
-        upload(
+        let script = uninstall_script(
+            &nonce,
+            &maintenance::owner_label(&request.owner_certificate_pem),
+        );
+        if let Sink::Plan(slot) = sink {
+            *slot = Some(InstallPlan {
+                operation: "uninstall",
+                host: target.host.clone(),
+                nonce: nonce.clone(),
+                discovery: None,
+                network_preflight: None,
+                managed_paths: managed_paths("var/lib/sirinvpn-server-release"),
+                steps: vec![
+                    upload_step(&remote_script, 0o700, script.as_bytes(), true),
+                    run_step(true, format!("/bin/sh {}", shell_quote(&remote_script))),
+                    run_step(true, uninstall_verification_command()),
+                    run_step(true, uninstall_commit_command(&nonce)),
+                    run_step(
+                        false,
+                        format!(
+                            "shred -u -- {path} 2>/dev/null || rm -f -- {path}",
+                            path = shell_quote(&remote_script)
+                        ),
+                    ),
+                ],
+            });
+            return Err(planned());
+        }
+        if let Err(error) = upload(
             &session,
             Path::new(&remote_script),
             script.as_bytes(),
             0o700,
-        )
-        .map_err(|error| phase_error("uninstall staging", error))?;
-
-        session.set_timeout(INSTALL_OPERATION_TIMEOUT_MS);
-        let uninstall_result = run_privileged(
-            &session,
-            &request.target,
-            &format!("/bin/sh {}", shell_quote(&remote_script)),
-        );
-        session.set_timeout(SSH_OPERATION_TIMEOUT_MS);
-        if let Err(error) = uninstall_result {
-            uninstall_rollback_now(&session, &request.target, &nonce);
-            remove_remote_file(&session, &remote_script);
-            return Err(phase_error("uninstall", error));
+        ) {
+            return Err(tx.abort(&session, target, phase_error("uninstall staging", error)));
         }
 
-        let verification =
-            run_privileged(&session, &request.target, &uninstall_verification_command());
-        if let Err(error) = verification {
-            uninstall_rollback_now(&session, &request.target, &nonce);
-            remove_remote_file(&session, &remote_script);
-            return Err(phase_error("uninstall verification", error));
-        }
-
-        let commit = run_privileged(&session, &request.target, &uninstall_commit_command(&nonce));
+        let result = (|| {
+            tx.step(&session, target, TransactionStep::Armed)?;
+            session.set_timeout(INSTALL_OPERATION_TIMEOUT_MS);
+            let uninstall_result = run_privileged(
+                &session,
+                target,
+                &format!("/bin/sh {}", shell_quote(&remote_script)),
+            );
+            session.set_timeout(SSH_OPERATION_TIMEOUT_MS);
+            if let Err(error) = uninstall_result {
+                return Err(tx.abort(&session, target, phase_error("uninstall", error)));
+            }
+            tx.step(&session, target, TransactionStep::Verified)?;
+            if let Err(error) = run_privileged(&session, target, &uninstall_verification_command())
+            {
+                return Err(tx.abort(
+                    &session,
+                    target,
+                    phase_error("uninstall verification", error),
+                ));
+            }
+            tx.commit(
+                &session,
+                target,
+                &uninstall_commit_command(&nonce),
+                "uninstall commit",
+            )
+        })();
         remove_remote_file(&session, &remote_script);
-        commit
-            .map(|_| ())
-            .map_err(|error| phase_error("uninstall commit", error))
+        result
     }
 }
 

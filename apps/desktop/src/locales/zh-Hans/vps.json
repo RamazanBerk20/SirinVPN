@@ -1,0 +1,469 @@
+{
+  "common": {
+    "backupFileType": "SirinVPN VPS 备份",
+    "backupPassword": "备份密码",
+    "checking": "正在检查 VPS…",
+    "chooseFile": "选择文件",
+    "disconnectFirst": "请先断开此设备的连接，然后继续。",
+    "keepOpen": "在完成之前，请保持应用打开。",
+    "noFile": "未选择文件",
+    "softwareDetails": "软件详情",
+    "softwareHash": "软件 SHA-256",
+    "error": {
+      "picker": "无法打开文件选择器。请重试。",
+      "unreachable": "无法通过 SSH 连接到 VPS。请检查登录信息，然后重试。"
+    },
+    "previousStep": "上一步",
+    "passwordsMatch": "密码一致。",
+    "step": {
+      "identity": "确认 VPS 身份",
+      "refresh": "刷新此服务器的状态"
+    }
+  },
+  "update": {
+    "title": "更新 {{name}}",
+    "description": {
+      "login": "通过 SSH 登录，以检查此服务器的版本。",
+      "configured": "检查已签名的发布版本，并在安装前进行审查。",
+      "setup": "尚未为此服务器设置更新。"
+    },
+    "busy": {
+      "reading": "正在读取服务器版本…",
+      "verifyingKey": "正在检查 SSH 密钥…",
+      "verifying": "正在验证发布版本…",
+      "installing": "正在安装更新…",
+      "installingSetup": "正在安装并完成设置…",
+      "recovering": "正在恢复更新…",
+      "rollingBack": "正在还原之前的版本…",
+      "saving": "正在保存计划…",
+      "finishing": "正在完成设置…"
+    },
+    "action": {
+      "check": "检查更新",
+      "verify": "验证发布版本",
+      "install": "安装 {{version}}",
+      "installAndFinish": "安装并完成设置",
+      "finishSetup": "完成设置",
+      "changeLogin": "更改 SSH 登录信息",
+      "repair": "修复 VPS…"
+    },
+    "steps": {
+      "label": "设置步骤",
+      "source": "选择来源",
+      "verify": "验证发布版本",
+      "finish": "完成设置"
+    },
+    "statusUnknown": "无法读取已安装的版本。设置仍可安装已验证的服务器软件。",
+    "versions": {
+      "installed": "已安装版本",
+      "available": "可用版本",
+      "notChecked": "尚未检查"
+    },
+    "warning": {
+      "mismatch": "已安装的服务器软件与其已签名的记录不符。请在更新之前修复服务器。",
+      "automaticFailed": "上一次自动安全更新失败。请检查发布来源，然后检查更新。"
+    },
+    "recovery": {
+      "needed": "一次中断的更新需要先恢复。",
+      "action": "恢复更新"
+    },
+    "source": {
+      "label": "发布来源",
+      "placeholder": "HTTPS 文件夹 URL",
+      "help": "发布文件所在的 HTTPS 文件夹，由安装此服务器的人提供",
+      "change": "更改来源",
+      "invalid": "请使用不含用户名、? 或 # 的 HTTPS 地址。"
+    },
+    "channel": {
+      "label": "发布通道",
+      "stable": "稳定版",
+      "preview": "预览版",
+      "previewHint": "较早发布的构建，稳定性可能较低。仅用于试用新功能。"
+    },
+    "review": {
+      "label": "已验证的发布版本",
+      "title": "版本 {{version}}",
+      "alreadyInstalled": "此版本已安装。",
+      "baseline": "安装此版本，并保留服务器的身份和访问权限。服务会短暂重启。",
+      "register": "与已安装的软件相匹配。完成设置即可将其注册以接收更新。",
+      "upgrade": "服务会短暂重启。如果健康检查失败，将还原之前的版本。",
+      "verification": "验证",
+      "verified": "签名和哈希已验证",
+      "compatibility": "兼容性",
+      "compatible": "兼容",
+      "incompatible": "无法在服务器当前状态下安装",
+      "type": "发布类型",
+      "security": "安全更新。请尽快安装。",
+      "standard": "标准版本"
+    },
+    "schedule": {
+      "toggle": "自动安装安全更新",
+      "help": "每天从上述发布来源检查一次。签名和回滚检查仍然适用。",
+      "enabled": "已开启自动安全更新。",
+      "disabled": "已关闭自动安全更新。",
+      "otherSource": "自动更新仍会检查 {{source}}。",
+      "useSource": "使用上述来源"
+    },
+    "rollback": {
+      "title": "之前的版本",
+      "kept": "保留版本 {{version}}，以便在此版本出现问题时回滚。",
+      "action": "回滚到 {{version}}…",
+      "confirmTitle": "回滚到版本 {{version}}？",
+      "confirmMessage": "服务将重启，设备会短暂重新连接。仅当该版本仍受信任且兼容时，此操作才有效。",
+      "confirm": "回滚"
+    },
+    "privacy": {
+      "summary": "隐私和验证",
+      "identifiers": "请求不包含任何设备、服务器或用户标识信息。",
+      "signing": "无论来源如何，仅接受使用 SirinVPN 内置密钥签名的发布版本。"
+    },
+    "disconnectFirst": "请先断开此设备的连接，然后再进行安装、恢复或回滚。",
+    "done": {
+      "installed": "版本 {{version}} 已安装。",
+      "setUp": "更新已设置。版本 {{version}} 已安装。",
+      "recovered": "中断的更新已恢复。",
+      "rolledBack": "版本 {{version}} 已还原。"
+    },
+    "error": {
+      "notVerified": "请先验证服务器的 SSH 密钥。",
+      "cancelled": "操作已取消。",
+      "status": "无法读取服务器的更新状态。",
+      "check": "无法验证此发布版本。请检查来源和通道。",
+      "notConfirmed": "服务器未确认新版本。请先检查其状态，然后再重试。",
+      "stopped": "操作已停止。请先检查服务器的状态，然后再重试。",
+      "scheduleNotConfirmed": "服务器未确认新的计划。请先检查其设置，然后再重试。",
+      "schedule": "无法保存自动更新设置。"
+    },
+    "blocked": {
+      "mismatch": "在检查或安装更新之前，请先修复 VPS。",
+      "recovery": "请先恢复中断的更新。",
+      "source": "请输入发布来源以进行检查。"
+    }
+  },
+  "backup": {
+    "title": "备份 {{name}}",
+    "titleDone": "备份完成",
+    "description": "保存服务器的身份和设置，以便稍后还原或迁移。",
+    "warning": "<strong>任何拥有此文件及其密码的人都可以克隆此服务器。</strong>请分开存放。",
+    "saveDialogTitle": "保存 VPS 备份",
+    "destination": "保存到",
+    "destinationHint": "已有文件绝不会被覆盖。",
+    "passwordHint": "至少使用 12 个字符。",
+    "repeatPassword": "重复密码",
+    "create": "创建备份",
+    "progress": "正在备份 VPS…",
+    "done": "加密备份已保存",
+    "doneNote": "请将文件和其密码分开存放。",
+    "error": "无法创建备份。",
+    "missing": {
+      "file": "请选择保存备份的位置。",
+      "password": "请输入至少 12 个字符的备份密码。",
+      "repeat": "请重复输入相同的密码。"
+    },
+    "step": "登录并导出加密备份"
+  },
+  "schedule": {
+    "action": "计划备份",
+    "title": "计划 VPS 备份",
+    "description": "加密备份将按计划保存。最新的备份会保存在你选择的文件夹中。",
+    "folder": "备份文件夹",
+    "folderHint": "超出数量限制的旧备份将从此文件夹中删除。",
+    "chooseFolder": "选择文件夹",
+    "folderDialogTitle": "选择 VPS 备份的文件夹",
+    "frequency": "频率",
+    "daily": "每天",
+    "weekly": "每周",
+    "monthly": "每 30 天",
+    "keep": "保留的备份数量",
+    "keepHint": "1 到 30 之间",
+    "passwordHint": "至少使用 12 个字符。密码将保存在此设备的安全存储中。",
+    "passwordKeepHint": "留空则保留已保存的密码",
+    "loginMissing": "备份将使用此 VPS 已保存的 SSH 登录信息。请先在开启“记住登录信息”的情况下备份一次 VPS。",
+    "disconnected": "备份会在 SirinVPN 打开且此设备断开连接时运行。",
+    "save": "保存计划",
+    "runNow": "立即备份",
+    "running": "正在备份…",
+    "turnOff": "关闭",
+    "lastBackup": "上次备份：{{age}}",
+    "noBackup": "尚无备份",
+    "failed": "上一次尝试未完成：{{message}}",
+    "stale": "备份已逾期。请在 SirinVPN 打开时断开此设备的连接，或选择“立即备份”。",
+    "summary": {
+      "off": "关",
+      "pending": "开 · 等待首次备份",
+      "ok": "上次备份 {{age}}",
+      "stale": "上次备份 {{age}} · 已逾期",
+      "failed": "上次尝试未完成"
+    },
+    "notice": {
+      "failed": "上一次计划的 VPS 备份未完成。",
+      "stale": "上次 VPS 备份：{{age}}。",
+      "none": "尚无计划的 VPS 备份。",
+      "review": "查看"
+    },
+    "error": {
+      "save": "无法保存计划。",
+      "run": "无法运行备份。",
+      "off": "无法关闭计划备份。"
+    },
+    "saving": "正在保存…",
+    "turningOff": "正在关闭…",
+    "saved": "计划备份已保存。",
+    "backedUp": "VPS 备份已保存。",
+    "turnedOff": "计划备份已关闭。",
+    "missing": {
+      "folder": "请选择备份文件夹。"
+    }
+  },
+  "restore": {
+    "title": "还原 {{name}}",
+    "titleDone": "还原完成",
+    "description": "将此服务器的身份还原到同一台或新的 VPS 上。",
+    "warning": "<strong>旧备份可能会恢复你之后已撤销的访问权限。</strong>之后请检查用户和设备。",
+    "openDialogTitle": "打开 VPS 备份",
+    "file": "备份文件",
+    "host": "VPS 地址",
+    "hostHint": "保留当前地址以恢复，或输入新地址以迁移服务器。",
+    "replace": "替换现有的 SirinVPN 安装",
+    "replaceHint": "如果该 VPS 上已安装 SirinVPN，请使用此选项。其他服务不受影响。",
+    "action": "还原 VPS",
+    "progress": "正在还原并验证服务器…",
+    "done": "服务器身份已还原",
+    "doneNote": "此设备现在使用 {{host}}。如果地址已更改，请在关闭旧 VPS 之前迁移你的其他设备。",
+    "reviewAccess": "检查访问权限",
+    "moveDevices": "迁移设备",
+    "error": "还原已停止。VPS 已恢复到之前的状态，此设备未更改。",
+    "review": "检查还原",
+    "reviewTitle": "还原此备份？",
+    "missing": {
+      "file": "请选择备份文件。",
+      "password": "请输入备份密码（至少 12 个字符）。",
+      "host": "请以主机名或 IP 地址的形式输入 VPS 地址。"
+    },
+    "consequence": {
+      "replace": "此 VPS 上的 SirinVPN 安装将被备份中的版本替换。",
+      "install": "将根据备份在此 VPS 上安装 SirinVPN。",
+      "access": "在创建此备份之后被你移除的用户和设备将重新获得访问权限。",
+      "device": "此设备将切换到 {{host}}。服务会短暂重启。"
+    },
+    "step": "登录、还原并验证 VPS"
+  },
+  "repair": {
+    "title": "修复 {{name}}",
+    "titleDns": "为 {{name}} 配置 DNS",
+    "titleDone": "修复完成",
+    "titleDoneDns": "DNS 设置已应用",
+    "description": {
+      "repair": "重新安装服务器软件，但不更改身份或访问权限。",
+      "dns": "你未更改的内容将保持不变。",
+      "running": "VPN 将短暂不可用。"
+    },
+    "note": "服务器重启期间，VPN 将短暂不可用。",
+    "securityUpdates": "开启自动安全更新",
+    "securityUpdatesNote": "之后 VPS 将每天安装其操作系统的安全修复。如果保持关闭，修复操作只会在从未安装过这些更新的地方将其开启。",
+    "action": {
+      "repair": "修复 VPS",
+      "review": "检查更改",
+      "apply": "应用更改",
+      "home": "返回首页"
+    },
+    "reviewTarget": "{{name}} · SSH {{address}}",
+    "progress": "正在更新并检查服务器…",
+    "error": {
+      "repair": "修复已停止。身份保持不变，部分更改会自动回滚。",
+      "dns": "DNS 更改已停止。部分更改会自动回滚。"
+    },
+    "options": "更改服务器设置（可选）",
+    "optionsNote": "除非你在此处更改，否则地址、端口、DNS 和 NAT64 保持不变。",
+    "signIn": "登录 VPS",
+    "progressDns": "正在应用 DNS 设置并检查服务器…",
+    "blocked": {
+      "dns": "请修正上方的 DNS 解析器。",
+      "split": "请修正上方的分流 DNS 区域。",
+      "records": "请修正上方的私有 DNS 记录。",
+      "nat64": "请修正上方的 NAT64 前缀。"
+    },
+    "step": "登录、更新并检查 VPS",
+    "stepDns": "登录并应用 DNS 设置"
+  },
+  "summary": {
+    "title": "{{name}} 已准备好重新连接",
+    "completed": "已完成",
+    "software": "服务器软件",
+    "softwareValue": "已安装并验证",
+    "services": "VPN 服务",
+    "servicesValue": "已重启并检查",
+    "dns": "私有 DNS",
+    "dnsValue": "已验证 · {{policy}}",
+    "records": "私有记录",
+    "recordsNone": "无",
+    "recordsValue": "{count, plural, other {已验证 # 条记录}}",
+    "preserved": "已保留",
+    "identities": "服务器和设备身份，以及访问权限",
+    "dnsPolicy": "私有 DNS 设置",
+    "dnsRecords": "私有 DNS 记录",
+    "fingerprint": "服务器身份指纹",
+    "fingerprintSaved": "已固定在此设备的服务器配置中",
+    "network": "网络要求",
+    "networkNote": "未检查防火墙访问。如果连接失败，请检查这些内容。",
+    "next": "请从首页连接，以测试此设备的连接。"
+  },
+  "remove": {
+    "title": "移除 {{name}}",
+    "description": {
+      "owner": "你可以将其从此设备中移除，或从 VPS 上卸载 SirinVPN。",
+      "member": "只有所有者可以从 VPS 上卸载 SirinVPN。",
+      "running": "正在从 VPS 上移除 SirinVPN。"
+    },
+    "local": {
+      "title": "从此设备移除",
+      "summary": "在此删除其密钥；服务器保持安装状态",
+      "confirmTitle": "从此设备移除 {{name}}？",
+      "confirmOwner": "此设备上的所有者密钥将被删除。服务器保持安装并已被认领。",
+      "confirmMember": "此设备的密钥将被删除。服务器不会被更改。",
+      "error": "无法从此设备移除服务器。",
+      "done": "已从此设备移除 {{name}}。",
+      "removing": "正在移除…"
+    },
+    "uninstall": {
+      "title": "从 VPS 卸载",
+      "summary": "先从 VPS 上移除 SirinVPN，然后从此设备移除",
+      "review": "检查卸载",
+      "action": "卸载 SirinVPN",
+      "confirmTitle": "从 {{host}} 卸载 SirinVPN？",
+      "confirmMessage": "此服务器的所有设备和加入码都将停止工作。VPS 上的 Docker 和其他服务将被保留。",
+      "confirm": "卸载",
+      "progress": "正在卸载 SirinVPN…",
+      "error": "卸载未完成。VPS 会回滚部分更改，此设备将保留该服务器。",
+      "done": "已从 {{host}} 卸载 SirinVPN。",
+      "step": "登录并从 VPS 上移除 SirinVPN",
+      "stepLocal": "从此设备移除服务器"
+    }
+  },
+  "endpoint": {
+    "titleShare": "迁移到新地址",
+    "titleApply": "应用地址更新",
+    "description": "已签名的更新会将设备迁移到服务器的新地址和设置。",
+    "tab": {
+      "label": "地址更新任务",
+      "share": "分享新地址",
+      "apply": "使用新地址"
+    },
+    "pending": "仍在使用 {{host}} 的设备需要此更新，然后才能停用该 VPS。",
+    "create": {
+      "title": "创建地址更新",
+      "action": "创建更新"
+    },
+    "retrieve": {
+      "title": "获取最新更新",
+      "action": "获取更新"
+    },
+    "intro": "新 VPS 会对更新进行签名。然后将其发布到旧 VPS，供你的设备使用。",
+    "connectFirst": "请先连接到新 VPS。",
+    "number": "更新 {{number}}",
+    "code": "更新代码",
+    "codeHint": "不包含访问密钥；其签名可防止篡改",
+    "copy": "复制代码",
+    "publish": "发布到旧 VPS",
+    "published": "已发布到旧 VPS",
+    "publishNote": "仍连接旧 VPS 的设备将在那里获取更新。",
+    "applied": "地址已更新",
+    "appliedNote": "请检查新地址下的连接是否正常。",
+    "applyIntro": "粘贴服务器所有者提供的代码，或从服务器获取。",
+    "getFromServer": "从服务器获取",
+    "verify": "验证并切换",
+    "identityNote": "新地址仍须证明为同一台服务器身份。",
+    "error": {
+      "create": "无法创建更新。请保持旧 VPS 运行，并在连接状态下重试。",
+      "retrieve": "无法从此服务器获取地址更新。",
+      "publish": "无法发布到旧 VPS。它未被更改，因此可以重试。",
+      "apply": "无法应用更新。请检查你的连接。"
+    },
+    "showCode": "显示更新代码",
+    "to": "迁移到",
+    "working": "正在获取更新…",
+    "publishing": "正在发布…",
+    "applying": "正在验证…",
+    "pasteFirst": "请粘贴代码以进行验证。",
+    "none": "此服务器没有等待中的地址更新。"
+  },
+  "alerts": {
+    "title": "VPS 提醒",
+    "summary": "当此 VPS 需要关注时获取通知，并允许外部监控器在其失去响应时察觉。在你添加地址之前处于关闭状态。通知仅包含固定文本：不包含名称、地址或流量信息。",
+    "unsupported": "请使用当前版本的应用修复此服务器，以使用 VPS 提醒。",
+    "format": "提醒格式",
+    "formats": {
+      "ntfy": {
+        "label": "ntfy 主题",
+        "hint": "带标题的纯文本，用于你选择的 ntfy 服务器"
+      },
+      "webhook": {
+        "label": "Webhook",
+        "hint": "包含标题、消息和文本的小型 JSON 对象"
+      }
+    },
+    "alertUrl": "提醒地址",
+    "alertUrlHint": "可选。你的主题或 Webhook 的完整 HTTPS 地址。VPS 每五分钟检查一次，并在问题出现或消除时发送通知。",
+    "heartbeatUrl": "心跳地址",
+    "heartbeatHint": "可选。VPS 每五分钟请求一次该地址。将其指向心跳丢失监控器，即可得知 VPS 何时宕机或离线。",
+    "invalid": "请使用不含用户名的完整 HTTPS 地址。",
+    "allowPrivate": "允许私有地址、回环地址和 VPN 地址",
+    "save": "保存提醒",
+    "saved": "已保存。VPS 将在下次检查时使用它。",
+    "test": "发送测试提醒",
+    "testSent": "VPS 已成功发送测试提醒。",
+    "loadFailed": "无法加载提醒设置。",
+    "saveFailed": "无法保存提醒设置。",
+    "testFailed": "无法发送测试提醒。",
+    "status": {
+      "notChecked": "VPS 尚未检查。它每五分钟检查一次。",
+      "checked": "VPS 上次检查：{{time}}。",
+      "alertFailed": "上一条提醒未能送达。{{reason}} VPS 将在下次检查时再次尝试。",
+      "heartbeat": "上次心跳：{{time}}。",
+      "heartbeatFailed": "上次心跳失败。{{reason}}"
+    },
+    "failure": {
+      "address": "地址无法解析，或解析为不被允许的私有地址。",
+      "connection": "VPS 无法通过 HTTPS 访问该地址。",
+      "rejected": "该地址拒绝了请求。",
+      "rejectedStatus": "该地址返回的 HTTP 状态为 {{status}}。",
+      "rejectedClient": "该地址返回的 HTTP 状态为 {{status}}。请检查该地址及其所需的任何访问令牌。"
+    }
+  },
+  "rotation": {
+    "confirmFirst": "请勾选上方的复选框以继续。",
+    "fingerprint": "新的设备身份指纹",
+    "unchanged": "未更改任何内容。你当前的密钥仍然有效。",
+    "interrupted": "轮换已中断。请恢复轮换以完成；在此之前，此设备无法连接。"
+  },
+  "deviceBackup": {
+    "confirmFirst": "请勾选上方的复选框以确认。"
+  },
+  "change": {
+    "blocked": "此更改暂时无法开始：",
+    "rolledBack": "服务器已回滚此更改，因此没有任何内容被更改。你可以重试。",
+    "unknown": {
+      "message": "{{host}} 上的更改可能已应用，但确认信息丢失了。此设备保留了其密钥。",
+      "checkAgain": "再次检查",
+      "checking": "正在检查…",
+      "checkFailed": "无法检查服务器。请在可以访问时重试。",
+      "committed": "{{host}} 上的更改已应用。",
+      "forget": "忘记此更改…",
+      "forgetTitle": "忘记 {{host}} 上的更改？",
+      "forgetMessage": "此设备将停止跟踪该更改，而不询问服务器。服务器可能已应用或已回滚它。已保存的所有者密钥将被保留。之后你可能需要修复服务器。",
+      "forgetConfirm": "忘记更改",
+      "forgetting": "正在忘记…",
+      "forgetFailed": "无法忘记此更改。请重试。",
+      "forgotten": "此设备已不再跟踪 {{host}} 上的更改。如果服务器未按预期工作，请修复它。"
+    },
+    "plan": {
+      "show": "显示将执行的操作",
+      "loading": "正在准备计划…",
+      "error": "无法准备计划。",
+      "commands": "命令",
+      "asRoot": "（以 root 身份）",
+      "upload": "上传 {{path}}（模式 {{mode}}）",
+      "files": "已更改的文件"
+    }
+  }
+}

@@ -30,6 +30,7 @@ pub(crate) fn state(directory: &Path, owner: &LocalIdentity) -> AppState {
         transport_peers: AuthorizedPeers::default(),
         transport_activity: ActiveTransportRegistry::default(),
         speed_test: Default::default(),
+        throttle: Default::default(),
     }
 }
 
@@ -38,6 +39,15 @@ pub(crate) fn caller(owner: &LocalIdentity) -> CallerIdentity {
         certificate_fingerprint: certificate_fingerprint(&owner.public.management_certificate_pem)
             .unwrap(),
     }
+}
+
+#[test]
+fn the_private_ipv6_listener_is_served_only_behind_the_leak_test_drop_rule() {
+    assert_eq!(
+        crate::runtime::guarded_ipv6_listener(Some(1), true),
+        Some(1)
+    );
+    assert_eq!(crate::runtime::guarded_ipv6_listener(Some(1), false), None);
 }
 
 #[test]

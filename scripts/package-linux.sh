@@ -100,6 +100,13 @@ repair_appimage_runtime() {
     fi
   done
 
+  # Added after linuxdeploy so it never processes a foreign-architecture ELF;
+  # the repack below only compresses the AppDir.
+  for SIRINVPN_ARCH in x86_64 aarch64; do
+    install -m 0755 "$BIN_DIR/sirinvpn-server-$SIRINVPN_ARCH" \
+      "$SIRINVPN_APPDIR/usr/lib/sirinvpn/sirinvpn-server-$SIRINVPN_ARCH"
+  done
+
   for SIRINVPN_LIBRARY in "$SIRINVPN_APPDIR/usr/lib"/libwayland-*.so*; do
     if [ -e "$SIRINVPN_LIBRARY" ] || [ -L "$SIRINVPN_LIBRARY" ]; then
       rm -f -- "$SIRINVPN_LIBRARY"
@@ -151,6 +158,16 @@ install -m 0755 "$PROJECT_ROOT/target/release/sirinvpn-helper" "$BIN_DIR/sirinvp
 install -m 0755 "$PROJECT_ROOT/target/release/sirinvpn" "$BIN_DIR/sirinvpn"
 install -m 0755 "$PROJECT_ROOT/target/release/sirinvpn-release" "$BIN_DIR/sirinvpn-release"
 install -m 0755 "$PROJECT_ROOT/target/release/sirinvpn-release-fetch" "$BIN_DIR/sirinvpn-release-fetch"
+# Per-architecture VPS payloads from packaging/Dockerfile.server-payloads (see
+# package-linux-container.sh). sirinvpn-server above stays the host-arch copy.
+for SIRINVPN_ARCH in x86_64 aarch64; do
+  SIRINVPN_PAYLOAD="$PROJECT_ROOT/target/server-payloads/$SIRINVPN_ARCH-unknown-linux-gnu/release/sirinvpn-server"
+  if [ ! -f "$SIRINVPN_PAYLOAD" ]; then
+    echo "Build the $SIRINVPN_ARCH VPS payload with packaging/Dockerfile.server-payloads first" >&2
+    exit 1
+  fi
+  install -m 0755 "$SIRINVPN_PAYLOAD" "$BIN_DIR/sirinvpn-server-$SIRINVPN_ARCH"
+done
 # The tray library is loaded dynamically, so ELF dependency scanning cannot
 # discover it. Bundle the build-host version and let linuxdeploy collect its
 # dependencies; a newer host tray library may require a newer GLib than ours.
@@ -165,5 +182,12 @@ pnpm test
 pnpm build
 prepare_appimage_pkgconf_compat
 prepare_appimage_runtime
-pnpm tauri build
+# The Debian package's file list comes from the install layout shared with the
+# AUR packages (scripts/install-linux.sh), merged in as a JSON Merge Patch.
+pnpm tauri build --config "$("$PROJECT_ROOT/scripts/install-linux.sh" tauri-deb-files)"
 repair_appimage_runtime
+# Tauri writes the SemVer version unchanged; a prerelease needs Debian's tilde
+# so 1.0.0~rc.1 sorts before 1.0.0. Only the control archive changes.
+SIRINVPN_VERSION=$(node -p "require('./src-tauri/tauri.conf.json').version")
+python3 "$PROJECT_ROOT/scripts/debian_version.py" \
+  "$PROJECT_ROOT/target/release/bundle/deb/SirinVPN_${SIRINVPN_VERSION}_amd64.deb"

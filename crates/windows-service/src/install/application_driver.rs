@@ -87,7 +87,7 @@ pub(crate) fn install(directory: &Path) -> io::Result<()> {
     }
     // The ordinary VPN remains installable if Windows rejects an unsigned or
     // incompatible driver. Runtime capability publication checks SCM and WFP.
-    let _ = start(&service, false);
+    let _ = start(&service, None);
     Ok(())
 }
 pub(crate) fn start_installed() -> io::Result<()> {
@@ -96,7 +96,7 @@ pub(crate) fn start_installed() -> io::Result<()> {
     let manager = manager()?;
     let service = open_driver(&manager, SERVICE_START | SERVICE_QUERY_CONFIG)?;
     owned(&service, directory)?;
-    start(&service, false)
+    start(&service, None)
 }
 pub(crate) fn running() -> bool {
     fn query() -> io::Result<bool> {

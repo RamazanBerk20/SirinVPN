@@ -8,8 +8,14 @@ mod endpoint_plan;
 mod firewall_plan;
 #[cfg(any(windows, test))]
 #[cfg_attr(not(windows), allow(dead_code))]
+mod link;
+#[cfg(any(windows, test))]
+#[cfg_attr(not(windows), allow(dead_code))]
 mod network_plan;
 mod protocol;
+#[cfg(any(windows, test))]
+#[cfg_attr(not(windows), allow(dead_code))]
+mod published;
 #[cfg(any(windows, test))]
 #[cfg_attr(not(windows), allow(dead_code))]
 mod quality_plan;
@@ -17,7 +23,8 @@ mod quality_plan;
 #[cfg_attr(not(windows), allow(dead_code))]
 mod state;
 pub use protocol::{
-    ApplicationRouteRequest, MAX_FRAME_BYTES, Operation, Request, Response, ServiceError,
+    ApplicationRouteRequest, MAX_FRAME_BYTES, MAX_WAIT_MS, Operation, Request, Response,
+    ServiceError, StatusWait, WIREGUARD_LISTEN_PORT,
 };
 
 #[cfg(any(windows, test))]

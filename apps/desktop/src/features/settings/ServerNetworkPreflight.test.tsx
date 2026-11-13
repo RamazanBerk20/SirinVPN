@@ -14,10 +14,11 @@ const report: NetworkPreflight = {
 it("shows the inspected address mapping and exact provider port requirements", () => {
   render(<ServerNetworkPreflight report={report} />);
   expect(screen.getByRole("heading", { name: t("ssh.network.title") })).toBeTruthy();
-  expect(screen.getByLabelText(t("ssh.network.port", { protocol: "UDP", port: 51820 }))).toBeTruthy();
-  expect(screen.getByLabelText(t("ssh.network.port", { protocol: "TCP", port: 7443 }))).toBeTruthy();
+  expect(screen.getByLabelText(t("ssh.network.port", { protocol: "UDP", port: "51820" }))).toBeTruthy();
+  expect(screen.getByLabelText(t("ssh.network.port", { protocol: "TCP", port: "7443" }))).toBeTruthy();
   expect(screen.getByText("10.2.0.4/24")).toBeTruthy();
-  expect(screen.getByText("Forward these ports through the provider NAT mapping.")).toBeTruthy();
+  // A known code is said in the catalog's words; the backend's text stays as its detail.
+  expect(screen.getByText(t("ssh.network.issue.natOrProxy")).getAttribute("title")).toBe("Forward these ports through the provider NAT mapping.");
 });
 it("makes an occupied port an actionable conflict", () => {
   render(<ServerNetworkPreflight report={{ ...report, issues: [{ code: "port_in_use", blocking: true, message: "TCP port 7443 is occupied. Choose a free port." }] }} />);

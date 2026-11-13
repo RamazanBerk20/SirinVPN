@@ -1,6 +1,7 @@
 //! Connection.
 
 use super::*;
+use sirinvpn_tunnel_model::TunnelPhase;
 
 #[tauri::command]
 pub(super) fn current_network_profile(state: State<'_, AppState>) -> NetworkProfile {
@@ -33,7 +34,7 @@ async fn connect_candidate_at_endpoint(
     let bootstrap =
         matches!(profile.client_tunnel_address, IpAddr::V4(address) if address.octets()[3] >= 224);
     let local = invoke_helper("status", None).map_err(safe_error)?;
-    if local.server_id.is_some() || local.state != ConnectionState::Disconnected {
+    if local.phase() != Some(TunnelPhase::Idle) {
         return Err(
             "Disconnect before testing the new server address.".to_owned(),
         );
@@ -119,7 +120,7 @@ pub(super) fn cleanup_automatic_attempt(
     transport: TransportKind,
 ) -> Result<(), String> {
     let local = invoke_helper("status", None).map_err(safe_error)?;
-    if local.server_id.is_none() && local.state == ConnectionState::Disconnected {
+    if local.phase() == Some(TunnelPhase::Idle) {
         return Ok(());
     }
     if local.server_id != Some(server_id) || local.transport != Some(transport) {
@@ -175,26 +176,28 @@ pub(super) fn connect_profile_with_transport_plan_and_routing(
 #[tauri::command]
 pub(super) async fn disconnect_server() -> Result<LocalTunnelStatus, String> {
     let cancellation = crate::connection_controller::cancel()?;
-    tauri::async_runtime::spawn_blocking(|| {
-        let _cancellation = cancellation;
-        let status = invoke_helper("status", None).map_err(safe_error)?;
-        let result = if status.connection_control_supported
-            && let Some(id) = status.server_id
-        {
-            crate::connection_controller::session_action("disconnect-session", id)
-        } else {
-            invoke_helper("disconnect", None).map_err(safe_error)
-        };
-        // A pending connect observes the cancellation epoch before committing,
-        // or removes its own late candidate. Its completion is part of Stop.
-        while crate::connection_controller::is_busy() {
-            std::thread::sleep(std::time::Duration::from_millis(25));
-        }
-        result?;
-        invoke_helper("status", None).map_err(safe_error)
-    })
-    .await
-    .map_err(|_| "Disconnecting was interrupted. Check the connection status.".to_owned())?
+    tauri::async_runtime::spawn_blocking(move || disconnect_cancelled(cancellation))
+        .await
+        .map_err(|_| "Disconnecting was interrupted. Check the connection status.".to_owned())?
+}
+
+/// Disconnect under an acquired cancellation; the tray and window share it.
+pub(crate) fn disconnect_cancelled(
+    cancellation: crate::connection_controller::CancellationGuard,
+) -> Result<LocalTunnelStatus, String> {
+    let status = invoke_helper("status", None).map_err(safe_error)?;
+    let result = if status.connection_control_supported
+        && let Some(id) = status.server_id
+    {
+        crate::connection_controller::session_action("disconnect-session", id)
+    } else {
+        invoke_helper("disconnect", None).map_err(safe_error)
+    };
+    // A pending connect observes the cancellation epoch before committing,
+    // or removes its own late candidate. Its completion is part of Stop.
+    cancellation.wait_for_connect();
+    result?;
+    invoke_helper("status", None).map_err(safe_error)
 }
 
 #[tauri::command]
@@ -243,19 +246,24 @@ pub(super) async fn server_status(
     Ok(status)
 }
 
+/// Writes only the caller fields of a fresh status, onto the saved profile as it is
+/// now and only while it still holds the identity that asked. A stream can outlive a
+/// rename, an endpoint checkpoint or a key rotation; none of those is undone.
 pub(super) fn reconcile_status_authority(
     paths: &ClientPaths,
     profile: &mut ServerProfile,
     status: &ServerStatus,
 ) {
-    if profile.clone().adopt_caller_status(status) {
-        // A stream can outlive a local rename or preference change.
-        let Ok(latest) = find_profile(paths, &profile.id.to_string()) else {
-            return;
-        };
+    if !profile.clone().adopt_caller_status(status) {
+        return;
+    }
+    let asked_as = profile.client_management_certificate_pem.clone();
+    if let Ok(Some(latest)) = paths.profile_store().update(profile.id, |current| {
+        Ok((current.client_management_certificate_pem == asked_as
+            && current.adopt_caller_status(status))
+        .then(|| current.clone()))
+    }) {
         *profile = latest;
-        profile.adopt_caller_status(status);
-        let _ = paths.profile_store().upsert(profile.clone());
     }
 }
 
@@ -263,7 +271,7 @@ pub(super) fn reconcile_status_authority(
 /// while holding its network lock so a different session cannot be disconnected.
 pub(super) fn disconnect_candidate(server_id: ServerId) -> Result<(), String> {
     let local = invoke_helper("status", None).map_err(safe_error)?;
-    if local.server_id.is_none() && local.state == ConnectionState::Disconnected {
+    if local.phase() == Some(TunnelPhase::Idle) {
         return Ok(());
     }
     if local.server_id != Some(server_id) {
@@ -273,4 +281,58 @@ pub(super) fn disconnect_candidate(server_id: ServerId) -> Result<(), String> {
     invoke_helper("disconnect-session", Some(&input))
         .map(|_| ())
         .map_err(safe_error)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn caller_authority_never_rewrites_a_profile_changed_meanwhile() {
+        let directory = tempfile::tempdir().unwrap();
+        let paths = ClientPaths::under(directory.path().to_path_buf());
+        let saved: ServerProfile = serde_json::from_value(serde_json::json!({
+            "schema_version":1,"id":"123e4567-e89b-42d3-a456-426614174001","name":"Before",
+            "role":"owner","endpoint":{"host":"example.invalid","wireguard_port":51820},
+            "client_tunnel_address":"10.77.0.2","server_tunnel_address":"10.77.0.1",
+            "server_wireguard_public_key":"fixture","identity_reference":"fixture",
+            "pinned_server_certificate_pem":"fixture","client_management_certificate_pem":"fixture"
+        }))
+        .unwrap();
+        paths.profile_store().insert(saved.clone()).unwrap();
+        let status: ServerStatus = serde_json::from_value(serde_json::json!({
+            "api_version": sirinvpn_protocol::API_VERSION, "server_name": "VPS",
+            "connection_state": "connected", "interface_up": true, "dns_healthy": true,
+            "transport": "direct_udp", "peer_count": 1, "rx_bytes": 0, "tx_bytes": 0,
+            "uptime_seconds": 1, "caller_role": "member",
+        }))
+        .unwrap();
+        // The stream loaded its copy, then the user renamed the server.
+        let mut streamed = saved.clone();
+        paths
+            .profile_store()
+            .update(saved.id, |current| {
+                current.name = "Renamed".into();
+                Ok(())
+            })
+            .unwrap();
+        reconcile_status_authority(&paths, &mut streamed, &status);
+        let stored = &paths.profile_store().load().unwrap()[0];
+        assert_eq!(stored.name, "Renamed");
+        assert_eq!(stored.role, ServerRole::Member);
+        assert_eq!(streamed.name, "Renamed");
+        // A rotated identity is not overwritten by a status the old one asked for.
+        let mut stale = saved.clone();
+        stale.role = ServerRole::Owner;
+        paths
+            .profile_store()
+            .update(saved.id, |current| {
+                current.client_management_certificate_pem = "rotated".into();
+                current.role = ServerRole::Owner;
+                Ok(())
+            })
+            .unwrap();
+        reconcile_status_authority(&paths, &mut stale, &status);
+        assert_eq!(paths.profile_store().load().unwrap()[0].role, ServerRole::Owner);
+    }
 }

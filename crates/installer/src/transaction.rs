@@ -2,31 +2,34 @@
 
 use super::*;
 
-pub(super) fn restored_local_profile(
+/// The profile a device keeps once the VPS confirms a commit (install, repair or
+/// restore): the committed server side (endpoint, transports, server identity) on
+/// top of the local profile, which keeps its own keys, role and membership. An
+/// endpoint moved without a signed generation keeps the old one pending, so
+/// members can still be moved to the new VPS.
+pub fn merge_committed_profile(
     current: &ServerProfile,
-    restored: &ServerProfile,
+    committed: &ServerProfile,
 ) -> ServerProfile {
     let mut profile = current.clone();
     let previous_transports = profile.endpoint_descriptor();
     let previous_endpoint = profile.endpoint.clone();
-    profile.set_endpoint_descriptor(&restored.endpoint_descriptor());
-    profile.endpoint_generation = restored
+    profile.set_endpoint_descriptor(&committed.endpoint_descriptor());
+    profile.endpoint_generation = committed
         .endpoint_generation
         .max(current.endpoint_generation);
-    if profile.endpoint != previous_endpoint && restored.endpoint_generation == 0 {
+    profile.pending_previous_endpoint = committed.pending_previous_endpoint.clone();
+    profile.pending_previous_transports = committed.pending_previous_transports.clone();
+    if profile.pending_previous_endpoint.is_none()
+        && profile.endpoint != previous_endpoint
+        && committed.endpoint_generation == 0
+    {
         profile.pending_previous_endpoint = Some(previous_endpoint);
         profile.pending_previous_transports = Some(previous_transports);
-    } else {
-        profile.pending_previous_endpoint = None;
-        profile.pending_previous_transports = None;
     }
-    profile.server_tunnel_address = restored.server_tunnel_address;
-    profile.server_wireguard_public_key = restored.server_wireguard_public_key.clone();
-    profile.pinned_server_certificate_pem = restored.pinned_server_certificate_pem.clone();
-    profile.ipv6_tunnel_enabled = restored.ipv6_tunnel_enabled;
-    profile.obfuscated_udp = restored.obfuscated_udp.clone();
-    profile.tcp_fallback = restored.tcp_fallback.clone();
-    profile.tls_like = restored.tls_like.clone();
+    profile.server_tunnel_address = committed.server_tunnel_address;
+    profile.server_wireguard_public_key = committed.server_wireguard_public_key.clone();
+    profile.pinned_server_certificate_pem = committed.pinned_server_certificate_pem.clone();
     profile
 }
 
@@ -160,40 +163,161 @@ pub(super) fn stage_and_install(
     discovery: &ServerDiscovery,
     events: &mut Vec<InstallEvent>,
     transaction: InstallTransaction<'_>,
+    sink: Sink<'_>,
 ) -> Result<InstallOutcome, InstallerError> {
     events.push(event(
         InstallPhase::Staging,
         "Staging verified SirinVPN artifacts with restrictive permissions.",
     ));
-    let nonce = Uuid::new_v4().simple().to_string();
-    let remote_directory = format!("/tmp/sirinvpn-install-{nonce}");
-    run(
-        session,
-        &format!(
-            "umask 077; install -d -m 0700 {}",
-            shell_quote(&remote_directory)
-        ),
-    )
-    .map_err(|error| phase_error("staging", error))?;
+    let mut tx = Transaction::begin(
+        sink.journal(),
+        TransactionOperation::Install,
+        &request.target,
+    )?;
+    let remote_directory = staging_directory(tx.nonce());
+    if let Sink::Plan(slot) = sink {
+        *slot = Some(plan_install(
+            session,
+            request,
+            discovery,
+            &remote_directory,
+            tx.nonce(),
+            transaction,
+        )?);
+        return Err(planned());
+    }
+    if let Err(error) = run(session, &staging_command(&remote_directory)) {
+        return Err(tx.abort(session, &request.target, phase_error("staging", error)));
+    }
 
     let result = install_staged(
         session,
         request,
         discovery,
         &remote_directory,
-        &nonce,
+        &mut tx,
         events,
         transaction,
     );
-    let _ = run(
-        session,
-        &format!(
-            "find {} -type f -exec shred -u -- {{}} + 2>/dev/null || true; rmdir {} 2>/dev/null || true",
-            shell_quote(&remote_directory),
-            shell_quote(&remote_directory)
-        ),
-    );
+    let _ = run(session, &staging_cleanup_command(&remote_directory));
     result
+}
+
+/// The steps `install_staged` takes, from the same builders, after the same
+/// read-only inspection; only server-dependent verification text is deferred.
+fn plan_install(
+    session: &Session,
+    request: &InstallRequest,
+    discovery: &ServerDiscovery,
+    remote_directory: &str,
+    nonce: &str,
+    transaction: InstallTransaction<'_>,
+) -> Result<InstallPlan, InstallerError> {
+    let network = preflight::inspect_network(
+        session,
+        &request.target,
+        discovery,
+        &request.transport,
+        transaction.endpoint_discovery_port,
+    )?;
+    network.require_compatible()?;
+    let artifact = release_guard::prepare(session, request, discovery)?;
+    let remote_binary = format!("{remote_directory}/sirinvpn-server");
+    let remote_owner = format!("{remote_directory}/owner.crt");
+    let remote_script = format!("{remote_directory}/install.sh");
+    let script = install_script(
+        request,
+        discovery,
+        &remote_binary,
+        &remote_owner,
+        nonce,
+        transaction,
+        &artifact,
+    );
+    let operation = if transaction.expected_profile.is_some() {
+        "repair"
+    } else if transaction.restore_snapshot.is_some() {
+        "restore"
+    } else {
+        "install"
+    };
+    Ok(InstallPlan {
+        operation,
+        host: request.target.host.clone(),
+        nonce: nonce.to_owned(),
+        discovery: Some(discovery.clone()),
+        network_preflight: Some(network),
+        managed_paths: managed_paths(""),
+        steps: vec![
+            run_step(false, staging_command(remote_directory)),
+            upload_step(&remote_binary, 0o700, &artifact.bytes, false),
+            upload_step(
+                &remote_owner,
+                0o600,
+                request.identity.management_certificate_pem.as_bytes(),
+                true,
+            ),
+            run_step(false, digest_command(&remote_binary)),
+            upload_step(&remote_script, 0o700, script.as_bytes(), true),
+            PlanStep::Run {
+                privileged: true,
+                command: format!("/bin/sh {}", shell_quote(&remote_script)),
+                stdin_bytes: transaction.restore_snapshot.map(<[u8]>::len),
+            },
+            run_step(true, init_command(request, nonce, &transaction)),
+            PlanStep::Deferred {
+                description: "run as root: health verification of the identity, keys and ports the previous step returns (rolls back on failure)".to_owned(),
+            },
+            run_step(true, maintenance::commit(nonce, false)),
+            run_step(false, staging_cleanup_command(remote_directory)),
+        ],
+    })
+}
+
+pub(super) fn staging_directory(nonce: &str) -> String {
+    format!("/tmp/sirinvpn-install-{nonce}")
+}
+
+pub(super) fn staging_command(remote_directory: &str) -> String {
+    format!(
+        "umask 077; install -d -m 0700 {}",
+        shell_quote(remote_directory)
+    )
+}
+
+pub(super) fn staging_cleanup_command(remote_directory: &str) -> String {
+    format!(
+        "find {} -type f -exec shred -u -- {{}} + 2>/dev/null || true; rmdir {} 2>/dev/null || true",
+        shell_quote(remote_directory),
+        shell_quote(remote_directory)
+    )
+}
+
+pub(super) fn digest_command(remote_path: &str) -> String {
+    format!("sha256sum {} | cut -d' ' -f1", shell_quote(remote_path))
+}
+
+pub(super) fn init_command(
+    request: &InstallRequest,
+    nonce: &str,
+    transaction: &InstallTransaction<'_>,
+) -> String {
+    maintenance::followup(
+        nonce,
+        &format!(
+            "/usr/local/lib/sirinvpn/sirinvpn-server init --name {} --owner-certificate /etc/sirinvpn/owner.crt --server-id {} --owner-wireguard-public-key {}{}{}{}",
+            shell_quote(&request.server_name),
+            shell_quote(&request.server_id.to_string()),
+            shell_quote(&request.identity.wireguard_public_key),
+            request.transport.port_arguments(),
+            if transaction.ipv6_tunnel_enabled {
+                " --ipv6-tunnel-enabled true"
+            } else {
+                ""
+            },
+            server_dns_init_arguments(&request.dns_upstream, &request.private_dns_records),
+        ),
+    )
 }
 
 pub(super) fn install_staged(
@@ -201,10 +325,65 @@ pub(super) fn install_staged(
     request: &InstallRequest,
     discovery: &ServerDiscovery,
     remote_directory: &str,
-    nonce: &str,
+    tx: &mut Transaction<'_>,
     events: &mut Vec<InstallEvent>,
     transaction: InstallTransaction<'_>,
 ) -> Result<InstallOutcome, InstallerError> {
+    let target = &request.target;
+    let nonce = tx.nonce().to_owned();
+    let nonce = nonce.as_str();
+    // Nothing on the VPS changes before the script runs: these errors need no rollback.
+    let staged = stage_install_files(
+        session,
+        request,
+        discovery,
+        remote_directory,
+        nonce,
+        events,
+        transaction,
+    )
+    .map_err(|error| tx.abort(session, target, error));
+    let (network, local_digest, remote_script) = staged?;
+    events.push(event(
+        InstallPhase::InstallingDependencies,
+        "Installing only the required system packages.",
+    ));
+    tx.step(session, target, TransactionStep::Armed)?;
+    session.set_timeout(INSTALL_OPERATION_TIMEOUT_MS);
+    let installation_command = format!("/bin/sh {}", shell_quote(&remote_script));
+    let installation_result = match transaction.restore_snapshot {
+        Some(snapshot) => {
+            run_privileged_with_input(session, target, &installation_command, snapshot)
+        }
+        None => run_privileged(session, target, &installation_command),
+    };
+    session.set_timeout(SSH_OPERATION_TIMEOUT_MS);
+    if let Err(error) = installation_result {
+        return Err(tx.abort(session, target, phase_error("server configuration", error)));
+    }
+    finish_install(
+        session,
+        request,
+        discovery,
+        tx,
+        events,
+        transaction,
+        network,
+        local_digest,
+    )
+}
+
+/// Uploads and checks everything the script needs; returns the network
+/// preflight, the artifact digest and the remote script path.
+fn stage_install_files(
+    session: &Session,
+    request: &InstallRequest,
+    discovery: &ServerDiscovery,
+    remote_directory: &str,
+    nonce: &str,
+    events: &mut Vec<InstallEvent>,
+    transaction: InstallTransaction<'_>,
+) -> Result<(NetworkPreflight, String, String), InstallerError> {
     let network = preflight::inspect_network(
         session,
         &request.target,
@@ -237,11 +416,8 @@ pub(super) fn install_staged(
     )
     .map_err(|error| phase_error("owner identity upload", error))?;
 
-    let remote_digest = run(
-        session,
-        &format!("sha256sum {} | cut -d' ' -f1", shell_quote(&remote_binary)),
-    )
-    .map_err(|error| phase_error("artifact verification", error))?;
+    let remote_digest = run(session, &digest_command(&remote_binary))
+        .map_err(|error| phase_error("artifact verification", error))?;
     if remote_digest.trim() != local_digest {
         return Err(phase_error(
             "artifact verification",
@@ -259,24 +435,28 @@ pub(super) fn install_staged(
     );
     upload(session, Path::new(&remote_script), script.as_bytes(), 0o700)
         .map_err(|error| phase_error("installer upload", error))?;
-    events.push(event(
-        InstallPhase::InstallingDependencies,
-        "Installing only the required system packages.",
-    ));
-    session.set_timeout(INSTALL_OPERATION_TIMEOUT_MS);
-    let installation_command = format!("/bin/sh {}", shell_quote(&remote_script));
-    let installation_result = match transaction.restore_snapshot {
-        Some(snapshot) => {
-            run_privileged_with_input(session, &request.target, &installation_command, snapshot)
-        }
-        None => run_privileged(session, &request.target, &installation_command),
-    };
-    session.set_timeout(SSH_OPERATION_TIMEOUT_MS);
-    if let Err(error) = installation_result {
-        rollback_now(session, &request.target, nonce);
-        return Err(phase_error("server configuration", error));
-    }
+    Ok((network, local_digest, remote_script))
+}
 
+#[allow(clippy::too_many_arguments)]
+fn finish_install(
+    session: &Session,
+    request: &InstallRequest,
+    discovery: &ServerDiscovery,
+    tx: &mut Transaction<'_>,
+    events: &mut Vec<InstallEvent>,
+    transaction: InstallTransaction<'_>,
+    network: NetworkPreflight,
+    local_digest: String,
+) -> Result<InstallOutcome, InstallerError> {
+    let target = &request.target;
+    let nonce = tx.nonce().to_owned();
+    let nonce = nonce.as_str();
+    macro_rules! fail {
+        ($error:expr) => {
+            return Err(tx.abort(session, target, $error))
+        };
+    }
     events.push(event(
         InstallPhase::ConfiguringIdentity,
         if transaction.expected_profile.is_some() {
@@ -287,47 +467,21 @@ pub(super) fn install_staged(
             "Enrolling this device as the local owner."
         },
     ));
-    let dns_init_arguments =
-        server_dns_init_arguments(&request.dns_upstream, &request.private_dns_records);
-    let bootstrap_json = match run_privileged(
-        session,
-        &request.target,
-        &maintenance::followup(
-            nonce,
-            &format!(
-                "/usr/local/lib/sirinvpn/sirinvpn-server init --name {} --owner-certificate /etc/sirinvpn/owner.crt --server-id {} --owner-wireguard-public-key {}{}{}{}",
-                shell_quote(&request.server_name),
-                shell_quote(&request.server_id.to_string()),
-                shell_quote(&request.identity.wireguard_public_key),
-                request.transport.port_arguments(),
-                if transaction.ipv6_tunnel_enabled {
-                    " --ipv6-tunnel-enabled true"
-                } else {
-                    ""
-                },
-                dns_init_arguments,
-            ),
-        ),
-    ) {
-        Ok(output) => output,
-        Err(error) => {
-            rollback_now(session, &request.target, nonce);
-            return Err(phase_error("owner enrollment", error));
-        }
-    };
+    tx.step(session, target, TransactionStep::Initialized)?;
+    let bootstrap_json =
+        match run_privileged(session, target, &init_command(request, nonce, &transaction)) {
+            Ok(output) => output,
+            Err(error) => fail!(phase_error("owner enrollment", error)),
+        };
     let bootstrap: BootstrapOutput = match serde_json::from_str(bootstrap_json.trim()) {
         Ok(bootstrap) => bootstrap,
-        Err(_) => {
-            rollback_now(session, &request.target, nonce);
-            return Err(phase_error(
-                "owner enrollment",
-                anyhow!("server returned invalid bootstrap data"),
-            ));
-        }
+        Err(_) => fail!(phase_error(
+            "owner enrollment",
+            anyhow!("server returned invalid bootstrap data"),
+        )),
     };
     if !bootstrap_matches_transport(&bootstrap, &request.transport) {
-        rollback_now(session, &request.target, nonce);
-        return Err(phase_error(
+        fail!(phase_error(
             "transport verification",
             anyhow!("server transport metadata did not match the requested configuration"),
         ));
@@ -359,8 +513,7 @@ pub(super) fn install_staged(
             && claims.tls_like == bootstrap.tls_like
     });
     if !valid_checkpoint {
-        rollback_now(session, &request.target, nonce);
-        return Err(phase_error(
+        fail!(phase_error(
             "endpoint verification",
             anyhow!("server did not publish the requested signed endpoint checkpoint"),
         ));
@@ -373,8 +526,7 @@ pub(super) fn install_staged(
                 .filter(|key| key.len() == 32 && key.iter().any(|byte| *byte != 0))
                 .is_none()
     }) {
-        rollback_now(session, &request.target, nonce);
-        return Err(phase_error(
+        fail!(phase_error(
             "owner enrollment",
             anyhow!("server did not enable the required Obfuscated UDP capability"),
         ));
@@ -387,8 +539,7 @@ pub(super) fn install_staged(
                 .filter(|key| key.len() == 32 && key.iter().any(|byte| *byte != 0))
                 .is_none()
     }) {
-        rollback_now(session, &request.target, nonce);
-        return Err(phase_error(
+        fail!(phase_error(
             "owner enrollment",
             anyhow!("server did not enable the required TCP fallback capability"),
         ));
@@ -407,22 +558,19 @@ pub(super) fn install_staged(
                 .filter(|fingerprint| fingerprint.len() == 32)
                 .is_none()
     }) {
-        rollback_now(session, &request.target, nonce);
-        return Err(phase_error(
+        fail!(phase_error(
             "owner enrollment",
             anyhow!("server did not enable the required TLS-like capability"),
         ));
     }
     if bootstrap.dns_upstream != request.dns_upstream {
-        rollback_now(session, &request.target, nonce);
-        return Err(phase_error(
+        fail!(phase_error(
             "owner enrollment",
             anyhow!("server did not apply the requested DNS upstream policy"),
         ));
     }
     if bootstrap.private_dns_records != request.private_dns_records {
-        rollback_now(session, &request.target, nonce);
-        return Err(phase_error(
+        fail!(phase_error(
             "owner enrollment",
             anyhow!("server did not apply the requested private DNS records"),
         ));
@@ -430,8 +578,7 @@ pub(super) fn install_staged(
     if transaction.expected_profile.is_some_and(|profile| {
         !bootstrap_matches_profile_with_transport(&bootstrap, profile, &request.transport)
     }) {
-        rollback_now(session, &request.target, nonce);
-        return Err(InstallerError::RepairTargetMismatch);
+        fail!(InstallerError::RepairTargetMismatch);
     }
 
     events.push(event(
@@ -442,9 +589,10 @@ pub(super) fn install_staged(
         InstallPhase::VerifyingServices,
         "Checking WireGuard, private DNS, management, and the SSH path.",
     ));
+    tx.step(session, target, TransactionStep::Verified)?;
     if let Err(error) = run_privileged(
         session,
-        &request.target,
+        target,
         &maintenance::followup(
             nonce,
             &format!(
@@ -460,22 +608,18 @@ pub(super) fn install_staged(
             ),
         ),
     ) {
-        rollback_now(session, &request.target, nonce);
-        return Err(phase_error("health verification", error));
+        fail!(phase_error("health verification", error));
     }
 
     events.push(event(
         InstallPhase::Committing,
         "Committing the verified installation and disarming rollback.",
     ));
-    run_privileged(session, &request.target, &maintenance::commit(nonce, false))
-        .map_err(|error| phase_error("commit", error))?;
     events.push(event(
         InstallPhase::Complete,
         "The VPS is ready for Direct UDP, Obfuscated UDP, TLS-like, or authenticated TCP fallback.",
     ));
-
-    Ok(InstallOutcome {
+    let outcome = InstallOutcome {
         network_preflight: network,
         profile: ServerProfile {
             favorite: false,
@@ -522,7 +666,16 @@ pub(super) fn install_staged(
         artifact_sha256: local_digest,
         dns_upstream: bootstrap.dns_upstream,
         private_dns_records: bootstrap.private_dns_records,
-    })
+    };
+    // Recorded before commit, so a lost reply still leaves the profile to keep.
+    tx.entry.committed_profile = Some(outcome.profile.clone());
+    tx.commit(
+        session,
+        target,
+        &maintenance::commit(nonce, false),
+        "commit",
+    )?;
+    Ok(outcome)
 }
 
 #[derive(Deserialize)]

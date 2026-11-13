@@ -1,0 +1,370 @@
+{
+  "layout": {
+    "categories": "Einstellungsbereiche"
+  },
+  "category": {
+    "general": {
+      "label": "Allgemein",
+      "hint": "WLAN, Bedienung, Benachrichtigungen"
+    },
+    "connection": {
+      "label": "Verbindung",
+      "hint": "Methode, Kill-Switch, Wiederverbindung"
+    },
+    "network": {
+      "label": "Netzwerk",
+      "hint": "App-Routing, DNS, Blockierung"
+    },
+    "recovery": {
+      "label": "Schlüssel und Wiederherstellung",
+      "hint": "Schlüssel, Backups, Wiederherstellung"
+    },
+    "maintenance": {
+      "label": "VPS-Wartung",
+      "shortLabel": "Diagnose",
+      "hint": "Zustand, Diagnose, Updates"
+    },
+    "advanced": {
+      "label": "Erweitert",
+      "hint": "Ports, Schlüsselwechsel, Warnungen, Zeitpläne"
+    }
+  },
+  "general": {
+    "startup": {
+      "title": "Start und Fenster",
+      "startOnLogin": {
+        "label": "Beim Anmelden starten",
+        "summary": "SirinVPN öffnen, wenn du dich anmeldest",
+        "unavailable": "Auf diesem System nicht verfügbar"
+      },
+      "launchMinimized": {
+        "label": "Minimiert starten",
+        "summary": "Öffnet in der Taskleiste, oder im Infobereich, wenn „In den Infobereich schließen“ aktiv ist"
+      },
+      "closeToTray": {
+        "label": "In den Infobereich schließen",
+        "summary": "Läuft beim Schließen des Fensters im Infobereich weiter",
+        "unavailable": "In dieser Desktop-Sitzung gibt es keinen Infobereich"
+      },
+      "note": "Das Schließen oder Beenden der App trennt das VPN nicht."
+    },
+    "android": {
+      "title": "VPN-Steuerung",
+      "summary": "Dauerhaftes VPN und „Verbindungen ohne VPN blockieren“ werden in Android eingestellt.",
+      "vpnSettings": "Android-VPN-Einstellungen",
+      "addTile": "Schnelleinstellungs-Kachel hinzufügen",
+      "addTileManually": "Öffne die Schnelleinstellungen, tippe auf Bearbeiten und füge SirinVPN hinzu."
+    },
+    "quickServer": {
+      "label": "Server für Schnelleinstellungen",
+      "placeholder": "Server wählen",
+      "loadFailed": "Deine Server konnten nicht geladen werden.",
+      "saveFailed": "Der Server für die Schnelleinstellungen konnte nicht gespeichert werden.",
+      "saved": "Die Schnelleinstellungen verwenden {{name}}."
+    },
+    "notifications": {
+      "title": "Benachrichtigungen und Oberfläche",
+      "infoLabel": "Über Benachrichtigungen",
+      "infoDesktop": "Warnungen enthalten nie Servernamen, Adressen oder Schlüssel.",
+      "infoAndroid": "Warnungen enthalten nie Servernamen, Adressen oder Schlüssel. Die laufende VPN-Benachrichtigung steuert Android.",
+      "connection": {
+        "label": "Verbindungsbenachrichtigungen",
+        "summary": "Warnt, wenn sich das VPN verbindet, abbricht oder erneut verbindet"
+      },
+      "test": "Test-Benachrichtigung",
+      "testing": "Wird gesendet…",
+      "androidSettings": "Benachrichtigungseinstellungen öffnen",
+      "blockedAndroid": "Benachrichtigungen sind für SirinVPN in Android blockiert. Erlaube sie in den Benachrichtigungseinstellungen; bis dahin steuerst du das VPN über die App oder ihre Schnelleinstellungs-Kachel.",
+      "animations": {
+        "label": "Animationen der Oberfläche",
+        "summary": "Seitenübergänge; die reduzierte Bewegung deines Systems gilt weiterhin"
+      },
+      "theme": {
+        "label": "Design",
+        "summary": "System folgt der Hell- oder Dunkel-Einstellung deines Geräts",
+        "system": "System",
+        "light": "Hell",
+        "dark": "Dunkel"
+      },
+      "testNeedsNotifications": "Schalte Verbindungsbenachrichtigungen ein, um eine Test-Benachrichtigung zu senden.",
+      "blocked": "Benachrichtigungen sind für SirinVPN blockiert. Erlaube sie in den Systemeinstellungen, um Verbindungswarnungen zu erhalten."
+    },
+    "language": {
+      "label": "Sprache",
+      "summary": "Wird auch für das Menü im Infobereich und für Benachrichtigungen verwendet",
+      "system": "Systemstandard",
+      "devExpanded": "Pseudo: erweiterter Text",
+      "devRtl": "Pseudo: von rechts nach links"
+    },
+    "updates": {
+      "title": "App-Updates",
+      "check": "Nach Updates suchen"
+    },
+    "component": {
+      "title": "Lokale VPN-Komponente",
+      "summary": "Hält den VPN-Dienst dieses Geräts zur App passend",
+      "review": "Komponente prüfen"
+    },
+    "loading": "App-Einstellungen werden geladen…"
+  },
+  "preferences": {
+    "loadFailed": "Einstellungen konnten nicht geladen werden.",
+    "saveFailed": "Diese Einstellung konnte nicht gespeichert werden. Deine vorherige Wahl gilt weiterhin.",
+    "testSent": "Test-Benachrichtigung gesendet. Prüfe die Systemeinstellungen, wenn sie nicht erscheint.",
+    "testFailed": "Die Test-Benachrichtigung konnte nicht gesendet werden.",
+    "notificationsUnknown": "Der Zugriff auf Benachrichtigungen konnte nicht bestätigt werden. Versuche es erneut oder erlaube Benachrichtigungen für SirinVPN in den Systemeinstellungen."
+  },
+  "wifi": {
+    "title": "WLAN-Automatikverbindung",
+    "infoLabel": "Über die WLAN-Automatikverbindung",
+    "infoDesktop": "Vertrauenswürdiges WLAN ist eine Ausnahme von der Automatikverbindung, keine Sicherheitsbewertung. WLAN-Namen werden nur angezeigt, nie gespeichert oder gesendet. Die Automatikverbindung läuft, solange die App im Infobereich ist, und endet, wenn du sie beendest.",
+    "infoAndroid": "Vertrauenswürdiges WLAN ist eine Ausnahme von der Automatikverbindung, keine Sicherheitsbewertung. WLAN-Namen werden nur angezeigt, nie gespeichert oder gesendet. Android zeigt sie nur Apps mit genauem Standort; SirinVPN liest nie, wo du bist. Während du im WLAN bist und das VPN aus ist, verlangt Android einen Hinweis, dass die Automatikverbindung aktiv ist. Mit der Schaltfläche Hinweis ausblenden schaltest du ihn dauerhaft aus; die Automatikverbindung funktioniert weiter.",
+    "toggle": {
+      "label": "Automatisch im WLAN verbinden",
+      "summary": "Verwendet den unten gewählten Server, außer in vertrauenswürdigem WLAN"
+    },
+    "server": {
+      "label": "Server für die Automatikverbindung",
+      "empty": "Füge zuerst einen Server hinzu",
+      "offHint": "Schalte die Automatikverbindung ein, um ihren Server zu wählen."
+    },
+    "network": {
+      "unavailable": "Kein aktives Netzwerk",
+      "otherNetwork": "Das aktuelle Netzwerk ist kein WLAN",
+      "trusted": "Das aktuelle WLAN ist vertrauenswürdig",
+      "untrusted": "Das aktuelle WLAN ist nicht vertrauenswürdig",
+      "named": "{{status}} — <strong>{{name}}</strong>",
+      "heading": "Aktuelles Netzwerk"
+    },
+    "status": {
+      "disabled": "Die Automatikverbindung ist aus.",
+      "starting": "Automatikverbindung startet…",
+      "waitingForWifi": "Warte auf WLAN, das nicht vertrauenswürdig ist.",
+      "trusted": "Im vertrauenswürdigen WLAN. Ein aktives VPN bleibt verbunden.",
+      "connecting": "Verbindet…",
+      "sessionActive": "Das VPN oder der Kill-Switch ist bereits aktiv.",
+      "paused": "Auf diesem Netzwerk pausiert, bis es sich ändert. Du kannst dich weiterhin manuell verbinden.",
+      "needsAttention": "Die Automatikverbindung konnte nicht abgeschlossen werden. Verbinde dich über Start, um den Grund zu sehen.",
+      "needsAuthorization": "Verbinde dich einmal über Start, um die Automatikverbindung zu erlauben."
+    },
+    "access": {
+      "unidentified": "Dieses WLAN kann nicht zuverlässig erkannt werden und ist daher nicht vertrauenswürdig.",
+      "permission": "Android verbirgt WLAN-Namen, solange SirinVPN keinen genauen Standort hat. Daher gilt jedes WLAN als nicht vertrauenswürdig, und die Automatikverbindung verbindet sich in allen.",
+      "locationOff": "Der Standort ist aus. Android verbirgt daher WLAN-Namen, und jedes WLAN gilt als nicht vertrauenswürdig.",
+      "background": "Vertrauenswürdiges WLAN funktioniert nur, solange SirinVPN geöffnet ist. Ist es geschlossen, verbirgt Android den WLAN-Namen, daher verbindet sich die Automatikverbindung in jedem WLAN.",
+      "restricted": "Die Akkunutzung für SirinVPN ist auf Eingeschränkt gesetzt, daher kann die Automatikverbindung das VPN bei geschlossener App nicht starten.",
+      "allow": "Standort erlauben",
+      "allowAlways": "Immer erlauben",
+      "locationSettings": "Standort einschalten",
+      "appSettings": "App-Einstellungen",
+      "changed": "Das Netzwerk hat sich geändert. Prüfe seinen Namen, bevor du ihm vertraust.",
+      "changedUnnamed": "Das Netzwerk hat sich geändert, und dieses Gerät meldet seinen Namen nicht. Prüfe in den WLAN-Einstellungen deines Systems, in welchem Netzwerk du bist, bevor du ihm vertraust."
+    },
+    "trust": {
+      "label": "Bezeichnung (optional)",
+      "placeholder": "Zum Beispiel Zuhause",
+      "action": "Diesem WLAN vertrauen",
+      "trusted": "{{name}} wird jetzt als vertrauenswürdig behandelt. Die Automatikverbindung überspringt es."
+    },
+    "trusted": {
+      "title": "Vertrauenswürdiges WLAN",
+      "unnamed": "Unbenanntes Netzwerk {{number}}",
+      "label": "Bezeichnung: {{label}}",
+      "current": "Aktuelles Netzwerk",
+      "saved": "Gespeichert",
+      "namesHidden": "Dieses Gerät hat keine WLAN-Namen geteilt. Unter Windows werden sie angezeigt, wenn du den Standortzugriff einschaltest.",
+      "namesHiddenAndroid": "Android zeigt nur den Namen des aktuellen WLAN. Gib einem Netzwerk beim Vertrauen eine Bezeichnung, damit es hier erkannt wird.",
+      "remove": "Vertrauen entfernen",
+      "removing": "Wird entfernt…",
+      "removeLabel": "Vertrauen für {{name}} entfernen",
+      "removed": "{{name}} wird nicht mehr als vertrauenswürdig behandelt."
+    },
+    "refresh": "Netzwerk aktualisieren",
+    "loadFailed": "WLAN-Einstellungen konnten nicht geladen werden.",
+    "refreshFailed": "Der Netzwerkstatus konnte nicht aktualisiert werden.",
+    "saveFailed": "Die WLAN-Einstellung konnte nicht geändert werden."
+  },
+  "credentials": {
+    "title": "Speicherung der Zugangsdaten",
+    "summary": "Gilt für neue Schlüssel. Vorhandene Schlüssel bleiben, wo sie sind, bis du sie verschiebst.",
+    "policy": {
+      "secure": "Neue Schlüssel müssen den Systemschlüsselbund verwenden.",
+      "fileAllowed": "Neue Schlüssel dürfen eine unverschlüsselte Datei verwenden, wenn der Schlüsselbund nicht verfügbar ist."
+    },
+    "consent": "Ich akzeptiere unverschlüsselte Schlüsseldateien, wenn der Schlüsselbund nicht verfügbar ist",
+    "allowFile": "Datei als Ausweichlösung erlauben",
+    "requireKeyring": "Schlüsselbund verlangen",
+    "protection": {
+      "keyring": "Systemschlüsselbund",
+      "file": "Unverschlüsselte Datei",
+      "unverified": "Ungeprüfte Speicherung"
+    },
+    "availability": {
+      "available": "Verfügbar",
+      "absent": "Fehlt",
+      "invalid": "Nicht lesbar",
+      "unavailable": "Gesperrt oder nicht verfügbar"
+    },
+    "cleanupIncomplete": "Bereinigung unvollständig",
+    "move": "In den Schlüsselbund verschieben",
+    "pendingCleanup": "Einige entfernte Schlüssel liegen noch auf diesem Gerät. Entsperre den Schlüsselbund und wiederhole die Bereinigung.",
+    "refresh": "Speicher aktualisieren",
+    "retryCleanup": "Bereinigung wiederholen",
+    "loadFailed": "Die Einstellung zur Speicherung der Zugangsdaten konnte nicht gelesen werden.",
+    "checking": "Es wird geprüft, wo Schlüssel gespeichert sind…",
+    "changed": "Speicherung der Zugangsdaten aktualisiert."
+  },
+  "recovery": {
+    "title": "Besitzer-Wiederherstellung",
+    "summary": "Besitzerzugriff zurückholen, wenn alle Besitzer-Geräte verloren sind",
+    "infoLabel": "Über die Besitzer-Wiederherstellung",
+    "info": "Wähle auf einem neuen Gerät Server hinzufügen und dann Wiederherstellungsschlüssel. Ein anderes Besitzer-Gerät oder eine VPN-Verbindung ist nicht nötig, nur Zugriff auf deinen Server.",
+    "unsupported": "Aktualisiere die Server-Software, um Wiederherstellungsschlüssel zu verwenden.",
+    "registered": "Ein Wiederherstellungsschlüssel ist eingerichtet.",
+    "none": "Noch kein Wiederherstellungsschlüssel.",
+    "cannotIssue": "Nur der Besitzer und die Admins, die der Besitzer für die Admin-Wiederherstellung gewählt hat, können einen Wiederherstellungsschlüssel erstellen.",
+    "finishing": "Der vorherige Wiederherstellungsschlüssel wird abgeschlossen… Diese Seite prüft von selbst erneut.",
+    "accept": "Ich verstehe, dass jede Person mit diesem Schlüssel jedes Besitzer-Gerät ersetzen kann. Ein neuer Schlüssel macht den alten ungültig.",
+    "create": "Wiederherstellungsschlüssel erstellen",
+    "replace": "Wiederherstellungsschlüssel ersetzen",
+    "revoke": "Wiederherstellungsschlüssel widerrufen",
+    "revokeConfirm": {
+      "title": "Wiederherstellungsschlüssel widerrufen?",
+      "message": "Gespeicherte Kopien dieses Schlüssels funktionieren sofort nicht mehr.",
+      "confirm": "Widerrufen"
+    },
+    "admins": {
+      "title": "Admin-Wiederherstellung",
+      "summary": "Ausgewählte Admins können jederzeit einen neuen Besitzer-Wiederherstellungsschlüssel ausstellen. Eine abgeschlossene Wiederherstellung leert diese Liste.",
+      "suspended": "Pausiert",
+      "none": "Noch keine Admins, daher ist die Admin-Wiederherstellung aus.",
+      "entry": "{{name}} ({{id}})",
+      "save": "Admin-Wiederherstellung speichern",
+      "saved": "Admin-Wiederherstellung gespeichert.",
+      "confirm": {
+        "title": "Admin-Wiederherstellung aktualisieren?",
+        "message": "{{names}} erlauben, Besitzer-Wiederherstellungsschlüssel auszustellen? Andere Admins verlieren diese Berechtigung.",
+        "confirm": "Speichern"
+      },
+      "confirmNone": {
+        "title": "Admin-Wiederherstellung ausschalten?",
+        "message": "Kein Admin kann dann Besitzer-Wiederherstellungsschlüssel ausstellen.",
+        "confirm": "Ausschalten"
+      },
+      "saving": "Wird gespeichert…"
+    },
+    "key": {
+      "warning": "Bewahre diesen Schlüssel jetzt offline auf. Er funktioniert einmal und kann nach Abschluss der Einrichtung nicht erneut angezeigt werden.",
+      "label": "Wiederherstellungsschlüssel",
+      "copy": "Wiederherstellungsschlüssel kopieren",
+      "copied": "Wiederherstellungsschlüssel kopiert. Bewahre ihn offline auf, bevor du fertig bist.",
+      "qr": "QR-Code für die Wiederherstellung",
+      "password": "Dateipasswort",
+      "passwordHint": "Mindestens 12 Zeichen verwenden.",
+      "repeat": "Dateipasswort wiederholen",
+      "save": "Wiederherstellungsschlüssel-Datei speichern",
+      "fileType": "SirinVPN-Wiederherstellungsschlüssel",
+      "saved": "Wiederherstellungsschlüssel-Datei gespeichert. Bewahre ihr Passwort an einem anderen Ort auf.",
+      "retained": "Ich habe diesen Schlüssel oder die Wiederherstellungsschlüssel-Datei offline gespeichert und kann sie erreichen",
+      "finish": "Einrichtung abschließen",
+      "finished": "Fertig. Der Schlüssel wird hier nicht mehr angezeigt.",
+      "title": "Dein neuer Wiederherstellungsschlüssel",
+      "saving": "Datei wird gespeichert…"
+    },
+    "loadFailed": "Wiederherstellungseinstellungen konnten nicht geladen werden.",
+    "actionFailed": "Die Wiederherstellungsaktion konnte nicht abgeschlossen werden.",
+    "update": "VPS aktualisieren",
+    "creating": "Schlüssel wird erstellt…",
+    "revoked": "Wiederherstellungsschlüssel widerrufen. Gespeicherte Kopien funktionieren nicht mehr."
+  },
+  "keyRotation": {
+    "title": "Geräteschlüssel erneuern",
+    "resumeTitle": "Schlüsselwechsel fortsetzen",
+    "doneTitle": "Schlüssel erneuert",
+    "description": "Erstellt neue Schlüssel für dieses Gerät. Sein Zugriff, seine VPN-Adresse und sein Name bleiben gleich.",
+    "presharedKeyDescription": "Erstellt neue Schlüssel für dieses Gerät, einschließlich eines Preshared Key, der aufgezeichneten VPN-Datenverkehr gegen künftige Quantencomputer privat hält. Sein Zugriff, seine VPN-Adresse und sein Name bleiben gleich. Geräte-Backups, die vorher exportiert wurden, funktionieren danach nicht mehr; exportiere danach ein neues.",
+    "done": {
+      "title": "Neue Schlüssel sind aktiv",
+      "summary": "Dein Server hat sie akzeptiert, und die alten Schlüssel wurden von diesem Gerät gelöscht."
+    },
+    "progress": {
+      "rotating": "Schlüssel werden erneuert…",
+      "resuming": "Der unterbrochene Wechsel wird abgeschlossen…",
+      "summary": "Das VPN verbindet sich kurz neu. Lass die App geöffnet."
+    },
+    "confirmation": {
+      "title": "Nur dieses Gerät ändert sich",
+      "resumeTitle": "Ein Wechsel wurde unterbrochen",
+      "warning": "Private Schlüssel werden auf diesem Gerät erstellt und nie an den Server gesendet. Sonst ändert sich auf dem Server nichts.",
+      "resumeWarning": "SirinVPN hat die neuen Schlüssel behalten, damit der Vorgang sicher abgeschlossen werden kann. Setze fort, statt diesen Server zu entfernen oder erneut hinzuzufügen.",
+      "accept": "Ich verstehe, dass sich das VPN kurz neu verbindet",
+      "acceptHint": "Kill-Switch und automatische Wiederverbindung werden wieder aktiv, sobald die neuen Schlüssel geprüft sind.",
+      "rotate": "Schlüssel erneuern",
+      "resume": "Wechsel fortsetzen"
+    },
+    "failed": "Der Schlüsselwechsel wurde sicher gestoppt. Wartet er darauf, fortgesetzt zu werden, versuche es erneut, sobald du online bist."
+  },
+  "backup": {
+    "title": "Verschlüsseltes Geräte-Backup",
+    "description": "Speichert dieses Serverprofil und die Schlüssel des Geräts in einer verschlüsselten Datei. Nichts wird hochgeladen.",
+    "dialogTitle": "Verschlüsseltes Backup speichern",
+    "fileType": "Verschlüsseltes SirinVPN-Backup",
+    "warning": "<strong>Mit dieser Datei kann man sich als dieses Gerät ausgeben.</strong> Jede Person mit ihr und dem Passwort kann sich verbinden, bis du das Gerät widerrufst.",
+    "destination": {
+      "label": "Speichern unter",
+      "hint": "Vorhandene Dateien werden nie überschrieben.",
+      "placeholder": "Keine Datei gewählt",
+      "choose": "Datei wählen"
+    },
+    "password": {
+      "label": "Passwort",
+      "hint": "Mindestens 12 Zeichen verwenden.",
+      "repeat": "Passwort wiederholen"
+    },
+    "accept": {
+      "label": "Ich verstehe, dass diese Datei die privaten Schlüssel dieses Geräts enthält",
+      "hint": "Ein verlorenes Passwort kann nicht wiederhergestellt werden."
+    },
+    "create": "Backup erstellen",
+    "creating": "Wird verschlüsselt…",
+    "done": {
+      "title": "Backup gespeichert",
+      "summary": "Bewahre die Datei und ihr Passwort an getrennten Orten auf."
+    },
+    "pickerFailed": "Die Dateiauswahl konnte nicht geöffnet werden. Versuche es erneut.",
+    "failed": "Das Backup konnte nicht erstellt werden. Versuche es erneut."
+  },
+  "alerts": {
+    "testNeedsAddress": "Speichere eine Warnungsadresse, um einen Test zu senden.",
+    "testing": "Wird gesendet…",
+    "allowPrivateSummary": "Nur für einen Monitor in deinem eigenen Netzwerk oder im VPN"
+  },
+  "dnsBlocking": {
+    "invalidSources": "Keine vollständige HTTPS-Adresse: {{values}}",
+    "invalidDomains": "Kein Domainname: {{values}}",
+    "needsList": "Wähle mindestens eine Blockliste, um die Blockierung einzuschalten.",
+    "serverStatus": "Jetzt auf dem Server"
+  },
+  "parts": {
+    "connect": "Verbinden",
+    "repair": "VPS aktualisieren"
+  },
+  "diagnostics": {
+    "allPassed": "{count, plural, one {Die # Prüfung war erfolgreich.} other {Alle # Prüfungen waren erfolgreich.}}",
+    "empty": "Es wurden keine Prüfungen ausgeführt. Verbinde dich mit diesem Server und starte die Diagnose erneut.",
+    "runAgain": "Erneut ausführen"
+  },
+  "speedTest": {
+    "phase": {
+      "idle": "Latenz wird gemessen",
+      "download": "Download wird gemessen",
+      "upload": "Upload wird gemessen",
+      "finishing": "Wird abgeschlossen"
+    },
+    "left": "{seconds, plural, one {{{phase}} · noch etwa {{seconds}} Sekunde.} other {{{phase}} · noch etwa {{seconds}} Sekunden.}}",
+    "finishingLine": "{{phase}}…",
+    "cancel": "Geschwindigkeitstest abbrechen",
+    "cancelled": "Geschwindigkeitstest abgebrochen.",
+    "cancelledWait": "{seconds, plural, one {Geschwindigkeitstest abgebrochen. Der VPS startet den nächsten Test in {{seconds}} Sekunde.} other {Geschwindigkeitstest abgebrochen. Der VPS startet den nächsten Test in {{seconds}} Sekunden.}}"
+  }
+}

@@ -2,7 +2,7 @@
   "unavailable": "Unavailable",
   "bytes": {
     "B": "{{value}} B",
-    "KB": "{{value}} KB",
+    "KB": "{{value}} kB",
     "MB": "{{value}} MB",
     "GB": "{{value}} GB",
     "TB": "{{value}} TB"
@@ -22,11 +22,21 @@
   },
   "dnsPolicy": {
     "recursive": "Recursive DNS",
-    "dnsOverTls_one": "DNS over TLS · {{count}} server",
-    "dnsOverTls_other": "DNS over TLS · {{count}} servers",
-    "dnsOverHttps_one": "DNS over HTTPS · {{count}} server",
-    "dnsOverHttps_other": "DNS over HTTPS · {{count}} servers",
-    "split_one": "Split DNS · {{count}} zone · {{fallback}}",
-    "split_other": "Split DNS · {{count}} zones · {{fallback}}"
+    "dnsOverTls": "{count, plural, one {DNS over TLS · # server} other {DNS over TLS · # servers}}",
+    "dnsOverHttps": "{count, plural, one {DNS over HTTPS · # server} other {DNS over HTTPS · # servers}}",
+    "split": "{count, plural, one {Split DNS · # zone · {{fallback}}} other {Split DNS · # zones · {{fallback}}}}"
+  },
+  "os": {
+    "android": "Android",
+    "windows": "Windows",
+    "linux": "Linux"
+  },
+  "arch": {
+    "x86_64": "64-bit x86",
+    "aarch64": "64-bit ARM"
+  },
+  "clock": {
+    "minutes": "{{minutes}}:{{seconds}}",
+    "hours": "{{hours}}:{{minutes}}:{{seconds}}"
   }
 }

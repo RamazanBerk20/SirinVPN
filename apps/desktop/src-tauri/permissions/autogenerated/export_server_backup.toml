@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-export-server-backup"
+description = "Enables the export_server_backup command without any pre-configured scope."
+commands.allow = ["export_server_backup"]
+
+[[permission]]
+identifier = "deny-export-server-backup"
+description = "Denies the export_server_backup command without any pre-configured scope."
+commands.deny = ["export_server_backup"]

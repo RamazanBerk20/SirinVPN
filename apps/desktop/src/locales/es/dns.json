@@ -1,0 +1,129 @@
+{
+  "example": "p. ej. {{value}}",
+  "resolver": {
+    "legend": "Resolutor DNS",
+    "mode": {
+      "preserve": "Mantener el actual",
+      "recursive": "Recursivo",
+      "dnsOverTls": "DNS sobre TLS",
+      "dnsOverHttps": "DNS sobre HTTPS"
+    },
+    "note": {
+      "preserve": "El resolutor actual y las zonas de DNS dividido se mantienen como están",
+      "recursive": "Tu servidor resuelve los nombres por sí mismo, con validación DNSSEC",
+      "dnsOverTls": "Reenvía las consultas por TLS en el puerto 853, sin alternativa en texto plano",
+      "dnsOverHttps": "Reenvía las consultas por HTTPS en el puerto 443, sin alternativa en texto plano"
+    },
+    "endpoint": "Resolutor {{number}}",
+    "endpointOptional": "Resolutor {{number}} (opcional)",
+    "address": "Dirección IP",
+    "tlsName": "Nombre de host TLS",
+    "httpsPath": "Ruta HTTPS",
+    "error": {
+      "address": "Introduce la dirección IP del resolutor, por ejemplo 9.9.9.9.",
+      "duplicate": "Es el mismo resolutor que el resolutor 1.",
+      "name": "Introduce el nombre de host del certificado del resolutor, por ejemplo dns.quad9.net.",
+      "path": "Empieza con / y usa solo letras, dígitos y - _ . ~"
+    }
+  },
+  "records": {
+    "legend": "Registros DNS privados",
+    "mode": {
+      "preserve": "Mantener los actuales",
+      "replace": "Reemplazar",
+      "clear": "Borrar"
+    },
+    "note": {
+      "preserve": "Los registros actuales se mantienen como están",
+      "replace": "Nombres que se resuelven solo dentro de tu VPN",
+      "clear": "Elimina todos los registros DNS privados del servidor, para todos los dispositivos"
+    },
+    "label": "Registros",
+    "hint": "Un nombre=IP por línea, hasta 64",
+    "invalidLine": "«{{line}}» no es un registro. Escribe nombre=IP, por ejemplo nas.casa=10.20.30.40.",
+    "invalid": "Introduce como máximo 64 registros."
+  },
+  "nat64": {
+    "legend": "Sitios web IPv4 mediante NAT64",
+    "mode": {
+      "preserve": "Mantener el actual",
+      "replace": "Usar prefijo",
+      "clear": "Desactivar"
+    },
+    "note": {
+      "setup": "Opcional. Este VPS no tiene IPv4, así que los sitios que solo usan IPv4 fallan a menos que los miembros accedan a ellos mediante una pasarela NAT64. Su operador ve qué direcciones IPv4 visitan.",
+      "preserve": "El VPS mantiene su ajuste actual de NAT64",
+      "replace": "Solo para un VPS sin IPv4. El operador de la pasarela NAT64 ve qué direcciones IPv4 visitan los miembros.",
+      "clear": "Sin IPv4 en el VPS, los miembros solo acceden a sitios web IPv6"
+    },
+    "label": "Prefijo NAT64",
+    "hint": "Del proveedor de tu VPS o de un servicio NAT64 público",
+    "invalid": "Introduce un prefijo IPv6, por ejemplo 64:ff9b::/96."
+  },
+  "split": {
+    "label": "Zonas de DNS dividido",
+    "summary": "Opcional. Envía un dominio a su propio resolutor: dominio=IP, uno por línea.",
+    "infoLabel": "Acerca de las zonas de DNS dividido",
+    "info": "Los resolutores con IP privada son de confianza sin DNSSEC. IP#nombre-TLS usa DNS sobre TLS con DNSSEC. Separa los resolutores de respaldo con comas; las zonas nunca recurren al resolutor principal.",
+    "invalid": "Indica cada dominio una sola vez, con un máximo de 16 zonas.",
+    "invalidLine": "«{{line}}» no es una zona. Escribe dominio=IP con una dirección de resolutor privada, o IP#nombre-TLS.",
+    "localSuffix": "{{zone}} termina en .local, que pertenece a los dispositivos de tu propia red. Usa otro nombre para esta zona.",
+    "publicResolver": "{{resolver}} es una dirección pública. Una zona solo puede usarla por TLS: escribe {{resolver}}#su-nombre-TLS."
+  },
+  "review": {
+    "label": "Revisión de los cambios de DNS",
+    "title": "Revisar los cambios de DNS",
+    "resolver": {
+      "term": "Resolutor",
+      "preserve": "Mantener el resolutor y las zonas de DNS dividido actuales",
+      "recursive": "DNS recursivo con DNSSEC",
+      "dnsOverTls": "DNS sobre TLS, sin alternativa en texto plano",
+      "dnsOverHttps": "DNS sobre HTTPS, sin alternativa en texto plano"
+    },
+    "addresses": "Direcciones de los resolutores",
+    "split": {
+      "term": "Zonas de DNS dividido",
+      "none": "Ninguna. Las zonas existentes se eliminan."
+    },
+    "records": {
+      "term": "Registros DNS privados",
+      "preserve": "Mantener los registros actuales",
+      "clear": "Eliminar todos los registros",
+      "replace": "Reemplazar todos los registros por:"
+    },
+    "impact": "Afecta a todos los dispositivos de este servidor, y la VPN se reinicia brevemente. Las direcciones, puertos, dispositivos y accesos de la VPN no cambian."
+  },
+  "blocklist": {
+    "title": "Bloqueo de anuncios y rastreadores",
+    "summary": "Bloquea dominios de anuncios y rastreadores para todos los dispositivos que usan el DNS de este servidor. El servidor no guarda ningún registro de las consultas.",
+    "unsupported": "Repara este servidor con la aplicación actual para usar el bloqueo de DNS.",
+    "enable": "Bloquear anuncios y rastreadores",
+    "lists": "Listas de bloqueo",
+    "custom": "Otras listas de bloqueo",
+    "customHint": "Opcional. Una dirección HTTPS por línea, en formato hosts o lista de dominios.",
+    "customInvalid": "Cada dirección debe ser una dirección HTTPS completa, y puede haber 8 listas como máximo.",
+    "allowlist": "No bloquear nunca",
+    "allowlistHint": "Un dominio por línea. Sus subdominios también se permiten.",
+    "allowlistInvalid": "Usa nombres de dominio válidos, hasta 512.",
+    "save": "Guardar bloqueo",
+    "refresh": "Actualizar estado",
+    "saved": "Guardado. El servidor lo aplica en menos de un minuto.",
+    "loadFailed": "No se pudieron cargar los ajustes de bloqueo de DNS.",
+    "saveFailed": "No se pudieron guardar los ajustes de bloqueo de DNS.",
+    "status": {
+      "off": "El bloqueo de DNS está desactivado.",
+      "pending": "Esperando a que el servidor aplique el último cambio.",
+      "active": "{count, plural, one {Bloqueando # dominio. Lista actualizada {{time}}.} many {Bloqueando # dominios. Lista actualizada {{time}}.} other {Bloqueando # dominios. Lista actualizada {{time}}.}}"
+    },
+    "member": {
+      "on": "Activado. Solo el propietario o un administrador pueden cambiarlo.",
+      "off": "Desactivado. Solo el propietario o un administrador pueden cambiarlo."
+    },
+    "failure": {
+      "download": "No se pudo descargar una lista de bloqueo. La última lista correcta sigue en vigor.",
+      "format": "Una lista de bloqueo no está en formato hosts o lista de dominios. La última lista correcta sigue en vigor.",
+      "too_many_domains": "Las listas elegidas contienen más de 300 000 dominios. Elige menos listas; la última lista correcta sigue en vigor.",
+      "resolver": "El servicio DNS rechazó la nueva lista. La última lista correcta sigue en vigor."
+    }
+  }
+}

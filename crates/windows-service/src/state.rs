@@ -1,7 +1,7 @@
 //! One encrypted current session and the route ownership needed to undo it.
 //! There are no traffic samples, connection timestamps, or activity records here.
 use crate::{
-    ServiceError,
+    Operation, ServiceError,
     network_plan::{self, RouteRecord},
 };
 use serde::{Deserialize, Serialize};
@@ -81,14 +81,6 @@ impl SavedConnection {
         Ok(())
     }
 
-    pub(crate) fn authorize(&self, owner_sid: &str) -> Result<(), ServiceError> {
-        if owner_sid == self.owner_sid {
-            Ok(())
-        } else {
-            Err(ServiceError::OwnedByAnotherUser)
-        }
-    }
-
     pub(crate) fn may_resume_after_restart(&self, boot_nonce: uuid::Uuid) -> bool {
         if self.phase == SessionPhase::Disconnecting {
             return false;
@@ -97,6 +89,35 @@ impl SavedConnection {
             return self.request.connection_policy().connect_on_startup;
         }
         self.phase != SessionPhase::Held && self.request.connection_policy().automatic_reconnect
+    }
+}
+
+/// Who may act on the machine-wide session. Without a session anyone may start
+/// one. The owner SID may do anything with it. An elevated member of
+/// BUILTIN\Administrators may only inspect it or end it, which also releases its
+/// kill switch, so another user's session can never lock out the machine.
+pub(crate) fn authorize(
+    session_owner: Option<&str>,
+    caller_sid: &str,
+    administrator: bool,
+    operation: &Operation,
+) -> Result<(), ServiceError> {
+    match session_owner {
+        None => Ok(()),
+        Some(owner) if owner == caller_sid => Ok(()),
+        Some(_)
+            if administrator
+                && matches!(
+                    operation,
+                    Operation::Status
+                        | Operation::WaitForChange(_)
+                        | Operation::Disconnect
+                        | Operation::DisconnectSession(_)
+                ) =>
+        {
+            Ok(())
+        }
+        Some(_) => Err(ServiceError::OwnedByAnotherUser),
     }
 }
 

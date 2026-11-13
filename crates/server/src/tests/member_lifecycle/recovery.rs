@@ -263,7 +263,10 @@ async fn kernel_offline_recovery_consumes_authority_and_revokes_all_previous_own
 
     let mut current = state.authorization.as_ref().unwrap().write().await;
     assert_eq!(current.device_pairs, paired.device_pairs[1..]);
-    assert!(current.recovery_key.is_none());
+    assert_eq!(
+        current.owner_recovery,
+        authorization::OwnerRecovery::Unarmed
+    );
     assert!(current.recovery_policy.administrator_member_ids.is_empty());
     assert_eq!(
         current
@@ -301,7 +304,7 @@ async fn kernel_offline_recovery_consumes_authority_and_revokes_all_previous_own
         );
     }
     assert!(live_peers.contains(&permanent.public.wireguard_public_key));
-    let expiry = current.recovery_receipt.as_ref().unwrap().expires_at_unix;
+    let expiry = current.owner_recovery.receipt().unwrap().expires_at_unix;
     let mut next = current.clone();
     next.prune_expired(expiry);
     commit_authorization(&state, &mut current, next)

@@ -1,0 +1,81 @@
+{
+  "demo": {
+    "enter": "Explorar la demostración",
+    "enterHint": "Echa un vistazo con datos de ejemplo primero. No se conecta nada y no se guarda nada.",
+    "banner": "Demostración · Solo datos de ejemplo. No se conecta nada y no se guarda nada.",
+    "exit": "Salir de la demostración"
+  },
+  "troubleshoot": {
+    "open": "¿No puedes conectarte? Averigua por qué",
+    "title": "¿No puedes conectarte?",
+    "description": "Revisa las causas habituales en orden. Cada paso indica qué comprobar y, cuando la aplicación puede solucionarlo, ofrece la solución.",
+    "checking": "Comprobando este dispositivo y la conexión…",
+    "progress": "Paso {{current}} de {{total}}",
+    "next": "Siguiente",
+    "previous": "Paso anterior",
+    "stepsLabel": "Pasos de solución de problemas",
+    "seen": "Lo que vimos:",
+    "settingsSummary": "¿No puedes conectarte? Revisa las causas habituales una a una, con una solución cuando la aplicación la tenga.",
+    "settingsAction": "Solucionar problemas",
+    "connectionSettings": "Abrir ajustes de conexión",
+    "status": {
+      "problem": "Causa probable",
+      "check": "Conviene comprobarlo",
+      "ok": "Parece correcto"
+    },
+    "step": {
+      "network": "Red local",
+      "dns": "Resolución de nombres (DNS)",
+      "reachability": "Acceso a tu VPS",
+      "transport": "Método de conexión bloqueado",
+      "clock": "Fecha y hora",
+      "enrollment": "Claves y registro del dispositivo",
+      "membership": "Tu acceso",
+      "service": "Servicio VPN en el VPS"
+    },
+    "network": {
+      "offline": "Este dispositivo no tiene conexión a la red. Activa el Wi-Fi o los datos móviles y vuelve a intentarlo.",
+      "check": "Abre una página web con la VPN desactivada. Si aparece una página de inicio de sesión, como en el Wi-Fi de un hotel, un aeropuerto o una cafetería, inicia sesión allí primero. Si no carga nada, prueba con otra red.",
+      "ok": "La red de este dispositivo llega a tu VPS."
+    },
+    "dns": {
+      "vps": "El DNS privado de tu VPS no responde, así que las páginas web no se abrirán a través de la VPN. El propietario puede restaurarlo con Reparar configuración del VPS.",
+      "check": "Este dispositivo busca el nombre de tu servidor antes de conectarse. Si esta red no puede hacerlo, prueba con otra red o pregunta al propietario si el nombre sigue apuntando al VPS.",
+      "address": "Tu servidor se alcanza por su dirección IP, así que conectarse no necesita ninguna resolución de nombres.",
+      "ok": "El DNS privado de tu VPS responde."
+    },
+    "reachability": {
+      "check": "Asegúrate de que el VPS está en marcha en la consola de tu proveedor y de que su dirección pública no ha cambiado. Si la dirección cambió, actualízala aquí.",
+      "ok": "Tu VPS respondió a este dispositivo."
+    },
+    "transport": {
+      "fixed": "Este servidor usa un solo método de conexión, y las redes suelen bloquear los métodos concretos. Elige Automático para que la aplicación pueda pasar a los demás.",
+      "owner": "Automático ya prueba todos los métodos que ofrece este servidor. Si esta red bloquea las VPN, activa HTTPS en el puerto 443 con Reparar configuración del VPS, y el modo CDN si la dirección de tu VPS está bloqueada.",
+      "member": "Automático ya prueba todos los métodos que ofrece este servidor. Si esta red los bloquea todos, prueba con otra red o pide al propietario que active HTTPS o el modo CDN.",
+      "automatic": "Automático ya prueba todos los métodos que ofrece este servidor, incluido HTTPS a través de una CDN. Si esta red sigue bloqueándolos, prueba con otra red.",
+      "ok": "El método de conexión actual atraviesa esta red."
+    },
+    "clock": {
+      "problem": "Tu VPS rechazó la conexión segura, lo que normalmente significa que el reloj de este dispositivo está mal. Activa la fecha y hora automáticas en los ajustes del sistema y vuelve a intentarlo.",
+      "check": "Comprueba que la fecha, la hora y la zona horaria de este dispositivo se configuran automáticamente. Un reloj incorrecto hace que el certificado de tu VPS parezca no válido.",
+      "ok": "Tu VPS aceptó la conexión segura, así que el reloj de este dispositivo está bien."
+    },
+    "enrollment": {
+      "rotation": "Un cambio de claves de este dispositivo no terminó. Termínalo antes de conectarte.",
+      "problem": "Las claves guardadas de este dispositivo no se pueden usar. Restaura una copia de seguridad del dispositivo o pide al propietario un nuevo código para unirse.",
+      "check": "Si este dispositivo se eliminó, o sus claves se reemplazaron o restauraron en otro dispositivo, no puede conectarse. Restaura una copia de seguridad del dispositivo o pide al propietario un nuevo código para unirse.",
+      "ok": "Tu VPS aceptó las claves de este dispositivo."
+    },
+    "membership": {
+      "owner": "Eres el propietario, así que tu acceso no puede caducar ni suspenderse.",
+      "problem": "Tu VPS denegó el acceso de este dispositivo. Es posible que tu acceso haya caducado, se haya suspendido o esté fuera de sus horas permitidas. Pide al propietario que lo revise.",
+      "check": "Si tu acceso caducó, se suspendió o tiene horas permitidas, el VPS deja de aceptar este dispositivo. Pide al propietario que revise tu acceso.",
+      "ok": "Tu VPS aceptó el acceso actual de este dispositivo."
+    },
+    "service": {
+      "problem": "El servicio VPN de tu VPS no funciona correctamente. El propietario puede restaurarlo con Reparar configuración del VPS, que conserva los dispositivos y los ajustes.",
+      "check": "Si el VPS se reinició o se actualizó, es posible que su servicio VPN se haya detenido. El propietario puede restaurarlo con Reparar configuración del VPS, que conserva los dispositivos y los ajustes.",
+      "ok": "El servicio VPN de tu VPS está en marcha."
+    }
+  }
+}

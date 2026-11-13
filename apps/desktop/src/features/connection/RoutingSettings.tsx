@@ -7,7 +7,7 @@ import { useState } from "react";
 import { InlineError } from "../../components/ui";
 import { errorMessage } from "../../lib/errors";
 import { hostBitFix, invalidRoutes } from "../../lib/cidr";
-import { formatNumber, t } from "../../i18n";
+import { formatList, t } from "../../i18n";
 import { SettingsNotice } from "../settings/SettingsParts";
 
 const MAX_INCLUDED_ROUTES = 32;
@@ -114,11 +114,11 @@ export function RoutingSettings({ model, onCheckUpdates }: { model: ServerWorksp
             disabled={disabled}
             aria-invalid={model.preferences.badRoutes.length > 0}
           />
-          <small>{t("connection.routing.routes.hint", { max: formatNumber(MAX_INCLUDED_ROUTES) })}</small>
+          <small>{t("connection.routing.routes.hint", { max: MAX_INCLUDED_ROUTES })}</small>
           {model.preferences.badRoutes.length > 0 && <small className="field-error" role="alert">
             {model.preferences.badRoutes[0] === "" ? t("connection.routing.routes.empty")
               : routeFix ? t("connection.routing.routes.hostBits", { route: routeFix.entry, network: routeFix.network })
-              : t("connection.routing.routes.invalid", { routes: model.preferences.badRoutes.join(", ") })}
+              : t("connection.routing.routes.invalid", { routes: formatList(model.preferences.badRoutes, "unit") })}
           </small>}
         </label>
       )}

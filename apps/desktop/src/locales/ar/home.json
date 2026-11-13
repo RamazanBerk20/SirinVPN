@@ -1,0 +1,249 @@
+{
+  "consoleLabel": "اتصال VPN",
+  "status": {
+    "unknown": "الحالة غير معروفة",
+    "restoringAccess": "جارٍ استعادة الوصول إلى الخادم",
+    "monitorUnavailable": "مراقب VPN لا يستجيب",
+    "reconnecting": "جارٍ إعادة الاتصال",
+    "connected": "متصل",
+    "connecting": "جارٍ الاتصال",
+    "interrupted": "انقطع الاتصال",
+    "disconnected": "غير متصل",
+    "changing": "جارٍ تغيير الاتصال…",
+    "checking": "جارٍ التحقق من حالة VPN…",
+    "connectingTo": "جارٍ الاتصال بـ {{name}}…",
+    "disconnecting": "جارٍ قطع الاتصال…"
+  },
+  "action": {
+    "showActive": "الانتقال إلى الخادم المتصل",
+    "refresh": "تحديث الحالة",
+    "disconnectAndUnblock": "قطع الاتصال وإيقاف حجب مفتاح قطع الإنترنت",
+    "disconnect": "قطع الاتصال",
+    "connect": "اتصال",
+    "changing": "جارٍ تغيير الاتصال",
+    "wait": "يرجى الانتظار…",
+    "vpnSettings": "إعدادات VPN",
+    "androidVpnSettings": "إعدادات VPN في Android",
+    "cancelConnection": "إلغاء",
+    "reconnect": "إعادة الاتصال",
+    "reconnectHint": "الاستئناف بالإعدادات الحالية",
+    "stop": "إيقاف VPN",
+    "connecting": "جارٍ الاتصال…",
+    "disconnecting": "جارٍ قطع الاتصال…",
+    "checkAgain": "التحقق مرة أخرى"
+  },
+  "routing": {
+    "unknown": "غير معروف",
+    "inactive": "غير نشط",
+    "selectedApps": "تطبيقات محددة",
+    "selectedRoutes": "مسارات محددة",
+    "fullTunnelLan": "نفق كامل · الشبكة المحلية مسموحة",
+    "fullTunnel": "نفق كامل"
+  },
+  "killSwitch": {
+    "unknown": "غير معروف",
+    "otherServer": "انظر الخادم النشط",
+    "nextConnection": "مفعّل للاتصال التالي",
+    "off": "معطّل",
+    "inactive": "غير نشط",
+    "armed": "مفعّل",
+    "blocking": "يحجب الحركة",
+    "failed": "لا يعمل",
+    "unverified": "مفعّل · لم يُتحقق منه"
+  },
+  "isolation": {
+    "verified": "تم التحقق",
+    "unverified": "لم يُتحقق"
+  },
+  "summary": {
+    "unknown": "تعذّر قراءة حالة VPN. حدّث الصفحة للتحقق.",
+    "restoringAccess": "لا تعتمد على هذا الاتصال حتى تُستعاد صلاحية الوصول إلى الخادم.",
+    "monitorUnavailable": "مراقب VPN لا يستجيب، لذلك حالة مفتاح قطع الإنترنت غير معروفة.",
+    "otherServer": "خادم آخر متصل. انتقل إليه لقطع الاتصال.",
+    "androidApps": "فقط التطبيقات المحددة تستخدم VPN.",
+    "windowsApps": "التطبيقات المحددة تستخدم VPN. يمر DNS النظام عبر الخادم.",
+    "launchedApps": "التطبيقات المشغّلة من SirinVPN تستخدم VPN.",
+    "selectedRoutes": "الشبكات المحددة تستخدم VPN. وما عداها لا يستخدمه.",
+    "fullTunnelLan": "حركة الإنترنت تستخدم VPN. حركة الشبكة المحلية لا تستخدمه.",
+    "fullTunnel": "كل حركة الإنترنت تمر عبر VPN.",
+    "fullTunnelIpv4": "حركة IPv4 تمر عبر VPN. أما IPv6 فلا تُنفق عبره ولا تُحجب.",
+    "interrupted": "انقطع الاتصال. حركتك غير محمية حتى تعيد الاتصال.",
+    "interruptedBlocked": "انقطع الاتصال. يحجب مفتاح قطع الإنترنت الحركة حتى تعيد الاتصال أو تقطعه.",
+    "waitingAndroidLockdown": "يحجب Android الحركة حتى تعيد الاتصال.",
+    "waitingBlocked": "الحركة محجوبة. أعد الاتصال، أو اقطع الاتصال لرفع الحجب.",
+    "waiting": "إعادة الاتصال التلقائي معطّلة. أعد الاتصال عندما تكون جاهزًا.",
+    "reconnecting": "جارٍ محاولة استعادة الاتصال.",
+    "connecting": "جارٍ إعداد اتصال آمن.",
+    "disconnected": "حركتك لا تستخدم VPN.",
+    "disconnecting": "جارٍ إيقاف VPN."
+  },
+  "warning": {
+    "accessContained": "جارٍ استعادة الوصول إلى الخادم. تُحجز حركة VPN حتى ينتهي ذلك.",
+    "accessUnenforced": "فحوص الوصول إلى الخادم لا تعمل. لا تعتمد على هذا الخادم حتى تُستعاد.",
+    "androidLockdown": "خيار Android “حظر الاتصالات دون VPN” يبقى مفعّلًا بعد قطع الاتصال.",
+    "killSwitchFailed": "تعذّر التحقق من مفتاح قطع الإنترنت. لا تعتمد عليه حتى يُصلح هذا الأمر.",
+    "androidAppsUnverified": "تعذّر التحقق من توجيه التطبيقات. تحقق من الاتصال قبل الاعتماد عليه.",
+    "appsUnverified": "تعذّر التحقق من توجيه التطبيقات. تشغيل التطبيقات الجديدة معطّل.",
+    "dnsDown": "DNS الخاص بالخادم لا يستجيب، لذلك قد لا تُحمّل المواقع.",
+    "ipv6": "حركة IPv6 لا تُنفق عبر VPN ولا تُحجب، لذلك قد تتجاوز VPN.",
+    "serverInterfaceDown": "يُبلغ الخادم أن واجهة VPN الخاصة به متوقفة. قد تتوقف الحركة في أي لحظة."
+  },
+  "componentUpdate": {
+    "needed": "حدّث مكوّن VPN للاتصال.",
+    "review": "مراجعة التحديث"
+  },
+  "presharedKey": {
+    "missing": "ليس لدى هذا الجهاز مفتاح مشترك مسبقًا، لذلك لا تُحمى حركة VPN المسجّلة من أجهزة الحوسبة الكمومية المستقبلية.",
+    "add": "إضافة مفتاح مشترك مسبقًا"
+  },
+  "health": {
+    "idle": "لا يوجد تبادل مفاتيح حديث. قد يكون الاتصال خاملًا فحسب.",
+    "managementUnavailable": "إدارة الخادم غير متاحة.",
+    "reachability": {
+      "notChecked": "لم يُفحص",
+      "replied": "يستجيب",
+      "noReply": "لا رد"
+    }
+  },
+  "protection": {
+    "ipv6NotVerified": "لم يُتحقق من IPv6",
+    "ipv6": {
+      "tunneled": "عبر VPN",
+      "blocked": "محجوب",
+      "unknown": "غير معروف",
+      "blockedLanAllowed": "محجوب · الشبكة المحلية مسموحة",
+      "blockedVerified": "محجوب · تم التحقق",
+      "selectedRoutes": "المسارات المحددة فقط",
+      "blockedUnverified": "محجوب · لم يُتحقق",
+      "bypassesOutsideRoutes": "يتجاوز VPN خارج المسارات المحددة",
+      "unverified": "لم يُتحقق"
+    },
+    "android": {
+      "unverified": "تعذّر التحقق من توجيه Android أو حجبه.",
+      "packages": "التطبيقات المحددة تستخدم VPN وDNS الخاص به. تتجاوزه التطبيقات الأخرى ما لم يحجبها Android.",
+      "lockdown": "خيار Android “حظر الاتصالات دون VPN” مفعّل لكل التطبيقات."
+    },
+    "apps": {
+      "ipv6Unverified": "لم يُتحقق من توجيه التطبيقات",
+      "ipv6Tunneled": "التطبيقات المشغّلة: عبر VPN",
+      "ipv6Blocked": "التطبيقات المشغّلة: محجوبة",
+      "notReady": "توجيه التطبيقات غير جاهز. التشغيل الجديد معطّل.",
+      "windows": "التطبيقات المحددة تستخدم VPN لـ IPv4، أما IPv6 الخاص بها فمحجوب. يستخدم DNS الخادم.",
+      "launched": "التطبيقات المشغّلة وDNS الخاص بها تستخدم VPN. التطبيقات الأخرى تستخدم شبكتك العادية."
+    },
+    "firewall": {
+      "verifiedSelectedRoutes": "تم التحقق من جدار الحماية للمسارات المحددة وDNS.",
+      "verifiedLanAllowed": "تم التحقق من جدار الحماية لـ IPv4 وIPv6 وDNS. الشبكة المحلية مسموحة.",
+      "verified": "تم التحقق من جدار الحماية لـ IPv4 وIPv6 وDNS.",
+      "unverified": "تعذّر التحقق من جدار الحماية."
+    }
+  },
+  "details": {
+    "connection": "الاتصال",
+    "status": "الحالة",
+    "method": "الطريقة",
+    "routing": "التوجيه",
+    "killSwitch": "مفتاح قطع الإنترنت",
+    "appIsolation": "عزل التطبيقات",
+    "reachability": "إمكانية الوصول إلى الخادم",
+    "serverResponse": "استجابة الخادم",
+    "serverResponseInfo": "المدة التي يستغرقها الخادم للرد على طلب الحالة. ليست زمن استجابة VPN.",
+    "addresses": "العناوين",
+    "serverAddress": "عنوان الخادم",
+    "vpnAddress": "عنوان VPN",
+    "thisDevice": "هذا الجهاز",
+    "mtu": "حجم الحزمة (MTU)",
+    "server": "الخادم",
+    "blockWithoutVpn": "الحظر دون VPN",
+    "alwaysOn": "VPN الدائم",
+    "mtuValue": "{value, plural, zero {{{value}} بايت} one {{{value}} بايت} two {{{value}} بايتان} few {{{value}} بايتات} many {{{value}} بايتًا} other {{{value}} بايت}}",
+    "mtuPending": "{value, plural, zero {{{value}} بايت مقاس · يُطبَّق في اتصالك التالي} one {{{value}} بايت مقاس · يُطبَّق في اتصالك التالي} two {{{value}} بايت مقاس · يُطبَّق في اتصالك التالي} few {{{value}} بايت مقاس · يُطبَّق في اتصالك التالي} many {{{value}} بايتًا مقاسًا · يُطبَّق في اتصالك التالي} other {{{value}} بايت مقاس · يُطبَّق في اتصالك التالي}}"
+  },
+  "traffic": {
+    "label": "حركة هذا الجهاز",
+    "session": "الجلسة الحالية",
+    "countersUnavailable": "العدادات غير متاحة",
+    "notConnected": "غير متصل بهذا الخادم",
+    "download": "التنزيل",
+    "upload": "الرفع",
+    "duration": "متصل منذ",
+    "measuring": "جارٍ القياس…",
+    "received": "تم استلام {{amount}}",
+    "sent": "تم إرسال {{amount}}",
+    "counterFailed": "تعذّر قراءة العدادات",
+    "needsUpdate": "يحتاج إلى تحديث مكوّن VPN",
+    "durationFailed": "تعذّر قراءة مدة الجلسة",
+    "updateNeeded": "عدادات حركة هذا الجهاز ومدة الجلسة تحتاج إلى تحديث مكوّن VPN."
+  },
+  "device": {
+    "summary": "تفاصيل الجهاز",
+    "receivedPackets": "الحزم المستلمة",
+    "sentPackets": "الحزم المرسلة",
+    "latency": "زمن الاستجابة",
+    "latencyInfo": "متوسط زمن الذهاب والإياب إلى الخادم عبر VPN. ليست سرعة الإنترنت.",
+    "noMeasurement": "لم يُقَس بعد",
+    "probes": "ردود الفحص",
+    "probesValue": "{{received}} من {{sent}} · تذبذب {{jitter}}",
+    "ipv6": "IPv6",
+    "autoReconnect": "إعادة الاتصال التلقائي",
+    "fallback": "طرق الاحتياط",
+    "countersNote": "تُعاد العدادات عند إعادة الاتصال. لا يُحتفظ بسجل."
+  },
+  "server": {
+    "title": "الخادم",
+    "freshness": {
+      "unavailable": "غير متاح",
+      "live": "مباشر",
+      "polling": "يُحدَّث دوريًا",
+      "connecting": "جارٍ تحميل الإحصاءات…",
+      "reconnecting": "جارٍ إعادة اتصال الإحصاءات…"
+    },
+    "unavailable": "إحصاءات الخادم غير متاحة. ستعود تلقائيًا.",
+    "connectToSee": "اتصل لعرض إحصاءات الخادم.",
+    "pollingNote": "الإحصاءات المباشرة للخادم تحتاج إلى تحديث للخادم.",
+    "noMeasurement": "لم يُقَس",
+    "usedOf": "{{used}} من {{total}}",
+    "cpu": "المعالج",
+    "cpuDetail": "متوسط كل الأنوية",
+    "memory": "الذاكرة",
+    "storage": "التخزين",
+    "uptime": "مدة التشغيل",
+    "devices": "الأجهزة",
+    "devicesActive": "{{active}} من {{total}} نشطة",
+    "devicesAuthorized": "{count, plural, zero {لا أجهزة} one {جهاز واحد} two {جهازان} few {# أجهزة} many {# جهازًا} other {# جهاز}}",
+    "activityUnavailable": "النشاط غير متاح",
+    "activityUnreadable": "تعذّر قراءة نشاط الأجهزة من الخادم.",
+    "activityUnsupported": "هذا الخادم لا يستطيع الإبلاغ عن نشاط الأجهزة. حدّثه لتفعيل ذلك.",
+    "reviewHealth": "فحص صحة الخادم",
+    "reviewUpdate": "مراجعة التحديث",
+    "detailsSummary": "تفاصيل الخادم",
+    "inbound": "الوارد",
+    "outbound": "الصادر",
+    "received": "المستلم",
+    "sent": "المرسل",
+    "receivedPackets": "الحزم المستلمة",
+    "sentPackets": "الحزم المرسلة",
+    "dns": "DNS",
+    "dnsRunning": "يعمل",
+    "dnsDown": "لا يستجيب",
+    "totalsInfo": "تشمل الإجماليات كل الأجهزة منذ بدء VPN على الخادم.",
+    "pollingNoteMember": "الإحصاءات المباشرة للخادم تحتاج إلى تحديث للخادم. يمكن لمالك الخادم تثبيته."
+  },
+  "alwaysOnNote": "VPN الدائم مفعّل، لذلك يقرر Android متى يتوقف VPN. اقطع الاتصال من إعدادات VPN في Android.",
+  "method": {
+    "https": "HTTPS",
+    "automatic": "تلقائي · {{method}}"
+  },
+  "alert": {
+    "label": "التنبيهات",
+    "runDiagnostics": "تشغيل التشخيص",
+    "checkServer": "فحص صحة الخادم",
+    "unstable": "{sent, plural, zero {اتصال غير مستقر: لم يصل رد على {{lost}} من آخر الفحوص.} one {اتصال غير مستقر: لم يصل رد على {{lost}} من آخر فحص.} two {اتصال غير مستقر: لم يصل رد على {{lost}} من آخر فحصين.} few {اتصال غير مستقر: لم يصل رد على {{lost}} من آخر # فحوص.} many {اتصال غير مستقر: لم يصل رد على {{lost}} من آخر # فحصًا.} other {اتصال غير مستقر: لم يصل رد على {{lost}} من آخر # فحص.}}",
+    "storage": "تخزين الخادم ممتلئ بنسبة {{percent}}. حرّر بعض المساحة قبل أن يتوقف عن العمل.",
+    "rotationPending": "لم يكتمل تدوير المفاتيح. أكمله ليحتفظ هذا الجهاز بوصوله.",
+    "finishRotation": "إكمال تدوير المفاتيح"
+  },
+  "consequence": {
+    "desktop": "قطع الاتصال يوقف أيضًا حجب مفتاح قطع الإنترنت وإعادة الاتصال التلقائي."
+  }
+}

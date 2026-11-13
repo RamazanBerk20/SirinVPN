@@ -1,5 +1,5 @@
 import { confirmAction } from "../../lib/confirmAction";
-import { useSshLogin } from "../../hooks/useSshLogin";
+import { useSshOperation } from "../../hooks/useSshOperation";
 import { SshLoginFields } from "./SshLoginFields";
 import { DialogBack, DialogContent } from "../../components/DialogContent";
 import { Busy, OperationProgress, stepsAt } from "../../components/OperationResult";
@@ -13,15 +13,13 @@ import {
   Trash,
   Warning,
 } from "@phosphor-icons/react";
-import { useEffect, useId, useState } from "react";
+import { useId, useState } from "react";
 import { api } from "../../api";
-import {
-  useSshHostTrust,
-  type InspectedSshHost,
-} from "../../hooks/useSshHostTrust";
+import type { InspectedSshHost } from "../../hooks/useSshHostTrust";
 import { SshHostVerification } from "./SshHostVerification";
 import { type ServerProfile } from "../../types";
 import { InlineError } from "../../components/ui";
+import { OperationPlan, ServerChangeFailure } from "../../components/ServerChange";
 import { errorMessage } from "../../lib/errors";
 import { t } from "../../i18n";
 
@@ -38,37 +36,24 @@ export function RemoveServerDialog({
 }) {
   const formId = useId();
   const owner = profile.role === "owner";
-  const [step, setStep] = useState<
-    "choice" | "details" | "fingerprint" | "uninstalling"
-  >("choice");
-  // Which step of the running task is under way, for its progress list.
-  const [phase, setPhase] = useState(0);
-  const login = useSshLogin(
-    profile.endpoint.host,
-    open && owner && step !== "choice",
-  );
-  const { port } = login;
-  const trust = useSshHostTrust(profile.endpoint.host, Number(port), open);
-  const [confirmed, setConfirmed] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // Removing only from this device is chosen first; uninstalling is the SSH operation behind it.
+  const [uninstalling, setUninstalling] = useState(false);
+  const op = useSshOperation<null>(profile.endpoint.host, open, open && owner && uninstalling);
+  const { login, trust, view } = op;
+  const [removingLocal, setRemovingLocal] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
+  const busy = op.busy || removingLocal;
+  const step = !uninstalling ? "choice" : view;
 
-  const clearSecrets = () => {
-    login.clearSecrets();
-  };
-
-  useEffect(() => {
-    if (!open) {
-      clearSecrets();
-      setStep("choice");
-      trust.reset();
-      setError(null);
-      setBusy(false);
-    }
-  }, [open]);
+  // The dialog stays mounted: each opening starts at the choice.
+  const [wasOpen, setWasOpen] = useState(open);
+  if (wasOpen !== open) {
+    setWasOpen(open);
+    if (!open) { setUninstalling(false); setLocalError(null); op.reset(); }
+  }
 
   const changeOpen = (next: boolean) => {
-    if (!next && (busy || step === "uninstalling")) return;
+    if (!next && busy) return;
     onOpenChange(next);
   };
 
@@ -81,8 +66,8 @@ export function RemoveServerDialog({
       })
     )
       return;
-    setBusy(true);
-    setError(null);
+    setRemovingLocal(true);
+    setLocalError(null);
     try {
       await api.removeServer(profile.id);
       forgetReleaseSource(profile.id);
@@ -91,74 +76,40 @@ export function RemoveServerDialog({
       // The dialog and the server's page are gone; say what happened.
       notify(t("vps.remove.local.done", { name: profile.name }));
     } catch (reason) {
-      setError(errorMessage(reason, t("vps.remove.local.error")));
+      setLocalError(errorMessage(reason, t("vps.remove.local.error")));
     } finally {
-      setBusy(false);
+      setRemovingLocal(false);
     }
   };
 
   const sshValid = login.valid;
-  const blocker = login.missing ?? (step === "fingerprint" && !confirmed ? t("ssh.verify.confirmFirst") : null);
+  const blocker = login.missing ?? (step === "confirmHost" && !trust.confirmed ? t("ssh.verify.confirmFirst") : null);
 
   const inspect = async () => {
     if (!sshValid) return;
-    setBusy(true);
-    setError(null);
-    try {
-      const checked = await trust.inspect();
-      if (!checked) return;
-      setConfirmed(false);
-      if (checked.status === "trusted") {
-        await uninstall(checked);
-      } else {
-        setStep("fingerprint");
-      }
-    } catch (reason) {
-      setError(errorMessage(reason, t("vps.common.error.unreachable")));
-    } finally {
-      setBusy(false);
-    }
+    await op.verify(t("vps.common.error.unreachable"), checked => uninstall(checked, true));
   };
 
-  const uninstall = async (
-    checked: InspectedSshHost | null = trust.inspection,
-  ) => {
-    if (!checked || !sshValid || (checked.status !== "trusted" && !confirmed))
+  /** `checking`: called while the host check is still under way, which a cancelled confirmation ends. */
+  const uninstall = async (checked: InspectedSshHost | null = trust.inspection, checking = false) => {
+    if (!checked || !sshValid || (checked.status !== "trusted" && !trust.confirmed)) return;
+    if (!await confirmAction({
+      title: t("vps.remove.uninstall.confirmTitle", { host: profile.endpoint.host }),
+      message: t("vps.remove.uninstall.confirmMessage"),
+      confirm: t("vps.remove.uninstall.confirm"),
+    })) {
+      if (checking) op.back();
       return;
-    if (
-      !await confirmAction({
-        title: t("vps.remove.uninstall.confirmTitle", { host: profile.endpoint.host }),
-        message: t("vps.remove.uninstall.confirmMessage"),
-        confirm: t("vps.remove.uninstall.confirm"),
-      })
-    )
-      return;
-    setStep("uninstalling");
-    setPhase(0);
-    setBusy(true);
-    setError(null);
-    try {
-      const fingerprint = await trust.accept(checked, confirmed);
-      setPhase(1);
-      await api.uninstallServer({
-        server_id: profile.id,
-        ...(await login.prepare(fingerprint)),
-      });
+    }
+    await op.run(async (credentials, setPhase) => {
+      await api.uninstallServer({ server_id: profile.id, ...credentials });
       forgetReleaseSource(profile.id);
-      clearSecrets();
       setPhase(2);
       await onRemoved();
       onOpenChange(false);
       notify(t("vps.remove.uninstall.done", { host: profile.endpoint.host }));
-    } catch (reason) {
-      clearSecrets();
-      setStep("details");
-      setError(
-        errorMessage(reason, t("vps.remove.uninstall.error")),
-      );
-    } finally {
-      setBusy(false);
-    }
+      return null;
+    }, t("vps.remove.uninstall.error"), { inspection: checked, onError: login.clearSecrets });
   };
 
   return (
@@ -167,21 +118,22 @@ export function RemoveServerDialog({
         <Dialog.Overlay className="dialog-overlay" />
         <DialogContent className="dialog-content remove-server-dialog"
           heading={t("vps.remove.title", { name: profile.name })}
-          description={step === "uninstalling" ? t("vps.remove.description.running")
+          data-operation="uninstall" data-flow-state={uninstalling ? op.state.kind : "choice"}
+          description={step === "running" ? t("vps.remove.description.running")
             : owner ? t("vps.remove.description.owner") : t("vps.remove.description.member")}
-          closeDisabled={busy || step === "uninstalling"}
-          footerNote={(step === "details" || step === "fingerprint") && !busy ? blocker : null}
-          footer={step === "details" || step === "fingerprint" ? <>
-            <DialogBack disabled={busy} onClick={() => setStep(step === "details" ? "choice" : "details")} />
+          closeDisabled={busy}
+          footerNote={(step === "form" || step === "confirmHost") && !busy ? blocker : null}
+          footer={step === "form" || step === "confirmHost" ? <>
+            <DialogBack disabled={busy} onClick={() => { if (step === "form") setUninstalling(false); op.back(); }} />
             <button className="secondary-button" type="button" disabled={busy} onClick={() => changeOpen(false)}>{t("common.action.cancel")}</button>
-            {step === "details"
+            {step === "form"
               ? <button className="primary-button" type="submit" form={formId} disabled={!sshValid || busy}>{busy ? <Busy label={t("vps.common.checking")} /> : t("vps.remove.uninstall.review")}</button>
-              : <button className="primary-button danger-action" type="button" disabled={!confirmed || !sshValid || busy} onClick={() => void uninstall()}>{t("vps.remove.uninstall.action")}</button>}
+              : <button className="primary-button danger-action" type="button" disabled={!trust.confirmed || !sshValid || busy} onClick={() => void uninstall()}>{t("vps.remove.uninstall.action")}</button>}
           </> : null}>
 
           {step === "choice" ? (
             <div className="removal-choices">
-              {error ? <InlineError message={error} /> : null}
+              {localError ? <InlineError message={localError} /> : null}
               <button
                 className="removal-choice"
                 disabled={busy}
@@ -192,15 +144,15 @@ export function RemoveServerDialog({
                 </span>
                 <div>
                   <strong>{t("vps.remove.local.title")}</strong>
-                  <small>{busy ? <Busy label={t("vps.remove.local.removing")} /> : t("vps.remove.local.summary")}</small>
+                  <small>{removingLocal ? <Busy label={t("vps.remove.local.removing")} /> : t("vps.remove.local.summary")}</small>
                 </div>
-                <CaretRight size={16} />
+                <CaretRight className="mirror-rtl" size={16} />
               </button>
               {owner ? (
                 <button
                   className="removal-choice destructive"
                   disabled={busy}
-                  onClick={() => setStep("details")}
+                  onClick={() => setUninstalling(true)}
                 >
                   <span>
                     <Trash size={20} />
@@ -209,13 +161,13 @@ export function RemoveServerDialog({
                     <strong>{t("vps.remove.uninstall.title")}</strong>
                     <small>{t("vps.remove.uninstall.summary")}</small>
                   </div>
-                  <CaretRight size={16} />
+                  <CaretRight className="mirror-rtl" size={16} />
                 </button>
               ) : null}
             </div>
           ) : null}
 
-          {step === "details" ? (
+          {step === "form" ? (
             <form
               className="uninstall-form"
               id={formId}
@@ -224,7 +176,7 @@ export function RemoveServerDialog({
                 void inspect();
               }}
             >
-              {error ? <InlineError message={error} /> : null}
+              <ServerChangeFailure reason={op.failure} message={op.error} />
               <fieldset disabled={busy} className="ssh-operation-fields">
                 <div className="uninstall-target">
                   <GlobeHemisphereWest size={16} />
@@ -235,12 +187,12 @@ export function RemoveServerDialog({
             </form>
           ) : null}
 
-          {step === "fingerprint" && trust.inspection ? (
+          {step === "confirmHost" && trust.inspection ? (
             <div className="uninstall-fingerprint">
               <SshHostVerification
                 inspection={trust.inspection}
-                confirmed={confirmed}
-                onConfirmed={setConfirmed}
+                confirmed={trust.confirmed}
+                onConfirmed={trust.setConfirmed}
               />
               {/* The consequence is on screen before the final button, not only in the confirmation. */}
               <div className="danger-note">
@@ -250,8 +202,11 @@ export function RemoveServerDialog({
             </div>
           ) : null}
 
-          {step === "uninstalling" ? <OperationProgress title={t("vps.remove.uninstall.progress")}
-            steps={stepsAt([t("vps.common.step.identity"), t("vps.remove.uninstall.step"), t("vps.remove.uninstall.stepLocal")], phase)} /> : null}
+          {(step === "form" || step === "confirmHost") && sshValid && !busy
+            ? <OperationPlan load={() => op.plan((credentials) => ({ operation: "uninstall", server_id: profile.id, ...credentials }))} /> : null}
+
+          {step === "running" ? <OperationProgress title={t("vps.remove.uninstall.progress")}
+            steps={stepsAt([t("vps.common.step.identity"), t("vps.remove.uninstall.step"), t("vps.remove.uninstall.stepLocal")], op.phase)} /> : null}
         </DialogContent>
       </Dialog.Portal>
     </Dialog.Root>

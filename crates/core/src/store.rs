@@ -60,6 +60,24 @@ impl ProfileStore {
         })
     }
 
+    /// Change only the fields a flow owns on the profile as it is now, under the store
+    /// lock. Long flows use this instead of writing back a copy they loaded earlier,
+    /// which would undo concurrent renames, endpoint checkpoints or key rotations.
+    /// Nothing is written when `change` fails.
+    pub fn update<T>(
+        &self,
+        id: ServerId,
+        change: impl FnOnce(&mut ServerProfile) -> Result<T, ProfileStoreError>,
+    ) -> Result<T, ProfileStoreError> {
+        self.mutate(move |profiles| {
+            let profile = profiles
+                .iter_mut()
+                .find(|profile| profile.id == id)
+                .ok_or(ProfileStoreError::NotFound)?;
+            change(profile)
+        })
+    }
+
     pub fn insert(&self, profile: ServerProfile) -> Result<(), ProfileStoreError> {
         self.mutate(move |profiles| {
             if profiles.iter().any(|item| item.id == profile.id) {
@@ -253,6 +271,61 @@ mod tests {
         assert_eq!(loaded.len(), 1);
         assert_eq!(loaded[0].id, id);
         assert_eq!(loaded[0].name, "Renamed");
+    }
+
+    #[test]
+    fn field_updates_keep_changes_made_after_the_caller_loaded_the_profile() {
+        let directory = tempfile::tempdir().unwrap();
+        let store = ProfileStore::new(directory.path().join("profiles.json"));
+        let loaded = profile("Original");
+        store.insert(loaded.clone()).unwrap();
+        // Another process renames the server and applies a checkpoint meanwhile.
+        store
+            .update_presentation(loaded.id, Some("Renamed".into()), Some(true))
+            .unwrap();
+        store
+            .update(loaded.id, |current| {
+                current.endpoint_generation = 7;
+                Ok(())
+            })
+            .unwrap();
+        // The long flow writes only what it owns.
+        let generation = store
+            .update(loaded.id, |current| {
+                current.role = ServerRole::Member;
+                current.administrator = true;
+                Ok(current.endpoint_generation)
+            })
+            .unwrap();
+        assert_eq!(generation, 7);
+        let saved = &store.load().unwrap()[0];
+        assert_eq!(
+            (
+                saved.name.as_str(),
+                saved.favorite,
+                saved.endpoint_generation
+            ),
+            ("Renamed", true, 7)
+        );
+        assert_eq!(
+            (saved.role, saved.administrator),
+            (ServerRole::Member, true)
+        );
+
+        // A refused change writes nothing, and a missing profile is reported.
+        let before = store.load().unwrap();
+        assert!(matches!(
+            store.update(loaded.id, |current| {
+                current.name = "Lost".into();
+                Err::<(), _>(ProfileStoreError::InvalidData)
+            }),
+            Err(ProfileStoreError::InvalidData)
+        ));
+        assert_eq!(store.load().unwrap(), before);
+        assert!(matches!(
+            store.update(ServerId::new(), |_| Ok(())),
+            Err(ProfileStoreError::NotFound)
+        ));
     }
 
     #[test]

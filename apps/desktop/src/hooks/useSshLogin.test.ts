@@ -46,7 +46,7 @@ it("defaults new logins to Password and keeps fast lookups quiet while typing", 
   expect(result.current.loading).toBe(false);
   expect(result.current.checkingSavedLogin).toBe(false);
   act(() => { result.current.setPassword("test-password"); result.current.setRemember(false); });
-  await expect(result.current.prepare(fingerprint)).resolves.toMatchObject({ authentication: "password", password: "test-password" });
+  expect(result.current.prepare(fingerprint).credentials).toMatchObject({ authentication: "password", password: "test-password" });
 });
 
 it("shows only slow saved-login checks and discards their progress when the destination changes", async () => {
@@ -83,16 +83,18 @@ it("uses a saved login and its SSH port without exposing or asking for a passwor
   expect(result.current.valid).toBe(true);
   expect(result.current.port).toBe("2222");
   expect(result.current.password).toBe("");
-  await expect(result.current.prepare(fingerprint)).resolves.toMatchObject({
+  const { credentials, save } = result.current.prepare(fingerprint);
+  expect(credentials).toMatchObject({
     authentication: "saved",
     password: null,
     sudo_password: null,
     host_key_sha256: fingerprint,
   });
+  await act(save);
   expect(api.saveSshLogin).not.toHaveBeenCalled();
 });
 
-it("remembers a newly entered login once and keeps it available after operation cleanup", async () => {
+it("remembers a newly entered login only after the operation that used it succeeded, and only once", async () => {
   const { result } = renderHook(() => useSshLogin("vps.example"));
   await load();
   act(() => {
@@ -102,12 +104,13 @@ it("remembers a newly entered login once and keeps it available after operation 
     result.current.setPassword("test-password");
     result.current.setSudoPassword("test-sudo");
   });
-  await act(async () => {
-    const input = await result.current.prepare(fingerprint);
-    expect(input.authentication).toBe("saved");
-    expect(input.password).toBeNull();
-  });
-  expect(api.saveSshLogin).toHaveBeenCalledWith(
+  const { credentials, save } = result.current.prepare(fingerprint);
+  // The operation uses what was typed; nothing is in the keyring yet.
+  expect(credentials).toMatchObject({ authentication: "password", password: "test-password", sudo_password: "test-sudo" });
+  expect(api.saveSshLogin).not.toHaveBeenCalled();
+  await act(save);
+  await act(save);
+  expect(api.saveSshLogin).toHaveBeenCalledExactlyOnceWith(
     expect.objectContaining({
       host: "vps.example",
       password: "test-password",
@@ -117,10 +120,26 @@ it("remembers a newly entered login once and keeps it available after operation 
   );
   act(() => result.current.clearSecrets());
   expect(result.current.usingSaved).toBe(true);
-  await expect(result.current.prepare(fingerprint)).resolves.toMatchObject({
-    authentication: "saved",
-  });
+  const next = result.current.prepare(fingerprint);
+  expect(next.credentials).toMatchObject({ authentication: "saved", password: null });
+  await act(next.save);
   expect(api.saveSshLogin).toHaveBeenCalledTimes(1);
+});
+
+it("never saves a login whose operation failed", async () => {
+  const { result } = renderHook(() => useSshLogin("vps.example"));
+  await load();
+  act(() => result.current.setPassword("wrong-password"));
+  const operation = vi.fn().mockRejectedValue(new Error("SSH authentication failed."));
+  const run = async () => {
+    const { credentials, save } = result.current.prepare(fingerprint);
+    await operation(credentials);
+    await save();
+  };
+  await act(async () => { await expect(run()).rejects.toThrow("SSH authentication failed."); });
+  expect(operation).toHaveBeenCalledOnce();
+  expect(api.saveSshLogin).not.toHaveBeenCalled();
+  expect(result.current.usingSaved).toBe(false);
 });
 
 it("permits a one-time login when remembering is disabled", async () => {
@@ -131,23 +150,25 @@ it("permits a one-time login when remembering is disabled", async () => {
     result.current.setPassword("test-password");
     result.current.setRemember(false);
   });
-  await expect(result.current.prepare(fingerprint)).resolves.toMatchObject({
+  const { credentials, save } = result.current.prepare(fingerprint);
+  expect(credentials).toMatchObject({
     authentication: "password",
     password: "test-password",
   });
+  await act(save);
   expect(api.saveSshLogin).not.toHaveBeenCalled();
 });
 
-it("stops before maintenance when authentication or wallet storage fails", async () => {
+it("reports a keyring failure after a successful operation without failing it or claiming a saved login", async () => {
   vi.mocked(api.saveSshLogin).mockRejectedValue(
     new Error("Unlock your desktop wallet."),
   );
   const { result } = renderHook(() => useSshLogin("vps.example"));
   await load();
   act(() => result.current.setAuth("agent"));
-  await expect(result.current.prepare(fingerprint)).rejects.toThrow(
-    "Unlock your desktop wallet.",
-  );
+  const { save } = result.current.prepare(fingerprint);
+  await act(async () => { await expect(save()).resolves.toBeUndefined(); });
+  expect(api.saveSshLogin).toHaveBeenCalledOnce();
   expect(result.current.usingSaved).toBe(false);
 });
 
@@ -188,7 +209,7 @@ it("does not use a lookup result for a previous destination", async () => {
   expect(result.current.username).toBe("root");
 });
 
-it("cancels preparation when the dialog closes while a login is being saved", async () => {
+it("refuses to prepare a login once the dialog closed, and drops a save that finishes afterwards", async () => {
   let resolve!: (value: SavedSshLogin) => void;
   vi.mocked(api.saveSshLogin).mockImplementation(
     () =>
@@ -202,9 +223,11 @@ it("cancels preparation when the dialog closes while a login is being saved", as
   );
   await load();
   act(() => result.current.setAuth("agent"));
-  const pending = result.current.prepare(fingerprint);
-  const rejected = expect(pending).rejects.toThrow(t("ssh.error.cancelled"));
+  const { save } = result.current.prepare(fingerprint);
+  const saving = save();
   rerender({ active: false });
-  await act(async () => resolve(saved));
-  await rejected;
+  expect(() => result.current.prepare(fingerprint)).toThrow(t("ssh.error.cancelled"));
+  await act(async () => { resolve(saved); await saving; });
+  expect(result.current.saved).toBeNull();
+  expect(result.current.usingSaved).toBe(false);
 });

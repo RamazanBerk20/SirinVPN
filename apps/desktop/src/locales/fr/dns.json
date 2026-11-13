@@ -1,0 +1,129 @@
+{
+  "example": "par ex. {{value}}",
+  "resolver": {
+    "legend": "Résolveur DNS",
+    "mode": {
+      "preserve": "Conserver l’actuel",
+      "recursive": "Récursif",
+      "dnsOverTls": "DNS sur TLS",
+      "dnsOverHttps": "DNS sur HTTPS"
+    },
+    "note": {
+      "preserve": "Le résolveur actuel et les zones DNS fractionnées restent inchangés",
+      "recursive": "Votre serveur résout lui-même les noms, avec validation DNSSEC",
+      "dnsOverTls": "Transmet les requêtes via TLS sur le port 853, sans repli en clair",
+      "dnsOverHttps": "Transmet les requêtes via HTTPS sur le port 443, sans repli en clair"
+    },
+    "endpoint": "Résolveur {{number}}",
+    "endpointOptional": "Résolveur {{number}} (facultatif)",
+    "address": "Adresse IP",
+    "tlsName": "Nom d’hôte TLS",
+    "httpsPath": "Chemin HTTPS",
+    "error": {
+      "address": "Saisissez l’adresse IP du résolveur, par exemple 9.9.9.9.",
+      "duplicate": "C’est le même résolveur que le résolveur 1.",
+      "name": "Saisissez le nom d’hôte présent sur le certificat du résolveur, par exemple dns.quad9.net.",
+      "path": "Commencez par / et utilisez uniquement des lettres, des chiffres et - _ . ~"
+    }
+  },
+  "records": {
+    "legend": "Enregistrements DNS privés",
+    "mode": {
+      "preserve": "Conserver l’actuel",
+      "replace": "Remplacer",
+      "clear": "Effacer"
+    },
+    "note": {
+      "preserve": "Les enregistrements actuels restent inchangés",
+      "replace": "Noms résolus uniquement à l’intérieur de votre VPN",
+      "clear": "Supprime tous les enregistrements DNS privés du serveur, pour tous les appareils"
+    },
+    "label": "Enregistrements",
+    "hint": "Un nom=IP par ligne, 64 maximum",
+    "invalidLine": "« {{line}} » n’est pas un enregistrement. Écrivez nom=IP, par exemple nas.home=10.20.30.40.",
+    "invalid": "Saisissez 64 enregistrements au maximum."
+  },
+  "nat64": {
+    "legend": "Sites IPv4 via NAT64",
+    "mode": {
+      "preserve": "Conserver l’actuel",
+      "replace": "Utiliser un préfixe",
+      "clear": "Désactiver"
+    },
+    "note": {
+      "setup": "Facultatif. Ce VPS n’a pas d’IPv4 : les sites en IPv4 seul ne fonctionnent pas, sauf si les membres y accèdent via une passerelle NAT64. L’opérateur de cette passerelle voit les adresses IPv4 visitées.",
+      "preserve": "Le VPS conserve son réglage NAT64 actuel",
+      "replace": "Seulement pour un VPS sans IPv4. L’opérateur de la passerelle NAT64 voit les adresses IPv4 visitées par les membres.",
+      "clear": "Sans IPv4 sur le VPS, les membres n’accèdent qu’aux sites en IPv6"
+    },
+    "label": "Préfixe NAT64",
+    "hint": "Fourni par votre hébergeur VPS ou par un service NAT64 public",
+    "invalid": "Saisissez un préfixe IPv6, par exemple 64:ff9b::/96."
+  },
+  "split": {
+    "label": "Zones DNS fractionnées",
+    "summary": "Facultatif. Envoyez un domaine vers son propre résolveur : domaine=IP, un par ligne.",
+    "infoLabel": "À propos des zones DNS fractionnées",
+    "info": "Les résolveurs à IP privée sont approuvés sans DNSSEC. IP#nom-TLS utilise DNS sur TLS avec DNSSEC. Séparez les résolveurs de secours par des virgules ; les zones ne basculent jamais vers le résolveur principal.",
+    "invalid": "Listez chaque domaine une seule fois, 16 zones au maximum.",
+    "invalidLine": "« {{line}} » n’est pas une zone. Écrivez domaine=IP avec une adresse de résolveur privée, ou IP#nom-TLS.",
+    "localSuffix": "{{zone}} se termine par .local, réservé aux appareils de votre propre réseau. Utilisez un autre nom pour cette zone.",
+    "publicResolver": "{{resolver}} est une adresse publique. Une zone ne peut l’utiliser que via TLS : écrivez {{resolver}}#son-nom-TLS."
+  },
+  "review": {
+    "label": "Vérification des modifications DNS",
+    "title": "Vérifier les modifications DNS",
+    "resolver": {
+      "term": "Résolveur",
+      "preserve": "Conserver le résolveur actuel et les zones DNS fractionnées",
+      "recursive": "DNS récursif avec DNSSEC",
+      "dnsOverTls": "DNS sur TLS, sans repli en clair",
+      "dnsOverHttps": "DNS sur HTTPS, sans repli en clair"
+    },
+    "addresses": "Adresses des résolveurs",
+    "split": {
+      "term": "Zones DNS fractionnées",
+      "none": "Aucune. Les zones existantes sont supprimées."
+    },
+    "records": {
+      "term": "Enregistrements DNS privés",
+      "preserve": "Conserver les enregistrements actuels",
+      "clear": "Supprimer tous les enregistrements",
+      "replace": "Remplacer tous les enregistrements par :"
+    },
+    "impact": "Affecte tous les appareils de ce serveur, et le VPN redémarre brièvement. Les adresses, ports, appareils et accès VPN restent identiques."
+  },
+  "blocklist": {
+    "title": "Blocage des publicités et des traqueurs",
+    "summary": "Bloque les domaines de publicités et de traqueurs pour tous les appareils qui utilisent le DNS de ce serveur. Le serveur ne conserve aucun historique des requêtes.",
+    "unsupported": "Réparez ce serveur avec l’application actuelle pour utiliser le blocage DNS.",
+    "enable": "Bloquer les publicités et les traqueurs",
+    "lists": "Listes de blocage",
+    "custom": "Autres listes de blocage",
+    "customHint": "Facultatif. Une adresse HTTPS par ligne, au format hosts ou liste de domaines.",
+    "customInvalid": "Chaque adresse doit être une adresse HTTPS complète, et 8 listes au maximum.",
+    "allowlist": "Ne jamais bloquer",
+    "allowlistHint": "Un domaine par ligne. Ses sous-domaines sont aussi autorisés.",
+    "allowlistInvalid": "Utilisez des noms de domaine valides, 512 au maximum.",
+    "save": "Enregistrer le blocage",
+    "refresh": "Actualiser l’état",
+    "saved": "Enregistré. Le serveur l’applique dans la minute.",
+    "loadFailed": "Impossible de charger les paramètres de blocage DNS.",
+    "saveFailed": "Impossible d’enregistrer les paramètres de blocage DNS.",
+    "status": {
+      "off": "Le blocage DNS est désactivé.",
+      "pending": "En attente de l’application de la dernière modification par le serveur.",
+      "active": "{count, plural, one {Blocage de # domaine. Liste mise à jour {{time}}.} many {Blocage de # domaines. Liste mise à jour {{time}}.} other {Blocage de # domaines. Liste mise à jour {{time}}.}}"
+    },
+    "member": {
+      "on": "Activé. Seuls le Propriétaire ou un Administrateur peuvent le modifier.",
+      "off": "Désactivé. Seuls le Propriétaire ou un Administrateur peuvent le modifier."
+    },
+    "failure": {
+      "download": "Une liste de blocage n’a pas pu être téléchargée. La dernière liste valide reste en vigueur.",
+      "format": "Une liste de blocage n’est pas au format hosts ou liste de domaines. La dernière liste valide reste en vigueur.",
+      "too_many_domains": "Les listes choisies contiennent plus de 300 000 domaines. Choisissez-en moins ; la dernière liste valide reste en vigueur.",
+      "resolver": "Le service DNS a rejeté la nouvelle liste. La dernière liste valide reste en vigueur."
+    }
+  }
+}

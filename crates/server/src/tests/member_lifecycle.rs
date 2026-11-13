@@ -3,9 +3,11 @@ mod alerts;
 mod device_pairs;
 mod device_platforms;
 mod dns_blocklist;
+mod people;
 mod policy_enrollment;
 mod recovery;
 mod subnet_routes;
+mod throttle;
 mod wireguard_devices;
 
 fn fixture() -> (tempfile::TempDir, AppState) {
@@ -87,6 +89,7 @@ fn fixture() -> (tempfile::TempDir, AppState) {
         transport_peers,
         transport_activity: ActiveTransportRegistry::default(),
         speed_test: Default::default(),
+        throttle: Default::default(),
     };
     (directory, state)
 }
@@ -270,7 +273,23 @@ async fn handoff_source_rejects_even_idempotent_member_changes() {
     let owner = identity(&document.devices[0]);
     let target = document.members[2].id.to_string();
     // This guard is intentionally independent of the handoff signature checks at load time.
-    document.endpoint_transition_source = true;
+    let elsewhere = tempfile::tempdir().unwrap();
+    let head = initialize_with_transport_capabilities(
+        &ServerPaths::under(elsewhere.path()),
+        "Successor",
+        &document.devices[0].management_certificate_pem,
+        document.server_id,
+        &document.devices[0].wireguard_public_key,
+        51820,
+        ServerCapabilities {
+            public_host: Some("9.9.9.9".into()),
+            ..Default::default()
+        },
+    )
+    .unwrap()
+    .endpoint_transition
+    .unwrap();
+    document.endpoint.hand_off(head);
     drop(document);
     let result = update_member_suspension_handler(
         State(state.clone()),

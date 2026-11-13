@@ -2,6 +2,11 @@
 //! or open an RPC listener on the network.
 #![deny(unsafe_op_in_unsafe_fn)]
 
+/// The host-testable command rules; on Android `commands` includes the same file.
+#[cfg(all(test, not(target_os = "android")))]
+#[path = "commands/rules.rs"]
+#[allow(dead_code)] // Some rules are used only by the Android commands.
+mod command_rules;
 #[cfg(target_os = "android")]
 mod commands;
 #[cfg(target_os = "android")]

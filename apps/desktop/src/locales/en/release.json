@@ -54,6 +54,7 @@
     "notNewer": "This release isn’t newer than your version, so it can’t be installed.",
     "notInstallableWindows": "This copy can’t update itself. Install SirinVPN with the Windows installer first.",
     "notInstallableLinux": "This copy can’t update itself. Use the Debian package or an AppImage you own.",
+    "packageManager": "Update with your package manager. Your system’s package manager installed this copy, so install {{version}} with it.",
     "notReady": "To install, disconnect and turn off the kill switch.",
     "openConnection": "Open connection settings",
     "confirmVerify": "I confirm verifying this installed version",

@@ -19,7 +19,7 @@ pub use dns_blocklist::{
 };
 mod endpoints;
 pub use endpoints::{
-    EndpointDescriptor, EndpointIdentity, MAX_ALTERNATE_ENDPOINT_HOSTS,
+    EndpointDescriptor, EndpointHandoff, EndpointIdentity, MAX_ALTERNATE_ENDPOINT_HOSTS,
     valid_alternate_endpoint_hosts,
 };
 mod split_dns;
@@ -58,12 +58,12 @@ pub use management::{
     DeviceSubnetRoutesUpdateRequest, DeviceSummary, DiagnosticCheck, DiagnosticLevel,
     DiagnosticReport, EndpointTransitionClaims, EndpointTransitionCreateRequest,
     EndpointTransitionResponse, EnrollmentNames, EnrollmentRequest, EnrollmentResult,
-    InvitationClaims, InvitationCreateRequest, InvitationCreateResponse, KeyRotationCommitResponse,
-    KeyRotationPrepareRequest, KeyRotationPrepareResponse, LeakTestObservation,
-    MemberAccessUpdateRequest, MemberDevicesRevokeRequest, MemberSummary,
+    InvitationClaims, InvitationCreateBody, InvitationCreateRequest, InvitationCreateResponse,
+    KeyRotationCommitResponse, KeyRotationPrepareRequest, KeyRotationPrepareResponse,
+    LeakTestObservation, MemberAccessUpdateRequest, MemberDevicesRevokeRequest, MemberSummary,
     MemberSuspensionUpdateRequest, MembershipSnapshot, OwnershipTransferRequest, PortForward,
-    PortForwardCreateRequest, PortForwardProtocol, RenameDeviceRequest, SpeedTestUpload,
-    WireGuardDeviceCreateRequest,
+    PortForwardCreateRequest, PortForwardProtocol, RenameDeviceRequest, RenameMemberRequest,
+    SpeedTestUpload, WireGuardDeviceCreateRequest,
 };
 
 use serde::{Deserialize, Serialize};
@@ -481,6 +481,11 @@ pub struct AuthorizationRecovery {
     pub committed: bool,
 }
 
+/// Exact message of the 409 `conflict_detected` refusal for a person name that another person
+/// on the server already uses (compared after NFKC and case folding). It is a message, not a
+/// new `ErrorCode`, because older clients reject error bodies with an unknown code.
+pub const PERSON_NAME_TAKEN_MESSAGE: &str = "another person on this server already uses this name";
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ErrorCode {
@@ -541,6 +546,8 @@ pub enum ValidationError {
         "split DNS requires up to 16 unique domain suffixes, each with private-address resolvers or authenticated TLS resolvers"
     )]
     InvalidSplitDns,
+    #[error("the pending VPS migration on this profile is inconsistent")]
+    InvalidEndpointHandoff,
 }
 
 pub fn validate_server_dns_configuration(

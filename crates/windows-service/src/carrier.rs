@@ -2,8 +2,8 @@ use crate::network::{self, Underlay};
 use sirinvpn_protocol::TransportKind;
 use sirinvpn_transport::{
     ClientRelayConfig, RelayError, TcpClientRelayConfig, TlsLikeClientRelayConfig,
-    run_client_relay_with_socket_protector, run_quic_client_relay_with_socket_protector,
-    run_tcp_client_relay_with_socket_protector, run_tls_like_client_relay_with_socket_protector,
+    run_client_relay_pinned, run_quic_client_relay_pinned, run_tcp_client_relay_pinned,
+    run_tls_like_client_relay_pinned,
 };
 use sirinvpn_tunnel_model::TunnelConnectRequest;
 use std::{io, net::SocketAddr, time::Duration};
@@ -40,6 +40,11 @@ pub(crate) async fn start(
     let random = uuid::Uuid::new_v4();
     let port = 49152 + u16::from_le_bytes([random.as_bytes()[0], random.as_bytes()[1]]) % 16384;
     let local = SocketAddr::from(([127, 0, 0, 1], port));
+    // The relay accepts and answers only WireGuardNT's fixed source. Windows has no
+    // privileged ports, so this narrows but does not prevent a local squatter: a
+    // process that binds 127.0.0.1:1023 first can block WireGuardNT or receive its
+    // (encrypted) datagrams; it cannot read or forge tunnel contents.
+    let wireguard = SocketAddr::from(([127, 0, 0, 1], crate::WIREGUARD_LISTEN_PORT));
     let private = zeroize::Zeroizing::new(request.private_key.clone());
     let public = request
         .server_transport_public_key
@@ -60,7 +65,7 @@ pub(crate) async fn start(
             };
             match transport {
                 TransportKind::ObfuscatedUdp => {
-                    run_client_relay_with_socket_protector(
+                    run_client_relay_pinned(
                         ClientRelayConfig {
                             local_listen: local,
                             server_address: remote,
@@ -68,13 +73,14 @@ pub(crate) async fn start(
                             client_private_key: private.to_string(),
                             server_public_key: public,
                         },
+                        wireguard,
                         protect,
                         ready,
                     )
                     .await
                 }
                 TransportKind::TcpFallback => {
-                    run_tcp_client_relay_with_socket_protector(
+                    run_tcp_client_relay_pinned(
                         TcpClientRelayConfig {
                             local_listen: local,
                             server_address: remote,
@@ -82,13 +88,14 @@ pub(crate) async fn start(
                             client_private_key: private.to_string(),
                             server_public_key: public,
                         },
+                        wireguard,
                         protect,
                         ready,
                     )
                     .await
                 }
                 TransportKind::TlsLike => {
-                    run_tls_like_client_relay_with_socket_protector(
+                    run_tls_like_client_relay_pinned(
                         TlsLikeClientRelayConfig {
                             local_listen: local,
                             server_address: remote,
@@ -99,13 +106,14 @@ pub(crate) async fn start(
                                 .ok_or(RelayError::InvalidConfiguration)?,
                             https,
                         },
+                        wireguard,
                         protect,
                         ready,
                     )
                     .await
                 }
                 TransportKind::Quic => {
-                    run_quic_client_relay_with_socket_protector(
+                    run_quic_client_relay_pinned(
                         TlsLikeClientRelayConfig {
                             local_listen: local,
                             server_address: remote,
@@ -116,6 +124,7 @@ pub(crate) async fn start(
                                 .ok_or(RelayError::InvalidConfiguration)?,
                             https,
                         },
+                        wireguard,
                         protect,
                         ready,
                     )

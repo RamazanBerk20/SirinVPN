@@ -12,7 +12,7 @@ pub(crate) struct ServerPreflightInput {
 #[tauri::command]
 pub(crate) async fn inspect_server_network(
     input: ServerPreflightInput,
-) -> Result<sirinvpn_installer::NetworkPreflight, String> {
+) -> Result<sirinvpn_installer::NetworkPreflight, crate::CommandError> {
     tauri::async_runtime::spawn_blocking(move || {
         let target = crate::ssh_login::resolve_target(input.ssh)?;
         sirinvpn_installer::Provisioner::inspect_server(
@@ -20,8 +20,8 @@ pub(crate) async fn inspect_server_network(
             &input.transport,
             input.endpoint_discovery_port,
         )
-        .map_err(|error| error.to_string())
+        .map_err(crate::command_error)
     })
     .await
-    .map_err(|_| "The server network check was interrupted. Try again.".to_owned())?
+    .map_err(|_| crate::CommandError::from("The server network check was interrupted. Try again."))?
 }

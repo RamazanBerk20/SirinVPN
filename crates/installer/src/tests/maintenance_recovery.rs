@@ -136,6 +136,10 @@ exit 0"#,
             authorization
         );
         assert!(!self.backup().exists());
+        assert_eq!(self.outcome(), "rolled_back\n");
+    }
+    fn outcome(&self) -> String {
+        self.read("var/lib/sirinvpn-maintenance/sirinvpn-install-fixture.outcome")
     }
 }
 
@@ -262,6 +266,13 @@ fn incomplete_snapshot_and_committed_cleanup_never_restore_old_files() {
             "revoked during health checks"
         );
         assert!(!fixture.backup().exists());
+        // A client whose commit reply was lost learns the result from this record.
+        let expected = if committed {
+            "committed\n"
+        } else {
+            "rolled_back\n"
+        };
+        assert_eq!(fixture.outcome(), expected);
     }
 }
 
@@ -270,7 +281,7 @@ fn incomplete_snapshot_and_committed_cleanup_never_restore_old_files() {
 fn generated_recovery_units_have_no_systemd_ordering_cycle() {
     let directory = tempfile::tempdir().unwrap();
     let service = "sirinvpn-install-rollback-fixture";
-    let rendered = maintenance::arm("fixture", false)
+    let rendered = maintenance::arm("fixture", false, "0123456789abcdef")
         .replace("$ROLLBACK_SERVICE", service)
         .replace(
             "$ROLLBACK_SCRIPT",

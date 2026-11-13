@@ -19,9 +19,28 @@ struct EnrollmentJournal {
     profile: Option<ServerProfile>,
 }
 
+/// Where an enrollment stands; each step accepts only its legal predecessors. On disk
+/// it stays the schema-1 journal (names and profile), so journals written by earlier
+/// versions resume unchanged. Key confirmation is not persisted: a resumed enrollment
+/// re-sends the same request and confirms the VPS answer again before committing.
+#[derive(Clone, Debug, Eq, PartialEq)]
+// Short-lived values read once per operation; boxing would only complicate matching.
+#[allow(clippy::large_enum_variant)]
+pub enum EnrollmentStage {
+    /// The permanent identity is generated and stored.
+    Staged,
+    /// The invitation's recipient names are bound to this journal.
+    Named(sirinvpn_protocol::EnrollmentNames),
+    /// The VPS answered; `preshared_key` says whether the identity keeps its key.
+    KeyConfirmed { preshared_key: bool },
+    /// The profile is saved in the journal and committed to the profile store.
+    Committed(ServerProfile),
+}
+
 pub struct PendingEnrollment {
     pub identity: LocalIdentity,
     pub identity_reference: String,
+    stage: EnrollmentStage,
     journal: EnrollmentJournal,
     path: PathBuf,
     _lock: fs::File,
@@ -95,9 +114,15 @@ impl PendingEnrollment {
             };
             (journal, identity)
         };
+        let stage = match (&journal.profile, &journal.invitation_names) {
+            (Some(profile), _) => EnrollmentStage::Committed(profile.clone()),
+            (None, Some(names)) => EnrollmentStage::Named(names.clone()),
+            (None, None) => EnrollmentStage::Staged,
+        };
         let staged = Self {
             identity_reference: journal.identity_reference.clone(),
             identity,
+            stage,
             journal,
             path,
             _lock: lock,
@@ -113,16 +138,45 @@ impl PendingEnrollment {
         &mut self,
         names: Option<sirinvpn_protocol::EnrollmentNames>,
     ) -> Result<()> {
+        if !matches!(
+            self.stage,
+            EnrollmentStage::Staged | EnrollmentStage::Named(_)
+        ) {
+            bail!("recipient names can only be bound before the VPS answers");
+        }
         if self.journal.invitation_names.is_some() && self.journal.invitation_names != names {
             bail!("retry this invitation with the same member and device names");
         }
-        self.journal.invitation_names = names;
-        self.persist()
+        self.journal.invitation_names = names.clone();
+        self.persist()?;
+        if let Some(names) = names {
+            self.stage = EnrollmentStage::Named(names);
+        }
+        Ok(())
+    }
+
+    pub fn stage(&self) -> &EnrollmentStage {
+        &self.stage
     }
 
     /// Keeps the offered preshared key only when the VPS reports storing it; an
     /// older VPS ignores the field and would never complete a handshake with it.
     pub fn confirm_preshared_key(
+        &mut self,
+        secrets: &dyn SecretStore,
+        stored_by_server: bool,
+    ) -> Result<()> {
+        if matches!(self.stage, EnrollmentStage::Committed(_)) {
+            bail!("this enrollment is already committed");
+        }
+        self.confirm_preshared_key_answer(secrets, stored_by_server)?;
+        self.stage = EnrollmentStage::KeyConfirmed {
+            preshared_key: self.identity.secret.wireguard_preshared_key.is_some(),
+        };
+        Ok(())
+    }
+
+    fn confirm_preshared_key_answer(
         &mut self,
         secrets: &dyn SecretStore,
         stored_by_server: bool,
@@ -158,6 +212,18 @@ impl PendingEnrollment {
         profile: ServerProfile,
         replace_existing: bool,
     ) -> Result<()> {
+        // A key the VPS never confirmed must not reach a saved profile: an older VPS
+        // ignores it and the device could never complete a handshake.
+        let legal = match &self.stage {
+            EnrollmentStage::KeyConfirmed { .. } => true,
+            EnrollmentStage::Committed(committed) => committed == &profile,
+            EnrollmentStage::Staged | EnrollmentStage::Named(_) => {
+                self.identity.secret.wireguard_preshared_key.is_none()
+            }
+        };
+        if !legal {
+            bail!("confirm the VPS answer for this device's preshared key before committing");
+        }
         self.validate_profile(&profile)?;
         self.journal.profile = Some(profile.clone());
         self.persist()?;
@@ -168,9 +234,9 @@ impl PendingEnrollment {
                 .iter()
                 .any(|existing| existing == &profile)
         {
-            paths.profile_store().upsert(profile)?;
+            paths.profile_store().upsert(profile.clone())?;
         } else {
-            paths.profile_store().insert(profile)?;
+            paths.profile_store().insert(profile.clone())?;
         }
         fs::remove_file(&self.path)?;
         sirinvpn_platform::files::sync_directory(
@@ -178,6 +244,7 @@ impl PendingEnrollment {
                 .parent()
                 .context("enrollment directory is unavailable")?,
         )?;
+        self.stage = EnrollmentStage::Committed(profile);
         Ok(())
     }
 
@@ -325,5 +392,98 @@ mod tests {
             PendingEnrollment::open(&paths, &secrets, ServerId::new(), "recovery-psk", "Laptop")
                 .unwrap();
         assert!(recovery.identity.secret.wireguard_preshared_key.is_none());
+    }
+
+    fn profile_for(pending: &PendingEnrollment, server: ServerId) -> ServerProfile {
+        serde_json::from_value(serde_json::json!({
+            "schema_version": 1,
+            "id": server,
+            "name": "Joined VPS",
+            "endpoint": {"host": "203.0.113.30", "wireguard_port": 51820},
+            "client_tunnel_address": "10.77.0.3",
+            "server_tunnel_address": "10.77.0.1",
+            "server_wireguard_public_key": "public",
+            "pinned_server_certificate_pem": "certificate",
+            "client_management_certificate_pem": pending.identity.public.management_certificate_pem,
+            "identity_reference": pending.identity_reference,
+            "role": "member"
+        }))
+        .unwrap()
+    }
+
+    #[test]
+    fn a_journal_written_by_an_earlier_version_resumes_at_its_stage() {
+        let directory = tempfile::tempdir().unwrap();
+        let paths = ClientPaths::under(directory.path().into());
+        let secrets = MemorySecrets::default();
+        let server = ServerId::new();
+        let mut identity = LocalIdentity::generate("Phone").unwrap();
+        identity.secret.wireguard_preshared_key = Some(crate::generate_preshared_key());
+        secrets.put("enrollment-legacy", &identity.secret).unwrap();
+        let journal_directory = paths.configuration_directory.join("pending-enrollment");
+        sirinvpn_platform::files::create_private_directory(&journal_directory).unwrap();
+        // The schema-1 shape every earlier version wrote: names bound, no profile yet.
+        let legacy = serde_json::json!({
+            "schema_version": 1,
+            "invitation_names": {"member_name": "Nickname", "device_name": "My phone"},
+            "server_id": server,
+            "authority": "invitation-legacy",
+            "public_identity": identity.public,
+            "identity_reference": "enrollment-legacy",
+            "profile": null
+        });
+        sirinvpn_platform::files::atomic_write(
+            &journal_directory.join("invitation-legacy.json"),
+            &serde_json::to_vec(&legacy).unwrap(),
+            false,
+        )
+        .unwrap();
+        let mut pending =
+            PendingEnrollment::open(&paths, &secrets, server, "invitation-legacy", "Phone")
+                .unwrap();
+        let EnrollmentStage::Named(names) = pending.stage() else {
+            panic!("legacy journal did not resume named: {:?}", pending.stage());
+        };
+        assert_eq!(names.device_name, "My phone");
+        assert_eq!(pending.identity.public, identity.public);
+        // Resuming never skips the key confirmation for a key-bearing identity.
+        let profile = profile_for(&pending, server);
+        assert!(
+            pending
+                .commit_profile(&paths, profile.clone(), false)
+                .is_err()
+        );
+        assert!(paths.profile_store().load().unwrap().is_empty());
+        pending.confirm_preshared_key(&secrets, true).unwrap();
+        assert_eq!(
+            pending.stage(),
+            &EnrollmentStage::KeyConfirmed {
+                preshared_key: true
+            }
+        );
+        // Names cannot change once the VPS answered.
+        assert!(pending.bind_invitation_names(None).is_err());
+        pending
+            .commit_profile(&paths, profile.clone(), false)
+            .unwrap();
+        assert_eq!(
+            pending.stage(),
+            &EnrollmentStage::Committed(profile.clone())
+        );
+        assert_eq!(paths.profile_store().load().unwrap(), vec![profile]);
+        assert!(pending.confirm_preshared_key(&secrets, true).is_err());
+    }
+
+    #[test]
+    fn recovery_without_a_preshared_key_commits_without_confirmation() {
+        let directory = tempfile::tempdir().unwrap();
+        let paths = ClientPaths::under(directory.path().into());
+        let secrets = MemorySecrets::default();
+        let server = ServerId::new();
+        let mut pending =
+            PendingEnrollment::open(&paths, &secrets, server, "recovery-test", "Laptop").unwrap();
+        assert_eq!(pending.stage(), &EnrollmentStage::Staged);
+        let profile = profile_for(&pending, server);
+        pending.commit_profile(&paths, profile, false).unwrap();
     }
 }

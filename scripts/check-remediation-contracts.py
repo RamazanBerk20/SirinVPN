@@ -15,6 +15,17 @@ def main():
     version = workspace["workspace"]["package"]["version"]
     for name in ["apps/desktop/package.json", "apps/desktop/src-tauri/tauri.conf.json"]:
         assert json.loads((ROOT / name).read_text())["version"] == version, name
+    # Tauri derives versionCode from major.minor.patch alone, so an rc and its final release
+    # would share one and the APK installer refuses the update. An rc takes 100 below the final.
+    core, _, pre = version.partition("-")
+    major, minor, patch = map(int, core.split("."))
+    expected_code = major * 1_000_000 + minor * 1000 + patch
+    if pre:
+        rc = re.fullmatch(r"rc\.([1-9][0-9]?)", pre)
+        assert rc, f"Unsupported prerelease {pre}: only rc.1 to rc.99 have an Android versionCode"
+        expected_code += int(rc[1]) - 100
+    android_code = json.loads((ROOT / "apps/desktop/src-tauri/tauri.conf.json").read_text())["bundle"]["android"]["versionCode"]
+    assert android_code == expected_code, f"Android versionCode {android_code} != {expected_code}"
     # The scanner cannot obtain registry license metadata for unpublished local crates.
     overrides = tomllib.loads((ROOT / "osv-scanner.toml").read_text())["PackageOverrides"]
     local = {p['name'] for p in tomllib.loads((ROOT / 'Cargo.lock').read_text())['package']

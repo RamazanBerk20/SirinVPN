@@ -1,6 +1,5 @@
 {
-  "count_one": "{{count}} server",
-  "count_other": "{{count}} servers",
+  "count": "{count, plural, one {# server} other {# servers}}",
   "add": "Add server",
   "open": "Open {{name}}",
   "favorite": "Favorite",

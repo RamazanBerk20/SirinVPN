@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-abandon-install-transaction"
+description = "Enables the abandon_install_transaction command without any pre-configured scope."
+commands.allow = ["abandon_install_transaction"]
+
+[[permission]]
+identifier = "deny-abandon-install-transaction"
+description = "Denies the abandon_install_transaction command without any pre-configured scope."
+commands.deny = ["abandon_install_transaction"]

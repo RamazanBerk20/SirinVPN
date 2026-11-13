@@ -1,0 +1,468 @@
+{
+  "page": {
+    "mine": "Mes appareils",
+    "you": "Vous",
+    "add": "Ajouter un appareil",
+    "addMine": "Ajouter mon appareil",
+    "addFor": "Ajouter un appareil pour {{name}}",
+    "cannotAdd": "Vous ne pouvez pas ajouter d’appareils. Demandez à un Propriétaire ou à un Administrateur d’en ajouter un pour vous.",
+    "refresh": "Actualiser",
+    "loading": "Chargement des personnes et des appareils…",
+    "connect": "Se connecter",
+    "openHome": "Ouvrir Accueil",
+    "disconnected": "Non connecté. Connectez-vous pour voir les appareils de tout le monde et apporter des modifications.",
+    "disconnectedSaved": "Non connecté. Affichage des personnes et des appareils tels qu’enregistrés à {{time}} ; connectez-vous pour apporter des modifications.",
+    "stale": "Affichage des personnes et des appareils tels qu’enregistrés à {{time}}. Les modifications sont désactivées jusqu’à l’actualisation de la liste.",
+    "unsupported": "Ce serveur est trop ancien pour gérer ici les personnes et les appareils.",
+    "unsupportedOwner": "Ce serveur est trop ancien pour gérer ici les personnes et les appareils. Mettez à jour le logiciel du VPS dans les paramètres.",
+    "search": "Rechercher des personnes et des appareils",
+    "searchPlaceholder": "Rechercher par nom ou adresse VPN",
+    "clearSearch": "Effacer la recherche",
+    "noMatches": "Aucune personne ni aucun appareil ne correspond à « {{query}} ».",
+    "adminOwnDevices": "Pour ajouter vos propres appareils, demandez au Propriétaire de l’autoriser dans vos Limites et autorisations.",
+    "unnamed": "Nom pas encore chargé"
+  },
+  "empty": {
+    "title": "Seulement cet appareil pour l’instant",
+    "body": "Chaque personne de ce serveur a un rôle et peut avoir plusieurs appareils. Ajoutez un autre de vos appareils, ou un appareil pour quelqu’un d’autre.",
+    "mine": "Ajouter un autre de mes appareils",
+    "someone": "Ajouter un appareil pour quelqu’un d’autre"
+  },
+  "count": {
+    "people": "{count, plural, one {# personne} many {# personnes} other {# personnes}}",
+    "devices": "{count, plural, one {# appareil} many {# appareils} other {# appareils}}",
+    "forwards": "{count, plural, one {# redirection de port} many {# redirections de port} other {# redirections de port}}",
+    "pairs": "{count, plural, one {# paire d’appareils} many {# paires d’appareils} other {# paires d’appareils}}",
+    "codes": "{count, plural, one {# code d’adhésion} many {# codes d’adhésion} other {# codes d’adhésion}}"
+  },
+  "role": {
+    "title": "Rôle",
+    "description": {
+      "owner": "Contrôle total du serveur. Il n’y a qu’un seul Propriétaire.",
+      "admin": "Peut ajouter des personnes et gérer les Membres, mais pas les Administrateurs ni le Propriétaire.",
+      "member": "Utilise le VPN et ne gère rien, sauf si des autorisations lui sont accordées."
+    },
+    "change": "Définir comme {{role}}",
+    "codesWaiting": "{count, plural, one {# code d’adhésion pour {{name}} ou émis par {{name}} est en attente. Le serveur ne peut pas changer le rôle tant qu’il n’est pas annulé.} many {# codes d’adhésion pour {{name}} ou émis par {{name}} sont en attente. Le serveur ne peut pas changer le rôle tant qu’ils ne sont pas annulés.} other {# codes d’adhésion pour {{name}} ou émis par {{name}} sont en attente. Le serveur ne peut pas changer le rôle tant qu’ils ne sont pas annulés.}}",
+    "cancelAndChange": "{count, plural, one {Annuler le code et changer de rôle} many {Annuler les codes et changer de rôle} other {Annuler les codes et changer de rôle}}",
+    "createdCodes": "Les codes d’adhésion créés par {{name}} sont aussi annulés."
+  },
+  "presence": {
+    "active": "Actif maintenant",
+    "idle": "Inactif récemment",
+    "unknown": "Activité inconnue",
+    "suspended": "Suspendu"
+  },
+  "summary": {
+    "sirinApp": "Application SirinVPN",
+    "wireguardApp": "Application WireGuard",
+    "reachesOthers": "joint les autres appareils",
+    "paired": "{count, plural, one {associé à # appareil} many {associé à # appareils} other {associé à # appareils}}",
+    "internetOnly": "Internet uniquement",
+    "sharesNetwork": "partage {{network}}",
+    "sharesNetworks": "{count, plural, one {partage # réseau local} many {partage # réseaux locaux} other {partage # réseaux locaux}}",
+    "forwards": "{count, plural, one {# port redirigé} many {# ports redirigés} other {# ports redirigés}}"
+  },
+  "gate": {
+    "resumeFirst": "Reprenez d’abord {{name}}.",
+    "limitReached": "{count, plural, one {Limite d’appareils atteinte (#). Augmentez-la dans Limites et autorisations.} many {Limite d’appareils atteinte (#). Augmentez-la dans Limites et autorisations.} other {Limite d’appareils atteinte (#). Augmentez-la dans Limites et autorisations.}}",
+    "needsAppDevice": "Nécessite un appareil avec l’application SirinVPN, pas seulement WireGuard.",
+    "lastOwnerDevice": "C’est le dernier appareil Propriétaire avec SirinVPN : il ne peut pas être supprimé. Ajoutez-en d’abord un autre."
+  },
+  "panel": {
+    "readOnly": "Lecture seule jusqu’à l’actualisation de la liste."
+  },
+  "person": {
+    "youTitle": "{{name}} (vous)",
+    "summary": "{count, plural, one {{{role}} · # appareil} many {{{role}} · # appareils} other {{{role}} · # appareils}}",
+    "name": "Nom",
+    "devices": "{count, plural, one {Appareil} many {Appareils} other {Appareils}}",
+    "devicesOfLimit": "{limit, plural, one {{{count}} sur # appareil} many {{{count}} sur # appareils} other {{{count}} sur # appareils}}",
+    "noDevices": "Pas encore d’appareils.",
+    "noDevicesSuspended": "Aucun appareil. Une personne suspendue ne peut en ajouter aucun.",
+    "suspended": "Suspendu",
+    "limitedHours": "Heures limitées",
+    "expires": "Accès jusqu’au {{date}}",
+    "expired": "Accès terminé le {{date}}",
+    "dangerZone": "Suspendre ou supprimer",
+    "suspend": "Suspendre",
+    "resume": "Reprendre",
+    "suspendHint": "Suspend tous ses appareils. Rien n’est supprimé, et Reprendre rétablit l’accès.",
+    "resumeHint": "Ses appareils sont suspendus. Reprendre leur redonne l’accès avec leurs paramètres enregistrés.",
+    "renameCodesWaiting": "{count, plural, one {# code d’adhésion pour {{name}} est en attente. Le serveur ne peut pas le renommer tant qu’il n’est pas annulé.} many {# codes d’adhésion pour {{name}} sont en attente. Le serveur ne peut pas les renommer tant qu’ils ne sont pas annulés.} other {# codes d’adhésion pour {{name}} sont en attente. Le serveur ne peut pas les renommer tant qu’ils ne sont pas annulés.}}",
+    "cancelAndRename": "{count, plural, one {Annuler le code et renommer} many {Annuler les codes et renommer} other {Annuler les codes et renommer}}",
+    "remove": "Supprimer la personne",
+    "removeHint": "Supprime la personne, {{devices}}, {{forwards}}, {{pairs}} et {{codes}}. Elle aura besoin d’un nouveau code d’adhésion pour revenir."
+  },
+  "device": {
+    "summary": "{{name}} · {{presence}}",
+    "name": "Nom de l’appareil",
+    "owner": "Appartient à",
+    "connection": "Se connecte avec",
+    "sirinApp": "Application SirinVPN",
+    "wireguardApp": "Application WireGuard ou routeur, Direct UDP uniquement",
+    "address": "Adresse VPN",
+    "activity": "Activité",
+    "fingerprint": "Empreinte d’identité",
+    "fingerprintLabel": "Empreinte de {{name}}",
+    "removeTitle": "Supprimer",
+    "remove": "Supprimer l’appareil",
+    "removeThis": "Supprimer cet appareil",
+    "removeHint": "Ses clés sont révoquées : l’accès VPN et à la gestion cesse immédiatement.",
+    "removeThisHint": "C’est l’appareil que vous utilisez. Le supprimer met fin à l’accès de cette application à {{server}}."
+  },
+  "network": {
+    "title": "Réseau",
+    "peer": "Accès d’appareil à appareil",
+    "peerOn": "Joint les autres appareils qui l’ont aussi activé.",
+    "peerOff": "Désactivé : Internet uniquement, plus les paires d’appareils éventuelles.",
+    "suspended": "Suspendu pendant la suspension de {{name}}."
+  },
+  "pairs": {
+    "title": "Paires d’appareils",
+    "description": "Une paire permet à deux appareils de se joindre même lorsque l’accès d’appareil à appareil est désactivé.",
+    "bothWays": "Avec {{name}}, dans les deux sens",
+    "starts": "Lance des connexions vers {{name}}",
+    "answers": "Répond seulement à {{name}}",
+    "otherDevice": "appareil d’une autre personne",
+    "peer": "Appareil",
+    "direction": "Sens",
+    "directionHint": "Un seul sens : seul le premier appareil lance les connexions ; l’autre répond seulement. Lancer des connexions vers un appareil qui partage des réseaux locaux permet aussi de les atteindre.",
+    "option": {
+      "both": "Dans les deux sens",
+      "starts": "Seul {{from}} lance, vers {{to}}"
+    },
+    "add": "Ajouter une paire",
+    "remove": "Supprimer"
+  },
+  "networks": {
+    "title": "Réseaux locaux",
+    "description": "Partage les réseaux privés derrière {{name}}, comme un réseau domestique, avec les appareils qui s’y connectent.",
+    "label": "Réseaux",
+    "hint": "Un réseau IPv4 privé par ligne, /20 ou plus petit. Laissez vide pour arrêter le partage.",
+    "invalid": "Ce n’est pas un réseau IPv4 privé de /20 ou plus petit : {{networks}}",
+    "hostBits": "{{network}} n’est pas le début de son réseau. Utilisez {{canonical}}.",
+    "inactive": "Non routé pour l’instant, car le VPS atteint ces réseaux via un autre réseau : {{networks}}",
+    "linux": "{{name}} doit exécuter SirinVPN sous Linux, avec le transfert IPv4 activé :",
+    "copyCommand": "Copier la commande",
+    "save": "Enregistrer les réseaux"
+  },
+  "ports": {
+    "title": "Redirection de port",
+    "none": "Aucun port redirigé vers cet appareil.",
+    "paused": "Suspendu pendant la suspension",
+    "exposure": "Toute personne sur Internet peut joindre un service redirigé.",
+    "protocol": "Protocole",
+    "publicPort": "Port public",
+    "publicPortHint": "S’ouvre sur l’adresse de votre VPS.",
+    "devicePort": "Port de l’appareil",
+    "devicePortHint": "Port sur lequel écoute le service.",
+    "publicPortLow": "Utilisez un port de 1024 à 65535. Les ports inférieurs sont réservés.",
+    "publicPortRange": "Utilisez un port de 1024 à 65535.",
+    "devicePortRange": "Utilisez un port de 1 à 65535.",
+    "preview": "Le port public {{protocol}} <strong>{{publicPort}}</strong> redirige vers <strong>{{device}}</strong>, port <strong>{{devicePort}}</strong>",
+    "used": "{max, plural, one {{{count}} port du serveur sur # utilisé} many {{{count}} ports du serveur sur # utilisés} other {{{count}} ports du serveur sur # utilisés}}",
+    "full": "{count, plural, one {Le # port du serveur est utilisé. Fermez-le pour en ouvrir un autre.} many {Les # ports du serveur sont utilisés. Fermez-en un pour en ouvrir un autre.} other {Les # ports du serveur sont utilisés. Fermez-en un pour en ouvrir un autre.}}",
+    "open": "Ouvrir le port",
+    "close": "Fermer",
+    "closeLabel": "Fermer le port {{protocol}} {{publicPort}} vers le port de l’appareil {{devicePort}}",
+    "visitorAddress": "Le service voit les visiteurs sous <address>{{address}}</address>, et non leur IP réelle."
+  },
+  "policy": {
+    "title": "Limites et autorisations",
+    "limits": "Limites",
+    "deviceLimit": "Limite d’appareils",
+    "deviceLimitHint": "Laissez vide pour aucune limite. Supprimez les appareils en trop avant de la baisser.",
+    "deviceLimitHintNew": "Laissez vide pour aucune limite.",
+    "expires": "Fin de l’accès",
+    "expiresHint": "Votre heure locale. Laissez vide pour ne jamais la fixer.",
+    "expiresPast": "Cette date est passée. La personne perd l’accès dès l’enregistrement.",
+    "permissions": "Autorisations",
+    "permission": {
+      "addPeople": "Ajouter de nouvelles personnes",
+      "addOwnDevices": "Ajouter leurs propres appareils",
+      "deviceToDevice": "Modifier l’accès d’appareil à appareil et les paires pour leurs appareils",
+      "portForwards": "Ouvrir des ports publics d’Internet vers leurs appareils"
+    },
+    "save": "Enregistrer les limites",
+    "appliesToAll": "S’applique à tous ses appareils.",
+    "cancelsCodes": "{count, plural, one {Enregistrer annule # code d’adhésion en attente pour elle ou émis par elle.} many {Enregistrer annule # codes d’adhésion en attente pour elle ou émis par elle.} other {Enregistrer annule # codes d’adhésion en attente pour elle ou émis par elle.}}",
+    "cancelsCreated": "Enregistrer annule les codes d’adhésion créés par {{name}}.",
+    "error": {
+      "limit": "Saisissez une limite de 1 à 222, ou laissez vide.",
+      "expires": "Saisissez une date et une heure valides.",
+      "noHours": "Choisissez au moins une heure, ou désactivez la limite d’heures.",
+      "tooManyRanges": "{count, plural, one {Utilisez au plus # plage horaire distincte dans la semaine.} many {Utilisez au plus # plages horaires distinctes dans la semaine.} other {Utilisez au plus # plages horaires distinctes dans la semaine.}}"
+    }
+  },
+  "hours": {
+    "title": "Heures hebdomadaires",
+    "limit": "Limiter à certaines heures",
+    "allWeek": "L’accès est autorisé à tout moment.",
+    "localTime": "Dans votre fuseau horaire ({{zone}}). Le passage à l’heure d’été peut les décaler d’une heure.",
+    "inexact": "Certaines heures enregistrées ne commencent pas à l’heure pleine. Modifier la grille les arrondit à l’heure pleine.",
+    "cell": "{{day}}, {{hour}}",
+    "toggleDay": "Tout {{day}}",
+    "toggleHour": "{{hour}} chaque jour"
+  },
+  "codes": {
+    "title": "{count, plural, one {En attente d’adhésion (#)} many {En attente d’adhésion (#)} other {En attente d’adhésion (#)}}",
+    "forPerson": "Appareil pour {{name}}",
+    "newPerson": "Quelqu’un de nouveau",
+    "newNamed": "{{name}}, nouvelle personne",
+    "severalPeople": "Plusieurs nouvelles personnes",
+    "row": "{{role}} · {{uses}} · Expire le {{date}}",
+    "singleUse": "Usage unique",
+    "usesLeft": "{max, plural, one {{{count}} utilisation restante sur #} many {{{count}} utilisations restantes sur #} other {{{count}} utilisations restantes sur #}}",
+    "cancel": "Annuler le code",
+    "cancelling": "Annulation…"
+  },
+  "add": {
+    "whose": {
+      "title": "À qui appartient cet appareil ?",
+      "description": "Chaque appareil appartient à une seule personne.",
+      "mine": "Le mien",
+      "mineHint": "Un autre téléphone ou ordinateur à vous.",
+      "person": "Une personne déjà présente",
+      "personHint": "Ajoute un appareil à une personne de ce serveur.",
+      "pick": "Personne",
+      "option": "{{name}} · {{role}}",
+      "new": "Quelqu’un de nouveau",
+      "newHint": "Ajoute une personne avec son premier appareil."
+    },
+    "new": {
+      "name": "Son nom",
+      "nameHint": "Visible par toutes les personnes qui gèrent ce serveur.",
+      "several": "Plusieurs nouvelles personnes utiliseront ce code",
+      "people": "Nombre de personnes",
+      "peopleHint": "Chaque personne se nomme en rejoignant et devient Membre.",
+      "peopleInvalid": "Saisissez un nombre entier de 2 à 100.",
+      "nameHintRename": "Visible par toutes les personnes qui gèrent ce serveur. Vous pourrez la renommer plus tard."
+    },
+    "connect": {
+      "title": "Comment se connectera-t-il ?",
+      "app": "Application SirinVPN",
+      "appHint": "Recommandé. L’appareil reçoit un code d’adhésion et crée ses propres clés.",
+      "wireguard": "Application WireGuard",
+      "wireguardHint": "Avancé. Pour iPhone, iPad, Mac ou un routeur. Direct UDP uniquement ; il ne peut pas gérer le serveur."
+    },
+    "forYou": "Pour vous",
+    "forPerson": "Pour {{name}}",
+    "severalPeople": "plusieurs nouvelles personnes",
+    "deviceName": "Nom de l’appareil",
+    "deviceNameFixed": "Ce serveur ne permet pas de le nommer à l’adhésion. Toute personne qui gère le serveur pourra le renommer plus tard.",
+    "lifetime": "Le code expire après",
+    "hours": "{count, plural, one {# heure} many {# heures} other {# heures}}",
+    "days": "{count, plural, one {# jour} many {# jours} other {# jours}}",
+    "uses": "Appareils que ce code peut ajouter",
+    "usesHint": "Chaque appareil rejoint avec ses propres clés. Les limites d’appareils s’appliquent toujours.",
+    "usesInvalid": "Saisissez un nombre entier de 1 à 100.",
+    "ownerWarningTitle": "Quiconque utilise ce code obtient le contrôle total du serveur.",
+    "ownerWarning": "Il ajoute un appareil Propriétaire. Partagez-le uniquement avec vous-même, en privé.",
+    "next": "Suivant",
+    "creating": "Création…",
+    "createCode": "Créer le code d’adhésion",
+    "createWireguard": "Créer la configuration",
+    "copyCode": "Copier le code",
+    "copyFailed": "Impossible de copier le code. Sélectionnez-le et copiez-le manuellement.",
+    "copyFailedAndroid": "Impossible de copier le code. Utilisez plutôt Afficher ou partager le code d’adhésion.",
+    "done": "Terminé",
+    "closeUnshared": {
+      "title": "Fermer sans partager le code ?",
+      "message": "Il ne pourra plus être affiché. Si vous ne l’avez ni copié, ni scanné, ni partagé, annulez-le sous En attente d’adhésion et ajoutez à nouveau l’appareil.",
+      "action": "Fermer"
+    },
+    "handover": {
+      "title": "Transmettez-le"
+    },
+    "code": {
+      "instructionSelf": "Sur votre autre appareil, ouvrez SirinVPN, choisissez Utiliser un code d’adhésion, puis scannez ce code QR ou collez le code.",
+      "instructionSelfAndroid": "Sur votre autre appareil, ouvrez SirinVPN, choisissez Utiliser un code d’adhésion, puis scannez ou collez le code que vous partagez depuis ici.",
+      "instructionPerson": "Envoyez-le en privé à {{name}}. Elle ouvre SirinVPN, choisit Utiliser un code d’adhésion, puis le scanne ou le colle.",
+      "instructionSeveral": "Envoyez-le en privé aux personnes qui rejoignent. Chacune ouvre SirinVPN, choisit Utiliser un code d’adhésion, puis le scanne ou le colle.",
+      "once": "Ce code n’est affiché qu’une seule fois",
+      "secret": "Quiconque le possède peut rejoindre jusqu’à ce qu’il soit utilisé, annulé ou qu’il expire le {{date}}."
+    },
+    "wireguard": {
+      "instruction": "Sur l’appareil, ouvrez l’application WireGuard et scannez ce code QR, ou importez le fichier enregistré.",
+      "secret": "Ce code QR et ce fichier contiennent la clé privée de l’appareil. Quiconque les possède peut utiliser ce VPN. Supprimez le fichier après l’import.",
+      "limits": "Un appareil WireGuard se connecte uniquement en Direct UDP et ne peut ni gérer le serveur ni suivre les changements d’adresse.",
+      "file": "Fichier de configuration",
+      "fileHint": "Facultatif. Enregistrez un fichier .conf pour un routeur ou pour l’importer plus tard.",
+      "fileType": "Configuration WireGuard",
+      "chooseFile": "Choisir un fichier",
+      "noFile": "Aucun fichier ; code QR uniquement",
+      "saved": "Enregistré dans <path>{{path}}</path>"
+    },
+    "state": {
+      "waiting": "En attente de l’adhésion de l’appareil…",
+      "joined": "{count, plural, one {{{name}} a rejoint.} many {{{name}} a rejoint.} other {{{name}} a rejoint.}}",
+      "connected": "L’appareil s’est connecté.",
+      "expired": "Le code a expiré avant d’être utilisé.",
+      "cancelled": "Le code a été annulé.",
+      "ended": "Le code n’est plus en attente : il a été utilisé ou annulé."
+    }
+  },
+  "share": {
+    "showInvitation": "Afficher ou partager le code d’adhésion",
+    "showRecovery": "Afficher ou partager la clé de récupération",
+    "qrNote": "Scannez-le au lieu de copier le code.",
+    "code": "Code",
+    "codeLabel": "Code d’adhésion",
+    "enlarge": "Agrandir le code QR",
+    "enlargeInvitation": "Agrandir le code QR d’adhésion",
+    "enlargeRecovery": "Agrandir le code QR de la clé de récupération",
+    "scanInvitation": "Scanner le code d’adhésion",
+    "scanRecovery": "Scanner la clé de récupération",
+    "closeQr": "Fermer le code QR",
+    "copyRecovery": "Copier la clé de récupération",
+    "altInvitation": "Code QR d’adhésion",
+    "altInvitationEnlarged": "Code QR d’adhésion agrandi",
+    "altRecovery": "Code QR de la clé de récupération",
+    "altRecoveryEnlarged": "Code QR de la clé de récupération agrandi",
+    "altWireguard": "Code QR de configuration WireGuard",
+    "copyCode": "Copier le code"
+  },
+  "name": {
+    "save": "Enregistrer le nom",
+    "empty": "Saisissez un nom.",
+    "tooLong": "{count, plural, one {Utilisez au plus # caractère.} many {Utilisez au plus # caractères.} other {Utilisez au plus # caractères.}}",
+    "invalid": "Supprimez les sauts de ligne et les caractères de contrôle."
+  },
+  "owner": {
+    "title": "Faire de {{name}} le Propriétaire",
+    "open": "Faire Propriétaire…",
+    "effect": "{{name}} obtient le contrôle total du serveur. Vous devenez Administrateur, et cela ne peut pas être annulé depuis ici.",
+    "device": "Appareil qui devient celui du Propriétaire",
+    "wireguardExcluded": "Les appareils WireGuard ne peuvent pas gérer le serveur, ils ne sont donc pas listés.",
+    "codesWaiting": "{count, plural, one {# code d’adhésion doit d’abord être annulé.} many {# codes d’adhésion doivent d’abord être annulés.} other {# codes d’adhésion doivent d’abord être annulés.}}",
+    "cancelCode": "Annuler le code de {{name}}",
+    "confirm": "Faire de {{name}} le Propriétaire"
+  },
+  "confirm": {
+    "removeDevice": {
+      "title": "Supprimer {{name}} ?",
+      "message": "Ses clés sont révoquées et son accès VPN et à la gestion cesse immédiatement. Il aura besoin d’un nouveau code d’adhésion pour revenir.",
+      "action": "Supprimer l’appareil"
+    },
+    "removeThis": {
+      "title": "Supprimer cet appareil ?",
+      "message": "Cette application perd immédiatement l’accès à {{server}}. Pour revenir, il faut un nouveau code d’adhésion depuis un autre appareil.",
+      "action": "Supprimer cet appareil"
+    },
+    "removePerson": {
+      "title": "Supprimer {{name}} ?",
+      "message": "Supprime {{name}}, {{devices}}, {{forwards}}, {{pairs}} et {{codes}}. Cette action est irréversible.",
+      "action": "Supprimer la personne"
+    },
+    "suspend": {
+      "title": "Suspendre {{name}} ?",
+      "message": "{count, plural, one {# appareil perd l’accès jusqu’à leur reprise. Les codes d’adhésion en attente et les changements de clés sont annulés.} many {# appareils perdent l’accès jusqu’à leur reprise. Les codes d’adhésion en attente et les changements de clés sont annulés.} other {# appareils perdent l’accès jusqu’à leur reprise. Les codes d’adhésion en attente et les changements de clés sont annulés.}}",
+      "action": "Suspendre"
+    },
+    "resume": {
+      "title": "Reprendre {{name}} ?",
+      "message": "Ses appareils retrouvent l’accès avec leurs paramètres enregistrés. Les codes d’adhésion annulés ne sont pas rétablis.",
+      "action": "Reprendre"
+    },
+    "role": {
+      "title": "Faire de {{name}} un {{role}} ?",
+      "toAdmin": "Elle peut ajouter des personnes et gérer les Membres.",
+      "toMember": "Elle garde ses appareils mais ne gère rien, sauf si des autorisations lui sont accordées.",
+      "toAdminCancels": "{count, plural, one {Elle peut ajouter des personnes et gérer les Membres. # code d’adhésion en attente est d’abord annulé.} many {Elle peut ajouter des personnes et gérer les Membres. # codes d’adhésion en attente sont d’abord annulés.} other {Elle peut ajouter des personnes et gérer les Membres. # codes d’adhésion en attente sont d’abord annulés.}}",
+      "toMemberCancels": "{count, plural, one {Elle garde ses appareils mais ne gère rien, sauf si des autorisations lui sont accordées. # code d’adhésion en attente est d’abord annulé.} many {Elle garde ses appareils mais ne gère rien, sauf si des autorisations lui sont accordées. # codes d’adhésion en attente sont d’abord annulés.} other {Elle garde ses appareils mais ne gère rien, sauf si des autorisations lui sont accordées. # codes d’adhésion en attente sont d’abord annulés.}}",
+      "action": "Changer de rôle"
+    },
+    "limits": {
+      "title": "Enregistrer les limites de {{name}} ?",
+      "message": "{count, plural, one {# code d’adhésion en attente pour elle ou émis par elle sera annulé.} many {# codes d’adhésion en attente pour elle ou émis par elle seront annulés.} other {# codes d’adhésion en attente pour elle ou émis par elle seront annulés.}}",
+      "action": "Enregistrer"
+    },
+    "makeOwner": {
+      "title": "Faire de {{name}} le Propriétaire ?",
+      "message": "{{device}} ({{fingerprint}}) et ses autres appareils SirinVPN obtiennent le contrôle total. Cet appareil devient un appareil Administrateur.",
+      "action": "Faire Propriétaire"
+    },
+    "cancelCode": {
+      "title": "Annuler « {{name}} » ?",
+      "message": "Le code cesse de fonctionner immédiatement. Les appareils déjà adhérents conservent leur accès.",
+      "action": "Annuler le code"
+    },
+    "openPort": {
+      "title": "Ouvrir le port public {{publicPort}} ?",
+      "message": "Le port {{protocol}} {{publicPort}} redirigera vers {{device}}, port {{devicePort}}. Toute personne sur Internet peut tenter de le joindre.",
+      "action": "Ouvrir le port"
+    },
+    "closePort": {
+      "title": "Fermer le port {{protocol}} {{publicPort}} ?",
+      "message": "Les connexions qui passent par lui s’arrêtent immédiatement.",
+      "action": "Fermer le port"
+    },
+    "removePair": {
+      "title": "Supprimer cette paire de {{name}} ?",
+      "message": "Les deux appareils ne peuvent plus se joindre, sauf si l’accès d’appareil à appareil est activé sur les deux.",
+      "action": "Supprimer la paire"
+    }
+  },
+  "notice": {
+    "abandoned": "La modification n’a pas été envoyée : la connexion au serveur a changé. Réessayez.",
+    "personRenamed": "Renommée en « {{name}} ».",
+    "deviceRenamed": "Renommé en « {{name}} ».",
+    "deviceRemoved": "{{name}} a été supprimé.",
+    "personRemoved": "La personne {{name}} a été supprimée.",
+    "suspended": "Accès suspendu pour {{name}}.",
+    "resumed": "L’accès de {{name}} est de nouveau actif.",
+    "roleChanged": "{{name}} est maintenant {{role}}.",
+    "ownerChanged": "{{name}} est maintenant le Propriétaire. Cet appareil est un appareil Administrateur.",
+    "limitsSaved": "Limites de {{name}} enregistrées.",
+    "codeCancelled": "Code d’adhésion annulé.",
+    "peerOn": "{{name}} a maintenant l’accès d’appareil à appareil.",
+    "peerOff": "{{name}} n’a plus l’accès d’appareil à appareil.",
+    "pairAdded": "Associé à {{name}}.",
+    "pairRemoved": "Paire supprimée.",
+    "networksSaved": "Réseaux locaux de {{name}} enregistrés.",
+    "networksCleared": "{{name}} ne partage plus de réseaux locaux.",
+    "portOpened": "Le port {{port}} est ouvert.",
+    "portClosed": "Le port {{port}} est fermé."
+  },
+  "join": {
+    "codeAccepted": "Code d’adhésion accepté",
+    "codeEntered": "Code d’adhésion saisi",
+    "changeCode": "Changer de code",
+    "rejected": {
+      "expired": "Ce code d’adhésion a expiré. Demandez-en un nouveau.",
+      "used": "Ce code d’adhésion a déjà été utilisé ou annulé. Demandez-en un nouveau.",
+      "invalid": "Ce n’est pas un code d’adhésion valide. Vérifiez que vous l’avez copié en entier, ou demandez-en un nouveau."
+    },
+    "ownerDevice": "Ajoute cet appareil à {{name}}, le Propriétaire.",
+    "ownerPower": "Les appareils Propriétaire ont le contrôle total du serveur, de chaque personne et de chaque appareil. Rejoignez seulement si vous vous y attendiez.",
+    "addsDevice": "Ajoute cet appareil à {{name}}.",
+    "namedPerson": "Vous rejoignez en tant que <strong>{{name}}</strong>.",
+    "personName": "Votre nom",
+    "personNameHint": "Visible par la personne qui gère ce serveur.",
+    "deviceName": "Nom de cet appareil",
+    "deviceNameHint": "Par exemple, le modèle du téléphone ou de l’ordinateur. Vous pourrez le renommer plus tard.",
+    "presetDevice": "Cet appareil s’appellera <strong>{{name}}</strong>.",
+    "renameLater": "Il peut être renommé plus tard dans Appareils."
+  },
+  "error": {
+    "load": "Impossible de charger les personnes et les appareils depuis le serveur.",
+    "features": "Impossible de vérifier ce que ce serveur prend en charge.",
+    "renamePerson": "Impossible de renommer la personne. Réessayez.",
+    "renameDevice": "Impossible de renommer l’appareil. Réessayez.",
+    "removeDevice": "Impossible de supprimer l’appareil. Réessayez.",
+    "removePerson": "Impossible de supprimer la personne. Actualisez pour voir son état actuel.",
+    "suspension": "Impossible de modifier sa suspension. Actualisez pour voir son état actuel.",
+    "role": "Impossible de changer le rôle. Réessayez.",
+    "makeOwner": "Impossible de changer le Propriétaire. Réessayez.",
+    "limits": "Impossible d’enregistrer les limites. Réessayez.",
+    "peer": "Impossible de modifier l’accès d’appareil à appareil. Réessayez.",
+    "pair": "Impossible de modifier la paire. Réessayez.",
+    "networks": "Impossible d’enregistrer les réseaux locaux. Réessayez.",
+    "openPort": "Impossible d’ouvrir le port. Réessayez.",
+    "closePort": "Impossible de fermer le port. Réessayez.",
+    "cancelCode": "Impossible d’annuler le code d’adhésion. Réessayez.",
+    "createCode": "Impossible de créer le code d’adhésion. Réessayez.",
+    "wireguard": "Impossible d’ajouter l’appareil WireGuard. Réessayez."
+  }
+}

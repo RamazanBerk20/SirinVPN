@@ -1,0 +1,129 @@
+{
+  "example": "z. B. {{value}}",
+  "resolver": {
+    "legend": "DNS-Resolver",
+    "mode": {
+      "preserve": "Aktuellen behalten",
+      "recursive": "Rekursiv",
+      "dnsOverTls": "DNS über TLS",
+      "dnsOverHttps": "DNS über HTTPS"
+    },
+    "note": {
+      "preserve": "Aktueller Resolver und Split-DNS-Zonen bleiben unverändert",
+      "recursive": "Dein Server löst Namen selbst auf, mit DNSSEC-Prüfung",
+      "dnsOverTls": "Leitet Anfragen über TLS auf Port 853 weiter, ohne unverschlüsselten Rückfall",
+      "dnsOverHttps": "Leitet Anfragen über HTTPS auf Port 443 weiter, ohne unverschlüsselten Rückfall"
+    },
+    "endpoint": "Resolver {{number}}",
+    "endpointOptional": "Resolver {{number}} (optional)",
+    "address": "IP-Adresse",
+    "tlsName": "TLS-Hostname",
+    "httpsPath": "HTTPS-Pfad",
+    "error": {
+      "address": "Gib die IP-Adresse des Resolvers ein, zum Beispiel 9.9.9.9.",
+      "duplicate": "Das ist derselbe Resolver wie Resolver 1.",
+      "name": "Gib den Hostnamen aus dem Zertifikat des Resolvers ein, zum Beispiel dns.quad9.net.",
+      "path": "Beginne mit / und verwende nur Buchstaben, Ziffern und - _ . ~"
+    }
+  },
+  "records": {
+    "legend": "Private DNS-Einträge",
+    "mode": {
+      "preserve": "Aktuelle behalten",
+      "replace": "Ersetzen",
+      "clear": "Leeren"
+    },
+    "note": {
+      "preserve": "Aktuelle Einträge bleiben unverändert",
+      "replace": "Namen, die nur innerhalb deines VPN aufgelöst werden",
+      "clear": "Entfernt alle privaten DNS-Einträge vom Server, für alle Geräte"
+    },
+    "label": "Einträge",
+    "hint": "Ein Name=IP pro Zeile, bis zu 64",
+    "invalidLine": "„{{line}}“ ist kein Eintrag. Schreibe Name=IP, zum Beispiel nas.home=10.20.30.40.",
+    "invalid": "Gib höchstens 64 Einträge ein."
+  },
+  "nat64": {
+    "legend": "IPv4-Websites über NAT64",
+    "mode": {
+      "preserve": "Aktuell behalten",
+      "replace": "Präfix verwenden",
+      "clear": "Ausschalten"
+    },
+    "note": {
+      "setup": "Optional. Dieser VPS hat kein IPv4, daher schlagen reine IPv4-Websites fehl, außer Mitglieder erreichen sie über ein NAT64-Gateway. Dessen Betreiber sieht, welche IPv4-Adressen sie aufrufen.",
+      "preserve": "Der VPS behält seine aktuelle NAT64-Einstellung",
+      "replace": "Nur für einen VPS ohne IPv4. Der Betreiber des NAT64-Gateways sieht, welche IPv4-Adressen Mitglieder aufrufen.",
+      "clear": "Ohne IPv4 auf dem VPS erreichen Mitglieder nur IPv6-Websites"
+    },
+    "label": "NAT64-Präfix",
+    "hint": "Von deinem VPS-Anbieter oder einem öffentlichen NAT64-Dienst",
+    "invalid": "Gib ein IPv6-Präfix ein, zum Beispiel 64:ff9b::/96."
+  },
+  "split": {
+    "label": "Split-DNS-Zonen",
+    "summary": "Optional. Schick eine Domain an einen eigenen Resolver: Domain=IP, eine pro Zeile.",
+    "infoLabel": "Über Split-DNS-Zonen",
+    "info": "Resolver mit privater IP gelten ohne DNSSEC als vertrauenswürdig. IP#TLS-Name verwendet DNS über TLS mit DNSSEC. Trenne Ersatz-Resolver mit Kommas; Zonen fallen nie auf den Haupt-Resolver zurück.",
+    "invalid": "Jede Domain nur einmal auflisten, höchstens 16 Zonen.",
+    "invalidLine": "„{{line}}“ ist keine Zone. Schreibe Domain=IP mit einer privaten Resolver-Adresse oder IP#TLS-Name.",
+    "localSuffix": "{{zone}} endet auf .local, das zu Geräten in deinem eigenen Netzwerk gehört. Verwende für diese Zone einen anderen Namen.",
+    "publicResolver": "{{resolver}} ist eine öffentliche Adresse. Eine Zone kann sie nur über TLS nutzen: Schreibe {{resolver}}#sein-TLS-Name."
+  },
+  "review": {
+    "label": "Prüfung der DNS-Änderungen",
+    "title": "DNS-Änderungen prüfen",
+    "resolver": {
+      "term": "Resolver",
+      "preserve": "Aktuellen Resolver und Split-DNS-Zonen behalten",
+      "recursive": "Rekursives DNS mit DNSSEC",
+      "dnsOverTls": "DNS über TLS, ohne unverschlüsselten Rückfall",
+      "dnsOverHttps": "DNS über HTTPS, ohne unverschlüsselten Rückfall"
+    },
+    "addresses": "Resolver-Adressen",
+    "split": {
+      "term": "Split-DNS-Zonen",
+      "none": "Keine. Vorhandene Zonen werden entfernt."
+    },
+    "records": {
+      "term": "Private DNS-Einträge",
+      "preserve": "Aktuelle Einträge behalten",
+      "clear": "Alle Einträge entfernen",
+      "replace": "Alle Einträge ersetzen durch:"
+    },
+    "impact": "Betrifft jedes Gerät auf diesem Server, und das VPN startet kurz neu. VPN-Adressen, Ports, Geräte und Zugriffe bleiben gleich."
+  },
+  "blocklist": {
+    "title": "Werbe- und Tracker-Blockierung",
+    "summary": "Blockiert Werbe- und Tracker-Domains für jedes Gerät, das das DNS dieses Servers nutzt. Der Server speichert keinen Verlauf der Anfragen.",
+    "unsupported": "Repariere diesen Server mit der aktuellen App, um die DNS-Blockierung zu nutzen.",
+    "enable": "Werbung und Tracker blockieren",
+    "lists": "Blocklisten",
+    "custom": "Weitere Blocklisten",
+    "customHint": "Optional. Eine HTTPS-Adresse pro Zeile, im Hosts- oder Domainlisten-Format.",
+    "customInvalid": "Jede Adresse muss eine vollständige HTTPS-Adresse sein, und es sind höchstens 8 Listen möglich.",
+    "allowlist": "Nie blockieren",
+    "allowlistHint": "Eine Domain pro Zeile. Ihre Subdomains sind ebenfalls erlaubt.",
+    "allowlistInvalid": "Verwende gültige Domainnamen, bis zu 512.",
+    "save": "Blockierung speichern",
+    "refresh": "Status aktualisieren",
+    "saved": "Gespeichert. Der Server übernimmt es innerhalb einer Minute.",
+    "loadFailed": "Die Einstellungen für die DNS-Blockierung konnten nicht geladen werden.",
+    "saveFailed": "Die Einstellungen für die DNS-Blockierung konnten nicht gespeichert werden.",
+    "status": {
+      "off": "DNS-Blockierung ist aus.",
+      "pending": "Der Server übernimmt gerade die neueste Änderung.",
+      "active": "{count, plural, one {Blockiert # Domain. Liste aktualisiert {{time}}.} other {Blockiert # Domains. Liste aktualisiert {{time}}.}}"
+    },
+    "member": {
+      "on": "Ein. Nur der Besitzer oder ein Admin kann das ändern.",
+      "off": "Aus. Nur der Besitzer oder ein Admin kann das ändern."
+    },
+    "failure": {
+      "download": "Eine Blockliste konnte nicht heruntergeladen werden. Die letzte funktionierende Liste bleibt in Kraft.",
+      "format": "Eine Blockliste liegt nicht im Hosts- oder Domainlisten-Format vor. Die letzte funktionierende Liste bleibt in Kraft.",
+      "too_many_domains": "Die gewählten Listen enthalten mehr als 300.000 Domains. Wähle weniger Listen; die letzte funktionierende Liste bleibt in Kraft.",
+      "resolver": "Der DNS-Dienst hat die neue Liste abgelehnt. Die letzte funktionierende Liste bleibt in Kraft."
+    }
+  }
+}

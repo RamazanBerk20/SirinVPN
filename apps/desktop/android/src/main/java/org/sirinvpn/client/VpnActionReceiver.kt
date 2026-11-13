@@ -6,31 +6,25 @@ import android.content.Context
 import android.content.Intent
 import java.util.UUID
 
+/**
+ * Notification and widget control actions. Notification actions always require authentication
+ * (VpnNotifications.controlAction), so Android unlocks before delivering them here: a receiver
+ * may not start an activity for a notification tap on Android 12+.
+ */
 class VpnActionReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        if (intent.getLongExtra("generation",-1) < 0) return
-        val command=when(intent.action) {
-            "org.sirinvpn.CONNECT" -> "connect_saved"
-            else -> "disconnect_server"
-        }
-        if (context.getSystemService(KeyguardManager::class.java).isDeviceLocked) {
-            context.startActivity(Intent(context, ControlActionActivity::class.java)
-                .putExtra("command",command)
-                .putExtra("generation", intent.getLongExtra("generation", -2)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-            return
-        }
+        val generation = intent.getLongExtra("generation", -1)
+        // Only a sender that bypassed Android's authentication arrives while locked: refuse it.
+        if (generation < 0 || context.getSystemService(KeyguardManager::class.java).isDeviceLocked) return
+        val command = if (intent.action == "org.sirinvpn.CONNECT") "connect_saved" else "disconnect_server"
         val pending = goAsync()
         val link = ServiceLink(context)
-        link.bind()
-        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-            link.ready.completeExceptionally(java.util.concurrent.TimeoutException())
-        },5000)
-        link.ready.whenComplete { control, error ->
+        link.control(5000).whenComplete { control, error ->
             try {
-                if(error==null) control.execute(command,"{}",UUID.randomUUID().toString(),intent.getLongExtra("generation",-2),
-                    object:IResult.Stub(){override fun complete(result:String){}})
-            } catch (_:Exception) { /* A dead service cannot report a successful action. */ }
-            finally {link.close();pending.finish()}
+                if (error == null) control.execute(command, "{}", UUID.randomUUID().toString(), generation,
+                    object : IResult.Stub() { override fun complete(result: String) {} })
+            } catch (_: Exception) { /* A dead service cannot report a successful action. */ }
+            finally { link.close(); pending.finish() }
         }
     }
 }

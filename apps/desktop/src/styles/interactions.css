@@ -39,7 +39,7 @@ button:active:not(:disabled) {
   transform: translateY(1px);
 }
 .settings-action:hover:not(:disabled) > svg:last-child {
-  transform: translateX(2px);
+  transform: translateX(calc(var(--dir) * 2px));
 }
 .settings-action > svg:last-child {
   transition: transform 150ms ease;

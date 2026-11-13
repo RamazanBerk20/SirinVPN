@@ -1,0 +1,468 @@
+{
+  "page": {
+    "mine": "Mis dispositivos",
+    "you": "Tú",
+    "add": "Añadir dispositivo",
+    "addMine": "Añadir mi dispositivo",
+    "addFor": "Añadir dispositivo para {{name}}",
+    "cannotAdd": "No puedes añadir dispositivos. Pide a un propietario o administrador que añada uno por ti.",
+    "refresh": "Actualizar",
+    "loading": "Cargando personas y dispositivos…",
+    "connect": "Conectar",
+    "openHome": "Abrir Inicio",
+    "disconnected": "No conectado. Conéctate para ver los dispositivos de todos y hacer cambios.",
+    "disconnectedSaved": "No conectado. Mostrando las personas y dispositivos tal como se guardaron a las {{time}}; conéctate para hacer cambios.",
+    "stale": "Mostrando las personas y dispositivos tal como se guardaron a las {{time}}. Los cambios están desactivados hasta que se actualice la lista.",
+    "unsupported": "Este servidor es demasiado antiguo para gestionar personas y dispositivos aquí.",
+    "unsupportedOwner": "Este servidor es demasiado antiguo para gestionar personas y dispositivos aquí. Actualiza el software del VPS en Ajustes.",
+    "search": "Buscar personas y dispositivos",
+    "searchPlaceholder": "Buscar por nombre o dirección VPN",
+    "clearSearch": "Borrar búsqueda",
+    "noMatches": "Ninguna persona ni dispositivo coincide con «{{query}}».",
+    "adminOwnDevices": "Para añadir tus propios dispositivos, pide al propietario que lo permita en tus Límites y permisos.",
+    "unnamed": "Nombre aún no cargado"
+  },
+  "empty": {
+    "title": "Solo este dispositivo por ahora",
+    "body": "Cada persona de este servidor tiene un rol y puede tener varios dispositivos. Añade otro dispositivo tuyo, o uno para otra persona.",
+    "mine": "Añadir otro dispositivo mío",
+    "someone": "Añadir un dispositivo para otra persona"
+  },
+  "count": {
+    "people": "{count, plural, one {# persona} many {# personas} other {# personas}}",
+    "devices": "{count, plural, one {# dispositivo} many {# dispositivos} other {# dispositivos}}",
+    "forwards": "{count, plural, one {# puerto reenviado} many {# puertos reenviados} other {# puertos reenviados}}",
+    "pairs": "{count, plural, one {# par de dispositivos} many {# pares de dispositivos} other {# pares de dispositivos}}",
+    "codes": "{count, plural, one {# código para unirse} many {# códigos para unirse} other {# códigos para unirse}}"
+  },
+  "role": {
+    "title": "Rol",
+    "description": {
+      "owner": "Control total del servidor. Solo hay un propietario.",
+      "admin": "Puede añadir personas y gestionar a los miembros, pero no a los administradores ni al propietario.",
+      "member": "Usa la VPN y no gestiona nada, salvo que se le den permisos."
+    },
+    "change": "Hacer {{role}}",
+    "codesWaiting": "{count, plural, one {# código para unirse de o para {{name}} está en espera. El servidor no puede cambiar el rol hasta que se cancele.} many {# códigos para unirse de o para {{name}} están en espera. El servidor no puede cambiar el rol hasta que se cancelen.} other {# códigos para unirse de o para {{name}} están en espera. El servidor no puede cambiar el rol hasta que se cancelen.}}",
+    "cancelAndChange": "{count, plural, one {Cancelar el código y cambiar el rol} many {Cancelar los códigos y cambiar el rol} other {Cancelar los códigos y cambiar el rol}}",
+    "createdCodes": "También se cancelan los códigos para unirse que creó {{name}}."
+  },
+  "presence": {
+    "active": "Activo ahora",
+    "idle": "Sin actividad reciente",
+    "unknown": "Actividad desconocida",
+    "suspended": "Suspendido"
+  },
+  "summary": {
+    "sirinApp": "App SirinVPN",
+    "wireguardApp": "App WireGuard",
+    "reachesOthers": "llega a otros dispositivos",
+    "paired": "{count, plural, one {emparejado con # dispositivo} many {emparejado con # dispositivos} other {emparejado con # dispositivos}}",
+    "internetOnly": "solo Internet",
+    "sharesNetwork": "comparte {{network}}",
+    "sharesNetworks": "{count, plural, one {comparte # red local} many {comparte # redes locales} other {comparte # redes locales}}",
+    "forwards": "{count, plural, one {# puerto reenviado} many {# puertos reenviados} other {# puertos reenviados}}"
+  },
+  "gate": {
+    "resumeFirst": "Reanuda primero a {{name}}.",
+    "limitReached": "{count, plural, one {Límite de dispositivos alcanzado (#). Auméntalo en Límites y permisos.} many {Límite de dispositivos alcanzado (#). Auméntalo en Límites y permisos.} other {Límite de dispositivos alcanzado (#). Auméntalo en Límites y permisos.}}",
+    "needsAppDevice": "Necesita un dispositivo con la app SirinVPN, no solo WireGuard.",
+    "lastOwnerDevice": "Este es el último dispositivo del propietario con SirinVPN, así que no se puede quitar. Añade primero otro."
+  },
+  "panel": {
+    "readOnly": "Solo lectura hasta que se actualice la lista."
+  },
+  "person": {
+    "youTitle": "{{name}} (tú)",
+    "summary": "{count, plural, one {{{role}} · # dispositivo} many {{{role}} · # dispositivos} other {{{role}} · # dispositivos}}",
+    "name": "Nombre",
+    "devices": "{count, plural, one {Dispositivo} many {Dispositivos} other {Dispositivos}}",
+    "devicesOfLimit": "{limit, plural, one {{{count}} de # dispositivo} many {{{count}} de # dispositivos} other {{{count}} de # dispositivos}}",
+    "noDevices": "Todavía no hay dispositivos.",
+    "noDevicesSuspended": "No hay dispositivos. Una persona suspendida no puede añadir ninguno.",
+    "suspended": "Suspendido",
+    "limitedHours": "Horas limitadas",
+    "expires": "Acceso hasta el {{date}}",
+    "expired": "El acceso terminó el {{date}}",
+    "dangerZone": "Pausar o quitar",
+    "suspend": "Suspender",
+    "resume": "Reanudar",
+    "suspendHint": "Pausa todos sus dispositivos. No se elimina nada, y Reanudar restaura el acceso.",
+    "resumeHint": "Sus dispositivos están en pausa. Reanudar les devuelve el acceso con sus ajustes guardados.",
+    "renameCodesWaiting": "{count, plural, one {# código para unirse de o para {{name}} está en espera. El servidor no puede cambiarle el nombre hasta que se cancele.} many {# códigos para unirse de o para {{name}} están en espera. El servidor no puede cambiarle el nombre hasta que se cancelen.} other {# códigos para unirse de o para {{name}} están en espera. El servidor no puede cambiarle el nombre hasta que se cancelen.}}",
+    "cancelAndRename": "{count, plural, one {Cancelar el código y cambiar el nombre} many {Cancelar los códigos y cambiar el nombre} other {Cancelar los códigos y cambiar el nombre}}",
+    "remove": "Quitar persona",
+    "removeHint": "La elimina a ella, {{devices}}, {{forwards}}, {{pairs}} y {{codes}}. Necesita un código nuevo para unirse para volver."
+  },
+  "device": {
+    "summary": "{{name}} · {{presence}}",
+    "name": "Nombre del dispositivo",
+    "owner": "Pertenece a",
+    "connection": "Se conecta con",
+    "sirinApp": "App SirinVPN",
+    "wireguardApp": "App WireGuard o router, solo UDP directo",
+    "address": "Dirección VPN",
+    "activity": "Actividad",
+    "fingerprint": "Huella digital de identidad",
+    "fingerprintLabel": "Huella digital de {{name}}",
+    "removeTitle": "Quitar",
+    "remove": "Quitar dispositivo",
+    "removeThis": "Quitar este dispositivo",
+    "removeHint": "Sus claves se revocan: el acceso a la VPN y a la gestión se detiene de inmediato.",
+    "removeThisHint": "Este es el dispositivo que estás usando. Quitarlo termina el acceso de esta app a {{server}}."
+  },
+  "network": {
+    "title": "Red",
+    "peer": "Acceso entre dispositivos",
+    "peerOn": "Llega a otros dispositivos que también lo tengan activado.",
+    "peerOff": "Desactivado: solo Internet, más los pares de dispositivos.",
+    "suspended": "En pausa mientras {{name}} está suspendido."
+  },
+  "pairs": {
+    "title": "Pares de dispositivos",
+    "description": "Un par permite que dos dispositivos se alcancen entre sí aunque el acceso entre dispositivos esté desactivado.",
+    "bothWays": "Con {{name}}, en ambos sentidos",
+    "starts": "Inicia conexiones hacia {{name}}",
+    "answers": "Solo responde a {{name}}",
+    "otherDevice": "el dispositivo de otra persona",
+    "peer": "Dispositivo",
+    "direction": "Sentido",
+    "directionHint": "Un sentido: solo el primer dispositivo inicia conexiones; el otro solo responde. Iniciar conexiones hacia un dispositivo que comparte redes locales también permite llegar a ellas.",
+    "option": {
+      "both": "En ambos sentidos",
+      "starts": "Solo {{from}} inicia, hacia {{to}}"
+    },
+    "add": "Añadir par",
+    "remove": "Quitar"
+  },
+  "networks": {
+    "title": "Redes locales",
+    "description": "Comparte las redes privadas detrás de {{name}}, como una red doméstica, con los dispositivos que la alcancen.",
+    "label": "Redes",
+    "hint": "Una red IPv4 privada por línea, /20 o menor. Déjalo vacío para dejar de compartir.",
+    "invalid": "No es una red IPv4 privada de /20 o menor: {{networks}}",
+    "hostBits": "{{network}} no es el inicio de su red. Usa {{canonical}}.",
+    "inactive": "No se enruta ahora, porque el VPS llega a estas redes a través de otra red: {{networks}}",
+    "linux": "{{name}} debe ejecutar SirinVPN en Linux con el reenvío IPv4 activado:",
+    "copyCommand": "Copiar comando",
+    "save": "Guardar redes"
+  },
+  "ports": {
+    "title": "Reenvío de puertos",
+    "none": "Ningún puerto reenviado a este dispositivo.",
+    "paused": "En pausa mientras está suspendido",
+    "exposure": "Cualquier persona en Internet puede llegar a un servicio reenviado.",
+    "protocol": "Protocolo",
+    "publicPort": "Puerto público",
+    "publicPortHint": "Se abre en la dirección de tu VPS.",
+    "devicePort": "Puerto del dispositivo",
+    "devicePortHint": "Donde escucha el servicio.",
+    "publicPortLow": "Usa un puerto del 1024 al 65535. Los puertos más bajos están reservados.",
+    "publicPortRange": "Usa un puerto del 1024 al 65535.",
+    "devicePortRange": "Usa un puerto del 1 al 65535.",
+    "preview": "El puerto público {{protocol}} <strong>{{publicPort}}</strong> se reenvía a <strong>{{device}}</strong>, puerto <strong>{{devicePort}}</strong>",
+    "used": "{max, plural, one {{{count}} de # puerto del servidor en uso} many {{{count}} de # puertos del servidor en uso} other {{{count}} de # puertos del servidor en uso}}",
+    "full": "{count, plural, one {Está en uso el único puerto del servidor. Cierra uno para abrir otro.} many {Están en uso todos los # puertos del servidor. Cierra uno para abrir otro.} other {Están en uso todos los # puertos del servidor. Cierra uno para abrir otro.}}",
+    "open": "Abrir puerto",
+    "close": "Cerrar",
+    "closeLabel": "Cerrar el puerto {{protocol}} {{publicPort}} hacia el puerto del dispositivo {{devicePort}}",
+    "visitorAddress": "El servicio ve a los visitantes como <address>{{address}}</address>, no con su IP real."
+  },
+  "policy": {
+    "title": "Límites y permisos",
+    "limits": "Límites",
+    "deviceLimit": "Límite de dispositivos",
+    "deviceLimitHint": "Déjalo vacío para no tener límite. Quita los dispositivos sobrantes antes de bajarlo.",
+    "deviceLimitHintNew": "Déjalo vacío para no tener límite.",
+    "expires": "El acceso termina",
+    "expiresHint": "Tu hora local. Déjalo vacío para que nunca termine.",
+    "expiresPast": "Esa hora ya ha pasado. Perderán el acceso en cuanto guardes.",
+    "permissions": "Permisos",
+    "permission": {
+      "addPeople": "Añadir personas nuevas",
+      "addOwnDevices": "Añadir sus propios dispositivos",
+      "deviceToDevice": "Cambiar el acceso entre dispositivos y los pares de sus dispositivos",
+      "portForwards": "Abrir puertos públicos de Internet hacia sus dispositivos"
+    },
+    "save": "Guardar límites",
+    "appliesToAll": "Se aplica a todos sus dispositivos.",
+    "cancelsCodes": "{count, plural, one {Al guardar se cancela # código para unirse de o para esta persona que está en espera.} many {Al guardar se cancelan # códigos para unirse de o para esta persona que están en espera.} other {Al guardar se cancelan # códigos para unirse de o para esta persona que están en espera.}}",
+    "cancelsCreated": "Al guardar se cancelan los códigos para unirse que creó {{name}}.",
+    "error": {
+      "limit": "Introduce un límite del 1 al 222, o déjalo vacío.",
+      "expires": "Introduce una fecha y hora válidas.",
+      "noHours": "Elige al menos una hora, o desactiva el límite de horas.",
+      "tooManyRanges": "{count, plural, one {Usa como máximo # intervalo horario separado en la semana.} many {Usa como máximo # intervalos horarios separados en la semana.} other {Usa como máximo # intervalos horarios separados en la semana.}}"
+    }
+  },
+  "hours": {
+    "title": "Horario semanal",
+    "limit": "Limitar a ciertas horas",
+    "allWeek": "El acceso está permitido en cualquier momento.",
+    "localTime": "En tu zona horaria ({{zone}}). Los cambios de horario de verano pueden desplazarlos una hora.",
+    "inexact": "Algunas horas guardadas no empiezan en punto. Al editar la cuadrícula se redondean a horas completas.",
+    "cell": "{{day}}, {{hour}}",
+    "toggleDay": "Todo el {{day}}",
+    "toggleHour": "{{hour}} todos los días"
+  },
+  "codes": {
+    "title": "{count, plural, one {En espera para unirse (#)} many {En espera para unirse (#)} other {En espera para unirse (#)}}",
+    "forPerson": "Dispositivo para {{name}}",
+    "newPerson": "Alguien nuevo",
+    "newNamed": "{{name}}, persona nueva",
+    "severalPeople": "Varias personas nuevas",
+    "row": "{{role}} · {{uses}} · Caduca el {{date}}",
+    "singleUse": "Uso único",
+    "usesLeft": "{max, plural, one {Queda {{count}} de # uso} many {Quedan {{count}} de # usos} other {Quedan {{count}} de # usos}}",
+    "cancel": "Cancelar código",
+    "cancelling": "Cancelando…"
+  },
+  "add": {
+    "whose": {
+      "title": "¿De quién es el dispositivo?",
+      "description": "Cada dispositivo pertenece a una sola persona.",
+      "mine": "Mío",
+      "mineHint": "Otro teléfono u ordenador tuyo.",
+      "person": "Alguien que ya está aquí",
+      "personHint": "Añade un dispositivo a una persona de este servidor.",
+      "pick": "Persona",
+      "option": "{{name}} · {{role}}",
+      "new": "Alguien nuevo",
+      "newHint": "Añade una persona con su primer dispositivo."
+    },
+    "new": {
+      "name": "Su nombre",
+      "nameHint": "Lo ve todo el que gestiona este servidor.",
+      "several": "Varias personas nuevas usarán este código",
+      "people": "Número de personas",
+      "peopleHint": "Cada persona se pone su nombre al unirse y pasa a ser miembro.",
+      "peopleInvalid": "Introduce un número entero del 2 al 100.",
+      "nameHintRename": "Lo ve todo el que gestiona este servidor. Puedes cambiarle el nombre más tarde."
+    },
+    "connect": {
+      "title": "¿Cómo se conectará?",
+      "app": "App SirinVPN",
+      "appHint": "Recomendado. El dispositivo recibe un código para unirse y crea sus propias claves.",
+      "wireguard": "App WireGuard",
+      "wireguardHint": "Avanzado. Para iPhone, iPad, Mac o un router. Solo UDP directo; no puede gestionar el servidor."
+    },
+    "forYou": "Para ti",
+    "forPerson": "Para {{name}}",
+    "severalPeople": "varias personas nuevas",
+    "deviceName": "Nombre del dispositivo",
+    "deviceNameFixed": "Este servidor no les permite ponerle nombre al unirse. Quien gestione el servidor puede cambiárselo más tarde.",
+    "lifetime": "El código caduca después de",
+    "hours": "{count, plural, one {# hora} many {# horas} other {# horas}}",
+    "days": "{count, plural, one {# día} many {# días} other {# días}}",
+    "uses": "Dispositivos que puede añadir este código",
+    "usesHint": "Cada dispositivo se une con sus propias claves. Los límites de dispositivos siguen aplicándose.",
+    "usesInvalid": "Introduce un número entero del 1 al 100.",
+    "ownerWarningTitle": "Quien use este código tendrá control total del servidor.",
+    "ownerWarning": "Añade un dispositivo propietario. Compártelo solo contigo, en privado.",
+    "next": "Siguiente",
+    "creating": "Creando…",
+    "createCode": "Crear código para unirse",
+    "createWireguard": "Crear configuración",
+    "copyCode": "Copiar código",
+    "copyFailed": "No se pudo copiar el código. Selecciónalo y cópialo manualmente.",
+    "copyFailedAndroid": "No se pudo copiar el código. Usa Ver o compartir código para unirse en su lugar.",
+    "done": "Hecho",
+    "closeUnshared": {
+      "title": "¿Cerrar sin compartir el código?",
+      "message": "No se puede volver a mostrar. Si no lo has copiado, escaneado ni compartido, cancélalo en En espera para unirse y vuelve a añadir el dispositivo.",
+      "action": "Cerrar"
+    },
+    "handover": {
+      "title": "Entrégalo"
+    },
+    "code": {
+      "instructionSelf": "En tu otro dispositivo, abre SirinVPN, elige Usar un código para unirse y luego escanea este código QR o pega el código.",
+      "instructionSelfAndroid": "En tu otro dispositivo, abre SirinVPN, elige Usar un código para unirse y luego escanea o pega el código que compartas desde aquí.",
+      "instructionPerson": "Envíalo en privado a {{name}}. Esa persona abre SirinVPN, elige Usar un código para unirse y lo escanea o lo pega.",
+      "instructionSeveral": "Envíalo en privado a las personas que se unan. Cada una abre SirinVPN, elige Usar un código para unirse y lo escanea o lo pega.",
+      "once": "Este código se muestra solo una vez",
+      "secret": "Cualquiera que lo tenga puede unirse hasta que se use, se cancele o caduque el {{date}}."
+    },
+    "wireguard": {
+      "instruction": "En el dispositivo, abre la app WireGuard y escanea este código QR, o importa el archivo guardado.",
+      "secret": "Este código QR y este archivo contienen la clave privada del dispositivo. Cualquiera que los tenga puede usar esta VPN. Elimina el archivo después de importarlo.",
+      "limits": "Un dispositivo WireGuard solo se conecta por UDP directo y no puede gestionar el servidor ni seguir los cambios de dirección.",
+      "file": "Archivo de configuración",
+      "fileHint": "Opcional. Guarda un archivo .conf para un router o para importarlo más tarde.",
+      "fileType": "Configuración de WireGuard",
+      "chooseFile": "Elegir archivo",
+      "noFile": "Sin archivo; solo código QR",
+      "saved": "Guardado en <path>{{path}}</path>"
+    },
+    "state": {
+      "waiting": "Esperando a que el dispositivo se una…",
+      "joined": "{count, plural, one {{{name}} se ha unido.} many {{{name}} se ha unido.} other {{{name}} se ha unido.}}",
+      "connected": "El dispositivo se ha conectado.",
+      "expired": "El código caducó antes de que lo usara nadie.",
+      "cancelled": "El código se canceló.",
+      "ended": "El código ya no está en espera: se usó o se canceló."
+    }
+  },
+  "share": {
+    "showInvitation": "Ver o compartir código para unirse",
+    "showRecovery": "Ver o compartir clave de recuperación",
+    "qrNote": "Escanea esto en lugar de copiar el código.",
+    "code": "Código",
+    "codeLabel": "Código para unirse",
+    "enlarge": "Ampliar código QR",
+    "enlargeInvitation": "Ampliar código QR del código para unirse",
+    "enlargeRecovery": "Ampliar código QR de la clave de recuperación",
+    "scanInvitation": "Escanear código para unirse",
+    "scanRecovery": "Escanear clave de recuperación",
+    "closeQr": "Cerrar código QR",
+    "copyRecovery": "Copiar clave de recuperación",
+    "altInvitation": "Código QR del código para unirse",
+    "altInvitationEnlarged": "Código QR del código para unirse ampliado",
+    "altRecovery": "Código QR de la clave de recuperación",
+    "altRecoveryEnlarged": "Código QR de la clave de recuperación ampliado",
+    "altWireguard": "Código QR de la configuración de WireGuard",
+    "copyCode": "Copiar código"
+  },
+  "name": {
+    "save": "Guardar nombre",
+    "empty": "Introduce un nombre.",
+    "tooLong": "{count, plural, one {Usa como máximo # carácter.} many {Usa como máximo # caracteres.} other {Usa como máximo # caracteres.}}",
+    "invalid": "Quita los saltos de línea y otros caracteres de control."
+  },
+  "owner": {
+    "title": "Hacer de {{name}} el propietario",
+    "open": "Hacer propietario…",
+    "effect": "{{name}} obtiene control total del servidor. Tú pasas a ser administrador, y esto no se puede deshacer desde aquí.",
+    "device": "Dispositivo que pasa a ser del propietario",
+    "wireguardExcluded": "Los dispositivos WireGuard no pueden gestionar el servidor, así que no aparecen en la lista.",
+    "codesWaiting": "{count, plural, one {# código para unirse debe cancelarse primero.} many {# códigos para unirse deben cancelarse primero.} other {# códigos para unirse deben cancelarse primero.}}",
+    "cancelCode": "Cancelar código de {{name}}",
+    "confirm": "Hacer de {{name}} el propietario"
+  },
+  "confirm": {
+    "removeDevice": {
+      "title": "¿Quitar {{name}}?",
+      "message": "Sus claves se revocan y su acceso a la VPN y a la gestión se detiene de inmediato. Necesita un código nuevo para unirse para volver.",
+      "action": "Quitar dispositivo"
+    },
+    "removeThis": {
+      "title": "¿Quitar este dispositivo?",
+      "message": "Esta app pierde el acceso a {{server}} de inmediato. Para volver se necesita un código nuevo para unirse desde otro dispositivo.",
+      "action": "Quitar este dispositivo"
+    },
+    "removePerson": {
+      "title": "¿Quitar a {{name}}?",
+      "message": "Elimina a {{name}}, {{devices}}, {{forwards}}, {{pairs}} y {{codes}}. Esto no se puede deshacer.",
+      "action": "Quitar persona"
+    },
+    "suspend": {
+      "title": "¿Suspender a {{name}}?",
+      "message": "{count, plural, one {# dispositivo pierde el acceso hasta que lo reanudes. Se cancelan los códigos para unirse y los cambios de claves en espera.} many {# dispositivos pierden el acceso hasta que los reanudes. Se cancelan los códigos para unirse y los cambios de claves en espera.} other {# dispositivos pierden el acceso hasta que los reanudes. Se cancelan los códigos para unirse y los cambios de claves en espera.}}",
+      "action": "Suspender"
+    },
+    "resume": {
+      "title": "¿Reanudar a {{name}}?",
+      "message": "Sus dispositivos recuperan el acceso con los ajustes guardados. Los códigos para unirse cancelados no se restauran.",
+      "action": "Reanudar"
+    },
+    "role": {
+      "title": "¿Hacer de {{name}} {{role}}?",
+      "toAdmin": "Puede añadir personas y gestionar a los miembros.",
+      "toMember": "Conserva sus dispositivos, pero no gestiona nada salvo que se le den permisos.",
+      "toAdminCancels": "{count, plural, one {Puede añadir personas y gestionar a los miembros. Antes se cancela # código para unirse en espera.} many {Puede añadir personas y gestionar a los miembros. Antes se cancelan # códigos para unirse en espera.} other {Puede añadir personas y gestionar a los miembros. Antes se cancelan # códigos para unirse en espera.}}",
+      "toMemberCancels": "{count, plural, one {Conserva sus dispositivos, pero no gestiona nada salvo que se le den permisos. Antes se cancela # código para unirse en espera.} many {Conserva sus dispositivos, pero no gestiona nada salvo que se le den permisos. Antes se cancelan # códigos para unirse en espera.} other {Conserva sus dispositivos, pero no gestiona nada salvo que se le den permisos. Antes se cancelan # códigos para unirse en espera.}}",
+      "action": "Cambiar rol"
+    },
+    "limits": {
+      "title": "¿Guardar los límites de {{name}}?",
+      "message": "{count, plural, one {Se cancela # código para unirse de o para esta persona que está en espera.} many {Se cancelan # códigos para unirse de o para esta persona que están en espera.} other {Se cancelan # códigos para unirse de o para esta persona que están en espera.}}",
+      "action": "Guardar"
+    },
+    "makeOwner": {
+      "title": "¿Hacer de {{name}} el propietario?",
+      "message": "{{device}} ({{fingerprint}}) y sus otros dispositivos de SirinVPN obtienen control total. Este dispositivo pasa a ser un dispositivo de administrador.",
+      "action": "Hacer propietario"
+    },
+    "cancelCode": {
+      "title": "¿Cancelar «{{name}}»?",
+      "message": "El código deja de funcionar de inmediato. Los dispositivos que ya se unieron conservan su acceso.",
+      "action": "Cancelar código"
+    },
+    "openPort": {
+      "title": "¿Abrir el puerto público {{publicPort}}?",
+      "message": "El puerto {{protocol}} {{publicPort}} se reenviará a {{device}}, puerto {{devicePort}}. Cualquiera en Internet puede intentar llegar a él.",
+      "action": "Abrir puerto"
+    },
+    "closePort": {
+      "title": "¿Cerrar el puerto {{protocol}} {{publicPort}}?",
+      "message": "Las conexiones que lo usen se detienen de inmediato.",
+      "action": "Cerrar puerto"
+    },
+    "removePair": {
+      "title": "¿Quitar este par de {{name}}?",
+      "message": "Los dos dispositivos ya no podrán alcanzarse entre sí, a menos que ambos tengan activado el acceso entre dispositivos.",
+      "action": "Quitar par"
+    }
+  },
+  "notice": {
+    "abandoned": "El cambio no se envió: cambió la conexión con el servidor. Inténtalo de nuevo.",
+    "personRenamed": "Nombre cambiado a «{{name}}».",
+    "deviceRenamed": "Nombre cambiado a «{{name}}».",
+    "deviceRemoved": "Se quitó {{name}}.",
+    "personRemoved": "Se quitó a {{name}}.",
+    "suspended": "{{name}} está suspendido.",
+    "resumed": "{{name}} vuelve a estar activo.",
+    "roleChanged": "{{name}} es ahora {{role}}.",
+    "ownerChanged": "{{name}} es ahora el propietario. Este dispositivo es un dispositivo de administrador.",
+    "limitsSaved": "Límites de {{name}} guardados.",
+    "codeCancelled": "Código para unirse cancelado.",
+    "peerOn": "{{name}} ahora tiene acceso entre dispositivos.",
+    "peerOff": "{{name}} ya no tiene acceso entre dispositivos.",
+    "pairAdded": "Emparejado con {{name}}.",
+    "pairRemoved": "Par eliminado.",
+    "networksSaved": "Redes locales de {{name}} guardadas.",
+    "networksCleared": "{{name}} ya no comparte redes locales.",
+    "portOpened": "El puerto {{port}} está abierto.",
+    "portClosed": "El puerto {{port}} está cerrado."
+  },
+  "join": {
+    "codeAccepted": "Código para unirse aceptado",
+    "codeEntered": "Código para unirse introducido",
+    "changeCode": "Cambiar código",
+    "rejected": {
+      "expired": "Este código para unirse ha caducado. Pide uno nuevo.",
+      "used": "Este código para unirse ya se usó o se canceló. Pide uno nuevo.",
+      "invalid": "Este no es un código para unirse válido. Comprueba que copiaste todo, o pide uno nuevo."
+    },
+    "ownerDevice": "Añade este dispositivo a {{name}}, el propietario.",
+    "ownerPower": "Los dispositivos propietarios tienen control total del servidor, de todas las personas y de todos los dispositivos. Únete solo si lo esperabas.",
+    "addsDevice": "Añade este dispositivo a {{name}}.",
+    "namedPerson": "Te unes como <strong>{{name}}</strong>.",
+    "personName": "Tu nombre",
+    "personNameHint": "Lo ve quien gestione este servidor.",
+    "deviceName": "Nombre de este dispositivo",
+    "deviceNameHint": "Por ejemplo, el modelo del teléfono u ordenador. Puedes cambiarlo más tarde.",
+    "presetDevice": "Este dispositivo se llamará <strong>{{name}}</strong>.",
+    "renameLater": "Se puede cambiar el nombre más tarde en Dispositivos."
+  },
+  "error": {
+    "load": "No se pudieron cargar las personas y dispositivos desde el servidor.",
+    "features": "No se pudo comprobar lo que admite este servidor.",
+    "renamePerson": "No se pudo cambiar el nombre de la persona. Inténtalo de nuevo.",
+    "renameDevice": "No se pudo cambiar el nombre del dispositivo. Inténtalo de nuevo.",
+    "removeDevice": "No se pudo quitar el dispositivo. Inténtalo de nuevo.",
+    "removePerson": "No se pudo quitar a la persona. Actualiza para ver su estado actual.",
+    "suspension": "No se pudo cambiar si está suspendido. Actualiza para ver su estado actual.",
+    "role": "No se pudo cambiar el rol. Inténtalo de nuevo.",
+    "makeOwner": "No se pudo cambiar el propietario. Inténtalo de nuevo.",
+    "limits": "No se pudieron guardar los límites. Inténtalo de nuevo.",
+    "peer": "No se pudo cambiar el acceso entre dispositivos. Inténtalo de nuevo.",
+    "pair": "No se pudo cambiar el par. Inténtalo de nuevo.",
+    "networks": "No se pudieron guardar las redes locales. Inténtalo de nuevo.",
+    "openPort": "No se pudo abrir el puerto. Inténtalo de nuevo.",
+    "closePort": "No se pudo cerrar el puerto. Inténtalo de nuevo.",
+    "cancelCode": "No se pudo cancelar el código para unirse. Inténtalo de nuevo.",
+    "createCode": "No se pudo crear el código para unirse. Inténtalo de nuevo.",
+    "wireguard": "No se pudo añadir el dispositivo WireGuard. Inténtalo de nuevo."
+  }
+}

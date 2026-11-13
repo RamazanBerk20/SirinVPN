@@ -10,6 +10,25 @@ pub struct AppPreferences {
     pub notifications: bool,
     pub animations: bool,
     pub theme: Theme,
+    /// "system" (follow the OS languages) or a BCP 47 language tag chosen in the app.
+    pub language: String,
+}
+
+/// The value `language` takes unless the user picks one.
+pub const SYSTEM_LANGUAGE: &str = "system";
+
+/// "system", or a well-formed BCP 47 tag such as `tr`, `zh-Hans` or `en-XA` (at most 35 chars).
+/// The interface maps any tag it has no catalog for to English, so this only keeps the file sane.
+pub fn valid_language(language: &str) -> bool {
+    if language == SYSTEM_LANGUAGE {
+        return true;
+    }
+    let mut parts = language.split('-');
+    let primary = parts.next().unwrap_or_default();
+    language.len() <= 35
+        && (2..=3).contains(&primary.len())
+        && primary.bytes().all(|b| b.is_ascii_alphabetic())
+        && parts.all(|part| (2..=8).contains(&part.len()) && part.bytes().all(|b| b.is_ascii_alphanumeric()))
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -30,6 +49,7 @@ impl Default for AppPreferences {
             notifications: false,
             animations: true,
             theme: Theme::System,
+            language: SYSTEM_LANGUAGE.to_owned(),
         }
     }
 }
@@ -57,7 +77,12 @@ pub fn read(path: &Path) -> io::Result<AppPreferences> {
     if document.schema_version != 1 {
         return Err(io::Error::other("unsupported preferences version"));
     }
-    Ok(document.preferences)
+    let mut preferences = document.preferences;
+    // An unusable language is not worth losing the other settings over: follow the system.
+    if !valid_language(&preferences.language) {
+        preferences.language = SYSTEM_LANGUAGE.to_owned();
+    }
+    Ok(preferences)
 }
 
 pub fn write(path: &Path, preferences: &AppPreferences) -> io::Result<()> {
@@ -103,6 +128,24 @@ mod tests {
         files::validate_private_file(&files::open_no_follow(&path).unwrap()).unwrap();
         write(&path, &AppPreferences::default()).unwrap();
         assert_eq!(read(&path).unwrap(), AppPreferences::default());
+    }
+
+    #[test]
+    fn language_is_system_or_a_well_formed_tag() {
+        for tag in ["system", "en", "tr", "zh-Hans", "zh-Hans-CN", "en-XA", "ar-XB", "fil"] {
+            assert!(valid_language(tag), "{tag}");
+        }
+        for tag in ["", "e", "english", "zh_Hans", "en-", "en-x", "../../etc", "ar-XB\n", &"a-bc".repeat(10)] {
+            assert!(!valid_language(tag), "{tag}");
+        }
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("settings.json");
+        fs::write(&path, r#"{"schema_version":1,"preferences":{"theme":"dark"}}"#).unwrap();
+        assert_eq!(read(&path).unwrap().language, SYSTEM_LANGUAGE);
+        fs::write(&path, r#"{"schema_version":1,"preferences":{"language":"zh-Hans"}}"#).unwrap();
+        assert_eq!(read(&path).unwrap().language, "zh-Hans");
+        fs::write(&path, r#"{"schema_version":1,"preferences":{"language":"<script>"}}"#).unwrap();
+        assert_eq!(read(&path).unwrap().language, SYSTEM_LANGUAGE);
     }
 
     #[test]

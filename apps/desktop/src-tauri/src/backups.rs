@@ -1,6 +1,8 @@
 //! Backups.
 
 use super::*;
+use crate::picked_files::Purpose;
+use sirinvpn_installer::OwnerMaintenance;
 
 #[tauri::command]
 pub(super) async fn remove_server(
@@ -70,56 +72,60 @@ pub(super) fn export_backup_blocking(
     if input.path.trim().is_empty() {
         return Err("Choose where to save the encrypted backup.".to_owned());
     }
+    let destination = crate::picked_files::granted(Purpose::BackupExport, &input.path)?;
     paths
-        .export_device_backup(server_id, Path::new(&input.path), &input.password)
-        .map(|_| ())
-        .map_err(safe_error)
+        .export_device_backup(server_id, &destination, &input.password)
+        .map_err(safe_error)?;
+    crate::picked_files::release(Purpose::BackupExport, &input.path);
+    Ok(())
 }
 
 #[tauri::command]
 pub(super) async fn import_server_backup(
     state: State<'_, AppState>,
     input: BackupImportInput,
-) -> Result<ServerProfile, String> {
+) -> Result<ServerProfile, CommandError> {
     let paths = state.paths.clone();
     tauri::async_runtime::spawn_blocking(move || import_backup_blocking(paths, input))
         .await
-        .map_err(|_| "Restoring the backup was interrupted.".to_owned())?
+        .map_err(|_| CommandError::from("Restoring the backup was interrupted."))?
 }
 
 pub(super) fn import_backup_blocking(
     paths: ClientPaths,
     input: BackupImportInput,
-) -> Result<ServerProfile, String> {
+) -> Result<ServerProfile, CommandError> {
     if input.path.trim().is_empty() {
-        return Err("Choose an encrypted SirinVPN backup.".to_owned());
+        return Err("Choose an encrypted SirinVPN backup.".into());
     }
+    let source = crate::picked_files::granted(Purpose::BackupImport, &input.path)?;
     paths
-        .import_device_backup(Path::new(&input.path), &input.password)
-        .map_err(safe_error)
+        .import_device_backup(&source, &input.password)
+        .map_err(command_error)
 }
 
 #[tauri::command]
 pub(super) async fn export_vps_backup(
     state: State<'_, AppState>,
     input: VpsBackupInput,
-) -> Result<ServerBackupOutcome, String> {
+) -> Result<ServerBackupOutcome, CommandError> {
     let paths = state.paths.clone();
     tauri::async_runtime::spawn_blocking(move || export_vps_backup_blocking(paths, input))
         .await
-        .map_err(|_| "The VPS backup was interrupted.".to_owned())?
+        .map_err(|_| CommandError::from("The VPS backup was interrupted."))?
 }
 
 pub(super) fn export_vps_backup_blocking(
     paths: ClientPaths,
     mut input: VpsBackupInput,
-) -> Result<ServerBackupOutcome, String> {
+) -> Result<ServerBackupOutcome, CommandError> {
     if !input.confirmed {
-        return Err("Confirm the sensitive VPS backup first.".to_owned());
+        return Err("Confirm the sensitive VPS backup first.".into());
     }
     if input.path.trim().is_empty() {
-        return Err("Choose where to save the encrypted VPS backup.".to_owned());
+        return Err("Choose where to save the encrypted VPS backup.".into());
     }
+    let destination = crate::picked_files::granted(Purpose::VpsBackupExport, &input.path)?;
     let login = crate::ssh_login::SshLoginInput {
         host: String::new(),
         ssh_port: input.ssh_port,
@@ -131,7 +137,7 @@ pub(super) fn export_vps_backup_blocking(
         sudo_password: input.sudo_password.take(),
         host_key_sha256: input.host_key_sha256.clone(),
     };
-    export_vps_backup_to(
+    let outcome = export_vps_backup_to(
         &paths,
         &input.server_id,
         true,
@@ -140,9 +146,11 @@ pub(super) fn export_vps_backup_blocking(
             login.host = profile.endpoint.host.clone();
             crate::ssh_login::resolve_target(login)
         },
-        PathBuf::from(&input.path),
+        destination,
         Zeroizing::new(std::mem::take(&mut input.backup_password)),
-    )
+    )?;
+    crate::picked_files::release(Purpose::VpsBackupExport, &input.path);
+    Ok(outcome)
 }
 
 /// Shared by the manual dialog and scheduled backups. Only `interactive` work
@@ -154,21 +162,9 @@ pub(super) fn export_vps_backup_to(
     target: impl FnOnce(&ServerProfile) -> Result<SshTarget, String>,
     destination: PathBuf,
     password: Zeroizing<String>,
-) -> Result<ServerBackupOutcome, String> {
-    let status = invoke_helper("status", None).map_err(safe_error)?;
-    if status.state != ConnectionState::Disconnected {
-        return Err("Disconnect the VPN before backing up this VPS.".to_owned());
-    }
+) -> Result<ServerBackupOutcome, CommandError> {
     let profile = find_profile(paths, server_id)?;
-    if profile.role != ServerRole::Owner {
-        return Err("Only the Owner can back up this VPS.".to_owned());
-    }
-    if has_pending_key_rotation(paths, profile.id).map_err(safe_error)? {
-        return Err(
-            "Finish this device’s key rotation before backing up this VPS."
-                .to_owned(),
-        );
-    }
+    crate::vps_transaction::ensure_owner_maintenance_ready(paths, &profile, OwnerMaintenance::Backup)?;
     let secret = if interactive {
         explicit_secret(paths, &profile.identity_reference)?
     } else {
@@ -180,18 +176,12 @@ pub(super) fn export_vps_backup_to(
     let request = ServerBackupRequest {
         profile: profile.clone(),
         target: target(&profile)?,
-        server_binary: resolve_binary(
-            "SIRINVPN_SERVER_BINARY",
-            "/usr/lib/sirinvpn/sirinvpn-server",
-            "sirinvpn-server",
-        )
-        .map_err(safe_error)?
-        .into(),
+        server_binary: crate::vps_transaction::server_payload()?,
         identity,
         destination,
         password,
     };
-    let outcome = Provisioner::export_server_backup(request).map_err(|error| error.to_string())?;
+    let outcome = Provisioner::export_server_backup(request).map_err(command_error)?;
     let _ = paths
         .vps_backup_schedule_store()
         .record_success(profile.id, sirinvpn_core::unix_now());
@@ -202,74 +192,22 @@ pub(super) fn export_vps_backup_to(
 pub(super) async fn restore_vps_backup(
     state: State<'_, AppState>,
     input: VpsRestoreInput,
-) -> Result<ServerRestoreOutcome, String> {
+) -> Result<serde_json::Value, CommandError> {
     let paths = state.paths.clone();
     tauri::async_runtime::spawn_blocking(move || restore_vps_backup_blocking(paths, input))
         .await
-        .map_err(|_| "The VPS restore was interrupted.".to_owned())?
+        .map_err(|_| CommandError::from("The VPS restore was interrupted."))?
 }
 
 pub(super) fn restore_vps_backup_blocking(
     paths: ClientPaths,
     mut input: VpsRestoreInput,
-) -> Result<ServerRestoreOutcome, String> {
+) -> Result<serde_json::Value, CommandError> {
     if !input.confirmed {
-        return Err("Confirm the restore risks first.".to_owned());
-    }
-    if input.path.trim().is_empty() || input.host.trim().is_empty() {
-        return Err("Choose an encrypted VPS backup and destination host.".to_owned());
-    }
-    let status = invoke_helper("status", None).map_err(safe_error)?;
-    if status.state != ConnectionState::Disconnected {
-        return Err("Disconnect the VPN before restoring a VPS.".to_owned());
+        return Err("Confirm the restore risks first.".into());
     }
     let profile = find_profile(&paths, &input.server_id)?;
-    if profile.role != ServerRole::Owner {
-        return Err("Only the Owner can restore this server onto a VPS.".to_owned());
-    }
-    if has_pending_key_rotation(&paths, profile.id).map_err(safe_error)? {
-        return Err(
-            "Finish this device’s key rotation before restoring this server."
-                .to_owned(),
-        );
-    }
-    let secret = explicit_secret(&paths, &profile.identity_reference)?;
-    let identity = secret
-        .public_identity(&profile.client_management_certificate_pem)
-        .map_err(safe_error)?;
-    drop(secret);
-    let outcome = Provisioner::restore_server_backup(ServerRestoreRequest {
-        profile,
-        target: crate::ssh_login::resolve_target(crate::ssh_login::SshLoginInput {
-            host: input.host.trim().to_owned(),
-            ssh_port: input.ssh_port,
-            username: input.username.clone(),
-            authentication: input.authentication.clone(),
-            password: input.password.take(),
-            private_key_path: input.private_key_path.take(),
-            private_key_passphrase: input.private_key_passphrase.take(),
-            sudo_password: input.sudo_password.take(),
-            host_key_sha256: input.host_key_sha256.clone(),
-        })?,
-        server_binary: resolve_binary(
-            "SIRINVPN_SERVER_BINARY",
-            "/usr/lib/sirinvpn/sirinvpn-server",
-            "sirinvpn-server",
-        )
-        .map_err(safe_error)?
-        .into(),
-        identity,
-        source: PathBuf::from(&input.path),
-        password: Zeroizing::new(std::mem::take(&mut input.backup_password)),
-        replace_existing_installation: input.replace_existing,
-    })
-    .map_err(|error| error.to_string())?;
-    paths
-        .profile_store()
-        .upsert(outcome.profile.clone())
-        .map_err(|_| {
-            "The VPS was restored, but this device couldn’t save its new address. Before connecting, restore again with “Replace an existing SirinVPN install” on."
-                .to_owned()
-        })?;
-    Ok(outcome)
+    crate::vps_transaction::ensure_owner_maintenance_ready(&paths, &profile, OwnerMaintenance::Restore)?;
+    let request = crate::vps_transaction::restore_request(&paths, &mut input, profile)?;
+    crate::vps_transaction::restore_server(&paths, request)
 }

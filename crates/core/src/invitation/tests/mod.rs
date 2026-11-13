@@ -31,6 +31,7 @@ fn signed_response(
     server_private_key: &str,
 ) -> InvitationCreateResponse {
     let claims = InvitationClaims {
+        fixed_member_name: false,
         recipient_names: request.recipient_names,
         alternate_endpoint_hosts: Vec::new(),
         endpoint_discovery_port: None,
@@ -117,4 +118,5 @@ fn owner_profile() -> (ServerProfile, String) {
 mod reusable;
 mod signed_long_code_round_trip_preserves_only_bootstrap_secret;
 
+mod named_join_codes;
 mod recipient_names;

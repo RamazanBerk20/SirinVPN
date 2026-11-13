@@ -1,8 +1,9 @@
 use crate::firewall_plan::{host, lan_routes};
 use ipnet::IpNet;
 use serde::{Deserialize, Serialize};
+use sirinvpn_protocol::TransportKind;
 use sirinvpn_tunnel_model::{TunnelConnectRequest, TunnelRoutingMode, validate_request};
-use std::{collections::BTreeSet, net::IpAddr};
+use std::{collections::BTreeSet, io, net::IpAddr};
 
 pub(crate) const OWNED_ROUTE_METRIC: u32 = 42867;
 pub(crate) const APPLICATION_ROUTE_METRIC: u32 = 60000;
@@ -54,6 +55,37 @@ pub(crate) fn validate(request: &TunnelConnectRequest) -> Result<(), crate::Serv
         return Err(crate::ServiceError::ApplicationPolicyRequired);
     }
     Ok(())
+}
+
+/// The WireGuardNT listen port: fixed for a relay carrier, which pins its peer to
+/// it; `None` (ephemeral) for Direct UDP.
+pub(crate) fn wireguard_listen_port(transport: TransportKind) -> Option<u16> {
+    (transport != TransportKind::DirectUdp).then_some(crate::WIREGUARD_LISTEN_PORT)
+}
+
+/// Whether any transport this session may try needs the fixed port.
+pub(crate) fn uses_fixed_port(request: &TunnelConnectRequest) -> bool {
+    std::iter::once(request.transport)
+        .chain(
+            request
+                .reconnect_candidates
+                .iter()
+                .map(|candidate| candidate.transport),
+        )
+        .any(|transport| wireguard_listen_port(transport).is_some())
+}
+
+/// Maps a bind probe of the fixed port to the user-facing error. Only a port held
+/// by another program is reported; other probe failures are left to the attempt.
+pub(crate) fn require_free_port(
+    probe: impl FnOnce(u16) -> io::Result<()>,
+) -> Result<(), crate::ServiceError> {
+    match probe(crate::WIREGUARD_LISTEN_PORT) {
+        Err(error) if error.kind() == io::ErrorKind::AddrInUse => {
+            Err(crate::ServiceError::LocalPortInUse)
+        }
+        _ => Ok(()),
+    }
 }
 
 pub(crate) fn allowed_ips(request: &TunnelConnectRequest) -> Vec<IpNet> {

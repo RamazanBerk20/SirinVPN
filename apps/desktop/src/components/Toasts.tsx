@@ -2,6 +2,7 @@ import { CheckCircle, Info, Warning, X } from "@phosphor-icons/react";
 import { useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { t } from "../i18n";
+import { ErrorText } from "./ui";
 
 export type ToastTone = "success" | "info" | "error";
 type Toast = { id: number; message: string; tone: ToastTone };
@@ -37,7 +38,7 @@ export function ToastRegion() {
   return createPortal(<div className="toast-region" role="status" aria-live="polite">
     {current.map((toast) => <div key={toast.id} className={`toast ${toast.tone}`}>
       {toast.tone === "success" ? <CheckCircle size={20} weight="fill" /> : toast.tone === "error" ? <Warning size={20} weight="fill" /> : <Info size={20} weight="fill" />}
-      <p>{toast.message}</p>
+      <p><ErrorText message={toast.message} /></p>
       <button type="button" className="icon-button" aria-label={t("common.action.dismiss")} onClick={() => dismissToast(toast.id)}><X size={16} /></button>
     </div>)}
   </div>, document.body);

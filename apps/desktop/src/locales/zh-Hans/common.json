@@ -1,0 +1,74 @@
+{
+  "appName": "SirinVPN",
+  "action": {
+    "back": "返回",
+    "cancel": "取消",
+    "close": "关闭",
+    "continue": "继续",
+    "copy": "复制",
+    "copied": "已复制",
+    "dismiss": "关闭",
+    "done": "完成",
+    "moreInfo": "更多信息",
+    "remove": "移除",
+    "retry": "重试"
+  },
+  "state": {
+    "checking": "正在检查…",
+    "disabled": "关",
+    "enabled": "开",
+    "loading": "正在加载…",
+    "notConnected": "未连接",
+    "saved": "已保存",
+    "saving": "正在保存…",
+    "unavailable": "不可用",
+    "unknown": "未知"
+  },
+  "role": {
+    "owner": "所有者",
+    "admin": "管理员",
+    "member": "成员"
+  },
+  "noun": {
+    "thisDevice": "此设备"
+  },
+  "separator": {
+    "pair": "{{first}} · {{second}}",
+    "triple": "{{first}} · {{second}} · {{third}}"
+  },
+  "target": "{{os}}，{{arch}}（{{target}}）",
+  "error": {
+    "withDetail": "{{summary}} {{detail}}",
+    "needsConnection": "请先连接到此服务器。",
+    "localSave": "无法在此设备上保存。请重试。",
+    "passwordsDiffer": "两次输入的密码不一致。"
+  },
+  "errorCode": {
+    "hetzner_create_uncertain": "Hetzner 可能已创建服务器 {{server}}。请先在 Hetzner Cloud 控制台中检查，然后再重试。",
+    "hetzner_provision_pending": "服务器 {{name}} 尚未完成创建。请先继续或删除它，然后再创建新的服务器。",
+    "hetzner_host_key_replacement": "新服务器 {{name}} 提供的 SSH 主机密钥与预期不同。除非你能在 Hetzner Cloud 控制台中确认该密钥，否则请勿继续。",
+    "install_phase_failed": "VPS 上的某个步骤失败了。",
+    "install_ssh_failed": "无法通过 SSH 登录 VPS。请检查主机密钥和登录信息。VPS 上没有任何更改。",
+    "install_incompatible": "无法使用此 VPS：它不兼容，或已运行其他安装。VPS 上没有任何更改。",
+    "backup_wrong_password": "备份密码不正确。",
+    "invitation_expired": "此加入码已过期。请索取新的加入码。",
+    "invitation_used": "此加入码已被使用或已取消。请索取新的加入码。",
+    "invitation_invalid": "此加入码无效。请检查后重试。",
+    "port_forward_public_port": "该公共端口已被保留、已被占用或无效。请选择其他端口。",
+    "operation_in_progress": "此服务器上正在进行另一项更改。请等待其完成，然后重试。",
+    "maintenance_blocked": "此更改暂时无法开始：{{steps}}。",
+    "maintenance_blocked_unnamed": "此更改暂时无法开始。",
+    "install_outcome_unknown": "{{host}} 上的结果未知：VPS 可能已应用此更改，但确认信息丢失了。此设备保留了其密钥。VPS 可以访问时，请重新检查此更改。",
+    "install_rolled_back": "VPS 已回滚此更改，因此没有任何内容被更改。",
+    "person_has_join_codes": "此用户仍有设备加入码。请先取消它们。",
+    "person_name_taken": "此服务器上已有其他用户使用此名称。请选择其他名称。",
+    "transaction_unresolved": "此设备之前对 {{host}} 的一项更改尚未解决。请先解决或放弃它，然后再开始其他更改。"
+  },
+  "maintenanceBlocker": {
+    "not_owner": "只有所有者设备可以维护此 VPS",
+    "connected": "请先断开此 VPS 的连接",
+    "persistent_policy": "请先关闭断网保护和自动重新连接",
+    "pending_key_rotation": "请先完成或恢复此设备待处理的密钥轮换",
+    "unresolved_transaction": "请先解决中断的 VPS 更改"
+  }
+}

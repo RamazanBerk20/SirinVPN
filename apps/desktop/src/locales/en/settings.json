@@ -89,6 +89,13 @@
       "testNeedsNotifications": "Turn on connection notifications to send a test.",
       "blocked": "Notifications are blocked for SirinVPN. Allow them in system settings to get connection alerts."
     },
+    "language": {
+      "label": "Language",
+      "summary": "Also used for the tray menu and notifications",
+      "system": "System default",
+      "devExpanded": "Pseudo: expanded text",
+      "devRtl": "Pseudo: right-to-left"
+    },
     "updates": {
       "title": "App updates",
       "check": "Check for updates"
@@ -211,7 +218,7 @@
     "title": "Owner recovery",
     "summary": "Regain Owner access if every Owner device is lost",
     "infoLabel": "About Owner recovery",
-    "info": "On a new device, choose Add server → Recovery key. No other Owner device or VPN connection is needed, only access to your server.",
+    "info": "On a new device, choose Add server, then Recovery key. No other Owner device or VPN connection is needed, only access to your server.",
     "unsupported": "Update the server software to use recovery keys.",
     "registered": "A recovery key is set up.",
     "none": "No recovery key yet.",
@@ -328,7 +335,6 @@
     "failed": "Couldn’t create the backup. Try again."
   },
   "alerts": {
-    "rejectedHint": "Check the address and any access token it needs.",
     "testNeedsAddress": "Save an alert address to send a test.",
     "testing": "Sending…",
     "allowPrivateSummary": "Only for a monitor on your own network or the VPN"
@@ -344,8 +350,7 @@
     "repair": "Update VPS"
   },
   "diagnostics": {
-    "allPassed_one": "The {{count}} check passed.",
-    "allPassed_other": "All {{count}} checks passed.",
+    "allPassed": "{count, plural, one {The # check passed.} other {All # checks passed.}}",
     "empty": "No checks ran. Connect to this server, then run diagnostics again.",
     "runAgain": "Run again"
   },
@@ -356,10 +361,10 @@
       "upload": "Measuring upload",
       "finishing": "Finishing"
     },
-    "left": "{{phase}} · about {{seconds}} s left.",
+    "left": "{seconds, plural, one {{{phase}} · about {{seconds}} second left.} other {{{phase}} · about {{seconds}} seconds left.}}",
     "finishingLine": "{{phase}}…",
     "cancel": "Cancel speed test",
     "cancelled": "Speed test cancelled.",
-    "cancelledWait": "Speed test cancelled. The VPS takes the next test in {{seconds}} s."
+    "cancelledWait": "{seconds, plural, one {Speed test cancelled. The VPS takes the next test in {{seconds}} second.} other {Speed test cancelled. The VPS takes the next test in {{seconds}} seconds.}}"
   }
 }

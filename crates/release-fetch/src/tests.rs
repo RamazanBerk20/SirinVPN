@@ -636,3 +636,23 @@ fn destination_policy_is_absolute_normalized_real_and_no_clobber() {
         Err(FetchError::InvalidDestination)
     ));
 }
+
+// Linux (any libc) and Android share this commit path, so the host run covers Android's.
+#[test]
+fn staging_commit_is_no_replace_on_every_linux_and_android_libc() {
+    let parent = tempfile::tempdir().unwrap();
+    let destination = parent.path().join("candidate");
+    let staging = TempBuilder::new().tempdir_in(parent.path()).unwrap();
+    fs::write(staging.path().join("marker"), b"first").unwrap();
+    commit_staging(staging, &destination).unwrap();
+    assert_eq!(fs::read(destination.join("marker")).unwrap(), b"first");
+
+    let second = TempBuilder::new().tempdir_in(parent.path()).unwrap();
+    fs::write(second.path().join("marker"), b"second").unwrap();
+    assert!(matches!(
+        commit_staging(second, &destination),
+        Err(FetchError::DestinationExists)
+    ));
+    assert_eq!(fs::read(destination.join("marker")).unwrap(), b"first");
+    assert_eq!(fs::read_dir(parent.path()).unwrap().count(), 1);
+}

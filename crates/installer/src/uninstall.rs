@@ -88,16 +88,13 @@ pub(super) const ROLLBACK_SYSCTL: &str = r#"if [ -f "$BACKUP_DIR/sysctl" ]; then
   done <"$BACKUP_DIR/sysctl"
 fi"#;
 
-pub(super) fn uninstall_script(nonce: &str) -> String {
+pub(super) fn uninstall_script(nonce: &str, owner: &str) -> String {
     format!(
         r#"#!/bin/sh
 set -eu
 umask 077
 
-for pending in /run/sirinvpn-rollback-*.sh /run/sirinvpn-uninstall-rollback-*.sh /var/lib/sirinvpn-maintenance/sirinvpn-rollback-*.sh /var/lib/sirinvpn-maintenance/sirinvpn-uninstall-rollback-*.sh; do
-  [ -f "$pending" ] || continue
-  /bin/sh "$pending"
-done
+{recover_pending}
 
 {maintenance_begin}
 
@@ -190,10 +187,11 @@ fi
             super::dns_blocklist::DNS_BLOCKLIST_MANAGED_PATHS,
             super::alerts::ALERTS_MANAGED_PATHS
         ),
+        recover_pending = maintenance::recover_pending(),
         maintenance_begin = super::updates::MAINTENANCE_BEGIN,
         rollback_begin = maintenance::rollback_begin(nonce, true),
         rollback_finish = maintenance::rollback_finish(),
-        arm_recovery = maintenance::arm(nonce, true),
+        arm_recovery = maintenance::arm(nonce, true, owner),
         runtime_table_cleanup = RUNTIME_TABLE_CLEANUP,
         snapshot_original_sysctl = snapshot_original_sysctl(),
         rollback_sysctl = ROLLBACK_SYSCTL,
@@ -252,11 +250,13 @@ systemctl is-active --quiet unbound.service
 }
 
 pub(super) fn uninstall_commit_command(nonce: &str) -> String {
-    maintenance::commit(nonce, true)
-}
-
-pub(super) fn uninstall_rollback_now(session: &Session, target: &SshTarget, nonce: &str) {
-    run_rollback_now(session, target, &maintenance::rollback_path(nonce, true));
+    // Install outcome records are the last SirinVPN state; uninstall leaves none.
+    format!(
+        "{}\nrm -f -- {}/sirinvpn-install-*.outcome\nrmdir {} 2>/dev/null || true",
+        maintenance::commit(nonce, true),
+        maintenance::DIRECTORY,
+        maintenance::DIRECTORY
+    )
 }
 
 pub(super) fn remove_remote_file(session: &Session, path: &str) {

@@ -11,6 +11,7 @@ import {
 import type { LocalTunnelStatus } from "../../types";
 import { useTunnelDuration } from "../../hooks/useTunnelDuration";
 import { currentQualitySample } from "./TransportQuality";
+import { formatMtu } from "./connectionPreferences";
 
 import { useTrafficStore, type TrafficStore } from "../../hooks/trafficStore";
 import { InfoHint } from "../../components/InfoHint";
@@ -205,8 +206,8 @@ export function DeviceTrafficDetails({
           const pending = mtu.policy.mode === "automatic" && mtu.outcome === "measured" && mtu.suggested !== null && mtu.suggested < mtu.configured;
           return <div>
             <dt>{t("home.details.mtu")}</dt>
-            <dd>{t("home.details.mtuValue", { value: formatNumber(mtu.configured) })}
-              {pending && <small className="metric-detail">{t("home.details.mtuPending", { value: formatNumber(mtu.suggested!) })}</small>}</dd>
+            <dd>{t("home.details.mtuValue", { value: formatMtu(mtu.configured) })}
+              {pending && <small className="metric-detail">{t("home.details.mtuPending", { value: formatMtu(mtu.suggested!) })}</small>}</dd>
           </div>;
         })()}
       </dl>

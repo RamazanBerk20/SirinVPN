@@ -2,10 +2,10 @@ import { describe, expect, it } from "vitest";
 import type { DiagnosticCheck } from "../../types";
 import { firstTroubleshootStep, troubleshootSteps } from "./troubleshooting";
 
-// The wizard reads the management failure's cause from core's text; this pins it to the real messages.
+// The wizard reads the management failure's `cause`; this pins each to a cause core sends.
 const core = Object.values(import.meta.glob<string>("../../../../../crates/core/src/diagnostics.rs", { query: "?raw", import: "default", eager: true }))[0];
 const check = (code: string, level: DiagnosticCheck["level"], message = "Fixed text."): DiagnosticCheck => ({ code, label: code, level, message });
-const management = (message: string) => { expect(core).toContain(message); return check("management", "fail", message); };
+const management = (cause: NonNullable<DiagnosticCheck["cause"]>) => { expect(core).toContain(`"${cause}"`); return { ...check("management", "fail"), cause }; };
 const disconnected = [
   check("local_backend", "pass"),
   check("local_tunnel", "warning", "This device is disconnected. Connect to run current tunnel and server checks."),
@@ -56,13 +56,13 @@ describe("Troubleshooting steps", () => {
   });
 
   it("names the cause a failed management check reports", () => {
-    expect(summary(run([management("The private TLS handshake failed. Check the pinned server identity, this device's enrollment and both device and VPS clocks. Do not bypass certificate verification.")])).clock)
+    expect(summary(run([management("management_clock")])).clock)
       .toEqual(["problem", "problem", null]);
-    expect(summary(run([management("The VPS rejected device authentication. Check the enrolled device certificate and recover or enroll again if it was replaced.")])).enrollment)
+    expect(summary(run([management("management_device_rejected")])).enrollment)
       .toEqual(["problem", "problem", "restoreDevice"]);
-    expect(summary(run([management("The VPS rejected this device's current access. The owner can check device revocation, member suspension, expiration and access schedules.")], { profile: member })).membership)
+    expect(summary(run([management("management_access_rejected")], { profile: member })).membership)
       .toEqual(["problem", "problem", null]);
-    expect(summary(run([check("local_tunnel", "pass"), management("The private management request timed out. Check the local tunnel, included management route and VPS service. A timeout alone does not identify a certificate problem.")])).service)
+    expect(summary(run([check("local_tunnel", "pass"), management("management_unreachable")])).service)
       .toEqual(["problem", "problem", "repairServer"]);
     expect(summary(run([check("local_identity", "fail")])).enrollment).toEqual(["problem", "problem", "restoreDevice"]);
     expect(summary(run(disconnected, { rotationPending: true })).enrollment).toEqual(["problem", "rotation", "keyRotation"]);

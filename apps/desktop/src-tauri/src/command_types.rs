@@ -90,21 +90,33 @@ impl Drop for RepairInput {
 
 #[derive(Serialize)]
 pub(super) struct ProvisionResult {
-    pub(super) network_preflight: sirinvpn_installer::NetworkPreflight,
+    /// Absent when the VPS confirmed the install only after its reply was lost.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(super) network_preflight: Option<sirinvpn_installer::NetworkPreflight>,
     pub(super) profile: ServerProfile,
     pub(super) events: Vec<sirinvpn_installer::InstallEvent>,
     pub(super) dns_upstream: DnsUpstream,
     pub(super) private_dns_records: Vec<PrivateDnsRecord>,
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub(super) resolved_after_lost_reply: bool,
 }
 
+/// After a lost commit reply the VPS confirms only that the repair committed:
+/// what it reported (preflight, artifact, DNS) is then absent.
 #[derive(Serialize)]
 pub(super) struct RepairResult {
-    pub(super) network_preflight: sirinvpn_installer::NetworkPreflight,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(super) network_preflight: Option<sirinvpn_installer::NetworkPreflight>,
     pub(super) events: Vec<sirinvpn_installer::InstallEvent>,
-    pub(super) artifact_sha256: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(super) artifact_sha256: Option<String>,
     pub(super) server_identity_fingerprint: String,
-    pub(super) dns_upstream: DnsUpstream,
-    pub(super) private_dns_records: Vec<PrivateDnsRecord>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(super) dns_upstream: Option<DnsUpstream>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(super) private_dns_records: Option<Vec<PrivateDnsRecord>>,
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub(super) resolved_after_lost_reply: bool,
 }
 
 #[derive(Deserialize)]

@@ -30,6 +30,10 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
         let endpoint =
             resolve_endpoint(&change.request.endpoint_host, change.request.endpoint_port)?;
         let mut request = change.request.clone();
+        // Only the helper's own resolvers, never the caller's value, as connect does.
+        if request.endpoint_identity.is_some() {
+            request.endpoint_dns_servers = self.endpoint_dns_servers();
+        }
         request.cdn_address = request
             .cdn_host()
             .and_then(|host| resolve_endpoint(host, request.endpoint_port).ok())
@@ -70,8 +74,7 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
             }
             // An interrupted transaction leaves explicit manual recovery, never an
             // unprotected cleanup or an automatic retry using half-written intent.
-            current.waiting_for_user = true;
-            current.reconnecting = false;
+            current.pause();
             self.write_state(&current)
                 .map_err(|_| HelperError::NetworkOperationFailed)?;
             if next.connection_policy().kill_switch {
@@ -130,7 +133,7 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
         }
         remove_file_if_exists(&self.state_path())
             .map_err(|_| HelperError::NetworkOperationFailed)?;
-        remove_file_if_exists(&self.persistent_path())
+        self.remove_persistent()
             .map_err(|_| HelperError::NetworkOperationFailed)?;
         self.runner
             .run(

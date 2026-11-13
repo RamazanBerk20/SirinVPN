@@ -383,7 +383,7 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
             && self.cleanup_all_owned().is_ok()
         {
             let _ = remove_file_if_exists(&self.state_path());
-            let _ = remove_file_if_exists(&self.persistent_path());
+            let _ = self.remove_persistent();
         }
         let _ = self.runner.run(
             "systemctl",
@@ -465,16 +465,22 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
     }
 
     pub(super) fn write_persistent(&self, state: &PersistentConnection) -> Result<(), HelperError> {
+        // Searchable but not listable, so status can read the public guard spec by name;
+        // every secret here is a 0600 file.
         fs::DirBuilder::new()
             .recursive(true)
-            .mode(0o700)
+            .mode(0o711)
             .create(&self.persistent_directory)
             .map_err(|_| HelperError::PersistentProtectionUnavailable)?;
         fs::set_permissions(
             &self.persistent_directory,
-            fs::Permissions::from_mode(0o700),
+            fs::Permissions::from_mode(0o711),
         )
         .map_err(|_| HelperError::PersistentProtectionUnavailable)?;
+        let spec = serde_json::to_vec(&enforcement::GuardSpec::for_request(&state.request))
+            .map_err(|_| HelperError::PersistentProtectionUnavailable)?;
+        write_public_file(&self.guard_spec_path(), &spec)
+            .map_err(|_| HelperError::PersistentProtectionUnavailable)?;
         let path = self.persistent_path();
         let temporary = path.with_extension("new");
         let bytes = Zeroizing::new(
@@ -497,6 +503,12 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
         fs::File::open(&self.persistent_directory)
             .and_then(|directory| directory.sync_all())
             .map_err(|_| HelperError::PersistentProtectionUnavailable)
+    }
+
+    /// The spec goes first: a spec without its request would show a saved session.
+    pub(super) fn remove_persistent(&self) -> io::Result<()> {
+        remove_file_if_exists(&self.guard_spec_path())?;
+        remove_file_if_exists(&self.persistent_path())
     }
 
     pub(super) fn read_persistent(&self) -> Result<PersistentConnection, HelperError> {
@@ -570,4 +582,18 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
         validate_request(&state.request)?;
         Ok(state)
     }
+}
+
+fn write_public_file(path: &Path, bytes: &[u8]) -> io::Result<()> {
+    let temporary = path.with_extension("new");
+    let mut file = fs::OpenOptions::new()
+        .write(true)
+        .create(true)
+        .truncate(true)
+        .mode(0o644)
+        .open(&temporary)?;
+    file.write_all(bytes)?;
+    file.sync_all()?;
+    fs::set_permissions(&temporary, fs::Permissions::from_mode(0o644))?;
+    fs::rename(temporary, path)
 }

@@ -1,0 +1,276 @@
+{
+  "options": {
+    "title": "Méthode de connexion",
+    "automatic": {
+      "label": "Choisir la méthode automatiquement",
+      "summary": "Choisit une méthode qui fonctionne sur votre réseau"
+    },
+    "conditions": {
+      "legend": "Type de réseau",
+      "automatic": {
+        "title": "Auto",
+        "summary": "Essaie chaque méthode à tour de rôle"
+      },
+      "normal": {
+        "title": "Normal",
+        "summary": "Réseau domestique ou mobile"
+      },
+      "restricted": {
+        "title": "Restreint",
+        "summary": "Bloque le trafic VPN classique"
+      },
+      "extreme": {
+        "title": "Très restreint",
+        "summary": "Lorsque les autres modes échouent"
+      },
+      "hint": "Aide le choix automatique à commencer par une méthode adaptée."
+    },
+    "methods": {
+      "legend": "Choisir une méthode",
+      "unavailable": "Nécessite un serveur plus récent",
+      "summary": {
+        "direct_udp": "WireGuard standard",
+        "obfuscated_udp": "UDP déguisé pour les réseaux qui bloquent WireGuard",
+        "tls_like": "Utilise TLS 1.3, comme le trafic Web",
+        "tcp_fallback": "Dernier recours lorsque l’UDP est bloqué",
+        "quic": "Ressemble à du trafic Web HTTP/3 sur UDP"
+      },
+      "unsupported": {
+        "owner": "{count, plural, one {{{methods}} nécessite une version plus récente du logiciel du serveur. Mettez à jour le VPS pour l’utiliser.} many {{{methods}} nécessitent une version plus récente du logiciel du serveur. Mettez à jour le VPS pour les utiliser.} other {{{methods}} nécessitent une version plus récente du logiciel du serveur. Mettez à jour le VPS pour les utiliser.}}",
+        "member": "{count, plural, one {{{methods}} nécessite une version plus récente du logiciel du serveur. Demandez au Propriétaire de mettre à jour le VPS.} many {{{methods}} nécessitent une version plus récente du logiciel du serveur. Demandez au Propriétaire de mettre à jour le VPS.} other {{{methods}} nécessitent une version plus récente du logiciel du serveur. Demandez au Propriétaire de mettre à jour le VPS.}}",
+        "update": "Mettre à jour le VPS"
+      }
+    },
+    "policy": {
+      "kill_switch": {
+        "label": "Coupe-circuit",
+        "summary": "Bloque Internet si le VPN se coupe, jusqu’à votre déconnexion",
+        "nextConnection": "Enregistré, mais pas encore actif. Il s’active à la reconnexion ; jusque-là, le trafic n’est pas bloqué si le VPN se coupe."
+      },
+      "automatic_reconnect": {
+        "label": "Reconnexion automatique",
+        "summary": "Réessaie si la connexion se coupe",
+        "summaryAndroid": "Réessaie si la connexion se coupe. S’applique immédiatement.",
+        "info": "Désactivée, une connexion coupée reste interrompue jusqu’à votre reconnexion. Le coupe-circuit continue de bloquer dans les deux cas.",
+        "infoAndroid": "Désactivée, une connexion coupée reste interrompue jusqu’à votre reconnexion. Le passage du Wi-Fi aux données mobiles donne tout de même une tentative de reconnexion.",
+        "infoLabel": "À propos de la reconnexion automatique"
+      },
+      "connect_on_startup": {
+        "label": "Se connecter au démarrage du système",
+        "summary": "Se connecte au démarrage de cet appareil"
+      }
+    },
+    "android": {
+      "label": "Bloquer les connexions sans VPN",
+      "summary": "Le VPN toujours actif et le blocage se règlent dans Android. Si le blocage est activé, Internet reste bloqué après votre déconnexion.",
+      "open": "Ouvrir les paramètres VPN",
+      "on": "Activé dans Android",
+      "off": "Désactivé dans Android",
+      "unknown": "Non signalé par Android",
+      "status": "État : {{value}}"
+    },
+    "notes": {
+      "selectedRoutes": "Seules vos routes sélectionnées et le DNS système utilisent le VPN.",
+      "windowsApps": "Le routage des applications Windows nécessite que le coupe-circuit soit activé et l’accès au réseau local désactivé.",
+      "launchedApps": "Les applications lancées sont bloquées dès que le VPN est coupé ; les autres applications utilisent votre réseau habituel."
+    },
+    "status": {
+      "title": "État actuel",
+      "method": "Méthode de connexion",
+      "killSwitch": "Coupe-circuit",
+      "routing": "Routage",
+      "blocking": "Bloquer les connexions sans VPN"
+    },
+    "protection": {
+      "title": "Protection",
+      "titleAndroid": "Reconnexion et blocage",
+      "note": "Le coupe-circuit et la reconnexion automatique s’appliquent à partir de votre prochaine connexion."
+    }
+  },
+  "routing": {
+    "title": "Routage du trafic",
+    "legend": "Mode de routage",
+    "modes": {
+      "full_tunnel": {
+        "label": "Tunnel complet",
+        "summary": "Tout le trafic Internet utilise le VPN"
+      },
+      "selected_routes": {
+        "label": "Routes sélectionnées",
+        "summary": "Seules les plages IP que vous indiquez utilisent le VPN"
+      },
+      "selected_applications": {
+        "label": "Applications sélectionnées",
+        "summaryAndroid": "Choisissez les applications qui utilisent le VPN",
+        "summaryWindows": "Seules les applications que vous choisissez utilisent le VPN",
+        "summaryLinux": "Seules les applications lancées depuis SirinVPN utilisent le VPN"
+      }
+    },
+    "unsupported": "Le routage par application n’est pas disponible sur cet appareil. Les routes sélectionnées fonctionnent toujours.",
+    "unsupportedWindows": "Le routage par application est indisponible, car son pilote Windows ne fonctionne pas. Réinstallez ou mettez à jour SirinVPN pour le rétablir.",
+    "windowsKillSwitch": "Le routage des applications Windows nécessite que le coupe-circuit soit activé. Activez-le dans les paramètres de connexion avant de vous connecter.",
+    "android": {
+      "blockNote": "Si l’option Bloquer les connexions sans VPN est activée, les applications qui n’utilisent pas le VPN n’ont pas accès à Internet.",
+      "choose": "Choisir les applications",
+      "chooseError": "Impossible d’ouvrir la liste des applications.",
+      "none": "Aucune application choisie",
+      "all": "Toutes les applications utilisent le VPN",
+      "include": "{count, plural, one {# application utilise le VPN} many {# applications utilisent le VPN} other {# applications utilisent le VPN}}",
+      "exclude": "{count, plural, one {# application contourne le VPN} many {# applications contournent le VPN} other {# applications contournent le VPN}}"
+    },
+    "routes": {
+      "label": "Plages IP (CIDR), une par ligne",
+      "hint": "{max, plural, one {Jusqu’à # plage. Le DNS système utilise toujours le VPN.} many {Jusqu’à # plages. Le DNS système utilise toujours le VPN.} other {Jusqu’à # plages. Le DNS système utilise toujours le VPN.}}",
+      "empty": "Ajoutez au moins une plage. Sans plage, aucun trafic n’utiliserait le VPN.",
+      "invalid": "{{routes}} : ce n’est pas un réseau au format CIDR. Écrivez les plages comme 198.51.100.0/24.",
+      "hostBits": "{{route}} n’est pas le début de son réseau. Utilisez {{network}}.",
+      "placeholder": "Par exemple, {{example}}"
+    },
+    "localNetwork": {
+      "label": "Autoriser le réseau local",
+      "summary": "Accéder aux imprimantes et autres appareils locaux en dehors du VPN",
+      "summaryLaunched": "Permet aux applications lancées d’atteindre les appareils de votre réseau local",
+      "summaryWindows": "Désactivez-le : le routage des applications Windows nécessite que l’accès au réseau local soit désactivé"
+    }
+  },
+  "launcher": {
+    "legend": "Lancer une application dans le VPN",
+    "summaryLinux": "Seules les applications que vous lancez ici utilisent le VPN. Fermez d’abord les copies ouvertes.",
+    "summaryWindows": "Les applications que vous choisissez ici utilisent le VPN. Fermez d’abord les copies ouvertes.",
+    "infoLinux": "Choisissez un programme natif. Les applications Flatpak et Snap, et celles qui dépendent d’un service en arrière-plan, peuvent ne pas fonctionner.",
+    "infoWindows": "Choisissez un .exe sur un disque local et ajoutez chaque application qui utilise le réseau : les assistants et services ne sont pas ajoutés automatiquement. Les applications sélectionnées ne peuvent pas utiliser IPv6, et le DNS système passe par le VPN.",
+    "infoLabel": "À propos du lancement d’applications",
+    "notReady": "Enregistrez les applications sélectionnées et connectez-vous à ce serveur pour lancer des applications.",
+    "executable": "Programme",
+    "placeholderLinux": "Par exemple, /usr/bin/firefox",
+    "placeholderWindows": "Par exemple, C:\\Program Files\\App\\app.exe",
+    "browse": "Parcourir…",
+    "dialogTitle": "Choisir une application",
+    "dialogFilter": "Applications (.exe)",
+    "chooserError": "Impossible d’ouvrir le sélecteur de fichiers. Réessayez.",
+    "arguments": {
+      "summary": "Arguments de lancement",
+      "label": "Un argument par ligne",
+      "hint": "Pas besoin de guillemets, même avec des espaces. Les arguments ne sont pas enregistrés."
+    },
+    "safetyLinux": "Les applications lancées n’utilisent jamais Internet en dehors du VPN, même avec le coupe-circuit désactivé. Après votre déconnexion, elles restent ouvertes mais hors ligne.",
+    "safetyWindows": "Les applications sélectionnées restent bloquées hors du VPN si celui-ci se coupe ou est suspendu. La déconnexion les débloque et efface la sélection.",
+    "launch": "Lancer dans le VPN",
+    "launching": "Lancement…",
+    "launched": "{{name}} a été lancé dans le VPN.",
+    "exited": "{{name}} a été lancé, mais s’est fermé aussitôt. S’il était déjà ouvert, fermez-le et réessayez.",
+    "launchError": "Impossible de lancer l’application dans le VPN.",
+    "needsProgram": "Choisissez un programme avec Parcourir."
+  },
+  "mtu": {
+    "title": "Taille des paquets (MTU)",
+    "automatic": {
+      "label": "Taille de paquet automatique",
+      "summary": "Mesure et ajuste la taille des paquets pendant la connexion"
+    },
+    "manual": {
+      "label": "MTU manuelle",
+      "hint": "{max, plural, one {{{min}}–{{max}} octet. UDP obfusqué utilise au maximum {{obfuscatedMax}} et QUIC au maximum {{quicMax}}.} many {{{min}}–{{max}} octets. UDP obfusqué utilise au maximum {{obfuscatedMax}} et QUIC au maximum {{quicMax}}.} other {{{min}}–{{max}} octets. UDP obfusqué utilise au maximum {{obfuscatedMax}} et QUIC au maximum {{quicMax}}.}}",
+      "invalid": "Saisissez un nombre entier entre {{min}} et {{max}}.",
+      "invalidIpv6": "Avec IPv6 activé, saisissez un nombre entier entre {{min}} et {{max}}."
+    },
+    "notConnected": "Connectez-vous pour mesurer la taille des paquets.",
+    "unsupported": "La taille des paquets ne peut pas être mesurée tant que le composant VPN de cet appareil n’est pas mis à jour. Vérifiez-le dans les paramètres généraux, sous Composant VPN local.",
+    "unsupportedAction": "La taille des paquets ne peut pas être mesurée tant que le composant VPN de cet appareil n’est pas mis à jour.",
+    "details": {
+      "current": "MTU actuelle",
+      "recommended": "Recommandée",
+      "notMeasured": "Pas encore mesurée",
+      "pending": "Modification en attente",
+      "bytes": "{value, plural, one {{{value}} octet} many {{{value}} octets} other {{{value}} octets}}",
+      "pendingValue": "{value, plural, one {{{value}} octet · pas encore appliqué} many {{{value}} octets · pas encore appliqués} other {{{value}} octets · pas encore appliqués}}"
+    },
+    "outcome": {
+      "pending": "Mesure de la taille des paquets en attente.",
+      "incomplete": "Mesure pas encore terminée.",
+      "verified": "{value, plural, one {Vérifiée à {{value}} octet.} many {Vérifiée à {{value}} octets.} other {Vérifiée à {{value}} octets.}}",
+      "smaller": "Une taille de paquet plus petite a été mesurée et sera appliquée.",
+      "manual": "Une recommandation est prête. Votre MTU manuelle reste utilisée.",
+      "noReply": "Le serveur n’a pas répondu à la mesure. La MTU actuelle reste utilisée.",
+      "noUsable": "Les grands paquets ne passent pas sur ce réseau. Essayez {{tls}} ou {{tcp}}.",
+      "applyFailed": "{value, plural, one {Impossible d’appliquer la taille mesurée. La MTU reste à {{value}} octet.} many {Impossible d’appliquer la taille mesurée. La MTU reste à {{value}} octets.} other {Impossible d’appliquer la taille mesurée. La MTU reste à {{value}} octets.}}"
+    }
+  },
+  "quality": {
+    "label": "Qualité de la connexion",
+    "sample": "{{latency}} de latence · {{jitter}} de gigue · {{loss}} de perte",
+    "selection": {
+      "pending": "En attente de la première vérification de qualité.",
+      "observing": "Mesurée à l’intérieur du VPN : ce n’est pas un test de débit.",
+      "waiting_for_idle": "Comparera les méthodes de connexion lorsque le trafic sera inactif.",
+      "comparing": "Comparaison des méthodes de connexion…",
+      "selected": "Utilise la meilleure méthode de connexion mesurée.",
+      "icmp_unavailable": "Le serveur n’a pas répondu aux vérifications de qualité : la latence et les pertes ne sont pas disponibles.",
+      "protection_required": "Activez le coupe-circuit pour que SirinVPN puisse comparer les méthodes de connexion."
+    },
+    "reason": {
+      "confirmed_failure": "Méthode de connexion changée après l’échec de la précédente.",
+      "quality_improvement": "Passage à une méthode de connexion nettement meilleure de façon constante.",
+      "rollback": "Méthode de connexion actuelle conservée : l’autre méthode n’a pas pu se connecter."
+    }
+  },
+  "startup": {
+    "unknown": "Impossible de vérifier la connexion au démarrage.",
+    "otherServer": "Enregistré, mais un autre serveur est actuellement connecté. Connectez-vous à ce serveur pour l’utiliser au démarrage.",
+    "serviceUnknown": "Enregistré. État du service de démarrage indisponible.",
+    "inactive": "Enregistré, mais pas encore actif.",
+    "activateHint": "Sélectionnez Se connecter et activer pour l’activer.",
+    "nextConnection": "Il s’active la prochaine fois que vous vous connectez à ce serveur.",
+    "active": "Se connecte à ce serveur au démarrage de cet appareil.",
+    "unconfirmed": "Le service de démarrage est activé, mais il n’est pas encore réglé sur ce serveur.",
+    "activate": "Se connecter et activer"
+  },
+  "saveBar": {
+    "unsaved": "Modifications non enregistrées",
+    "discard": "Abandonner",
+    "save": "Enregistrer les préférences",
+    "pending": "<strong>Enregistré pour votre prochaine connexion.</strong> Connexion actuelle : {{differences}}.",
+    "invalid": "Corrigez les valeurs en surbrillance pour enregistrer."
+  },
+  "differences": {
+    "mtu": {
+      "automatic": "MTU {{value}} (automatique)",
+      "manual": "MTU {{value}} (manuelle)"
+    },
+    "method": "Méthode de connexion : {{method}}",
+    "policy": {
+      "kill_switch": {
+        "on": "Coupe-circuit : activé",
+        "off": "Coupe-circuit : désactivé"
+      },
+      "automatic_reconnect": {
+        "on": "Reconnexion automatique : activée",
+        "off": "Reconnexion automatique : désactivée"
+      },
+      "connect_on_startup": {
+        "on": "Connexion au démarrage : activée",
+        "off": "Connexion au démarrage : désactivée"
+      }
+    },
+    "routing": {
+      "full_tunnel": "Routage : tunnel complet",
+      "selected_routes": "Routage : routes sélectionnées",
+      "selected_applications": "Routage : applications sélectionnées"
+    },
+    "localNetwork": {
+      "on": "Accès au réseau local : activé",
+      "off": "Accès au réseau local : désactivé"
+    },
+    "routes": "Plages IP différentes"
+  },
+  "preferences": {
+    "loadError": "Impossible de charger les préférences de connexion.",
+    "loading": "Chargement des préférences de connexion…",
+    "saved": "Préférences de connexion enregistrées. Elles s’appliquent à partir de votre prochaine connexion.",
+    "saveError": "Impossible d’enregistrer. Vos préférences précédentes restent en place.",
+    "reconnectOn": "La reconnexion automatique est activée.",
+    "reconnectOff": "La reconnexion automatique est désactivée.",
+    "reconnectError": "Impossible de modifier la reconnexion automatique."
+  },
+  "nextConnection": "S’applique à partir de votre prochaine connexion."
+}

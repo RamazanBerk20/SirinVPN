@@ -1,0 +1,264 @@
+{
+  "choice": {
+    "listLabel": "서버 추가 방법",
+    "back": "옵션으로 돌아가기",
+    "privacy": "계정 없음. 원격 측정 없음.",
+    "join": {
+      "title": "참여 코드 사용",
+      "summary": "QR 코드를 스캔하거나 코드를 입력하세요"
+    },
+    "provision": {
+      "title": "내 VPS 설정",
+      "summary": "내 서버에 VPN 만들기"
+    },
+    "backup": {
+      "title": "백업 복원",
+      "summary": "암호화된 기기 백업 가져오기"
+    },
+    "recovery": {
+      "title": "복구 키 사용",
+      "summary": "서버 접근 권한 복구"
+    },
+    "hetzner": {
+      "title": "Hetzner 서버 만들기",
+      "summary": "스스로 설정되는 새 VPS 임대"
+    },
+    "advanced": "고급",
+    "advancedHint": "Hetzner Cloud 계정으로 서버 만들기"
+  },
+  "backup": {
+    "title": "이 기기 복원",
+    "summary": "이 기기에 서버를 다시 추가합니다. 서버 자체에는 연결하지 않습니다.",
+    "file": "백업 파일",
+    "fileHint": ".sirinvpn-backup 파일입니다. 이 기기에 이미 있는 서버는 덮어쓰지 않습니다.",
+    "choose": "파일 선택",
+    "pickerTitle": "SirinVPN 백업 열기",
+    "fileType": "SirinVPN 백업",
+    "password": "백업 비밀번호",
+    "submit": "백업 복원",
+    "submitting": "복원하는 중…",
+    "error": {
+      "picker": "파일 선택기를 열지 못했습니다. 다시 시도하세요.",
+      "restore": "백업을 복원하지 못했습니다. 파일과 비밀번호를 확인하세요."
+    },
+    "change": "파일 변경",
+    "restored": "{{name}}이(가) 이 기기에 복원되었습니다."
+  },
+  "invitation": {
+    "expires": "{{date}}에 만료",
+    "identity": "확인된 서버 ID",
+    "trust": "신뢰하는 사람에게서 이 참여 코드를 받았을 때만 참여하세요.",
+    "error": "이 참여 코드를 확인하지 못했습니다. 새 코드를 요청하세요."
+  },
+  "join": {
+    "title": "서버에 참여",
+    "summary": "개인 키는 이 기기에서 만들어지며 기기를 떠나지 않습니다.",
+    "code": "참여 코드",
+    "codeHint": "비밀번호처럼 비공개로 보관하세요",
+    "review": "참여 코드 검토",
+    "submit": "서버에 참여",
+    "submitting": "참여하는 중…",
+    "error": "이 참여 코드는 작동하지 않았습니다. 만료되었거나, 사용되었거나, 취소되었을 수 있습니다. 새 코드를 요청하세요."
+  },
+  "recover": {
+    "title": "복구 키 사용",
+    "summary": "이 기기에서 이 서버의 소유자 권한을 다시 얻습니다.",
+    "key": "복구 키",
+    "keyHint": "sirr1로 시작합니다. 확인하기 전에는 아무것도 전송되지 않습니다.",
+    "file": {
+      "toggle": "복구 키 파일 열기",
+      "choose": "파일 선택",
+      "password": "파일 비밀번호",
+      "open": "파일 열기",
+      "opening": "파일을 여는 중…",
+      "loaded": "파일에서 복구 키를 불러왔습니다.",
+      "pickerError": "파일 선택기를 열지 못했습니다.",
+      "openError": "복구 키 파일을 열지 못했습니다. 파일과 비밀번호를 확인하세요.",
+      "type": "SirinVPN 복구 키"
+    },
+    "serverIdentity": "서버 ID",
+    "deviceName": "소유자 기기 이름",
+    "defaultDeviceName": "복구된 소유자 기기",
+    "confirmRevoke": "이전의 모든 소유자 기기를 삭제하고 이 키를 사용합니다. 다른 사람은 접근 권한을 유지하며, 관리자는 복구 권한을 잃습니다.",
+    "replaceProfile": "{{name}}에 대해 이 기기에 저장된 프로필 바꾸기",
+    "review": "복구 키 검토",
+    "submit": "소유자 접근 권한 복구",
+    "error": "복구가 끝나지 않았습니다. 같은 키로 다시 시도하세요.",
+    "disconnectFirst": "먼저 VPN 연결을 끊으세요. 이 기기가 연결된 동안에는 복구를 시작할 수 없습니다.",
+    "reviewing": "복구 키를 확인하는 중…",
+    "submitting": "소유자 접근 권한을 복구하는 중…",
+    "done": "{{name}}의 소유자 권한을 다시 얻었습니다. 이전 복구 키는 사용되었으므로, 키 및 복구에서 새 키를 만드세요."
+  },
+  "setup": {
+    "title": "서버 연결",
+    "summary": "SSH로 서버에 로그인해 SirinVPN을 설치합니다.",
+    "defaultName": "내 서버",
+    "name": "서버 이름",
+    "nameHint": "이 기기에만 저장됩니다",
+    "host": "IP 주소 또는 호스트 이름",
+    "advanced": "고급 설정",
+    "replace": {
+      "title": "기존 설치 바꾸기",
+      "summary": "모든 소유자 기기와 복구 키를 잃은 경우에만"
+    },
+    "verify": "서버 확인",
+    "verifying": "{{host}}에 연결하는 중…",
+    "fingerprint": {
+      "title": "서버 확인",
+      "summary": "호스팅 제공업체의 웹 콘솔에서 이 지문을 확인하세요.",
+      "copy": "지문 복사",
+      "mismatch": "일치하지 않으면 계속하지 마세요. 연결이 가로채였을 수 있습니다.",
+      "replaceWarning": "바꾸면 이 서버의 모든 기기, 참여 코드, 복구 키가 삭제됩니다.",
+      "matches": "지문이 일치함",
+      "checkAgain": "네트워크 다시 확인",
+      "checking": "네트워크 확인 중…",
+      "install": "SirinVPN 설치",
+      "replace": "SirinVPN 바꾸기",
+      "pinnedTitle": "서버의 SSH 키",
+      "pinned": "SirinVPN이 이 기기에서 이 키를 만들고, 서버가 처음 시작되기 전에 서버에 넣었으므로 비교할 대상이 없습니다.",
+      "checkNetwork": "네트워크 확인",
+      "confirmed": "이 지문이 서버와 일치하는 것을 확인했습니다.",
+      "changePort": "포트 변경"
+    },
+    "confirmReplace": {
+      "title": "기존 설치를 바꿀까요?",
+      "message": "이 서버의 모든 기기, 참여 코드, 복구 키가 작동을 멈춥니다. 서버의 다른 소프트웨어에는 영향을 주지 않습니다.",
+      "confirm": "바꾸기"
+    },
+    "installing": {
+      "title": "서버 설정 중",
+      "summary": "{{host}}에 SirinVPN을 설치하는 중입니다. 보통 몇 분 정도 걸립니다.",
+      "keepOpen": "완료될 때까지 SirinVPN을 열어 두세요.",
+      "stepChecked": "VPS ID와 네트워크 확인",
+      "stepInstall": "VPS에 SirinVPN 설치",
+      "stepInstallDetail": "연결하고, 서버를 확인하고, 소프트웨어를 업로드해 검증한 뒤 VPN을 설정합니다"
+    },
+    "success": {
+      "title": "VPN이 준비되었습니다",
+      "summary": "{{name}}을(를) 추가했으며, 이 기기가 소유자입니다.",
+      "recoveryTitle": "복구 키 저장",
+      "recoverySummary": "이 기기만 서버를 관리할 수 있습니다. 기기를 잃어버리면 복구 키가 다시 들어올 수 있는 유일한 방법입니다. 연결된 후에 만들 수 있습니다.",
+      "recoveryKey": "복구 키 저장",
+      "open": "서버 열기"
+    },
+    "error": {
+      "unreachable": "SSH로 서버에 연결하지 못했습니다. 주소와 포트를 확인하세요.",
+      "network": "서버의 네트워크를 확인하지 못했습니다. 다시 시도하세요.",
+      "install": "SirinVPN을 설치하지 못했습니다."
+    },
+    "hostPlaceholder": "예: 203.0.113.10",
+    "continue": "계속",
+    "previousStep": "이전 단계",
+    "progress": {
+      "label": "설정 단계",
+      "server": "서버",
+      "verify": "확인",
+      "install": "설치"
+    },
+    "failed": {
+      "title": "설치가 끝나지 않았습니다",
+      "stage": "중지된 단계",
+      "server": "서버",
+      "fingerprint": "확인된 지문",
+      "stages": {
+        "connect": "서버에 로그인하는 중",
+        "check": "서버를 확인하는 중",
+        "upload": "SirinVPN을 업로드하는 중",
+        "configure": "서버를 설정하는 중"
+      },
+      "change": {
+        "unchanged": "서버의 어떤 것도 변경되지 않았습니다.",
+        "rolledBack": "SirinVPN이 서버를 변경한 뒤 해당 변경 사항을 되돌렸습니다.",
+        "unknown": "SirinVPN은 서버가 변경되었는지 확인하지 못했습니다. 다시 설치하면 먼저 서버를 확인합니다."
+      },
+      "signInAgain": "SSH 비밀번호가 저장되지 않았습니다. 설정으로 돌아가 다시 입력하세요.",
+      "back": "설정으로 돌아가기",
+      "retry": "설치 다시 시도"
+    },
+    "created": {
+      "title": "{{name}} 준비 완료",
+      "summary": "{{host}}에서 실행 중이며, 이 기기가 만든 SSH 키를 사용하므로 확인할 항목이 없습니다. 권장 설정으로 SirinVPN을 설치하거나, 먼저 설정을 검토하세요.",
+      "settings": "설정 검토(선택 사항)",
+      "address": "주소",
+      "key": "root SSH 키",
+      "copyKey": "키 경로 복사"
+    }
+  },
+  "hetzner": {
+    "title": "Hetzner Cloud에 서버 만들기",
+    "summary": "SirinVPN이 Hetzner 계정에 Debian 13 서버를 임대하고 스스로 설치합니다. IP 주소나 비밀번호를 직접 입력할 필요가 없습니다.",
+    "token": "Hetzner Cloud API 토큰",
+    "tokenHint": "Hetzner Console에서 프로젝트를 열고 Security > API tokens에서 Read & Write 토큰을 만드세요. 토큰은 Hetzner에만 전송되며 저장되지 않습니다.",
+    "tokenExpired": "SirinVPN은 API 토큰을 10분 동안만 보관합니다. 계속하려면 다시 입력하세요.",
+    "loadPlans": "가격 보기",
+    "loading": "Hetzner에서 가격을 가져오는 중…",
+    "location": "위치",
+    "serverType": "서버 유형",
+    "typeOption": "{{price}}/월 · {{name}}({{architecture}}) · vCPU {{cores}}개 · 메모리 {{memory}} GB · 디스크 {{disk}} GB",
+    "price": "월 {{total}}: 서버 {{server}}와 IPv4 주소 {{ipv4}}. 서버를 삭제할 때까지 Hetzner가 계정에 요금을 청구합니다.",
+    "priceNoIpv4": "서버 기준 월 {{total}}. 서버를 삭제할 때까지 Hetzner가 계정에 요금을 청구합니다.",
+    "create": "월 {{total}}로 서버 만들기",
+    "confirm": {
+      "title": "Hetzner 서버를 만들까요?",
+      "message": "{{location}}의 {{type}}은(는) 삭제할 때까지 월 {{total}}입니다.",
+      "confirm": "서버 만들기"
+    },
+    "creating": "서버를 만드는 중…",
+    "waiting": "{{name}}이(가) 시작되기를 기다리는 중…",
+    "waitingHint": "보통 1~2분이 걸립니다.",
+    "cancel": "기다리기 중지",
+    "keyPath": "root SSH 키",
+    "delete": "이 서버 삭제",
+    "deleting": "{{name}} 삭제 중…",
+    "deleteConfirm": {
+      "title": "{{name}}을(를) 삭제할까요?",
+      "message": "{{name}}, 해당 IP 주소, 그 안의 모든 데이터가 Hetzner 계정에서 삭제됩니다. 이 작업은 되돌릴 수 없습니다.",
+      "confirm": "서버 삭제"
+    },
+    "deleted": "Hetzner 계정에서 삭제되었으며, Hetzner는 더 이상 이 서버에 요금을 청구하지 않습니다.",
+    "startOver": "처음부터 다시",
+    "failedTitle": "{{name}}이(가) 아직 준비되지 않았습니다",
+    "failedSummary": "서버는 Hetzner 계정에 있으며 삭제할 때까지 요금이 청구됩니다. 다시 기다리거나, 나중에 설정하도록 유지하거나, 삭제하세요.",
+    "waitAgain": "다시 기다리기",
+    "keep": "서버 유지",
+    "keptTitle": "{{name}}은(는) Hetzner 계정에 남아 있습니다",
+    "kept": "Hetzner Console에서 삭제할 때까지 Hetzner가 요금을 청구합니다. 나중에 설정하려면 ‘내 VPS 설정’을 선택하고 주소를 입력하세요. 확인용 SSH 호스트 키는 아래에 있습니다.",
+    "leaveWarning": "Hetzner 서버가 만들어졌으며 삭제할 때까지 요금이 청구됩니다. 그래도 나가시겠습니까?",
+    "error": {
+      "catalog": "Hetzner 가격을 불러오지 못했습니다.",
+      "create": "서버를 만들지 못했습니다.",
+      "wait": "서버가 준비되지 않았습니다.",
+      "delete": "서버를 삭제하지 못했습니다."
+    },
+    "hostKey": "SSH 호스트 키",
+    "dangerLabel": "서버 삭제",
+    "billed": "{{name}}은(는) 삭제할 때까지 Hetzner 계정에 요금이 청구됩니다.",
+    "deletedTitle": "{{name}}을(를) 삭제했습니다",
+    "locationOption": "{{city}}, {{country}}({{name}})",
+    "uncertain": {
+      "title": "Hetzner가 {{name}}을(를) 만들었을 수 있습니다",
+      "summary": "Hetzner의 응답이 도착하지 않아 {{name}}이(가) Hetzner 계정에 있고 요금이 청구되고 있을 수 있습니다. Hetzner Console에서 이 이름의 서버가 있는지 찾거나 여기에서 확인하세요. 이 문제가 해결될 때까지 다른 서버 만들기는 꺼져 있습니다.",
+      "nameLabel": "서버 이름",
+      "copyName": "서버 이름 복사",
+      "check": "서버가 있는지 확인",
+      "checking": "Hetzner 확인 중…",
+      "checkFailed": "서버가 있는지 확인하지 못했습니다. Hetzner Console에서 찾아보세요.",
+      "found": "{{name}}이(가) Hetzner 계정에 있습니다. 지금 설정하거나 Hetzner Console에서 삭제하세요.",
+      "notFound": "현재 Hetzner에 {{name}}이(가) 나타나지 않습니다. Hetzner Console에서도 보이지 않으면 만들어지지 않은 것입니다.",
+      "adopt": "이 서버 설정",
+      "absent": "존재하지 않음",
+      "absentConfirm": {
+        "title": "{{name}}이(가) 존재하지 않나요?",
+        "message": "Hetzner Console을 확인한 뒤에만 확인하세요. {{name}}이(가) 있다면 다른 서버를 만들 때 두 서버 모두 요금이 청구됩니다.",
+        "confirm": "존재하지 않음"
+      },
+      "leaveWarning": "Hetzner가 {{name}}을(를) 만들었을 수 있으며, 삭제할 때까지 요금이 청구됩니다. Hetzner Console에서 찾아보세요. 그래도 나가시겠습니까?"
+    }
+  },
+  "port": {
+    "range": "1에서 65535 사이의 포트를 입력하세요.",
+    "reserved": "SirinVPN은 서버에서 포트 {{port}}을(를) 사용합니다. 다른 포트를 선택하세요.",
+    "sameAsDirect": "직접 UDP가 이미 이 포트를 사용합니다. 다른 포트를 선택하세요.",
+    "sameAsQuic": "QUIC이 TCP/TLS와 같은 번호의 이 UDP 포트에서 응답합니다. 다른 포트를 선택하세요."
+  }
+}

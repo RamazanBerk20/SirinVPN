@@ -52,3 +52,21 @@ it("is amber while reachability checks go unanswered", () => {
   expect(document.querySelector(".connection-console")?.getAttribute("data-tone")).toBe("warn");
   expect(screen.getByRole("button", { name: t("home.alert.runDiagnostics") })).toBeTruthy();
 });
+
+it("shows the routing chip on Android only for a narrower scope, by state value not by translated text", async () => {
+  vi.resetModules();
+  vi.doMock("../../platform", () => ({ isAndroid: true, dpadOnly: false, invoke: vi.fn() }));
+  const { ConnectionFacts } = await import("./ConnectionHero");
+  const { t: translate } = await import("../../i18n");
+  const facts = (local: LocalTunnelStatus) => { cleanup(); render(<ConnectionFacts model={model(local)} />); return screen.queryByText(translate("home.details.routing")); };
+  expect(facts(connected)).toBeNull();
+  expect(facts({ ...connected, routing_mode: "selected_routes" })).not.toBeNull();
+  vi.doUnmock("../../platform");
+});
+
+it("shows Disconnecting on Home while a dialog's disconnect is in flight", () => {
+  const pending = { id: 1, kind: "disconnect" as const, serverId: null };
+  render(<ConnectionHero model={model(connected, { pending, busy: true })} view="home" />);
+  expect(screen.getByRole("status").textContent).toBe(t("home.status.disconnecting"));
+  expect(document.querySelector(".connection-console")?.getAttribute("data-state")).toBe("stopping");
+});

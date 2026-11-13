@@ -98,7 +98,7 @@ export function RecoveryKeys({ profile, connected, owner, onConnect, onUpdate }:
   });
   const exportPackage = () => action("export", async (current) => {
     if (!created) return;
-    const path = await save({ defaultPath: "sirinvpn-recovery.sirrec", filters: [{ name: t("settings.recovery.key.fileType"), extensions: ["sirrec"] }] });
+    const path = await save({ purpose: "recovery_export", defaultPath: "sirinvpn-recovery.sirrec", filters: [{ name: t("settings.recovery.key.fileType"), extensions: ["sirrec"] }] });
     if (!path || !current()) return;
     await api.exportRecoveryPackage(created.key, path, password, accepted);
     if (!current()) return;
@@ -126,8 +126,8 @@ export function RecoveryKeys({ profile, connected, owner, onConnect, onUpdate }:
       {say("copy")}
     </div>
     {!isAndroid && <SettingsDisclosure summary={t("settings.recovery.key.qr")}><SecretQr source={qrSource} kind="recovery" code={created.key} /></SettingsDisclosure>}
-    <Field label={t("settings.recovery.key.password")} hint={t("settings.recovery.key.passwordHint")}><SecretInput type="password" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} /></Field>
-    <Field label={t("settings.recovery.key.repeat")} error={repeat && repeat !== password ? t("common.error.passwordsDiffer") : undefined}><SecretInput type="password" autoComplete="new-password" value={repeat} onChange={(event) => setRepeat(event.target.value)} /></Field>
+    <Field label={t("settings.recovery.key.password")} hint={t("settings.recovery.key.passwordHint")}><SecretInput field="password" type="password" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} /></Field>
+    <Field label={t("settings.recovery.key.repeat")} error={repeat && repeat !== password ? t("common.error.passwordsDiffer") : undefined}><SecretInput field="password" type="password" autoComplete="new-password" value={repeat} onChange={(event) => setRepeat(event.target.value)} /></Field>
     <div className="recovery-key-action">
       <button className="secondary-button" disabled={busy || !accepted || [...password].length < 12 || password !== repeat} onClick={() => void exportPackage()}><DownloadSimple size={17} />{busyAt === "export" ? t("settings.recovery.key.saving") : t("settings.recovery.key.save")}</button>
       {say("export")}

@@ -78,7 +78,7 @@ export function Troubleshooter({ model, onOpenSettings, onRestoreDevice }: {
                   <div>
                     <strong>{t(`help.troubleshoot.step.${step.id}`)}</strong>
                     <p>{t(step.message)}</p>
-                    {step.evidence && <p className="troubleshoot-evidence">{t("help.troubleshoot.seen", { detail: step.evidence })}</p>}
+                    {step.evidence && <p className="troubleshoot-evidence">{t("help.troubleshoot.seen")}<span className="error-detail" lang="en" dir="auto">{step.evidence}</span></p>}
                     {fix && <div className="settings-action-row"><button type="button" className="secondary-button" onClick={() => { setOpen(false); fix.run(); }}>{fix.label}</button></div>}
                   </div>
                 </div>

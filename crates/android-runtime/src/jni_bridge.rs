@@ -612,7 +612,8 @@ pub extern "system" fn Java_org_sirinvpn_client_Native_call(
             } else {
                 "The operation did not complete. Check permissions, credentials and network access. Review the current state before retrying: a server change may already have completed.".to_owned()
             };
-            serde_json::json!({"error":message})
+            // A coded error (in progress, blocked, uncertain…) also tells the UI which case it is.
+            crate::commands::error_response(&error, message)
         }
     };
     env.new_string(response.to_string())

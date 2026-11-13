@@ -1,6 +1,6 @@
 import { SecretInput } from "../../components/SecretInput";
 import { ShareEncryptedFile } from "../../components/ShareEncryptedFile";
-import { useSshLogin } from "../../hooks/useSshLogin";
+import { useSshOperation } from "../../hooks/useSshOperation";
 import { SshLoginFields } from "./SshLoginFields";
 import { DialogBack, DialogContent } from "../../components/DialogContent";
 import { HashValue } from "../../components/CopyValue";
@@ -10,13 +10,11 @@ import { save } from "../../lib/nativeDialog";
 import { GlobeHemisphereWest, Warning } from "@phosphor-icons/react";
 import { useId, useState } from "react";
 import { api } from "../../api";
-import {
-  useSshHostTrust,
-  type InspectedSshHost,
-} from "../../hooks/useSshHostTrust";
+import type { InspectedSshHost } from "../../hooks/useSshHostTrust";
 import { SshHostVerification } from "./SshHostVerification";
 import { type ServerBackupResult, type ServerProfile } from "../../types";
-import { Field, InlineError } from "../../components/ui";
+import { Field } from "../../components/ui";
+import { ServerChangeFailure } from "../../components/ServerChange";
 import { preferredBackupPath } from "../../lib/backupPaths";
 import { errorMessage } from "../../lib/errors";
 import { t } from "../../i18n";
@@ -35,46 +33,25 @@ export function VpsBackupDialog({
   disconnected: boolean;
 }) {
   const formId = useId();
-  const [step, setStep] = useState<
-    "details" | "fingerprint" | "exporting" | "success"
-  >("details");
-  // Which step of the running task is under way, for its progress list.
-  const [phase, setPhase] = useState(0);
-  const login = useSshLogin(profile.endpoint.host, dialogOpen);
-  const { port } = login;
+  const op = useSshOperation<ServerBackupResult>(profile.endpoint.host, dialogOpen);
+  const { login, trust, view: step, busy, phase, result } = op;
   const [path, setPath] = useState("");
+  const [pickerError, setPickerError] = useState<string | null>(null);
+  const error = op.error ?? pickerError;
   const [backupPassword, setBackupPassword] = useState("");
   const [backupPasswordConfirmation, setBackupPasswordConfirmation] =
     useState("");
-  const trust = useSshHostTrust(
-    profile.endpoint.host,
-    Number(port),
-    dialogOpen,
-  );
-  const [confirmed, setConfirmed] = useState(false);
-  const [result, setResult] = useState<ServerBackupResult | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const clearSecrets = () => {
-    login.clearSecrets();
-    setBackupPassword("");
-    setBackupPasswordConfirmation("");
-  };
 
   const reset = () => {
-    clearSecrets();
-    setStep("details");
+    op.reset();
+    setBackupPassword("");
+    setBackupPasswordConfirmation("");
     setPath("");
-    trust.reset();
-    setConfirmed(false);
-    setResult(null);
-    setBusy(false);
-    setError(null);
+    setPickerError(null);
   };
 
   const changeOpen = (next: boolean) => {
-    if (!next && (busy || step === "exporting")) return;
+    if (!next && busy) return;
     onOpenChange(next);
     if (!next) reset();
   };
@@ -87,16 +64,18 @@ export function VpsBackupDialog({
     : !path ? t("vps.backup.missing.file")
     : !passwordLong ? t("vps.backup.missing.password")
     : !passwordsMatch ? t("vps.backup.missing.repeat")
-    : login.missing ?? (step === "fingerprint" && !confirmed ? t("ssh.verify.confirmFirst") : null);
+    : login.missing ?? (step === "confirmHost" && !trust.confirmed ? t("ssh.verify.confirmFirst") : null);
 
   const chooseDestination = async () => {
     try {
+      // Letters and digits of any script stay; a non-Latin name must not become the generic default.
       const safeName =
         profile.name
           .trim()
-          .replace(/[^a-zA-Z0-9_-]+/g, "-")
+          .replace(/[^\p{L}\p{N}_-]+/gu, "-")
           .replace(/^-+|-+$/g, "") || "sirinvpn-vps";
       const selected = await save({
+        purpose: "vps_backup_export",
         title: t("vps.backup.saveDialogTitle"),
         defaultPath: await preferredBackupPath(
           `${safeName}.sirinvpn-server-backup`,
@@ -110,67 +89,34 @@ export function VpsBackupDialog({
       });
       if (typeof selected === "string") {
         setPath(selected);
-        setError(null);
+        setPickerError(null);
       }
     } catch (reason) {
-      setError(
-        errorMessage(reason, t("vps.common.error.picker")),
-      );
+      setPickerError(errorMessage(reason, t("vps.common.error.picker")));
     }
   };
 
   const inspect = async () => {
     if (!valid) return;
-    setBusy(true);
-    setError(null);
-    try {
-      const checked = await trust.inspect();
-      if (!checked) return;
-      setConfirmed(false);
-      if (checked.status === "trusted") {
-        await exportBackup(checked);
-      } else {
-        setStep("fingerprint");
-      }
-    } catch (reason) {
-      setError(errorMessage(reason, t("vps.common.error.unreachable")));
-    } finally {
-      setBusy(false);
-    }
+    setPickerError(null);
+    await op.verify(t("vps.common.error.unreachable"), exportBackup);
   };
 
-  const exportBackup = async (
-    checked: InspectedSshHost | null = trust.inspection,
-  ) => {
-    if (!checked || !valid || (checked.status !== "trusted" && !confirmed))
-      return;
-    setStep("exporting");
-    setPhase(0);
-    setBusy(true);
-    setError(null);
-    try {
-      const fingerprint = await trust.accept(checked, confirmed);
-      setPhase(1);
+  const exportBackup = async (checked: InspectedSshHost | null = trust.inspection) => {
+    if (!checked || !valid || (checked.status !== "trusted" && !trust.confirmed)) return;
+    // On failure the passwords the user chose stay entered: it says nothing about them.
+    await op.run(async credentials => {
       const completed = await api.exportVpsBackup({
         server_id: profile.id,
         path,
         backup_password: backupPassword,
-        ...(await login.prepare(fingerprint)),
+        ...credentials,
         confirmed: true,
       });
-      clearSecrets();
-      setResult(completed);
-      setStep("success");
-    } catch (reason) {
-      // The passwords the user chose stay entered: this failure says nothing about them.
-      setConfirmed(false);
-      setStep("details");
-      setError(
-        errorMessage(reason, t("vps.backup.error")),
-      );
-    } finally {
-      setBusy(false);
-    }
+      setBackupPassword("");
+      setBackupPasswordConfirmation("");
+      return completed;
+    }, t("vps.backup.error"), { inspection: checked });
   };
 
   return (
@@ -179,20 +125,21 @@ export function VpsBackupDialog({
         <Dialog.Overlay className="dialog-overlay" />
         <DialogContent className="dialog-content remove-server-dialog repair-server-dialog vps-backup-dialog"
           heading={t("vps.backup.title", { name: profile.name })}
-          description={step === "success" ? t("vps.backup.titleDone") : t("vps.backup.description")}
-          closeDisabled={busy || step === "exporting"}
-          footerNote={step === "details" || step === "fingerprint" ? busy ? null : blocker : null}
-          footer={step === "exporting" ? null
-            : step === "success" ? <button className="primary-button" type="button" onClick={() => changeOpen(false)}>{t("common.action.done")}</button>
+          data-operation="backup" data-flow-state={op.state.kind}
+          description={step === "succeeded" ? t("vps.backup.titleDone") : t("vps.backup.description")}
+          closeDisabled={busy}
+          footerNote={step === "form" || step === "confirmHost" ? busy ? null : blocker : null}
+          footer={step === "running" ? null
+            : step === "succeeded" ? <button className="primary-button" type="button" onClick={() => changeOpen(false)}>{t("common.action.done")}</button>
             : <>
-              {step === "fingerprint" && <DialogBack disabled={busy} onClick={() => setStep("details")} />}
+              {step === "confirmHost" && <DialogBack disabled={busy} onClick={op.back} />}
               <button className="secondary-button" type="button" disabled={busy} onClick={() => changeOpen(false)}>{t("common.action.cancel")}</button>
-              {step === "details"
+              {step === "form"
                 ? <button className="primary-button" type="submit" form={formId} disabled={!valid || busy}>{busy ? <Busy label={t("vps.common.checking")} /> : t("vps.backup.create")}</button>
-                : <button className="primary-button" type="button" disabled={!confirmed || !valid || busy} onClick={() => void exportBackup()}>{t("vps.backup.create")}</button>}
+                : <button className="primary-button" type="button" disabled={!trust.confirmed || !valid || busy} onClick={() => void exportBackup()}>{t("vps.backup.create")}</button>}
             </>}>
 
-          {step === "details" ? (
+          {step === "form" ? (
             <form
               className="uninstall-form"
               id={formId}
@@ -201,7 +148,7 @@ export function VpsBackupDialog({
                 void inspect();
               }}
             >
-              {error ? <InlineError message={error} /> : null}
+              <ServerChangeFailure reason={op.failure} message={error} />
               <fieldset disabled={busy} className="ssh-operation-fields">
                 <div className="sensitive-backup-warning">
                   <Warning size={19} weight="fill" />
@@ -239,7 +186,7 @@ export function VpsBackupDialog({
                     label={t("vps.common.backupPassword")}
                     hint={t("vps.backup.passwordHint")}
                   >
-                    <SecretInput
+                    <SecretInput field="backup_password"
                       type="password"
                       value={backupPassword}
                       onChange={(event) =>
@@ -251,7 +198,7 @@ export function VpsBackupDialog({
                   <Field label={t("vps.backup.repeatPassword")}
                     hint={passwordsMatch ? t("vps.common.passwordsMatch") : undefined}
                     error={backupPasswordConfirmation && backupPasswordConfirmation !== backupPassword ? t("common.error.passwordsDiffer") : undefined}>
-                    <SecretInput
+                    <SecretInput field="backup_password"
                       type="password"
                       value={backupPasswordConfirmation}
                       onChange={(event) =>
@@ -266,18 +213,18 @@ export function VpsBackupDialog({
             </form>
           ) : null}
 
-          {step === "fingerprint" && trust.inspection ? (
+          {step === "confirmHost" && trust.inspection ? (
             <SshHostVerification
               inspection={trust.inspection}
-              confirmed={confirmed}
-              onConfirmed={setConfirmed}
+              confirmed={trust.confirmed}
+              onConfirmed={trust.setConfirmed}
             />
           ) : null}
 
-          {step === "exporting" ? <OperationProgress title={t("vps.backup.progress")}
+          {step === "running" ? <OperationProgress title={t("vps.backup.progress")}
             steps={stepsAt([t("vps.common.step.identity"), t("vps.backup.step")], phase)} /> : null}
 
-          {step === "success" && result ? (
+          {result ? (
             <OperationResult title={t("vps.backup.done")}>
               <p className="operation-result-path">{path}</p>
               <p>{t("vps.backup.doneNote")}</p>

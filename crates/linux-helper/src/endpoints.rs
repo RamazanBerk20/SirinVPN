@@ -482,8 +482,7 @@ impl<R: CommandRunner> LinuxNetworkHelper<R> {
         let previous_state = state.clone();
         state.transport = request.transport;
         state.applied_at_unix = now_unix();
-        state.initial_attempts = 1;
-        state.reconnecting = !state.waiting_for_user;
+        state.restart_plan();
         state.mtu = mtu::initial_mtu(request);
         state.mtu_sampled_at_unix = None;
         state.client_ipv6_address = request.client_ipv6_address;

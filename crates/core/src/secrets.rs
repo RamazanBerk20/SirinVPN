@@ -25,10 +25,46 @@ pub fn validate_reference(reference: &str) -> Result<(), SecretStoreError> {
     Ok(())
 }
 
+/// Where one stored device identity stands, the same vocabulary on every platform.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum CredentialState {
+    /// Nothing is stored under this reference and it was never deleted.
+    Absent,
+    /// A write started and has not been confirmed; retry it or clean up.
+    Writing,
+    Stored(CredentialBackend),
+    /// Deletion started; this reference can never hold an identity again.
+    Deleting,
+    Deleted,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum CredentialBackend {
+    /// The system secure store (Secret Service).
+    SecureStore,
+    /// A permission-protected file the user explicitly allowed.
+    PrivateFile,
+    /// Saved before provenance records existed; its backend is not verified.
+    Unverified,
+    /// The platform's own store (Windows DPAPI, Android Keystore).
+    Platform,
+}
+
 pub trait SecretStore: Send + Sync {
     fn put(&self, reference: &str, secret: &SecretIdentity) -> Result<(), SecretStoreError>;
     fn get(&self, reference: &str) -> Result<SecretIdentity, SecretStoreError>;
     fn delete(&self, reference: &str) -> Result<(), SecretStoreError>;
+    /// The reference's state. Backends with explicit records override this; the
+    /// default derives it from `get`, which every backend already implements.
+    fn state(&self, reference: &str) -> Result<CredentialState, SecretStoreError> {
+        match self.get(reference) {
+            Ok(_) => Ok(CredentialState::Stored(CredentialBackend::Platform)),
+            Err(SecretStoreError::NotFound) => Ok(CredentialState::Absent),
+            Err(SecretStoreError::Deleted) => Ok(CredentialState::Deleted),
+            Err(SecretStoreError::TransitionPending) => Ok(CredentialState::Writing),
+            Err(error) => Err(error),
+        }
+    }
     /// Preflight for a freshly generated random reference; put must still validate it.
     fn new_reference_available(&self, reference: &str) -> Result<bool, SecretStoreError> {
         match self.get(reference) {

@@ -169,7 +169,7 @@ fn server_restore_is_profile_bound_stdin_only_and_guarded_before_identity_replac
 
     let mut restored = profile.clone();
     restored.endpoint.host = "203.0.113.99".to_owned();
-    let migrated = restored_local_profile(&profile, &restored);
+    let migrated = merge_committed_profile(&profile, &restored);
     assert_eq!(migrated.endpoint, restored.endpoint);
     assert_eq!(
         migrated.pending_previous_endpoint,
@@ -182,7 +182,7 @@ fn server_restore_is_profile_bound_stdin_only_and_guarded_before_identity_replac
         profile.client_management_certificate_pem
     );
 
-    let recovered_in_place = restored_local_profile(&profile, &profile);
+    let recovered_in_place = merge_committed_profile(&profile, &profile);
     assert_eq!(recovered_in_place.pending_previous_endpoint, None);
     restore.profile.role = ServerRole::Member;
     assert!(matches!(
@@ -270,7 +270,7 @@ fn server_restore_is_profile_bound_stdin_only_and_guarded_before_identity_replac
 
 #[test]
 fn uninstall_is_guarded_and_scoped_to_sirinvpn_state() {
-    let script = uninstall_script("uninstall");
+    let script = uninstall_script("uninstall", "0123456789abcdef");
     let backup_position = script.find("tar -C / -cpf").unwrap();
     let guard_position = script
         .find(

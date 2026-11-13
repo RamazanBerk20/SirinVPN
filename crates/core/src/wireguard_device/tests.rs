@@ -179,3 +179,11 @@ fn saved_configuration_is_private_and_never_replaces_a_file() {
     assert_eq!(config_file_name("..."), "sirinvpn.conf");
     assert_eq!(config_file_name("GL.iNet router"), "GL.iNet-router.conf");
 }
+
+#[test]
+fn a_host_saved_with_whitespace_is_sent_normalised() {
+    let profile = profile(" vpn.example.test\n", false);
+    let draft =
+        WireGuardDeviceDraft::new(&profile, "Home", "Router", None, Default::default()).unwrap();
+    assert_eq!(draft.request().endpoint.host, "vpn.example.test");
+}

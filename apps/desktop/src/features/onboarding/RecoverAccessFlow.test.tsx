@@ -3,11 +3,11 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { api } from "../../api";
 import { RecoverAccessFlow } from "./RecoverAccessFlow";
 import type { LocalTunnelStatus, RecoveryPreview, ServerProfile } from "../../types";
-import { open } from "@tauri-apps/plugin-dialog";
+import { open } from "../../lib/nativeDialog";
 import { t } from "../../i18n";
 
 vi.mock("../../api", () => ({ api: { previewRecoveryKey: vi.fn(), recoverOwnerAccess: vi.fn(), localStatus: vi.fn(), importRecoveryPackage: vi.fn() } }));
-vi.mock("@tauri-apps/plugin-dialog", () => ({ open: vi.fn() }));
+vi.mock("../../lib/nativeDialog", () => ({ open: vi.fn() }));
 const preview: RecoveryPreview = { existing_profile: true, preview: { server_id: "a", server_name: "My VPS", host: "vps.example", recovery_id: "recovery", server_identity_fingerprint: "test-pin" } };
 beforeEach(() => {
   vi.resetAllMocks();

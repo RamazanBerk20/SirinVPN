@@ -57,6 +57,7 @@ async fn kernel_published_source_blocks_data_but_retains_control_across_restart(
         transport_peers: AuthorizedPeers::default(),
         transport_activity: ActiveTransportRegistry::default(),
         speed_test: Default::default(),
+        throttle: Default::default(),
     };
     sync_peer_isolation(&state.configuration, &before)
         .await
@@ -118,7 +119,7 @@ async fn kernel_published_source_blocks_data_but_retains_control_across_restart(
     assert!(publish().await.is_ok());
     packets("source", serde_json::json!({"server_ipv6": server_v6})).await;
     let current = load_authorization(&state.paths.authorization).unwrap();
-    assert!(current.endpoint_transition_source);
+    assert!(current.endpoint.is_handoff_source());
     assert_eq!(current.endpoint_generation(), 8);
     assert!(
         state

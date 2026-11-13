@@ -19,9 +19,8 @@ class ServiceAcceptanceTest {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val context = instrumentation.targetContext
         val link = ServiceLink(context)
-        instrumentation.runOnMainSync { link.bind() }
         try {
-            val control = link.ready.get(10,TimeUnit.SECONDS)
+            val control = link.control(10000).get(10,TimeUnit.SECONDS)
             fun call(command: String, args: JSONObject = JSONObject(), expectFailure:Boolean=false): Any {
                 val done = CountDownLatch(1)
                 var result = JSONObject()

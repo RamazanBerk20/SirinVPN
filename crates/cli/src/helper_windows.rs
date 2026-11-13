@@ -5,10 +5,12 @@ pub(super) fn invoke_helper(command: &str, input: Option<&[u8]>) -> Result<Local
         command, input,
     )?)
 }
-pub(super) fn resolve_server_binary(explicit: Option<PathBuf>) -> Result<PathBuf> {
+pub(super) fn resolve_server_binary(
+    explicit: Option<PathBuf>,
+) -> Result<sirinvpn_installer::ServerBinarySource> {
     if let Some(path) = explicit {
         if path.is_file() {
-            return Ok(path);
+            return Ok(path.into());
         }
         bail!("the selected Linux server binary is unavailable");
     }
@@ -16,7 +18,7 @@ pub(super) fn resolve_server_binary(explicit: Option<PathBuf>) -> Result<PathBuf
     if let Some(path) = env::var_os("SIRINVPN_SERVER_BINARY") {
         let path = PathBuf::from(path);
         if path.is_file() {
-            return Ok(path);
+            return Ok(path.into());
         }
     }
     let executable = env::current_exe()?;
@@ -28,7 +30,7 @@ pub(super) fn resolve_server_binary(explicit: Option<PathBuf>) -> Result<PathBuf
         directory.join("resources/vps/sirinvpn-server"),
     ] {
         if path.is_file() {
-            return Ok(path);
+            return Ok(path.into());
         }
     }
     bail!("the packaged Linux server binary is unavailable; repair the Windows installation")

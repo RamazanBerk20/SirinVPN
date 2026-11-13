@@ -7,16 +7,31 @@ pub(super) fn connect_transport(target: &SshTarget) -> anyhow::Result<Session> {
     if target.port == 0 {
         bail!("SSH port must be non-zero");
     }
-    let address = (target.host.as_str(), target.port)
+    let addresses = (target.host.as_str(), target.port)
         .to_socket_addrs()?
-        .next()
-        .ok_or_else(|| anyhow!("server address did not resolve"))?;
-    let stream = TcpStream::connect_timeout(&address, Duration::from_secs(10))?;
+        .collect::<Vec<_>>();
+    let stream = connect_any(&addresses, Duration::from_secs(10))?;
     let mut session = Session::new()?;
     session.set_tcp_stream(stream);
     session.set_timeout(SSH_OPERATION_TIMEOUT_MS);
     session.handshake()?;
     Ok(session)
+}
+
+/// A dual-stack name may resolve to an address family the local network cannot
+/// route, so every resolved address is tried in order with the same timeout.
+pub(super) fn connect_any(
+    addresses: &[std::net::SocketAddr],
+    timeout: Duration,
+) -> anyhow::Result<TcpStream> {
+    let mut last_error = None;
+    for address in addresses {
+        match TcpStream::connect_timeout(address, timeout) {
+            Ok(stream) => return Ok(stream),
+            Err(error) => last_error = Some(error),
+        }
+    }
+    Err(last_error.map_or_else(|| anyhow!("server address did not resolve"), Into::into))
 }
 
 pub(super) fn fingerprint(session: &Session) -> anyhow::Result<String> {
@@ -326,6 +341,46 @@ pub(super) fn ensure_dns_upstream_compatible(
     Ok(())
 }
 
+/// sudo reads the password only when it asks for one. Every privileged command
+/// therefore discards stdin up to this marker, so an unread password line never
+/// reaches the root command or a child such as dpkg.
+const PRIVILEGED_STDIN_MARKER: &str = "SIRINVPN_RESTORE_STREAM_V1";
+
+pub(super) fn privileged_command(command: &str) -> String {
+    let relay = format!(
+        "while IFS= read -r line; do [ \"$line\" = {} ] && break; done; exec /bin/sh -lc {}",
+        shell_quote(PRIVILEGED_STDIN_MARKER),
+        shell_quote(command),
+    );
+    format!("sudo -S -p '' /bin/sh -lc {}", shell_quote(&relay))
+}
+
+pub(super) fn privileged_stdin(target: &SshTarget, input: &[u8]) -> Zeroizing<Vec<u8>> {
+    let mut stdin = Zeroizing::new(Vec::new());
+    if let Some(password) = &target.sudo_password {
+        stdin.extend_from_slice(password.as_bytes());
+        stdin.push(b'\n');
+    }
+    stdin.extend_from_slice(PRIVILEGED_STDIN_MARKER.as_bytes());
+    stdin.push(b'\n');
+    stdin.extend_from_slice(input);
+    stdin
+}
+
+fn exec_privileged(
+    session: &Session,
+    target: &SshTarget,
+    command: &str,
+    input: &[u8],
+) -> anyhow::Result<ssh2::Channel> {
+    let mut channel = open_channel(session)?;
+    channel.exec(&privileged_command(command))?;
+    channel.write_all(&privileged_stdin(target, input))?;
+    channel.flush()?;
+    channel.send_eof()?;
+    Ok(channel)
+}
+
 pub(super) fn run_privileged(
     session: &Session,
     target: &SshTarget,
@@ -334,16 +389,7 @@ pub(super) fn run_privileged(
     if target.username == "root" {
         return run(session, command);
     }
-    let wrapped = format!("sudo -S -p '' /bin/sh -lc {}", shell_quote(command));
-    let mut channel = session.channel_session()?;
-    channel.exec(&wrapped)?;
-    if let Some(password) = &target.sudo_password {
-        channel.write_all(password.as_bytes())?;
-        channel.write_all(b"\n")?;
-        channel.flush()?;
-    }
-    channel.send_eof()?;
-    read_channel(channel)
+    read_channel(exec_privileged(session, target, command, &[])?)
 }
 
 pub(super) fn run_privileged_bytes(
@@ -355,16 +401,10 @@ pub(super) fn run_privileged_bytes(
     if target.username == "root" {
         return run_bytes(session, command, max_stdout_bytes);
     }
-    let wrapped = format!("sudo -S -p '' /bin/sh -lc {}", shell_quote(command));
-    let mut channel = session.channel_session()?;
-    channel.exec(&wrapped)?;
-    if let Some(password) = &target.sudo_password {
-        channel.write_all(password.as_bytes())?;
-        channel.write_all(b"\n")?;
-        channel.flush()?;
-    }
-    channel.send_eof()?;
-    read_channel_bytes(channel, max_stdout_bytes)
+    read_channel_bytes(
+        exec_privileged(session, target, command, &[])?,
+        max_stdout_bytes,
+    )
 }
 
 pub(super) fn run_privileged_with_input(
@@ -376,29 +416,19 @@ pub(super) fn run_privileged_with_input(
     if target.username == "root" {
         return run_with_input(session, command, input);
     }
-    const STREAM_MARKER: &str = "SIRINVPN_RESTORE_STREAM_V1";
-    let relay = format!(
-        "while IFS= read -r line; do [ \"$line\" = {} ] && break; done; exec /bin/sh -lc {}",
-        shell_quote(STREAM_MARKER),
-        shell_quote(command),
-    );
-    let wrapped = format!("sudo -S -p '' /bin/sh -lc {}", shell_quote(&relay));
+    read_channel(exec_privileged(session, target, command, input)?)
+}
+
+/// Remote stderr is never read (it may echo credentials). Discarding it inside
+/// libssh2 keeps a chatty stderr from filling the window stdout shares.
+fn open_channel(session: &Session) -> anyhow::Result<ssh2::Channel> {
     let mut channel = session.channel_session()?;
-    channel.exec(&wrapped)?;
-    if let Some(password) = &target.sudo_password {
-        channel.write_all(password.as_bytes())?;
-        channel.write_all(b"\n")?;
-    }
-    channel.write_all(STREAM_MARKER.as_bytes())?;
-    channel.write_all(b"\n")?;
-    channel.write_all(input)?;
-    channel.flush()?;
-    channel.send_eof()?;
-    read_channel(channel)
+    channel.handle_extended_data(ssh2::ExtendedData::Ignore)?;
+    Ok(channel)
 }
 
 pub(super) fn run(session: &Session, command: &str) -> anyhow::Result<String> {
-    let mut channel = session.channel_session()?;
+    let mut channel = open_channel(session)?;
     channel.exec(command)?;
     read_channel(channel)
 }
@@ -408,7 +438,7 @@ pub(super) fn run_bytes(
     command: &str,
     max_stdout_bytes: usize,
 ) -> anyhow::Result<Zeroizing<Vec<u8>>> {
-    let mut channel = session.channel_session()?;
+    let mut channel = open_channel(session)?;
     channel.exec(command)?;
     read_channel_bytes(channel, max_stdout_bytes)
 }
@@ -418,16 +448,12 @@ pub(super) fn run_with_input(
     command: &str,
     input: &[u8],
 ) -> anyhow::Result<String> {
-    let mut channel = session.channel_session()?;
+    let mut channel = open_channel(session)?;
     channel.exec(command)?;
     channel.write_all(input)?;
     channel.flush()?;
     channel.send_eof()?;
     read_channel(channel)
-}
-
-pub(super) fn rollback_now(session: &Session, target: &SshTarget, nonce: &str) {
-    run_rollback_now(session, target, &maintenance::rollback_path(nonce, false));
 }
 
 pub(super) fn run_rollback_now(session: &Session, target: &SshTarget, path: &str) {
@@ -474,9 +500,6 @@ pub(super) fn read_bounded_output(
 
 pub(super) fn read_channel(mut channel: ssh2::Channel) -> anyhow::Result<String> {
     let stdout = read_bounded_output(&mut channel, MAX_COMMAND_STDOUT_BYTES)?;
-    // Remote stderr may contain echoed credentials; never include it in an error,
-    // including debug APKs and desktop development builds.
-    let _stderr = read_bounded_output(channel.stderr(), MAX_SERVER_BACKUP_STDERR_SIZE)?;
     channel.wait_close()?;
     let status = channel.exit_status()?;
     if status != 0 {
@@ -497,7 +520,6 @@ pub(super) fn read_channel_bytes(
     if stdout.is_empty() {
         bail!("remote command returned an empty binary response");
     }
-    let _stderr = read_bounded_output(channel.stderr(), MAX_SERVER_BACKUP_STDERR_SIZE)?;
     channel.wait_close()?;
     let status = channel.exit_status()?;
     if status != 0 {

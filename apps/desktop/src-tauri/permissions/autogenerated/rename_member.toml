@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-rename-member"
+description = "Enables the rename_member command without any pre-configured scope."
+commands.allow = ["rename_member"]
+
+[[permission]]
+identifier = "deny-rename-member"
+description = "Denies the rename_member command without any pre-configured scope."
+commands.deny = ["rename_member"]

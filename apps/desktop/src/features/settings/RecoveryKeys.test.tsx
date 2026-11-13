@@ -2,10 +2,10 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-libra
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { RecoveryKeys } from "./RecoveryKeys";
 import { api } from "../../api";
-import { save } from "@tauri-apps/plugin-dialog";
+import { save } from "../../lib/nativeDialog";
 import { t } from "../../i18n";
 vi.mock("../../api", () => ({ api: { serverConfiguration: vi.fn(), membership: vi.fn(), recoverySettings: vi.fn(), createRecoveryKey: vi.fn(), exportRecoveryPackage: vi.fn() } }));
-vi.mock("@tauri-apps/plugin-dialog", () => ({ save: vi.fn() }));
+vi.mock("../../lib/nativeDialog", () => ({ save: vi.fn() }));
 const key = { key: "sirk1.fixture-only", qr_svg: '<svg viewBox="0 0 29 29"></svg>', recovery_id: "recovery-fixture" };
 beforeEach(() => {
   vi.clearAllMocks();

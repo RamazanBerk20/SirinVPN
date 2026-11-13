@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-update-device-subnet-routes"
+description = "Enables the update_device_subnet_routes command without any pre-configured scope."
+commands.allow = ["update_device_subnet_routes"]
+
+[[permission]]
+identifier = "deny-update-device-subnet-routes"
+description = "Denies the update_device_subnet_routes command without any pre-configured scope."
+commands.deny = ["update_device_subnet_routes"]

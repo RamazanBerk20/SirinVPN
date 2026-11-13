@@ -1,5 +1,5 @@
 import { SecretInput } from "../../components/SecretInput";
-import { useSshLogin } from "../../hooks/useSshLogin";
+import { useSshOperation } from "../../hooks/useSshOperation";
 import { SshLoginFields } from "./SshLoginFields";
 import { ServerNetworkPreflight } from "./ServerNetworkPreflight";
 import { DialogBack, DialogContent } from "../../components/DialogContent";
@@ -8,23 +8,18 @@ import { Busy, OperationProgress, OperationResult, stepsAt } from "../../compone
 import * as Dialog from "@radix-ui/react-dialog";
 import { open } from "../../lib/nativeDialog";
 import { Warning } from "@phosphor-icons/react";
-import { useEffect, useId, useState } from "react";
+import { useId, useState } from "react";
 import { api } from "../../api";
-import {
-  useSshHostTrust,
-  type InspectedSshHost,
-} from "../../hooks/useSshHostTrust";
+import type { InspectedSshHost } from "../../hooks/useSshHostTrust";
 import { SshHostVerification } from "./SshHostVerification";
 import { validateHost } from "../../format";
-import { type ServerProfile, type ServerRestoreResult } from "../../types";
-import { Field, InlineError } from "../../components/ui";
-import { errorMessage } from "../../lib/errors";
+import { type ServerProfile, type ServerRestoreResult, type SshCredentials } from "../../types";
+import { Field } from "../../components/ui";
+import { OperationPlan, ServerChangeFailure } from "../../components/ServerChange";
+import { appError, errorMessage } from "../../lib/errors";
 import { t } from "../../i18n";
 import { Rich } from "../../i18n/Rich";
 import { SettingsDisclosure } from "./SettingsParts";
-
-/** The backend's wording for a wrong backup password; only then is the entered password cleared. */
-const WRONG_PASSWORD = /password is incorrect/i;
 
 export function VpsRestoreDialog({
   profile,
@@ -44,48 +39,34 @@ export function VpsRestoreDialog({
   onMoveDevices?: () => void;
 }) {
   const formId = useId();
-  const [step, setStep] = useState<
-    "details" | "fingerprint" | "review" | "restoring" | "success"
-  >("details");
-  // Which step of the running task is under way, for its progress list.
-  const [phase, setPhase] = useState(0);
   const [host, setHost] = useState(profile.endpoint.host);
-  const login = useSshLogin(host, dialogOpen);
+  const op = useSshOperation<ServerRestoreResult>(host.trim(), dialogOpen);
+  const { login, trust, view: step, busy, phase, result } = op;
   const { port } = login;
   const [path, setPath] = useState("");
   const [backupPassword, setBackupPassword] = useState("");
-  const trust = useSshHostTrust(host.trim(), Number(port), dialogOpen);
   const [replaceExisting, setReplaceExisting] = useState(false);
-  const [confirmed, setConfirmed] = useState(false);
-  const [result, setResult] = useState<ServerRestoreResult | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const clearSecrets = () => {
-    login.clearSecrets();
-    setBackupPassword("");
-  };
+  const [pickerError, setPickerError] = useState<string | null>(null);
+  const error = op.error ?? pickerError;
 
   const reset = () => {
-    clearSecrets();
-    setStep("details");
+    op.reset();
+    setBackupPassword("");
     setHost(profile.endpoint.host);
     setPath("");
-    trust.reset();
     setReplaceExisting(false);
-    setConfirmed(false);
-    setResult(null);
-    setBusy(false);
-    setError(null);
+    setPickerError(null);
   };
 
-  useEffect(() => {
-    // The dialog stays mounted; default to the endpoint saved when it opens.
+  // The dialog stays mounted; default to the endpoint saved when it opens.
+  const [wasOpen, setWasOpen] = useState(dialogOpen);
+  if (wasOpen !== dialogOpen) {
+    setWasOpen(dialogOpen);
     if (dialogOpen) setHost(profile.endpoint.host);
-  }, [dialogOpen]);
+  }
 
   const changeOpen = (next: boolean) => {
-    if (!next && (busy || step === "restoring")) return;
+    if (!next && busy) return;
     onOpenChange(next);
     if (!next) reset();
   };
@@ -102,11 +83,12 @@ export function VpsRestoreDialog({
     : !path ? t("vps.restore.missing.file")
     : !passwordLong ? t("vps.restore.missing.password")
     : !hostValid ? t("vps.restore.missing.host")
-    : login.missing ?? (step === "fingerprint" && !confirmed ? t("ssh.verify.confirmFirst") : null);
+    : login.missing ?? (step === "confirmHost" && !trust.confirmed ? t("ssh.verify.confirmFirst") : null);
 
   const chooseSource = async () => {
     try {
       const selected = await open({
+        purpose: "vps_backup_restore",
         title: t("vps.restore.openDialogTitle"),
         multiple: false,
         directory: false,
@@ -119,69 +101,42 @@ export function VpsRestoreDialog({
       });
       if (typeof selected === "string") {
         setPath(selected);
-        setError(null);
+        setPickerError(null);
       }
     } catch (reason) {
-      setError(
-        errorMessage(reason, t("vps.common.error.picker")),
-      );
+      setPickerError(errorMessage(reason, t("vps.common.error.picker")));
     }
   };
 
   const inspect = async () => {
     if (!valid) return;
-    setBusy(true);
-    setError(null);
-    try {
-      const checked = await trust.inspect();
-      if (!checked) return;
-      setConfirmed(false);
-      setStep(checked.status === "trusted" ? "review" : "fingerprint");
-    } catch (reason) {
-      setError(
-        errorMessage(reason, t("vps.common.error.unreachable")),
-      );
-    } finally {
-      setBusy(false);
-    }
+    setPickerError(null);
+    await op.verify(t("vps.common.error.unreachable"), op.review);
   };
 
-  const restore = async (
-    checked: InspectedSshHost | null = trust.inspection,
-  ) => {
-    if (!checked || !valid || (checked.status !== "trusted" && !confirmed))
-      return;
-    setStep("restoring");
-    setPhase(0);
-    setBusy(true);
-    setError(null);
-    try {
-      const fingerprint = await trust.accept(checked, confirmed);
-      setPhase(1);
-      const completed = await api.restoreVpsBackup({
-        server_id: profile.id,
-        path,
-        backup_password: backupPassword,
-        host: host.trim(),
-        ...(await login.prepare(fingerprint)),
-        replace_existing: replaceExisting,
-        confirmed: true,
-      });
-      clearSecrets();
-      setResult(completed);
+  const restoreInput = (credentials: SshCredentials) => ({
+    server_id: profile.id,
+    path,
+    backup_password: backupPassword,
+    host: host.trim(),
+    ...credentials,
+    replace_existing: replaceExisting,
+    confirmed: true,
+  });
+
+  const restore = async (checked: InspectedSshHost | null = trust.inspection) => {
+    if (!checked || !valid || (checked.status !== "trusted" && !trust.confirmed)) return;
+    await op.run(async (credentials, setPhase) => {
+      const completed = await api.restoreVpsBackup(restoreInput(credentials));
+      setBackupPassword("");
       setPhase(2);
       await onCompleted();
-      setStep("success");
-    } catch (reason) {
-      const message = errorMessage(reason, t("vps.restore.error"));
+      return completed;
+    }, t("vps.restore.error"), {
+      inspection: checked,
       // Keep what was entered, except a backup password the file just rejected.
-      if (WRONG_PASSWORD.test(message)) setBackupPassword("");
-      setConfirmed(false);
-      setStep("details");
-      setError(message);
-    } finally {
-      setBusy(false);
-    }
+      onError: reason => { if (appError(reason, ["backup_wrong_password"]).code === "backup_wrong_password") setBackupPassword(""); },
+    });
   };
 
   const fileName = path.split(/[\\/]/).pop() ?? path;
@@ -192,20 +147,21 @@ export function VpsRestoreDialog({
         <Dialog.Overlay className="dialog-overlay" />
         <DialogContent className="dialog-content remove-server-dialog repair-server-dialog vps-restore-dialog"
           heading={t("vps.restore.title", { name: profile.name })}
-          description={step === "success" ? t("vps.restore.titleDone") : t("vps.restore.description")}
-          closeDisabled={busy || step === "restoring"}
-          footerNote={step === "details" || step === "fingerprint" ? busy ? null : blocker : null}
-          footer={step === "restoring" ? null
-            : step === "success" ? <button className="primary-button" type="button" onClick={() => changeOpen(false)}>{t("common.action.done")}</button>
+          data-operation="restore" data-flow-state={op.state.kind}
+          description={step === "succeeded" ? t("vps.restore.titleDone") : t("vps.restore.description")}
+          closeDisabled={busy}
+          footerNote={step === "form" || step === "confirmHost" ? busy ? null : blocker : null}
+          footer={step === "running" ? null
+            : step === "succeeded" ? <button className="primary-button" type="button" onClick={() => changeOpen(false)}>{t("common.action.done")}</button>
             : <>
-              {step !== "details" && <DialogBack disabled={busy} onClick={() => setStep("details")} />}
+              {step !== "form" && <DialogBack disabled={busy} onClick={op.back} />}
               <button className="secondary-button" type="button" disabled={busy} onClick={() => changeOpen(false)}>{t("common.action.cancel")}</button>
-              {step === "details" && <button className="primary-button" type="submit" form={formId} disabled={!valid || busy}>{busy ? <Busy label={t("vps.common.checking")} /> : t("vps.restore.review")}</button>}
-              {step === "fingerprint" && <button className="primary-button" type="button" disabled={!confirmed || !valid || busy} onClick={() => setStep("review")}>{t("vps.restore.review")}</button>}
+              {step === "form" && <button className="primary-button" type="submit" form={formId} disabled={!valid || busy}>{busy ? <Busy label={t("vps.common.checking")} /> : t("vps.restore.review")}</button>}
+              {step === "confirmHost" && <button className="primary-button" type="button" disabled={!trust.confirmed || !valid || busy} onClick={op.review}>{t("vps.restore.review")}</button>}
               {step === "review" && <button className="primary-button danger-action" type="button" disabled={!valid || busy} onClick={() => void restore()}>{t("vps.restore.action")}</button>}
             </>}>
 
-          {step === "details" ? (
+          {step === "form" ? (
             <form
               className="uninstall-form"
               id={formId}
@@ -214,7 +170,7 @@ export function VpsRestoreDialog({
                 void inspect();
               }}
             >
-              {error ? <InlineError message={error} /> : null}
+              <ServerChangeFailure reason={op.failure} message={error} onResolved={() => void onCompleted()} />
               <fieldset disabled={busy} className="ssh-operation-fields">
                 <div className="sensitive-backup-warning">
                   <Warning size={19} weight="fill" />
@@ -241,7 +197,7 @@ export function VpsRestoreDialog({
                   </div>
                 </Field>
                 <Field label={t("vps.common.backupPassword")}>
-                  <SecretInput
+                  <SecretInput field="backup_password"
                     type="password"
                     value={backupPassword}
                     onChange={(event) => setBackupPassword(event.target.value)}
@@ -280,11 +236,11 @@ export function VpsRestoreDialog({
             </form>
           ) : null}
 
-          {step === "fingerprint" && trust.inspection ? (
+          {step === "confirmHost" && trust.inspection ? (
             <SshHostVerification
               inspection={trust.inspection}
-              confirmed={confirmed}
-              onConfirmed={setConfirmed}
+              confirmed={trust.confirmed}
+              onConfirmed={trust.setConfirmed}
             />
           ) : null}
 
@@ -307,10 +263,12 @@ export function VpsRestoreDialog({
             </section>
           ) : null}
 
-          {step === "restoring" ? <OperationProgress title={t("vps.restore.progress")}
+          {step === "review" ? <OperationPlan load={() => op.plan((credentials) => ({ operation: "restore", ...restoreInput(credentials) }))} /> : null}
+
+          {step === "running" ? <OperationProgress title={t("vps.restore.progress")}
             steps={stepsAt([t("vps.common.step.identity"), t("vps.restore.step"), t("vps.common.step.refresh")], phase)} /> : null}
 
-          {step === "success" && result ? (
+          {result ? (
             <OperationResult title={t("vps.restore.done")}>
               <p>{t("vps.restore.doneNote", { host: result.profile.endpoint.host })}</p>
               {(onReviewAccess || onMoveDevices) && <div className="operation-result-actions">

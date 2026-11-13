@@ -92,8 +92,21 @@ pub(super) async fn create_invitation(
     {
         return Err("Update this server to let recipients choose their own names.".into());
     }
-    let advanced = input.target_member_id.is_some() || input.administrator;
     let max_uses = input.max_uses.unwrap_or(1);
+    if input.fixed_member_name {
+        if !input.recipient_names || input.target_member_id.is_some() || max_uses != 1 {
+            return Err("A join code that names the person is for one new person and one use.".into());
+        }
+        if !client
+            .configuration()
+            .await
+            .map_err(safe_error)?
+            .named_join_codes_enabled
+        {
+            return Err("Update this server to create join codes that name the person.".into());
+        }
+    }
+    let advanced = input.target_member_id.is_some() || input.administrator;
     if (max_uses > 1
         || !input.member_policy.is_default()
         || (profile.role != ServerRole::Owner && !profile.administrator))
@@ -140,7 +153,7 @@ pub(super) async fn create_invitation(
             )
         }
         None => (
-            if input.recipient_names {
+            if input.recipient_names && !input.fixed_member_name {
                 "Invited member".into()
             } else {
                 input.member_name
@@ -165,9 +178,10 @@ pub(super) async fn create_invitation(
     .map_err(safe_error)?
     .with_recipient_names(input.recipient_names)
     .with_policy(max_uses, input.member_policy)
+    .and_then(|draft| draft.with_fixed_member_name(input.fixed_member_name))
     .map_err(safe_error)?;
     let response = client
-        .create_invitation(draft.request())
+        .create_invitation_body(&draft.body())
         .await
         .map_err(safe_error)?;
     let code = draft.finish(response).map_err(safe_error)?;
@@ -394,9 +408,9 @@ pub(super) async fn send_test_alert(
 pub(super) async fn create_port_forward(
     app: tauri::AppHandle,
     input: PortForwardCreateInput,
-) -> Result<MembershipSnapshot, String> {
+) -> Result<MembershipSnapshot, CommandError> {
     if !input.confirmed {
-        return Err("Confirm the public port exposure before continuing.".to_owned());
+        return Err("Confirm the public port exposure before continuing.".into());
     }
     let device_id = input
         .device_id
@@ -409,7 +423,10 @@ pub(super) async fn create_port_forward(
         .map_err(safe_error)?
         .port_forwarding_enabled
     {
-        return Err("Repair this server to manage port forwarding.".to_owned());
+        return Err("Repair this server to manage port forwarding.".into());
+    }
+    if input.device_port == 0 {
+        return Err("Enter a device port from 1 to 65535.".into());
     }
     client
         .create_port_forward(&PortForwardCreateRequest {
@@ -419,7 +436,17 @@ pub(super) async fn create_port_forward(
             device_port: input.device_port,
         })
         .await
-        .map_err(safe_error)
+        .map_err(|error| match error {
+            // The device port is checked above, so the VPS refused the public port.
+            ManagementError::RequestRejected {
+                code: sirinvpn_protocol::ErrorCode::InvalidInput,
+                ..
+            } => command_error(crate::command_error::Rejected {
+                refused: crate::command_error::Refused::PublicPort,
+                error,
+            }),
+            error => command_error(error),
+        })
 }
 
 #[tauri::command]

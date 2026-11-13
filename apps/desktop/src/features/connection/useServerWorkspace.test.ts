@@ -2,10 +2,10 @@ import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "../../api";
 import { emptyLocalStatus } from "../../hooks/useDesktopStatus";
-import { t } from "../../i18n";
 import type { DiagnosticReport, LocalTunnelStatus, ServerProfile } from "../../types";
 import { defaultConnectionPreferences } from "./connectionPreferences";
 import { useServerWorkspace } from "./useServerWorkspace";
+import { pendingCommand } from "./connectionCommands";
 vi.mock("../../api", () => ({
   api: {
     getConnectionPreferences: vi.fn(),
@@ -107,16 +107,14 @@ describe("independent desktop policy", () => {
     expect(result.current.diagnosticsOpen).toBe(false);
   });
 
-  it("reports a failed diagnostics request as an unavailable check", async () => {
+  it("reports a failed diagnostics request as a failed run, not as a check", async () => {
     vi.mocked(api.diagnostics).mockRejectedValue(new Error("unavailable"));
     const { result } = renderHook(() => useServerWorkspace(input()));
     await waitFor(() => expect(result.current.preferences.ready).toBe(true));
     await act(() => result.current.runDiagnostics());
-    expect(result.current.diagnostics?.checks).toEqual([expect.objectContaining({
-      code: "local_diagnostics_unavailable",
-      level: "fail",
-      message: t("maintenance.workspace.error.diagnostics"),
-    })]);
+    expect(result.current.diagnostics).toBeNull();
+    expect(result.current.diagnosticsFailed).toBe(true);
+    expect(result.current.dialog).toEqual({ kind: "diagnostics", run: { state: "failed" } });
   });
 
   for (const kill of [false, true])
@@ -197,14 +195,31 @@ describe("independent desktop policy", () => {
   });
 });
 
-it("tells the sidebar a connect is in progress until the request settles", async () => {
+it("tells every view a connect is in progress until the request settles", async () => {
   let finish!: (status: LocalTunnelStatus) => void;
   vi.mocked(api.connectWithPolicy).mockReturnValue(new Promise((resolve) => { finish = resolve; }));
-  const onConnectionOperation = vi.fn();
-  const { result } = renderHook(() => useServerWorkspace({ ...input(), onConnectionOperation }));
+  const { result } = renderHook(() => useServerWorkspace(input()));
   await waitFor(() => expect(result.current.preferences.ready).toBe(true));
   act(() => { void result.current.toggle(); });
-  await waitFor(() => expect(onConnectionOperation).toHaveBeenLastCalledWith("connecting"));
+  expect(pendingCommand()).toMatchObject({ kind: "connect", serverId: profile.id });
+  expect(result.current.connectionOperation).toBe("connecting");
+  expect(result.current.busy).toBe(true);
   await act(async () => finish(emptyLocalStatus));
-  await waitFor(() => expect(onConnectionOperation).toHaveBeenLastCalledWith(null));
+  expect(pendingCommand()).toBeNull();
+  expect(result.current.busy).toBe(false);
+});
+
+it("keeps one dialog open at a time and the repair intent inside it", async () => {
+  const { result } = renderHook(() => useServerWorkspace(input()));
+  await waitFor(() => expect(result.current.preferences.ready).toBe(true));
+  act(() => result.current.setMaintenanceReview("update"));
+  act(() => result.current.openRepair("update"));
+  expect(result.current.maintenanceReview).toBeNull();
+  expect(result.current.repairIntent).toBe("update");
+  act(() => result.current.setBackupOpen(true));
+  expect(result.current.repairIntent).toBeNull();
+  expect(result.current.dialog).toEqual({ kind: "backup" });
+  // A late close from a dialog that was already replaced does nothing.
+  act(() => result.current.setRemoveOpen(false));
+  expect(result.current.backupOpen).toBe(true);
 });

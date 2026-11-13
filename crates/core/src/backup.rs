@@ -8,7 +8,8 @@ use crate::{
 use base64::{Engine as _, engine::general_purpose::STANDARD};
 use serde::{Deserialize, Serialize};
 use sirinvpn_protocol::{
-    SERVER_TUNNEL_ADDRESS, ServerId, ServerProfile, ServerRole, validate_host, validate_server_name,
+    EndpointHandoff, SERVER_TUNNEL_ADDRESS, ServerId, ServerProfile, ServerRole, validate_host,
+    validate_server_name,
 };
 use std::{io, net::IpAddr, path::Path};
 use thiserror::Error;
@@ -220,8 +221,10 @@ pub fn encrypt_device_backup(
     password: &str,
 ) -> Result<Vec<u8>, BackupError> {
     validate_export_password(password)?;
-    validate_profile_and_identity(profile, identity)?;
-    validate_recovery_metadata(profile, recovery_metadata.as_ref())?;
+    let mut profile = profile.clone();
+    normalize_hosts(&mut profile);
+    validate_profile_and_identity(&profile, identity)?;
+    validate_recovery_metadata(&profile, recovery_metadata.as_ref())?;
     let payload = BackupPayload {
         schema_version: if identity.wireguard_preshared_key.is_some() {
             PRESHARED_KEY_PAYLOAD_SCHEMA_VERSION
@@ -230,7 +233,7 @@ pub fn encrypt_device_backup(
         } else {
             LEGACY_PAYLOAD_SCHEMA_VERSION
         },
-        profile: profile.clone(),
+        profile,
         identity: identity.clone(),
         recovery_metadata,
     };
@@ -254,8 +257,9 @@ pub fn decrypt_device_backup(
 }
 
 pub(crate) fn parse_payload(plaintext: &[u8]) -> Result<DecryptedDeviceBackup, BackupError> {
-    let payload: BackupPayload =
+    let mut payload: BackupPayload =
         serde_json::from_slice(plaintext).map_err(|_| BackupError::InvalidFormat)?;
+    normalize_hosts(&mut payload.profile);
     let preshared_key = payload.identity.wireguard_preshared_key.is_some();
     match payload.schema_version {
         LEGACY_PAYLOAD_SCHEMA_VERSION if payload.recovery_metadata.is_none() && !preshared_key => {}
@@ -290,6 +294,28 @@ fn validate_recovery_metadata(
     Ok(())
 }
 
+/// Older clients saved hosts as typed; carry what validation accepts, not the raw text.
+fn normalize_hosts(profile: &mut ServerProfile) {
+    for endpoint in std::iter::once(&mut profile.endpoint)
+        .chain(profile.pending_previous_endpoint.as_mut())
+        .chain(
+            profile
+                .pending_previous_transports
+                .as_mut()
+                .map(|transports| &mut transports.endpoint),
+        )
+    {
+        if let Ok(host) = validate_host(&endpoint.host).map(str::to_owned) {
+            endpoint.host = host;
+        }
+    }
+}
+
+/// A host exactly as validation returns it, so it is stored and resolved unchanged.
+fn canonical_host(host: &str) -> bool {
+    validate_host(host).is_ok_and(|valid| valid == host)
+}
+
 fn validate_profile_and_identity(
     profile: &ServerProfile,
     identity: &SecretIdentity,
@@ -309,17 +335,19 @@ fn validate_profile_and_identity(
         .map_err(|_| BackupError::InvalidIdentity)?;
     if profile.schema_version != 1
         || validate_server_name(&profile.name).is_err()
-        || validate_host(&profile.endpoint.host).is_err()
+        || !canonical_host(&profile.endpoint.host)
         || profile.endpoint.wireguard_port == 0
-        || profile
-            .pending_previous_endpoint
-            .as_ref()
-            .is_some_and(|endpoint| {
-                validate_host(&endpoint.host).is_err()
-                    || endpoint.wireguard_port == 0
-                    || endpoint == &profile.endpoint
-                    || profile.role != ServerRole::Owner
-            })
+        || match profile.endpoint_handoff() {
+            Ok(EndpointHandoff::Current) => false,
+            Ok(EndpointHandoff::AwaitingPublication {
+                previous_endpoint, ..
+            }) => {
+                !canonical_host(&previous_endpoint.host)
+                    || previous_endpoint.wireguard_port == 0
+                    || previous_endpoint == profile.endpoint
+            }
+            Err(_) => true,
+        }
         || !valid_client_address
         || profile.server_tunnel_address != expected_server_address
         || !valid_membership_ids
@@ -698,6 +726,26 @@ mod tests {
         let imported = import_device_backup(&target_store, &target_secrets, &source, password)
             .expect("updated desktop reader should accept an Android backup");
         assert_eq!(imported.id, profile.id);
+    }
+
+    #[test]
+    fn hosts_saved_with_whitespace_are_restored_normalised() {
+        let (mut profile, identity) = profile_and_secret("Typed host");
+        let password = "correct horse battery staple";
+        profile.endpoint.host = " 203.0.113.4\n".into();
+        let exported = encrypt_device_backup(&profile, &identity, None, password).unwrap();
+        let exported = decrypt_device_backup(&exported, password).unwrap();
+        assert_eq!(exported.profile.endpoint.host, "203.0.113.4");
+        // A backup an older client wrote with the raw text restores with the usable host.
+        let plaintext = serde_json::to_vec(&BackupPayload {
+            schema_version: LEGACY_PAYLOAD_SCHEMA_VERSION,
+            profile: profile.clone(),
+            identity: identity.clone(),
+            recovery_metadata: None,
+        })
+        .unwrap();
+        let restored = parse_payload(&plaintext).unwrap();
+        assert_eq!(restored.profile.endpoint.host, "203.0.113.4");
     }
 
     #[test]

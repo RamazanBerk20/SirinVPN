@@ -2,27 +2,101 @@
 
 use super::*;
 
+fn owner_device_state(
+    role: ServerRole,
+    connection: &ConnectionState,
+    kill_switch_enabled: bool,
+    auto_reconnect_enabled: bool,
+    pending_key_rotation: bool,
+    unresolved_transaction: bool,
+) -> OwnerDeviceState {
+    OwnerDeviceState {
+        role,
+        disconnected: *connection == ConnectionState::Disconnected,
+        kill_switch_enabled,
+        auto_reconnect_enabled,
+        pending_key_rotation,
+        unresolved_transaction,
+    }
+}
+
+fn blocker_report(blockers: &[MaintenanceBlocker]) -> String {
+    blockers
+        .iter()
+        .map(|blocker| blocker.message())
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+/// Every Owner maintenance command asks the same rules before it starts anything.
+pub(super) fn ensure_maintenance_ready(
+    paths: &ClientPaths,
+    profile: &ServerProfile,
+    operation: OwnerMaintenance,
+) -> Result<()> {
+    let status = invoke_helper("status", None)?;
+    let state = owner_device_state(
+        profile.role,
+        &status.state,
+        status.kill_switch_enabled,
+        status.auto_reconnect_enabled,
+        has_pending_key_rotation(paths, profile.id)?,
+        transaction_journal(paths).blocks_server(profile)?,
+    );
+    owner_maintenance_ready(operation, &state)
+        .map_err(|blockers| anyhow!(blocker_report(&blockers)))
+}
+
+/// After a lost commit reply: ask the VPS and keep or drop the change accordingly.
+fn finish_uncertain(
+    paths: &ClientPaths,
+    target: &SshTarget,
+    operation: &str,
+    json: bool,
+) -> Result<()> {
+    match settle_uncertain(paths, target) {
+        Settlement::Committed(committed) => {
+            let profile = save_committed_profile(paths, &committed, &target.host).with_context(|| {
+                format!("the VPS {operation} committed, but its local profile could not be saved; {operation} again before connecting")
+            })?;
+            if json {
+                println!(
+                    "{}",
+                    serde_json::json!({
+                        operation: true,
+                        "server_id": profile.id,
+                        "confirmed_after_lost_reply": true
+                    })
+                );
+            } else {
+                println!(
+                    "The VPS confirmed the {operation} of {}, although its reply was lost. This device's profile now matches it.",
+                    profile.name
+                );
+            }
+            Ok(())
+        }
+        Settlement::RolledBack => bail!(
+            "The VPS rolled the {operation} back. Nothing changed, and this device's profile is unchanged."
+        ),
+        Settlement::Unknown(reason) => Err(unresolved_outcome(&reason)),
+    }
+}
+
 pub(super) fn uninstall_server(
     paths: &ClientPaths,
     arguments: UninstallServerArguments,
     json: bool,
 ) -> Result<()> {
-    if !arguments.confirm_uninstall {
+    if !arguments.plan && !arguments.confirm_uninstall {
         bail!(
             "pass --confirm-uninstall after verifying that all current SirinVPN devices and invitations may be revoked"
         );
     }
     let store = paths.profile_store();
     let profile = resolve_profile(&store, &arguments.server)?;
-    if has_pending_key_rotation(paths, profile.id)? {
-        bail!("complete or recover this device's pending key rotation before uninstalling its VPS");
-    }
-    if profile.role != ServerRole::Owner {
-        bail!("only the Owner can uninstall SirinVPN from this VPS");
-    }
-    let status = invoke_helper("status", None)?;
-    if status.state != ConnectionState::Disconnected {
-        bail!("disconnect SirinVPN before uninstalling it from a VPS");
+    if !arguments.plan {
+        ensure_maintenance_ready(paths, &profile, OwnerMaintenance::Uninstall)?;
     }
     let authentication = if arguments.ssh_agent {
         SshAuthentication::Agent
@@ -40,7 +114,7 @@ pub(super) fn uninstall_server(
     } else {
         Some(prompt_nonempty_secret("sudo password: ")?)
     };
-    Provisioner::uninstall(UninstallRequest {
+    let request = UninstallRequest {
         server_id: profile.id,
         target: SshTarget {
             host: profile.endpoint.host.clone(),
@@ -51,7 +125,31 @@ pub(super) fn uninstall_server(
             expected_host_key_sha256: Some(arguments.host_key),
         },
         owner_certificate_pem: profile.client_management_certificate_pem.clone(),
-    })?;
+    };
+    if arguments.plan {
+        return print_plan(&Provisioner::plan_uninstall(request)?, json);
+    }
+    // Journaled like install, repair and restore, so an interruption can be resolved.
+    let target = request.target.clone();
+    match Provisioner::uninstall_with_journal(request, &transaction_journal(paths)) {
+        Ok(()) => {}
+        // Removed locally only once the VPS confirms; the keys stay otherwise.
+        Err(InstallerError::CommitUncertain { .. }) => {
+            let resolved = Provisioner::resolve_transaction(&target, &transaction_journal(paths));
+            // An uninstall commits no profile: a confirmed commit alone means it is gone.
+            if !matches!(&resolved, Ok(Some(done)) if done.state == RemoteTransactionState::Committed)
+            {
+                return Err(match settle(resolved) {
+                    Settlement::RolledBack => anyhow!(
+                        "The VPS rolled the uninstall back. SirinVPN is still installed, and this device kept its profile and key."
+                    ),
+                    Settlement::Unknown(reason) => unresolved_outcome(&reason),
+                    Settlement::Committed(_) => unresolved_outcome("unexpected state"),
+                });
+            }
+        }
+        Err(error) => return Err(error.into()),
+    }
     paths
         .secret_store()
         .delete(&profile.identity_reference)
@@ -78,18 +176,14 @@ pub(super) fn repair_server(
     arguments: RepairServerArguments,
     json: bool,
 ) -> Result<()> {
-    if !arguments.confirm_repair {
+    if !arguments.plan && !arguments.confirm_repair {
         bail!(
             "pass --confirm-repair after confirming the VPN is disconnected and the pinned SSH fingerprint belongs to this VPS"
         );
     }
     let mut profile = resolve_profile(&paths.profile_store(), &arguments.server)?;
-    if profile.role != ServerRole::Owner {
-        bail!("only the Owner can repair or update SirinVPN on this VPS");
-    }
-    let status = invoke_helper("status", None)?;
-    if status.state != ConnectionState::Disconnected {
-        bail!("disconnect SirinVPN before repairing or updating its VPS");
+    if !arguments.plan {
+        ensure_maintenance_ready(paths, &profile, OwnerMaintenance::Repair)?;
     }
     let secret = explicit_secret(paths, &profile.identity_reference)?;
     let identity = secret.public_identity(&profile.client_management_certificate_pem)?;
@@ -110,7 +204,7 @@ pub(super) fn repair_server(
         Some(prompt_nonempty_secret("sudo password: ")?)
     };
     let transport = arguments.transport.requested(Some(&profile))?;
-    let outcome = Provisioner::repair(RepairRequest {
+    let request = RepairRequest {
         transport,
         enable_security_updates: arguments.enable_security_updates,
         profile: profile.clone(),
@@ -122,7 +216,7 @@ pub(super) fn repair_server(
             sudo_password,
             expected_host_key_sha256: Some(arguments.host_key),
         },
-        server_binary: resolve_server_binary(arguments.server_binary)?.into(),
+        server_binary: resolve_server_binary(arguments.server_binary)?,
         identity,
         dns_upstream: arguments.dns.requested(),
         private_dns_records: arguments.private_dns.requested(),
@@ -131,7 +225,18 @@ pub(super) fn repair_server(
         } else {
             arguments.nat64_prefix.map(Some)
         },
-    })?;
+    };
+    if arguments.plan {
+        return print_plan(&Provisioner::plan_repair(request)?, json);
+    }
+    let target = request.target.clone();
+    let outcome = match Provisioner::repair_with_journal(request, &transaction_journal(paths)) {
+        Ok(outcome) => outcome,
+        Err(InstallerError::CommitUncertain { .. }) => {
+            return finish_uncertain(paths, &target, "repair", json);
+        }
+        Err(error) => return Err(error.into()),
+    };
     if profile.endpoint != outcome.endpoint
         || profile.endpoint_generation != outcome.endpoint_generation
         || profile.alternate_endpoint_hosts != outcome.alternate_endpoint_hosts
@@ -141,19 +246,24 @@ pub(super) fn repair_server(
         || profile.tcp_fallback != outcome.tcp_fallback
         || profile.tls_like != outcome.tls_like
     {
-        profile.endpoint = outcome.endpoint.clone();
-        profile.endpoint_generation = outcome.endpoint_generation;
-        profile.alternate_endpoint_hosts = outcome.alternate_endpoint_hosts.clone();
-        profile.endpoint_discovery_port = outcome.endpoint_discovery_port;
-        profile.pending_previous_endpoint = None;
-        profile.pending_previous_transports = None;
-        profile.ipv6_tunnel_enabled = outcome.ipv6_tunnel_enabled;
-        profile.obfuscated_udp = outcome.obfuscated_udp.clone();
-        profile.tcp_fallback = outcome.tcp_fallback.clone();
-        profile.tls_like = outcome.tls_like.clone();
-        paths.profile_store().upsert(profile.clone()).context(
-            "the VPS was repaired, but its local capabilities could not be saved; repair again before connecting",
-        )?;
+        // Repair owns only the endpoint capabilities; the rest stays as saved now.
+        profile = paths
+            .profile_store()
+            .update(profile.id, |current| {
+                current.endpoint = outcome.endpoint.clone();
+                current.endpoint_generation = outcome.endpoint_generation;
+                current.alternate_endpoint_hosts = outcome.alternate_endpoint_hosts.clone();
+                current.endpoint_discovery_port = outcome.endpoint_discovery_port;
+                current.set_endpoint_handoff(sirinvpn_protocol::EndpointHandoff::Current);
+                current.ipv6_tunnel_enabled = outcome.ipv6_tunnel_enabled;
+                current.obfuscated_udp = outcome.obfuscated_udp.clone();
+                current.tcp_fallback = outcome.tcp_fallback.clone();
+                current.tls_like = outcome.tls_like.clone();
+                Ok(current.clone())
+            })
+            .context(
+                "the VPS was repaired, but its local capabilities could not be saved; repair again before connecting",
+            )?;
     }
     if json {
         println!(
@@ -195,16 +305,7 @@ pub(super) fn backup_vps(
         );
     }
     let profile = resolve_profile(&paths.profile_store(), &arguments.server)?;
-    if profile.role != ServerRole::Owner {
-        bail!("only the Owner can back up SirinVPN state from this VPS");
-    }
-    if has_pending_key_rotation(paths, profile.id)? {
-        bail!("complete or recover this device's pending key rotation before backing up its VPS");
-    }
-    let status = invoke_helper("status", None)?;
-    if status.state != ConnectionState::Disconnected {
-        bail!("disconnect SirinVPN before backing up its VPS over SSH");
-    }
+    ensure_maintenance_ready(paths, &profile, OwnerMaintenance::Backup)?;
     let secret = explicit_secret(paths, &profile.identity_reference)?;
     let identity = secret.public_identity(&profile.client_management_certificate_pem)?;
     let authentication = if arguments.ssh_agent {
@@ -239,7 +340,7 @@ pub(super) fn backup_vps(
             sudo_password,
             expected_host_key_sha256: Some(arguments.host_key),
         },
-        server_binary: resolve_server_binary(arguments.server_binary)?.into(),
+        server_binary: resolve_server_binary(arguments.server_binary)?,
         identity,
         destination: arguments.output,
         password,
@@ -313,21 +414,14 @@ pub(super) fn restore_vps(
             "Warning: --replace-existing destroys the destination VPS's current SirinVPN identity after the rollback guard is armed. Unrelated VPS state is not included."
         );
     }
-    if !arguments.confirm_server_restore {
+    if !arguments.plan && !arguments.confirm_server_restore {
         bail!(
             "pass --confirm-server-restore after verifying the backup, destination, SSH fingerprint, authorization rollback risk, and any replacement choice"
         );
     }
     let profile = resolve_profile(&paths.profile_store(), &arguments.server)?;
-    if profile.role != ServerRole::Owner {
-        bail!("only the Owner can restore this server identity onto a VPS");
-    }
-    if has_pending_key_rotation(paths, profile.id)? {
-        bail!("complete or recover this device's pending key rotation before restoring its VPS");
-    }
-    let status = invoke_helper("status", None)?;
-    if status.state != ConnectionState::Disconnected {
-        bail!("disconnect SirinVPN before restoring a VPS over SSH");
+    if !arguments.plan {
+        ensure_maintenance_ready(paths, &profile, OwnerMaintenance::Restore)?;
     }
     let backup_password = prompt_nonempty_secret("Server backup password (hidden): ")?;
     let secret = explicit_secret(paths, &profile.identity_reference)?;
@@ -350,7 +444,7 @@ pub(super) fn restore_vps(
         Some(prompt_nonempty_secret("sudo password: ")?)
     };
     let previous_host = profile.endpoint.host.clone();
-    let outcome = Provisioner::restore_server_backup(ServerRestoreRequest {
+    let request = ServerRestoreRequest {
         profile,
         target: SshTarget {
             host: arguments.host,
@@ -360,12 +454,25 @@ pub(super) fn restore_vps(
             sudo_password,
             expected_host_key_sha256: Some(arguments.host_key),
         },
-        server_binary: resolve_server_binary(arguments.server_binary)?.into(),
+        server_binary: resolve_server_binary(arguments.server_binary)?,
         identity,
         source: arguments.input,
         password: backup_password,
         replace_existing_installation: arguments.replace_existing,
-    })?;
+    };
+    if arguments.plan {
+        return print_plan(&Provisioner::plan_restore_server_backup(request)?, json);
+    }
+    let target = request.target.clone();
+    let outcome =
+        match Provisioner::restore_server_backup_with_journal(request, &transaction_journal(paths))
+        {
+            Ok(outcome) => outcome,
+            Err(InstallerError::CommitUncertain { .. }) => {
+                return finish_uncertain(paths, &target, "restore", json);
+            }
+            Err(error) => return Err(error.into()),
+        };
     paths
         .profile_store()
         .upsert(outcome.profile.clone())
@@ -389,4 +496,71 @@ pub(super) fn restore_vps(
         }
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn target() -> SshTarget {
+        SshTarget {
+            host: "203.0.113.9".to_owned(),
+            port: 22,
+            username: "root".to_owned(),
+            authentication: SshAuthentication::Agent,
+            sudo_password: None,
+            expected_host_key_sha256: Some("SHA256:pin".to_owned()),
+        }
+    }
+
+    #[test]
+    fn device_state_feeds_the_shared_rules_and_each_blocker_is_reported() {
+        let ready = owner_device_state(
+            ServerRole::Owner,
+            &ConnectionState::Disconnected,
+            false,
+            false,
+            false,
+            false,
+        );
+        assert!(owner_maintenance_ready(OwnerMaintenance::Repair, &ready).is_ok());
+        let busy = owner_device_state(
+            ServerRole::Member,
+            &ConnectionState::Connected,
+            true,
+            false,
+            true,
+            true,
+        );
+        let blockers = owner_maintenance_ready(OwnerMaintenance::Restore, &busy).unwrap_err();
+        let report = blocker_report(&blockers);
+        for blocker in &blockers {
+            assert!(report.contains(blocker.message()));
+        }
+        assert_eq!(report.lines().count(), blockers.len());
+        assert!(report.contains("resolve the interrupted VPS maintenance transaction first"));
+    }
+
+    #[test]
+    fn a_backup_only_reads_so_the_kill_switch_does_not_block_it() {
+        let state = owner_device_state(
+            ServerRole::Owner,
+            &ConnectionState::Disconnected,
+            true,
+            true,
+            false,
+            false,
+        );
+        assert!(owner_maintenance_ready(OwnerMaintenance::Backup, &state).is_ok());
+        assert!(owner_maintenance_ready(OwnerMaintenance::Uninstall, &state).is_err());
+    }
+
+    #[test]
+    fn an_uncertain_commit_with_no_journal_keeps_everything_and_asks_for_resolve() {
+        let directory = tempfile::tempdir().unwrap();
+        let paths = ClientPaths::under(directory.path().to_owned());
+        let error = finish_uncertain(&paths, &target(), "repair", false).unwrap_err();
+        assert!(error.to_string().contains("sirinvpn server resolve"));
+        assert!(paths.profile_store().load().unwrap().is_empty());
+    }
 }

@@ -158,6 +158,7 @@ impl Adapter {
         preshared: Option<&str>,
         endpoint: SocketAddr,
         routes: &[IpNet],
+        listen_port: Option<u16>,
     ) -> io::Result<()> {
         if routes.is_empty() || routes.len() > 40 {
             return Err(invalid());
@@ -181,6 +182,10 @@ impl Adapter {
         let mut memory = Zeroizing::new(vec![0u64; bytes.div_ceil(8)]);
         let interface = unsafe { &mut *memory.as_mut_ptr().cast::<Interface>() };
         interface.flags = 2 | 8; // private key, replace peers
+        if let Some(port) = listen_port {
+            interface.flags |= 4; // WIREGUARD_INTERFACE_HAS_LISTEN_PORT
+            interface.listen_port = port;
+        }
         interface.private_key.copy_from_slice(&private);
         interface.peers_count = 1;
         let base = memory.as_mut_ptr().cast::<u8>();

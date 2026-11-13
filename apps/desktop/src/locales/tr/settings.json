@@ -1,0 +1,370 @@
+{
+  "layout": {
+    "categories": "Ayar kategorileri"
+  },
+  "category": {
+    "general": {
+      "label": "Genel",
+      "hint": "Wi-Fi, denetimler, bildirimler"
+    },
+    "connection": {
+      "label": "Bağlantı",
+      "hint": "Yöntem, kill switch, yeniden bağlanma"
+    },
+    "network": {
+      "label": "Ağ",
+      "hint": "Uygulama yönlendirme, DNS, engelleme"
+    },
+    "recovery": {
+      "label": "Anahtarlar ve kurtarma",
+      "hint": "Anahtarlar, yedekler, kurtarma"
+    },
+    "maintenance": {
+      "label": "VPS bakımı",
+      "shortLabel": "Tanılama",
+      "hint": "Sağlık, tanılama, güncellemeler"
+    },
+    "advanced": {
+      "label": "Gelişmiş",
+      "hint": "Portlar, anahtar değişimi, uyarılar, takvimler"
+    }
+  },
+  "general": {
+    "startup": {
+      "title": "Açılış ve pencere",
+      "startOnLogin": {
+        "label": "Oturum açarken başlat",
+        "summary": "Oturum açtığınızda SirinVPN’i aç",
+        "unavailable": "Bu sistemde kullanılamıyor"
+      },
+      "launchMinimized": {
+        "label": "Küçültülmüş başlat",
+        "summary": "Görev çubuğunda açılır; Sistem tepsisine kapat açıksa tepsiye küçülür"
+      },
+      "closeToTray": {
+        "label": "Kapatınca sistem tepsisine küçült",
+        "summary": "Pencereyi kapattığınızda tepside çalışmaya devam eder",
+        "unavailable": "Bu masaüstü oturumunda sistem tepsisi yok"
+      },
+      "note": "Uygulamayı kapatmak veya çıkmak VPN’in bağlantısını kesmez."
+    },
+    "android": {
+      "title": "VPN denetimleri",
+      "summary": "Her zaman açık VPN ve VPN olmadan bağlantıları engelle Android’de ayarlanır.",
+      "vpnSettings": "Android VPN ayarları",
+      "addTile": "Hızlı Ayarlar kutucuğu ekle",
+      "addTileManually": "Hızlı Ayarlar’ı açın, Düzenle’ye dokunun ve SirinVPN’i ekleyin."
+    },
+    "quickServer": {
+      "label": "Hızlı Ayarlar sunucusu",
+      "placeholder": "Bir sunucu seçin",
+      "loadFailed": "Sunucularınız yüklenemedi.",
+      "saveFailed": "Hızlı Ayarlar sunucusu kaydedilemedi.",
+      "saved": "Hızlı Ayarlar {{name}} sunucusunu kullanıyor."
+    },
+    "notifications": {
+      "title": "Bildirimler ve arayüz",
+      "infoLabel": "Bildirimler hakkında",
+      "infoDesktop": "Uyarılar hiçbir zaman sunucu adlarını, adreslerini veya anahtarlarını içermez.",
+      "infoAndroid": "Uyarılar hiçbir zaman sunucu adlarını, adreslerini veya anahtarlarını içermez. Devam eden VPN bildirimini Android denetler.",
+      "connection": {
+        "label": "Bağlantı bildirimleri",
+        "summary": "VPN bağlandığında, koptuğunda veya yeniden bağlandığında uyarır"
+      },
+      "test": "Test bildirimi",
+      "testing": "Gönderiliyor…",
+      "androidSettings": "Bildirim ayarlarını aç",
+      "blockedAndroid": "Android’de SirinVPN için bildirimler engellenmiş. Bildirim ayarlarından izin verin; o zamana kadar VPN’i uygulamadan veya Hızlı Ayarlar kutucuğundan denetleyin.",
+      "animations": {
+        "label": "Arayüz animasyonları",
+        "summary": "Sayfa geçişleri; sisteminizin azaltılmış hareket ayarı yine geçerlidir"
+      },
+      "theme": {
+        "label": "Tema",
+        "summary": "Sistem, cihazınızın açık veya koyu ayarını izler",
+        "system": "Sistem",
+        "light": "Açık",
+        "dark": "Koyu"
+      },
+      "testNeedsNotifications": "Test göndermek için bağlantı bildirimlerini açın.",
+      "blocked": "SirinVPN için bildirimler engellenmiş. Bağlantı uyarılarını almak için sistem ayarlarından izin verin."
+    },
+    "language": {
+      "label": "Dil",
+      "summary": "Sistem tepsisi menüsü ve bildirimler için de kullanılır",
+      "system": "Sistem varsayılanı",
+      "devExpanded": "Sahte: genişletilmiş metin",
+      "devRtl": "Sahte: sağdan sola"
+    },
+    "updates": {
+      "title": "Uygulama güncellemeleri",
+      "check": "Güncellemeleri denetle"
+    },
+    "component": {
+      "title": "Yerel VPN bileşeni",
+      "summary": "Bu cihazın VPN hizmetini uygulamayla eşleşik tutar",
+      "review": "Bileşeni incele"
+    },
+    "loading": "Uygulama tercihleri yükleniyor…"
+  },
+  "preferences": {
+    "loadFailed": "Tercihler yüklenemedi.",
+    "saveFailed": "Bu ayar kaydedilemedi. Önceki seçiminiz hâlâ geçerli.",
+    "testSent": "Test bildirimi gönderildi; görünmezse sistem ayarlarını kontrol edin.",
+    "testFailed": "Test bildirimi gönderilemedi.",
+    "notificationsUnknown": "Bildirim erişimi doğrulanamadı. Tekrar deneyin ya da sistem ayarlarında SirinVPN için bildirimlere izin verin."
+  },
+  "wifi": {
+    "title": "Wi-Fi otomatik bağlantı",
+    "infoLabel": "Wi-Fi otomatik bağlantı hakkında",
+    "infoDesktop": "Güvenilir Wi-Fi, otomatik bağlantıdan bir istisnadır; güvenlik derecelendirmesi değildir. Wi-Fi adları yalnızca gösterilir, hiçbir zaman kaydedilmez veya gönderilmez. Otomatik bağlantı, uygulama tepsideyken çalışır ve çıktığınızda durur.",
+    "infoAndroid": "Güvenilir Wi-Fi, otomatik bağlantıdan bir istisnadır; güvenlik derecelendirmesi değildir. Wi-Fi adları yalnızca gösterilir, hiçbir zaman kaydedilmez veya gönderilmez. Android bu adları yalnızca kesin konumu olan uygulamalara gösterir; SirinVPN nerede olduğunuzu hiçbir zaman okumaz. VPN kapalıyken Wi-Fi’deyken Android, otomatik bağlantının izlediğine dair bir bildirim ister. Bildirimi Gizle düğmesi bunu kalıcı olarak kapatır; otomatik bağlantı çalışmaya devam eder.",
+    "toggle": {
+      "label": "Wi-Fi’de otomatik bağlan",
+      "summary": "Güvenilir Wi-Fi dışında aşağıdaki sunucuyu kullanır"
+    },
+    "server": {
+      "label": "Otomatik bağlantı sunucusu",
+      "empty": "Önce bir sunucu ekleyin",
+      "offHint": "Sunucusunu seçmek için otomatik bağlantıyı açın."
+    },
+    "network": {
+      "unavailable": "Etkin ağ yok",
+      "otherNetwork": "Geçerli ağ Wi-Fi değil",
+      "trusted": "Geçerli Wi-Fi güvenilir",
+      "untrusted": "Geçerli Wi-Fi güvenilir değil",
+      "named": "{{status}} — <strong>{{name}}</strong>",
+      "heading": "Geçerli ağ"
+    },
+    "status": {
+      "disabled": "Otomatik bağlantı kapalı.",
+      "starting": "Otomatik bağlantı başlatılıyor…",
+      "waitingForWifi": "Güvenilir olmayan Wi-Fi bekleniyor.",
+      "trusted": "Güvenilir Wi-Fi’de. Etkin VPN bağlı kalır.",
+      "connecting": "Bağlanılıyor…",
+      "sessionActive": "VPN veya kill switch zaten açık.",
+      "paused": "Bu ağda değişene kadar duraklatıldı. Yine de elle bağlanabilirsiniz.",
+      "needsAttention": "Otomatik bağlantı tamamlanamadı. Nedenini görmek için Ana sayfa’dan bağlanın.",
+      "needsAuthorization": "Otomatik bağlantıya izin vermek için Ana sayfa’dan bir kez bağlanın."
+    },
+    "access": {
+      "unidentified": "Bu Wi-Fi güvenilir biçimde tanımlanamıyor, bu yüzden güvenilir sayılamaz.",
+      "permission": "Android, SirinVPN kesin konuma erişmediği sürece Wi-Fi adlarını gizler; bu yüzden her Wi-Fi güvenilir değil sayılır ve otomatik bağlantı hepsinde bağlanır.",
+      "locationOff": "Konum kapalı; bu yüzden Android Wi-Fi adlarını gizler ve her Wi-Fi güvenilir değil sayılır.",
+      "background": "Güvenilir Wi-Fi yalnızca SirinVPN açıkken çalışır. Kapalıyken Android Wi-Fi adını gizler; bu yüzden otomatik bağlantı her Wi-Fi’de bağlanır.",
+      "restricted": "SirinVPN için pil kullanımı Kısıtlı olarak ayarlı; bu yüzden uygulama kapalıyken otomatik bağlantı VPN’i başlatamaz.",
+      "allow": "Konuma izin ver",
+      "allowAlways": "Her zaman izin ver",
+      "locationSettings": "Konumu aç",
+      "appSettings": "Uygulama ayarları",
+      "changed": "Ağ değişti. Güvenmeden önce adını kontrol edin.",
+      "changedUnnamed": "Ağ değişti ve bu cihaz adını bildirmiyor. Güvenmeden önce sisteminizin Wi-Fi ayarlarında hangi ağda olduğunuzu kontrol edin."
+    },
+    "trust": {
+      "label": "Etiket (isteğe bağlı)",
+      "placeholder": "Örneğin Ev",
+      "action": "Bu Wi-Fi’ye güven",
+      "trusted": "{{name}} artık güvenilir. Otomatik bağlantı bu ağı atlar."
+    },
+    "trusted": {
+      "title": "Güvenilir Wi-Fi",
+      "unnamed": "Adsız ağ {{number}}",
+      "label": "Etiket: {{label}}",
+      "current": "Geçerli ağ",
+      "saved": "Kaydedildi",
+      "namesHidden": "Bu cihaz Wi-Fi adlarını paylaşmadı. Windows’ta konum erişimini açarsanız görünür.",
+      "namesHiddenAndroid": "Android yalnızca geçerli Wi-Fi’nin adını gösterir. Burada tanıyabilmek için bir ağa güvendiğinizde bir etiket verin.",
+      "remove": "Güveni kaldır",
+      "removing": "Kaldırılıyor…",
+      "removeLabel": "{{name}} için güveni kaldır",
+      "removed": "{{name}} artık güvenilir değil."
+    },
+    "refresh": "Ağı yenile",
+    "loadFailed": "Wi-Fi ayarları yüklenemedi.",
+    "refreshFailed": "Ağ durumu yenilenemedi.",
+    "saveFailed": "Wi-Fi ayarı değiştirilemedi."
+  },
+  "credentials": {
+    "title": "Kimlik bilgisi depolama",
+    "summary": "Yeni anahtarlar için geçerlidir. Mevcut anahtarlar siz taşıyana kadar yerinde kalır.",
+    "policy": {
+      "secure": "Yeni anahtarlar sistem anahtarlığını kullanmalıdır.",
+      "fileAllowed": "Anahtarlık kullanılamıyorsa yeni anahtarlar şifrelenmemiş bir dosya kullanabilir."
+    },
+    "consent": "Anahtarlık kullanılamadığında şifrelenmemiş anahtar dosyalarını kabul ediyorum",
+    "allowFile": "Dosya yedeğine izin ver",
+    "requireKeyring": "Anahtarlık zorunlu",
+    "protection": {
+      "keyring": "Sistem anahtarlığı",
+      "file": "Şifrelenmemiş dosya",
+      "unverified": "Doğrulanmamış depolama"
+    },
+    "availability": {
+      "available": "Kullanılabilir",
+      "absent": "Eksik",
+      "invalid": "Okunamıyor",
+      "unavailable": "Kilitli veya kullanılamıyor"
+    },
+    "cleanupIncomplete": "Temizleme tamamlanmadı",
+    "move": "Anahtarlığa taşı",
+    "pendingCleanup": "Kaldırılan bazı anahtarlar hâlâ bu cihazda. Anahtarlığın kilidini açıp temizliği yeniden deneyin.",
+    "refresh": "Depolamayı yenile",
+    "retryCleanup": "Temizliği yeniden dene",
+    "loadFailed": "Kimlik bilgisi depolama ayarı okunamadı.",
+    "checking": "Anahtarların nerede saklandığı denetleniyor…",
+    "changed": "Kimlik bilgisi depolama güncellendi."
+  },
+  "recovery": {
+    "title": "Sahip kurtarma",
+    "summary": "Her Sahip cihazı kaybolursa Sahip erişimini geri kazanın",
+    "infoLabel": "Sahip kurtarma hakkında",
+    "info": "Yeni bir cihazda Sunucu ekle, ardından Kurtarma anahtarı’nı seçin. Başka bir Sahip cihazına veya VPN bağlantısına gerek yoktur; yalnızca sunucunuza erişim yeterlidir.",
+    "unsupported": "Kurtarma anahtarlarını kullanmak için sunucu yazılımını güncelleyin.",
+    "registered": "Bir kurtarma anahtarı ayarlı.",
+    "none": "Henüz kurtarma anahtarı yok.",
+    "cannotIssue": "Yalnızca Sahip ve Sahibin Yönetici kurtarması için seçtiği Yöneticiler kurtarma anahtarı oluşturabilir.",
+    "finishing": "Önceki kurtarma anahtarı tamamlanıyor… Bu sayfa kendiliğinden tekrar denetler.",
+    "accept": "Bu anahtara sahip herkesin her Sahip cihazını değiştirebileceğini anlıyorum. Yeni bir anahtar eskisini geçersiz kılar.",
+    "create": "Kurtarma anahtarı oluştur",
+    "replace": "Kurtarma anahtarını değiştir",
+    "revoke": "Kurtarma anahtarını iptal et",
+    "revokeConfirm": {
+      "title": "Kurtarma anahtarı iptal edilsin mi?",
+      "message": "Bu anahtarın kayıtlı kopyaları hemen çalışmayı durdurur.",
+      "confirm": "İptal et"
+    },
+    "admins": {
+      "title": "Yönetici kurtarma",
+      "summary": "Seçilen Yöneticiler istedikleri zaman yeni bir Sahip kurtarma anahtarı oluşturabilir. Tamamlanan bir kurtarma bu listeyi temizler.",
+      "suspended": "Askıya alındı",
+      "none": "Henüz Yönetici yok, bu yüzden Yönetici kurtarma kapalı.",
+      "entry": "{{name}} ({{id}})",
+      "save": "Yönetici kurtarmayı kaydet",
+      "saved": "Yönetici kurtarma kaydedildi.",
+      "confirm": {
+        "title": "Yönetici kurtarma güncellensin mi?",
+        "message": "{{names}} kişisinin Sahip kurtarma anahtarları oluşturmasına izin verilsin mi? Diğer Yöneticiler bu izni kaybeder.",
+        "confirm": "Kaydet"
+      },
+      "confirmNone": {
+        "title": "Yönetici kurtarma kapatılsın mı?",
+        "message": "Hiçbir Yönetici Sahip kurtarma anahtarı oluşturamayacak.",
+        "confirm": "Kapat"
+      },
+      "saving": "Kaydediliyor…"
+    },
+    "key": {
+      "warning": "Bu anahtarı şimdi çevrimdışı saklayın. Bir kez çalışır ve kurulumu bitirdikten sonra bir daha gösterilemez.",
+      "label": "Kurtarma anahtarı",
+      "copy": "Kurtarma anahtarını kopyala",
+      "copied": "Kurtarma anahtarı kopyalandı. Bitirmeden önce çevrimdışı saklayın.",
+      "qr": "Kurtarma QR kodu",
+      "password": "Dosya parolası",
+      "passwordHint": "En az 12 karakter kullanın.",
+      "repeat": "Dosya parolasını tekrarla",
+      "save": "Kurtarma anahtarı dosyasını kaydet",
+      "fileType": "SirinVPN kurtarma anahtarı",
+      "saved": "Kurtarma anahtarı dosyası kaydedildi. Parolasını başka bir yerde saklayın.",
+      "retained": "Bu anahtarı veya kurtarma anahtarı dosyasını çevrimdışı sakladım ve ona erişebilirim",
+      "finish": "Kurulumu bitir",
+      "finished": "Tamam. Anahtar artık burada gösterilmiyor.",
+      "title": "Yeni kurtarma anahtarınız",
+      "saving": "Dosya kaydediliyor…"
+    },
+    "loadFailed": "Kurtarma ayarları yüklenemedi.",
+    "actionFailed": "Kurtarma işlemi tamamlanamadı.",
+    "update": "VPS’i güncelle",
+    "creating": "Anahtar oluşturuluyor…",
+    "revoked": "Kurtarma anahtarı iptal edildi. Kayıtlı kopyaları artık çalışmaz."
+  },
+  "keyRotation": {
+    "title": "Cihaz anahtarlarını değiştir",
+    "resumeTitle": "Anahtar değişimini sürdür",
+    "doneTitle": "Anahtarlar değiştirildi",
+    "description": "Bu cihaz için yeni anahtarlar oluşturur. Erişimi, VPN adresi ve adı aynı kalır.",
+    "presharedKeyDescription": "Bu cihaz için, kaydedilmiş VPN trafiğini gelecekteki kuantum bilgisayarlara karşı gizli tutan önceden paylaşılmış bir anahtar dahil yeni anahtarlar oluşturur. Erişimi, VPN adresi ve adı aynı kalır. Bundan önce dışa aktarılmış cihaz yedekleri artık bağlanmaz; bu yüzden sonradan yenisini dışa aktarın.",
+    "done": {
+      "title": "Yeni anahtarlar etkin",
+      "summary": "Sunucunuz bunları kabul etti ve eski anahtarlar bu cihazdan silindi."
+    },
+    "progress": {
+      "rotating": "Anahtarlar değiştiriliyor…",
+      "resuming": "Kesintiye uğrayan değişim tamamlanıyor…",
+      "summary": "VPN kısa süreliğine yeniden bağlanır. Uygulamayı açık tutun."
+    },
+    "confirmation": {
+      "title": "Yalnızca bu cihaz değişir",
+      "resumeTitle": "Bir değişim kesildi",
+      "warning": "Özel anahtarlar bu cihazda oluşturulur ve asla sunucuya gönderilmez. Sunucudaki başka hiçbir şey değişmez.",
+      "resumeWarning": "SirinVPN, güvenle tamamlayabilmek için yeni anahtarları sakladı. Bu sunucuyu kaldırıp yeniden eklemek yerine değişimi sürdürün.",
+      "accept": "VPN’in kısa süreliğine yeniden bağlanacağını anlıyorum",
+      "acceptHint": "Yeni anahtarlar doğrulandığında kill switch ve otomatik yeniden bağlanma yeniden devreye girer.",
+      "rotate": "Anahtarları değiştir",
+      "resume": "Değişimi sürdür"
+    },
+    "failed": "Anahtar değişimi güvenli bir şekilde durdu. Sürdürülmek için bekliyorsa çevrimiçi olduğunuzda tekrar deneyin."
+  },
+  "backup": {
+    "title": "Şifreli cihaz yedeği",
+    "description": "Bu sunucu profilini ve cihaz anahtarlarını şifreli bir dosyaya kaydeder. Hiçbir şey yüklenmez.",
+    "dialogTitle": "Şifreli yedeği kaydet",
+    "fileType": "SirinVPN şifreli yedeği",
+    "warning": "<strong>Bu dosya bu cihazın yerine geçebilir.</strong> Dosyaya ve parolaya sahip herkes, cihazı iptal edene kadar bağlanabilir.",
+    "destination": {
+      "label": "Kaydet",
+      "hint": "Mevcut dosyaların üzerine asla yazılmaz.",
+      "placeholder": "Dosya seçilmedi",
+      "choose": "Dosya seç"
+    },
+    "password": {
+      "label": "Parola",
+      "hint": "En az 12 karakter kullanın.",
+      "repeat": "Parolayı tekrarla"
+    },
+    "accept": {
+      "label": "Bu dosyanın bu cihazın özel anahtarlarını içerdiğini anlıyorum",
+      "hint": "Unutulan parola kurtarılamaz."
+    },
+    "create": "Yedek oluştur",
+    "creating": "Şifreleniyor…",
+    "done": {
+      "title": "Yedek kaydedildi",
+      "summary": "Dosyayı ve parolasını ayrı yerlerde saklayın."
+    },
+    "pickerFailed": "Dosya seçici açılamadı. Tekrar deneyin.",
+    "failed": "Yedek oluşturulamadı. Tekrar deneyin."
+  },
+  "alerts": {
+    "testNeedsAddress": "Test göndermek için bir uyarı adresi kaydedin.",
+    "testing": "Gönderiliyor…",
+    "allowPrivateSummary": "Yalnızca kendi ağınızdaki veya VPN’deki bir izleyici için"
+  },
+  "dnsBlocking": {
+    "invalidSources": "Tam bir HTTPS adresi değil: {{values}}",
+    "invalidDomains": "Bir alan adı değil: {{values}}",
+    "needsList": "Engellemeyi açmak için en az bir engelleme listesi seçin.",
+    "serverStatus": "Sunucuda şu an"
+  },
+  "parts": {
+    "connect": "Bağlan",
+    "repair": "VPS’i güncelle"
+  },
+  "diagnostics": {
+    "allPassed": "{count, plural, one {Tüm # denetim geçti.} other {Tüm # denetim geçti.}}",
+    "empty": "Hiçbir denetim çalışmadı. Bu sunucuya bağlanın ve tanılamayı yeniden çalıştırın.",
+    "runAgain": "Yeniden çalıştır"
+  },
+  "speedTest": {
+    "phase": {
+      "idle": "Gecikme ölçülüyor",
+      "download": "İndirme ölçülüyor",
+      "upload": "Yükleme ölçülüyor",
+      "finishing": "Tamamlanıyor"
+    },
+    "left": "{seconds, plural, one {{{phase}} · yaklaşık {{seconds}} saniye kaldı.} other {{{phase}} · yaklaşık {{seconds}} saniye kaldı.}}",
+    "finishingLine": "{{phase}}…",
+    "cancel": "Hız testini iptal et",
+    "cancelled": "Hız testi iptal edildi.",
+    "cancelledWait": "{seconds, plural, one {Hız testi iptal edildi. VPS bir sonraki testi {{seconds}} saniye içinde alır.} other {Hız testi iptal edildi. VPS bir sonraki testi {{seconds}} saniye içinde alır.}}"
+  }
+}

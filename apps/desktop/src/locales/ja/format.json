@@ -1,0 +1,42 @@
+{
+  "unavailable": "利用できません",
+  "bytes": {
+    "B": "{{value}} B",
+    "KB": "{{value}} kB",
+    "MB": "{{value}} MB",
+    "GB": "{{value}} GB",
+    "TB": "{{value}} TB"
+  },
+  "rate": "{{value}}/秒",
+  "memoryUsage": "{{percent}} · {{used}}",
+  "latency": "{{value}} ms",
+  "latencyBelowOne": "1 ms 未満",
+  "uptimeDays": "{{days}} 日 {{hours}} 時間",
+  "uptimeHours": "{{hours}} 時間 {{minutes}} 分",
+  "transport": {
+    "direct_udp": "直接 UDP",
+    "obfuscated_udp": "難読化 UDP",
+    "tls_like": "TLS フォールバック",
+    "tcp_fallback": "TCP フォールバック",
+    "quic": "QUIC (HTTP/3)"
+  },
+  "dnsPolicy": {
+    "recursive": "再帰 DNS",
+    "dnsOverTls": "{count, plural, other {DNS over TLS · #台のサーバー}}",
+    "dnsOverHttps": "{count, plural, other {DNS over HTTPS · #台のサーバー}}",
+    "split": "{count, plural, other {スプリット DNS · #つのゾーン · {{fallback}}}}"
+  },
+  "os": {
+    "android": "Android",
+    "windows": "Windows",
+    "linux": "Linux"
+  },
+  "arch": {
+    "x86_64": "64 ビット x86",
+    "aarch64": "64 ビット ARM"
+  },
+  "clock": {
+    "minutes": "{{minutes}}:{{seconds}}",
+    "hours": "{{hours}}:{{minutes}}:{{seconds}}"
+  }
+}

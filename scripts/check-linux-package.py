@@ -10,6 +10,8 @@ import subprocess
 import tarfile
 import tempfile
 
+from debian_version import debian_version
+
 
 ROOT = Path(__file__).resolve().parents[1]
 PAYLOADS = {
@@ -17,9 +19,12 @@ PAYLOADS = {
     "usr/bin/sirinvpn": ROOT / "apps/desktop/src-tauri/binaries/sirinvpn",
     **{
         f"usr/lib/sirinvpn/{name}": ROOT / "apps/desktop/src-tauri/binaries" / name
-        for name in ["sirinvpn-helper", "sirinvpn-server", "sirinvpn-release", "sirinvpn-release-fetch"]
+        for name in ["sirinvpn-helper", "sirinvpn-server", "sirinvpn-release", "sirinvpn-release-fetch",
+                     "sirinvpn-server-x86_64", "sirinvpn-server-aarch64"]
     },
 }
+# Every payload is an x64 executable except the arm64 VPS server payload.
+MACHINES = {"usr/lib/sirinvpn/sirinvpn-server-aarch64": 183}
 
 
 def sha256(path: Path) -> str:
@@ -64,7 +69,7 @@ def inspect(debian: Path, appimage: Path) -> dict:
                     or not member.mode & 0o100
                     or script != (ROOT / "packaging/debian" / f"{name}.sh").read_bytes()):
                 raise ValueError(f"Debian maintainer script differs or is unsafe: {name}")
-    for field, value in [("Package", "sirin-vpn"), ("Version", version), ("Architecture", "amd64")]:
+    for field, value in [("Package", "sirin-vpn"), ("Version", debian_version(version)), ("Architecture", "amd64")]:
         if not re.search(rf"^{field}: {re.escape(value)}$", control, re.MULTILINE):
             raise ValueError(f"Unexpected Debian {field}")
     dependencies = re.search(r"^Depends: (.+)$", control, re.MULTILINE)
@@ -89,8 +94,8 @@ def inspect(debian: Path, appimage: Path) -> dict:
                 if expected.count(marker) != 1:
                     raise ValueError("Expected one Tauri bundle-type marker")
                 expected = expected.replace(marker, b"__TAURI_BUNDLE_TYPE_VAR_DEB", 1)
-            if elf_machine(packaged) != 62 or packaged != expected:
-                raise ValueError(f"Debian executable differs from the current x64 build: {name}")
+            if elf_machine(packaged) != MACHINES.get(name, 62) or packaged != expected:
+                raise ValueError(f"Debian executable differs from the current build: {name}")
             payload_hashes[name] = hashlib.sha256(packaged).hexdigest()
         policy_paths = {
             "usr/lib/NetworkManager/conf.d/90-sirinvpn-probe.conf":
@@ -102,6 +107,11 @@ def inspect(debian: Path, appimage: Path) -> dict:
                 for name in ["sirinvpn-killswitch.service", "sirinvpn-reconnect.service", "sirinvpn-transport.service", "sirinvpn-transport@.service"]
             },
         }
+        # The licence is the package's copyright file; every third-party notice sits beside it
+        # (scripts/install-linux.sh, deb_doc_files).
+        policy_paths["usr/share/doc/sirin-vpn/copyright"] = ROOT / "LICENSE"
+        for notice in sorted((ROOT / "packaging/third-party").iterdir()):
+            policy_paths[f"usr/share/doc/sirin-vpn/third-party/{notice.name}"] = notice
         for name, source in policy_paths.items():
             member, packaged = regular_member(data_archive, name)
             if member.uid != 0 or member.gid != 0 or member.mode & 0o022 or packaged != source.read_bytes():
@@ -116,9 +126,10 @@ def inspect(debian: Path, appimage: Path) -> dict:
             if not packaged.is_file() or not packaged.resolve().is_relative_to(extracted):
                 raise ValueError(f"Missing or unsafe AppImage executable: {name}")
             with packaged.open("rb") as source:
-                if elf_machine(source.read(20)) != 62:
+                if elf_machine(source.read(20)) != MACHINES.get(name, 62):
                     raise ValueError(f"Invalid AppImage executable architecture: {name}")
-        for component in ["sirinvpn-server", "sirinvpn-helper"]:
+        for component in ["sirinvpn-server", "sirinvpn-helper", "sirinvpn-server-x86_64",
+                          "sirinvpn-server-aarch64"]:
             name = f"usr/lib/sirinvpn/{component}"
             if sha256(extracted / name) != payload_hashes[name]:
                 raise ValueError(f"AppImage must retain the exact system-installable {component} bytes")
@@ -133,13 +144,14 @@ def inspect(debian: Path, appimage: Path) -> dict:
                 raise ValueError(f"Missing or unsafe AppImage tray library: {library}")
 
     return {
-        "debian": {"path": str(debian), "sha256": sha256(debian), "version": version,
+        "debian": {"path": str(debian), "sha256": sha256(debian), "version": debian_version(version),
                    "architecture": "amd64", "root_owned_executables": len(payload_hashes),
                    "current_payload_sha256": payload_hashes, "integration_files": "passed",
                    "maintainer_scripts": "postinst, prerm and postrm verified",
                    "gui_bundle_marker": "only the expected UNK to DEB replacement"},
         "appimage": {"path": str(appimage), "sha256": sha256(appimage),
-                     "executables": "present; x64 ELF", "server_matches_debian": True,
+                     "executables": "present; x64 ELF plus the arm64 VPS payload",
+                     "server_matches_debian": True, "vps_payloads": ["x86_64", "aarch64"],
                      "helper_matches_debian": True,
                      "bundled_tray_libraries": True,
                      "bundled_wayland_libraries": False},

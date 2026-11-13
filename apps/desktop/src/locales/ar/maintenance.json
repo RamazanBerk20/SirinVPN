@@ -1,0 +1,270 @@
+{
+  "tools": {
+    "deviceTitle": "النسخ الاحتياطي للجهاز",
+    "vpsTitle": "النسخ الاحتياطي والاسترداد لـ VPS",
+    "serverTitle": "صيانة {{name}}",
+    "finishRotationFirst": "أكمل تدوير المفاتيح أولًا",
+    "exportBackup": {
+      "label": "تصدير نسخة احتياطية للجهاز",
+      "summary": "نسخة مشفّرة من مفاتيح هذا الجهاز"
+    },
+    "restoreBackup": {
+      "label": "استعادة نسخة احتياطية للجهاز",
+      "summary": "تحميل مفاتيح الجهاز من ملف نسخة احتياطية مشفّر"
+    },
+    "rotateKeys": {
+      "label": "تدوير مفاتيح الجهاز",
+      "resumeLabel": "استئناف تدوير المفاتيح",
+      "summary": "استبدال مفاتيح هذا الجهاز",
+      "resumeSummary": "إكمال تدوير هذا الجهاز الذي انقطع",
+      "needsConnection": "اتصل بهذا الخادم أولًا"
+    },
+    "endpoint": {
+      "ownerLabel": "الانتقال إلى عنوان جديد",
+      "ownerSummary": "توجيه كل الأجهزة إلى العنوان الجديد للخادم",
+      "memberLabel": "تطبيق تحديث العنوان",
+      "memberSummary": "استخدام تحديث موقّع للوصول إلى العنوان الجديد للخادم",
+      "otherConnected": "اقطع اتصال الخادم الآخر أولًا"
+    },
+    "remove": {
+      "label": "إزالة أو إلغاء التثبيت",
+      "summary": "النسيان على هذا الجهاز أو إلغاء التثبيت من VPS"
+    },
+    "deviceKeysTitle": "مفاتيح الجهاز",
+    "vpsScheduleTitle": "النسخ الاحتياطية التلقائية لـ VPS"
+  },
+  "operation": {
+    "interruption": "تُعاد تشغيل الخدمات، لذلك قد تنقطع الأجهزة الأخرى لفترة قصيرة.",
+    "backup": {
+      "title": "نسخ VPS احتياطيًا",
+      "summary": "نسخة مشفّرة من إعدادات الخادم والوصول",
+      "steps": {
+        "read": "تُقرأ إعدادات الخادم والوصول عبر SSH موثّق.",
+        "encrypt": "تُشفَّر النسخة الاحتياطية بكلمة مرورك وتُحفظ على هذا الجهاز."
+      }
+    },
+    "restore": {
+      "title": "استعادة VPS أو نقله",
+      "summary": "استعادة نسخة احتياطية على هذا VPS أو على VPS جديد",
+      "steps": {
+        "choose": "تختار نسخة احتياطية لـ VPS وتتحقق من VPS الهدف عبر SSH.",
+        "review": "تراجع ما سيُستبدل قبل أن يتغير أي شيء."
+      }
+    },
+    "update": {
+      "title": "تحديث برنامج VPS",
+      "summary": "تثبيت إصدار أحدث من SirinVPN على VPS",
+      "steps": {
+        "review": "تراجع الإصدار الموقّع قبل تثبيته.",
+        "rollback": "يُحتفظ بالإصدار الحالي للتراجع عنه."
+      }
+    },
+    "repair": {
+      "title": "إصلاح إعدادات VPS",
+      "summary": "إعادة تطبيق الشبكة والخدمات على VPS",
+      "steps": {
+        "reapply": "تُعاد تطبيق الشبكة والخدمات وDNS، ويُعاد تثبيت برنامج الخادم.",
+        "preserve": "تبقى الأجهزة والوصول كما هي. تراجع تغييرات DNS أولًا."
+      }
+    },
+    "dns": {
+      "title": "ضبط DNS الخاص بـ VPS",
+      "steps": {
+        "choose": "تختار خوادم DNS أو سجلات خاصة لكل جهاز على هذا الخادم.",
+        "apply": "تُطبَّق التغييرات عبر إصلاح يعيد تثبيت برنامج الخادم."
+      }
+    },
+    "security": {
+      "title": "تفعيل تحديثات أمان VPS",
+      "steps": {
+        "enable": "يفعّل الإصلاح التحديثات الأمنية التلقائية لنظام التشغيل ويعيد تثبيت برنامج الخادم."
+      }
+    }
+  },
+  "review": {
+    "description": "ما الذي سيحدث على {{name}}",
+    "close": "إغلاق المراجعة",
+    "rotationFirst": "أكمل تدوير مفاتيح هذا الجهاز أولًا.",
+    "reviewRotation": "مراجعة تدوير المفاتيح",
+    "refreshFirst": "حدّث حالة VPN لهذا الجهاز أولًا.",
+    "disconnectFirst": "اقطع اتصال VPN على هذا الجهاز أولًا. الأجهزة الأخرى لا تتأثر.",
+    "disconnectFirstKillSwitch": "اقطع اتصال VPN على هذا الجهاز أولًا. يؤدي ذلك إلى رفع حجب مفتاح قطع الإنترنت وإيقاف إعادة الاتصال التلقائي.",
+    "disconnect": "قطع اتصال هذا الجهاز",
+    "disconnecting": "جارٍ قطع الاتصال…",
+    "refresh": "تحديث الحالة",
+    "disconnectFailed": "تعذّر قطع اتصال VPN.",
+    "blocked": "نفّذ الخطوة أعلاه للمتابعة."
+  },
+  "health": {
+    "title": "صحة النظام",
+    "connection": "الاتصال",
+    "killSwitch": "مفتاح قطع الإنترنت",
+    "autoReconnect": "إعادة الاتصال التلقائي",
+    "autoReconnectOther": "عرض الخادم المتصل",
+    "management": "إدارة الخادم",
+    "managementResponding": "يستجيب",
+    "managementUnavailable": "غير متاح · VPN ما زال متصلًا",
+    "notChecked": "لم يُفحص",
+    "serverVpn": "VPN الخادم",
+    "serverVpnUp": "يعمل",
+    "serverVpnDown": "متوقف",
+    "serverDns": "DNS الخادم",
+    "serverDnsRunning": "يعمل",
+    "serverDnsDown": "لا يستجيب",
+    "diagnosticsSummary": "يفحص هذا الجهاز، وأثناء الاتصال يفحص DNS وتسرب الحركة والخادم.",
+    "runDiagnostics": "تشغيل التشخيص"
+  },
+  "diagnostics": {
+    "title": "التشخيص",
+    "description": "الحالة الحالية لهذا الجهاز والخادم. النتائج لا تُحفظ.",
+    "checking": "جارٍ فحص هذا الجهاز والخادم…",
+    "copy": "نسخ التقرير",
+    "openNetwork": "فتح إعدادات الشبكة",
+    "turnOnUpdates": "تفعيل",
+    "copied": "تم نسخ التقرير. يبقى في الحافظة حتى يُستبدل.",
+    "copyFailed": "تعذّر نسخ التقرير. تحقق من إذن الوصول إلى الحافظة وحاول مجددًا.",
+    "summary": {
+      "attention": "{count, plural, zero {لا شيء يحتاج إلى انتباه} one {عنصر واحد يحتاج إلى انتباه} two {عنصران يحتاجان إلى انتباه} few {# عناصر تحتاج إلى انتباه} many {# عنصرًا يحتاج إلى انتباه} other {# عنصر يحتاج إلى انتباه}}",
+      "review": "{count, plural, zero {لا شيء للمراجعة} one {عنصر واحد للمراجعة} two {عنصران للمراجعة} few {# عناصر للمراجعة} many {# عنصرًا للمراجعة} other {# عنصر للمراجعة}}",
+      "unavailable": "{count, plural, zero {لم يُفحص شيء} one {عنصر واحد لم يُفحص} two {عنصران لم يُفحصا} few {# عناصر لم تُفحص} many {# عنصرًا لم يُفحص} other {# عنصر لم يُفحص}}",
+      "passed": "{count, plural, zero {لا شيء اجتاز} one {عنصر واحد اجتاز} two {عنصران اجتازا} few {# عناصر اجتازت} many {# عنصرًا اجتاز} other {# عنصر اجتاز}}",
+      "line": "{{attention}} · {{review}} · {{passed}}",
+      "withUnavailable": "{{attention}} · {{review}} · {{unavailable}} · {{passed}}"
+    },
+    "group": {
+      "attention": "يحتاج إلى انتباه",
+      "review": "للمراجعة",
+      "unavailable": "لم يُفحص",
+      "passed": "اجتاز"
+    },
+    "passedChecks": "الفحوص الناجحة · {{count}}",
+    "passedNote": "الفحوص الناجحة لا تستبعد كل تسرب محتمل.",
+    "checkTitle": {
+      "local_backend": "خدمة VPN المحلية",
+      "local_tunnel": "اتصال VPN المحدد",
+      "local_protection": "حماية الحركة الحالية",
+      "local_transport": "وسيلة النقل الحالية",
+      "local_routes": "توجيه VPN المُعدّ",
+      "local_ipv6": "معالجة IPv6 المُعدّة",
+      "local_mtu": "MTU المسار الحالي",
+      "local_quality": "فحوص النفق الخاص الحالية",
+      "local_dns": "DNS الخاص عبر هذا الجهاز",
+      "local_identity": "تخزين هوية الجهاز",
+      "management": "مصادقة VPS وقابلية الوصول",
+      "server_report_format": "توافق تشخيص VPS",
+      "interface": "واجهة VPN في VPS",
+      "wireguard": "WireGuard في VPS",
+      "dns": "خدمة DNS الخاصة في VPS",
+      "forwarding": "تمرير IPv4 في VPS",
+      "ipv6": "نفق IPv6 في VPS",
+      "server_process": "خدمة النظام في VPS",
+      "server_routes": "مسارات VPS",
+      "server_firewall": "بنية جدار حماية VPS",
+      "server_nat4": "NAT لـ IPv4 في VPS",
+      "server_nat6": "NAT لـ IPv6 في VPS",
+      "server_ports": "المنافذ المستمعة في VPS",
+      "server_mtu": "MTU واجهة VPS",
+      "server_cpu": "معالج VPS",
+      "server_memory": "ذاكرة VPS",
+      "server_disk": "قرص VPS",
+      "external_reachability": "جدار حماية المزوّد وقابلية الوصول العام",
+      "dns_blocklist": "حجب DNS في VPS",
+      "os_security_updates": "تحديثات أمان VPS",
+      "os_reboot_required": "إعادة تشغيل VPS",
+      "diagnostics_busy": "التشخيص الحالي لـ VPS",
+      "dns_probe_busy": "فحوص استجابة DNS في VPS",
+      "dns_resolver_response": "استجابة المحلل الخاص في VPS",
+      "leak_ipv4": "اختبار تسرب IPv4",
+      "leak_ipv6": "اختبار تسرب IPv6",
+      "leak_dns": "اختبار تسرب DNS",
+      "authorization_transaction": "تغييرات الوصول",
+      "authorization_containment": "حجب الحركة أثناء تغييرات الوصول",
+      "authorization_intent": "سجل استرداد الوصول",
+      "authorization_peers": "الأجهزة المفروضة"
+    },
+    "evidence": {
+      "configuration": "تم فحص الإعداد",
+      "service": "أبلغت عنه الخدمة",
+      "observed": "تم الاختبار",
+      "notChecked": "لم يُفحص",
+      "notApplicable": "غير منطبق",
+      "reported": "مُبلَّغ عنه"
+    },
+    "report": {
+      "title": "تشخيص SirinVPN",
+      "scope": "الحالة الحالية فقط. لا يوجد سجل نشاط.",
+      "evidence": "الدليل: {{evidence}}",
+      "check": "[{{level}}] {{label}}",
+      "level": {
+        "pass": "نجح",
+        "warning": "تحذير",
+        "fail": "فشل",
+        "not_applicable": "غير منطبق"
+      }
+    },
+    "progress": {
+      "device": {
+        "label": "هذا الجهاز",
+        "detail": "خدمة VPN والنفق ومفتاح قطع الإنترنت والتوجيه وMTU"
+      },
+      "identity": {
+        "label": "هوية الخادم المحفوظة",
+        "detail": "تثبيت الخادم وشهادة هذا الجهاز"
+      },
+      "server": {
+        "label": "VPS",
+        "detail": "تسجيل الدخول وDNS والشبكة وجدار الحماية والموارد"
+      },
+      "leaks": {
+        "label": "اختبارات التسرب",
+        "detail": "IPv4 وIPv6 وDNS"
+      },
+      "disconnected": "اتصل بهذا الخادم لفحص VPS واختبار التسرب أيضًا."
+    },
+    "cause": {
+      "not_measured": "لا يتوفر قياس حالي.",
+      "mtu_pending": "ما زال يجري قياس MTU للمسار.",
+      "management_clock": "فشل الاتصال الآمن بـ VPS. تحقق من ساعتي هذا الجهاز وVPS.",
+      "management_credentials_invalid": "هوية الخادم المحفوظة أو شهادة هذا الجهاز غير صالحة.",
+      "management_device_rejected": "رفض VPS شهادة هذا الجهاز.",
+      "management_access_rejected": "رفض VPS الوصول الحالي لهذا الجهاز.",
+      "management_unreachable": "تعذّر الوصول إلى خدمة إدارة VPS عبر VPN."
+    },
+    "numberedCheck": {
+      "dnsTls": "محلل TLS في VPS رقم {{number}}",
+      "dnsHttps": "محلل HTTPS في VPS رقم {{number}}",
+      "dnsZone": "منطقة DNS المقسّم في VPS: {{zone}}",
+      "dnsZoneUpstream": "منطقة DNS المقسّم في VPS: {{zone}}، المصدر الأعلى {{upstream}}"
+    }
+  },
+  "speedTest": {
+    "title": "اختبار السرعة إلى VPS الخاص بك",
+    "description": "يقيس التنزيل والرفع والاستجابة عبر VPN إلى VPS الخاص بك باتصال واحد، لذلك لا يمثل سرعة إنترنتك. يستغرق نحو 20 ثانية ويبطّئ VPN لفترة قصيرة للجميع. تبقى النتيجة على هذا الجهاز.",
+    "run": "تشغيل اختبار السرعة",
+    "again": "إعادة اختبار السرعة",
+    "running": "جارٍ قياس النفق إلى VPS الخاص بك…",
+    "download": "التنزيل",
+    "upload": "الرفع",
+    "idleLatency": "زمن الاستجابة في الخمول",
+    "downloadLatency": "زمن الاستجابة أثناء التنزيل",
+    "uploadLatency": "زمن الاستجابة أثناء الرفع",
+    "rate": "{{value}} ميغابت/ث",
+    "latency": "{{value}} مللي ثانية",
+    "notMeasured": "لم يُقَس",
+    "failed": "لم ينتهِ اختبار السرعة. تحقق من أن هذا الجهاز متصل ثم حاول مجددًا."
+  },
+  "workspace": {
+    "metric": {
+      "needsUpdate": "حدّث الخادم",
+      "sampling": "جارٍ القياس…"
+    },
+    "error": {
+      "unsavedSettings": "احفظ تغييراتك أو تجاهلها في الإعدادات، ثم اتصل.",
+      "settingsNotLoaded": "إعدادات الاتصال لم تُحمّل بعد. افتح الإعدادات وحاول مجددًا.",
+      "connectionChange": "لم يتغير الاتصال. حدّث الحالة وحاول مجددًا.",
+      "stopUnconfirmed": "لم يؤكد VPN أنه توقف. تحقق من حالته.",
+      "resume": "تعذّر الاستئناف. إعدادات حركة المرور لم تتغير.",
+      "diagnostics": "تعذّر تشغيل التشخيص. حدّث الحالة وحاول مجددًا."
+    }
+  }
+}

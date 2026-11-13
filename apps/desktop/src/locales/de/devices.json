@@ -1,0 +1,468 @@
+{
+  "page": {
+    "mine": "Meine Geräte",
+    "you": "Du",
+    "add": "Gerät hinzufügen",
+    "addMine": "Mein Gerät hinzufügen",
+    "addFor": "Gerät hinzufügen für {{name}}",
+    "cannotAdd": "Du kannst keine Geräte hinzufügen. Bitte einen Besitzer oder Admin, eines für dich hinzuzufügen.",
+    "refresh": "Aktualisieren",
+    "loading": "Personen und Geräte werden geladen…",
+    "connect": "Verbinden",
+    "openHome": "Start öffnen",
+    "disconnected": "Nicht verbunden. Verbinde dich, um die Geräte aller zu sehen und Änderungen vorzunehmen.",
+    "disconnectedSaved": "Nicht verbunden. Personen und Geräte werden so angezeigt, wie sie um {{time}} gespeichert wurden. Verbinde dich, um Änderungen vorzunehmen.",
+    "stale": "Personen und Geräte werden so angezeigt, wie sie um {{time}} gespeichert wurden. Änderungen sind aus, bis die Liste aktualisiert ist.",
+    "unsupported": "Dieser Server ist zu alt, um Personen und Geräte hier zu verwalten.",
+    "unsupportedOwner": "Dieser Server ist zu alt, um Personen und Geräte hier zu verwalten. Aktualisiere die VPS-Software in den Einstellungen.",
+    "search": "Personen und Geräte durchsuchen",
+    "searchPlaceholder": "Nach Name oder VPN-Adresse suchen",
+    "clearSearch": "Suche leeren",
+    "noMatches": "Keine Person und kein Gerät passt zu „{{query}}“.",
+    "adminOwnDevices": "Um deine eigenen Geräte hinzuzufügen, bitte den Besitzer, dies in deinen Limits und Berechtigungen zu erlauben.",
+    "unnamed": "Name noch nicht geladen"
+  },
+  "empty": {
+    "title": "Bisher nur dieses Gerät",
+    "body": "Jede Person auf diesem Server hat eine Rolle und kann mehrere Geräte haben. Füge ein weiteres deiner Geräte hinzu oder eines für jemand anderen.",
+    "mine": "Ein weiteres meiner Geräte hinzufügen",
+    "someone": "Ein Gerät für jemand anderen hinzufügen"
+  },
+  "count": {
+    "people": "{count, plural, one {# Person} other {# Personen}}",
+    "devices": "{count, plural, one {# Gerät} other {# Geräte}}",
+    "forwards": "{count, plural, one {# Portweiterleitung} other {# Portweiterleitungen}}",
+    "pairs": "{count, plural, one {# Gerätepaar} other {# Gerätepaare}}",
+    "codes": "{count, plural, one {# Beitrittscode} other {# Beitrittscodes}}"
+  },
+  "role": {
+    "title": "Rolle",
+    "description": {
+      "owner": "Volle Kontrolle über den Server. Es gibt genau einen Besitzer.",
+      "admin": "Kann Personen hinzufügen und Mitglieder verwalten, aber keine Admins oder den Besitzer.",
+      "member": "Nutzt das VPN und verwaltet nichts, außer es werden Berechtigungen vergeben."
+    },
+    "change": "{{role}} machen",
+    "codesWaiting": "{count, plural, one {# Beitrittscode für {{name}} oder von {{name}} wartet. Der Server kann die Rolle erst ändern, wenn er abgebrochen ist.} other {# Beitrittscodes für {{name}} oder von {{name}} warten. Der Server kann die Rolle erst ändern, wenn sie abgebrochen sind.}}",
+    "cancelAndChange": "{count, plural, one {Code abbrechen und Rolle ändern} other {Codes abbrechen und Rolle ändern}}",
+    "createdCodes": "Beitrittscodes, die {{name}} erstellt hat, werden ebenfalls abgebrochen."
+  },
+  "presence": {
+    "active": "Jetzt aktiv",
+    "idle": "Vor Kurzem nicht aktiv",
+    "unknown": "Aktivität unbekannt",
+    "suspended": "Pausiert"
+  },
+  "summary": {
+    "sirinApp": "SirinVPN-App",
+    "wireguardApp": "WireGuard-App",
+    "reachesOthers": "erreicht andere Geräte",
+    "paired": "{count, plural, one {gekoppelt mit # Gerät} other {gekoppelt mit # Geräten}}",
+    "internetOnly": "nur Internet",
+    "sharesNetwork": "teilt {{network}}",
+    "sharesNetworks": "{count, plural, one {teilt # lokales Netzwerk} other {teilt # lokale Netzwerke}}",
+    "forwards": "{count, plural, one {# weitergeleiteter Port} other {# weitergeleitete Ports}}"
+  },
+  "gate": {
+    "resumeFirst": "Setze zuerst {{name}} fort.",
+    "limitReached": "{count, plural, one {Gerätelimit erreicht (#). Erhöhe es unter Limits und Berechtigungen.} other {Gerätelimit erreicht (#). Erhöhe es unter Limits und Berechtigungen.}}",
+    "needsAppDevice": "Benötigt ein Gerät mit der SirinVPN-App, nicht nur WireGuard.",
+    "lastOwnerDevice": "Dies ist das letzte Gerät des Besitzers mit SirinVPN, daher kann es nicht entfernt werden. Füge zuerst ein anderes hinzu."
+  },
+  "panel": {
+    "readOnly": "Nur lesbar, bis die Liste aktualisiert ist."
+  },
+  "person": {
+    "youTitle": "{{name}} (du)",
+    "summary": "{count, plural, one {{{role}} · # Gerät} other {{{role}} · # Geräte}}",
+    "name": "Name",
+    "devices": "{count, plural, one {Gerät} other {Geräte}}",
+    "devicesOfLimit": "{limit, plural, one {{{count}} von # Gerät} other {{{count}} von # Geräten}}",
+    "noDevices": "Noch keine Geräte.",
+    "noDevicesSuspended": "Keine Geräte. Eine pausierte Person kann keine hinzufügen.",
+    "suspended": "Pausiert",
+    "limitedHours": "Begrenzte Zeiten",
+    "expires": "Zugriff bis {{date}}",
+    "expired": "Zugriff endete {{date}}",
+    "dangerZone": "Pausieren oder entfernen",
+    "suspend": "Pausieren",
+    "resume": "Fortsetzen",
+    "suspendHint": "Pausiert alle ihre Geräte. Nichts wird gelöscht, und Fortsetzen stellt den Zugriff wieder her.",
+    "resumeHint": "Ihre Geräte sind pausiert. Fortsetzen gibt ihnen den Zugriff mit ihren gespeicherten Einstellungen zurück.",
+    "renameCodesWaiting": "{count, plural, one {# Beitrittscode für {{name}} wartet. Der Server kann sie erst umbenennen, wenn er abgebrochen ist.} other {# Beitrittscodes für {{name}} warten. Der Server kann sie erst umbenennen, wenn sie abgebrochen sind.}}",
+    "cancelAndRename": "{count, plural, one {Code abbrechen und umbenennen} other {Codes abbrechen und umbenennen}}",
+    "remove": "Person entfernen",
+    "removeHint": "Löscht sie, {{devices}}, {{forwards}}, {{pairs}} und {{codes}}. Um zurückzukommen, braucht sie einen neuen Beitrittscode."
+  },
+  "device": {
+    "summary": "{{name}} · {{presence}}",
+    "name": "Gerätename",
+    "owner": "Gehört zu",
+    "connection": "Verbindet mit",
+    "sirinApp": "SirinVPN-App",
+    "wireguardApp": "WireGuard-App oder Router, nur Direktes UDP",
+    "address": "VPN-Adresse",
+    "activity": "Aktivität",
+    "fingerprint": "Identitäts-Fingerabdruck",
+    "fingerprintLabel": "Fingerabdruck von {{name}}",
+    "removeTitle": "Entfernen",
+    "remove": "Gerät entfernen",
+    "removeThis": "Dieses Gerät entfernen",
+    "removeHint": "Seine Schlüssel werden widerrufen: VPN- und Verwaltungszugriff enden sofort.",
+    "removeThisHint": "Dies ist das Gerät, das du gerade verwendest. Wenn du es entfernst, endet der Zugriff dieser App auf {{server}}."
+  },
+  "network": {
+    "title": "Netzwerk",
+    "peer": "Gerät-zu-Gerät-Zugriff",
+    "peerOn": "Erreicht andere Geräte, die ihn ebenfalls eingeschaltet haben.",
+    "peerOff": "Aus: nur Internet, plus alle Gerätepaare.",
+    "suspended": "Pausiert, solange {{name}} pausiert ist."
+  },
+  "pairs": {
+    "title": "Gerätepaare",
+    "description": "Ein Paar lässt zwei Geräte einander erreichen, auch wenn der Gerät-zu-Gerät-Zugriff aus ist.",
+    "bothWays": "Mit {{name}}, in beide Richtungen",
+    "starts": "Startet Verbindungen zu {{name}}",
+    "answers": "Antwortet nur {{name}}",
+    "otherDevice": "Gerät einer anderen Person",
+    "peer": "Gerät",
+    "direction": "Richtung",
+    "directionHint": "Eine Richtung: nur das erste Gerät startet Verbindungen; das andere antwortet nur. Verbindungen zu einem Gerät, das lokale Netzwerke teilt, erreichen auch diese.",
+    "option": {
+      "both": "In beide Richtungen",
+      "starts": "Nur {{from}} startet, zu {{to}}"
+    },
+    "add": "Paar hinzufügen",
+    "remove": "Entfernen"
+  },
+  "networks": {
+    "title": "Lokale Netzwerke",
+    "description": "Teile private Netzwerke hinter {{name}}, etwa ein Heimnetzwerk, mit Geräten, die es erreichen.",
+    "label": "Netzwerke",
+    "hint": "Ein privates IPv4-Netzwerk pro Zeile, /20 oder kleiner. Leer lassen, um das Teilen zu beenden.",
+    "invalid": "Kein privates IPv4-Netzwerk mit /20 oder kleiner: {{networks}}",
+    "hostBits": "{{network}} ist nicht der Anfang seines Netzwerks. Verwende {{canonical}}.",
+    "inactive": "Wird gerade nicht geroutet, weil der VPS diese über ein anderes Netzwerk erreicht: {{networks}}",
+    "linux": "{{name}} muss SirinVPN unter Linux mit aktivierter IPv4-Weiterleitung ausführen:",
+    "copyCommand": "Befehl kopieren",
+    "save": "Netzwerke speichern"
+  },
+  "ports": {
+    "title": "Portweiterleitung",
+    "none": "Keine Ports zu diesem Gerät weitergeleitet.",
+    "paused": "Pausiert, solange die Person pausiert ist",
+    "exposure": "Jede Person im Internet kann einen weitergeleiteten Dienst erreichen.",
+    "protocol": "Protokoll",
+    "publicPort": "Öffentlicher Port",
+    "publicPortHint": "Öffnet sich auf der Adresse deines VPS.",
+    "devicePort": "Geräte-Port",
+    "devicePortHint": "Auf diesem Port hört der Dienst.",
+    "publicPortLow": "Verwende einen Port von 1024 bis 65535. Niedrigere Ports sind reserviert.",
+    "publicPortRange": "Verwende einen Port von 1024 bis 65535.",
+    "devicePortRange": "Verwende einen Port von 1 bis 65535.",
+    "preview": "Öffentlicher {{protocol}}-Port <strong>{{publicPort}}</strong> leitet an <strong>{{device}}</strong>, Port <strong>{{devicePort}}</strong> weiter",
+    "used": "{max, plural, one {{{count}} von # Server-Port belegt} other {{{count}} von # Server-Ports belegt}}",
+    "full": "{count, plural, one {Alle # Server-Port ist belegt. Schließe einen, um einen anderen zu öffnen.} other {Alle # Server-Ports sind belegt. Schließe einen, um einen anderen zu öffnen.}}",
+    "open": "Port öffnen",
+    "close": "Schließen",
+    "closeLabel": "{{protocol}}-Port {{publicPort}} zu Geräte-Port {{devicePort}} schließen",
+    "visitorAddress": "Der Dienst sieht Besucher als <address>{{address}}</address>, nicht mit ihrer echten IP."
+  },
+  "policy": {
+    "title": "Limits und Berechtigungen",
+    "limits": "Limits",
+    "deviceLimit": "Gerätelimit",
+    "deviceLimitHint": "Leer lassen für kein Limit. Entferne überzählige Geräte, bevor du es senkst.",
+    "deviceLimitHintNew": "Leer lassen für kein Limit.",
+    "expires": "Zugriff endet",
+    "expiresHint": "Deine lokale Zeit. Leer lassen, damit er nie endet.",
+    "expiresPast": "Diese Zeit ist schon vorbei. Der Zugriff endet, sobald du speicherst.",
+    "permissions": "Berechtigungen",
+    "permission": {
+      "addPeople": "Neue Personen hinzufügen",
+      "addOwnDevices": "Eigene Geräte hinzufügen",
+      "deviceToDevice": "Gerät-zu-Gerät-Zugriff und Paare für ihre Geräte ändern",
+      "portForwards": "Öffentliche Internet-Ports zu ihren Geräten öffnen"
+    },
+    "save": "Limits speichern",
+    "appliesToAll": "Gilt für alle ihre Geräte.",
+    "cancelsCodes": "{count, plural, one {Speichern bricht # wartenden Beitrittscode für oder von dieser Person ab.} other {Speichern bricht # wartende Beitrittscodes für oder von dieser Person ab.}}",
+    "cancelsCreated": "Speichern bricht alle Beitrittscodes ab, die {{name}} erstellt hat.",
+    "error": {
+      "limit": "Gib ein Limit von 1 bis 222 ein oder lass das Feld leer.",
+      "expires": "Gib ein gültiges Datum und eine gültige Uhrzeit ein.",
+      "noHours": "Wähle mindestens eine Stunde oder schalte das Stundenlimit aus.",
+      "tooManyRanges": "{count, plural, one {Verwende höchstens # getrennten Zeitbereich in der Woche.} other {Verwende höchstens # getrennte Zeitbereiche in der Woche.}}"
+    }
+  },
+  "hours": {
+    "title": "Wochenzeiten",
+    "limit": "Auf bestimmte Zeiten beschränken",
+    "allWeek": "Zugriff ist zu jeder Zeit erlaubt.",
+    "localTime": "In deiner Zeitzone ({{zone}}). Die Umstellung auf Sommerzeit kann sie um eine Stunde verschieben.",
+    "inexact": "Einige gespeicherte Zeiten beginnen nicht zur vollen Stunde. Beim Bearbeiten des Rasters werden sie auf volle Stunden gerundet.",
+    "cell": "{{day}}, {{hour}}",
+    "toggleDay": "Ganzer {{day}}",
+    "toggleHour": "{{hour}} jeden Tag"
+  },
+  "codes": {
+    "title": "{count, plural, one {Wartet auf Beitritt (#)} other {Wartet auf Beitritt (#)}}",
+    "forPerson": "Gerät für {{name}}",
+    "newPerson": "Neue Person",
+    "newNamed": "{{name}}, neue Person",
+    "severalPeople": "Mehrere neue Personen",
+    "row": "{{role}} · {{uses}} · Läuft ab {{date}}",
+    "singleUse": "Einmalige Verwendung",
+    "usesLeft": "{max, plural, one {{{count}} von # Verwendung übrig} other {{{count}} von # Verwendungen übrig}}",
+    "cancel": "Code abbrechen",
+    "cancelling": "Wird abgebrochen…"
+  },
+  "add": {
+    "whose": {
+      "title": "Welchem Gerät gehört das?",
+      "description": "Jedes Gerät gehört zu einer Person.",
+      "mine": "Meins",
+      "mineHint": "Ein weiteres Telefon oder Computer von dir.",
+      "person": "Jemand, der schon hier ist",
+      "personHint": "Fügt einer Person auf diesem Server ein Gerät hinzu.",
+      "pick": "Person",
+      "option": "{{name}} · {{role}}",
+      "new": "Neue Person",
+      "newHint": "Fügt eine Person mit ihrem ersten Gerät hinzu."
+    },
+    "new": {
+      "name": "Ihr Name",
+      "nameHint": "Wird allen angezeigt, die diesen Server verwalten.",
+      "several": "Mehrere neue Personen werden diesen Code verwenden",
+      "people": "Anzahl der Personen",
+      "peopleHint": "Jede Person gibt beim Beitritt ihren Namen an und wird Mitglied.",
+      "peopleInvalid": "Gib eine ganze Zahl von 2 bis 100 ein.",
+      "nameHintRename": "Wird allen angezeigt, die diesen Server verwalten. Du kannst sie später umbenennen."
+    },
+    "connect": {
+      "title": "Wie wird es sich verbinden?",
+      "app": "SirinVPN-App",
+      "appHint": "Empfohlen. Das Gerät bekommt einen Beitrittscode und erstellt seine eigenen Schlüssel.",
+      "wireguard": "WireGuard-App",
+      "wireguardHint": "Erweitert. Für iPhone, iPad, Mac oder einen Router. Nur Direktes UDP; es kann den Server nicht verwalten."
+    },
+    "forYou": "Für dich",
+    "forPerson": "Für {{name}}",
+    "severalPeople": "mehrere neue Personen",
+    "deviceName": "Gerätename",
+    "deviceNameFixed": "Dieser Server kann sie den Namen beim Beitritt nicht vergeben lassen. Wer den Server verwaltet, kann es später umbenennen.",
+    "lifetime": "Code läuft ab nach",
+    "hours": "{count, plural, one {# Stunde} other {# Stunden}}",
+    "days": "{count, plural, one {# Tag} other {# Tage}}",
+    "uses": "Geräte, die dieser Code hinzufügen kann",
+    "usesHint": "Jedes Gerät tritt mit eigenen Schlüsseln bei. Gerätelimits gelten weiterhin.",
+    "usesInvalid": "Gib eine ganze Zahl von 1 bis 100 ein.",
+    "ownerWarningTitle": "Wer diesen Code verwendet, erhält volle Kontrolle über den Server.",
+    "ownerWarning": "Er fügt ein Besitzer-Gerät hinzu. Teile ihn nur mit dir selbst, privat.",
+    "next": "Weiter",
+    "creating": "Wird erstellt…",
+    "createCode": "Beitrittscode erstellen",
+    "createWireguard": "Konfiguration erstellen",
+    "copyCode": "Code kopieren",
+    "copyFailed": "Der Code konnte nicht kopiert werden. Markiere ihn und kopiere ihn manuell.",
+    "copyFailedAndroid": "Der Code konnte nicht kopiert werden. Nutze stattdessen Beitrittscode anzeigen oder teilen.",
+    "done": "Fertig",
+    "closeUnshared": {
+      "title": "Ohne Teilen des Codes schließen?",
+      "message": "Er kann nicht erneut angezeigt werden. Wenn du ihn nicht kopiert, gescannt oder geteilt hast, brich ihn unter Wartet auf Beitritt ab und füge das Gerät erneut hinzu.",
+      "action": "Schließen"
+    },
+    "handover": {
+      "title": "Übergeben"
+    },
+    "code": {
+      "instructionSelf": "Öffne auf deinem anderen Gerät SirinVPN, wähle Beitrittscode verwenden und scanne dann diesen QR-Code oder füge den Code ein.",
+      "instructionSelfAndroid": "Öffne auf deinem anderen Gerät SirinVPN, wähle Beitrittscode verwenden und scanne oder füge den Code ein, den du von hier teilst.",
+      "instructionPerson": "Schicke ihn privat an {{name}}. Die Person öffnet SirinVPN, wählt Beitrittscode verwenden und scannt oder fügt ihn ein.",
+      "instructionSeveral": "Schicke ihn privat an die Personen, die beitreten. Jede öffnet SirinVPN, wählt Beitrittscode verwenden und scannt oder fügt ihn ein.",
+      "once": "Dieser Code wird nur einmal angezeigt",
+      "secret": "Jede Person mit ihm kann beitreten, bis er verwendet, abgebrochen wird oder am {{date}} abläuft."
+    },
+    "wireguard": {
+      "instruction": "Öffne auf dem Gerät die WireGuard-App und scanne diesen QR-Code oder importiere die gespeicherte Datei.",
+      "secret": "Dieser QR-Code und diese Datei enthalten den privaten Schlüssel des Geräts. Wer sie hat, kann dieses VPN nutzen. Lösche die Datei nach dem Import.",
+      "limits": "Ein WireGuard-Gerät verbindet sich nur über Direktes UDP und kann den Server nicht verwalten oder Adressänderungen folgen.",
+      "file": "Konfigurationsdatei",
+      "fileHint": "Optional. Speichere eine .conf-Datei für einen Router oder um sie später zu importieren.",
+      "fileType": "WireGuard-Konfiguration",
+      "chooseFile": "Datei wählen",
+      "noFile": "Keine Datei; nur QR-Code",
+      "saved": "Gespeichert unter <path>{{path}}</path>"
+    },
+    "state": {
+      "waiting": "Warte, bis das Gerät beitritt…",
+      "joined": "{count, plural, one {{{name}} ist beigetreten.} other {{{name}} ist beigetreten.}}",
+      "connected": "Das Gerät hat sich verbunden.",
+      "expired": "Der Code ist abgelaufen, bevor ihn jemand verwendet hat.",
+      "cancelled": "Der Code wurde abgebrochen.",
+      "ended": "Der Code wartet nicht mehr: Er wurde verwendet oder abgebrochen."
+    }
+  },
+  "share": {
+    "showInvitation": "Beitrittscode anzeigen oder teilen",
+    "showRecovery": "Wiederherstellungsschlüssel anzeigen oder teilen",
+    "qrNote": "Scanne ihn, statt den Code zu kopieren.",
+    "code": "Code",
+    "codeLabel": "Beitrittscode",
+    "enlarge": "QR-Code vergrößern",
+    "enlargeInvitation": "QR-Code des Beitrittscodes vergrößern",
+    "enlargeRecovery": "QR-Code des Wiederherstellungsschlüssels vergrößern",
+    "scanInvitation": "Beitrittscode scannen",
+    "scanRecovery": "Wiederherstellungsschlüssel scannen",
+    "closeQr": "QR-Code schließen",
+    "copyRecovery": "Wiederherstellungsschlüssel kopieren",
+    "altInvitation": "QR-Code des Beitrittscodes",
+    "altInvitationEnlarged": "Vergrößerter QR-Code des Beitrittscodes",
+    "altRecovery": "QR-Code des Wiederherstellungsschlüssels",
+    "altRecoveryEnlarged": "Vergrößerter QR-Code des Wiederherstellungsschlüssels",
+    "altWireguard": "QR-Code der WireGuard-Konfiguration",
+    "copyCode": "Code kopieren"
+  },
+  "name": {
+    "save": "Namen speichern",
+    "empty": "Gib einen Namen ein.",
+    "tooLong": "{count, plural, one {Verwende höchstens # Zeichen.} other {Verwende höchstens # Zeichen.}}",
+    "invalid": "Entferne Zeilenumbrüche und andere Steuerzeichen."
+  },
+  "owner": {
+    "title": "{{name}} zum Besitzer machen",
+    "open": "Zum Besitzer machen…",
+    "effect": "{{name}} erhält volle Kontrolle über den Server. Du wirst Admin, und das kann von hier aus nicht rückgängig gemacht werden.",
+    "device": "Gerät, das Besitzer-Gerät wird",
+    "wireguardExcluded": "WireGuard-Geräte können den Server nicht verwalten, daher sind sie nicht aufgeführt.",
+    "codesWaiting": "{count, plural, one {# Beitrittscode muss zuerst abgebrochen werden.} other {# Beitrittscodes müssen zuerst abgebrochen werden.}}",
+    "cancelCode": "Code für {{name}} abbrechen",
+    "confirm": "{{name}} zum Besitzer machen"
+  },
+  "confirm": {
+    "removeDevice": {
+      "title": "{{name}} entfernen?",
+      "message": "Seine Schlüssel werden widerrufen, und sein VPN- und Verwaltungszugriff endet sofort. Um zurückzukommen, braucht es einen neuen Beitrittscode.",
+      "action": "Gerät entfernen"
+    },
+    "removeThis": {
+      "title": "Dieses Gerät entfernen?",
+      "message": "Diese App verliert sofort den Zugriff auf {{server}}. Um zurückzukommen, braucht sie einen neuen Beitrittscode von einem anderen Gerät.",
+      "action": "Dieses Gerät entfernen"
+    },
+    "removePerson": {
+      "title": "{{name}} entfernen?",
+      "message": "Löscht {{name}}, {{devices}}, {{forwards}}, {{pairs}} und {{codes}}. Das kann nicht rückgängig gemacht werden.",
+      "action": "Person entfernen"
+    },
+    "suspend": {
+      "title": "{{name}} pausieren?",
+      "message": "{count, plural, one {# Gerät verliert den Zugriff, bis du die Person fortsetzt. Wartende Beitrittscodes und Schlüsselwechsel werden abgebrochen.} other {# Geräte verlieren den Zugriff, bis du die Person fortsetzt. Wartende Beitrittscodes und Schlüsselwechsel werden abgebrochen.}}",
+      "action": "Pausieren"
+    },
+    "resume": {
+      "title": "{{name}} fortsetzen?",
+      "message": "Ihre Geräte erhalten den Zugriff mit den gespeicherten Einstellungen zurück. Abgebrochene Beitrittscodes werden nicht wiederhergestellt.",
+      "action": "Fortsetzen"
+    },
+    "role": {
+      "title": "{{name}} zu {{role}} machen?",
+      "toAdmin": "Kann Personen hinzufügen und Mitglieder verwalten.",
+      "toMember": "Behält seine Geräte, verwaltet aber nichts, außer es werden Berechtigungen vergeben.",
+      "toAdminCancels": "{count, plural, one {Kann Personen hinzufügen und Mitglieder verwalten. # wartender Beitrittscode wird zuerst abgebrochen.} other {Kann Personen hinzufügen und Mitglieder verwalten. # wartende Beitrittscodes werden zuerst abgebrochen.}}",
+      "toMemberCancels": "{count, plural, one {Behält seine Geräte, verwaltet aber nichts, außer es werden Berechtigungen vergeben. # wartender Beitrittscode wird zuerst abgebrochen.} other {Behält seine Geräte, verwaltet aber nichts, außer es werden Berechtigungen vergeben. # wartende Beitrittscodes werden zuerst abgebrochen.}}",
+      "action": "Rolle ändern"
+    },
+    "limits": {
+      "title": "Limits für {{name}} speichern?",
+      "message": "{count, plural, one {# wartender Beitrittscode für oder von dieser Person wird abgebrochen.} other {# wartende Beitrittscodes für oder von dieser Person werden abgebrochen.}}",
+      "action": "Speichern"
+    },
+    "makeOwner": {
+      "title": "{{name}} zum Besitzer machen?",
+      "message": "{{device}} ({{fingerprint}}) und ihre anderen SirinVPN-Geräte erhalten volle Kontrolle. Dieses Gerät wird ein Admin-Gerät.",
+      "action": "Zum Besitzer machen"
+    },
+    "cancelCode": {
+      "title": "„{{name}}“ abbrechen?",
+      "message": "Der Code funktioniert sofort nicht mehr. Geräte, die bereits beigetreten sind, behalten ihren Zugriff.",
+      "action": "Code abbrechen"
+    },
+    "openPort": {
+      "title": "Öffentlichen Port {{publicPort}} öffnen?",
+      "message": "{{protocol}}-Port {{publicPort}} wird an {{device}}, Port {{devicePort}} weitergeleitet. Jede Person im Internet kann versuchen, ihn zu erreichen.",
+      "action": "Port öffnen"
+    },
+    "closePort": {
+      "title": "{{protocol}}-Port {{publicPort}} schließen?",
+      "message": "Verbindungen darüber enden sofort.",
+      "action": "Port schließen"
+    },
+    "removePair": {
+      "title": "Dieses Paar von {{name}} entfernen?",
+      "message": "Die beiden Geräte können einander nicht mehr erreichen, außer beide haben den Gerät-zu-Gerät-Zugriff eingeschaltet.",
+      "action": "Paar entfernen"
+    }
+  },
+  "notice": {
+    "abandoned": "Die Änderung wurde nicht gesendet: Die Verbindung zum Server hat sich geändert. Versuche es erneut.",
+    "personRenamed": "In „{{name}}“ umbenannt.",
+    "deviceRenamed": "In „{{name}}“ umbenannt.",
+    "deviceRemoved": "{{name}} wurde entfernt.",
+    "personRemoved": "{{name}} wurde entfernt.",
+    "suspended": "{{name}} ist pausiert.",
+    "resumed": "{{name}} ist wieder aktiv.",
+    "roleChanged": "{{name}} ist jetzt {{role}}.",
+    "ownerChanged": "{{name}} ist jetzt der Besitzer. Dieses Gerät ist ein Admin-Gerät.",
+    "limitsSaved": "Limits für {{name}} gespeichert.",
+    "codeCancelled": "Beitrittscode abgebrochen.",
+    "peerOn": "{{name}} hat jetzt Gerät-zu-Gerät-Zugriff.",
+    "peerOff": "{{name}} hat keinen Gerät-zu-Gerät-Zugriff mehr.",
+    "pairAdded": "Mit {{name}} gekoppelt.",
+    "pairRemoved": "Paar entfernt.",
+    "networksSaved": "Lokale Netzwerke auf {{name}} gespeichert.",
+    "networksCleared": "{{name}} teilt keine lokalen Netzwerke mehr.",
+    "portOpened": "Port {{port}} ist offen.",
+    "portClosed": "Port {{port}} ist geschlossen."
+  },
+  "join": {
+    "codeAccepted": "Beitrittscode akzeptiert",
+    "codeEntered": "Beitrittscode eingegeben",
+    "changeCode": "Code ändern",
+    "rejected": {
+      "expired": "Dieser Beitrittscode ist abgelaufen. Bitte um einen neuen.",
+      "used": "Dieser Beitrittscode wurde bereits verwendet oder abgebrochen. Bitte um einen neuen.",
+      "invalid": "Das ist kein gültiger Beitrittscode. Prüfe, ob du den ganzen Code kopiert hast, oder bitte um einen neuen."
+    },
+    "ownerDevice": "Fügt dieses Gerät {{name}} hinzu, dem Besitzer.",
+    "ownerPower": "Besitzer-Geräte haben volle Kontrolle über den Server, jede Person und jedes Gerät. Tritt nur bei, wenn du das erwartet hast.",
+    "addsDevice": "Fügt dieses Gerät {{name}} hinzu.",
+    "namedPerson": "Du trittst als <strong>{{name}}</strong> bei.",
+    "personName": "Dein Name",
+    "personNameHint": "Wird allen angezeigt, die diesen Server verwalten.",
+    "deviceName": "Name für dieses Gerät",
+    "deviceNameHint": "Zum Beispiel das Modell des Telefons oder Computers. Du kannst es später umbenennen.",
+    "presetDevice": "Dieses Gerät heißt <strong>{{name}}</strong>.",
+    "renameLater": "Es kann später unter Geräte umbenannt werden."
+  },
+  "error": {
+    "load": "Personen und Geräte konnten nicht vom Server geladen werden.",
+    "features": "Es konnte nicht geprüft werden, was dieser Server unterstützt.",
+    "renamePerson": "Die Person konnte nicht umbenannt werden. Versuche es erneut.",
+    "renameDevice": "Das Gerät konnte nicht umbenannt werden. Versuche es erneut.",
+    "removeDevice": "Das Gerät konnte nicht entfernt werden. Versuche es erneut.",
+    "removePerson": "Die Person konnte nicht entfernt werden. Aktualisiere, um ihren aktuellen Zustand zu sehen.",
+    "suspension": "Das Pausieren konnte nicht geändert werden. Aktualisiere, um ihren aktuellen Zustand zu sehen.",
+    "role": "Die Rolle konnte nicht geändert werden. Versuche es erneut.",
+    "makeOwner": "Der Besitzer konnte nicht geändert werden. Versuche es erneut.",
+    "limits": "Die Limits konnten nicht gespeichert werden. Versuche es erneut.",
+    "peer": "Der Gerät-zu-Gerät-Zugriff konnte nicht geändert werden. Versuche es erneut.",
+    "pair": "Das Paar konnte nicht geändert werden. Versuche es erneut.",
+    "networks": "Die lokalen Netzwerke konnten nicht gespeichert werden. Versuche es erneut.",
+    "openPort": "Der Port konnte nicht geöffnet werden. Versuche es erneut.",
+    "closePort": "Der Port konnte nicht geschlossen werden. Versuche es erneut.",
+    "cancelCode": "Der Beitrittscode konnte nicht abgebrochen werden. Versuche es erneut.",
+    "createCode": "Der Beitrittscode konnte nicht erstellt werden. Versuche es erneut.",
+    "wireguard": "Das WireGuard-Gerät konnte nicht hinzugefügt werden. Versuche es erneut."
+  }
+}

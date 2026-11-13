@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-set-vps-backup-schedule"
+description = "Enables the set_vps_backup_schedule command without any pre-configured scope."
+commands.allow = ["set_vps_backup_schedule"]
+
+[[permission]]
+identifier = "deny-set-vps-backup-schedule"
+description = "Denies the set_vps_backup_schedule command without any pre-configured scope."
+commands.deny = ["set_vps_backup_schedule"]

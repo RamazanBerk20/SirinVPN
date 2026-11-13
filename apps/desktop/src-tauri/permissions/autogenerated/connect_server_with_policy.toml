@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-connect-server-with-policy"
+description = "Enables the connect_server_with_policy command without any pre-configured scope."
+commands.allow = ["connect_server_with_policy"]
+
+[[permission]]
+identifier = "deny-connect-server-with-policy"
+description = "Denies the connect_server_with_policy command without any pre-configured scope."
+commands.deny = ["connect_server_with_policy"]

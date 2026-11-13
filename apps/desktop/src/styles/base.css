@@ -1,5 +1,7 @@
 :root {
-  --font-ui: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --dir: 1; /* -1 in RTL: sign for translateX slides */
+  /* Inter covers Latin/Cyrillic/Greek; the rest falls to native fonts per platform. */
+  --font-ui: "Inter Variable", "Segoe UI", Tahoma, "Noto Sans Arabic", "Noto Naskh Arabic", "DejaVu Sans", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
   font-family: var(--font-ui);
   color: var(--text);
@@ -96,3 +98,61 @@ textarea:focus-visible {
   filter: drop-shadow(0 0 13px color-mix(in srgb, var(--accent) 34%, transparent));
 }
 
+
+/* RTL support: direction sign for slides, mirroring and bidi helpers. */
+:root[dir="rtl"] {
+  --dir: -1;
+}
+/* Independent `scale` composes with existing `transform: rotate(...)` on chevrons/arrows. */
+:root[dir="rtl"] .mirror-rtl {
+  scale: -1 1;
+}
+.bidi-isolate {
+  unicode-bidi: isolate;
+}
+/* The backend's own (English) text under a translated error: secondary, on its own line. */
+.error-detail {
+  display: block;
+  margin-block-start: 2px;
+  font-size: 0.86em;
+  font-weight: 400;
+  opacity: 0.85;
+  unicode-bidi: isolate;
+}
+/* Code-like values (IPs, keys, fingerprints, commands) stay LTR inside RTL text. */
+.mono,
+code,
+kbd,
+samp,
+.fingerprint-value,
+.secret-code-output {
+  direction: ltr;
+  unicode-bidi: isolate;
+  text-align: match-parent;
+}
+
+/* Per-script native font stacks (nothing bundled); Inter still covers Latin runs. */
+:root:lang(zh),
+:root:lang(zh-Hans) {
+  --font-ui: "Inter Variable", "Microsoft YaHei UI", "Microsoft YaHei", "Noto Sans CJK SC", "Noto Sans SC", "Source Han Sans SC", "WenQuanYi Micro Hei", sans-serif;
+}
+:root:lang(ja) {
+  --font-ui: "Inter Variable", "Yu Gothic UI", "Meiryo UI", "Meiryo", "Noto Sans CJK JP", "Noto Sans JP", "Source Han Sans JP", "IPAGothic", sans-serif;
+}
+:root:lang(ko) {
+  --font-ui: "Inter Variable", "Malgun Gothic", "Noto Sans CJK KR", "Noto Sans KR", "Source Han Sans KR", "NanumGothic", sans-serif;
+}
+:root:lang(ar) {
+  --font-ui: "Inter Variable", "Segoe UI", Tahoma, "Noto Sans Arabic", "Noto Naskh Arabic", "DejaVu Sans", system-ui, sans-serif;
+}
+/* Letter-spacing breaks Arabic joining and is unwanted on CJK. */
+html:root:lang(ar) *,
+html:root:lang(zh) *,
+html:root:lang(zh-Hans) *,
+html:root:lang(ja) *,
+html:root:lang(ko) * {
+  letter-spacing: 0;
+}
+html:root:lang(ar) body {
+  line-height: 1.7;
+}

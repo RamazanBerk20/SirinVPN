@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { useConnectionPreferences } from "./useConnectionPreferences";
 import type { MaintenanceOperation } from "./MaintenanceReview";
 import type { StatusFreshness } from "../../hooks/useDesktopStatus";
@@ -15,7 +15,9 @@ import {
 } from "../../types";
 import { errorMessage } from "../../lib/errors";
 import { t } from "../../i18n";
-import { clearMembershipCache } from "../devices/membershipCache";
+import { disconnectTunnel, runCommand, usePendingCommand } from "./connectionCommands";
+import { connectionView } from "./connectionView";
+import { workspaceDialogReducer, type DialogKind, type RepairIntent } from "./workspaceDialog";
 
 export function useServerWorkspace({
   profile,
@@ -25,7 +27,6 @@ export function useServerWorkspace({
   onRefresh,
   onAccessChanged,
   onRemoved,
-  onConnectionOperation,
 }: {
   profile: ServerProfile;
   localStatus: LocalTunnelStatus;
@@ -35,46 +36,35 @@ export function useServerWorkspace({
   onRefresh: (status?: LocalTunnelStatus) => Promise<void>;
   onAccessChanged: () => Promise<void>;
   onRemoved: () => Promise<void>;
-  /** Lets the sidebar name a connect or disconnect before the tunnel reports it. */
-  onConnectionOperation?: (operation: "connecting" | "disconnecting" | null) => void;
 }) {
-  const [busy, setBusy] = useState(false);
-  const [connectionOperation, setConnectionOperation] = useState<"connecting" | "disconnecting" | null>(null);
+  const pending = usePendingCommand();
+  const view = connectionView(localStatus, profile.id, pending);
+  // One tunnel per device: any command in flight blocks every connect control.
+  const busy = pending !== null;
+  const connectionOperation = view.phase === "starting" && pending ? "connecting" as const : view.phase === "stopping" ? "disconnecting" as const : null;
   const connectionGeneration = useRef(0);
   useEffect(() => () => { ++connectionGeneration.current; }, []);
-  useEffect(() => {
-    onConnectionOperation?.(connectionOperation);
-    return () => onConnectionOperation?.(null);
-  }, [connectionOperation, onConnectionOperation]);
-  const [maintenanceReview, setMaintenanceReview] =
-    useState<MaintenanceOperation | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [diagnostics, setDiagnostics] = useState<DiagnosticReport | null>(null);
-  const [diagnosticsOpen, setDiagnosticsOpenState] = useState(false);
-  const diagnosticGeneration = useRef(0);
-  const setDiagnosticsOpen = useCallback((open: boolean) => {
-    if (!open) { diagnosticGeneration.current += 1; setDiagnostics(null); }
-    setDiagnosticsOpenState(open);
+  const [dialog, dispatchDialog] = useReducer(workspaceDialogReducer, null);
+  const diagnosticRequest = useRef(0);
+  useEffect(() => { dispatchDialog({ type: "reset" }); }, [profile.id]);
+  const dialogs = useMemo(() => {
+    const flag = (kind: "troubleshoot" | "backup" | "vpsBackup" | "vpsRestore" | "vpsBackupSchedule" | "rotation" | "endpointUpdate" | "remove") =>
+      (open: boolean) => dispatchDialog(open ? { type: "open", dialog: { kind } } : { type: "close", kind });
+    return {
+      setTroubleshootOpen: flag("troubleshoot"), setBackupOpen: flag("backup"), setVpsBackupOpen: flag("vpsBackup"),
+      setVpsRestoreOpen: flag("vpsRestore"), setVpsBackupScheduleOpen: flag("vpsBackupSchedule"), setRotationOpen: flag("rotation"),
+      setEndpointUpdateOpen: flag("endpointUpdate"), setRemoveOpen: flag("remove"),
+      setMaintenanceReview: (operation: MaintenanceOperation | null) =>
+        dispatchDialog(operation ? { type: "open", dialog: { kind: "review", operation } } : { type: "close", kind: "review" }),
+      openRepair: (intent: RepairIntent) => dispatchDialog({ type: "open", dialog: { kind: "repair", intent } }),
+      setRepairOpen: (open: boolean) => { if (!open) dispatchDialog({ type: "close", kind: "repair" }); },
+      setDiagnosticsOpen: (open: boolean) => { if (!open) dispatchDialog({ type: "close", kind: "diagnostics" }); },
+    };
   }, []);
-  useEffect(() => {
-    diagnosticGeneration.current += 1;
-    setDiagnostics(null); setDiagnosticsOpenState(false);
-    return () => { diagnosticGeneration.current += 1; };
-  }, [profile.id]);
-  const [troubleshootOpen, setTroubleshootOpen] = useState(false);
-  const [backupOpen, setBackupOpen] = useState(false);
-  const [vpsBackupOpen, setVpsBackupOpen] = useState(false);
-  const [vpsRestoreOpen, setVpsRestoreOpen] = useState(false);
-  const [vpsBackupScheduleOpen, setVpsBackupScheduleOpen] = useState(false);
-  const [repairIntent, setRepairIntent] = useState<"repair" | "update" | "dns" | "security">(
-    "repair",
-  );
-  const [repairOpen, setRepairOpen] = useState(false);
-  const [rotationOpen, setRotationOpen] = useState(false);
-  const [endpointUpdateOpen, setEndpointUpdateOpen] = useState(false);
+  const is = (kind: DialogKind) => dialog?.kind === kind;
   const [rotationPending, setRotationPending] = useState(true);
   const [presharedKeyMissing, setPresharedKeyMissing] = useState(false);
-  const [removeOpen, setRemoveOpen] = useState(false);
   const preferences = useConnectionPreferences(profile.id);
   const connectionPolicy = preferences.draft.policy;
   const selectedTransport = preferences.draft.transport;
@@ -97,11 +87,7 @@ export function useServerWorkspace({
   const setIncludedRoutesDraft = preferences.setRoutesText;
   const connected =
     localStatus.server_id === profile.id && localStatus.state === "connected";
-  const reconnecting =
-    localStatus.server_id === profile.id &&
-    !localStatus.waiting_for_user &&
-    localStatus.auto_reconnect_enabled &&
-    (localStatus.state === "connecting" || localStatus.state === "degraded");
+  const reconnecting = view.phase === "reconnecting";
   const protectedConnection =
     localStatus.state !== "unknown" &&
     localStatus.server_id === profile.id &&
@@ -182,120 +168,86 @@ export function useServerWorkspace({
       );
       return;
     }
-    setBusy(true);
     const request = ++connectionGeneration.current;
-    setConnectionOperation(active ? "disconnecting" : "connecting");
     setError(null);
     try {
-      if (active) clearMembershipCache();
-      const status = active ? await api.disconnect() : await api.connectWithPolicy(
+      const status = active ? await disconnectTunnel(profile.id) : await runCommand("connect", profile.id, () => api.connectWithPolicy(
           profile.id,
           preferences.saved ?? preferences.draft,
-        );
+        ));
       if (request !== connectionGeneration.current) return;
       await onRefresh(status);
     } catch (reason) {
       if (request !== connectionGeneration.current) return;
       setError(errorMessage(reason, t("maintenance.workspace.error.connectionChange")));
       await onRefresh();
-    } finally {
-      if (request === connectionGeneration.current) { setBusy(false); setConnectionOperation(null); }
     }
   };
 
   const cancelConnection = async () => {
     if (connectionOperation === "disconnecting") return;
     const request = ++connectionGeneration.current;
-    setBusy(true); setConnectionOperation("disconnecting"); setError(null);
-    clearMembershipCache();
+    setError(null);
     try {
-      const status = await api.disconnect();
+      const status = await disconnectTunnel(profile.id);
       if (request === connectionGeneration.current) await onRefresh(status);
     } catch (reason) {
       if (request === connectionGeneration.current) {
         setError(errorMessage(reason, t("maintenance.workspace.error.stopUnconfirmed")));
         await onRefresh();
       }
-    } finally {
-      if (request === connectionGeneration.current) { setBusy(false); setConnectionOperation(null); }
     }
   };
 
   const resume = async () => {
     if (busy || !localStatus.waiting_for_user) return;
-    setBusy(true);
     setError(null);
     try {
-      await api.resume(profile.id);
+      await runCommand("resume", profile.id, async () => {
+        try { await api.resume(profile.id); } finally { await onRefresh(); }
+      });
     } catch (reason) {
-      setError(
-        errorMessage(reason, t("maintenance.workspace.error.resume")),
-      );
-    } finally {
-      await onRefresh();
-      setBusy(false);
+      setError(errorMessage(reason, t("maintenance.workspace.error.resume")));
     }
   };
 
-  const runDiagnostics = async () => {
-    const request = ++diagnosticGeneration.current;
-    setDiagnosticsOpen(true);
-    setDiagnostics(null);
-    try {
-      const report = await api.diagnostics(profile.id);
-      if (request === diagnosticGeneration.current) setDiagnostics(report);
-    } catch {
-      if (request !== diagnosticGeneration.current) return;
-      setDiagnostics({
-        api_version: "v1",
-        checks: [
-          {
-            code: "local_diagnostics_unavailable",
-            label: t("maintenance.diagnostics.title"),
-            level: "fail",
-            message: t("maintenance.workspace.error.diagnostics"),
-          },
-        ],
-      });
-    }
-  };
+  const runDiagnostics = useCallback(async () => {
+    const request = ++diagnosticRequest.current;
+    dispatchDialog({ type: "open", dialog: { kind: "diagnostics", run: { state: "running", request } } });
+    let report: DiagnosticReport | null = null;
+    try { report = await api.diagnostics(profile.id); } catch { report = null; }
+    dispatchDialog({ type: "diagnosticsFinished", request, report });
+  }, [profile.id]);
+  const run = dialog?.kind === "diagnostics" ? dialog.run : null;
 
   return {
+    view,
+    pending,
     connectionOperation,
     cancelConnection,
-    maintenanceReview,
-    setMaintenanceReview,
+    dialog,
+    ...dialogs,
+    maintenanceReview: dialog?.kind === "review" ? dialog.operation : null,
     busy,
     preferences,
     error,
     clearConnectionError: () => setError(null),
-    diagnostics,
-    diagnosticsOpen,
-    setDiagnosticsOpen,
-    troubleshootOpen,
-    setTroubleshootOpen,
-    backupOpen,
-    setBackupOpen,
-    vpsBackupOpen,
-    setVpsBackupOpen,
-    vpsRestoreOpen,
-    setVpsRestoreOpen,
-    vpsBackupScheduleOpen,
-    setVpsBackupScheduleOpen,
-    repairIntent,
-    setRepairIntent,
-    repairOpen,
-    setRepairOpen,
-    rotationOpen,
-    setRotationOpen,
-    endpointUpdateOpen,
-    setEndpointUpdateOpen,
+    diagnostics: run?.state === "done" ? run.report : null,
+    diagnosticsFailed: run?.state === "failed",
+    diagnosticsOpen: is("diagnostics"),
+    troubleshootOpen: is("troubleshoot"),
+    backupOpen: is("backup"),
+    vpsBackupOpen: is("vpsBackup"),
+    vpsRestoreOpen: is("vpsRestore"),
+    vpsBackupScheduleOpen: is("vpsBackupSchedule"),
+    repairIntent: dialog?.kind === "repair" ? dialog.intent : null,
+    rotationOpen: is("rotation"),
+    endpointUpdateOpen: is("endpointUpdate"),
     rotationPending,
     presharedKeyMissing,
     rotationPendingConfirmed,
     setPresharedKeyMissing,
-    removeOpen,
-    setRemoveOpen,
+    removeOpen: is("remove"),
     connectionPolicy,
     setConnectionPolicy,
     selectedTransport,

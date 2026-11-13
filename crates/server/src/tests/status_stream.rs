@@ -32,6 +32,7 @@ async fn stream_delivers_repeated_authorized_samples_and_closes_on_revocation() 
         transport_peers: AuthorizedPeers::default(),
         transport_activity: ActiveTransportRegistry::default(),
         speed_test: Default::default(),
+        throttle: Default::default(),
     };
     let caller = CallerIdentity {
         certificate_fingerprint: certificate_fingerprint(&owner.public.management_certificate_pem)
@@ -75,4 +76,48 @@ async fn stream_delivers_repeated_authorized_samples_and_closes_on_revocation() 
             .unwrap()
             .is_none()
     );
+}
+
+#[tokio::test]
+async fn every_reader_shares_one_host_sampler() {
+    let directory = tempfile::tempdir().unwrap();
+    let paths = ServerPaths::under(directory.path());
+    let owner = LocalIdentity::generate("Feed owner").unwrap();
+    initialize(
+        &paths,
+        "Feed test",
+        &owner.public.management_certificate_pem,
+        ServerId::new(),
+        &owner.public.wireguard_public_key,
+        51_820,
+    )
+    .unwrap();
+    let configuration = load_configuration(&paths).unwrap();
+    let feed = super::super::status_stream::StatusFeed::default();
+    let mut readers: Vec<_> = (0..50).map(|_| feed.subscribe(&configuration)).collect();
+    let mut samples = Vec::new();
+    for reader in &mut readers {
+        samples.push(
+            reader
+                .wait_for(Option::is_some)
+                .await
+                .unwrap()
+                .clone()
+                .unwrap(),
+        );
+    }
+    // Fifty subscribers and a REST read cost one host reading, not fifty-one.
+    let rest = feed.latest(&configuration).await;
+    assert!(
+        samples
+            .iter()
+            .all(|sample| Arc::ptr_eq(sample, &samples[0]))
+    );
+    assert!(Arc::ptr_eq(&rest, &samples[0]));
+    assert_eq!(rest.status.server_name, "Feed test");
+    // The task stops once nobody listens, and a later reader starts a fresh one.
+    drop(readers);
+    tokio::time::sleep(super::super::status_stream::STATUS_SAMPLE_INTERVAL * 3).await;
+    let later = feed.latest(&configuration).await;
+    assert!(!Arc::ptr_eq(&later, &rest));
 }

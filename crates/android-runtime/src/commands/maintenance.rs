@@ -29,6 +29,11 @@ pub fn accepts(command: &str) -> bool {
             | "wait_hetzner_server"
             | "cancel_hetzner_wait"
             | "delete_hetzner_server"
+            | "find_hetzner_server"
+            | "install_transaction_status"
+            | "resolve_install_transaction"
+            | "abandon_install_transaction"
+            | "plan_server_operation"
             | "vps_backup_schedules"
             | "set_vps_backup_schedule"
             | "disable_vps_backup_schedule"
@@ -136,6 +141,141 @@ fn owner(runtime: &Runtime, input: &Value) -> Result<ServerProfile> {
     );
     Ok(p)
 }
+/// One journal file per VPS host, beside the path the CLI and desktop use.
+pub(super) fn journal(runtime: &Runtime) -> TransactionJournal {
+    TransactionJournal::new(
+        runtime
+            .paths
+            .configuration_directory
+            .join("vps-transaction.json"),
+    )
+}
+/// Every Owner maintenance operation asks the shared rules before it starts.
+pub(super) fn ready(
+    runtime: &Runtime,
+    p: &ServerProfile,
+    operation: OwnerMaintenance,
+) -> Result<()> {
+    let policy = preferences(runtime)
+        .get(p.id)
+        .map_err(anyhow::Error::msg)?
+        .policy;
+    let state = OwnerDeviceState {
+        role: p.role,
+        disconnected: runtime.platform.require_idle().is_ok(),
+        kill_switch_enabled: policy.kill_switch,
+        auto_reconnect_enabled: policy.automatic_reconnect,
+        pending_key_rotation: sirinvpn_core::has_pending_key_rotation(&runtime.paths, p.id)?,
+        unresolved_transaction: journal(runtime).blocks_server(p)?,
+    };
+    owner_maintenance_ready(operation, &state)
+        .map_err(|blockers| rules::maintenance_blocked(&blockers).into())
+}
+fn provision_checkpoint(host: &str, port: impl std::fmt::Display, pin: &str) -> String {
+    reference(&format!("{host}:{port}:{pin}"), "provision")
+}
+fn install_request(
+    runtime: &Runtime,
+    input: &Value,
+    server_id: ServerId,
+    identity: sirinvpn_core::PublicIdentity,
+) -> Result<InstallRequest> {
+    Ok(InstallRequest {
+        server_id,
+        server_name: text(input, "name")?.to_owned(),
+        target: target(runtime, input, text(input, "host")?)?,
+        server_binary: payload(runtime),
+        identity,
+        identity_reference: server_id.to_string(),
+        transport: serde_json::from_value(input.get("transport").cloned().unwrap_or(json!({})))?,
+        dns_upstream: serde_json::from_value(input["dns_upstream"].clone())?,
+        private_dns_records: serde_json::from_value(input["private_dns_records"].clone())?,
+        nat64_prefix: input["nat64_prefix"]
+            .as_str()
+            .map(sirinvpn_installer::parse_nat64_prefix)
+            .transpose()?,
+        replace_existing_installation: input["replace_existing_installation"]
+            .as_bool()
+            .unwrap_or(false),
+        enable_security_updates: false,
+    })
+}
+/// After a lost commit reply: the profile the VPS confirmed, or the error to show.
+/// Nothing is deleted unless the VPS confirms the rollback.
+fn settle_lost_reply(runtime: &Runtime, target: &SshTarget) -> Result<ServerProfile> {
+    match rules::settle(Provisioner::resolve_transaction(target, &journal(runtime))) {
+        rules::Settlement::Committed(profile) => Ok(*profile),
+        rules::Settlement::RolledBack => Err(rules::rolled_back().into()),
+        rules::Settlement::Unknown(reason) => {
+            Err(rules::outcome_unknown(&target.host, &reason).into())
+        }
+    }
+}
+/// Saves a profile the VPS confirmed: merged into the saved one, else a new install.
+fn save_committed(runtime: &Runtime, committed: &ServerProfile) -> Result<ServerProfile> {
+    let store = runtime.paths.profile_store();
+    match store.update(committed.id, |current| {
+        rules::merge_committed(current, committed);
+        Ok(current.clone())
+    }) {
+        Err(sirinvpn_core::ProfileStoreError::NotFound) => {
+            store.upsert(committed.clone())?;
+            Ok(committed.clone())
+        }
+        saved => Ok(saved?),
+    }
+}
+/// A dry run goes back to the UI: never with a secret used for it.
+fn plan_output(plan: InstallPlan, ssh: &SshTarget, input: &Value) -> Result<Value> {
+    let value = encode(plan)?;
+    let mut secrets: Vec<&str> = input["backup_password"].as_str().into_iter().collect();
+    secrets.extend(ssh.sudo_password.as_deref().map(String::as_str));
+    match &ssh.authentication {
+        SshAuthentication::Password(password) => secrets.push(password),
+        SshAuthentication::PrivateKeyMemory {
+            private_key_pem,
+            passphrase,
+        } => {
+            secrets.push(private_key_pem);
+            secrets.extend(passphrase.as_deref().map(String::as_str));
+        }
+        _ => {}
+    }
+    rules::ensure_no_secrets(&value, &secrets)?;
+    Ok(value)
+}
+fn staging(runtime: &Runtime) -> Result<(tempfile::TempDir, std::path::PathBuf)> {
+    let staging = tempfile::Builder::new()
+        .prefix("encrypted-transfer-")
+        .tempdir_in(&runtime.paths.configuration_directory)?;
+    let path = staging.path().join("transfer.sirvps");
+    Ok((staging, path))
+}
+fn hetzner_key(runtime: &Runtime, name: &str) -> Result<Zeroizing<String>> {
+    Ok(Zeroizing::new(String::from_utf8(
+        runtime
+            .platform
+            .blob(&reference(name, "hetzner"))?
+            .context("The new server’s SSH key is missing")?
+            .to_vec(),
+    )?))
+}
+/// Drops a Hetzner creation record and its login key (installed or deleted).
+fn forget_hetzner(runtime: &Runtime, name: &str) -> Result<()> {
+    HetznerProvision::forget(&runtime.paths.configuration_directory, name)?;
+    runtime.platform.delete_blob(&reference(name, "hetzner"))
+}
+/// SirinVPN now runs on `host`: a Hetzner creation that ended there is finished.
+fn forget_installed_hetzner(runtime: &Runtime, host: &str) {
+    let pending =
+        HetznerProvision::pending(&runtime.paths.configuration_directory).unwrap_or_default();
+    for provision in pending {
+        if matches!(&provision.phase, HetznerPhase::Ready { ready, .. } if ready.ipv4.to_string() == host)
+        {
+            let _ = forget_hetzner(runtime, &provision.name);
+        }
+    }
+}
 fn schedule_status(runtime: &Runtime, id: ServerId) -> Result<Value> {
     encode(
         runtime
@@ -152,10 +292,6 @@ fn scheduled_backup(
     p: &ServerProfile,
     schedule: &VpsBackupSchedule,
 ) -> Result<()> {
-    ensure!(
-        !sirinvpn_core::has_pending_key_rotation(&runtime.paths, p.id)?,
-        "Complete key rotation first"
-    );
     let saved = runtime
         .platform
         .blob(&reference(&p.endpoint.host, "ssh"))?
@@ -269,8 +405,8 @@ pub async fn dispatch(
             let schedule = store
                 .get(p.id)?
                 .context("Turn on scheduled backups for this VPS first")?;
-            // Not a failure: like a manual backup, the run waits for a disconnected device.
-            runtime.platform.require_idle()?;
+            // Not a failure: like a manual backup, the run waits until the shared rules allow it.
+            ready(runtime, &p, OwnerMaintenance::Backup)?;
             if let Err(error) = scheduled_backup(runtime, &p, &schedule) {
                 store.record_failure(p.id, unix_now(), &error.to_string())?;
             }
@@ -390,14 +526,8 @@ pub async fn dispatch(
             let host = text(input, "host")?;
             // One encrypted checkpoint per explicitly requested target. Retrying
             // after process loss must reuse the installed Owner's identity.
-            let checkpoint = reference(
-                &format!(
-                    "{host}:{}:{}",
-                    input["ssh_port"],
-                    text(input, "host_key_sha256")?
-                ),
-                "provision",
-            );
+            let checkpoint =
+                provision_checkpoint(host, &input["ssh_port"], text(input, "host_key_sha256")?);
             let saved = runtime.platform.blob(&checkpoint)?;
             let document = if let Some(bytes) = saved {
                 serde_json::from_slice::<Value>(&bytes)?
@@ -420,42 +550,113 @@ pub async fn dispatch(
                 secret: serde_json::from_value(document["secret"].clone())?,
             };
             let server_id: ServerId = serde_json::from_value(document["server_id"].clone())?;
-            let identity_reference = server_id.to_string();
-            let request = InstallRequest {
-                server_id,
-                server_name: name.to_owned(),
-                target: target(runtime, input, host)?,
-                server_binary: payload(runtime),
-                identity: identity.public,
-                identity_reference: identity_reference.clone(),
-                transport: serde_json::from_value(
-                    input.get("transport").cloned().unwrap_or(json!({})),
-                )?,
-                dns_upstream: serde_json::from_value(input["dns_upstream"].clone())?,
-                private_dns_records: serde_json::from_value(input["private_dns_records"].clone())?,
-                nat64_prefix: input["nat64_prefix"]
-                    .as_str()
-                    .map(sirinvpn_installer::parse_nat64_prefix)
-                    .transpose()?,
-                replace_existing_installation: input["replace_existing_installation"]
-                    .as_bool()
-                    .unwrap_or(false),
-                enable_security_updates: false,
-            };
+            let request = install_request(runtime, input, server_id, identity.public)?;
+            let pinned = request.target.clone();
+            // Refused before the key is stored: an unresolved change on this host comes first.
+            if journal(runtime).read_server(&pinned.host)?.is_some() {
+                return Err(InstallerError::TransactionUnresolved {
+                    host: pinned.host.clone(),
+                }
+                .into());
+            }
+            let requested_dns = (
+                request.dns_upstream.clone(),
+                request.private_dns_records.clone(),
+            );
             runtime
                 .paths
                 .secret_store()
-                .put(&identity_reference, &identity.secret)?;
-            let outcome = Provisioner::install(request)?;
+                .put(&request.identity_reference, &identity.secret)?;
             // Keep the identity if commit fails: retry/recovery must not orphan the installed owner.
-            runtime
-                .paths
-                .profile_store()
-                .upsert(outcome.profile.clone())?;
+            let (profile, output) = match Provisioner::install_with_journal(
+                request,
+                &journal(runtime),
+            ) {
+                Ok(outcome) => (
+                    outcome.profile.clone(),
+                    json!({"network_preflight":outcome.network_preflight,"profile":outcome.profile,"events":outcome.events,"dns_upstream":outcome.dns_upstream,"private_dns_records":outcome.private_dns_records}),
+                ),
+                // The install may be live: the identity and checkpoint stay until the VPS answers.
+                Err(InstallerError::CommitUncertain { .. }) => {
+                    let profile = settle_lost_reply(runtime, &pinned)?;
+                    let output = json!({"profile":profile,"events":[],"dns_upstream":requested_dns.0,
+                        "private_dns_records":requested_dns.1,"resolved_after_lost_reply":true});
+                    (profile, output)
+                }
+                Err(error) => return Err(error.into()),
+            };
+            runtime.paths.profile_store().upsert(profile)?;
             runtime.platform.delete_blob(&checkpoint)?;
+            forget_installed_hetzner(runtime, host);
+            return Ok(output);
+        }
+        "abandon_install_transaction" => {
+            // Forgets this host's record without asking the VPS: it may have committed
+            // or rolled back. Every key and saved server is kept.
+            let host = text(input, "host")?;
+            let journal = journal(runtime);
+            let entry = journal.read_server(host).ok().flatten();
+            if !journal.abandon(host)? {
+                return Ok(Value::Null);
+            }
             return Ok(
-                json!({"network_preflight":outcome.network_preflight,"profile":outcome.profile,"events":outcome.events,"dns_upstream":outcome.dns_upstream,"private_dns_records":outcome.private_dns_records}),
+                json!({"host":host,"transaction":entry.as_ref().map(|e| &e.nonce),
+                "operation":entry.as_ref().map(|e| e.operation),"state":"abandoned","keys_kept":true}),
             );
+        }
+        "install_transaction_status" | "resolve_install_transaction" => {
+            let journal = journal(runtime);
+            // `host` picks one server's transaction; without it, the first one.
+            let entry = match input["host"].as_str() {
+                Some(host) => journal.read_server(host)?,
+                None => journal.read()?,
+            };
+            let Some(entry) = entry else {
+                return Ok(Value::Null);
+            };
+            let mut summary = json!({"transaction":entry.nonce,"host":entry.host,"port":entry.port,
+                "operation":entry.operation,"step":entry.step,
+                "server_id":entry.committed_profile.as_ref().map(|p| p.id),"state":null});
+            if command == "install_transaction_status" && input["authentication"].is_null() {
+                return Ok(summary);
+            }
+            // The journal names the VPS and its pin; the login is given or saved.
+            let mut login = input.as_object().cloned().unwrap_or_default();
+            login.entry("authentication").or_insert(json!("saved"));
+            login.insert("ssh_port".into(), json!(entry.port));
+            login.insert("host_key_sha256".into(), json!(entry.host_key_sha256));
+            let pinned = target(runtime, &Value::Object(login), &entry.host)?;
+            if command == "install_transaction_status" {
+                summary["state"] = json!(Provisioner::transaction_status(
+                    &pinned,
+                    entry.operation,
+                    &entry.nonce
+                )?);
+                return Ok(summary);
+            }
+            match rules::settle(Provisioner::resolve_transaction(&pinned, &journal)) {
+                rules::Settlement::Committed(committed) => {
+                    summary["profile"] = encode(save_committed(runtime, &committed)?)?;
+                    summary["state"] = json!("committed");
+                    runtime.platform.delete_blob(&provision_checkpoint(
+                        &entry.host,
+                        entry.port,
+                        &entry.host_key_sha256,
+                    ))?;
+                    forget_installed_hetzner(runtime, &entry.host);
+                }
+                rules::Settlement::RolledBack => summary["state"] = json!("rolled_back"),
+                rules::Settlement::Unknown(reason) => {
+                    return Err(rules::outcome_unknown(&entry.host, &reason).into());
+                }
+            }
+            return Ok(summary);
+        }
+        "plan_server_operation" if input["operation"] == "install" => {
+            let identity = new_identity_for_server(text(input, "name")?)?;
+            let request = install_request(runtime, input, ServerId::new(), identity.public)?;
+            let pinned = request.target.clone();
+            return plan_output(Provisioner::plan_install(request)?, &pinned, input);
         }
         "hetzner_catalog" => {
             return encode(
@@ -467,6 +668,19 @@ pub async fn dispatch(
         "create_hetzner_server" => {
             let client = HetznerClient::new(text(input, "apiToken")?)?;
             let request: HetznerServerRequest = serde_json::from_value(input["request"].clone())?;
+            let directory = &runtime.paths.configuration_directory;
+            // Never a second server while an earlier creation is unfinished.
+            if let Some(pending) = HetznerProvision::pending(directory)?.into_iter().next() {
+                return Err(rules::CommandError::new(
+                    "hetzner_provision_pending",
+                    format!(
+                        "The server {} was not finished. Resume or delete it before creating another.",
+                        pending.name
+                    ),
+                    json!({"name": pending.name}),
+                )
+                .into());
+            }
             let prepared = PreparedServer::generate();
             // Saved first, so the key outlives an interrupted creation.
             let key = reference(&prepared.name, "hetzner");
@@ -474,29 +688,95 @@ pub async fn dispatch(
                 &key,
                 &Zeroizing::new(prepared.login_private_key().as_bytes().to_vec()),
             )?;
-            let created = client
-                .create_server(&prepared, &request, payload(runtime).supports("aarch64"))
-                .await;
-            if matches!(&created, Err(error) if !matches!(error, HetznerError::Uncertain(_))) {
-                runtime.platform.delete_blob(&key)?;
+            // The record keeps the pre-seeded host key, so an uncertain create stays resumable.
+            let mut provision = HetznerProvision::requested(&prepared);
+            if let Err(error) = provision.save(directory) {
+                let _ = runtime.platform.delete_blob(&key);
+                return Err(error.into());
             }
-            return Ok(json!({"server": created?, "private_key_path": null}));
+            return match client
+                .create_server(&prepared, &request, payload(runtime).supports("aarch64"))
+                .await
+            {
+                Ok(server) => {
+                    // Unsaved, the record stays Requested and resuming finds the server by name.
+                    let _ = provision.advance(
+                        directory,
+                        HetznerPhase::Created {
+                            server_id: server.id,
+                        },
+                    );
+                    Ok(json!({"server": server, "private_key_path": null}))
+                }
+                Err(error @ HetznerError::Uncertain(_)) => Err(rules::CommandError::new(
+                    "hetzner_create_uncertain",
+                    error.to_string(),
+                    json!({"name": prepared.name, "server": prepared.name}),
+                )
+                .into()),
+                Err(error) => {
+                    let _ = forget_hetzner(runtime, &prepared.name);
+                    Err(error.into())
+                }
+            };
+        }
+        "find_hetzner_server" => {
+            let client = HetznerClient::new(text(input, "apiToken")?)?;
+            let directory = &runtime.paths.configuration_directory;
+            let Some(mut provision) = HetznerProvision::load(directory, text(input, "name")?)?
+            else {
+                return Ok(Value::Null);
+            };
+            if provision.server_id().is_none() {
+                // Already cancelled, so `resume` only looks the name up and records the server.
+                let lookup_only = AtomicBool::new(true);
+                let key = hetzner_key(runtime, &provision.name)?;
+                match client
+                    .resume(directory, &mut provision, key, &lookup_only)
+                    .await
+                {
+                    Ok(_) | Err(HetznerError::Cancelled) => {}
+                    // `resume` dropped the record: Hetzner has no server with this name.
+                    Err(HetznerError::InvalidChoice(_)) => {
+                        let _ = forget_hetzner(runtime, &provision.name);
+                        return Ok(Value::Null);
+                    }
+                    Err(error) => return Err(error.into()),
+                }
+            }
+            return Ok(
+                json!({"server": {"id": provision.server_id(), "name": provision.name,
+                "host_key_sha256": provision.pre_seeded_host_key_sha256}, "private_key_path": null}),
+            );
         }
         "wait_hetzner_server" => {
             let client = HetznerClient::new(text(input, "apiToken")?)?;
             let server: HetznerServer = serde_json::from_value(input["server"].clone())?;
-            let key = reference(&server.name, "hetzner");
-            let pem = Zeroizing::new(String::from_utf8(
-                runtime
-                    .platform
-                    .blob(&key)?
-                    .context("The new server’s SSH key is missing")?
-                    .to_vec(),
-            )?);
+            let directory = &runtime.paths.configuration_directory;
+            let mut provision = HetznerProvision::load(directory, &server.name)?
+                .filter(|provision| provision.server_id().is_none_or(|id| id == server.id))
+                .context("The new server’s creation record is missing")?;
+            let pem = hetzner_key(runtime, &server.name)?;
             HETZNER_WAIT_CANCEL.store(false, Ordering::SeqCst);
-            let ready = client
-                .wait_until_ready(&server, pem.clone(), &HETZNER_WAIT_CANCEL)
-                .await?;
+            let ready = match client
+                .resume(directory, &mut provision, pem.clone(), &HETZNER_WAIT_CANCEL)
+                .await
+            {
+                Ok(ready) => ready,
+                // Its own text names the replacement key the server may present now.
+                Err(error @ HetznerError::HostKeyReplacement(_)) => {
+                    return Err(rules::CommandError::new(
+                        "hetzner_host_key_replacement",
+                        format!(
+                            "{error}. The pre-seeded host key was {}.",
+                            provision.pre_seeded_host_key_sha256
+                        ),
+                        json!({"name": provision.name}),
+                    )
+                    .into());
+                }
+                Err(error) => return Err(error.into()),
+            };
             // Saved like an imported key: the install and later repairs use this login.
             let host = ready.ipv4.to_string();
             let login = Zeroizing::new(serde_json::to_vec(&json!({
@@ -510,7 +790,7 @@ pub async fn dispatch(
                 &trust_reference(&host, 22),
                 ready.host_key_sha256.as_bytes(),
             )?;
-            runtime.platform.delete_blob(&key)?;
+            // The record and key stay until SirinVPN is installed there or the server is deleted.
             return encode(ready);
         }
         "cancel_hetzner_wait" => {
@@ -522,47 +802,81 @@ pub async fn dispatch(
             HetznerClient::new(text(input, "apiToken")?)?
                 .delete_server(server.id)
                 .await?;
-            runtime
-                .platform
-                .delete_blob(&reference(&server.name, "hetzner"))?;
+            forget_hetzner(runtime, &server.name)?;
             return Ok(Value::Null);
         }
         _ => {}
     }
+    // Owner maintenance on a saved profile; `plan_server_operation` dry-runs the same request.
+    let plan = command == "plan_server_operation";
+    let requested = if plan {
+        text(input, "operation")?
+    } else {
+        command
+    };
+    let operation = match (plan, requested) {
+        (false, "uninstall_server") | (true, "uninstall") => OwnerMaintenance::Uninstall,
+        (false, "repair_server") | (true, "repair") => OwnerMaintenance::Repair,
+        (false, "export_vps_backup") => OwnerMaintenance::Backup,
+        (false, "restore_vps_backup") | (true, "restore") => OwnerMaintenance::Restore,
+        _ => bail!("Unknown maintenance command"),
+    };
     let p = profile(runtime, text(input, "server_id")?)?;
-    ensure!(
-        p.role == ServerRole::Owner,
-        "Only the Owner may perform VPS maintenance"
-    );
-    ensure!(
-        !sirinvpn_core::has_pending_key_rotation(&runtime.paths, p.id)?,
-        "Complete key rotation first"
-    );
+    if plan {
+        ensure!(
+            p.role == ServerRole::Owner,
+            "Only the Owner may perform VPS maintenance"
+        );
+    } else {
+        confirmed(input)?;
+        ready(runtime, &p, operation)?;
+    }
     let secret = runtime.paths.secret_store().get(&p.identity_reference)?;
     let identity = secret.public_identity(&p.client_management_certificate_pem)?;
     let host = input["host"].as_str().unwrap_or(&p.endpoint.host);
     let ssh = target(runtime, input, host)?;
-    match command {
-        "uninstall_server" => {
-            confirmed(input)?;
-            runtime.platform.require_idle()?;
-            Provisioner::uninstall(UninstallRequest {
+    let pinned = ssh.clone();
+    match operation {
+        OwnerMaintenance::Uninstall => {
+            let request = UninstallRequest {
                 server_id: p.id,
                 target: ssh,
-                owner_certificate_pem: p.client_management_certificate_pem,
-            })?;
+                owner_certificate_pem: p.client_management_certificate_pem.clone(),
+            };
+            if plan {
+                return plan_output(Provisioner::plan_uninstall(request)?, &pinned, input);
+            }
+            // Journaled like install, repair and restore, so an interruption can be resolved.
+            match Provisioner::uninstall_with_journal(request, &journal(runtime)) {
+                Ok(()) => {}
+                // Removed here only once the VPS confirms; an uninstall commits no profile.
+                Err(InstallerError::CommitUncertain { .. }) => {
+                    let resolved = Provisioner::resolve_transaction(&pinned, &journal(runtime));
+                    if !matches!(&resolved, Ok(Some(done)) if done.state == RemoteTransactionState::Committed)
+                    {
+                        return Err(match rules::settle(resolved) {
+                            rules::Settlement::RolledBack => rules::rolled_back(),
+                            rules::Settlement::Unknown(reason) => {
+                                rules::outcome_unknown(&pinned.host, &reason)
+                            }
+                            rules::Settlement::Committed(_) => {
+                                rules::outcome_unknown(&pinned.host, "unexpected state")
+                            }
+                        }
+                        .into());
+                    }
+                }
+                Err(error) => return Err(error.into()),
+            }
             runtime.paths.secret_store().delete(&p.identity_reference)?;
             runtime.paths.profile_store().remove(p.id)?;
             let _ = forget_vps_backup_schedule(runtime, p.id);
             Ok(Value::Null)
         }
-        "repair_server" => {
-            confirmed(input)?;
-            runtime.platform.require_idle()?;
-            let mut p = p;
+        OwnerMaintenance::Repair => {
             let fingerprint =
                 sirinvpn_core::management_identity_fingerprint(&p.pinned_server_certificate_pem)?;
-            let result = Provisioner::repair(RepairRequest {
+            let request = RepairRequest {
                 profile: p.clone(),
                 target: ssh,
                 server_binary: payload(runtime),
@@ -594,77 +908,92 @@ pub async fn dispatch(
                     .map(|v| serde_json::from_value(v.clone()))
                     .transpose()?,
                 enable_security_updates: input["enable_security_updates"] == true,
-            })?;
-            p.endpoint = result.endpoint;
-            p.endpoint_generation = result.endpoint_generation;
-            p.alternate_endpoint_hosts = result.alternate_endpoint_hosts;
-            p.endpoint_discovery_port = result.endpoint_discovery_port;
-            p.pending_previous_endpoint = None;
-            p.pending_previous_transports = None;
-            p.ipv6_tunnel_enabled = result.ipv6_tunnel_enabled;
-            p.obfuscated_udp = result.obfuscated_udp;
-            p.tcp_fallback = result.tcp_fallback;
-            p.tls_like = result.tls_like;
-            runtime.paths.profile_store().upsert(p)?;
-            Ok(
-                json!({"network_preflight":result.network_preflight,"events":result.events,"artifact_sha256":result.artifact_sha256,
-                "server_identity_fingerprint":fingerprint,"dns_upstream":result.dns_upstream,"private_dns_records":result.private_dns_records}),
-            )
+            };
+            if plan {
+                return plan_output(Provisioner::plan_repair(request)?, &pinned, input);
+            }
+            match Provisioner::repair_with_journal(request, &journal(runtime)) {
+                Ok(result) => {
+                    // Owns the endpoint and transport fields the repair reinstalled.
+                    runtime.paths.profile_store().update(p.id, |current| {
+                        *current = result.updated_profile(current);
+                        Ok(())
+                    })?;
+                    Ok(
+                        json!({"network_preflight":result.network_preflight,"events":result.events,"artifact_sha256":result.artifact_sha256,
+                        "server_identity_fingerprint":fingerprint,"dns_upstream":result.dns_upstream,"private_dns_records":result.private_dns_records}),
+                    )
+                }
+                Err(InstallerError::CommitUncertain { .. }) => {
+                    save_committed(runtime, &settle_lost_reply(runtime, &pinned)?)?;
+                    Ok(
+                        json!({"events":[],"server_identity_fingerprint":fingerprint,"dns_upstream":input["dns_upstream"],
+                        "private_dns_records":input["private_dns_records"],"resolved_after_lost_reply":true}),
+                    )
+                }
+                Err(error) => Err(error.into()),
+            }
         }
-        "export_vps_backup" | "restore_vps_backup" => {
-            confirmed(input)?;
+        OwnerMaintenance::Backup => {
             let id = p.id;
-            let staging = tempfile::Builder::new()
-                .prefix("encrypted-transfer-")
-                .tempdir_in(&runtime.paths.configuration_directory)?;
-            let path = staging.path().join("transfer.sirvps");
             let uri = text(input, "path")?;
             let password = Zeroizing::new(text(input, "backup_password")?.to_owned());
-            let outcome = if command == "export_vps_backup" {
-                let result = Provisioner::export_server_backup(ServerBackupRequest {
-                    profile: p,
-                    target: ssh,
-                    server_binary: payload(runtime),
-                    identity,
-                    destination: path.clone(),
-                    password,
-                });
-                match result {
-                    Ok(result) => {
-                        runtime
-                            .platform
-                            .write_document(uri, &std::fs::read(&path)?)?;
-                        let _ = runtime
-                            .paths
-                            .vps_backup_schedule_store()
-                            .record_success(id, unix_now());
-                        encode(result)
-                    }
-                    Err(error) => Err(error.into()),
-                }
-            } else {
-                runtime.platform.require_idle()?;
-                let bytes = runtime.platform.document(uri)?;
-                sirinvpn_platform::files::atomic_write(&path, &bytes, true)?;
-                let result = Provisioner::restore_server_backup(ServerRestoreRequest {
-                    profile: p,
-                    target: ssh,
-                    server_binary: payload(runtime),
-                    identity,
-                    source: path.clone(),
-                    password,
-                    replace_existing_installation: input["replace_existing"]
-                        .as_bool()
-                        .unwrap_or(false),
-                })?;
-                runtime
-                    .paths
-                    .profile_store()
-                    .upsert(result.profile.clone())?;
-                encode(result)
+            let (_staging, path) = staging(runtime)?;
+            let result = Provisioner::export_server_backup(ServerBackupRequest {
+                profile: p,
+                target: ssh,
+                server_binary: payload(runtime),
+                identity,
+                destination: path.clone(),
+                password,
+            })?;
+            runtime
+                .platform
+                .write_document(uri, &std::fs::read(&path)?)?;
+            let _ = runtime
+                .paths
+                .vps_backup_schedule_store()
+                .record_success(id, unix_now());
+            encode(result)
+        }
+        OwnerMaintenance::Restore => {
+            let uri = text(input, "path")?;
+            let password = Zeroizing::new(text(input, "backup_password")?.to_owned());
+            let (_staging, path) = staging(runtime)?;
+            sirinvpn_platform::files::atomic_write(&path, &runtime.platform.document(uri)?, true)?;
+            let request = ServerRestoreRequest {
+                profile: p.clone(),
+                target: ssh,
+                server_binary: payload(runtime),
+                identity,
+                source: path,
+                password,
+                replace_existing_installation: input["replace_existing"].as_bool().unwrap_or(false),
             };
-            let _ = std::fs::remove_file(path);
-            outcome
+            if plan {
+                return plan_output(
+                    Provisioner::plan_restore_server_backup(request)?,
+                    &pinned,
+                    input,
+                );
+            }
+            match Provisioner::restore_server_backup_with_journal(request, &journal(runtime)) {
+                Ok(result) => {
+                    // Owns the server side the backup restored; see `merge_committed`.
+                    let saved = runtime.paths.profile_store().update(p.id, |current| {
+                        rules::merge_committed(current, &result.profile);
+                        Ok(current.clone())
+                    })?;
+                    let mut output = encode(result)?;
+                    output["profile"] = encode(saved)?;
+                    Ok(output)
+                }
+                Err(InstallerError::CommitUncertain { .. }) => {
+                    let profile = save_committed(runtime, &settle_lost_reply(runtime, &pinned)?)?;
+                    Ok(json!({"events":[],"profile":profile,"resolved_after_lost_reply":true}))
+                }
+                Err(error) => Err(error.into()),
+            }
         }
         _ => bail!("Unknown maintenance command"),
     }

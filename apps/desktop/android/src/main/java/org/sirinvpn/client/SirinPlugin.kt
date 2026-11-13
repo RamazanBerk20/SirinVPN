@@ -14,6 +14,8 @@ import android.os.IBinder
 import android.provider.Settings
 import android.webkit.WebView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
 import androidx.activity.result.ActivityResult
 import app.tauri.annotation.Command
 import app.tauri.annotation.ActivityCallback
@@ -49,23 +51,25 @@ class SirinPlugin(private val activity: Activity) : Plugin(activity) {
         link = ServiceLink(activity,lost={
             listening=false
             activity.runOnUiThread { trigger("status", JSObject().put("status", JSONObject.NULL).put("phase","unknown").put("stale",true)) }
-        },connected={ service -> service.subscribe(listener);listening=true }).also { it.bind() }
+        },connected={ service -> service.subscribe(listener);listening=true }).also { it.control(CONTROL_TIMEOUT_MS) }
     }
+    /** The controller for a UI request; :vpn's first start copies server payloads, so allow it time. */
+    private fun control() = attach().let { link!!.control(CONTROL_TIMEOUT_MS) }
+    private companion object { const val CONTROL_TIMEOUT_MS = 30000L }
     private fun detach() {
-        if (listening) try { link?.ready?.getNow(null)?.unsubscribe(listener) } catch (_: Exception) {}
+        if (listening) try { link?.current()?.unsubscribe(listener) } catch (_: Exception) {}
         listening = false; link?.close(); link = null
     }
     @Command fun call(invoke: Invoke) {
         val request = invoke.getArgs()
-        val command = request.getString("command") ?: return reject(invoke,"Missing command")
+        val command = request.getString("command") ?: return reject(invoke,R.string.error_missing_command)
         val args = request.optJSONObject("args") ?: JSONObject()
         if(command=="android_close_ui") {resolve(invoke);activity.moveTaskToBack(true);return}
         if(command=="android_system_bars") {val light=args.optBoolean("light");activity.runOnUiThread {(activity as? MainActivity)?.systemBars(light)};resolve(invoke);return}
         if(command=="android_share_document") {
             val uri=android.net.Uri.parse(args.optString("uri"))
             if(uri.scheme!="content") {reject(invoke,R.string.error_choose_document);return}
-            attach()
-            link!!.ready.whenComplete {control,error ->
+            control().whenComplete {control,error ->
                 if(error!=null) reject(invoke,R.string.error_service_unavailable)
                 else execute(control,"authorize_document_share",args.toString(),-1,{reject(invoke,R.string.error_service_interrupted)}) {result -> activity.runOnUiThread {
                     if(JSONObject(result).has("error")) reject(invoke,R.string.error_share_expired)
@@ -79,6 +83,7 @@ class SirinPlugin(private val activity: Activity) : Plugin(activity) {
             };return
         }
         if(command=="android_scan_code") {
+            if(args.optString("field") !in SecretInputs.secretFields) {reject(invoke,R.string.error_protected_input);return}
             requestPermissionForAlias("camera",invoke,"scanGranted");return
         }
         if(command=="android_wifi_permission") {
@@ -118,21 +123,33 @@ class SirinPlugin(private val activity: Activity) : Plugin(activity) {
                 }.setOnCancelListener { resolve(invoke) }.show()
             return
         }
-        if (command in setOf("remember_secret","reveal_secret","secret_qr")) { reject(invoke,"Native-only operation"); return }
+        if (command in setOf("remember_secret","reveal_secret","secret_qr")) { reject(invoke,R.string.error_native_only); return }
         if (command == "android_show_secret" || command == "android_copy_secret") {
-            attach()
-            link!!.ready.whenComplete { control,error ->
-                if (error != null) { reject(invoke,R.string.error_protected_value_unavailable); return@whenComplete }
-                execute(control,"reveal_secret",JSONObject().put("reference",args.getString("reference")).toString(),-1,{reject(invoke,R.string.error_protected_value_unavailable)}) { result ->
-                    val response=JSONObject(result)
-                    activity.runOnUiThread {
-                        if (response.has("error")) reject(invoke,R.string.error_protected_value_expired)
-                        else { ProtectedValue.show(activity,response.getJSONObject("ok"),command == "android_copy_secret"); resolve(invoke) }
+            val copy = command == "android_copy_secret"
+            val reference = args.optString("reference")
+            // The WebView only asks; the user decides here, outside it, whether the value leaves its handle.
+            val confirm = android.app.AlertDialog.Builder(activity).setTitle(R.string.protected_value_title)
+                .setMessage(if (copy) R.string.protected_value_confirm_copy else R.string.protected_value_confirm_show)
+                .setPositiveButton(if (copy) R.string.protected_value_copy else R.string.protected_value_show) { _,_ ->
+                    control().whenComplete { control,error ->
+                        if (error != null) { reject(invoke,R.string.error_protected_value_unavailable); return@whenComplete }
+                        execute(control,"reveal_secret",JSONObject().put("reference",reference).toString(),-1,{reject(invoke,R.string.error_protected_value_unavailable)}) { result ->
+                            val response=JSONObject(result)
+                            activity.runOnUiThread {
+                                if (response.has("error")) reject(invoke,R.string.error_protected_value_expired)
+                                else { ProtectedValue.show(activity,response.getJSONObject("ok"),copy); resolve(invoke) }
+                            }
+                        }
                     }
                 }
-            }; return
+                .setNegativeButton(R.string.dialog_cancel) { _,_ -> reject(invoke,R.string.error_entry_cancelled) }.create()
+            confirm.setOnCancelListener { reject(invoke,R.string.error_entry_cancelled) }
+            confirm.show(); return
         }
         if (command == "android_secret_input") {
+            // The handle is redeemable only as the argument it was typed for (SecretInputs).
+            val purpose = args.optString("field")
+            if (purpose !in SecretInputs.secretFields) { reject(invoke,R.string.error_protected_input); return }
             val field = android.widget.EditText(activity).apply {
                 inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD
                 importantForAutofill = android.view.View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS
@@ -148,7 +165,7 @@ class SirinPlugin(private val activity: Activity) : Plugin(activity) {
             dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener {
                 val minimum=args.optInt("minimumLength",0).coerceIn(0,1024)
                 if(field.text.length<minimum) field.error=activity.resources.getQuantityString(R.plurals.secret_input_minimum_length,minimum,minimum)
-                else {send(invoke,"remember_secret",JSONObject().put("value",field.text.toString()));field.text?.clear();dialog.dismiss()}
+                else {send(invoke,"remember_secret",JSONObject().put("value",field.text.toString()).put("field",purpose));field.text?.clear();dialog.dismiss()}
             }
             return
         }
@@ -190,7 +207,7 @@ class SirinPlugin(private val activity: Activity) : Plugin(activity) {
             return
         }
         if (command == "android_snapshot") {
-            attach(); link!!.ready.whenComplete { control,error ->
+            control().whenComplete { control,error ->
                 if (error != null) reject(invoke,R.string.error_service_unavailable) else resolve(invoke,JSONObject(control.snapshot()))
             }; return
         }
@@ -204,7 +221,22 @@ class SirinPlugin(private val activity: Activity) : Plugin(activity) {
             }
             prepareVpnCommand(invoke);return
         }
+        if (command == "get_app_preferences" || command == "set_app_preferences") { send(invoke, command, args, ::followLanguage); return }
         send(invoke, command, args)
+    }
+    /**
+     * Android 12/12L: :vpn keeps the app language, and AppCompat applies it to this process's activity
+     * (MainActivity handles locale|layoutDirection itself, so the WebView is not recreated). Android 13+
+     * applies the per-app language to every process, so this must not write it back.
+     */
+    private fun followLanguage(result: String) {
+        if (Build.VERSION.SDK_INT >= 33) return
+        val tag = JSONObject(result).optJSONObject("ok")?.optJSONObject("preferences")?.optString("language").orEmpty()
+        if (!AppLanguage.valid(tag)) return
+        val locales = if (tag == AppLanguage.SYSTEM) LocaleListCompat.getEmptyLocaleList() else LocaleListCompat.forLanguageTags(tag)
+        activity.runOnUiThread {
+            if (AppCompatDelegate.getApplicationLocales().toLanguageTags() != locales.toLanguageTags()) AppCompatDelegate.setApplicationLocales(locales)
+        }
     }
     private fun prepareVpnCommand(invoke:Invoke) {
         val consent=VpnService.prepare(activity)
@@ -223,7 +255,7 @@ class SirinPlugin(private val activity: Activity) : Plugin(activity) {
     private fun testNotification(invoke:Invoke) {
         if(notificationPermission()!="granted") {reject(invoke,R.string.error_notifications_blocked);return}
         VpnNotifications.channels(activity)
-        activity.getSystemService(NotificationManager::class.java).notify(71,
+        activity.getSystemService(NotificationManager::class.java).notify(VpnNotifications.TEST_ID,
             android.app.Notification.Builder(activity,VpnNotifications.CHANNEL).setSmallIcon(R.drawable.ic_sirin_vpn)
                 .setBadgeIconType(android.app.Notification.BADGE_ICON_NONE)
                 .setContentTitle(activity.getString(R.string.app_name)).setContentText(activity.getString(R.string.notification_test_text)).setAutoCancel(true)
@@ -237,7 +269,7 @@ class SirinPlugin(private val activity: Activity) : Plugin(activity) {
             scanner = null
             if (value == null) reject(invoke,R.string.error_scan_cancelled)
             else if (value.length > 131072) reject(invoke,R.string.error_code_too_large)
-            else send(invoke,"remember_secret",JSONObject().put("value",value))
+            else send(invoke,"remember_secret",JSONObject().put("value",value).put("field",invoke.getArgs().optJSONObject("args")?.optString("field")))
         }.also { it.show() }
     }
     @ActivityCallback private fun vpnConsent(invoke: Invoke, result: ActivityResult) {
@@ -255,14 +287,17 @@ class SirinPlugin(private val activity: Activity) : Plugin(activity) {
         } catch (_: SecurityException) {}
         resolve(invoke,uri.toString())
     }
-    private fun send(invoke: Invoke, command: String, args: JSONObject) {
-        attach()
-        link!!.ready.whenComplete { control,error ->
+    private fun send(invoke: Invoke, command: String, args: JSONObject, completed: (String) -> Unit = {}) {
+        control().whenComplete { control,error ->
             if (error != null) { reject(invoke,R.string.error_service_unavailable); return@whenComplete }
             val expected = try {
                 if (command in setOf("disconnect_server","cancel_connection","reconnect_server")) JSONObject(control.snapshot()).getLong("generation") else -1L
             } catch (_: Exception) { reject(invoke,R.string.error_service_interrupted); return@whenComplete }
-            execute(control,command,args.toString(),expected,{reject(invoke,R.string.error_service_interrupted)}) { result -> invoke.resolve(JSObject(result)) }
+            execute(control,command,args.toString(),expected,{reject(invoke,R.string.error_service_interrupted)}) { result ->
+                // A failed follow-up never withholds the controller's answer.
+                try { completed(result) } catch (_: Exception) {}
+                invoke.resolve(JSObject(result))
+            }
         }
     }
     /**

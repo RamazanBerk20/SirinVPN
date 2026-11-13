@@ -15,7 +15,6 @@
   },
   "state": {
     "checking": "Checking…",
-    "connected": "Connected",
     "disabled": "Off",
     "enabled": "On",
     "loading": "Loading…",
@@ -39,8 +38,37 @@
   },
   "target": "{{os}}, {{arch}} ({{target}})",
   "error": {
+    "withDetail": "{{summary}} {{detail}}",
     "needsConnection": "Connect to this server first.",
     "localSave": "Couldn’t save on this device. Try again.",
     "passwordsDiffer": "The passwords don’t match."
+  },
+  "errorCode": {
+    "hetzner_create_uncertain": "Hetzner may have created the server {{server}}. Check the Hetzner Cloud Console before you try again.",
+    "hetzner_provision_pending": "The server {{name}} wasn’t finished. Resume or delete it before you create another.",
+    "hetzner_host_key_replacement": "The new server {{name}} presented a different SSH host key than expected. Don’t continue unless you can confirm the key in the Hetzner Cloud Console.",
+    "install_phase_failed": "A step on the VPS failed.",
+    "install_ssh_failed": "Couldn’t sign in to the VPS over SSH. Check the host key and the login. Nothing on the VPS was changed.",
+    "install_incompatible": "This VPS can’t be used: it’s incompatible or already runs another installation. Nothing on the VPS was changed.",
+    "backup_wrong_password": "The backup password is incorrect.",
+    "invitation_expired": "This join code has expired. Ask for a new one.",
+    "invitation_used": "This join code was already used or cancelled. Ask for a new one.",
+    "invitation_invalid": "This join code isn’t valid. Check it and try again.",
+    "port_forward_public_port": "That public port is reserved, already in use or not valid. Choose another one.",
+    "operation_in_progress": "Another change to this server is running. Wait for it to finish, then try again.",
+    "maintenance_blocked": "This change can’t start yet: {{steps}}.",
+    "maintenance_blocked_unnamed": "This change can’t start yet.",
+    "install_outcome_unknown": "The outcome on {{host}} is unknown: the VPS may have applied the change, but its confirmation was lost. This device kept its keys. Check the change again when the VPS is reachable.",
+    "install_rolled_back": "The VPS rolled the change back, so nothing changed.",
+    "person_has_join_codes": "This person still has device join codes. Cancel them first.",
+    "person_name_taken": "Another person on this server already uses this name. Choose a different name.",
+    "transaction_unresolved": "An earlier change to {{host}} from this device is unresolved. Resolve it, or forget it, before starting another."
+  },
+  "maintenanceBlocker": {
+    "not_owner": "only the Owner device can maintain this VPS",
+    "connected": "disconnect from this VPS first",
+    "persistent_policy": "turn off the kill switch and auto-reconnect first",
+    "pending_key_rotation": "finish or recover this device’s pending key rotation first",
+    "unresolved_transaction": "resolve the interrupted VPS change first"
   }
 }

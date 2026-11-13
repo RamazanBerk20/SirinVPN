@@ -32,9 +32,8 @@ class NotificationActionTest {
             fail(message)
         }
         val link = ServiceLink(context)
-        instrumentation.runOnMainSync { link.bind() }
         try {
-            val control = link.ready.get(10, TimeUnit.SECONDS)
+            val control = link.control(10000).get(10, TimeUnit.SECONDS)
             fun snapshot() = JSONObject(control.snapshot())
             // Let initial network callbacks finish before starting an idle service.
             until("Initial network state was not published") { snapshot().getLong("sequence") > 0 }
@@ -57,7 +56,8 @@ class NotificationActionTest {
                 }
                 val action = manager.activeNotifications.single { it.id == VpnNotifications.VPN_ID }.notification.actions.single()
                 assertTrue(action.actionIntent.isBroadcast)
-                assertFalse(action.isAuthenticationRequired)
+                // Always authentication-required: Android unlocks before delivering, if it needs to.
+                assertTrue(action.isAuthenticationRequired)
                 stage.writeText(phase)
                 until("Disconnect was not delivered") { snapshot().getLong("generation") > state.getLong("generation") }
                 until("VPN notification was not removed") { manager.activeNotifications.none { it.id == VpnNotifications.VPN_ID } }
@@ -69,17 +69,17 @@ class NotificationActionTest {
             until("Stop notification was not published") { manager.activeNotifications.any { it.id == VpnNotifications.VPN_ID } }
             val unlockedAction = manager.activeNotifications.single { it.id == VpnNotifications.VPN_ID }.notification.actions.single()
             VpnNotifications.failed(context, state)
-            until("Retry notification was not published") { manager.activeNotifications.any { it.id == 73 } }
-            assertFalse(manager.activeNotifications.single { it.id == 73 }.notification.actions.single().isAuthenticationRequired)
+            until("Retry notification was not published") { manager.activeNotifications.any { it.id == VpnNotifications.FAILURE_ID } }
+            assertTrue(manager.activeNotifications.single { it.id == VpnNotifications.FAILURE_ID }.notification.actions.single().isAuthenticationRequired)
             stage.writeText("lock")
             until("Emulator did not lock") { keyguard.isDeviceLocked }
-            // An action created before locking must still refuse an unauthenticated stop.
+            // A broadcast that bypasses Android's authentication while locked is still refused.
             unlockedAction.actionIntent.send()
             SystemClock.sleep(1000)
             assertEquals(state.getLong("generation"), snapshot().getLong("generation"))
             VpnNotifications.update(context, state)
             VpnNotifications.failed(context, state)
-            for (id in listOf(VpnNotifications.VPN_ID, 73)) {
+            for (id in listOf(VpnNotifications.VPN_ID, VpnNotifications.FAILURE_ID)) {
                 until("Locked notification must require authentication") {
                     manager.activeNotifications.single { it.id == id }.notification.actions.single().isAuthenticationRequired
                 }

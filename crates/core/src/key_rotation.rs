@@ -1,7 +1,7 @@
 use crate::{
-    ClientPaths, LocalIdentity, ManagementClient, ManagementError, ProfileStoreError,
-    PublicIdentity, SecretIdentity, SecretStore, SecretStoreError, generate_preshared_key,
-    management_certificate_fingerprint,
+    ClientPaths, LocalIdentity, ManagementError, ProfileStoreError, PublicIdentity, SecretIdentity,
+    SecretStore, SecretStoreError, ServerOperationError, ServerOperationLock,
+    generate_preshared_key, management_certificate_fingerprint,
 };
 use serde::{Deserialize, Serialize};
 use sirinvpn_protocol::{
@@ -13,7 +13,11 @@ use thiserror::Error;
 
 const KEY_ROTATION_JOURNAL_SCHEMA_VERSION: u16 = 1;
 mod policy;
+mod remote;
+mod steps;
 pub use policy::RotationConnectionPolicy;
+use remote::{LiveRemote, RotationClient, RotationRemote};
+use steps::{Observation, Progress, Step};
 
 #[derive(Debug, Error)]
 pub enum KeyRotationError {
@@ -33,6 +37,8 @@ pub enum KeyRotationError {
     RecoveryRequired(String),
     #[error("key rotation journal operation failed: {0}")]
     Io(#[from] io::Error),
+    #[error("{0}")]
+    Operation(#[from] ServerOperationError),
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize)]
@@ -127,6 +133,15 @@ impl RotationJournal {
             return Err(KeyRotationError::InvalidState);
         }
         Ok(())
+    }
+
+    fn connection_mode(&self) -> RotationConnectionMode {
+        RotationConnectionMode {
+            persistent_protection: self.persistent_protection,
+            connection_policy: self.connection_policy.clone(),
+            transport: self.transport,
+            transport_fallback_enabled: self.transport_fallback_enabled,
+        }
     }
 
     fn new_profile(&self) -> ServerProfile {
@@ -262,8 +277,8 @@ pub async fn rotate_current_device_keys_with_policy<Disconnect, Connect>(
     transport: TransportKind,
     transport_fallback_enabled: bool,
     connection_policy: Option<RotationConnectionPolicy>,
-    mut disconnect: Disconnect,
-    mut connect: Connect,
+    disconnect: Disconnect,
+    connect: Connect,
 ) -> Result<KeyRotationResult, KeyRotationError>
 where
     Disconnect: FnMut() -> Result<(), String>,
@@ -276,281 +291,303 @@ where
         Option<&RotationConnectionPolicy>,
     ) -> Result<(), String>,
 {
+    // Held for the whole run: a second CLI, desktop or Android runner, or an endpoint
+    // transition, would otherwise reconnect underneath this one.
+    let _operation = ServerOperationLock::acquire(paths, server_id)?;
+    drive(
+        paths,
+        &paths.secret_store(),
+        &LiveRemote,
+        server_id,
+        RotationConnectionMode {
+            persistent_protection,
+            transport,
+            transport_fallback_enabled,
+            connection_policy,
+        },
+        disconnect,
+        connect,
+    )
+    .await
+}
+
+/// Executes the steps chosen by [`steps::next`]; holds no decisions of its own.
+async fn drive<Remote, Disconnect, Connect>(
+    paths: &ClientPaths,
+    secrets: &dyn SecretStore,
+    remote: &Remote,
+    server_id: ServerId,
+    requested: RotationConnectionMode,
+    mut disconnect: Disconnect,
+    mut connect: Connect,
+) -> Result<KeyRotationResult, KeyRotationError>
+where
+    Remote: RotationRemote,
+    Disconnect: FnMut() -> Result<(), String>,
+    Connect: FnMut(
+        &ServerProfile,
+        &SecretIdentity,
+        bool,
+        TransportKind,
+        bool,
+        Option<&RotationConnectionPolicy>,
+    ) -> Result<(), String>,
+{
     let profiles = paths.profile_store();
-    let secrets = paths.secret_store();
     let journals = RotationJournalStore::new(paths);
-    let mut resumed = true;
-    let mut journal = match journals.load(server_id)? {
-        Some(journal) => journal,
-        None => {
-            resumed = false;
-            let profile = profiles
-                .load()?
-                .into_iter()
-                .find(|profile| profile.id == server_id)
-                .ok_or(ProfileStoreError::NotFound)?;
-            let original_secret = secrets.get(&profile.identity_reference)?;
-            validate_original_identity(&profile, &original_secret)?;
-            let client = ManagementClient::new(&profile, &original_secret)?;
-            let configuration = client.configuration().await?;
-            if !configuration.key_rotation_enabled {
-                return Err(KeyRotationError::UnsupportedServer);
-            }
-            verify_status_identity(
-                &client.status().await?,
-                &profile.client_management_certificate_pem,
-            )?;
-            stage_rotation(
-                &journals,
-                &secrets,
-                profile,
-                &original_secret,
-                persistent_protection,
-                transport,
-                transport_fallback_enabled,
-                connection_policy,
-                configuration.preshared_keys_enabled,
-            )?
-        }
+    let (mut journal, resumed) = match journals.load(server_id)? {
+        Some(journal) => (journal, true),
+        None => (
+            stage_from_current_profile(&profiles, &journals, secrets, remote, server_id, requested)
+                .await?,
+            false,
+        ),
     };
-
-    if journal.phase == RotationPhase::Activated {
-        let final_secret = secrets.get(&journal.final_identity_reference)?;
-        let (status, client) = connect_and_verify(
-            &profiles,
-            &mut disconnect,
-            &mut connect,
-            &journal.new_profile(),
-            &final_secret,
-            &journal.new_public_identity.management_certificate_pem,
-            RotationConnectionMode {
-                persistent_protection: journal.persistent_protection,
-                connection_policy: journal.connection_policy.clone(),
-                transport: journal.transport,
-                transport_fallback_enabled: journal.transport_fallback_enabled,
-            },
-        )
-        .await?;
-        return activate_and_finish(
-            &profiles,
-            &secrets,
-            &journals,
-            &mut journal,
-            status,
-            client,
-            resumed,
-        )
-        .await;
-    }
-
-    let original_secret = secrets.get(&journal.original_profile.identity_reference)?;
-    let transition_secret = secrets.get(&journal.transition_identity_reference)?;
     let final_secret = secrets.get(&journal.final_identity_reference)?;
-    validate_staged_identities(
-        &journal,
-        &original_secret,
-        &transition_secret,
-        &final_secret,
-    )?;
-
-    if journal.phase == RotationPhase::Committing
-        && let Ok((status, client)) = connect_and_verify(
-            &profiles,
-            &mut disconnect,
-            &mut connect,
-            &journal.new_profile(),
-            &final_secret,
-            &journal.new_public_identity.management_certificate_pem,
-            RotationConnectionMode {
-                persistent_protection: journal.persistent_protection,
-                connection_policy: journal.connection_policy.clone(),
-                transport: journal.transport,
-                transport_fallback_enabled: journal.transport_fallback_enabled,
-            },
-        )
-        .await
-    {
-        activate_and_finish(
-            &profiles,
-            &secrets,
-            &journals,
-            &mut journal,
-            status,
-            client,
-            resumed,
-        )
-        .await
+    // An activated journal may already have deleted the original and transition secrets.
+    let staged = if journal.phase == RotationPhase::Activated {
+        None
     } else {
-        let old_client = if resumed {
-            match connect_and_verify(
-                &profiles,
-                &mut disconnect,
-                &mut connect,
-                &journal.original_profile,
-                &original_secret,
-                &journal.original_profile.client_management_certificate_pem,
-                RotationConnectionMode {
-                    persistent_protection: journal.persistent_protection,
-                    connection_policy: journal.connection_policy.clone(),
-                    transport: journal.transport,
-                    transport_fallback_enabled: journal.transport_fallback_enabled,
-                },
-            )
-            .await
-            {
-                Ok((_, client)) => client,
-                Err(_) => {
-                    profiles.upsert(journal.original_profile.clone())?;
-                    return Err(KeyRotationError::RecoveryRequired(
-                            "neither the old nor new device identity could be confirmed; restore network access and run key rotation again"
-                                .to_owned(),
-                    ));
+        let original = secrets.get(&journal.original_profile.identity_reference)?;
+        let transition = secrets.get(&journal.transition_identity_reference)?;
+        validate_staged_identities(&journal, &original, &transition, &final_secret)?;
+        Some((original, transition))
+    };
+    let staged_secret = |index: usize| {
+        staged
+            .as_ref()
+            .map(|(original, transition)| if index == 0 { original } else { transition })
+            .ok_or(KeyRotationError::InvalidState)
+    };
+    let mode = journal.connection_mode();
+
+    let mut progress = Progress {
+        phase: journal.phase,
+        resumed,
+        commit_sent: false,
+    };
+    let mut observation = Observation::Started;
+    let mut confirmed_new = None;
+    let mut old: Option<(Option<ServerStatus>, Remote::Client)> = None;
+    let mut last_error = None;
+    loop {
+        observation = match steps::next(progress, observation) {
+            Step::ConnectNew => {
+                match connect_and_verify(
+                    &profiles,
+                    remote,
+                    &mut disconnect,
+                    &mut connect,
+                    &journal.new_profile(),
+                    &final_secret,
+                    &mode,
+                )
+                .await
+                {
+                    Ok(confirmed) => {
+                        confirmed_new = Some(confirmed);
+                        Observation::NewIdentityConfirmed
+                    }
+                    Err(error) => {
+                        last_error = Some(error);
+                        Observation::NewIdentityUnconfirmed
+                    }
                 }
             }
-        } else {
-            ManagementClient::new(&journal.original_profile, &original_secret)?
-        };
-
-        if !old_client.configuration().await?.key_rotation_enabled {
-            return Err(KeyRotationError::RecoveryRequired(
-                "the VPS no longer exposes the safe rotation protocol; repair/update the server, reconnect the old identity, and resume"
-                    .to_owned(),
-            ));
-        }
-
-        if matches!(
-            journal.phase,
-            RotationPhase::Staged | RotationPhase::Prepared
-        ) {
-            let request = KeyRotationPrepareRequest {
-                rotation_id: journal.rotation_id,
-                server_id,
-                new_wireguard_public_key: journal.new_public_identity.wireguard_public_key.clone(),
-                new_management_certificate_pem: journal
+            Step::ConnectOld => {
+                match connect_and_verify(
+                    &profiles,
+                    remote,
+                    &mut disconnect,
+                    &mut connect,
+                    &journal.original_profile,
+                    staged_secret(0)?,
+                    &mode,
+                )
+                .await
+                {
+                    Ok((status, client)) => {
+                        old = Some((Some(status), client));
+                        Observation::OldIdentityConfirmed
+                    }
+                    Err(_) => Observation::OldIdentityUnconfirmed,
+                }
+            }
+            Step::UseOld => {
+                old = Some((
+                    None,
+                    remote.client(&journal.original_profile, staged_secret(0)?)?,
+                ));
+                Observation::OldIdentityConfirmed
+            }
+            Step::CheckSupport => {
+                let (_, client) = old.as_ref().ok_or(KeyRotationError::InvalidState)?;
+                if client.capabilities().await?.key_rotation {
+                    Observation::RotationSupported
+                } else {
+                    Observation::RotationUnsupported
+                }
+            }
+            Step::Prepare => {
+                let (_, client) = old.as_ref().ok_or(KeyRotationError::InvalidState)?;
+                let request = KeyRotationPrepareRequest {
+                    rotation_id: journal.rotation_id,
+                    server_id,
+                    new_wireguard_public_key: journal
+                        .new_public_identity
+                        .wireguard_public_key
+                        .clone(),
+                    new_management_certificate_pem: journal
+                        .new_public_identity
+                        .management_certificate_pem
+                        .clone(),
+                    new_wireguard_preshared_key: final_secret.wireguard_preshared_key.clone(),
+                };
+                match client.prepare(&request).await {
+                    Ok(response) if response.rotation_id == journal.rotation_id => {
+                        journal.phase = RotationPhase::Prepared;
+                        journals.update(&journal)?;
+                        Observation::Prepared
+                    }
+                    Ok(_) => return Err(KeyRotationError::InvalidState),
+                    Err(ManagementError::ConnectionFailed) => Observation::PrepareUncertain,
+                    Err(error) => {
+                        last_error = Some(error.into());
+                        Observation::PrepareRejected
+                    }
+                }
+            }
+            Step::Commit => {
+                journal.phase = RotationPhase::Committing;
+                journals.update(&journal)?;
+                let mut transition_profile = journal.original_profile.clone();
+                transition_profile.client_management_certificate_pem = journal
                     .new_public_identity
                     .management_certificate_pem
-                    .clone(),
-                new_wireguard_preshared_key: final_secret.wireguard_preshared_key.clone(),
-            };
-            match old_client.prepare_key_rotation(&request).await {
-                Ok(response) if response.rotation_id == journal.rotation_id => {
-                    journal.phase = RotationPhase::Prepared;
-                    journals.update(&journal)?;
+                    .clone();
+                transition_profile.identity_reference =
+                    journal.transition_identity_reference.clone();
+                let commit_result = remote
+                    .client(&transition_profile, staged_secret(1)?)?
+                    .commit(journal.rotation_id)
+                    .await;
+                let expected_new_fingerprint = management_certificate_fingerprint(
+                    &journal.new_public_identity.management_certificate_pem,
+                )
+                .map_err(|_| KeyRotationError::InvalidState)?;
+                // A lost response is expected when the old peer goes; only a wrong one is fatal.
+                if let Ok(response) = &commit_result
+                    && (response.server_id != server_id
+                        || response.identity_fingerprint != expected_new_fingerprint)
+                {
+                    return Err(KeyRotationError::InvalidState);
                 }
-                Ok(_) => return Err(KeyRotationError::InvalidState),
-                Err(ManagementError::ConnectionFailed) => {
-                    return Err(KeyRotationError::RecoveryRequired(
-                        "preparation may have reached the VPS; keep the local journal and run key rotation again"
-                            .to_owned(),
-                    ));
-                }
-                Err(error) => {
-                    abandon_staged_rotation(&secrets, &journals, &journal)?;
-                    return Err(error.into());
-                }
+                progress.commit_sent = true;
+                Observation::CommitSent
             }
-        }
-
-        journal.phase = RotationPhase::Committing;
-        journals.update(&journal)?;
-        let mut transition_profile = journal.original_profile.clone();
-        transition_profile.client_management_certificate_pem = journal
-            .new_public_identity
-            .management_certificate_pem
-            .clone();
-        transition_profile.identity_reference = journal.transition_identity_reference.clone();
-        let transition_client = ManagementClient::new(&transition_profile, &transition_secret)?;
-        let commit_result = transition_client
-            .commit_key_rotation(journal.rotation_id)
-            .await;
-        let expected_new_fingerprint = management_certificate_fingerprint(
-            &journal.new_public_identity.management_certificate_pem,
-        )
-        .map_err(|_| KeyRotationError::InvalidState)?;
-        if let Ok(response) = &commit_result
-            && (response.server_id != server_id
-                || response.identity_fingerprint != expected_new_fingerprint)
-        {
-            return Err(KeyRotationError::InvalidState);
-        }
-
-        match connect_and_verify(
-            &profiles,
-            &mut disconnect,
-            &mut connect,
-            &journal.new_profile(),
-            &final_secret,
-            &journal.new_public_identity.management_certificate_pem,
-            RotationConnectionMode {
-                persistent_protection: journal.persistent_protection,
-                connection_policy: journal.connection_policy.clone(),
-                transport: journal.transport,
-                transport_fallback_enabled: journal.transport_fallback_enabled,
-            },
-        )
-        .await
-        {
-            Ok((status, client)) => {
-                activate_and_finish(
+            Step::Activate => {
+                let (status, client) =
+                    confirmed_new.take().ok_or(KeyRotationError::InvalidState)?;
+                return activate_and_finish(
                     &profiles,
-                    &secrets,
+                    secrets,
                     &journals,
                     &mut journal,
                     status,
                     client,
                     resumed,
                 )
-                .await
+                .await;
             }
-            Err(_) => {
-                match connect_and_verify(
-                    &profiles,
-                    &mut disconnect,
-                    &mut connect,
-                    &journal.original_profile,
-                    &original_secret,
-                    &journal.original_profile.client_management_certificate_pem,
-                    RotationConnectionMode {
-                        persistent_protection: journal.persistent_protection,
-                        connection_policy: journal.connection_policy.clone(),
-                        transport: journal.transport,
-                        transport_fallback_enabled: journal.transport_fallback_enabled,
-                    },
-                )
-                .await
-                {
-                    Ok((status, client)) => {
-                        if let Some(role) = status.caller_role {
-                            journal.original_profile.role = role;
-                            journal.original_profile.administrator = status.caller_administrator;
-                        }
-                        client
-                            .refresh_membership_ids(
-                                &mut journal.original_profile,
-                                status
-                                    .caller_device_id
-                                    .ok_or(KeyRotationError::InvalidState)?,
-                            )
-                            .await?;
-                        journal.phase = RotationPhase::Prepared;
-                        profiles.upsert(journal.original_profile.clone())?;
-                        journals.update(&journal)?;
-                        Err(KeyRotationError::RecoveryRequired(
-                            "the VPS kept the old identity, which was restored locally; run key rotation again to retry the commit"
-                                .to_owned(),
-                        ))
-                    }
-                    Err(_) => {
-                        profiles.upsert(journal.original_profile.clone())?;
-                        Err(KeyRotationError::RecoveryRequired(
-                            "the commit result is uncertain and neither identity can currently reach the VPS; restore network access and run key rotation again"
-                                .to_owned(),
-                        ))
-                    }
+            Step::Abandon => {
+                abandon_staged_rotation(secrets, &journals, &journal)?;
+                return Err(last_error.unwrap_or(KeyRotationError::InvalidState));
+            }
+            Step::KeepOld => {
+                let (Some(status), client) = old.as_ref().ok_or(KeyRotationError::InvalidState)?
+                else {
+                    return Err(KeyRotationError::InvalidState);
+                };
+                if let Some(role) = status.caller_role {
+                    journal.original_profile.role = role;
+                    journal.original_profile.administrator = status.caller_administrator;
                 }
+                client
+                    .refresh_membership_ids(
+                        &mut journal.original_profile,
+                        status
+                            .caller_device_id
+                            .ok_or(KeyRotationError::InvalidState)?,
+                    )
+                    .await?;
+                journal.phase = RotationPhase::Prepared;
+                write_device_identity(&profiles, &journal.original_profile)?;
+                journals.update(&journal)?;
+                return Err(KeyRotationError::RecoveryRequired(
+                    "the VPS kept the old identity, which was restored locally; run key rotation again to retry the commit"
+                        .to_owned(),
+                ));
             }
-        }
+            Step::Stop => return Err(last_error.unwrap_or(KeyRotationError::InvalidState)),
+            Step::Fail(failure) => {
+                if failure.restores_original_identity() {
+                    // Never point the profile at an identity whose deletion has started.
+                    if matches!(
+                        secrets.state(&journal.original_profile.identity_reference)?,
+                        crate::CredentialState::Deleting | crate::CredentialState::Deleted
+                    ) {
+                        return Err(KeyRotationError::RecoveryRequired(
+                            "the original device identity was already deleted; reconnect and run key rotation again to finish with the new identity".to_owned(),
+                        ));
+                    }
+                    write_device_identity(&profiles, &journal.original_profile)?;
+                }
+                return Err(failure
+                    .message()
+                    .map_or(KeyRotationError::InvalidState, |message| {
+                        KeyRotationError::RecoveryRequired(message.to_owned())
+                    }));
+            }
+        };
+        progress.phase = journal.phase;
     }
+}
+
+async fn stage_from_current_profile<Remote: RotationRemote>(
+    profiles: &crate::ProfileStore,
+    journals: &RotationJournalStore,
+    secrets: &dyn SecretStore,
+    remote: &Remote,
+    server_id: ServerId,
+    requested: RotationConnectionMode,
+) -> Result<RotationJournal, KeyRotationError> {
+    let profile = profiles
+        .load()?
+        .into_iter()
+        .find(|profile| profile.id == server_id)
+        .ok_or(ProfileStoreError::NotFound)?;
+    let original_secret = secrets.get(&profile.identity_reference)?;
+    validate_original_identity(&profile, &original_secret)?;
+    let client = remote.client(&profile, &original_secret)?;
+    let capabilities = client.capabilities().await?;
+    if !capabilities.key_rotation {
+        return Err(KeyRotationError::UnsupportedServer);
+    }
+    verify_status_identity(
+        &client.status().await?,
+        &profile.client_management_certificate_pem,
+    )?;
+    stage_rotation(
+        journals,
+        secrets,
+        profile,
+        &original_secret,
+        requested.persistent_protection,
+        requested.transport,
+        requested.transport_fallback_enabled,
+        requested.connection_policy,
+        capabilities.preshared_keys,
+    )
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -674,16 +711,17 @@ fn validate_staged_identities(
     Ok(())
 }
 
-async fn connect_and_verify<Disconnect, Connect>(
+async fn connect_and_verify<Remote, Disconnect, Connect>(
     profiles: &crate::ProfileStore,
+    remote: &Remote,
     disconnect: &mut Disconnect,
     connect: &mut Connect,
-    profile: &ServerProfile,
+    identity: &ServerProfile,
     secret: &SecretIdentity,
-    expected_certificate: &str,
-    mode: RotationConnectionMode,
-) -> Result<(ServerStatus, ManagementClient), KeyRotationError>
+    mode: &RotationConnectionMode,
+) -> Result<(ServerStatus, Remote::Client), KeyRotationError>
 where
+    Remote: RotationRemote,
     Disconnect: FnMut() -> Result<(), String>,
     Connect: FnMut(
         &ServerProfile,
@@ -695,9 +733,11 @@ where
     ) -> Result<(), String>,
 {
     disconnect().map_err(KeyRotationError::Tunnel)?;
-    profiles.upsert(profile.clone())?;
+    // Connect with the profile as it is now (endpoint, routes, name), carrying the
+    // candidate identity; the journal's copy of the rest may be days old.
+    let profile = write_device_identity(profiles, identity)?;
     connect(
-        profile,
+        &profile,
         secret,
         mode.persistent_protection,
         mode.transport,
@@ -705,10 +745,29 @@ where
         mode.connection_policy.as_ref(),
     )
     .map_err(KeyRotationError::Tunnel)?;
-    let client = ManagementClient::new(profile, secret)?;
+    let client = remote.client(&profile, secret)?;
     let status = client.status().await?;
-    verify_status_identity(&status, expected_certificate)?;
+    verify_status_identity(&status, &identity.client_management_certificate_pem)?;
     Ok((status, client))
+}
+
+/// Rotation owns only the device identity fields of the saved profile. Every other
+/// field keeps its current value, including renames and endpoint checkpoints applied
+/// while the rotation was staged or interrupted.
+fn write_device_identity(
+    profiles: &crate::ProfileStore,
+    identity: &ServerProfile,
+) -> Result<ServerProfile, KeyRotationError> {
+    Ok(profiles.update(identity.id, |current| {
+        current.identity_reference = identity.identity_reference.clone();
+        current.client_management_certificate_pem =
+            identity.client_management_certificate_pem.clone();
+        current.device_id = identity.device_id;
+        current.member_id = identity.member_id;
+        current.role = identity.role;
+        current.administrator = identity.administrator;
+        Ok(current.clone())
+    })?)
 }
 
 #[derive(Clone)]
@@ -738,13 +797,13 @@ fn verify_status_identity(
     Ok(())
 }
 
-async fn activate_and_finish(
+async fn activate_and_finish<Client: RotationClient>(
     profiles: &crate::ProfileStore,
     secrets: &dyn SecretStore,
     journals: &RotationJournalStore,
     journal: &mut RotationJournal,
     status: ServerStatus,
-    client: ManagementClient,
+    client: Client,
     resumed: bool,
 ) -> Result<KeyRotationResult, KeyRotationError> {
     let device_id = status
@@ -757,11 +816,9 @@ async fn activate_and_finish(
         .await?;
     journal.original_profile.member_id = profile.member_id;
     let role = status.caller_role.ok_or(KeyRotationError::InvalidState)?;
-    profile.role = role;
-    profile.administrator = status.caller_administrator;
     journal.original_profile.role = role;
     journal.original_profile.administrator = status.caller_administrator;
-    profiles.upsert(profile.clone())?;
+    write_device_identity(profiles, &journal.new_profile())?;
     journal.phase = RotationPhase::Activated;
     journals.update(journal)?;
     finish_activation(profiles, secrets, journals, journal, resumed)
@@ -783,7 +840,7 @@ fn finish_activation(
     {
         return Err(KeyRotationError::InvalidState);
     }
-    profiles.upsert(journal.new_profile())?;
+    write_device_identity(profiles, &journal.new_profile())?;
     secrets.delete(&journal.original_profile.identity_reference)?;
     secrets.delete(&journal.transition_identity_reference)?;
     journals.remove(journal.original_profile.id)?;
@@ -822,5 +879,7 @@ fn ensure_unused_secret_reference(
     }
 }
 
+#[cfg(test)]
+mod driver_tests;
 #[cfg(test)]
 mod tests;

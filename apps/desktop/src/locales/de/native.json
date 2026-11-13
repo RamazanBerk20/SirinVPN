@@ -1,0 +1,110 @@
+{
+  "tray": {
+    "status": {
+      "unknown": "Status unbekannt",
+      "connected": "Verbunden",
+      "connectedTo": "Verbunden mit {{name}}",
+      "paused": "Verbindung pausiert",
+      "pausedOn": "Verbindung pausiert · {{name}}",
+      "reconnecting": "Verbindet erneut…",
+      "reconnectingTo": "Verbindet erneut mit {{name}}…",
+      "connecting": "Verbindet…",
+      "connectingTo": "Verbindung zu {{name}} wird hergestellt…",
+      "interrupted": "Verbindung unterbrochen",
+      "interruptedOn": "Verbindung unterbrochen · {{name}}",
+      "disconnected": "Getrennt",
+      "serversUnavailable": "{{status}} · Server konnten nicht geladen werden",
+      "busy": "Verbindung wird geändert…",
+      "legacySession": "Weitere Steuerung bei der nächsten Verbindung"
+    },
+    "killSwitch": {
+      "on": "Kill-Switch: Ein",
+      "onIpv6Unverified": "Kill-Switch: Ein · IPv6 nicht geprüft",
+      "blocking": "Kill-Switch: Blockiert Datenverkehr",
+      "blockingIpv6Unverified": "Kill-Switch: Blockiert Datenverkehr · IPv6 nicht geprüft",
+      "off": "Kill-Switch: Aus",
+      "failed": "Kill-Switch: Funktioniert nicht",
+      "unknown": "Kill-Switch: Unbekannt"
+    },
+    "menu": {
+      "open": "SirinVPN öffnen",
+      "connectTo": "Mit {{name}} verbinden",
+      "addServer": "Server hinzufügen…",
+      "disconnect": "Trennen…",
+      "resume": "Fortsetzen",
+      "reconnect": "Erneut verbinden",
+      "stopReconnecting": "Wiederverbindung beenden…",
+      "stopConnecting": "Verbindungsversuch beenden…",
+      "updateComponent": "VPN-Komponente aktualisieren…",
+      "switchServer": "Server wechseln",
+      "connectServer": "Mit Server verbinden",
+      "manageServers": "Server verwalten",
+      "connectionSettings": "Verbindungseinstellungen",
+      "settings": "Einstellungen",
+      "diagnostics": "Diagnose",
+      "disconnectQuit": "Trennen und beenden…"
+    },
+    "quit": {
+      "plain": "App beenden",
+      "statusUnknown": "App beenden · Status unbekannt…",
+      "paused": "App beenden · VPN bleibt pausiert",
+      "reconnecting": "App beenden · VPN verbindet weiter erneut",
+      "connected": "App beenden · VPN läuft weiter",
+      "service": "App beenden · VPN-Dienst läuft weiter",
+      "blocking": "App beenden · Datenverkehr bleibt blockiert",
+      "killSwitchUnknown": "App beenden · Kill-Switch unbekannt…"
+    },
+    "confirm": {
+      "cancel": "Abbrechen",
+      "switch": {
+        "title": "Zu {{name}} wechseln?",
+        "messageKillSwitchOn": "Deine aktuellen Einstellungen werden übernommen. Der Kill-Switch bleibt während des Wechsels eingeschaltet.",
+        "messageKillSwitchOff": "Deine aktuellen Einstellungen werden übernommen. Der Kill-Switch ist aus, daher kann der Datenverkehr während des Wechsels am VPN vorbeilaufen.",
+        "confirm": "Wechseln"
+      },
+      "stop": {
+        "title": "Verbindungsversuche beenden?",
+        "messageKillSwitchOn": "Der Kill-Switch blockiert den Datenverkehr weiter, bis du dich erneut verbindest oder trennst.",
+        "messageKillSwitchOff": "Der Kill-Switch ist aus, daher umgeht der Datenverkehr das VPN, bis du dich erneut verbindest.",
+        "confirm": "Versuche beenden"
+      },
+      "disconnect": {
+        "title": "VPN trennen?",
+        "message": "Jede Datenverkehrssperre wird aufgehoben, und das VPN bleibt aus, bis du dich wieder verbindest. Andere Geräte bleiben verbunden.",
+        "confirm": "Trennen"
+      },
+      "disconnectQuit": {
+        "title": "Trennen und beenden?",
+        "confirm": "Trennen und beenden"
+      },
+      "quit": {
+        "title": "SirinVPN beenden?",
+        "message": "{{status}}\nDas Schließen der App beendet weder das VPN, die Wiederverbindung noch den Kill-Switch.",
+        "confirm": "Beenden"
+      }
+    },
+    "error": {
+      "title": "Verbindung konnte nicht geändert werden",
+      "alreadyConnected": "Eine andere Verbindung ist aktiv. Nutze stattdessen Server wechseln.",
+      "statusUnverified": "Der Verbindungsstatus konnte nicht geprüft werden. Öffne SirinVPN und versuche es erneut.",
+      "updateToSwitch": "Aktualisiere die VPN-Komponente, um den Server zu wechseln.",
+      "serverUnconfirmed": "Das VPN hat den ausgewählten Server nicht bestätigt. Prüfe seinen Status.",
+      "connectionChanged": "Die Verbindung hat sich geändert. Öffne das Menü im Infobereich erneut.",
+      "stopUnconfirmed": "Das VPN hat nicht bestätigt, dass es die Versuche beendet hat. Prüfe seinen Status.",
+      "disconnectUnconfirmed": "Das VPN hat nicht bestätigt, dass es getrennt wurde. Prüfe seinen Status und den Kill-Switch.",
+      "quitUnconfirmed": "Das VPN hat nicht bestätigt, dass es getrennt wurde, daher bleibt die App geöffnet. Prüfe seinen Status.",
+      "selectionUnavailable": "Das Menü im Infobereich konnte nicht aktualisiert werden. Versuche es erneut."
+    }
+  },
+  "notification": {
+    "test": "Benachrichtigungen sind bereit. Verbindungswarnungen erscheinen hier.",
+    "connected": "VPN verbunden",
+    "disconnected": "VPN getrennt",
+    "reconnecting": "Verbindung unterbrochen. Verbindet erneut…",
+    "statusUnknown": "Der VPN-Status konnte nicht gelesen werden. Öffne SirinVPN, um ihn zu prüfen.",
+    "error": {
+      "disabled": "Schalte zuerst Benachrichtigungen ein.",
+      "failed": "Die Benachrichtigung konnte nicht angezeigt werden. Prüfe die Benachrichtigungseinstellungen deines Systems."
+    }
+  }
+}

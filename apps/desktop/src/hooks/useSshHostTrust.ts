@@ -1,64 +1,58 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useReducer, useRef } from "react";
 import { api } from "../api";
-import type { SshHostInspection } from "../types";
 import { t } from "../i18n";
+import { hostTrustReducer, initialHostTrust, type InspectedSshHost } from "./sshHostTrustMachine";
 
-export interface InspectedSshHost extends SshHostInspection {
-  host: string;
-  port: number;
-}
+export type { InspectedSshHost } from "./sshHostTrustMachine";
 
 export function useSshHostTrust(host: string, port: number, open: boolean) {
-  const [inspection, setInspection] = useState<InspectedSshHost | null>(null);
+  const [state, dispatch] = useReducer(hostTrustReducer, initialHostTrust);
+  const latest = useRef(state);
+  latest.current = state;
   const target = JSON.stringify([host.trim(), port, open]);
   const current = useRef(target);
   current.current = target;
-  const generation = useRef(0);
-  const reset = useCallback(() => {
-    generation.current += 1;
-    setInspection(null);
-  }, []);
+  // The machine's request number, known before React renders it, so a result can tell it's stale.
+  const seqRef = useRef(initialHostTrust.seq);
+  const reset = useCallback(() => { seqRef.current += 1; dispatch({ type: "reset" }); }, []);
   useEffect(reset, [target, reset]);
-  useEffect(
-    () => () => {
-      generation.current += 1;
-    },
-    [],
-  );
+  // Results arriving after unmount must not count.
+  useEffect(() => () => { current.current = ""; }, []);
 
-  const inspect = async () => {
-    const attempt = ++generation.current;
-    const result = await api.inspectSshHost(host.trim(), port);
-    if (attempt !== generation.current || target !== current.current || !open)
-      return null;
+  const inspect = async (): Promise<InspectedSshHost | null> => {
+    const seq = ++seqRef.current;
+    dispatch({ type: "check" });
+    let result;
+    try { result = await api.inspectSshHost(host.trim(), port); }
+    catch (reason) { dispatch({ type: "checkFailed", seq }); throw reason; }
+    if (target !== current.current || !open || seqRef.current !== seq) return null;
     const inspected = { ...result, host: host.trim(), port };
-    setInspection(inspected);
+    dispatch({ type: "inspected", seq, inspection: inspected });
     return inspected;
   };
 
-  const accept = async (inspected: InspectedSshHost, confirmed: boolean) => {
-    const attempt = generation.current;
-    if (
-      !open ||
-      target !== current.current ||
-      inspected.host !== host.trim() ||
-      inspected.port !== port
-    ) {
+  /** The pinned fingerprint for an operation: a trusted key, or one the user confirmed, remembered first. */
+  const accept = async (inspected: InspectedSshHost) => {
+    const state = latest.current;
+    if (!open || target !== current.current || inspected.host !== host.trim() || inspected.port !== port)
       throw new Error(t("ssh.error.hostChanged"));
-    }
     if (inspected.status !== "trusted") {
-      if (!confirmed) throw new Error(t("ssh.error.verifyFirst"));
-      await api.trustSshHost(
-        inspected.host,
-        inspected.port,
-        inspected.fingerprint,
-      );
-      if (attempt !== generation.current || target !== current.current)
-        throw new Error(t("ssh.error.hostChanged"));
-      setInspection({ ...inspected, status: "trusted" });
+      if (state.kind !== "confirmed" || state.inspection.fingerprint !== inspected.fingerprint) throw new Error(t("ssh.error.verifyFirst"));
+      await api.trustSshHost(inspected.host, inspected.port, inspected.fingerprint);
+      if (seqRef.current !== state.seq || target !== current.current) throw new Error(t("ssh.error.hostChanged"));
+      dispatch({ type: "trusted", seq: state.seq });
     }
     return inspected.fingerprint;
   };
 
-  return { inspection, inspect, accept, reset };
+  const inspection = state.kind === "trusted" || state.kind === "needsConfirmation" || state.kind === "confirmed" ? state.inspection : null;
+  return {
+    state: state.kind,
+    inspection,
+    confirmed: state.kind === "confirmed",
+    setConfirmed: (confirmed: boolean) => dispatch({ type: "confirm", confirmed }),
+    inspect,
+    accept,
+    reset,
+  };
 }

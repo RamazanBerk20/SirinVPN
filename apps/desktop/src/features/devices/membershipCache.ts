@@ -1,46 +1,25 @@
 import type { MembershipSnapshot } from "../../types";
+import type { Saved } from "./model";
 
-type Entry = { value?: MembershipSnapshot; at?: number; revision: number; pending?: Promise<MembershipSnapshot> };
-const entries = new Map<string, Entry>();
+/**
+ * The last list read for each server and device, kept for this app session only, so the page can
+ * show it read-only while disconnected. Nothing is written to disk.
+ */
+const lastKnown = new Map<string, Saved>();
 
-export function clearMembershipCache() { entries.clear(); }
-export function cachedMembership(key: string) { return entries.get(key); }
-function entry(key: string): Entry {
-  const existing = entries.get(key);
-  if (existing) return existing;
-  if (entries.size >= 16) entries.delete(entries.keys().next().value!);
-  const next = { revision: 0 };
-  entries.set(key, next);
-  return next;
+export function rememberMembership(key: string, snapshot: MembershipSnapshot) {
+  lastKnown.delete(key);
+  if (lastKnown.size >= 16) lastKnown.delete(lastKnown.keys().next().value!);
+  lastKnown.set(key, { snapshot, at: Date.now() });
 }
-export function retainMembership(key: string, value: MembershipSnapshot) {
-  const current = entry(key);
-  current.revision++;
-  current.value = value;
-  current.at = Date.now();
-}
-/** A read that started before a change on the VPS must not satisfy a refresh that follows it. */
-export function invalidateMembership(key: string) {
-  const current = entries.get(key);
-  if (!current) return;
-  current.revision++;
-  current.pending = undefined;
-}
-export function readMembership(key: string, load: () => Promise<MembershipSnapshot>) {
-  const current = entry(key);
-  if (current.pending) return current.pending;
-  const revision = current.revision;
-  const pending = load().then(value => {
-    if (entries.get(key) === current && current.revision === revision) {
-      current.value = value; current.at = Date.now();
-    }
-    return current.revision === revision ? value : current.value!;
-  }).finally(() => { if (current.pending === pending) current.pending = undefined; });
-  current.pending = pending;
-  return pending;
-}
-export function withoutLiveActivity(value: MembershipSnapshot): MembershipSnapshot {
-  return { ...value, members: value.members.map(member => ({ ...member,
-    devices: member.devices.map(device => ({ ...device, recent_handshake: undefined })),
-  })) };
-}
+
+export const savedMembership = (key: string): Saved | null => lastKnown.get(key) ?? null;
+
+/**
+ * Called when the tunnel goes down. The saved lists stay: the disconnected page shows them,
+ * marked with when they were read, and every read after reconnecting replaces them.
+ */
+export function clearMembershipCache() {}
+
+/** For tests. */
+export function forgetMembership() { lastKnown.clear(); }

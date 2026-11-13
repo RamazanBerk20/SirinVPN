@@ -334,6 +334,7 @@ async fn creation_pre_seeds_keys_and_continues_once_the_pinned_key_answers() {
         .wait_with(
             &server,
             &AtomicBool::new(false),
+            None,
             move |ipv4| {
                 assert_eq!(ipv4, Ipv4Addr::new(203, 0, 113, 7));
                 let mut attempts = seen.lock().unwrap();
@@ -488,17 +489,27 @@ async fn waiting_times_out_and_never_trusts_another_host_key() {
     let never = AtomicBool::new(false);
     let unused = |_| unreachable!("the pinned key never answered");
     assert!(matches!(
-        client.wait_with(&server, &never, |_| None, unused).await,
+        client
+            .wait_with(&server, &never, None, |_| None, unused)
+            .await,
         Err(HetznerError::Timeout("start"))
     ));
     mock.state.lock().unwrap().statuses = vec!["running"];
     assert!(matches!(
-        client.wait_with(&server, &never, |_| None, unused).await,
+        client
+            .wait_with(&server, &never, None, |_| None, unused)
+            .await,
         Err(HetznerError::Timeout("accept SSH connections"))
     ));
     assert!(matches!(
         client
-            .wait_with(&server, &never, |_| Some("SHA256:other".to_owned()), unused)
+            .wait_with(
+                &server,
+                &never,
+                None,
+                |_| Some("SHA256:other".to_owned()),
+                unused
+            )
             .await,
         Err(HetznerError::HostKeyMismatch)
     ));
@@ -507,7 +518,7 @@ async fn waiting_times_out_and_never_trusts_another_host_key() {
     let pinned = |_| Some("SHA256:pinned".to_owned());
     assert!(matches!(
         client
-            .wait_with(&server, &never, pinned, |_| Err(
+            .wait_with(&server, &never, None, pinned, |_| Err(
                 HetznerError::HostKeyReplacement("failed".to_owned())
             ))
             .await,
@@ -515,7 +526,9 @@ async fn waiting_times_out_and_never_trusts_another_host_key() {
     ));
     assert!(matches!(
         client
-            .wait_with(&server, &never, pinned, |_| Ok("SHA256:new".to_owned()))
+            .wait_with(&server, &never, None, pinned, |_| Ok(
+                "SHA256:new".to_owned()
+            ))
             .await,
         Err(HetznerError::Timeout("accept SSH connections"))
     ));
@@ -534,7 +547,13 @@ async fn waiting_times_out_and_never_trusts_another_host_key() {
     };
     assert!(matches!(
         client
-            .wait_with(&server, &never, third, |_| Ok("SHA256:new".to_owned()))
+            .wait_with(
+                &server,
+                &never,
+                None,
+                third,
+                |_| Ok("SHA256:new".to_owned())
+            )
             .await,
         Err(HetznerError::HostKeyMismatch)
     ));
@@ -563,7 +582,7 @@ async fn cancelling_stops_waiting_and_the_server_is_deleted_only_when_asked() {
     });
     assert!(matches!(
         client
-            .wait_with(&server, &cancel, |_| None, |_| unreachable!())
+            .wait_with(&server, &cancel, None, |_| None, |_| unreachable!())
             .await,
         Err(HetznerError::Cancelled)
     ));
@@ -735,4 +754,230 @@ fn keys_use_the_openssh_format_and_the_installer_fingerprint() {
         listed.split_whitespace().nth(1),
         Some(prepared.host_key_sha256().as_str())
     );
+}
+
+/// Runs a host-key step against a temporary /etc/ssh with real ssh-keygen and
+/// shimmed sshd/systemctl.
+struct HostKeys {
+    directory: tempfile::TempDir,
+}
+
+impl HostKeys {
+    fn new() -> Self {
+        let directory = tempfile::tempdir().unwrap();
+        std::fs::create_dir_all(directory.path().join("etc/ssh")).unwrap();
+        std::fs::create_dir_all(directory.path().join("bin")).unwrap();
+        let keys = Self { directory };
+        let status = std::process::Command::new("ssh-keygen")
+            .args(["-q", "-t", "ed25519", "-N", "", "-C", "", "-f"])
+            .arg(keys.key(""))
+            .status()
+            .unwrap();
+        assert!(status.success());
+        keys.shim("sshd", r#"[ ! -f "$SIRINVPN_TEST_ROOT/sshd-rejects" ]"#);
+        keys.shim(
+            "systemctl",
+            r#"printf '%s\n' "$*" >>"$SIRINVPN_TEST_ROOT/systemctl""#,
+        );
+        keys
+    }
+    fn key(&self, suffix: &str) -> PathBuf {
+        self.directory
+            .path()
+            .join(format!("etc/ssh/ssh_host_ed25519_key{suffix}"))
+    }
+    fn shim(&self, name: &str, body: &str) {
+        use std::os::unix::fs::PermissionsExt;
+        let path = self.directory.path().join("bin").join(name);
+        std::fs::write(&path, format!("#!/bin/sh\n{body}\n")).unwrap();
+        std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o700)).unwrap();
+    }
+    fn public(&self) -> String {
+        let output = std::process::Command::new("ssh-keygen")
+            .arg("-y")
+            .arg("-f")
+            .arg(self.key(""))
+            .output()
+            .unwrap();
+        String::from_utf8(output.stdout)
+            .unwrap()
+            .split_whitespace()
+            .take(2)
+            .collect::<Vec<_>>()
+            .join(" ")
+    }
+    fn run(&self, script: &str) -> std::process::Output {
+        let root = self.directory.path().to_str().unwrap();
+        std::process::Command::new("/bin/sh")
+            .arg("-c")
+            .arg(
+                script
+                    .replace("/etc/ssh", &format!("{root}/etc/ssh"))
+                    .replace("/usr/sbin/sshd", "sshd"),
+            )
+            .env("PATH", format!("{root}/bin:/usr/bin:/bin"))
+            .env("SIRINVPN_TEST_ROOT", root)
+            .output()
+            .unwrap()
+    }
+}
+
+#[test]
+fn host_key_replacement_has_no_state_with_an_unknown_key() {
+    let keys = HostKeys::new();
+    let pinned = keys.public();
+
+    // Preparing twice (a lost reply) offers the same replacement and keeps the pin.
+    let prepare = |keys: &HostKeys| {
+        let output = keys.run(PREPARE_HOST_KEY);
+        assert!(output.status.success(), "{output:?}");
+        String::from_utf8(output.stdout).unwrap().trim().to_owned()
+    };
+    let replacement = prepare(&keys);
+    assert_eq!(prepare(&keys), replacement);
+    assert_ne!(replacement, pinned);
+    assert_eq!(keys.public(), pinned);
+    assert!(public_key_fingerprint(&replacement).is_some());
+
+    // A configuration sshd rejects puts the pinned key back, ready for a retry.
+    std::fs::write(keys.directory.path().join("sshd-rejects"), "").unwrap();
+    assert!(!keys.run(&activate_host_key(&replacement)).status.success());
+    assert_eq!(keys.public(), pinned);
+    assert_eq!(prepare(&keys), replacement);
+    std::fs::remove_file(keys.directory.path().join("sshd-rejects")).unwrap();
+
+    // Another key than the one the client learned is never activated.
+    assert!(!keys.run(&activate_host_key(&pinned)).status.success());
+    assert_eq!(keys.public(), pinned);
+
+    let output = keys.run(&activate_host_key(&replacement));
+    assert!(output.status.success(), "{output:?}");
+    assert_eq!(keys.public(), replacement);
+    assert_eq!(
+        std::fs::read_to_string(keys.key(".pub")).unwrap().trim(),
+        replacement
+    );
+    assert!(!keys.key(".new").exists() && !keys.key(".previous").exists());
+    // A retry after the reply was lost only confirms the switch.
+    assert!(keys.run(&activate_host_key(&replacement)).status.success());
+    assert_eq!(keys.public(), replacement);
+    let reloads = std::fs::read_to_string(keys.directory.path().join("systemctl")).unwrap();
+    assert_eq!(
+        reloads.lines().filter(|line| *line == "reload ssh").count(),
+        2
+    );
+}
+
+#[tokio::test]
+async fn only_a_definite_not_found_drops_an_uncertain_creation_record() {
+    let directory = tempfile::tempdir().unwrap();
+    let prepared = PreparedServer::generate();
+    let mut provision = HetznerProvision::requested(&prepared);
+    provision.save(directory.path()).unwrap();
+    let lookup_only = AtomicBool::new(true);
+    let login = || Zeroizing::new(String::new());
+
+    // A failed lookup (no answer at all) says nothing about the server: keep the record.
+    let unreachable = TcpListener::bind("127.0.0.1:0").unwrap();
+    let base = Url::parse(&format!("http://{}/v1/", unreachable.local_addr().unwrap())).unwrap();
+    drop(unreachable);
+    let http = Client::builder()
+        .timeout(Duration::from_millis(800))
+        .build()
+        .unwrap();
+    let offline = HetznerClient::with(http, base, TOKEN, quick()).unwrap();
+    assert!(
+        offline
+            .resume(directory.path(), &mut provision, login(), &lookup_only)
+            .await
+            .is_err()
+    );
+    assert!(
+        HetznerProvision::load(directory.path(), &prepared.name)
+            .unwrap()
+            .is_some()
+    );
+
+    // Hetzner answering that no server has this name is the only reason to drop it.
+    let empty = Mock::start(State::default());
+    let error = empty
+        .client(quick())
+        .resume(directory.path(), &mut provision, login(), &lookup_only)
+        .await
+        .unwrap_err();
+    assert!(matches!(error, HetznerError::InvalidChoice(_)), "{error:?}");
+    assert!(
+        HetznerProvision::load(directory.path(), &prepared.name)
+            .unwrap()
+            .is_none()
+    );
+}
+
+#[test]
+fn a_creation_record_survives_restarts_until_forgotten() {
+    let directory = tempfile::tempdir().unwrap();
+    let prepared = PreparedServer::generate();
+    let mut provision = HetznerProvision::requested(&prepared);
+    assert!(
+        HetznerProvision::pending(directory.path())
+            .unwrap()
+            .is_empty()
+    );
+    provision.save(directory.path()).unwrap();
+    provision
+        .advance(directory.path(), HetznerPhase::Created { server_id: 42 })
+        .unwrap();
+    let loaded = HetznerProvision::load(directory.path(), &prepared.name)
+        .unwrap()
+        .unwrap();
+    assert_eq!(loaded, provision);
+    assert_eq!(loaded.server_id(), Some(42));
+    assert_eq!(
+        loaded.pre_seeded_host_key_sha256,
+        prepared.host_key_sha256()
+    );
+    let saved = std::fs::read_to_string(
+        directory
+            .path()
+            .join("ssh-keys")
+            .join(format!("{}.provision.json", prepared.name)),
+    )
+    .unwrap();
+    assert!(!saved.contains("PRIVATE KEY") && !saved.contains(TOKEN));
+    assert_eq!(
+        HetznerProvision::pending(directory.path()).unwrap(),
+        vec![provision]
+    );
+    HetznerProvision::forget(directory.path(), &prepared.name).unwrap();
+    assert!(
+        HetznerProvision::pending(directory.path())
+            .unwrap()
+            .is_empty()
+    );
+    assert!(HetznerProvision::load(directory.path(), "../escape").is_err());
+}
+
+#[tokio::test]
+async fn a_resumed_creation_whose_new_key_is_active_needs_no_second_replacement() {
+    let mock = Mock::start(State {
+        statuses: vec!["running"],
+        ..State::default()
+    });
+    let client = mock.client(quick());
+    let server = HetznerServer {
+        id: 42,
+        name: "sirinvpn-test".to_owned(),
+        host_key_sha256: "SHA256:pinned".to_owned(),
+    };
+    let ready = client
+        .wait_with(
+            &server,
+            &AtomicBool::new(false),
+            Some("SHA256:new"),
+            |_| Some("SHA256:new".to_owned()),
+            |_| unreachable!("the replacement is already active"),
+        )
+        .await
+        .unwrap();
+    assert_eq!(ready.host_key_sha256, "SHA256:new");
 }

@@ -10,7 +10,7 @@ pub(super) async fn endpoint_transition_handler(
     let authorization = require_authorization(&state)?;
     let current = authorization.read().await;
     authorize_current(&current, &caller, false)?;
-    let transition = current.endpoint_transition.clone();
+    let transition = current.endpoint.head().cloned();
     Ok(Json(ApiEnvelope::new(transition)))
 }
 
@@ -27,6 +27,13 @@ pub(super) async fn create_endpoint_transition_handler(
         return Err(ApiError::forbidden());
     }
     ensure_active_endpoint_authority(&current)?;
+    // Only the next generation (or an idempotent retry of the current one): a skipped-ahead
+    // generation such as u64::MAX would leave repair and observation unable to follow it.
+    if request.generation > current.endpoint_generation().saturating_add(1) {
+        return Err(ApiError::invalid(
+            "the endpoint update must use the next generation",
+        ));
+    }
     if current.server_id != request.server_id {
         return Err(ApiError::conflict(
             "the endpoint update belongs to a different server profile",
@@ -67,17 +74,15 @@ pub(super) async fn publish_endpoint_transition_handler(
             "the endpoint update belongs to a different server identity",
         ));
     }
-    if !current.endpoint_transition_source
-        && current.endpoint_transition.as_ref() == Some(&response)
-    {
+    if !current.endpoint.is_handoff_source() && current.endpoint.head() == Some(&response) {
         // This is the active destination, possibly reached through an alias of
         // its predecessor. Publishing its own checkpoint must not freeze it.
         return Ok(Json(ApiEnvelope::new(response)));
     }
-    if !current.endpoint_transition_source && response.claims.schema_version == 2 {
+    if !current.endpoint.is_handoff_source() && response.claims.schema_version == 2 {
         let expected = current
-            .endpoint_transition
-            .as_ref()
+            .endpoint
+            .head()
             .map(|head| head.claims.endpoint_descriptor())
             .unwrap_or_else(|| {
                 configuration_endpoint_descriptor(
@@ -102,8 +107,7 @@ pub(super) async fn publish_endpoint_transition_handler(
             "the old and restored VPS authorization state differs; reconcile access before publishing this endpoint update",
         ));
     }
-    if current.endpoint_transition_source && current.endpoint_transition.as_ref() != Some(&response)
-    {
+    if current.endpoint.is_handoff_source() && current.endpoint.head() != Some(&response) {
         return Err(ApiError::conflict(
             "this handoff source is already bound to its current signed endpoint update",
         ));
@@ -113,8 +117,7 @@ pub(super) async fn publish_endpoint_transition_handler(
     ensure_transition_quiescent(&next)?;
     next.accept_endpoint_transition(response.clone())
         .map_err(|error| ApiError::conflict(error.to_string()))?;
-    next.endpoint_observed_address = None;
-    next.endpoint_transition_source = true;
+    next.endpoint.hand_off(response.clone());
     if next != *current {
         commit_authorization(&state, &mut current, next).await?;
     }
@@ -160,7 +163,7 @@ pub(super) fn ensure_transition_quiescent(
     if !authorization.invitations.is_empty()
         || !authorization.enrollment_receipts.is_empty()
         || !authorization.key_rotations.is_empty()
-        || authorization.recovery_receipt.is_some()
+        || authorization.owner_recovery.receipt().is_some()
     {
         return Err(ApiError::conflict(
             "cancel active invitations and finish enrollment handoffs and key rotations before publishing an endpoint update",
@@ -172,7 +175,7 @@ pub(super) fn ensure_transition_quiescent(
 pub(super) fn ensure_active_endpoint_authority(
     authorization: &AuthorizationDocument,
 ) -> Result<(), ApiError> {
-    if authorization.endpoint_transition_source {
+    if authorization.endpoint.is_handoff_source() {
         return Err(ApiError::conflict(
             "this VPS is a read-only endpoint handoff source; manage access on the restored VPS",
         ));
@@ -197,8 +200,8 @@ pub(super) fn endpoint_transition_claims(
                 .clone()
                 .or_else(|| {
                     authorization
-                        .endpoint_transition
-                        .as_ref()
+                        .endpoint
+                        .head()
                         .map(|head| head.claims.endpoint_descriptor())
                 })
                 .unwrap_or_else(|| sirinvpn_protocol::EndpointDescriptor {
@@ -260,19 +263,19 @@ pub(super) fn synchronize_configuration_endpoint(
     let mut authorization = load_authorization(&paths.authorization)?;
     let descriptor = configuration_endpoint_descriptor(configuration, &endpoint.host);
     authorization::validate_endpoint_descriptor(&descriptor)?;
-    if authorization.endpoint_transition_source
+    if authorization.endpoint.is_handoff_source()
         || authorization
-            .endpoint_transition
-            .as_ref()
+            .endpoint
+            .head()
             .is_some_and(|head| head.claims.endpoint_descriptor() == descriptor)
     {
-        return Ok(authorization.endpoint_transition);
+        return Ok(authorization.endpoint.head().cloned());
     }
     authorization.prune_expired(unix_time());
     ensure_transition_quiescent(&authorization).map_err(|error| anyhow!(error.message))?;
     let previous = authorization
-        .endpoint_transition
-        .as_ref()
+        .endpoint
+        .head()
         .map(|head| head.claims.endpoint_descriptor())
         .or(previous)
         .unwrap_or_else(|| descriptor.clone());

@@ -77,13 +77,13 @@ export function SpeedTest({ serverId }: { serverId: string }) {
         <strong><ArrowClockwise className="spin" size={18} />{t("maintenance.speedTest.running")}</strong>
         <progress max={TOTAL_SECONDS} value={Math.min(elapsed, TOTAL_SECONDS)} aria-label={phaseText} />
         <p>{phase === "finishing" ? t("settings.speedTest.finishingLine", { phase: phaseText })
-          : t("settings.speedTest.left", { phase: phaseText, seconds: formatNumber(TOTAL_SECONDS - elapsed) })}</p>
+          : t("settings.speedTest.left", { phase: phaseText, seconds: TOTAL_SECONDS - elapsed })}</p>
       </div>
       <button className="secondary-button" type="button" onClick={() => void api.cancelSpeedTest()}>{t("settings.speedTest.cancel")}</button>
     </> : error ? <InlineError message={error} onRetry={() => void run()} />
       : <>
         {cancelled && <p className="settings-note" role="status">{readyAt === null ? t("settings.speedTest.cancelled")
-          : t("settings.speedTest.cancelledWait", { seconds: formatNumber(Math.max(1, Math.ceil((readyAt - now) / 1000))) })}</p>}
+          : t("settings.speedTest.cancelledWait", { seconds: Math.max(1, Math.ceil((readyAt - now) / 1000)) })}</p>}
         <button className="secondary-button" type="button" disabled={readyAt !== null} onClick={() => void run()}>
           <Gauge />{result ? t("maintenance.speedTest.again") : t("maintenance.speedTest.run")}
         </button>

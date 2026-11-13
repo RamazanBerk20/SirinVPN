@@ -2,19 +2,21 @@
 
 iPhone, iPad, Mac and routers (OpenWrt, GL.iNet, FritzBox) can join a SirinVPN
 server through the official WireGuard app or the router's built-in WireGuard
-client. Such a device gets a standard `.conf` instead of an invitation.
+client. Such a device gets a standard `.conf` instead of a join code.
 
 ## Who can add one
 
 The Owner, an Admin (for ordinary Members), and a Member whose policy allows
-inviting members (a new member, with at most the Member's own policy). A Member
-who may only add their own devices adds them with an invitation instead.
+**Add new people** (a new person, with at most the Member's own policy). A
+Member who may only **Add their own devices** adds them with a join code instead.
 
-- **Desktop:** **Devices → Add device → Add WireGuard device** (under Advanced)
-  creates a new member; **Add WireGuard device for …** under Advanced in a
-  member's menu adds one to that member.
-  Choosing a file is optional; the QR code is always shown. The desktop shows
-  the action only when the VPS advertises `wireguard_devices_enabled`.
+- **Desktop:** **Devices → Add device**, then **Someone new** (a new person) or
+  **Someone already here** / **Mine** under "Whose device is it?"; under "How will
+  it connect?" choose **WireGuard app** (Advanced) and **Create configuration**.
+  **Add device for …** in a person's panel starts the same flow for that
+  person. Choosing a file (**Choose file**) is optional; the QR code is always
+  shown. The desktop shows the option only when the VPS advertises
+  `wireguard_devices_enabled`.
 - **CLI:**
 
   ```sh
@@ -55,9 +57,10 @@ apply. The suggested file name is at most 15 characters from
 
 ## What the device can and cannot do
 
-It is an ordinary device in the member list, marked **WireGuard app or router,
-Direct UDP only**. Rename, peer communication, port forwards, suspension,
-schedules, device limits, revocation and member removal work as for any device.
+It is an ordinary device under its person, marked **WireGuard app or router,
+Direct UDP only**. Rename, device-to-device access, port forwards, suspension,
+weekly hours, device limits, **Remove device** and **Remove person** work as for
+any device.
 
 It has no management certificate, so it cannot open the management API and does
 not appear in the VPS's mTLS trust store. The Obfuscated UDP, TCP and TLS relays

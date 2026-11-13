@@ -1,0 +1,370 @@
+{
+  "layout": {
+    "categories": "设置分类"
+  },
+  "category": {
+    "general": {
+      "label": "常规",
+      "hint": "Wi-Fi、控制、通知"
+    },
+    "connection": {
+      "label": "连接",
+      "hint": "连接方式、断网保护、重新连接"
+    },
+    "network": {
+      "label": "网络",
+      "hint": "应用路由、DNS、拦截"
+    },
+    "recovery": {
+      "label": "密钥和恢复",
+      "hint": "密钥、备份、恢复"
+    },
+    "maintenance": {
+      "label": "VPS 维护",
+      "shortLabel": "诊断",
+      "hint": "健康状况、诊断、更新"
+    },
+    "advanced": {
+      "label": "高级",
+      "hint": "端口、密钥轮换、提醒、计划任务"
+    }
+  },
+  "general": {
+    "startup": {
+      "title": "启动和窗口",
+      "startOnLogin": {
+        "label": "登录时启动",
+        "summary": "登录时打开 SirinVPN",
+        "unavailable": "此系统不支持"
+      },
+      "launchMinimized": {
+        "label": "最小化启动",
+        "summary": "打开到任务栏；如果已开启“关闭到托盘”，则打开到托盘"
+      },
+      "closeToTray": {
+        "label": "关闭到托盘",
+        "summary": "关闭窗口时继续在托盘中运行",
+        "unavailable": "此桌面会话中没有系统托盘"
+      },
+      "note": "关闭或退出应用不会断开 VPN 连接。"
+    },
+    "android": {
+      "title": "VPN 控制",
+      "summary": "始终开启的 VPN 和“没有 VPN 时阻止连接”在 Android 中设置。",
+      "vpnSettings": "Android VPN 设置",
+      "addTile": "添加快速设置磁贴",
+      "addTileManually": "打开快速设置，点按“编辑”，然后添加 SirinVPN。"
+    },
+    "quickServer": {
+      "label": "快速设置服务器",
+      "placeholder": "选择服务器",
+      "loadFailed": "无法加载你的服务器。",
+      "saveFailed": "无法保存快速设置服务器。",
+      "saved": "快速设置将使用 {{name}}。"
+    },
+    "notifications": {
+      "title": "通知和界面",
+      "infoLabel": "关于通知",
+      "infoDesktop": "提醒绝不包含服务器名称、地址或密钥。",
+      "infoAndroid": "提醒绝不包含服务器名称、地址或密钥。VPN 的持续通知由 Android 控制。",
+      "connection": {
+        "label": "连接通知",
+        "summary": "VPN 连接、断开或重新连接时发出提醒"
+      },
+      "test": "测试通知",
+      "testing": "正在发送…",
+      "androidSettings": "打开通知设置",
+      "blockedAndroid": "Android 已为 SirinVPN 阻止通知。请在通知设置中允许；在此之前，请通过应用或其快速设置磁贴控制 VPN。",
+      "animations": {
+        "label": "界面动画",
+        "summary": "页面切换动画；系统的减少动态效果设置仍然适用"
+      },
+      "theme": {
+        "label": "主题",
+        "summary": "“跟随系统”将遵循设备的浅色或深色设置",
+        "system": "跟随系统",
+        "light": "浅色",
+        "dark": "深色"
+      },
+      "testNeedsNotifications": "请开启连接通知，然后再发送测试。",
+      "blocked": "SirinVPN 的通知已被阻止。请在系统设置中允许，以接收连接提醒。"
+    },
+    "language": {
+      "label": "语言",
+      "summary": "同时用于托盘菜单和通知",
+      "system": "跟随系统默认",
+      "devExpanded": "伪本地化：扩展文本",
+      "devRtl": "伪本地化：从右到左"
+    },
+    "updates": {
+      "title": "应用更新",
+      "check": "检查更新"
+    },
+    "component": {
+      "title": "本地 VPN 组件",
+      "summary": "使此设备的 VPN 服务与应用保持匹配",
+      "review": "查看组件"
+    },
+    "loading": "正在加载应用偏好设置…"
+  },
+  "preferences": {
+    "loadFailed": "无法加载偏好设置。",
+    "saveFailed": "无法保存此设置。你之前的选择仍然有效。",
+    "testSent": "测试通知已发送；如果未显示，请检查系统设置。",
+    "testFailed": "无法发送测试通知。",
+    "notificationsUnknown": "无法确认通知权限。请重试，或在系统设置中允许 SirinVPN 发送通知。"
+  },
+  "wifi": {
+    "title": "Wi-Fi 自动连接",
+    "infoLabel": "关于 Wi-Fi 自动连接",
+    "infoDesktop": "受信任的 Wi-Fi 是自动连接的例外，而不是安全评级。Wi-Fi 名称仅用于显示，从不保存或发送。应用在托盘中运行时，自动连接即会运行；退出应用后即停止。",
+    "infoAndroid": "受信任的 Wi-Fi 是自动连接的例外，而不是安全评级。Wi-Fi 名称仅用于显示，从不保存或发送。只有拥有精确位置权限的应用，Android 才会向其显示这些名称；SirinVPN 从不读取你的位置。当你在 VPN 关闭的情况下连接 Wi-Fi 时，Android 会要求显示一条提示，说明自动连接正在监视。点按“隐藏通知”将永久关闭该提示，自动连接仍会继续工作。",
+    "toggle": {
+      "label": "Wi-Fi 上自动连接",
+      "summary": "除受信任的 Wi-Fi 外，使用下方的服务器"
+    },
+    "server": {
+      "label": "自动连接服务器",
+      "empty": "请先添加服务器",
+      "offHint": "开启自动连接以选择其服务器。"
+    },
+    "network": {
+      "unavailable": "没有活动网络",
+      "otherNetwork": "当前网络不是 Wi-Fi",
+      "trusted": "当前 Wi-Fi 受信任",
+      "untrusted": "当前 Wi-Fi 不受信任",
+      "named": "{{status}} — <strong>{{name}}</strong>",
+      "heading": "当前网络"
+    },
+    "status": {
+      "disabled": "自动连接已关闭。",
+      "starting": "正在启动自动连接…",
+      "waitingForWifi": "正在等待不受信任的 Wi-Fi。",
+      "trusted": "已连接到受信任的 Wi-Fi。活动的 VPN 将保持连接。",
+      "connecting": "正在连接…",
+      "sessionActive": "VPN 或断网保护已开启。",
+      "paused": "已在此网络上暂停，直到网络发生变化。你仍可手动连接。",
+      "needsAttention": "自动连接未能完成。请在首页连接以查看原因。",
+      "needsAuthorization": "请先在首页连接一次，以允许自动连接。"
+    },
+    "access": {
+      "unidentified": "无法可靠地识别此 Wi-Fi，因此无法将其视为受信任的网络。",
+      "permission": "除非 SirinVPN 拥有精确位置权限，否则 Android 会隐藏 Wi-Fi 名称。因此，每个 Wi-Fi 都被视为不受信任，自动连接会在所有 Wi-Fi 上连接。",
+      "locationOff": "位置服务已关闭，因此 Android 会隐藏 Wi-Fi 名称，每个 Wi-Fi 都被视为不受信任。",
+      "background": "受信任的 Wi-Fi 仅在 SirinVPN 打开时有效。应用关闭时，Android 会隐藏 Wi-Fi 名称，因此自动连接会在每个 Wi-Fi 上连接。",
+      "restricted": "SirinVPN 的电池用量已设为“受限”，因此在应用关闭时，自动连接无法启动 VPN。",
+      "allow": "允许位置权限",
+      "allowAlways": "始终允许",
+      "locationSettings": "开启位置服务",
+      "appSettings": "应用设置",
+      "changed": "网络已更改。请在信任之前检查其名称。",
+      "changedUnnamed": "网络已更改，且此设备不报告其名称。在信任之前，请在系统的 Wi-Fi 设置中确认你所连接的网络。"
+    },
+    "trust": {
+      "label": "标签（可选）",
+      "placeholder": "例如：家",
+      "action": "信任此 Wi-Fi",
+      "trusted": "{{name}} 现已受信任。自动连接将跳过它。"
+    },
+    "trusted": {
+      "title": "受信任的 Wi-Fi",
+      "unnamed": "未命名网络 {{number}}",
+      "label": "标签：{{label}}",
+      "current": "当前网络",
+      "saved": "已保存",
+      "namesHidden": "此设备未共享 Wi-Fi 名称。在 Windows 上，开启位置访问后即可显示。",
+      "namesHiddenAndroid": "Android 只显示当前 Wi-Fi 的名称。信任某个网络时请为其设置标签，以便在此处识别。",
+      "remove": "移除信任",
+      "removing": "正在移除…",
+      "removeLabel": "移除对 {{name}} 的信任",
+      "removed": "{{name}} 不再受信任。"
+    },
+    "refresh": "刷新网络",
+    "loadFailed": "无法加载 Wi-Fi 设置。",
+    "refreshFailed": "无法刷新网络状态。",
+    "saveFailed": "无法更改 Wi-Fi 设置。"
+  },
+  "credentials": {
+    "title": "凭据存储",
+    "summary": "适用于新密钥。现有密钥将保留在原处，直到你将其移动。",
+    "policy": {
+      "secure": "新密钥必须使用系统密钥环。",
+      "fileAllowed": "如果密钥环不可用，新密钥可以使用未加密的文件。"
+    },
+    "consent": "我接受在密钥环不可用时使用未加密的密钥文件",
+    "allowFile": "允许使用文件备用方案",
+    "requireKeyring": "要求使用密钥环",
+    "protection": {
+      "keyring": "系统密钥环",
+      "file": "未加密文件",
+      "unverified": "未经验证的存储"
+    },
+    "availability": {
+      "available": "可用",
+      "absent": "缺失",
+      "invalid": "无法读取",
+      "unavailable": "已锁定或不可用"
+    },
+    "cleanupIncomplete": "清理未完成",
+    "move": "移至密钥环",
+    "pendingCleanup": "一些已移除的密钥仍在此设备上。请解锁密钥环并重试清理。",
+    "refresh": "刷新存储",
+    "retryCleanup": "重试清理",
+    "loadFailed": "无法读取凭据存储设置。",
+    "checking": "正在检查密钥的存储位置…",
+    "changed": "凭据存储已更新。"
+  },
+  "recovery": {
+    "title": "所有者恢复",
+    "summary": "如果所有所有者设备都已丢失，请重新获得所有者访问权限",
+    "infoLabel": "关于所有者恢复",
+    "info": "在新设备上，请选择“添加服务器”，然后选择“恢复密钥”。无需其他所有者设备或 VPN 连接，只需能够访问你的服务器。",
+    "unsupported": "请更新服务器软件以使用恢复密钥。",
+    "registered": "已设置恢复密钥。",
+    "none": "尚无恢复密钥。",
+    "cannotIssue": "只有所有者，以及所有者为管理员恢复选择的管理员，才能创建恢复密钥。",
+    "finishing": "正在完成之前的恢复密钥…… 此页面会自动再次检查。",
+    "accept": "我了解，任何拥有此密钥的人都可以替换所有所有者设备。创建新密钥会使旧密钥失效。",
+    "create": "创建恢复密钥",
+    "replace": "替换恢复密钥",
+    "revoke": "撤销恢复密钥",
+    "revokeConfirm": {
+      "title": "撤销恢复密钥？",
+      "message": "此密钥的已保存副本将立即停止工作。",
+      "confirm": "撤销"
+    },
+    "admins": {
+      "title": "管理员恢复",
+      "summary": "所选管理员可随时签发新的所有者恢复密钥。完成一次恢复后，此列表会被清空。",
+      "suspended": "已暂停",
+      "none": "尚无管理员，因此管理员恢复已关闭。",
+      "entry": "{{name}}（{{id}}）",
+      "save": "保存管理员恢复设置",
+      "saved": "管理员恢复设置已保存。",
+      "confirm": {
+        "title": "更新管理员恢复设置？",
+        "message": "允许 {{names}} 签发所有者恢复密钥？其他管理员将失去此权限。",
+        "confirm": "保存"
+      },
+      "confirmNone": {
+        "title": "关闭管理员恢复？",
+        "message": "任何管理员都将无法签发所有者恢复密钥。",
+        "confirm": "关闭"
+      },
+      "saving": "正在保存…"
+    },
+    "key": {
+      "warning": "请立即将此密钥离线保存。它只能使用一次，设置完成后将无法再次显示。",
+      "label": "恢复密钥",
+      "copy": "复制恢复密钥",
+      "copied": "恢复密钥已复制。请在完成设置前将其离线保存。",
+      "qr": "恢复二维码",
+      "password": "文件密码",
+      "passwordHint": "至少使用 12 个字符。",
+      "repeat": "重复文件密码",
+      "save": "保存恢复密钥文件",
+      "fileType": "SirinVPN 恢复密钥",
+      "saved": "恢复密钥文件已保存。请将其密码保存在其他地方。",
+      "retained": "我已将此密钥或恢复密钥文件离线保存，并且可以取用",
+      "finish": "完成设置",
+      "finished": "完成。此处将不再显示该密钥。",
+      "title": "你的新恢复密钥",
+      "saving": "正在保存文件…"
+    },
+    "loadFailed": "无法加载恢复设置。",
+    "actionFailed": "无法完成恢复操作。",
+    "update": "更新 VPS",
+    "creating": "正在创建密钥…",
+    "revoked": "恢复密钥已撤销。已保存的副本将不再有效。"
+  },
+  "keyRotation": {
+    "title": "轮换设备密钥",
+    "resumeTitle": "恢复密钥轮换",
+    "doneTitle": "密钥已轮换",
+    "description": "为此设备创建新密钥。其访问权限、VPN 地址和名称保持不变。",
+    "presharedKeyDescription": "为此设备创建新密钥，包括一个预共享密钥，以确保已记录的 VPN 流量在未来量子计算机面前仍保持私密。其访问权限、VPN 地址和名称保持不变。在此之前导出的设备备份将无法再连接，因此请之后重新导出一份。",
+    "done": {
+      "title": "新密钥已生效",
+      "summary": "服务器已接受新密钥，旧密钥已从此设备上删除。"
+    },
+    "progress": {
+      "rotating": "正在轮换密钥…",
+      "resuming": "正在完成中断的轮换…",
+      "summary": "VPN 会短暂重新连接。请保持应用打开。"
+    },
+    "confirmation": {
+      "title": "仅此设备会更改",
+      "resumeTitle": "轮换已中断",
+      "warning": "私钥在此设备上创建，且从不发送到服务器。服务器上的其他内容均不会更改。",
+      "resumeWarning": "SirinVPN 已保留新密钥，以便安全地完成轮换。请恢复轮换，而不是移除或重新添加此服务器。",
+      "accept": "我了解 VPN 将会短暂重新连接",
+      "acceptHint": "新密钥验证通过后，断网保护和自动重新连接将恢复。",
+      "rotate": "轮换密钥",
+      "resume": "恢复轮换"
+    },
+    "failed": "密钥轮换已安全停止。如果它正在等待恢复，请在联网后重试。"
+  },
+  "backup": {
+    "title": "加密设备备份",
+    "description": "将此服务器配置和设备密钥保存到加密文件中。不会上传任何内容。",
+    "dialogTitle": "保存加密备份",
+    "fileType": "SirinVPN 加密备份",
+    "warning": "<strong>此文件可以冒充此设备。</strong>任何拥有此文件和密码的人都可以连接，直到你撤销此设备。",
+    "destination": {
+      "label": "保存到",
+      "hint": "已有文件绝不会被覆盖。",
+      "placeholder": "未选择文件",
+      "choose": "选择文件"
+    },
+    "password": {
+      "label": "密码",
+      "hint": "至少使用 12 个字符。",
+      "repeat": "重复密码"
+    },
+    "accept": {
+      "label": "我了解此文件包含此设备的私钥",
+      "hint": "丢失的密码无法找回。"
+    },
+    "create": "创建备份",
+    "creating": "正在加密…",
+    "done": {
+      "title": "备份已保存",
+      "summary": "请将文件和其密码分开存放。"
+    },
+    "pickerFailed": "无法打开文件选择器。请重试。",
+    "failed": "无法创建备份。请重试。"
+  },
+  "alerts": {
+    "testNeedsAddress": "请先保存提醒地址，再发送测试。",
+    "testing": "正在发送…",
+    "allowPrivateSummary": "仅适用于你自己网络或 VPN 中的监控器"
+  },
+  "dnsBlocking": {
+    "invalidSources": "不是完整的 HTTPS 地址：{{values}}",
+    "invalidDomains": "不是域名：{{values}}",
+    "needsList": "请至少选择一个拦截列表，才能开启拦截。",
+    "serverStatus": "服务器当前状态"
+  },
+  "parts": {
+    "connect": "连接",
+    "repair": "更新 VPS"
+  },
+  "diagnostics": {
+    "allPassed": "{count, plural, other {全部 # 项检查已通过。}}",
+    "empty": "未运行任何检查。请连接到此服务器，然后再次运行诊断。",
+    "runAgain": "再次运行"
+  },
+  "speedTest": {
+    "phase": {
+      "idle": "正在测量延迟",
+      "download": "正在测量下载速度",
+      "upload": "正在测量上传速度",
+      "finishing": "正在完成"
+    },
+    "left": "{seconds, plural, other {{{phase}} · 约剩 {{seconds}} 秒。}}",
+    "finishingLine": "{{phase}}…",
+    "cancel": "取消速度测试",
+    "cancelled": "速度测试已取消。",
+    "cancelledWait": "{seconds, plural, other {速度测试已取消。VPS 将在 {{seconds}} 秒后进行下一次测试。}}"
+  }
+}

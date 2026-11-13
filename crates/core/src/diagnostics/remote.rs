@@ -1,4 +1,4 @@
-use super::{check, report};
+use super::{caused, check, report};
 use sirinvpn_protocol::{DiagnosticCheck, DiagnosticLevel, DiagnosticReport};
 use std::collections::HashSet;
 use zeroize::Zeroize;
@@ -38,10 +38,26 @@ fn sanitize_check(value: &DiagnosticCheck) -> Option<DiagnosticCheck> {
     }
     if let Some(label) = dns_label(&value.code) {
         let message = match value.level {
-            DiagnosticLevel::Pass => dns_success(&value.message).unwrap_or_else(|| "The resolver returned a valid DNS response.".into()),
-            DiagnosticLevel::Warning | DiagnosticLevel::NotApplicable => "A current DNS response check is unavailable. Try again after other diagnostics finish.".into(),
-            DiagnosticLevel::Fail => if DNS_ERRORS.contains(&value.message.as_str()) { value.message.clone() }
-                else { "The resolver did not return a usable DNS response. Check its route, port, upstream configuration, TLS identity and clock.".into() },
+            DiagnosticLevel::Pass => dns_success(&value.message)
+                .unwrap_or_else(|| "The resolver returned a valid DNS response.".into()),
+            DiagnosticLevel::Warning | DiagnosticLevel::NotApplicable => {
+                return Some(caused(
+                    check(
+                        &value.code,
+                        &label,
+                        value.level.clone(),
+                        "A current DNS response check is unavailable. Try again after other diagnostics finish.",
+                    ),
+                    "not_measured",
+                ));
+            }
+            DiagnosticLevel::Fail => {
+                if DNS_ERRORS.contains(&value.message.as_str()) {
+                    value.message.clone()
+                } else {
+                    "The resolver did not return a usable DNS response. Check its route, port, upstream configuration, TLS identity and clock.".into()
+                }
+            }
         };
         return Some(check(&value.code, &label, value.level.clone(), &message));
     }
@@ -175,18 +191,19 @@ fn sanitize_check(value: &DiagnosticCheck) -> Option<DiagnosticCheck> {
         }
         _ => return None,
     };
-    Some(check(
-        &value.code,
-        label,
-        value.level.clone(),
-        match value.level {
-            DiagnosticLevel::Pass => success,
-            DiagnosticLevel::Fail => failure,
-            DiagnosticLevel::Warning | DiagnosticLevel::NotApplicable => {
-                "This current state could not be read. Check server tools and service permissions, then rerun diagnostics."
-            }
-        },
-    ))
+    Some(match value.level {
+        DiagnosticLevel::Pass => check(&value.code, label, DiagnosticLevel::Pass, success),
+        DiagnosticLevel::Fail => check(&value.code, label, DiagnosticLevel::Fail, failure),
+        DiagnosticLevel::Warning | DiagnosticLevel::NotApplicable => caused(
+            check(
+                &value.code,
+                label,
+                value.level.clone(),
+                "This current state could not be read. Check server tools and service permissions, then rerun diagnostics.",
+            ),
+            "not_measured",
+        ),
+    })
 }
 
 fn resource(value: &DiagnosticCheck) -> DiagnosticCheck {
@@ -226,11 +243,14 @@ fn resource(value: &DiagnosticCheck) -> DiagnosticCheck {
                 }
             ),
         ),
-        None => check(
-            &value.code,
-            label,
-            DiagnosticLevel::Warning,
-            "A current resource reading is unavailable.",
+        None => caused(
+            check(
+                &value.code,
+                label,
+                DiagnosticLevel::Warning,
+                "A current resource reading is unavailable.",
+            ),
+            "not_measured",
         ),
     }
 }

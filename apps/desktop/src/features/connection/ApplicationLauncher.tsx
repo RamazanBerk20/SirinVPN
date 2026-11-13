@@ -8,10 +8,8 @@ import { useInfoHint } from "../../components/InfoHint";
 import { InlineError } from "../../components/ui";
 import { SettingsDisclosure, SettingsNotice } from "../settings/SettingsParts";
 
-/** The file name of a program path, for "Firefox started in the VPN." */
+/** The file name of a program path, as written (the messages never start a sentence with it). */
 const programName = (path: string) => path.trim().split(/[\\/]/).filter(Boolean).pop()?.replace(/\.exe$/i, "") ?? path;
-// The name starts a sentence: "Firefox started in the VPN."
-const sentenceName = (path: string) => { const name = programName(path); return name.charAt(0).toUpperCase() + name.slice(1); };
 
 export function ApplicationLauncher({ serverId, local, busy, onConnect }: {
   serverId: string;
@@ -33,13 +31,13 @@ export function ApplicationLauncher({ serverId, local, busy, onConnect }: {
     windows ? t("connection.launcher.infoWindows") : t("connection.launcher.infoLinux"),
     t("connection.launcher.infoLabel"),
   );
+  // A new server number drops the answers of choices and launches made for the previous one.
   useEffect(() => {
     ++generation.current;
     setExecutable("");
     setArgumentsText("");
     setNotice(null);
     setError(null);
-    return () => { ++generation.current; };
   }, [serverId]);
   const ready = local.server_id === serverId && local.state === "connected" &&
     local.routing_mode === "selected_applications" && local.application_routing_ready === true &&
@@ -47,7 +45,7 @@ export function ApplicationLauncher({ serverId, local, busy, onConnect }: {
   const choose = async () => {
     const current = generation.current;
     try {
-      const path = await open({ title: t("connection.launcher.dialogTitle"), ...(windows
+      const path = await open({ purpose: "program", title: t("connection.launcher.dialogTitle"), ...(windows
         ? { filters: [{ name: t("connection.launcher.dialogFilter"), extensions: ["exe"] }] }
         : { defaultPath: "/usr/bin" }), multiple: false, directory: false });
       if (current === generation.current && typeof path === "string") setExecutable(path);
@@ -58,7 +56,7 @@ export function ApplicationLauncher({ serverId, local, busy, onConnect }: {
   const launch = async () => {
     if (!ready || busy || launching || !executable.trim()) return;
     const current = generation.current;
-    const name = sentenceName(executable);
+    const name = programName(executable);
     setLaunching(true);
     setNotice(null);
     setError(null);
@@ -80,11 +78,11 @@ export function ApplicationLauncher({ serverId, local, busy, onConnect }: {
       <p>{windows ? t("connection.launcher.summaryWindows") : t("connection.launcher.summaryLinux")}{infoButton}</p>
       {infoPanel}
       {!ready && <SettingsNotice action={onConnect && { label: t("settings.parts.connect"), onClick: onConnect, disabled: busy }}>{t("connection.launcher.notReady")}</SettingsNotice>}
-      {/* Browse sits beside the input, outside the label, so the label names only the path field. */}
+      {/* Browse sits beside the input, outside the label, so the label names only the path field. Native code only runs a program chosen with Browse, so the path isn't typed. */}
       <div className="field">
         <span><label htmlFor={programId}>{t("connection.launcher.executable")}</label></span>
         <div className="field-with-button">
-          <input id={programId} value={executable} onChange={(event) => setExecutable(event.target.value)} placeholder={windows ? t("connection.launcher.placeholderWindows") : t("connection.launcher.placeholderLinux")} disabled={editing} autoComplete="off" spellCheck={false} />
+          <input id={programId} value={executable} readOnly placeholder={windows ? t("connection.launcher.placeholderWindows") : t("connection.launcher.placeholderLinux")} disabled={editing} autoComplete="off" spellCheck={false} />
           <button type="button" className="secondary-button" onClick={() => void choose()} disabled={editing}>{t("connection.launcher.browse")}</button>
         </div>
       </div>

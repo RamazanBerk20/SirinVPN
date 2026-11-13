@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Connection status, shared by the VPN notification and the Quick Settings tile.
+         Match home.status in the WebView catalog. -->
+    <string name="status_connected">Bağlı</string>
+    <string name="status_connecting">Bağlanılıyor…</string>
+    <string name="status_reconnecting">Yeniden bağlanılıyor…</string>
+    <string name="status_interrupted">Bağlantı kesintiye uğradı</string>
+    <string name="status_disconnected">Bağlı değil</string>
+    <string name="status_unknown">Durum bilinmiyor</string>
+
+    <!-- Notification channels, shown in Android notification settings. -->
+    <string name="notification_channel_vpn">VPN bağlantısı</string>
+    <string name="notification_channel_vpn_description">Bağlantı durumu ve denetimleri</string>
+    <string name="notification_channel_maintenance">Sunucu görevleri</string>
+    <string name="notification_channel_maintenance_description">Başlattığınız sunucu görevlerinin ilerlemesi</string>
+    <string name="notification_channel_updates">Uygulama güncellemeleri</string>
+    <string name="notification_channel_updates_description">SirinVPN güncellemelerini onaylama istekleri</string>
+    <string name="notification_channel_wifi">Wi-Fi otomatik bağlantı</string>
+    <string name="notification_channel_wifi_description">VPN kapalıyken otomatik bağlantı güvenilmeyen Wi-Fi’yi izlerken gösterilir. Kapatmak otomatik bağlantıyı durdurmaz.</string>
+
+    <!-- Ongoing VPN notification. %1$s is the download rate and %2$s the upload rate. -->
+    <string name="notification_status_connected_traffic">Bağlı · ↓ %1$s · ↑ %2$s</string>
+    <string name="notification_status_waiting_for_network">Ağ bekleniyor</string>
+    <string name="notification_status_failed">Bağlanılamadı</string>
+    <!-- Transfer rates. %1$s is a formatted number. -->
+    <string name="notification_rate_bytes">%1$s B/sn</string>
+    <string name="notification_rate_kilobytes">%1$s KB/sn</string>
+    <string name="notification_rate_megabytes">%1$s MB/sn</string>
+    <string name="notification_rate_gigabytes">%1$s GB/sn</string>
+    <string name="notification_rate_terabytes">%1$s TB/sn</string>
+    <!-- Notification actions: 1–3 words, verb first. -->
+    <string name="notification_action_vpn_settings">VPN ayarları</string>
+    <string name="notification_action_disconnect">Bağlantıyı kes</string>
+    <string name="notification_action_stop_connecting">Bağlanmayı durdur</string>
+    <string name="notification_action_hide">Bildirimi gizle</string>
+    <string name="notification_action_retry">Tekrar dene</string>
+    <!-- Dismissible alert after a connection attempt fails. -->
+    <string name="notification_failure_text">Bağlanılamadı. Nedenini görmek için SirinVPN’i açın.</string>
+    <string name="notification_maintenance_title">Sunucu görevi sürüyor</string>
+    <string name="notification_maintenance_text">Sonucu görmek için SirinVPN’i yeniden açın.</string>
+    <string name="notification_wifi_watch_text">Otomatik bağlantı güvenilmeyen Wi-Fi’yi izliyor</string>
+    <string name="notification_update_title">SirinVPN güncellemesini onaylayın</string>
+    <string name="notification_update_text">Doğrulanmış güncellemeyi incelemek ve kurmak için dokunun.</string>
+    <string name="notification_test_text">Bildirimler çalışıyor.</string>
+
+    <!-- Quick Settings tile. Subtitles are short; the tile shows about 15 characters. -->
+    <string name="tile_status_always_on">Her zaman açık VPN</string>
+    <string name="tile_status_no_network">Ağ yok</string>
+    <string name="tile_status_open_app">SirinVPN’i aç</string>
+    <!-- Spoken description of the tile. %1$s is its status, for example “Connected”. -->
+    <string name="tile_description">SirinVPN, %1$s</string>
+    <!-- Shown on Android 12 and older, which can’t add the tile from the app. -->
+    <string name="tile_add_instructions">Hızlı Ayarlar’ı açın, Düzenle’ye dokunun ve SirinVPN’i ekleyin.</string>
+
+    <!-- Home-screen widget. Its button reuses the notification action labels. -->
+    <string name="widget_description">Bağlan ve Bağlantıyı kes düğmeli bağlantı durumu</string>
+    <string name="widget_no_server">Bir Hızlı Ayarlar sunucusu seçin</string>
+    <string name="widget_action_connect">Bağlan</string>
+    <string name="widget_action_open">Aç</string>
+
+    <!-- Permission an automation app (Tasker, Automate) asks for. Android shows the label
+         as “Allow <app> to <label>?”, so it starts lowercase. -->
+    <string name="automation_permission_label">SirinVPN’e bağlan ve bağlantısını kes</string>
+    <string name="automation_permission_description">Uygulamanın SirinVPN’e bağlanmasına veya bağlantısını kesmesine ve Hızlı Ayarlar sunucusunu seçmesine izin verir; SirinVPN’i açmadan.</string>
+
+    <!-- QR code scanner. -->
+    <string name="scanner_title">QR kodu tara</string>
+    <string name="scanner_back">Geri</string>
+    <string name="scanner_guidance">Kodun tamamını görüntüde tutun. Yoğun bir kodu diğer ekranda büyütün ve sabit tutun.</string>
+    <string name="scanner_flashlight_on">Feneri aç</string>
+    <string name="scanner_flashlight_off">Feneri kapat</string>
+    <string name="scanner_refocus">Yeniden odakla</string>
+    <string name="scanner_refocused">Odak sıfırlandı. Kodun tamamı görünür kalacak şekilde yaklaşın veya uzaklaşın.</string>
+    <string name="scanner_camera_error">Kamera kullanılamıyor. Tekrar denemek için Yeniden odakla’ya dokunun ya da geri dönüp kodu girin.</string>
+
+    <!-- Protected value viewer and secure entry. -->
+    <string name="protected_value_title">Korumalı değer</string>
+    <string name="protected_value_qr_description">Korumalı QR kodu</string>
+    <string name="protected_value_close">Kapat</string>
+    <string name="protected_value_copy">1 dakika için kopyala</string>
+    <string name="protected_value_show">Göster</string>
+    <string name="protected_value_confirm_show">Bu korumalı değer ekranda gösterilsin mi?</string>
+    <string name="protected_value_confirm_copy">Bu korumalı değer 1 dakika için panoya kopyalansın mı?</string>
+    <!-- Clipboard label; some keyboards and clipboard previews show it. -->
+    <string name="protected_value_clip_label">SirinVPN korumalı değeri</string>
+    <string name="secret_input_use">Değeri kullan</string>
+    <string name="secret_input_clear">Değeri temizle</string>
+    <plurals name="secret_input_minimum_length">
+        <item quantity="one">En az %1$d karakter kullanın.</item>
+        <item quantity="other">En az %1$d karakter kullanın.</item>
+    </plurals>
+
+    <!-- Native confirmation dialog. -->
+    <string name="dialog_confirm">Onayla</string>
+    <string name="dialog_cancel">İptal</string>
+
+    <!-- App routing picker. Match connection.routing in the WebView catalog. -->
+    <string name="routing_title">Uygulama seçin</string>
+    <string name="routing_mode_include">Yalnızca seçilen uygulamalar VPN’i kullanır</string>
+    <string name="routing_mode_exclude">Seçilen uygulamalar VPN’i atlar</string>
+    <string name="routing_include_title">VPN’i kullanan uygulamalar</string>
+    <string name="routing_exclude_title">VPN’i atlayan uygulamalar</string>
+    <string name="routing_use_selection">Seçimi kullan</string>
+
+    <!-- Sharing an encrypted backup or recovery file. -->
+    <string name="share_chooser_title">Şifreli dosyayı paylaş</string>
+    <string name="share_clip_label">Şifreli SirinVPN dosyası</string>
+
+    <!-- Shown instead of the app when the system WebView is too old. %1$d is the minimum version. -->
+    <string name="webview_update_message">Android Sistem WebView’ı güncelleyin\n\nSirinVPN, WebView %1$d veya daha yeni bir sürüm gerektirir. Güncelleyin, sonra SirinVPN’i yeniden açın.</string>
+    <string name="webview_update_action">WebView ayarlarını aç</string>
+
+    <!-- Errors shown in the app. What happened, then what to do. -->
+    <string name="error_choose_document">Önce şifreli bir dosya seçin.</string>
+    <string name="error_service_unavailable">VPN hizmetine ulaşılamadı. Tekrar deneyin.</string>
+    <string name="error_service_interrupted">VPN hizmetiyle bağlantı koptu. Durumu kontrol edip tekrar deneyin.</string>
+    <string name="error_share_expired">Bu dosya artık paylaşılamaz. Yeniden dışa aktarıp paylaşın.</string>
+    <string name="error_share_failed">Dosya paylaşılamadı. Tekrar deneyin.</string>
+    <string name="error_install_permission">SirinVPN’in bilinmeyen uygulamaları kurmasına izin verin, sonra güncellemeyi yeniden deneyin.</string>
+    <string name="error_protected_value_unavailable">Korumalı değer açılamadı. Tekrar deneyin.</string>
+    <string name="error_protected_value_expired">Bu korumalı değerin süresi doldu. Yeniden girin veya oluşturun.</string>
+    <string name="error_protected_input">Korumalı değer tutulamadı. Geçerli görevi bitirin, sonra tekrar deneyin.</string>
+    <string name="error_entry_cancelled">Giriş iptal edildi.</string>
+    <string name="error_notifications_blocked">Bildirimler engelli. Android ayarlarında SirinVPN için izin verin, sonra tekrar deneyin.</string>
+    <string name="error_camera_denied">Kamera erişimi verilmedi. Bunun yerine kodu güvenli şekilde girebilirsiniz.</string>
+    <string name="error_scanner_open">Tarayıcı zaten açık.</string>
+    <string name="error_scan_cancelled">Tarama iptal edildi. Bunun yerine kodu güvenli şekilde girebilirsiniz.</string>
+    <string name="error_code_too_large">Bu kod çok büyük. Bir SirinVPN kodu tarayın.</string>
+    <string name="error_vpn_permission_denied">VPN izni verilmedi. Yeniden bağlanın ve izin verin.</string>
+    <string name="error_vpn_permission_required">VPN izni gerekli. İzin vermek için yeniden bağlanın.</string>
+    <string name="error_vpn_start_failed">Android VPN’i başlatamadı. Yeniden bağlanmayı deneyin.</string>
+    <string name="error_vpn_recovery_deferred">Android VPN’in geri yüklenmesini erteledi. Yeniden bağlanın.</string>
+    <string name="error_always_on">Her zaman açık VPN bu bağlantıyı denetliyor. Android VPN ayarlarından değiştirin.</string>
+    <string name="error_connection_changed">Bağlantı değişti. Durumunu kontrol edip tekrar deneyin.</string>
+    <string name="error_busy_disconnect">Başka bir görev sürüyor. Bittikten sonra bağlantıyı kesin.</string>
+    <string name="error_busy">Başka bir görev sürüyor. Bittiğinde tekrar deneyin.</string>
+    <string name="error_switching_method">Bağlantı yöntemi değiştiriliyor. Birazdan tekrar deneyin.</string>
+    <string name="error_queue_full">Çok fazla istek bekliyor. Geçerli istek bittiğinde tekrar deneyin.</string>
+    <string name="error_request_too_large">Bu istek çok büyük. Kısaltıp tekrar deneyin.</string>
+    <string name="error_preferences">Uygulama ayarları okunamadı veya kaydedilemedi. Tekrar deneyin.</string>
+    <string name="error_server_task_background">Android sunucu görevini engelledi. SirinVPN’i açık tutun ve tekrar deneyin.</string>
+    <string name="error_server_task_interrupted">Bir sunucu görevi tamamlanmadı. Tekrar denemeden önce sunucuyu veya dosyayı kontrol edin.</string>
+    <string name="error_missing_command">İstek eksikti. SirinVPN’i güncelleyin, sonra tekrar deneyin.</string>
+    <string name="error_native_only">Bu işlem yalnızca SirinVPN’in kendi güvenli iletişim kutularında kullanılabilir.</string>
+    <string name="error_operation_failed">İstek tamamlanamadı. İzinleri, ayarları ve ağınızı kontrol edip tekrar deneyin.</string>
+</resources>

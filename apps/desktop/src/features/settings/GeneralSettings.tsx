@@ -13,6 +13,7 @@ import { usePreferences } from "./PreferencesProvider";
 import { t } from "../../i18n";
 import { useInfoHint } from "../../components/InfoHint";
 import { SettingsNotice } from "./SettingsParts";
+import { LanguagePicker } from "./LanguagePicker";
 
 export function GeneralSettings({
   platform,
@@ -48,7 +49,7 @@ export function GeneralSettings({
     return (saving || status) ? <small className="preference-feedback" role="status">{saving ? t("common.state.saving") : status}</small> : null;
   };
   const row = (
-    key: Exclude<keyof AppPreferences, "theme">,
+    key: Exclude<keyof AppPreferences, "theme" | "language">,
     label: string,
     description: string,
     unavailable = false,
@@ -164,6 +165,17 @@ export function GeneralSettings({
           t("settings.general.notifications.animations.label"),
           t("settings.general.notifications.animations.summary"),
         )}
+        <div className="preference-group">
+          <div className="preference-row">
+            <span>
+              <label htmlFor="language-preference"><strong>{t("settings.general.language.label")}</strong></label>
+              <small>{t("settings.general.language.summary")}</small>
+              {changedKey === "language" && !error && feedback("language")}
+            </span>
+            <LanguagePicker id="language-preference" />
+          </div>
+          {changedKey === "language" && error && feedback("language")}
+        </div>
         <div className="preference-group">
           <div className="preference-row" role="group" aria-labelledby="theme-preference-label">
             <span>

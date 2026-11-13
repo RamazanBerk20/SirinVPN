@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-uninstall-server"
+description = "Enables the uninstall_server command without any pre-configured scope."
+commands.allow = ["uninstall_server"]
+
+[[permission]]
+identifier = "deny-uninstall-server"
+description = "Denies the uninstall_server command without any pre-configured scope."
+commands.deny = ["uninstall_server"]

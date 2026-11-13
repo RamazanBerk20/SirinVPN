@@ -1,7 +1,16 @@
 {
   "identifier": "android",
   "description": "SirinVPN Android presentation shell",
-  "windows": ["main"],
-  "platforms": ["android"],
-  "permissions": ["core:default"]
+  "windows": [
+    "main"
+  ],
+  "platforms": [
+    "android"
+  ],
+  "permissions": [
+    "core:default",
+    "allow-android-call",
+    "allow-android-watch",
+    "allow-android-unwatch"
+  ]
 }

@@ -1,0 +1,270 @@
+{
+  "tools": {
+    "deviceTitle": "设备备份",
+    "vpsTitle": "VPS 备份和恢复",
+    "serverTitle": "{{name}} 维护",
+    "finishRotationFirst": "请先完成密钥轮换",
+    "exportBackup": {
+      "label": "导出设备备份",
+      "summary": "此设备密钥的加密副本"
+    },
+    "restoreBackup": {
+      "label": "还原设备备份",
+      "summary": "从加密备份文件加载设备密钥"
+    },
+    "rotateKeys": {
+      "label": "轮换设备密钥",
+      "resumeLabel": "恢复密钥轮换",
+      "summary": "替换此设备的密钥",
+      "resumeSummary": "完成此设备中断的轮换",
+      "needsConnection": "请先连接到此服务器"
+    },
+    "endpoint": {
+      "ownerLabel": "迁移到新地址",
+      "ownerSummary": "将所有设备指向服务器的新地址",
+      "memberLabel": "应用地址更新",
+      "memberSummary": "使用已签名的更新来访问服务器的新地址",
+      "otherConnected": "请先断开另一台服务器的连接"
+    },
+    "remove": {
+      "label": "移除或卸载",
+      "summary": "在此设备上忘记，或从 VPS 上卸载"
+    },
+    "deviceKeysTitle": "设备密钥",
+    "vpsScheduleTitle": "自动 VPS 备份"
+  },
+  "operation": {
+    "interruption": "服务将重新启动，因此其他设备可能会短暂断开连接。",
+    "backup": {
+      "title": "备份 VPS",
+      "summary": "服务器设置和访问权限的加密副本",
+      "steps": {
+        "read": "将通过已验证的 SSH 读取服务器设置和访问权限。",
+        "encrypt": "备份将使用你的密码加密，并保存在此设备上。"
+      }
+    },
+    "restore": {
+      "title": "还原或迁移 VPS",
+      "summary": "在此 VPS 或新的 VPS 上还原备份",
+      "steps": {
+        "choose": "你选择一个 VPS 备份，并通过 SSH 验证目标 VPS。",
+        "review": "在进行任何更改之前，你可以查看将被替换的内容。"
+      }
+    },
+    "update": {
+      "title": "更新 VPS 软件",
+      "summary": "在 VPS 上安装较新的 SirinVPN 版本",
+      "steps": {
+        "review": "在安装前，你可以查看已签名的发布版本。",
+        "rollback": "当前版本会被保留，以便回滚。"
+      }
+    },
+    "repair": {
+      "title": "修复 VPS 配置",
+      "summary": "在 VPS 上重新应用网络和服务配置",
+      "steps": {
+        "reapply": "网络、服务和 DNS 将被重新应用，服务器软件将被重新安装。",
+        "preserve": "设备和访问权限会被保留。你需要先审查 DNS 更改。"
+      }
+    },
+    "dns": {
+      "title": "配置 VPS DNS",
+      "steps": {
+        "choose": "你为此服务器上的每台设备选择 DNS 服务器或私有记录。",
+        "apply": "更改将通过修复来应用，修复会重新安装服务器软件。"
+      }
+    },
+    "security": {
+      "title": "开启 VPS 安全更新",
+      "steps": {
+        "enable": "修复操作会开启操作系统的自动安全更新，并重新安装服务器软件。"
+      }
+    }
+  },
+  "review": {
+    "description": "{{name}} 上将发生的操作",
+    "close": "关闭审查",
+    "rotationFirst": "请先完成此设备的密钥轮换。",
+    "reviewRotation": "审查密钥轮换",
+    "refreshFirst": "请先刷新此设备的 VPN 状态。",
+    "disconnectFirst": "请先断开此设备上的 VPN 连接。其他设备不受影响。",
+    "disconnectFirstKillSwitch": "请先断开此设备上的 VPN 连接。这将解除断网保护，并停止自动重新连接。",
+    "disconnect": "断开此设备的连接",
+    "disconnecting": "正在断开连接…",
+    "refresh": "刷新状态",
+    "disconnectFailed": "无法断开 VPN 连接。",
+    "blocked": "请先完成上述步骤以继续。"
+  },
+  "health": {
+    "title": "系统健康",
+    "connection": "连接",
+    "killSwitch": "断网保护",
+    "autoReconnect": "自动重新连接",
+    "autoReconnectOther": "查看已连接的服务器",
+    "management": "服务器管理",
+    "managementResponding": "正在响应",
+    "managementUnavailable": "不可用 · VPN 仍保持连接",
+    "notChecked": "未检查",
+    "serverVpn": "服务器 VPN",
+    "serverVpnUp": "正常",
+    "serverVpnDown": "已停止",
+    "serverDns": "服务器 DNS",
+    "serverDnsRunning": "正在运行",
+    "serverDnsDown": "无响应",
+    "diagnosticsSummary": "检查此设备；连接时还会检查 DNS、流量泄漏和服务器。",
+    "runDiagnostics": "运行诊断"
+  },
+  "diagnostics": {
+    "title": "诊断",
+    "description": "此设备和服务器的当前状态。结果不会保存。",
+    "checking": "正在检查此设备和服务器…",
+    "copy": "复制报告",
+    "openNetwork": "打开网络设置",
+    "turnOnUpdates": "开启",
+    "copied": "报告已复制。在被替换之前，它会一直保留在剪贴板中。",
+    "copyFailed": "无法复制报告。请检查剪贴板访问权限，然后重试。",
+    "summary": {
+      "attention": "{count, plural, other {# 项需要注意}}",
+      "review": "{count, plural, other {# 项待审查}}",
+      "unavailable": "{count, plural, other {# 项未检查}}",
+      "passed": "{count, plural, other {# 项通过}}",
+      "line": "{{attention}} · {{review}} · {{passed}}",
+      "withUnavailable": "{{attention}} · {{review}} · {{unavailable}} · {{passed}}"
+    },
+    "group": {
+      "attention": "需要注意",
+      "review": "待审查",
+      "unavailable": "未检查",
+      "passed": "已通过"
+    },
+    "passedChecks": "已通过的检查 · {{count}}",
+    "passedNote": "通过检查并不能排除所有可能的泄漏。",
+    "checkTitle": {
+      "local_backend": "本地 VPN 服务",
+      "local_tunnel": "所选 VPN 连接",
+      "local_protection": "当前流量保护",
+      "local_transport": "当前传输方式",
+      "local_routes": "已配置的 VPN 路由",
+      "local_ipv6": "已配置的 IPv6 处理方式",
+      "local_mtu": "当前路径 MTU",
+      "local_quality": "当前专用隧道探测",
+      "local_dns": "通过此设备使用的私有 DNS",
+      "local_identity": "设备身份存储",
+      "management": "VPS 身份验证和连通性",
+      "server_report_format": "VPS 诊断兼容性",
+      "interface": "VPS VPN 接口",
+      "wireguard": "VPS WireGuard",
+      "dns": "VPS 私有 DNS 服务",
+      "forwarding": "VPS IPv4 转发",
+      "ipv6": "VPS IPv6 隧道",
+      "server_process": "VPS 系统服务",
+      "server_routes": "VPS 路由",
+      "server_firewall": "VPS 防火墙结构",
+      "server_nat4": "VPS IPv4 NAT",
+      "server_nat6": "VPS IPv6 NAT",
+      "server_ports": "VPS 监听端口",
+      "server_mtu": "VPS 接口 MTU",
+      "server_cpu": "VPS CPU",
+      "server_memory": "VPS 内存",
+      "server_disk": "VPS 磁盘",
+      "external_reachability": "服务商防火墙和公共可达性",
+      "dns_blocklist": "VPS DNS 拦截",
+      "os_security_updates": "VPS 安全更新",
+      "os_reboot_required": "VPS 重启",
+      "diagnostics_busy": "VPS 当前诊断",
+      "dns_probe_busy": "VPS DNS 响应检查",
+      "dns_resolver_response": "VPS 私有解析器响应",
+      "leak_ipv4": "IPv4 泄漏测试",
+      "leak_ipv6": "IPv6 泄漏测试",
+      "leak_dns": "DNS 泄漏测试",
+      "authorization_transaction": "访问权限更改",
+      "authorization_containment": "访问权限更改期间的流量阻止",
+      "authorization_intent": "访问权限恢复记录",
+      "authorization_peers": "受强制执行的设备"
+    },
+    "evidence": {
+      "configuration": "已检查配置",
+      "service": "由服务报告",
+      "observed": "已测试",
+      "notChecked": "未检查",
+      "notApplicable": "不适用",
+      "reported": "已报告"
+    },
+    "report": {
+      "title": "SirinVPN 诊断",
+      "scope": "仅包含当前状态。不包含活动记录。",
+      "evidence": "依据：{{evidence}}",
+      "check": "[{{level}}] {{label}}",
+      "level": {
+        "pass": "通过",
+        "warning": "警告",
+        "fail": "失败",
+        "not_applicable": "不适用"
+      }
+    },
+    "progress": {
+      "device": {
+        "label": "此设备",
+        "detail": "VPN 服务、隧道、断网保护、路由和 MTU"
+      },
+      "identity": {
+        "label": "已保存的服务器身份",
+        "detail": "服务器固定证书和此设备的证书"
+      },
+      "server": {
+        "label": "VPS",
+        "detail": "登录、DNS、网络、防火墙和资源"
+      },
+      "leaks": {
+        "label": "泄漏测试",
+        "detail": "IPv4、IPv6 和 DNS"
+      },
+      "disconnected": "连接到此服务器，以同时检查 VPS 并测试泄漏。"
+    },
+    "cause": {
+      "not_measured": "目前没有可用的测量结果。",
+      "mtu_pending": "路径 MTU 仍在测量中。",
+      "management_clock": "与 VPS 的安全连接失败。请检查此设备和 VPS 的时钟。",
+      "management_credentials_invalid": "已保存的服务器身份或此设备的证书无效。",
+      "management_device_rejected": "VPS 拒绝了此设备的证书。",
+      "management_access_rejected": "VPS 拒绝了此设备当前的访问权限。",
+      "management_unreachable": "无法通过 VPN 连接到 VPS 管理服务。"
+    },
+    "numberedCheck": {
+      "dnsTls": "VPS TLS 解析器 {{number}}",
+      "dnsHttps": "VPS HTTPS 解析器 {{number}}",
+      "dnsZone": "VPS 分流 DNS 区域 {{zone}}",
+      "dnsZoneUpstream": "VPS 分流 DNS 区域 {{zone}}，上游 {{upstream}}"
+    }
+  },
+  "speedTest": {
+    "title": "到你的 VPS 的速度测试",
+    "description": "通过 VPN 经由一个连接测量你自己 VPS 的下载、上传和延迟，因此结果并非你的网络速度。测试约需 20 秒，并会短暂降低所有设备的 VPN 速度。结果仅保存在此设备上。",
+    "run": "运行速度测试",
+    "again": "再次运行速度测试",
+    "running": "正在测量到你 VPS 的隧道…",
+    "download": "下载",
+    "upload": "上传",
+    "idleLatency": "空闲延迟",
+    "downloadLatency": "下载期间的延迟",
+    "uploadLatency": "上传期间的延迟",
+    "rate": "{{value}} Mbit/s",
+    "latency": "{{value}} 毫秒",
+    "notMeasured": "未测量",
+    "failed": "速度测试未能完成。请确认此设备已连接，然后重试。"
+  },
+  "workspace": {
+    "metric": {
+      "needsUpdate": "请更新服务器",
+      "sampling": "正在测量…"
+    },
+    "error": {
+      "unsavedSettings": "请在“设置”中保存或放弃更改，然后再连接。",
+      "settingsNotLoaded": "连接设置尚未加载。请打开“设置”后重试。",
+      "connectionChange": "连接未发生变化。请刷新状态后重试。",
+      "stopUnconfirmed": "VPN 未确认已停止。请检查其状态。",
+      "resume": "无法恢复。你的流量设置未更改。",
+      "diagnostics": "无法运行诊断。请刷新状态后重试。"
+    }
+  }
+}

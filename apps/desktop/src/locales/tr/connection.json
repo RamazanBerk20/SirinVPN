@@ -1,0 +1,276 @@
+{
+  "options": {
+    "title": "Bağlantı yöntemi",
+    "automatic": {
+      "label": "Yöntemi otomatik seç",
+      "summary": "Ağınızda çalışan bir yöntem seçer"
+    },
+    "conditions": {
+      "legend": "Ağ türü",
+      "automatic": {
+        "title": "Otomatik",
+        "summary": "Yöntemleri sırayla dener"
+      },
+      "normal": {
+        "title": "Normal",
+        "summary": "Ev veya mobil ağ"
+      },
+      "restricted": {
+        "title": "Kısıtlı",
+        "summary": "Normal VPN trafiğini engeller"
+      },
+      "extreme": {
+        "title": "Çok kısıtlı",
+        "summary": "Diğer modlar çalışmadığında"
+      },
+      "hint": "Otomatik seçimin, duruma uyan bir yöntemle başlamasına yardımcı olur."
+    },
+    "methods": {
+      "legend": "Bir yöntem seçin",
+      "unavailable": "Daha yeni bir sunucu gerekir",
+      "summary": {
+        "direct_udp": "Standart WireGuard",
+        "obfuscated_udp": "WireGuard’ı engelleyen ağlar için gizlenmiş UDP",
+        "tls_like": "Web trafiği gibi TLS 1.3 kullanır",
+        "tcp_fallback": "UDP engellendiğinde son çare",
+        "quic": "UDP üzerinden HTTP/3 web trafiği gibi görünür"
+      },
+      "unsupported": {
+        "owner": "{count, plural, one {{{methods}} sunucu yazılımının daha yeni bir sürümünü gerektirir. Kullanmak için VPS’i güncelleyin.} other {{{methods}} sunucu yazılımının daha yeni bir sürümünü gerektirir. Kullanmak için VPS’i güncelleyin.}}",
+        "member": "{count, plural, one {{{methods}} sunucu yazılımının daha yeni bir sürümünü gerektirir. Sahipten VPS’i güncellemesini isteyin.} other {{{methods}} sunucu yazılımının daha yeni bir sürümünü gerektirir. Sahipten VPS’i güncellemesini isteyin.}}",
+        "update": "VPS’i güncelle"
+      }
+    },
+    "policy": {
+      "kill_switch": {
+        "label": "Kill switch",
+        "summary": "VPN koparsa bağlantıyı kesene kadar interneti engeller",
+        "nextConnection": "Kaydedildi, ancak henüz etkin değil. Yeniden bağlandığınızda açılır; o zamana kadar VPN koparsa trafik engellenmez."
+      },
+      "automatic_reconnect": {
+        "label": "Otomatik yeniden bağlanma",
+        "summary": "Bağlantı koparsa yeniden dener",
+        "summaryAndroid": "Bağlantı koparsa yeniden dener. Hemen uygulanır.",
+        "info": "Kapalıyken bağlantı koptuğunda, yeniden bağlanana kadar kapalı kalır. Kill switch her durumda engellemeye devam eder.",
+        "infoAndroid": "Kapalıyken bağlantı koptuğunda, yeniden bağlanana kadar kapalı kalır. Wi-Fi ile mobil veri arasında geçişte yine de bir yeniden bağlanma denemesi yapılır.",
+        "infoLabel": "Otomatik yeniden bağlanma hakkında"
+      },
+      "connect_on_startup": {
+        "label": "Sistem açılışında bağlan",
+        "summary": "Bu cihaz açıldığında bağlanır"
+      }
+    },
+    "android": {
+      "label": "VPN olmadan bağlantıları engelle",
+      "summary": "Her zaman açık VPN ve engelleme Android’de ayarlanır. Engelleme açıksa, bağlantıyı kestikten sonra internet engelli kalır.",
+      "open": "VPN ayarlarını aç",
+      "on": "Android’de açık",
+      "off": "Android’de kapalı",
+      "unknown": "Android bildirmedi",
+      "status": "Durum: {{value}}"
+    },
+    "notes": {
+      "selectedRoutes": "Yalnızca seçtiğiniz yollar ve sistem DNS’i VPN’i kullanır.",
+      "windowsApps": "Windows uygulama yönlendirmesi için kill switch açık, yerel ağ erişimi kapalı olmalıdır.",
+      "launchedApps": "Başlatılan uygulamalar VPN kapalıyken her zaman engellenir; diğer uygulamalar normal ağınızı kullanır."
+    },
+    "status": {
+      "title": "Geçerli durum",
+      "method": "Bağlantı yöntemi",
+      "killSwitch": "Kill switch",
+      "routing": "Yönlendirme",
+      "blocking": "VPN olmadan bağlantıları engelle"
+    },
+    "protection": {
+      "title": "Koruma",
+      "titleAndroid": "Yeniden bağlanma ve engelleme",
+      "note": "Kill switch ve otomatik yeniden bağlanma bir sonraki bağlantınızdan itibaren uygulanır."
+    }
+  },
+  "routing": {
+    "title": "Trafik yönlendirme",
+    "legend": "Yönlendirme modu",
+    "modes": {
+      "full_tunnel": {
+        "label": "Tam tünel",
+        "summary": "Tüm internet trafiği VPN’i kullanır"
+      },
+      "selected_routes": {
+        "label": "Seçilen yollar",
+        "summary": "Yalnızca listelediğiniz IP aralıkları VPN’i kullanır"
+      },
+      "selected_applications": {
+        "label": "Seçilen uygulamalar",
+        "summaryAndroid": "VPN’i hangi uygulamaların kullanacağını seçin",
+        "summaryWindows": "Yalnızca seçtiğiniz uygulamalar VPN’i kullanır",
+        "summaryLinux": "Yalnızca SirinVPN’den başlatılan uygulamalar VPN’i kullanır"
+      }
+    },
+    "unsupported": "Bu cihazda uygulama yönlendirme kullanılamıyor. Seçilen yollar yine çalışır.",
+    "unsupportedWindows": "Windows sürücüsü çalışmadığı için uygulama yönlendirme kullanılamıyor. Geri getirmek için SirinVPN’i yeniden yükleyin veya güncelleyin.",
+    "windowsKillSwitch": "Windows uygulama yönlendirmesi için kill switch açık olmalıdır. Bağlanmadan önce bunu Bağlantı ayarlarında açın.",
+    "android": {
+      "blockNote": "VPN olmadan bağlantıları engelle açıksa, VPN’i kullanmayan uygulamaların interneti olmaz.",
+      "choose": "Uygulama seç",
+      "chooseError": "Uygulama listesi açılamadı.",
+      "none": "Uygulama seçilmedi",
+      "all": "Tüm uygulamalar VPN’i kullanır",
+      "include": "{count, plural, one {# uygulama VPN’i kullanır} other {# uygulama VPN’i kullanır}}",
+      "exclude": "{count, plural, one {# uygulama VPN’i atlar} other {# uygulama VPN’i atlar}}"
+    },
+    "routes": {
+      "label": "IP aralıkları (CIDR), her satırda bir tane",
+      "hint": "{max, plural, one {En fazla # aralık. Sistem DNS’i her zaman VPN’i kullanır.} other {En fazla # aralık. Sistem DNS’i her zaman VPN’i kullanır.}}",
+      "empty": "En az bir aralık ekleyin. Hiç aralık yoksa hiçbir trafik VPN’i kullanmaz.",
+      "invalid": "{{routes}}: CIDR biçiminde bir ağ değil. 198.51.100.0/24 gibi aralıklar yazın.",
+      "hostBits": "{{route}}, ağının başlangıcı değil. {{network}} kullanın.",
+      "placeholder": "Örneğin {{example}}"
+    },
+    "localNetwork": {
+      "label": "Yerel ağa izin ver",
+      "summary": "Yazıcılara ve diğer yerel cihazlara VPN dışından erişin",
+      "summaryLaunched": "Başlatılan uygulamaların yerel ağınızdaki cihazlara erişmesine izin verir",
+      "summaryWindows": "Bunu kapatın: Windows uygulama yönlendirmesi için yerel ağ erişimi kapalı olmalıdır"
+    }
+  },
+  "launcher": {
+    "legend": "Uygulamayı VPN içinde başlat",
+    "summaryLinux": "Yalnızca burada başlattığınız uygulamalar VPN’i kullanır. Önce açık olan kopyaları kapatın.",
+    "summaryWindows": "Burada seçtiğiniz uygulamalar VPN’i kullanır. Önce açık olan kopyaları kapatın.",
+    "infoLinux": "Yerel bir program seçin. Flatpak ve Snap uygulamaları ile arka plan hizmetine bağlı uygulamalar çalışmayabilir.",
+    "infoWindows": "Yerel bir sürücüdeki bir .exe seçin ve ağı kullanan her uygulamayı ekleyin; yardımcılar ve hizmetler otomatik eklenmez. Seçilen uygulamalar IPv6 kullanamaz ve sistem DNS’i VPN üzerinden geçer.",
+    "infoLabel": "Uygulama başlatma hakkında",
+    "notReady": "Uygulamaları başlatmak için Seçilen uygulamalar ayarını kaydedin ve bu sunucuya bağlanın.",
+    "executable": "Program",
+    "placeholderLinux": "Örneğin /usr/bin/firefox",
+    "placeholderWindows": "Örneğin C:\\Program Files\\App\\app.exe",
+    "browse": "Gözat…",
+    "dialogTitle": "Bir uygulama seçin",
+    "dialogFilter": "Uygulamalar (.exe)",
+    "chooserError": "Dosya seçici açılamadı. Tekrar deneyin.",
+    "arguments": {
+      "summary": "Başlatma argümanları",
+      "label": "Her satırda bir argüman",
+      "hint": "Boşluk içerseniz bile tırnak gerekmez. Argümanlar kaydedilmez."
+    },
+    "safetyLinux": "Başlatılan uygulamalar, kill switch kapalı olsa bile VPN dışında internet kullanmaz. Bağlantıyı kestikten sonra açık kalır ama çevrimdışı olur.",
+    "safetyWindows": "Seçilen uygulamalar VPN koparsa veya duraklatılırsa VPN dışında engelli kalır. Bağlantıyı kesmek engeli kaldırır ve seçimi temizler.",
+    "launch": "VPN içinde başlat",
+    "launching": "Başlatılıyor…",
+    "launched": "{{name}} VPN içinde başlatıldı.",
+    "exited": "{{name}} başlatıldı, ancak hemen kapandı. Zaten açıksa kapatıp tekrar deneyin.",
+    "launchError": "Uygulama VPN içinde başlatılamadı.",
+    "needsProgram": "Gözat ile bir program seçin."
+  },
+  "mtu": {
+    "title": "Paket boyutu (MTU)",
+    "automatic": {
+      "label": "Otomatik paket boyutu",
+      "summary": "Bağlıyken paket boyutunu ölçer ve ayarlar"
+    },
+    "manual": {
+      "label": "Elle MTU",
+      "hint": "{max, plural, one {{{min}}–{{max}} bayt. Gizlenmiş UDP en fazla {{obfuscatedMax}}, QUIC en fazla {{quicMax}} kullanır.} other {{{min}}–{{max}} bayt. Gizlenmiş UDP en fazla {{obfuscatedMax}}, QUIC en fazla {{quicMax}} kullanır.}}",
+      "invalid": "{{min}} ile {{max}} arasında tam sayı girin.",
+      "invalidIpv6": "IPv6 açıkken {{min}} ile {{max}} arasında tam sayı girin."
+    },
+    "notConnected": "Paket boyutunu ölçmek için bağlanın.",
+    "unsupported": "Bu cihazın VPN bileşeni güncellenmeden paket boyutu ölçülemez. Genel ayarlarda Yerel VPN bileşeni altında inceleyin.",
+    "unsupportedAction": "Bu cihazın VPN bileşeni güncellenmeden paket boyutu ölçülemez.",
+    "details": {
+      "current": "Geçerli MTU",
+      "recommended": "Önerilen",
+      "notMeasured": "Henüz ölçülmedi",
+      "pending": "Bekleyen değişiklik",
+      "bytes": "{value, plural, one {{{value}} bayt} other {{{value}} bayt}}",
+      "pendingValue": "{value, plural, one {{{value}} bayt · henüz uygulanmadı} other {{{value}} bayt · henüz uygulanmadı}}"
+    },
+    "outcome": {
+      "pending": "Paket boyutu ölçümü bekleniyor.",
+      "incomplete": "Ölçüm henüz tamamlanmadı.",
+      "verified": "{value, plural, one {{{value}} bayt olarak doğrulandı.} other {{{value}} bayt olarak doğrulandı.}}",
+      "smaller": "Daha küçük bir paket boyutu ölçüldü ve uygulanacak.",
+      "manual": "Bir öneri hazır. Elle girdiğiniz MTU kullanılmaya devam eder.",
+      "noReply": "Sunucu ölçüme yanıt vermedi. Geçerli MTU kullanılmaya devam eder.",
+      "noUsable": "Bu ağda büyük paketler iletilmiyor. {{tls}} veya {{tcp}} yöntemini deneyin.",
+      "applyFailed": "{value, plural, one {Ölçülen boyut uygulanamadı. MTU {{value}} bayt olarak kalır.} other {Ölçülen boyut uygulanamadı. MTU {{value}} bayt olarak kalır.}}"
+    }
+  },
+  "quality": {
+    "label": "Bağlantı kalitesi",
+    "sample": "{{latency}} gecikme · {{jitter}} titreme · {{loss}} kayıp",
+    "selection": {
+      "pending": "İlk kalite denetimi bekleniyor.",
+      "observing": "VPN içinde ölçülür, hız testi değildir.",
+      "waiting_for_idle": "Trafik boşken bağlantı yöntemleri karşılaştırılacak.",
+      "comparing": "Bağlantı yöntemleri karşılaştırılıyor…",
+      "selected": "Ölçülen en iyi bağlantı yöntemi kullanılıyor.",
+      "icmp_unavailable": "Sunucu kalite denetimlerine yanıt vermedi, bu yüzden gecikme ve kayıp bilgisi yok.",
+      "protection_required": "SirinVPN’in bağlantı yöntemlerini karşılaştırabilmesi için kill switch’i açın."
+    },
+    "reason": {
+      "confirmed_failure": "Önceki yöntem başarısız olduktan sonra bağlantı yöntemi değiştirildi.",
+      "quality_improvement": "Sürekli daha iyi bir bağlantı yöntemine geçildi.",
+      "rollback": "Geçerli bağlantı yöntemi korundu; alternatif bağlanamadı."
+    }
+  },
+  "startup": {
+    "unknown": "Açılıştaki bağlantı denetlenemedi.",
+    "otherServer": "Kaydedildi, ancak şu anda başka bir sunucuya bağlı. Açılışta kullanmak için bu sunucuya bağlanın.",
+    "serviceUnknown": "Kaydedildi. Açılış hizmeti durumu kullanılamıyor.",
+    "inactive": "Kaydedildi, ancak henüz etkin değil.",
+    "activateHint": "Açmak için Bağlan ve etkinleştir’i seçin.",
+    "nextConnection": "Bu sunucuya bir sonraki bağlanışınızda açılır.",
+    "active": "Bu cihaz açıldığında bu sunucuya bağlanır.",
+    "unconfirmed": "Açılış hizmeti açık, ancak henüz bu sunucuya ayarlı değil.",
+    "activate": "Bağlan ve etkinleştir"
+  },
+  "saveBar": {
+    "unsaved": "Kaydedilmemiş değişiklikler",
+    "discard": "Vazgeç",
+    "save": "Tercihleri kaydet",
+    "pending": "<strong>Bir sonraki bağlantınız için kaydedildi.</strong> Geçerli bağlantı: {{differences}}.",
+    "invalid": "Kaydetmek için vurgulanan değerleri düzeltin."
+  },
+  "differences": {
+    "mtu": {
+      "automatic": "MTU {{value}} (otomatik)",
+      "manual": "MTU {{value}} (elle)"
+    },
+    "method": "Bağlantı yöntemi: {{method}}",
+    "policy": {
+      "kill_switch": {
+        "on": "Kill switch: açık",
+        "off": "Kill switch: kapalı"
+      },
+      "automatic_reconnect": {
+        "on": "Otomatik yeniden bağlanma: açık",
+        "off": "Otomatik yeniden bağlanma: kapalı"
+      },
+      "connect_on_startup": {
+        "on": "Açılışta bağlan: açık",
+        "off": "Açılışta bağlan: kapalı"
+      }
+    },
+    "routing": {
+      "full_tunnel": "Yönlendirme: tam tünel",
+      "selected_routes": "Yönlendirme: seçilen yollar",
+      "selected_applications": "Yönlendirme: seçilen uygulamalar"
+    },
+    "localNetwork": {
+      "on": "Yerel ağ erişimi: açık",
+      "off": "Yerel ağ erişimi: kapalı"
+    },
+    "routes": "Farklı IP aralıkları"
+  },
+  "preferences": {
+    "loadError": "Bağlantı tercihleri yüklenemedi.",
+    "loading": "Bağlantı tercihleri yükleniyor…",
+    "saved": "Bağlantı tercihleri kaydedildi. Bir sonraki bağlantınızdan itibaren uygulanır.",
+    "saveError": "Kaydedilemedi. Önceki tercihleriniz hâlâ geçerli.",
+    "reconnectOn": "Otomatik yeniden bağlanma açık.",
+    "reconnectOff": "Otomatik yeniden bağlanma kapalı.",
+    "reconnectError": "Otomatik yeniden bağlanma değiştirilemedi."
+  },
+  "nextConnection": "Bir sonraki bağlantınızdan itibaren uygulanır."
+}

@@ -36,10 +36,8 @@
         "quic": "Looks like HTTP/3 web traffic on UDP"
       },
       "unsupported": {
-        "owner_one": "{{methods}} needs a newer version of the server software. Update the VPS to use it.",
-        "owner_other": "{{methods}} need a newer version of the server software. Update the VPS to use them.",
-        "member_one": "{{methods}} needs a newer version of the server software. Ask the Owner to update the VPS.",
-        "member_other": "{{methods}} need a newer version of the server software. Ask the Owner to update the VPS.",
+        "owner": "{count, plural, one {{{methods}} needs a newer version of the server software. Update the VPS to use it.} other {{{methods}} need a newer version of the server software. Update the VPS to use them.}}",
+        "member": "{count, plural, one {{{methods}} needs a newer version of the server software. Ask the Owner to update the VPS.} other {{{methods}} need a newer version of the server software. Ask the Owner to update the VPS.}}",
         "update": "Update VPS"
       }
     },
@@ -117,14 +115,12 @@
       "chooseError": "Couldn’t open the app list.",
       "none": "No apps chosen",
       "all": "All apps use the VPN",
-      "include_one": "{{count}} app uses the VPN",
-      "include_other": "{{count}} apps use the VPN",
-      "exclude_one": "{{count}} app bypasses the VPN",
-      "exclude_other": "{{count}} apps bypass the VPN"
+      "include": "{count, plural, one {# app uses the VPN} other {# apps use the VPN}}",
+      "exclude": "{count, plural, one {# app bypasses the VPN} other {# apps bypass the VPN}}"
     },
     "routes": {
       "label": "IP ranges (CIDR), one per line",
-      "hint": "Up to {{max}} ranges. System DNS always uses the VPN.",
+      "hint": "{max, plural, one {Up to # range. System DNS always uses the VPN.} other {Up to # ranges. System DNS always uses the VPN.}}",
       "empty": "Add at least one range. With none, no traffic would use the VPN.",
       "invalid": "{{routes}}: not a network in CIDR form. Write ranges like 198.51.100.0/24.",
       "hostBits": "{{route}} isn’t the start of its network. Use {{network}}.",
@@ -151,7 +147,7 @@
     "browse": "Browse…",
     "dialogTitle": "Choose an app",
     "dialogFilter": "Apps (.exe)",
-    "chooserError": "Couldn’t open the file chooser. Enter the path instead.",
+    "chooserError": "Couldn’t open the file chooser. Try again.",
     "arguments": {
       "summary": "Launch arguments",
       "label": "One argument per line",
@@ -161,10 +157,10 @@
     "safetyWindows": "Selected apps stay blocked outside the VPN if it drops or is paused. Disconnecting unblocks them and clears the selection.",
     "launch": "Launch in VPN",
     "launching": "Launching…",
-    "launched": "{{name}} started in the VPN.",
-    "exited": "{{name}} exited right away. If it was already open, close it and try again.",
+    "launched": "Started {{name}} in the VPN.",
+    "exited": "Started {{name}}, but it exited right away. If it was already open, close it and try again.",
     "launchError": "Couldn’t launch the app in the VPN.",
-    "needsProgram": "Enter a program or choose one with Browse."
+    "needsProgram": "Choose a program with Browse."
   },
   "mtu": {
     "title": "Packet size (MTU)",
@@ -174,7 +170,7 @@
     },
     "manual": {
       "label": "Manual MTU",
-      "hint": "{{min}}–{{max}} bytes. Obfuscated UDP uses at most {{obfuscatedMax}} and QUIC at most {{quicMax}}.",
+      "hint": "{max, plural, one {{{min}}–{{max}} byte. Obfuscated UDP uses at most {{obfuscatedMax}} and QUIC at most {{quicMax}}.} other {{{min}}–{{max}} bytes. Obfuscated UDP uses at most {{obfuscatedMax}} and QUIC at most {{quicMax}}.}}",
       "invalid": "Enter a whole number from {{min}} to {{max}}.",
       "invalidIpv6": "With IPv6 on, enter a whole number from {{min}} to {{max}}."
     },
@@ -186,18 +182,18 @@
       "recommended": "Recommended",
       "notMeasured": "Not measured yet",
       "pending": "Pending change",
-      "bytes": "{{value}} bytes",
-      "pendingValue": "{{value}} bytes · not applied yet"
+      "bytes": "{value, plural, one {{{value}} byte} other {{{value}} bytes}}",
+      "pendingValue": "{value, plural, one {{{value}} byte · not applied yet} other {{{value}} bytes · not applied yet}}"
     },
     "outcome": {
       "pending": "Waiting to measure the packet size.",
       "incomplete": "Measurement not finished yet.",
-      "verified": "Verified at {{value}} bytes.",
+      "verified": "{value, plural, one {Verified at {{value}} byte.} other {Verified at {{value}} bytes.}}",
       "smaller": "A smaller packet size was measured and will be applied.",
       "manual": "A recommendation is ready. Your manual MTU stays in use.",
       "noReply": "The server didn’t answer the measurement. The current MTU stays in use.",
       "noUsable": "Large packets don’t get through on this network. Try {{tls}} or {{tcp}}.",
-      "applyFailed": "Couldn’t apply the measured size. MTU stays at {{value}} bytes."
+      "applyFailed": "{value, plural, one {Couldn’t apply the measured size. MTU stays at {{value}} byte.} other {Couldn’t apply the measured size. MTU stays at {{value}} bytes.}}"
     }
   },
   "quality": {

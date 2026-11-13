@@ -6,7 +6,9 @@ use crate::{
     carrier::Carrier,
     firewall::Firewall,
     firewall_plan::FirewallPlan,
+    link::{Event, Link},
     network::{self, Underlay},
+    published::{PublishedStatus, SharedStatus},
     state::{SavedConnection, SessionPhase, SessionStore},
     wireguard::{Adapter, Statistics},
 };
@@ -16,12 +18,12 @@ use std::{
     io,
     net::SocketAddr,
     sync::{
-        Arc, RwLock,
+        Arc,
         atomic::{AtomicU64, Ordering},
     },
     time::{Duration, Instant},
 };
-use tokio::sync::Notify;
+use tokio::sync::{Notify, watch};
 
 mod applications;
 mod connection;
@@ -29,20 +31,6 @@ mod endpoints;
 mod lifecycle;
 mod measurements;
 mod status;
-
-pub(crate) type SharedStatus = Arc<RwLock<PublishedStatus>>;
-pub(crate) struct PublishedStatus {
-    pub owner: Option<String>,
-    pub status: LocalTunnelStatus,
-}
-impl PublishedStatus {
-    pub(crate) fn for_user(&self, owner: &str) -> Result<LocalTunnelStatus, ServiceError> {
-        if self.owner.as_ref().is_some_and(|saved| saved != owner) {
-            return Err(ServiceError::OwnedByAnotherUser);
-        }
-        Ok(self.status.clone())
-    }
-}
 
 /// Every admitted stop-like operation increments the epoch before entering the
 /// command queue. notify_one retains a permit if cancellation precedes the await.
@@ -86,16 +74,12 @@ pub(crate) struct Controller {
     store: SessionStore,
     firewall: Firewall,
     saved: Option<SavedConnection>,
-    active: Option<Active>,
+    /// Runtime state beside `saved.phase`: Stopped while there is no session or
+    /// it is Held/Disconnecting; Connecting/Connected while it is Connecting/Active.
+    link: Link<Box<Active>>,
     boot: uuid::Uuid,
-    published: SharedStatus,
+    published: watch::Sender<PublishedStatus>,
     cancel: Arc<Cancellation>,
-    next_attempt: Instant,
-    pass_started: Instant,
-    attempt_index: usize,
-    retry_passes: u32,
-    had_connected: bool,
-    enforcement_failed: bool,
     operation_epoch: u64,
     endpoints: endpoints::EndpointMonitor,
     quality: crate::quality_plan::QualityMonitor,
@@ -107,7 +91,9 @@ impl Controller {
     }
 
     /// Only SCM start arguments supplied by an administrator reach this path.
-    pub(crate) fn uninstall() -> io::Result<()> {
+    /// Both end the current session as an explicit Disconnect would; `uninstall`
+    /// also removes the WFP provider and the service's state directory.
+    pub(crate) fn release(uninstall: bool) -> io::Result<()> {
         let store = SessionStore::open()?;
         let saved = match store.load() {
             Ok(saved) => saved,
@@ -128,8 +114,14 @@ impl Controller {
                 store.save(&saved)?;
             }
         }
-        Firewall::open()?.uninstall()?;
-        store.remove_installation()
+        let mut firewall = Firewall::open()?;
+        if uninstall {
+            firewall.uninstall()?;
+            store.remove_installation()
+        } else {
+            firewall.clear()?;
+            store.remove()
+        }
     }
 
     pub(crate) fn open() -> io::Result<Self> {
@@ -142,19 +134,12 @@ impl Controller {
             store,
             firewall,
             saved,
-            active: None,
+            link: Link::Stopped {
+                enforcement_failed: false,
+            },
             boot,
-            published: Arc::new(RwLock::new(PublishedStatus {
-                owner: None,
-                status: status::idle(),
-            })),
+            published: PublishedStatus::channel(status::idle()),
             cancel: Arc::new(Cancellation::default()),
-            next_attempt: Instant::now(),
-            pass_started: Instant::now(),
-            attempt_index: 0,
-            retry_passes: 0,
-            had_connected: false,
-            enforcement_failed: false,
             operation_epoch: 0,
             endpoints: endpoints::EndpointMonitor::default(),
             quality: crate::quality_plan::QualityMonitor::default(),
@@ -176,6 +161,7 @@ impl Controller {
                     SessionPhase::Held
                 };
                 controller.persist()?;
+                controller.reset_attempts();
                 if !resume && !saved_policy_kill(&controller.saved) {
                     controller.firewall.clear()?;
                 }
@@ -193,20 +179,24 @@ impl Controller {
     }
 
     pub(crate) fn shared(&self) -> (SharedStatus, Arc<Cancellation>) {
-        (Arc::clone(&self.published), Arc::clone(&self.cancel))
+        (self.published.subscribe(), Arc::clone(&self.cancel))
     }
 
     pub(crate) async fn handle(
         &mut self,
         owner: &str,
+        administrator: bool,
         operation: Operation,
     ) -> Result<LocalTunnelStatus, ServiceError> {
         self.operation_epoch = self.cancel.epoch.load(Ordering::SeqCst);
-        if let Some(saved) = &self.saved {
-            saved.authorize(owner)?;
-        }
+        crate::state::authorize(
+            self.saved.as_ref().map(|saved| saved.owner_sid.as_str()),
+            owner,
+            administrator,
+            &operation,
+        )?;
         let result = match operation {
-            Operation::Status => Ok(()),
+            Operation::Status | Operation::WaitForChange(_) => Ok(()),
             Operation::RouteApplication(request) => self.route_application(request).await,
             Operation::Connect(request) => self.connect(owner, request, false).await,
             Operation::Disconnect => self.disconnect().await,
@@ -286,7 +276,7 @@ impl Controller {
 
     fn plan(&self) -> Option<FirewallPlan> {
         self.saved.as_ref().map(|saved| {
-            if let Some(active) = &self.active {
+            if let Some(active) = self.link.active() {
                 self.session_plan(
                     &active.request,
                     &[active.endpoint],
@@ -328,25 +318,30 @@ impl Controller {
     }
 
     fn current_status(&self) -> Result<LocalTunnelStatus, ServiceError> {
-        self.published
-            .read()
-            .map(|snapshot| snapshot.status.clone())
-            .map_err(|_| ServiceError::NetworkOperation)
+        Ok(self.published.borrow().status.clone())
     }
 
-    /// SCM stop preserves the acknowledged boot policy and persistent kill switch.
-    /// Only an authenticated Disconnect or elevated uninstall releases that guard.
+    /// SCM stop preserves the acknowledged boot policy and persistent kill switch,
+    /// so a crash or an update never opens the guard. An owner's or elevated
+    /// administrator's Disconnect, `--release-guard` and uninstall release it.
     pub(crate) async fn shutdown(&mut self) -> io::Result<()> {
+        let keep = self.link.enforcement_failed();
         if self
             .saved
             .as_ref()
             .is_some_and(|saved| saved.phase == SessionPhase::Disconnecting)
         {
-            self.stop_active().await?;
+            self.transition(Event::Stop {
+                enforcement_failed: keep,
+            })
+            .await;
             return self.finish_disconnect();
         }
         self.close_guard()?;
-        self.stop_active().await?;
+        self.transition(Event::Stop {
+            enforcement_failed: keep,
+        })
+        .await;
         self.cleanup_routes()?;
         if !saved_policy_kill(&self.saved) {
             self.firewall.clear()?;

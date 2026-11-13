@@ -252,3 +252,22 @@ fn cached_files(store: &InstalledReleaseStore) -> Vec<String> {
 }
 
 mod successful_update_commits_receipt_only_after_candidate_health;
+
+#[test]
+fn debian_package_version_sorts_a_prerelease_before_its_final_release() {
+    assert_eq!(debian_package_version("1.0.0").as_deref(), Some("1.0.0"));
+    assert_eq!(
+        debian_package_version("1.0.0-rc.1").as_deref(),
+        Some("1.0.0~rc.1")
+    );
+    assert_eq!(
+        debian_package_version("1.0.0-rc.1+build.7").as_deref(),
+        Some("1.0.0~rc.1+build.7")
+    );
+    // A second hyphen would be read as Debian's revision separator.
+    assert_eq!(debian_package_version("1.0.0-rc-1"), None);
+    assert_eq!(debian_package_version("1.0.0+linux-x64"), None);
+    // Only the canonical manifest spelling maps, never a near miss.
+    assert_eq!(debian_package_version("v1.0.0"), None);
+    assert_eq!(debian_package_version("1.0"), None);
+}

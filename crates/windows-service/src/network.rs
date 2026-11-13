@@ -375,6 +375,11 @@ fn row(record: &RouteRecord) -> io::Result<MIB_IPFORWARD_ROW2> {
     Ok(row)
 }
 
+/// Whether the fixed WireGuard port can be bound right now (for error mapping).
+pub(crate) fn probe_port(port: u16) -> io::Result<()> {
+    std::net::UdpSocket::bind((Ipv4Addr::UNSPECIFIED, port)).map(drop)
+}
+
 pub(crate) fn protect_socket(
     socket: &socket2::Socket,
     interface: Underlay,

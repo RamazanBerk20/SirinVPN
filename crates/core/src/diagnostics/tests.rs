@@ -72,3 +72,55 @@ fn authorization_errors_discard_server_text_and_tls_cause_requires_typed_evidenc
         "certificate failure untrusted free text"
     )));
 }
+
+#[test]
+fn known_messages_carry_their_cause_and_a_vps_cannot_set_one() {
+    let cause = |check: DiagnosticCheck| check.cause;
+    assert_eq!(
+        cause(management_failure(&ManagementError::ConnectionFailed)).as_deref(),
+        Some("management_unreachable")
+    );
+    assert_eq!(
+        cause(management_failure(&ManagementError::DiagnosticTlsFailed)).as_deref(),
+        Some("management_clock")
+    );
+    assert_eq!(
+        cause(management_failure(&ManagementError::RequestRejected {
+            code: ErrorCode::PermissionDenied,
+            message: String::new(),
+        }))
+        .as_deref(),
+        Some("management_access_rejected")
+    );
+    assert_eq!(
+        cause(management_failure(&ManagementError::ProtocolMismatch)),
+        None
+    );
+    let mtu = |outcome, suggested| {
+        mtu_check(Some(MtuStatus {
+            policy: MtuPolicy::Automatic,
+            configured: 1420,
+            suggested,
+            outcome,
+        }))
+    };
+    assert_eq!(
+        cause(mtu(MtuProbeOutcome::Pending, None)).as_deref(),
+        Some("mtu_pending")
+    );
+    assert_eq!(
+        cause(mtu(MtuProbeOutcome::Measured, None)).as_deref(),
+        Some("mtu_pending")
+    );
+    assert_eq!(cause(mtu(MtuProbeOutcome::Measured, Some(1320))), None);
+    assert_eq!(cause(mtu_check(None)).as_deref(), Some("not_measured"));
+    let mut sent = check("interface", "x", DiagnosticLevel::Warning, "x");
+    sent.cause = Some("management_clock".into());
+    let mut passed = check("forwarding", "x", DiagnosticLevel::Pass, "x");
+    passed.cause = Some("not_measured".into());
+    let report = sanitize(report(vec![sent, passed]));
+    assert_eq!(report.checks[0].cause.as_deref(), Some("not_measured"));
+    assert_eq!(report.checks[1].cause, None);
+    let json = serde_json::to_value(&report.checks[1]).unwrap();
+    assert!(json.get("cause").is_none());
+}

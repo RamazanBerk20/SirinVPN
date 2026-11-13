@@ -308,7 +308,7 @@ pub(super) async fn set_member_access(
     if let Some(role) = status.caller_role {
         profile.role = role;
         profile.administrator = status.caller_administrator;
-        paths.profile_store().upsert(profile.clone())?;
+        save_caller_role(paths, &profile)?;
     }
     if status.caller_role != Some(ServerRole::Owner) {
         bail!("only an owner device can change member access");
@@ -348,10 +348,20 @@ pub(super) async fn transfer_ownership(
     let snapshot = client.transfer_ownership(destination_device_id).await?;
     profile.role = ServerRole::Member;
     profile.administrator = true;
-    paths.profile_store().upsert(profile).context(
+    save_caller_role(paths, &profile).context(
         "ownership was transferred on the VPS, but this device's local access level could not be saved; reconnect and run status to retry",
     )?;
     print_membership(&snapshot, json)
+}
+
+/// Saves only the caller's role and administrator flag, on the profile as it is now.
+pub(super) fn save_caller_role(paths: &ClientPaths, asked_as: &ServerProfile) -> Result<()> {
+    paths.profile_store().update(asked_as.id, |current| {
+        current.role = asked_as.role;
+        current.administrator = asked_as.administrator;
+        Ok(())
+    })?;
+    Ok(())
 }
 
 /// The rotation that would give this key-less device a WireGuard preshared key,

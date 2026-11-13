@@ -58,7 +58,6 @@ pub(super) async fn serve<S: AsyncRead + AsyncWrite + Unpin>(
     config: &TcpServerRelayConfig,
     authorized: &AuthorizedPeers,
     replay_cache: &Mutex<HandshakeReplayCache>,
-    client_connections: &ClientConnectionRegistry,
 ) -> Result<bool, RelayError> {
     if https::one_header(headers, "host").is_none()
         || headers
@@ -95,9 +94,6 @@ pub(super) async fn serve<S: AsyncRead + AsyncWrite + Unpin>(
     if !authorized.contains(&client) {
         return Ok(false);
     }
-    let Some(_permit) = client_connections.acquire(client) else {
-        return Ok(false);
-    };
     if !replay_cache
         .lock()
         .unwrap_or_else(|error| error.into_inner())

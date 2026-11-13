@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-restore-vps-backup"
+description = "Enables the restore_vps_backup command without any pre-configured scope."
+commands.allow = ["restore_vps_backup"]
+
+[[permission]]
+identifier = "deny-restore-vps-backup"
+description = "Denies the restore_vps_backup command without any pre-configured scope."
+commands.deny = ["restore_vps_backup"]

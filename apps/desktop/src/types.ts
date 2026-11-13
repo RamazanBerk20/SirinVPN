@@ -2,7 +2,7 @@ export type ServerId = string;
 export type ClientPlatform = "desktop" | "android";
 export type ReleaseUpdateChannel = "stable" | "preview";
 export interface ReleaseUpdateStatus {
-  installer_kind: "debian" | "windows" | "appimage" | "android";
+  installer_kind: "debian" | "windows" | "appimage" | "android" | "package_manager";
   rollback_version: string | null;
   baseline_required: boolean;
   pending_version?: string | null;
@@ -30,7 +30,7 @@ export interface ReleaseUpdateCandidate {
   android_install_available?: boolean;
   baseline_bind_available?: boolean;
   baseline_bound?: boolean;
-  installer_kind?: "debian" | "windows" | "appimage" | "android";
+  installer_kind?: "debian" | "windows" | "appimage" | "android" | "package_manager";
 }
 
 export interface LocalStatusEvent {
@@ -155,6 +155,8 @@ export interface WifiPolicySnapshot {
 }
 
 export interface LocalTunnelStatus {
+  /** The tunnel lifecycle (crates/tunnel-model `TunnelPhase`); absent or null from older services. */
+  phase?: { kind: "idle" | "connecting" | "connected" | "recovering" | "paused" | "unhealthy"; server_id?: string; recovering?: boolean } | null;
   always_on?: boolean;
   lockdown?: boolean;
   application_routing_backend?: "linux_namespace" | "windows_bind_redirect" | "android_packages";
@@ -268,6 +270,8 @@ export interface DiagnosticCheck {
   label: string;
   level: "pass" | "warning" | "fail" | "not_applicable";
   message: string;
+  /** A stable cause the message names; absent from older servers and native layers. */
+  cause?: import("./lib/errors").DiagnosticCause;
 }
 
 export interface DiagnosticReport {
@@ -386,6 +390,8 @@ export interface ProvisionResult {
   events: InstallEvent[];
   dns_upstream: DnsUpstream;
   private_dns_records: PrivateDnsRecord[];
+  /** The VPS confirmed the install after its reply was lost; `events` is then empty. */
+  resolved_after_lost_reply?: boolean;
 }
 
 export interface NetworkPreflight {
@@ -395,16 +401,19 @@ export interface NetworkPreflight {
   exposure: "public_interface" | "nat_or_proxy" | "private_endpoint" | "unresolved";
   assigned_addresses: { interface: string; address: string; prefix_length: number; public: boolean }[];
   required_ports: { protocol: PortForwardProtocol; port: number }[];
-  issues: { blocking: boolean; code: string; message: string }[];
+  /** `params` holds the values the message names (ports, interfaces, routes), as strings. */
+  issues: { blocking: boolean; code: string; message: string; params?: Record<string, string> }[];
 }
 
+/** After a lost commit reply (`resolved_after_lost_reply`) the VPS confirmed only the commit: the artifact and DNS are absent. */
 export interface RepairResult {
   network_preflight?: NetworkPreflight;
   events: InstallEvent[];
-  artifact_sha256: string;
+  artifact_sha256?: string;
   server_identity_fingerprint?: string;
-  dns_upstream: DnsUpstream;
-  private_dns_records: PrivateDnsRecord[];
+  dns_upstream?: DnsUpstream;
+  private_dns_records?: PrivateDnsRecord[];
+  resolved_after_lost_reply?: boolean;
 }
 
 export interface KeyRotationResult {
@@ -491,6 +500,8 @@ export interface ActiveInvitationSummary {
   max_uses?: number;
   uses_remaining?: number;
   member_policy?: MemberPolicy;
+  /** The person who created the code; absent on older servers. */
+  issued_by_member_id?: string;
 }
 
 export type PortForwardProtocol = "tcp" | "udp";
@@ -514,6 +525,12 @@ export interface CurrentConfiguration {
   subnet_routes_enabled?: boolean;
   device_pairs_enabled?: boolean;
   alerts_enabled?: boolean;
+  /** A single-use join code for a new person carries the name the inviter typed; the joiner names only the device. */
+  named_join_codes_enabled?: boolean;
+  /** `rename_member` exists. */
+  person_rename_enabled?: boolean;
+  /** An Admin may add devices for themselves without the "add own devices" permission. */
+  admin_own_devices_enabled?: boolean;
 }
 
 export interface DnsBlocklistPolicy {
@@ -637,6 +654,8 @@ export interface TransportSetup {
 export interface InvitationPreview {
   server_name: string; host: string; server_identity_fingerprint: string; expires_at_unix: number;
   recipient_names: boolean; creates_member: boolean; member_name: string; device_name: string; access_level: "owner" | "admin" | "member";
+  /** The code names the new person; the joiner names only the device. Absent on older clients and servers. */
+  member_name_fixed?: boolean;
 }
 export interface InvitationNames { member_name?: string; device_name?: string; }
 

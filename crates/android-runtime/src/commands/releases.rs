@@ -174,12 +174,12 @@ pub async fn dispatch(runtime: &Runtime, command: &str, input: &Value) -> Result
             Ok(value)
         }
         "install_vps_baseline" => {
-            runtime.platform.require_idle()?;
             let request = request(runtime, input)?;
-            ensure!(
-                !sirinvpn_core::has_pending_key_rotation(&runtime.paths, request.profile.id)?,
-                "Finish key rotation first"
-            );
+            maintenance::ready(
+                runtime,
+                &request.profile,
+                sirinvpn_installer::OwnerMaintenance::SignedBaseline,
+            )?;
             let bundle = {
                 let pending = BASELINE
                     .lock()
@@ -196,12 +196,17 @@ pub async fn dispatch(runtime: &Runtime, command: &str, input: &Value) -> Result
                 );
                 pending.bundle.clone()
             };
-            let p = request.profile.clone();
-            let outcome = Provisioner::install_signed_baseline(request, bundle)?;
-            runtime
-                .paths
-                .profile_store()
-                .upsert(outcome.repair.updated_profile(&p))?;
+            let id = request.profile.id;
+            let outcome = Provisioner::install_signed_baseline(
+                request,
+                bundle,
+                &maintenance::journal(runtime),
+            )?;
+            // Owns the endpoint and transport fields `updated_profile` sets.
+            runtime.paths.profile_store().update(id, |current| {
+                *current = outcome.repair.updated_profile(current);
+                Ok(())
+            })?;
             *BASELINE
                 .lock()
                 .map_err(|_| anyhow::anyhow!("Baseline unavailable"))? = None;
@@ -216,11 +221,11 @@ pub async fn dispatch(runtime: &Runtime, command: &str, input: &Value) -> Result
                     | ServerReleaseAction::Rollback { .. }
                     | ServerReleaseAction::Recover
             ) {
-                runtime.platform.require_idle()?;
-                ensure!(
-                    !sirinvpn_core::has_pending_key_rotation(&runtime.paths, request.profile.id)?,
-                    "Finish key rotation first"
-                );
+                maintenance::ready(
+                    runtime,
+                    &request.profile,
+                    sirinvpn_installer::OwnerMaintenance::ReleaseInstall,
+                )?;
             }
             let mut output = Provisioner::manage_server_release(request)?;
             sequences(&mut output);

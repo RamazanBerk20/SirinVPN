@@ -27,7 +27,7 @@ const MAX_PASSWORD_BYTES: usize = 1024;
 const MIN_EXPORT_PASSWORD_CHARACTERS: usize = 12;
 
 #[derive(Debug, Error)]
-pub(crate) enum EncryptedBackupError {
+pub enum EncryptedBackupError {
     #[error("the backup password must contain at least 12 characters")]
     WeakPassword,
     #[error("the backup password is invalid")]

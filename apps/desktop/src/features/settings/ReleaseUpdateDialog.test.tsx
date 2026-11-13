@@ -100,6 +100,14 @@ describe("portable app updates", () => {
     fireEvent.click(screen.getByRole("button", { name: t("release.candidate.verify") }));
     expect(await screen.findByText(t("release.done.titleVerified"))).toBeTruthy();
   });
+  it("leaves a package-manager install to the package manager", async () => {
+    vi.mocked(api.checkReleaseUpdate).mockResolvedValue({ ...candidate, installer_kind: "package_manager", appimage_install_available: false });
+    render(<ReleaseUpdateDialog open onOpenChange={vi.fn()} installationReady />);
+    await check();
+    expect(screen.getByText(t("release.candidate.packageManager", { version: "0.2.0" }))).toBeTruthy();
+    expect(screen.queryByRole("button", { name: t("release.candidate.install") })).toBeNull();
+    expect(screen.queryByText(t("release.candidate.notInstallableLinux"))).toBeNull();
+  });
   it("retains the authenticated candidate across prerequisite navigation and requires fresh consent", async () => {
     vi.mocked(api.checkReleaseUpdate).mockResolvedValue({ ...candidate, installer_kind: "debian", appimage_install_available: false, debian_install_available: true });
     const review = vi.fn();

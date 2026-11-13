@@ -2,14 +2,13 @@ import { SecretTextarea } from "../../components/SecretInput";
 import { InvitationReviewFields, useInvitationReview } from "./InvitationReview";
 import { ArrowClockwise, CheckCircle, Key, ShieldCheck } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
-import { isAndroid } from "../../platform";
 import { api } from "../../api";
 import { type ServerProfile } from "../../types";
 import { Field, InlineError } from "../../components/ui";
-import { errorMessage } from "../../lib/errors";
+import { appError, errorMessage } from "../../lib/errors";
 import { t } from "../../i18n";
 
-/** Invitation codes begin with this prefix; it is a format hint, not language. */
+/** Join codes begin with this prefix; it is a format hint, not language. */
 const codePlaceholder = "sirin1.…";
 
 export function JoinFlow({
@@ -22,9 +21,10 @@ export function JoinFlow({
   const form = useRef<HTMLFormElement>(null);
   const [code, setCode] = useState("");
   const [focusCode, setFocusCode] = useState(false);
-  const review = useInvitationReview(code, isAndroid ? t("onboarding.join.defaultDeviceNameAndroid") : t("onboarding.join.defaultDeviceNameDesktop"));
+  const review = useInvitationReview(code);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [takenName, setTakenName] = useState<string | null>(null);
 
   useEffect(() => {
     if (!focusCode) return;
@@ -44,7 +44,9 @@ export function JoinFlow({
       setCode("");
       await onComplete(profile);
     } catch (reason) {
-      setError(errorMessage(reason, t("onboarding.join.error")));
+      // A taken person name belongs to its field, not to the form's error.
+      if (review.naming.personName && appError(reason, ["person_name_taken"]).code === "person_name_taken") setTakenName(review.personName.trim());
+      else setError(errorMessage(reason, t("onboarding.join.error")));
     } finally {
       setBusy(false);
     }
@@ -54,6 +56,7 @@ export function JoinFlow({
     <form
       ref={form}
       className={`setup-form join-form ${compact ? "compact" : ""}`}
+      data-state={busy ? "joining" : review.rejected ? "rejected" : review.preview ? "reviewed" : review.busy ? "reviewing" : "entering"}
       data-rejected={review.rejected}
       onSubmit={(event) => {
         event.preventDefault();
@@ -78,7 +81,7 @@ export function JoinFlow({
         </div>
       ) : (
         <Field label={t("onboarding.join.code")} hint={t("onboarding.join.codeHint")}>
-          <SecretTextarea
+          <SecretTextarea field="code"
             className="secret-code-input mono"
             value={code}
             onChange={(event) => setCode(event.target.value)}
@@ -92,7 +95,7 @@ export function JoinFlow({
       {review.error && (review.rejected
         ? <InlineError message={review.error} />
         : <InlineError message={review.error} onRetry={() => void review.review()} retryDisabled={review.busy} />)}
-      <InvitationReviewFields review={review} disabled={busy} />
+      <InvitationReviewFields review={review} disabled={busy} takenName={takenName} />
       {error ? <InlineError message={error} /> : null}
       {review.rejected ? (
         <button type="button" className="primary-button" onClick={changeCode}>{t("devices.join.changeCode")}</button>

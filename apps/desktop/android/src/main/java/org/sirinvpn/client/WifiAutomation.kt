@@ -32,9 +32,9 @@ object WifiAutomation {
     private val worker = ThreadPoolExecutor(1, 1, 0, TimeUnit.MILLISECONDS, ArrayBlockingQueue(1), ThreadPoolExecutor.DiscardPolicy())
     @Volatile private var status = "disabled"
     @Volatile private var revision = 0L
-    // Unknown after a process start: the first check re-applies both.
-    private var joinArmed: Boolean? = null
-    @Volatile var monitoring = false
+    /** What sees the next network now; guarded by [armLock], never by the slow check, so services' main threads don't wait. */
+    private var watch: WifiWatch? = null
+    private val armLock = Any()
     private val preferences get() = context.getSharedPreferences("connection-intent", Context.MODE_PRIVATE)
 
     fun initialize(application: Context) { context = application.applicationContext }
@@ -44,7 +44,9 @@ object WifiAutomation {
     /** A saved policy, trust or server change is a new entry, as on desktop. The caller checks once it is idle. */
     fun policyChanged() { revision++; preferences.edit().remove("wifi_attempted").commit() }
     /** The one-shot join callback was delivered and Android released it. */
-    @Synchronized fun joined() { joinArmed = false }
+    fun joined() = synchronized(armLock) { watch = WifiWatch.joinDelivered(watch) }
+    fun monitorStarted() = synchronized(armLock) { apply(WifiWatch.monitorStarted(watch, preferences.getLong("wifi_join", 0))) }
+    fun monitorStopped() = synchronized(armLock) { watch = WifiWatch.monitorStopped(watch) }
 
     @Synchronized fun check() {
         val observed = Controller.network
@@ -66,8 +68,7 @@ object WifiAutomation {
             if (decision.remember) preferences.edit().putString("wifi_attempted", entry).commit()
             if (decision.connect) Controller.execute("connect_saved", JSONObject().put("serverId", policy.getString("server_id")).toString(),
                 UUID.randomUUID().toString(), Controller.generation(), Controller.ignoreResult)
-            join(decision.watch == WifiRule.Watch.WIFI_JOIN)
-            monitor(decision.watch == WifiRule.Watch.MONITOR)
+            synchronized(armLock) { apply(WifiWatch.arm(watch, decision.watch, preferences.getLong("wifi_join", 0))) }
         }
     }
 
@@ -116,26 +117,22 @@ object WifiAutomation {
      * Android sends a PendingIntent network callback once, immediately if a Wi-Fi network already exists, and
      * releases it 5 s after delivery by Intent.filterEquals. Arm it only off Wi-Fi, each time with a new URI.
      */
-    private fun join(on: Boolean) {
-        if (joinArmed == on) return
+    private fun apply(step: WifiWatch.Step) {
         val manager = context.getSystemService(ConnectivityManager::class.java)
-        val number = preferences.getLong("wifi_join", 0)
         fun intent(value: Long) = PendingIntent.getBroadcast(context, 0, Intent(JOINED, android.net.Uri.parse("sirin-wifi://joined/$value"),
             context, ReplacementReceiver::class.java), PendingIntent.FLAG_IMMUTABLE)
-        intent(number).also { manager.unregisterNetworkCallback(it); it.cancel() }
-        if (on) {
-            preferences.edit().putLong("wifi_join", number + 1).commit()
+        step.cancelJoin?.let { intent(it).also { pending -> manager.unregisterNetworkCallback(pending); pending.cancel() } }
+        step.registerJoin?.let {
+            preferences.edit().putLong("wifi_join", it).commit()
             manager.registerNetworkCallback(NetworkRequest.Builder().addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
-                .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET).build(), intent(number + 1))
+                .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET).build(), intent(it))
         }
-        joinArmed = on
-    }
-
-    private fun monitor(on: Boolean) {
-        if (on == monitoring) return
-        try {
-            if (on) context.startForegroundService(Intent(context, WifiWatchService::class.java))
-            else context.startService(Intent(context, WifiWatchService::class.java).setAction(WifiWatchService.STOP))
-        } catch (_: Exception) { /* Android refused a background start; the next check or app start retries. */ }
+        step.monitor?.let { on ->
+            try {
+                if (on) context.startForegroundService(Intent(context, WifiWatchService::class.java))
+                else context.startService(Intent(context, WifiWatchService::class.java).setAction(WifiWatchService.STOP))
+            } catch (_: Exception) { /* Android refused a background start; the next check or app start retries. */ }
+        }
+        watch = step.next
     }
 }

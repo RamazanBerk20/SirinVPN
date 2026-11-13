@@ -1,0 +1,81 @@
+{
+  "demo": {
+    "enter": "Demo ansehen",
+    "enterHint": "Sieh dich zuerst mit Beispieldaten um. Es wird nichts verbunden und nichts gespeichert.",
+    "banner": "Demo · Nur Beispieldaten. Es wird nichts verbunden und nichts gespeichert.",
+    "exit": "Demo beenden"
+  },
+  "troubleshoot": {
+    "open": "Keine Verbindung? Finde heraus, warum",
+    "title": "Keine Verbindung?",
+    "description": "Geh die üblichen Ursachen der Reihe nach durch. Jeder Schritt sagt dir, was du prüfen sollst, und bietet, wo die App es beheben kann, die Lösung an.",
+    "checking": "Dieses Gerät und die Verbindung werden geprüft…",
+    "progress": "Schritt {{current}} von {{total}}",
+    "next": "Weiter",
+    "previous": "Vorheriger Schritt",
+    "stepsLabel": "Schritte zur Fehlersuche",
+    "seen": "Was wir gesehen haben:",
+    "settingsSummary": "Keine Verbindung? Geh die üblichen Ursachen einzeln durch, mit einer Lösung, wo die App eine hat.",
+    "settingsAction": "Fehler suchen",
+    "connectionSettings": "Verbindungseinstellungen öffnen",
+    "status": {
+      "problem": "Wahrscheinliche Ursache",
+      "check": "Einen Blick wert",
+      "ok": "Sieht gut aus"
+    },
+    "step": {
+      "network": "Lokales Netzwerk",
+      "dns": "Namensauflösung (DNS)",
+      "reachability": "Erreichbarkeit deines VPS",
+      "transport": "Blockierte Verbindungsmethode",
+      "clock": "Datum und Uhrzeit",
+      "enrollment": "Geräteschlüssel und Anmeldung",
+      "membership": "Dein Zugriff",
+      "service": "VPN-Dienst auf dem VPS"
+    },
+    "network": {
+      "offline": "Dieses Gerät hat keine Netzwerkverbindung. Schalte WLAN oder mobile Daten ein und versuche es dann erneut.",
+      "check": "Öffne eine Website, während das VPN aus ist. Erscheint eine Anmeldeseite, wie bei WLAN in Hotels, Flughäfen oder Cafés, melde dich dort zuerst an. Lädt nichts, probiere ein anderes Netzwerk.",
+      "ok": "Das Netzwerk dieses Geräts erreicht deinen VPS."
+    },
+    "dns": {
+      "vps": "Der private DNS-Dienst deines VPS antwortet nicht, daher öffnen sich Websites nicht über das VPN. Der Besitzer kann ihn mit „VPS-Konfiguration reparieren“ wiederherstellen.",
+      "check": "Dieses Gerät löst den Namen deines Servers auf, bevor es sich verbindet. Kann dieses Netzwerk das nicht, probiere ein anderes Netzwerk oder frag den Besitzer, ob der Name noch auf den VPS zeigt.",
+      "address": "Dein Server wird über seine IP-Adresse angesprochen, daher braucht die Verbindung keine Namensauflösung.",
+      "ok": "Der private DNS-Dienst deines VPS antwortet."
+    },
+    "reachability": {
+      "check": "Stelle sicher, dass der VPS in der Konsole deines Anbieters läuft und seine öffentliche Adresse sich nicht geändert hat. Wenn sich die Adresse geändert hat, aktualisiere sie hier.",
+      "ok": "Dein VPS hat auf dieses Gerät geantwortet."
+    },
+    "transport": {
+      "fixed": "Dieser Server ist auf eine Verbindungsmethode festgelegt, und Netzwerke blockieren oft einzelne Methoden. Wähle Automatisch, damit die App auf die anderen ausweichen kann.",
+      "owner": "Automatisch probiert bereits jede Methode aus, die dieser Server anbietet. Blockiert dieses Netzwerk VPNs, schalte HTTPS auf Port 443 mit „VPS-Konfiguration reparieren“ ein, und den CDN-Modus, falls die Adresse deines VPS selbst blockiert ist.",
+      "member": "Automatisch probiert bereits jede Methode aus, die dieser Server anbietet. Blockiert dieses Netzwerk alle, probiere ein anderes Netzwerk oder bitte den Besitzer, HTTPS oder den CDN-Modus einzuschalten.",
+      "automatic": "Automatisch probiert bereits jede Methode aus, die dieser Server anbietet, auch HTTPS über ein CDN. Blockiert dieses Netzwerk sie trotzdem, probiere ein anderes Netzwerk.",
+      "ok": "Die aktuelle Verbindungsmethode kommt durch dieses Netzwerk."
+    },
+    "clock": {
+      "problem": "Dein VPS hat die sichere Verbindung abgelehnt, meist weil die Uhr dieses Geräts falsch ist. Schalte in den Systemeinstellungen Datum und Uhrzeit automatisch ein und versuche es dann erneut.",
+      "check": "Prüfe, ob Datum, Uhrzeit und Zeitzone dieses Geräts automatisch gesetzt sind. Eine falsche Uhr lässt das Zertifikat deines VPS ungültig aussehen.",
+      "ok": "Dein VPS hat die sichere Verbindung akzeptiert, die Uhr dieses Geräts ist also in Ordnung."
+    },
+    "enrollment": {
+      "rotation": "Ein Schlüsselwechsel für dieses Gerät wurde nicht abgeschlossen. Schließe ihn ab, bevor du dich verbindest.",
+      "problem": "Die gespeicherten Schlüssel dieses Geräts können nicht verwendet werden. Stelle ein Geräte-Backup wieder her oder bitte den Besitzer um einen neuen Beitrittscode.",
+      "check": "Wenn dieses Gerät entfernt wurde oder seine Schlüssel ersetzt oder auf einem anderen Gerät wiederhergestellt wurden, kann es sich nicht verbinden. Stelle ein Geräte-Backup wieder her oder bitte den Besitzer um einen neuen Beitrittscode.",
+      "ok": "Dein VPS hat die Schlüssel dieses Geräts akzeptiert."
+    },
+    "membership": {
+      "owner": "Du bist der Besitzer, daher kann dein Zugriff nicht ablaufen oder pausiert werden.",
+      "problem": "Dein VPS hat den Zugriff dieses Geräts abgelehnt. Dein Zugriff ist vielleicht abgelaufen, pausiert oder liegt außerhalb der erlaubten Zeiten. Bitte den Besitzer, das zu prüfen.",
+      "check": "Ist dein Zugriff abgelaufen, pausiert oder auf erlaubte Zeiten beschränkt, nimmt der VPS dieses Gerät nicht an. Bitte den Besitzer, deinen Zugriff zu prüfen.",
+      "ok": "Dein VPS hat den aktuellen Zugriff dieses Geräts akzeptiert."
+    },
+    "service": {
+      "problem": "Der VPN-Dienst auf deinem VPS läuft nicht richtig. Der Besitzer kann ihn mit „VPS-Konfiguration reparieren“ wiederherstellen; das behält Geräte und Einstellungen.",
+      "check": "Wenn der VPS neu gestartet oder aktualisiert wurde, ist sein VPN-Dienst vielleicht stehen geblieben. Der Besitzer kann ihn mit „VPS-Konfiguration reparieren“ wiederherstellen; das behält Geräte und Einstellungen.",
+      "ok": "Der VPN-Dienst auf deinem VPS läuft."
+    }
+  }
+}

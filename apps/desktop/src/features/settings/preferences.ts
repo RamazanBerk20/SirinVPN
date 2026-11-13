@@ -7,6 +7,8 @@ export type AppPreferences = {
   notifications: boolean;
   animations: boolean;
   theme: ThemePreference;
+  /** "system" (follow the OS language list) or a language tag; absent from older shells. */
+  language?: string;
 };
 
 export type NotificationPermission =

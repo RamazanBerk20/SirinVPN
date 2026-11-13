@@ -24,7 +24,7 @@ it("opens at the likely cause, steps through the others and hands off to its fix
   await waitFor(() => expect(detail().getByText(t("help.troubleshoot.step.transport"))).toBeTruthy());
   // The step list shows every step, and the likely cause quotes the failed check.
   expect(screen.getAllByRole("button", { name: new RegExp(t("help.troubleshoot.step.network")) })).toHaveLength(1);
-  expect(detail().getByText(t("help.troubleshoot.seen", { detail: "No usable connection." }))).toBeTruthy();
+  expect(detail().getByText("No usable connection.").closest(".troubleshoot-evidence")?.textContent).toBe(`${t("help.troubleshoot.seen")}No usable connection.`);
   expect(screen.getByText(t("common.separator.pair", { first: t("help.troubleshoot.progress", { current: 4, total: 8 }), second: t("help.troubleshoot.status.problem") }))).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: t("help.troubleshoot.previous") }));
   expect(detail().getByText(t("help.troubleshoot.step.reachability"))).toBeTruthy();

@@ -37,6 +37,7 @@ where
 {
     run_tcp_client_inner(
         config,
+        None,
         before_remote_socket,
         after_remote_socket,
         |_| Ok(()),
@@ -56,6 +57,30 @@ where
 {
     run_tcp_client_inner(
         config,
+        None,
+        || async { Ok(()) },
+        || async { Ok(()) },
+        protect,
+        ready,
+    )
+    .await
+}
+
+/// Like `run_tcp_client_relay_with_socket_protector`, for a caller that fixed
+/// WireGuard's local address; see `run_client_relay_pinned`.
+pub async fn run_tcp_client_relay_pinned<F, Protect>(
+    config: TcpClientRelayConfig,
+    wireguard: SocketAddr,
+    protect: Protect,
+    ready: F,
+) -> Result<(), RelayError>
+where
+    F: FnOnce(),
+    Protect: FnOnce(&Socket) -> Result<(), RelayError>,
+{
+    run_tcp_client_inner(
+        config,
+        Some(wireguard),
         || async { Ok(()) },
         || async { Ok(()) },
         protect,
@@ -66,6 +91,7 @@ where
 
 async fn run_tcp_client_inner<F, Before, BeforeFuture, After, AfterFuture, Protect>(
     config: TcpClientRelayConfig,
+    wireguard: Option<SocketAddr>,
     before_remote_socket: Before,
     after_remote_socket: After,
     protect: Protect,
@@ -82,6 +108,7 @@ where
     if !config.local_listen.ip().is_loopback() {
         return Err(RelayError::InvalidConfiguration);
     }
+    let local_peer = LocalPeer::new(wireguard)?;
     let (client_private, server_public) = config.decoded_keys()?;
     let local_socket = crate::socket_policy::bind_loopback(config.local_listen)?;
     before_remote_socket().await?;
@@ -91,6 +118,7 @@ where
     release_result?;
     relay_client_stream(
         local_socket,
+        local_peer,
         stream_result?,
         &client_private,
         &server_public,
@@ -137,6 +165,7 @@ where
 {
     run_tls_client_inner(
         config,
+        None,
         before_remote_socket,
         after_remote_socket,
         |_| Ok(()),
@@ -156,6 +185,30 @@ where
 {
     run_tls_client_inner(
         config,
+        None,
+        || async { Ok(()) },
+        || async { Ok(()) },
+        protect,
+        ready,
+    )
+    .await
+}
+
+/// Like `run_tls_like_client_relay_with_socket_protector`, for a caller that fixed
+/// WireGuard's local address; see `run_client_relay_pinned`.
+pub async fn run_tls_like_client_relay_pinned<F, Protect>(
+    config: TlsLikeClientRelayConfig,
+    wireguard: SocketAddr,
+    protect: Protect,
+    ready: F,
+) -> Result<(), RelayError>
+where
+    F: FnOnce(),
+    Protect: FnOnce(&Socket) -> Result<(), RelayError>,
+{
+    run_tls_client_inner(
+        config,
+        Some(wireguard),
         || async { Ok(()) },
         || async { Ok(()) },
         protect,
@@ -166,6 +219,7 @@ where
 
 async fn run_tls_client_inner<F, Before, BeforeFuture, After, AfterFuture, Protect>(
     config: TlsLikeClientRelayConfig,
+    wireguard: Option<SocketAddr>,
     before_remote_socket: Before,
     after_remote_socket: After,
     protect: Protect,
@@ -182,6 +236,7 @@ where
     if !config.local_listen.ip().is_loopback() {
         return Err(RelayError::InvalidConfiguration);
     }
+    let local_peer = LocalPeer::new(wireguard)?;
     let (client_private, server_public, certificate_sha256) = config.decoded_material()?;
     let local_socket = crate::socket_policy::bind_loopback(config.local_listen)?;
     before_remote_socket().await?;
@@ -216,6 +271,7 @@ where
     if let Some(https) = &config.https {
         return https::client(
             local_socket,
+            local_peer,
             tls_stream,
             https,
             config.server_address.port(),
@@ -227,6 +283,7 @@ where
     }
     relay_client_stream(
         local_socket,
+        local_peer,
         tls_stream,
         &client_private,
         &server_public,

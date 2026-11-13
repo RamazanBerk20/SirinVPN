@@ -417,6 +417,24 @@ impl SecretStore for HybridSecretStore {
         self.get_locked(reference)
     }
 
+    /// Read from the schema-2 record without changing it; files written by earlier
+    /// versions, including those with no record at all, keep their meaning.
+    fn state(&self, reference: &str) -> Result<CredentialState, SecretStoreError> {
+        let _lock = self.lock(reference)?;
+        Ok(match self.record(reference)?.map(|record| record.backend) {
+            Some(Backend::Writing) => CredentialState::Writing,
+            Some(Backend::Keyring) => CredentialState::Stored(CredentialBackend::SecureStore),
+            Some(Backend::PrivateFile) => CredentialState::Stored(CredentialBackend::PrivateFile),
+            Some(Backend::Deleting) => CredentialState::Deleting,
+            Some(Backend::Deleted) => CredentialState::Deleted,
+            None => match self.get_locked(reference) {
+                Ok(_) => CredentialState::Stored(CredentialBackend::Unverified),
+                Err(SecretStoreError::NotFound) => CredentialState::Absent,
+                Err(error) => return Err(error),
+            },
+        })
+    }
+
     fn delete(&self, reference: &str) -> Result<(), SecretStoreError> {
         let _lock = self.lock(reference)?;
         if self

@@ -55,3 +55,14 @@ it("cleans up a local channel when the window hides before subscription complete
   acknowledge();
   await vi.waitFor(() => expect(native.invoke).toHaveBeenCalledWith("unsubscribe_local_status", { subscriptionId: id }));
 });
+
+it("does not forward the final event of a removed server's watch", async () => {
+  native.invoke.mockResolvedValue(undefined);
+  const receive = vi.fn();
+  const stop = api.watchServerStatus("removed", receive);
+  native.channels[0].onmessage({ kind: "state", state: "reconnecting", stream: "reconnecting" });
+  native.channels[0].onmessage({ kind: "state", state: "stopped", stream: "stopped" });
+  expect(receive).toHaveBeenCalledTimes(1);
+  expect(receive).toHaveBeenCalledWith(expect.objectContaining({ state: "reconnecting" }));
+  stop();
+});
