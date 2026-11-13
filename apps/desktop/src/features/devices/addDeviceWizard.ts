@@ -49,7 +49,8 @@ export type WizardEvent =
   | { type: "choose"; whose: Whose }
   | { type: "editPerson"; patch: Partial<NewPerson> }
   | { type: "edit"; patch: Partial<Omit<WizardDraft, "whose" | "newPerson">> }
-  | { type: "next" }
+  /** `namesPerson`: the inviter types the new person's name on this step. */
+  | { type: "next"; namesPerson: boolean }
   | { type: "back" }
   | { type: "create" }
   | { type: "failed"; error: string }
@@ -70,36 +71,34 @@ export function startWizard(preset: Whose | null, inheritedPolicy?: Partial<Poli
   return preset && preset.kind !== "new" ? { step: "connect", draft, error: null } : { step: "whose", draft, error: null };
 }
 
-/** Why the first step can't continue, or null. */
-export function whoseProblem(draft: WizardDraft): string | null {
+/** Why the first step can't continue, or null. `namesPerson`: the inviter types the new person's name (see `inviterNamesPerson`). */
+export function whoseProblem(draft: WizardDraft, namesPerson: boolean): string | null {
   if (!draft.whose) return "choose";
   if (draft.whose.kind !== "new") return null;
   const person = draft.newPerson;
-  if (!person.several && personNameProblem(person.name)) return "name";
+  if (namesPerson && !person.several && personNameProblem(person.name)) return "name";
   if (person.several && (!Number.isInteger(person.people) || person.people < 2 || person.people > 100)) return "people";
   if (person.role === "member" && Object.keys(policyProblems(person.policy)).length > 0) return "policy";
   return null;
 }
 
-/** Why the second step can't create, or null. `needsDeviceName` comes from the server's naming support. */
-export function connectProblem(draft: WizardDraft, needsDeviceName: boolean): string | null {
+/** Why the second step can't create, or null. `needsDeviceName` and `namesPerson` come from the server's naming support. */
+export function connectProblem(draft: WizardDraft, needsDeviceName: boolean, namesPerson = false): string | null {
   if (draft.method === "wireguard" || needsDeviceName) {
     if (deviceNameProblem(draft.deviceName)) return "deviceName";
   }
+  if (namesPerson && draft.whose?.kind === "new" && personNameProblem(draft.newPerson.name)) return "name";
   if (draft.method === "app" && (!Number.isInteger(draft.uses) || draft.uses < 1 || draft.uses > 100)) return "uses";
   return null;
 }
 
 /** The joiner can't name things on this server, so the issuer names the device now. */
-export function needsDeviceName(draft: WizardDraft, caps: Pick<Capabilities, "recipientNames" | "namedCodes">): boolean {
-  if (!caps.recipientNames) return true;
-  // Until codes can carry a new person's name, a single new person's code fixes both names.
-  return draft.whose?.kind === "new" && !draft.newPerson.several && !caps.namedCodes;
-}
+export const needsDeviceName = (caps: Pick<Capabilities, "recipientNames">): boolean => !caps.recipientNames;
 
-/** `fixed_member_name`: only a single new person's code, with joiner-named devices, on a server with named codes. */
-export function fixesPersonName(draft: WizardDraft, caps: Pick<Capabilities, "recipientNames" | "namedCodes">): boolean {
-  return draft.whose?.kind === "new" && !draft.newPerson.several && caps.namedCodes && !needsDeviceName(draft, caps);
+/** Where the inviter types a single new person's name, if at all: up front where the joiner can't name themselves (older server), or with a WireGuard configuration, which has no join screen. */
+export function personNameStep(draft: WizardDraft, caps: Pick<Capabilities, "recipientNames">): "whose" | "connect" | null {
+  if (draft.whose?.kind !== "new" || draft.newPerson.several) return null;
+  return !caps.recipientNames ? "whose" : draft.method === "wireguard" ? "connect" : null;
 }
 
 /** Devices that appeared for the code's person (or new people) since the code was made. */
@@ -125,7 +124,7 @@ export function wizardReducer(state: WizardState, event: WizardEvent): WizardSta
     case "edit":
       return state.step === "whose" || state.step === "connect" ? { ...state, draft: { ...state.draft, ...event.patch }, error: null } : state;
     case "next":
-      return state.step === "whose" && !whoseProblem(state.draft) ? { step: "connect", draft: state.draft, error: null } : state;
+      return state.step === "whose" && !whoseProblem(state.draft, event.namesPerson) ? { step: "connect", draft: state.draft, error: null } : state;
     case "back":
       return state.step === "connect" ? { step: "whose", draft: state.draft, error: null } : state;
     case "create":

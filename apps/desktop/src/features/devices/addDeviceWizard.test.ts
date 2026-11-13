@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { MembershipSnapshot } from "../../types";
-import { connectProblem, fixesPersonName, needsDeviceName, startWizard, whoseProblem, wizardReducer, type WizardState } from "./addDeviceWizard";
+import { connectProblem, needsDeviceName, personNameStep, startWizard, whoseProblem, wizardReducer, type WizardState } from "./addDeviceWizard";
 
 const code = { invitation_id: "code-1", expires_at_unix: 2_000, code: "sirin1.secret", qr_svg: "<svg/>" };
 const base: MembershipSnapshot = {
@@ -23,19 +23,22 @@ describe("add-device wizard", () => {
     expect(startWizard({ kind: "person", personId: "m" }).step).toBe("connect");
   });
 
-  it("needs a name and valid limits for someone new, but not for several people", () => {
+  it("needs valid limits, and a name only where the inviter must type one", () => {
     let state = wizardReducer(startWizard(null), { type: "choose", whose: { kind: "new" } });
-    expect(whoseProblem(state.draft)).toBe("name");
-    expect(wizardReducer(state, { type: "next" }).step).toBe("whose");
+    // On a current server the joiner names themselves: nothing to type.
+    expect(whoseProblem(state.draft, false)).toBeNull();
+    expect(wizardReducer(state, { type: "next", namesPerson: false }).step).toBe("connect");
+    expect(wizardReducer(state, { type: "next", namesPerson: true }).step).toBe("whose");
+    // An older server can't let them: the inviter's name is required.
+    expect(whoseProblem(state.draft, true)).toBe("name");
     state = wizardReducer(state, { type: "editPerson", patch: { name: "Ayşe" } });
-    expect(whoseProblem(state.draft)).toBeNull();
-    expect(wizardReducer(state, { type: "next" }).step).toBe("connect");
+    expect(whoseProblem(state.draft, true)).toBeNull();
     const several = wizardReducer(wizardReducer(state, { type: "editPerson", patch: { name: "", several: true } }), { type: "edit", patch: { method: "wireguard" } });
-    expect(whoseProblem(several.draft)).toBeNull();
+    expect(whoseProblem(several.draft, true)).toBeNull();
     const broken = wizardReducer(state, { type: "editPerson", patch: { policy: { ...state.draft.newPerson.policy, limit: "0" } } });
-    expect(whoseProblem(broken.draft)).toBe("policy");
+    expect(whoseProblem(broken.draft, false)).toBe("policy");
     // An Admin has no limits to check.
-    expect(whoseProblem(wizardReducer(broken, { type: "editPerson", patch: { role: "admin" } }).draft)).toBeNull();
+    expect(whoseProblem(wizardReducer(broken, { type: "editPerson", patch: { role: "admin" } }).draft, false)).toBeNull();
   });
 
   it("keeps several new people on the SirinVPN app", () => {
@@ -97,23 +100,32 @@ describe("add-device wizard", () => {
 });
 
 describe("naming on the code", () => {
-  const caps = { recipientNames: true, namedCodes: true };
-  const draft = (whose: Parameters<typeof startWizard>[0], several = false) => {
+  const current = { recipientNames: true }, older = { recipientNames: false };
+  const draft = (whose: Parameters<typeof startWizard>[0], method: "app" | "wireguard" = "app", several = false) => {
     const state = startWizard(whose);
-    return { ...state.draft, newPerson: { ...state.draft.newPerson, name: "Ayşe", several } };
+    return { ...state.draft, method, newPerson: { ...state.draft.newPerson, name: "Ayşe", several } };
   };
 
-  it("fixes the person's name only for one new person on a server with named codes", () => {
-    expect(fixesPersonName(draft({ kind: "new" }), caps)).toBe(true);
-    expect(needsDeviceName(draft({ kind: "new" }), caps)).toBe(false);
-    expect(fixesPersonName(draft({ kind: "new" }, true), caps)).toBe(false);
-    expect(fixesPersonName(draft({ kind: "self" }), caps)).toBe(false);
-    expect(fixesPersonName(draft({ kind: "person", personId: "m" }), caps)).toBe(false);
+  it("asks the inviter for no name on a current server, for a person or a device", () => {
+    for (const whose of [{ kind: "new" }, { kind: "self" }, { kind: "person", personId: "m" }] as const) {
+      expect(personNameStep(draft(whose), current)).toBeNull();
+      expect(needsDeviceName(current)).toBe(false);
+    }
+    expect(connectProblem(draft({ kind: "new" }), needsDeviceName(current), false)).toBeNull();
   });
 
-  it("keeps the older behaviour without named codes or recipient names", () => {
-    expect(fixesPersonName(draft({ kind: "new" }), { recipientNames: true, namedCodes: false })).toBe(false);
-    expect(needsDeviceName(draft({ kind: "new" }), { recipientNames: true, namedCodes: false })).toBe(true);
-    expect(fixesPersonName(draft({ kind: "new" }), { recipientNames: false, namedCodes: true })).toBe(false);
+  it("asks for the new person's name up front only where the joiner can't choose", () => {
+    expect(personNameStep(draft({ kind: "new" }), older)).toBe("whose");
+    expect(needsDeviceName(older)).toBe(true);
+    expect(personNameStep(draft({ kind: "new" }, "app", true), older)).toBeNull();
+    expect(personNameStep(draft({ kind: "self" }), older)).toBeNull();
+  });
+
+  it("always asks for the person and the device with a WireGuard configuration", () => {
+    const wireguard = draft({ kind: "new" }, "wireguard");
+    expect(personNameStep(wireguard, current)).toBe("connect");
+    expect(connectProblem({ ...wireguard, deviceName: "Router" }, false, true)).toBeNull();
+    expect(connectProblem({ ...wireguard, deviceName: "Router", newPerson: { ...wireguard.newPerson, name: " " } }, false, true)).toBe("name");
+    expect(personNameStep(draft({ kind: "person", personId: "m" }, "wireguard"), current)).toBeNull();
   });
 });

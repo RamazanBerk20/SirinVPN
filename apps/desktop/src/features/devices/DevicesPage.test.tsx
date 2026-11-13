@@ -5,10 +5,10 @@ import { t } from "../../i18n";
 import type { MembershipSnapshot } from "../../types";
 import { DevicesPage } from "./DevicesPage";
 import { forgetMembership } from "./membershipCache";
-import { capabilities } from "./model";
+import { capabilities, codeTitle } from "./model";
 import { couplingNote } from "./PersonPanel";
 
-vi.mock("../../api", () => ({ api: { serverConfiguration: vi.fn(), membership: vi.fn(), renamePerson: vi.fn(), cancelInvitation: vi.fn() } }));
+vi.mock("../../api", () => ({ api: { serverConfiguration: vi.fn(), membership: vi.fn(), renamePerson: vi.fn(), cancelInvitation: vi.fn(), createInvitation: vi.fn() } }));
 afterEach(() => { cleanup(); vi.resetAllMocks(); forgetMembership(); });
 
 const profile = { id: "server", name: "My VPS", device_id: "laptop" };
@@ -18,8 +18,8 @@ const alone: MembershipSnapshot = {
 };
 const configuration = { member_lifecycle_enabled: true, recipient_names_enabled: true, reusable_invitations_enabled: true };
 
-function show(snapshot: MembershipSnapshot, accessLevel: "owner" | "admin" | "member" = "owner", connected = true) {
-  vi.mocked(api.serverConfiguration).mockResolvedValue(configuration);
+function show(snapshot: MembershipSnapshot, accessLevel: "owner" | "admin" | "member" = "owner", connected = true, server: Record<string, boolean> = configuration) {
+  vi.mocked(api.serverConfiguration).mockResolvedValue(server);
   vi.mocked(api.membership).mockResolvedValue(snapshot);
   render(<DevicesPage profile={profile} connected={connected} accessLevel={accessLevel} onAccessChanged={vi.fn()} />);
 }
@@ -101,4 +101,45 @@ it("counts codes a person created exactly when the server reports issuers, and o
   expect(couplingNote({ ...snapshot, active_invitations: [] }, admin, newer)).toEqual({ count: 0, mayHaveCreated: false });
   const legacy = { ...snapshot, active_invitations: [code("for", { target_member_id: "a" })] };
   expect(couplingNote(legacy, admin, older)).toEqual({ count: 1, mayHaveCreated: true });
+});
+
+async function addSomeoneNew(server: Record<string, boolean>) {
+  show(alone, "owner", true, server);
+  await waitFor(() => expect(screen.getByTestId("devices-page").dataset.state).toBe("ready"));
+  vi.mocked(api.createInvitation).mockResolvedValue({ invitation_id: "c", expires_at_unix: 2_000_000_000, code: "sirin1.x", qr_svg: "<svg/>" });
+  fireEvent.click(screen.getByTestId("empty-add-someone"));
+  await screen.findByTestId("add-device-wizard");
+}
+
+it("asks the inviter for no name when someone new joins a current server, and sends no fixed name", async () => {
+  await addSomeoneNew({ ...configuration, named_join_codes_enabled: true });
+  expect(screen.queryByTestId("new-person-name")).toBeNull();
+  fireEvent.click(screen.getByTestId("wizard-next"));
+  expect(screen.queryByTestId("device-name")).toBeNull();
+  fireEvent.click(screen.getByTestId("wizard-create"));
+  await waitFor(() => expect(api.createInvitation).toHaveBeenCalled());
+  const call = vi.mocked(api.createInvitation).mock.calls[0];
+  expect(call[1]).toBe("");
+  expect(call[2]).toBe("");
+  expect(call).toHaveLength(9);
+  expect(call[8]).toBe(true);
+});
+
+it("still asks the inviter for both names on a server that can't let the joiner choose", async () => {
+  await addSomeoneNew({ member_lifecycle_enabled: true });
+  fireEvent.change(screen.getByTestId("new-person-name"), { target: { value: "Ayşe" } });
+  expect(screen.getByText(t("devices.add.new.nameHintFixed"))).toBeTruthy();
+  fireEvent.click(screen.getByTestId("wizard-next"));
+  fireEvent.change(screen.getByTestId("device-name"), { target: { value: "Pixel 9" } });
+  expect(screen.getByText(t("devices.add.deviceNameFixed"))).toBeTruthy();
+  fireEvent.click(screen.getByTestId("wizard-create"));
+  await waitFor(() => expect(api.createInvitation).toHaveBeenCalled());
+  const call = vi.mocked(api.createInvitation).mock.calls[0];
+  expect([call[1], call[2], call[8]]).toEqual(["Ayşe", "Pixel 9", false]);
+});
+
+it("titles a waiting code for a new person without a name", () => {
+  const code = { id: "c", member_name: "Invited member", device_name: "", recipient_names: true, expires_at_unix: 2_000_000_000 };
+  expect(codeTitle(code, [])).toBe(t("devices.codes.newPerson"));
+  expect(codeTitle({ ...code, recipient_names: false, member_name: "Ayşe" }, [])).toBe(t("devices.codes.newNamed", { name: "Ayşe" }));
 });

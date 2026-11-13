@@ -69,7 +69,7 @@ it("asks someone new for their own name only when the code doesn't carry one", a
   expect(api.joinServer).toHaveBeenCalledWith("sirin1.code", { member_name: "Ayşe", device_name: "Pixel 9" });
 });
 
-it("keeps the name the inviter typed and asks only for the device's", async () => {
+it("honours a name fixed by an older or other client, read-only, and asks only for the device's", async () => {
   await review({ ...preview, creates_member: true, member_name: "Ayşe", access_level: "member", member_name_fixed: true });
   expect(screen.queryByTestId("join-person-name")).toBeNull();
   expect(screen.getByTestId("join-person").textContent).toContain("Ayşe");
@@ -84,4 +84,19 @@ it("shows both names fixed by an older server and sends none", async () => {
   expect(screen.getByTestId("join-role").textContent).toContain(t("common.role.admin"));
   fireEvent.click(screen.getByRole("button", { name: t("onboarding.join.submit") }));
   expect(api.joinServer).toHaveBeenCalledWith("sirin1.code", {});
+});
+
+it("asks for both names when the code makes a new person", async () => {
+  await review({ ...preview, creates_member: true, member_name: "Invited member", access_level: "member" });
+  expect(screen.getByTestId("join-person-name")).toBeTruthy();
+  expect(screen.getByTestId("join-device-name")).toBeTruthy();
+});
+
+it("shows whose device it will be for an existing person and asks only for the device name", async () => {
+  await review({ ...preview, creates_member: false, member_name: "Family", access_level: "member" });
+  expect(screen.getByText(t("devices.join.addsDevice", { name: "Family" }))).toBeTruthy();
+  expect(screen.queryByTestId("join-person-name")).toBeNull();
+  fireEvent.change(screen.getByTestId("join-device-name"), { target: { value: "Pixel 9" } });
+  fireEvent.click(screen.getByRole("button", { name: t("onboarding.join.submit") }));
+  expect(api.joinServer).toHaveBeenCalledWith("sirin1.code", { device_name: "Pixel 9" });
 });

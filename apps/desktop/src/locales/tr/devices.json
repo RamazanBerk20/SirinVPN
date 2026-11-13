@@ -233,6 +233,7 @@
     "new": {
       "name": "Adı",
       "nameHint": "Bu sunucuyu yöneten herkese gösterilir.",
+      "nameHintFixed": "Bu sunucu, katılırken kendi adlarını seçmelerine izin vermez. Bu sunucuyu yöneten herkese gösterilir.",
       "several": "Bu kodu birkaç yeni kişi kullanacak",
       "people": "Kişi sayısı",
       "peopleHint": "Her kişi katılırken kendi adını girer ve Üye olur.",
@@ -280,6 +281,7 @@
       "instructionSelfAndroid": "Diğer cihazınızda SirinVPN’i açın, Katılım kodu kullan’ı seçin, sonra buradan paylaştığınız kodu tarayın veya yapıştırın.",
       "instructionPerson": "Bunu özel olarak {{name}} ile paylaşın. Kişi SirinVPN’i açar, Katılım kodu kullan’ı seçer ve kodu tarayabilir veya yapıştırabilir.",
       "instructionSeveral": "Bunu katılacak kişilere özel olarak gönderin. Her biri SirinVPN’i açar, Katılım kodu kullan’ı seçer ve tarar veya yapıştırır.",
+      "instructionNew": "Bunu katılacak kişiye özel olarak gönderin. Kişi SirinVPN’i açar, Katılım kodu kullan’ı seçer, kodu tarar veya yapıştırır ve kendi adını seçer.",
       "once": "Bu kod yalnızca bir kez gösterilir",
       "secret": "Kodu bilen herkes, kullanılana, iptal edilene veya {{date}} tarihinde sona erene kadar katılabilir."
     },

@@ -51,7 +51,7 @@ inline) or into documentation. Never stack more than one note paragraph under a 
 | device | peer, client, identity | “identity” only for the cryptographic fingerprint |
 | person, people | member, user (for the entity) | Each person has one role and one or more devices |
 | role: Owner, Admin, Member | access level, Make admin, Admin access | “Member” is only the lowest role. Each role has one fixed description (`devices.role.description.*`), shown wherever a role is chosen or described |
-| join code | invitation, invitation code, invite code | For a new person and for a new device of an existing person alike. Codes not yet used are “Waiting to join” |
+| join code | invitation, invitation code, invite code | For a new person and for a new device of an existing person alike. Codes not yet used are “Waiting to join”. The person joining names themselves and the device; the inviter types names only on older servers and for WireGuard-app devices |
 | device-to-device access | mutual access, isolate, peer communication | “peer communication” stays in the API only |
 | Remove device, Remove person | Revoke … | A confirmation may say the keys are revoked |
 | Suspend, Resume | Reactivate | The reversible pause of a person |

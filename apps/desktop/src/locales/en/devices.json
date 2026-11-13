@@ -233,6 +233,7 @@
     "new": {
       "name": "Their name",
       "nameHint": "Shown to everyone who manages this server.",
+      "nameHintFixed": "This server can’t let them choose their own name when joining. Shown to everyone who manages this server.",
       "several": "Several new people will use this code",
       "people": "Number of people",
       "peopleHint": "Each person names themselves when joining and becomes a Member.",
@@ -280,6 +281,7 @@
       "instructionSelfAndroid": "On your other device, open SirinVPN, choose Use a join code, then scan or paste the code you share from here.",
       "instructionPerson": "Send this privately to {{name}}. They open SirinVPN, choose Use a join code, and scan or paste it.",
       "instructionSeveral": "Send this privately to the people joining. Each opens SirinVPN, chooses Use a join code, and scans or pastes it.",
+      "instructionNew": "Send this privately to the person joining. They open SirinVPN, choose Use a join code, scan or paste it, and choose their own name.",
       "once": "This code is shown only once",
       "secret": "Anyone with it can join until it’s used, cancelled or expires on {{date}}."
     },

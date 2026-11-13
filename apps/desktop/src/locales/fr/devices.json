@@ -233,6 +233,7 @@
     "new": {
       "name": "Son nom",
       "nameHint": "Visible par toutes les personnes qui gèrent ce serveur.",
+      "nameHintFixed": "Ce serveur ne permet pas de choisir son propre nom à l’adhésion. Visible par toutes les personnes qui gèrent ce serveur.",
       "several": "Plusieurs nouvelles personnes utiliseront ce code",
       "people": "Nombre de personnes",
       "peopleHint": "Chaque personne se nomme en rejoignant et devient Membre.",
@@ -280,6 +281,7 @@
       "instructionSelfAndroid": "Sur votre autre appareil, ouvrez SirinVPN, choisissez Utiliser un code d’adhésion, puis scannez ou collez le code que vous partagez depuis ici.",
       "instructionPerson": "Envoyez-le en privé à {{name}}. Elle ouvre SirinVPN, choisit Utiliser un code d’adhésion, puis le scanne ou le colle.",
       "instructionSeveral": "Envoyez-le en privé aux personnes qui rejoignent. Chacune ouvre SirinVPN, choisit Utiliser un code d’adhésion, puis le scanne ou le colle.",
+      "instructionNew": "Envoyez-le en privé à la personne qui rejoint. Elle ouvre SirinVPN, choisit Utiliser un code d’adhésion, le scanne ou le colle, puis choisit son propre nom.",
       "once": "Ce code n’est affiché qu’une seule fois",
       "secret": "Quiconque le possède peut rejoindre jusqu’à ce qu’il soit utilisé, annulé ou qu’il expire le {{date}}."
     },

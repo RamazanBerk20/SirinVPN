@@ -118,10 +118,10 @@ servers or a VPN subscription.
    service handles privileged networking.
 4. **Add other devices.** On a device that is already set up, open **Devices** and
    select **Add device**. Say whose device it is (**Mine**, someone already on the
-   server, or **Someone new** with their name and role) and how it connects. The
+   server, or **Someone new** with a role) and how it connects. The
    wizard shows a join code and QR code and tells you when the device has joined.
    On the new device, choose **Use a join code** and scan the QR code or paste the
-   code. For an iPhone, iPad, Mac or router with the official WireGuard app, choose
+   code, then choose your own name and a name for the device. For an iPhone, iPad, Mac or router with the official WireGuard app, choose
    **WireGuard app** as the connection (desktop only) and scan its QR code in that
    app ([details](docs/wireguard-devices.md)).
 

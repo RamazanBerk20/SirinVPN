@@ -302,12 +302,9 @@ export const api = {
     maxUses = 1,
     memberPolicy?: import("./types").MemberPolicy,
     recipientNames = true,
-    /** Only for servers with `named_join_codes_enabled`: the code keeps `memberName` for the new person. */
-    fixedMemberName = false,
   ) =>
     invoke<InvitationResult>("create_invitation", {
       input: {
-        ...(fixedMemberName ? { fixed_member_name: true } : {}),
         server_id: serverId,
         member_name: memberName,
         device_name: deviceName,

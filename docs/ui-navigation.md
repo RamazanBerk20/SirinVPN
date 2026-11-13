@@ -82,8 +82,9 @@ mostly created members, and five words named the same role.
   networks, forwarded ports) and its activity, with one rule for every device.
   Codes not yet used are listed under **Waiting to join (N)**.
 - **Add device always adds a device**: one wizard asks whose device it is
-  (Mine, someone already here, Someone new with their name, role and, for a
-  Member, limits and permissions), how it connects (SirinVPN app, or the
+  (Mine, someone already here, Someone new with a role and, for a
+  Member, limits and permissions; the person joining chooses their own name and
+  their device's name, except on older servers that can't let them), how it connects (SirinVPN app, or the
   WireGuard app on the desktop), then hands over the join code and follows it
   until the device joins, the code expires or is cancelled. A person's group has
   **Add device for …** with the person chosen. Options the caller can't use are

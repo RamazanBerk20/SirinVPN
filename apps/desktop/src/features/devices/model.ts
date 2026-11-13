@@ -17,7 +17,7 @@ export interface Capabilities {
   policies: boolean;
   /** The joiner names the device (and, for a new person, themselves) when joining. */
   recipientNames: boolean;
-  /** A new person's code carries the name the inviter typed. */
+  /** The server names every code's issuer. */
   namedCodes: boolean;
   renamePerson: boolean;
   adminOwnDevices: boolean;

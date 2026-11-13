@@ -233,6 +233,7 @@
     "new": {
       "name": "Ihr Name",
       "nameHint": "Wird allen angezeigt, die diesen Server verwalten.",
+      "nameHintFixed": "Dieser Server kann sie ihren Namen beim Beitritt nicht selbst wählen lassen. Wird allen angezeigt, die diesen Server verwalten.",
       "several": "Mehrere neue Personen werden diesen Code verwenden",
       "people": "Anzahl der Personen",
       "peopleHint": "Jede Person gibt beim Beitritt ihren Namen an und wird Mitglied.",
@@ -280,6 +281,7 @@
       "instructionSelfAndroid": "Öffne auf deinem anderen Gerät SirinVPN, wähle Beitrittscode verwenden und scanne oder füge den Code ein, den du von hier teilst.",
       "instructionPerson": "Schicke ihn privat an {{name}}. Die Person öffnet SirinVPN, wählt Beitrittscode verwenden und scannt oder fügt ihn ein.",
       "instructionSeveral": "Schicke ihn privat an die Personen, die beitreten. Jede öffnet SirinVPN, wählt Beitrittscode verwenden und scannt oder fügt ihn ein.",
+      "instructionNew": "Schicke ihn privat an die Person, die beitritt. Sie öffnet SirinVPN, wählt Beitrittscode verwenden, scannt oder fügt ihn ein und wählt ihren eigenen Namen.",
       "once": "Dieser Code wird nur einmal angezeigt",
       "secret": "Jede Person mit ihm kann beitreten, bis er verwendet, abgebrochen wird oder am {{date}} abläuft."
     },

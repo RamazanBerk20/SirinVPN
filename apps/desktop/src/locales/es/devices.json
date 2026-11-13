@@ -233,6 +233,7 @@
     "new": {
       "name": "Su nombre",
       "nameHint": "Lo ve todo el que gestiona este servidor.",
+      "nameHintFixed": "Este servidor no permite que elijan su propio nombre al unirse. Lo ve todo el que gestiona este servidor.",
       "several": "Varias personas nuevas usarán este código",
       "people": "Número de personas",
       "peopleHint": "Cada persona se pone su nombre al unirse y pasa a ser miembro.",
@@ -280,6 +281,7 @@
       "instructionSelfAndroid": "En tu otro dispositivo, abre SirinVPN, elige Usar un código para unirse y luego escanea o pega el código que compartas desde aquí.",
       "instructionPerson": "Envíalo en privado a {{name}}. Esa persona abre SirinVPN, elige Usar un código para unirse y lo escanea o lo pega.",
       "instructionSeveral": "Envíalo en privado a las personas que se unan. Cada una abre SirinVPN, elige Usar un código para unirse y lo escanea o lo pega.",
+      "instructionNew": "Envíalo en privado a la persona que se une. Esa persona abre SirinVPN, elige Usar un código para unirse, lo escanea o lo pega, y elige su propio nombre.",
       "once": "Este código se muestra solo una vez",
       "secret": "Cualquiera que lo tenga puede unirse hasta que se use, se cancele o caduque el {{date}}."
     },

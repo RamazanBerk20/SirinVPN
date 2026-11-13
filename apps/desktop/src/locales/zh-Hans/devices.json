@@ -233,6 +233,7 @@
     "new": {
       "name": "他们的名称",
       "nameHint": "向所有管理此服务器的人显示。",
+      "nameHintFixed": "此服务器不允许对方在加入时自行选择名称。向所有管理此服务器的人显示。",
       "several": "多位新用户将使用此加入码",
       "people": "用户人数",
       "peopleHint": "每位用户在加入时自行命名，并成为成员。",
@@ -280,6 +281,7 @@
       "instructionSelfAndroid": "在你的另一台设备上打开 SirinVPN，选择“使用加入码”，然后扫描或粘贴你从此处分享的代码。",
       "instructionPerson": "私下将此发送给 {{name}}。对方打开 SirinVPN，选择“使用加入码”，然后扫描或粘贴。",
       "instructionSeveral": "私下将此发送给加入的人员。每人打开 SirinVPN，选择“使用加入码”，然后扫描或粘贴。",
+      "instructionNew": "私下将此发送给要加入的人。对方打开 SirinVPN，选择“使用加入码”，扫描或粘贴后，自行选择名称。",
       "once": "此加入码仅显示一次",
       "secret": "拥有它的人可以加入，直到它被使用、取消或于 {{date}} 过期。"
     },

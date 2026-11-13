@@ -82,8 +82,7 @@ export function demoDevices(command: string, args: Record<string, unknown>): { h
     case "membership": return answer(visible());
     case "create_invitation": {
       const target = input.target_member_id as string | null;
-      // The VPS rules the demo exercises: fixed names only for one new named person, and an Admin's own devices only on newer servers.
-      if (input.fixed_member_name && (!future || target || !input.recipient_names || Number(input.max_uses ?? 1) !== 1 || !input.member_name)) throw new Error("a fixed member name needs one new person, a name and recipient-named devices");
+      // An Admin's own devices exist only on newer servers.
       if (target === SELF && role === "admin" && !future) throw new Error("only managers can add devices for this member");
       if (target && Boolean(input.administrator) !== Boolean(person(target).administrator)) throw new Error("the invitation's access level does not match the member");
       const code: ActiveInvitationSummary = {

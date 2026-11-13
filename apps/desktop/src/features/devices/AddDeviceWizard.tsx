@@ -15,7 +15,7 @@ import { save } from "../../lib/nativeDialog";
 import { isAndroid } from "../../platform";
 import type { MemberSummary, MembershipSnapshot } from "../../types";
 import { SettingsDisclosure } from "../settings/SettingsParts";
-import { connectProblem, fixesPersonName, needsDeviceName, startWizard, whoseProblem, wizardReducer, type WizardDraft, type WizardState } from "./addDeviceWizard";
+import { connectProblem, needsDeviceName, personNameStep, startWizard, whoseProblem, wizardReducer, type WizardDraft, type WizardState } from "./addDeviceWizard";
 import { InvitationQr } from "./InvitationQr";
 import { InvitationShare } from "./InvitationShare";
 import { LimitsAndPermissions } from "./LimitsAndPermissions";
@@ -66,42 +66,41 @@ export function AddDeviceWizard({ controller, snapshot, preset }: { controller: 
           isNew && caps.policies ? policyFromDraft(fresh.newPerson.policy) : undefined, fresh.wireguardPath || null);
         dispatch({ type: "createdWireGuard", result });
       } else {
-        const naming = needsDeviceName(fresh, caps);
+        const naming = needsDeviceName(caps);
         const result = await api.createInvitation(
           controller.serverId,
-          person?.name ?? (several ? "" : fresh.newPerson.name.trim()),
+          person?.name ?? (personNameStep(fresh, caps) ? fresh.newPerson.name.trim() : ""),
           naming ? fresh.deviceName.trim() : "",
           fresh.lifetime,
           person?.id ?? null,
           person ? Boolean(person.administrator) : fresh.newPerson.role === "admin",
           isNew ? (several ? fresh.newPerson.people : 1) : person?.role === "owner" ? 1 : fresh.uses,
           isNew && fresh.newPerson.role === "member" && caps.policies ? policyFromDraft(fresh.newPerson.policy) : undefined,
-          caps.recipientNames && !naming,
-          fixesPersonName(fresh, caps),
+          caps.recipientNames,
         );
         dispatch({ type: "createdCode", result, snapshot, personId: person?.id ?? null, seesEveryone: viewer.role !== "member" });
       }
       void controller.refresh();
     } catch (reason) {
       if (isNew && appError(reason, ["person_name_taken"]).code === "person_name_taken")
-        dispatch({ type: "nameTaken", error: t("common.errorCode.person_name_taken") });
+        dispatch({ type: personNameStep(fresh, caps) === "whose" ? "nameTaken" : "failed", error: t("common.errorCode.person_name_taken") });
       else dispatch({ type: "failed", error: errorMessage(reason, t(fresh.method === "wireguard" ? "devices.error.wireguard" : "devices.error.createCode")) });
     }
   };
 
   const heading = state.step === "handover" ? t("devices.add.handover.title")
     : state.step === "whose" ? t("devices.add.whose.title") : t("devices.add.connect.title");
-  const forName = draft.whose?.kind === "new" ? (draft.newPerson.several ? t("devices.add.severalPeople") : draft.newPerson.name.trim()) : person?.name ?? "";
+  const forName = draft.whose?.kind === "new" ? (draft.newPerson.several ? t("devices.add.severalPeople") : draft.newPerson.name.trim() || t("devices.add.whose.new")) : person?.name ?? "";
   const description = state.step === "whose" ? t("devices.add.whose.description")
     : draft.whose?.kind === "self" ? t("devices.add.forYou") : t("devices.add.forPerson", { name: forName });
 
   const footer = state.step === "whose" ? <div className="dialog-commit">
-    <button className="primary-button" data-testid="wizard-next" disabled={Boolean(whoseProblem(draft))} onClick={() => dispatch({ type: "next" })}>
+    <button className="primary-button" data-testid="wizard-next" disabled={Boolean(whoseProblem(draft, personNameStep(draft, viewer.caps) === "whose"))} onClick={() => dispatch({ type: "next", namesPerson: personNameStep(draft, viewer.caps) === "whose" })}>
       {t("devices.add.next")}<ArrowRight className="mirror-rtl" size={16} aria-hidden="true" />
     </button>
   </div> : state.step === "connect" || state.step === "creating" ? <div className="dialog-commit">
     <DialogBack onClick={() => dispatch({ type: "back" })} disabled={state.step === "creating"} />
-    <button className="primary-button" data-testid="wizard-create" disabled={state.step === "creating" || Boolean(connectProblem(draft, needsDeviceName(draft, viewer.caps)))}
+    <button className="primary-button" data-testid="wizard-create" disabled={state.step === "creating" || Boolean(connectProblem(draft, needsDeviceName(viewer.caps), personNameStep(draft, viewer.caps) === "connect"))}
       onClick={() => { if (state.step === "connect") void create(state); }}>
       {state.step === "creating" ? <ArrowClockwise className="spin" size={18} aria-hidden="true" /> : <Key size={18} aria-hidden="true" />}
       {state.step === "creating" ? t("devices.add.creating") : t(draft.method === "wireguard" ? "devices.add.createWireguard" : "devices.add.createCode")}
@@ -140,7 +139,7 @@ function WhoseStep({ state, dispatch, controller, snapshot, entry }: {
   const caps = controller.viewer.caps;
   const [pick, setPick] = useState(() => whose?.kind === "person" ? whose.personId : entry.people[0]?.id ?? "");
   const pickable = entry.people;
-  return <form className="invite-form" onSubmit={(event) => { event.preventDefault(); dispatch({ type: "next" }); }}>
+  return <form className="invite-form" onSubmit={(event) => { event.preventDefault(); dispatch({ type: "next", namesPerson: personNameStep(draft, caps) === "whose" }); }}>
     <fieldset className="choice-fieldset">
       <legend className="sr-only">{t("devices.add.whose.title")}</legend>
       <div className="condition-choices">
@@ -174,12 +173,10 @@ function WhoseStep({ state, dispatch, controller, snapshot, entry }: {
         <span>{t("devices.add.new.several")}</span>
       </label>}
       {person.several
-        ? <Field label={t("devices.add.new.people")} hint={t("devices.add.new.peopleHint")} error={whoseProblem(draft) === "people" ? t("devices.add.new.peopleInvalid") : undefined}>
+        ? <Field label={t("devices.add.new.people")} hint={t("devices.add.new.peopleHint")} error={whoseProblem(draft, false) === "people" ? t("devices.add.new.peopleInvalid") : undefined}>
           <input type="number" min={2} max={100} inputMode="numeric" value={person.people} onChange={(event) => dispatch({ type: "editPerson", patch: { people: Number(event.target.value) } })} />
         </Field>
-        : <Field label={t("devices.add.new.name")} hint={t(caps.renamePerson ? "devices.add.new.nameHintRename" : "devices.add.new.nameHint")} error={person.name && personNameProblem(person.name) ? personNameProblem(person.name)! : state.error ?? undefined}>
-          <input value={person.name} maxLength={128} autoComplete="off" data-testid="new-person-name" onChange={(event) => dispatch({ type: "editPerson", patch: { name: event.target.value } })} />
-        </Field>}
+        : personNameStep(draft, caps) === "whose" && <PersonNameField draft={draft} caps={caps} dispatch={dispatch} error={state.error ?? undefined} />}
       {entry.roles.length > 1 && !person.several && <fieldset className="choice-fieldset">
         <legend>{t("devices.role.title")}</legend>
         <div className="condition-choices">
@@ -197,6 +194,15 @@ function WhoseStep({ state, dispatch, controller, snapshot, entry }: {
   </form>;
 }
 
+/** The inviter names the new person: on a server where the joiner can't, or for a WireGuard configuration. */
+function PersonNameField({ draft, caps, dispatch, error }: { draft: WizardDraft; caps: DevicesController["viewer"]["caps"]; dispatch: Dispatch; error?: string }) {
+  const name = draft.newPerson.name;
+  const hint = !caps.recipientNames && draft.method === "app" ? "devices.add.new.nameHintFixed" : caps.renamePerson ? "devices.add.new.nameHintRename" : "devices.add.new.nameHint";
+  return <Field label={t("devices.add.new.name")} hint={t(hint)} error={name && personNameProblem(name) ? personNameProblem(name)! : error}>
+    <input value={name} maxLength={128} autoComplete="off" data-testid="new-person-name" onChange={(event) => dispatch({ type: "editPerson", patch: { name: event.target.value } })} />
+  </Field>;
+}
+
 function OwnerWarning() {
   return <div className="invitation-review-owner" role="note">
     <Warning size={18} weight="fill" aria-hidden="true" />
@@ -211,7 +217,7 @@ function ConnectStep({ draft, dispatch, controller, person, error, disabled }: {
   const isNew = draft.whose?.kind === "new";
   // A WireGuard configuration can't make an Admin, nor serve several people.
   const wireguard = caps.wireguard && !(isNew && (draft.newPerson.several || draft.newPerson.role === "admin"));
-  const naming = needsDeviceName(draft, caps);
+  const naming = needsDeviceName(caps);
   const multiDevice = !isNew && caps.policies && person?.role !== "owner";
   const edit = (patch: Partial<WizardDraft>) => dispatch({ type: "edit", patch });
   const chooseFile = async () => {
@@ -236,6 +242,7 @@ function ConnectStep({ draft, dispatch, controller, person, error, disabled }: {
       </div>
     </fieldset>
     <fieldset className="policy-form-fields" disabled={disabled}>
+      {personNameStep(draft, caps) === "connect" && <PersonNameField draft={draft} caps={caps} dispatch={dispatch} />}
       {(draft.method === "wireguard" || naming) && <Field label={t("devices.add.deviceName")} hint={draft.method === "app" ? t("devices.add.deviceNameFixed") : undefined}
         error={draft.deviceName && deviceNameProblem(draft.deviceName) ? deviceNameProblem(draft.deviceName)! : undefined}>
         <input value={draft.deviceName} maxLength={128} autoComplete="off" data-testid="device-name" onChange={(event) => edit({ deviceName: event.target.value })} />
@@ -278,7 +285,8 @@ function Handover({ state, dispatch, person, self, copyFailed }: {
   </div>;
   const name = state.draft.whose?.kind === "new" ? state.draft.newPerson.name.trim() : person?.name ?? "";
   const instruction = self ? t(isAndroid ? "devices.add.code.instructionSelfAndroid" : "devices.add.code.instructionSelf")
-    : state.draft.whose?.kind === "new" && state.draft.newPerson.several ? t("devices.add.code.instructionSeveral") : t("devices.add.code.instructionPerson", { name });
+    : state.draft.whose?.kind === "new" && state.draft.newPerson.several ? t("devices.add.code.instructionSeveral")
+      : name ? t("devices.add.code.instructionPerson", { name }) : t("devices.add.code.instructionNew");
   const waiting = handover.status === "waiting";
   return <div className="invitation-result">
     {waiting && <>
