@@ -269,6 +269,11 @@ codes, keys, passwords, backups, or private VPS details.
 - [Hetzner VPS creation](docs/hetzner-vps-creation.md) — one-click servers with a pre-pinned SSH host key
 - [Signed update design](docs/releases.md) — implementation documentation; no published releases yet
 
+## Support
+
+SirinVPN is free. If you find it useful, development can be supported through
+[GitHub Sponsors](https://github.com/sponsors/RamazanBerk20).
+
 ## License
 
 SirinVPN is licensed under the **GNU Affero General Public License v3.0 only**.

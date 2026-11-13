@@ -186,6 +186,12 @@ class SirinPlugin(private val activity: Activity) : Plugin(activity) {
         }
         if (command == "register_status") { registerListener(invoke); return }
         if (command == "client_platform") { resolve(invoke, "android"); return }
+        if (command == "open_sponsor_page") {
+            // Fixed address: the webview cannot choose what opens.
+            try { activity.startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://github.com/sponsors/RamazanBerk20"))); resolve(invoke) }
+            catch (_: android.content.ActivityNotFoundException) { reject(invoke,R.string.error_service_unavailable) }
+            return
+        }
         if (command == "android_vpn_settings") { activity.startActivity(Intent(Settings.ACTION_VPN_SETTINGS)); resolve(invoke); return }
         if (command == "android_notification_settings") {
             activity.startActivity(Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE,activity.packageName))

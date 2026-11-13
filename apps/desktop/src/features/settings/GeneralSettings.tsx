@@ -214,6 +214,12 @@ export function GeneralSettings({
         <div><h2>{t("settings.general.component.title")}</h2><p>{t("settings.general.component.summary")}</p></div>
         <button className="secondary-button" onClick={onReviewComponentUpdate}>{t("settings.general.component.review")}</button>
       </section>}
+      {/* Last on the page, plain text: findable, never in the way. */}
+      <p className="settings-note">
+        <button type="button" className="quiet-link" onClick={() => void api.openSponsorPage().catch(() => notify(t("settings.general.support.failed")))}>
+          {t("settings.general.support.link")}
+        </button>
+      </p>
     </div>
   );
 }

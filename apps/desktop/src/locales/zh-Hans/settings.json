@@ -100,6 +100,10 @@
       "title": "应用更新",
       "check": "检查更新"
     },
+    "support": {
+      "link": "通过 GitHub Sponsors 支持开发",
+      "failed": "无法打开浏览器。请重试。"
+    },
     "component": {
       "title": "本地 VPN 组件",
       "summary": "使此设备的 VPN 服务与应用保持匹配",

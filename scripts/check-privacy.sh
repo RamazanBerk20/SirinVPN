@@ -129,13 +129,25 @@ if printf '%s\n' \
   exit 1
 fi
 
+# The About-style "Support development" link opens this one page in the user's browser
+# when clicked; the app itself makes no request.
+SPONSOR_PAGE='src-tauri/src/desktop[.]rs:[0-9]+:const SPONSOR_URL: &str = "https://github[.]com/sponsors/RamazanBerk20";$'
+if printf '%s\n' \
+  'src-tauri/src/desktop.rs:1:const SPONSOR_URL: &str = "https://github.com/sponsors/RamazanBerk20/x";' \
+  'src-tauri/src/desktop.rs:1:const SPONSOR_URL: &str = "https://github.com.attacker.test/sponsors/RamazanBerk20";' \
+  'src-tauri/src/other.rs:1:const SPONSOR_URL: &str = "https://github.com/sponsors/RamazanBerk20";' \
+  | rg -q "$SPONSOR_PAGE"; then
+  echo "privacy check failed: sponsor URL exception accepted another location" >&2
+  exit 1
+fi
+
 URL_MATCHES=$(rg -n -g '!THIRD-PARTY-NOTICES' 'https?://' \
   "$PROJECT_ROOT/crates" \
   "$DESKTOP_DIR/src" \
   "$DESKTOP_DIR/src-tauri/src" || true)
 # These URL-validation fixtures use a reserved .example domain. Production
 # release destinations still come only from explicit user input.
-UNEXPECTED_URLS=$(printf '%s\n' "$URL_MATCHES" | rg -v "$NON_NETWORK_URLS" | rg -v "$DNS_BLOCKLISTS" | rg -v "$DNS_BLOCKLIST_FIXTURES" | rg -v "$HETZNER_API" | rg -v "$HETZNER_FIXTURES" | rg -v "$ALERT_FIXTURES" | rg -v 'windows-service/src/wireguard.rs:[0-9]+://! ABI source: https://git[.]zx2c4[.]com/wireguard-nt/tree/api/wireguard[.]h$' | rg -v '(features/settings/VpsUpdateDialog.test.tsx|installer/src/release_update/tests.rs|server/src/release_update/policy/tests.rs):[0-9]+:.*https?://(user:pass@)?releases[.]example/' | rg -v 'src/format.ts:[0-9]+:      const address = new URL\(`http://\[\$\{host\}\]`\).hostname;$' | rg -v \
+UNEXPECTED_URLS=$(printf '%s\n' "$URL_MATCHES" | rg -v "$NON_NETWORK_URLS" | rg -v "$DNS_BLOCKLISTS" | rg -v "$DNS_BLOCKLIST_FIXTURES" | rg -v "$HETZNER_API" | rg -v "$HETZNER_FIXTURES" | rg -v "$SPONSOR_PAGE" | rg -v "$ALERT_FIXTURES" | rg -v 'windows-service/src/wireguard.rs:[0-9]+://! ABI source: https://git[.]zx2c4[.]com/wireguard-nt/tree/api/wireguard[.]h$' | rg -v '(features/settings/VpsUpdateDialog.test.tsx|installer/src/release_update/tests.rs|server/src/release_update/policy/tests.rs):[0-9]+:.*https?://(user:pass@)?releases[.]example/' | rg -v 'src/format.ts:[0-9]+:      const address = new URL\(`http://\[\$\{host\}\]`\).hostname;$' | rg -v \
   'features/devices/demoDevices[.]ts:[0-9]+:const qr = .<svg xmlns="http://www[.]w3[.]org/2000/svg" viewBox="0 0 21 21">|management.rs:.*https://\{\}:8443|installer/src/lib.rs:.*https://\{SERVER_TUNNEL_ADDRESS\}|freedesktop.org/standards/PolicyKit|src/assets/mountains.svg:1:<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 660" fill="none">$|core/src/management/tests.rs:[0-9]+:.*format!\("https://\{address\}"\)|core/src/management/status_stream/tests.rs:[0-9]+:.*format!\("https://\{\}", listener.local_addr\(\).unwrap\(\)\)' || true)
 if [ -n "$UNEXPECTED_URLS" ]; then
   printf '%s\n' "$UNEXPECTED_URLS" >&2

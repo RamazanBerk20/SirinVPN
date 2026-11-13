@@ -104,6 +104,8 @@ export const api = {
     invoke<NotificationPermission>("request_notification_permission"),
   testNotification: () => invoke<void>("test_notification"),
   clientPlatform: () => invoke<ClientPlatform>("client_platform"),
+  /** Opens the project's fixed GitHub Sponsors page in the default browser; the address lives in native code. */
+  openSponsorPage: () => invoke<void>("open_sponsor_page"),
   checkReleaseUpdate: (source: string, channel: ReleaseUpdateChannel) =>
     invoke<ReleaseUpdateCandidate>("check_release_update", {
       input: { source, channel },

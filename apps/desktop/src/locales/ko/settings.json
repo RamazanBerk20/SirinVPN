@@ -100,6 +100,10 @@
       "title": "앱 업데이트",
       "check": "업데이트 확인"
     },
+    "support": {
+      "link": "GitHub Sponsors에서 개발 후원하기",
+      "failed": "브라우저를 열 수 없습니다. 다시 시도하세요."
+    },
     "component": {
       "title": "로컬 VPN 구성 요소",
       "summary": "이 기기의 VPN 서비스를 앱 버전에 맞게 유지합니다",

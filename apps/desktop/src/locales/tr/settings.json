@@ -100,6 +100,10 @@
       "title": "Uygulama güncellemeleri",
       "check": "Güncellemeleri denetle"
     },
+    "support": {
+      "link": "GitHub Sponsors üzerinden geliştirmeyi destekle",
+      "failed": "Tarayıcı açılamadı. Yeniden deneyin."
+    },
     "component": {
       "title": "Yerel VPN bileşeni",
       "summary": "Bu cihazın VPN hizmetini uygulamayla eşleşik tutar",

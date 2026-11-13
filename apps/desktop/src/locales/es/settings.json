@@ -100,6 +100,10 @@
       "title": "Actualizaciones de la app",
       "check": "Buscar actualizaciones"
     },
+    "support": {
+      "link": "Apoyar el desarrollo en GitHub Sponsors",
+      "failed": "No se pudo abrir el navegador. Inténtalo de nuevo."
+    },
     "component": {
       "title": "Componente VPN local",
       "summary": "Mantiene el servicio VPN de este dispositivo acorde con la app",

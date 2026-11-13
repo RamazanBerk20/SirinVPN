@@ -19,6 +19,7 @@
     "allow-local-component-update-status",
     "allow-install-local-vpn-component",
     "allow-client-platform",
+    "allow-open-sponsor-page",
     "allow-preview-invitation",
     "allow-get-app-preferences",
     "allow-get-connection-preferences",

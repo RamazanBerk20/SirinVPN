@@ -100,6 +100,10 @@
       "title": "App-Updates",
       "check": "Nach Updates suchen"
     },
+    "support": {
+      "link": "Entwicklung über GitHub Sponsors unterstützen",
+      "failed": "Der Browser konnte nicht geöffnet werden. Versuche es erneut."
+    },
     "component": {
       "title": "Lokale VPN-Komponente",
       "summary": "Hält den VPN-Dienst dieses Geräts zur App passend",

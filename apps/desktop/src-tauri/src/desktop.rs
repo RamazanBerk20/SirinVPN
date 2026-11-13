@@ -120,6 +120,29 @@ fn client_platform() -> &'static str {
     "desktop"
 }
 
+/// The one page the app can open outside itself; the webview supplies no address.
+const SPONSOR_URL: &str = "https://github.com/sponsors/RamazanBerk20";
+
+#[tauri::command]
+fn open_sponsor_page() -> Result<(), String> {
+    let mut command = if cfg!(target_os = "windows") {
+        std::process::Command::new("explorer.exe")
+    } else if cfg!(target_os = "macos") {
+        std::process::Command::new("open")
+    } else {
+        std::process::Command::new("xdg-open")
+    };
+    // The opener's exit status says nothing reliable (explorer.exe returns 1 on success).
+    command
+        .arg(SPONSOR_URL)
+        .stdin(std::process::Stdio::null())
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
+        .spawn()
+        .map(|_| ())
+        .map_err(|_| "The browser couldn’t be opened.".to_owned())
+}
+
 fn safe_error(error: impl std::fmt::Display) -> String {
     error.to_string()
 }
@@ -179,6 +202,7 @@ fn run_inner() -> tauri::Result<()> {
             local_component::local_component_update_status,
             local_component::install_local_vpn_component,
             client_platform,
+            open_sponsor_page,
             invitation_preview::preview_invitation,
             get_app_preferences,
             get_connection_preferences,

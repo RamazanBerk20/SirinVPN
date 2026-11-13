@@ -20,6 +20,7 @@ const mocks = vi.hoisted(() => ({
   requestNotificationPermission: vi.fn(),
   testNotification: vi.fn(),
   invoke: vi.fn(),
+  openSponsorPage: vi.fn(),
   android: false,
   tv: false,
 }));
@@ -42,6 +43,7 @@ beforeEach(() => {
   vi.resetAllMocks();
   mocks.android = false; mocks.tv = false;
   mocks.listServers.mockResolvedValue([]);
+  mocks.openSponsorPage.mockResolvedValue(undefined);
   mocks.getWifiPolicy.mockResolvedValue({ policy: { enabled: false, server_id: null }, trusted_networks: [], current_network: "unavailable", can_trust_current: false, current_network_token: null, automation_status: "disabled" });
   mocks.getAppPreferences.mockResolvedValue(structuredClone(initial));
   mocks.setAppPreferences.mockImplementation(async (preferences) => ({
@@ -235,4 +237,12 @@ it("saves the theme choice and applies it before the next paint", async () => {
   await waitFor(() => expect(light.getAttribute("aria-pressed")).toBe("true"));
   expect(mocks.setAppPreferences).toHaveBeenCalledWith({ ...initial.preferences, theme: "light" });
   expect(document.documentElement.dataset.theme).toBe("light");
+});
+
+it("ends with one quiet sponsor link that opens the page only on click", async () => {
+  setup();
+  const link = await screen.findByRole("button", { name: t("settings.general.support.link") });
+  expect(mocks.openSponsorPage).not.toHaveBeenCalled();
+  fireEvent.click(link);
+  expect(mocks.openSponsorPage).toHaveBeenCalledTimes(1);
 });

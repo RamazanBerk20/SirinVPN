@@ -183,6 +183,8 @@ The VPS daemon reads aggregate CPU counters and memory totals from `/proc`, plus
 
 ## Network communication
 
+The app itself makes no request to GitHub. Settings → General ends with a plain “Support development on GitHub Sponsors” link; only when a user clicks it, the system's default browser opens `https://github.com/sponsors/RamazanBerk20` (a fixed address in the native code, not chosen by the interface). SirinVPN sends nothing, and the click is not recorded or counted.
+
 The client communicates directly with:
 
 - the VPS over SSH during provisioning, explicit Owner repair/update, or explicit Owner uninstall;

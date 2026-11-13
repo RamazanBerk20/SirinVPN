@@ -100,6 +100,10 @@
       "title": "App updates",
       "check": "Check for updates"
     },
+    "support": {
+      "link": "Support development on GitHub Sponsors",
+      "failed": "Couldn’t open the browser. Try again."
+    },
     "component": {
       "title": "Local VPN component",
       "summary": "Keep this device’s VPN service matched to the app",
