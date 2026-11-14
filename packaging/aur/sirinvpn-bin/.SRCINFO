@@ -36,7 +36,7 @@ pkgbase = sirinvpn-bin
 	options = !debug
 	source_x86_64 = SirinVPN_1.0.0-rc.2_amd64.deb::https://github.com/RamazanBerk20/SirinVPN/releases/download/v1.0.0-rc.2/SirinVPN_1.0.0-rc.2_amd64.deb
 	source_x86_64 = LICENSE-1.0.0rc2::https://raw.githubusercontent.com/RamazanBerk20/SirinVPN/v1.0.0-rc.2/LICENSE
-	sha256sums_x86_64 = FILL_FROM_RELEASE
-	sha256sums_x86_64 = FILL_FROM_RELEASE
+	sha256sums_x86_64 = 1721203e3327ce63df7edf4816f77e2654385a09e4d0309476c5ddc8589d212f
+	sha256sums_x86_64 = d8a6cc31abc16b6748c7a21f21611f5a1ec33f67d22ca23d7da1c19b95496bee
 
 pkgname = sirinvpn-bin

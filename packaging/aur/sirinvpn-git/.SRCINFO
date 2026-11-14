@@ -46,7 +46,7 @@ pkgbase = sirinvpn-git
 	source = sirinvpn-server-x86_64-v1.0.0-rc.2::https://github.com/RamazanBerk20/SirinVPN/releases/download/v1.0.0-rc.2/sirinvpn-server-x86_64
 	source = sirinvpn-server-aarch64-v1.0.0-rc.2::https://github.com/RamazanBerk20/SirinVPN/releases/download/v1.0.0-rc.2/sirinvpn-server-aarch64
 	sha256sums = SKIP
-	sha256sums = FILL_FROM_RELEASE
-	sha256sums = FILL_FROM_RELEASE
+	sha256sums = 833d79c1988c7346af9bcab989e0b12ff6190bce70c274dc118fb9e5f719de71
+	sha256sums = 2f4ed867dad10c6e0c74b9dc451e4f4486d1012ba5ace2379a907df873d7bd90
 
 pkgname = sirinvpn-git

@@ -26,8 +26,8 @@ source=("sirinvpn::git+$url.git#branch=main"
         "sirinvpn-server-aarch64-$_payload_tag::$url/releases/download/$_payload_tag/sirinvpn-server-aarch64")
 # The payload sums are filled from that release by scripts/update-aur-checksums.sh.
 sha256sums=('SKIP'
-            'FILL_FROM_RELEASE'
-            'FILL_FROM_RELEASE')
+            '833d79c1988c7346af9bcab989e0b12ff6190bce70c274dc118fb9e5f719de71'
+            '2f4ed867dad10c6e0c74b9dc451e4f4486d1012ba5ace2379a907df873d7bd90')
 
 pkgver() {
   cd sirinvpn

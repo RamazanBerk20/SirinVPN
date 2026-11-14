@@ -22,7 +22,7 @@ Ledger for this release:
 | Channel | `preview` |
 | Preview release sequence | `2` (rc.1 was `1`) |
 | Trust policy sequence | `1`, unchanged (`release/sirinvpn-release-trust.json` is not touched) |
-| Android signing certificate SHA-256 | record it in step c (first release with an APK) |
+| Android signing certificate SHA-256 | `73d956a5b45be05698b59daf7c104023af9cf8ad3f8028ea88e7e528ce8b20da` (every later APK must print the same) |
 | Git tag | `v1.0.0-rc.2` |
 
 No release key or trust policy is created for this release: the rc.1 release
@@ -57,7 +57,7 @@ Exactly rc.1 step d, with `1.0.0-rc.2` in the file names. Check:
 Needs the server payloads from step a (the APK bundles them).
 
 ```sh
-./scripts/build-android.sh all release
+sh scripts/build-android.sh all release
 U=apps/desktop/src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release-unsigned.apk
 python3 scripts/check-android-package.py --unsigned "$U"
 ```

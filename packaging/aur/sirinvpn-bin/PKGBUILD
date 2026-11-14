@@ -24,8 +24,8 @@ source_x86_64=("$_deb::$url/releases/download/$_tag/$_deb"
                "LICENSE-$pkgver::https://raw.githubusercontent.com/RamazanBerk20/SirinVPN/$_tag/LICENSE")
 noextract=("$_deb")
 # Filled from the published release by scripts/update-aur-checksums.sh.
-sha256sums_x86_64=('FILL_FROM_RELEASE'
-                   'FILL_FROM_RELEASE')
+sha256sums_x86_64=('1721203e3327ce63df7edf4816f77e2654385a09e4d0309476c5ddc8589d212f'
+                   'd8a6cc31abc16b6748c7a21f21611f5a1ec33f67d22ca23d7da1c19b95496bee')
 
 package() {
   local data_archive

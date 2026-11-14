@@ -77,7 +77,7 @@ set_sums sirinvpn-bin sha256sums_x86_64 "$deb_sum" "$license_sum"
 for package in sirinvpn sirinvpn-git sirinvpn-bin; do
   (cd "$aur/$package" && makepkg --printsrcinfo >.SRCINFO)
 done
-if grep -rn FILL_FROM_RELEASE "$aur"; then
+if grep -rn --include=PKGBUILD --include=.SRCINFO FILL_FROM_RELEASE "$aur"; then
   echo 'a placeholder checksum remains' >&2
   exit 1
 fi
