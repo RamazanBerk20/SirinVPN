@@ -59,6 +59,15 @@ the same data the visual tests use. A banner, **Demo · Sample data only**,
 stays on every page with **Exit demo**. It works for screenshots and for a first
 look before setting up a VPS.
 
+People and devices in the demo come from `features/devices/demoDevices.ts`, which
+follows the role you choose for it. In a plain browser under `pnpm dev` (no Tauri
+bridge), the demo also opens from the address:
+`http://127.0.0.1:1420/?demo=1&role=owner|admin|member&platform=android&future=1`.
+`platform=android` shows the phone layout, `future=1` turns on the server features that older servers lack (see below), and `lang=<tag>` (development builds only) picks the language. The values are kept
+for the tab's session and removed from the address. The real app never reads its address,
+and the address never changes the platform outside the demo. The README screenshots are
+taken this way.
+
 ### Isolation
 
 - **No backend calls.** Every app command goes through `invoke` in

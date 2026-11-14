@@ -72,9 +72,10 @@ inline) or into documentation. Never stack more than one note paragraph under a 
 3. **Never build sentences from pieces.** One message per sentence with `{{placeholders}}`:
    `"{{name}} was removed"`, not `name + t("wasRemoved")`. Translators need to reorder.
    Separators belong in messages too (`"{{role}} · {{status}}"`).
-4. **Plurals** use i18next suffixes and the `count` parameter:
-   `"devices_one": "{{count}} device", "devices_other": "{{count}} devices"` →
+4. **Plurals** use ICU plural syntax inside one message, with the number passed as a
+   parameter: `"devices": "{count, plural, one {# device} other {# devices}}"` →
    `t("devices.summary.devices", { count })`. Never `"device" + (n === 1 ? "" : "s")`.
+   The syntax is explained in [Translating SirinVPN](translating.md#message-syntax).
 5. **Never use display text for logic.** Compare codes or enums, map them to text at the
    edge (`status === "reconnecting"`, not `label === "Reconnecting"`).
 6. **Format values before inserting them.** Use `formatNumber`, `formatList`,
@@ -109,16 +110,30 @@ and then redraws the tray.
 `src/i18n/catalog.test.ts` verifies the catalogs: every key used in code exists, every
 English key is used, placeholders and tags are well formed, plural groups are complete,
 and translations use the same placeholders as English. It also rejects literal text in
-JSX. In development builds, set `localStorage["sirin.locale"] = "en-XA"` and reload to
-see the pseudo-locale: accented, ~35% longer text that exposes anything not
-translated and any layout that clips.
+JSX. In development builds (`pnpm dev`), add `?lang=en-XA` to the address to see the
+pseudo-locale: accented, ~35% longer text that exposes anything not translated and any
+layout that clips. `?lang=ar-XB` mirrors the layout right to left. Any other tag in
+`?lang=` shows that language.
+`pnpm i18n:check` (also part of `pnpm lint`) compares every translation with English.
+
+## Languages
+
+English, Turkish, Spanish, French, German, Russian, Arabic, Simplified Chinese, Japanese
+and Korean are included. People choose one under **Settings → General → Language**, or
+leave it on **System default**, which follows the operating system's language list and
+falls back to English. The same choice drives the tray menu and desktop notifications.
+The nine translations besides English are machine translations that native speakers have
+not reviewed; see [Translating SirinVPN](translating.md) to correct one.
 
 ## Adding a language
 
-Copy `src/locales/en` to `src/locales/<tag>` (for example `tr`, `pt-BR`) and translate the
-values. Keys missing from a translation fall back to English. The catalogs use
-i18next JSON v4 conventions, which Weblate, Crowdin and Lokalise import directly.
+Copy `src/locales/en` to `src/locales/<tag>` (for example `pt-BR`), add an empty file
+named `UNTRANSLATED` to it until it is done, and translate the values. Keys missing from a
+translation fall back to English. Then add the language to `LANGUAGES` in
+`src/i18n/index.ts` and to `android/src/main/res/xml/locales_config.xml`.
 Native Android text (notifications, the Quick Settings tile, native dialogs, the QR
 scanner and errors returned to the app) is in
 `apps/desktop/android/src/main/res/values/strings.xml`; add
-`values-<tag>/strings.xml` alongside it.
+`values-<tag>/strings.xml` alongside it, starting with a `<!-- UNTRANSLATED … -->`
+comment. Run `pnpm i18n:check` before you finish; the whole workflow is in
+[Translating SirinVPN](translating.md).

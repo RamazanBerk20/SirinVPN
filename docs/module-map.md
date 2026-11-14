@@ -14,12 +14,13 @@ a file boundary does not change which process owns an operation or its secrets.
 | `components/` | Local branding, navigation, fields, metrics, errors, dialog focus restoration |
 | `features/onboarding/` | SSH provisioning, invitation redemption, encrypted device import |
 | `features/connection/` | Connection state/actions, Home, transport/routing options, metrics, maintenance entry points |
-| `features/devices/` | Membership, invitations, peer access, forwarding |
-| `features/settings/` | Backup, repair, uninstall, key rotation, migration, explicit releases |
+| `features/devices/` | The Devices page: people and their devices, the add-device wizard and join codes, person and device panels, limits and weekly hours, peer access, pairs, local networks, forwarding; `demoDevices.ts` is the demo's in-memory server |
+| `features/servers/` | The saved-server list, search and picker (sidebar and Servers page) |
+| `features/settings/` | General settings (language, credential storage, updates), backup, repair, uninstall, key rotation, migration, explicit releases |
 | `features/dns/` | Typed recursive/DoT/DoH and private-record inputs |
 | `platform.ts`, `hooks/useAndroidBack.ts` | Android native bridge selection and platform navigation |
 | `demo.ts` | Demo mode: answers `platform.ts` commands from sample data, never the native bridge ([details](in-app-help.md)) |
-| `i18n/`, `locales/<lang>/` | Interface text: `t()` lookup, plurals and formatting; JSON catalogs per namespace ([guide](ui-text.md)) |
+| `i18n/`, `locales/<lang>/` | Interface text: `t()` lookup, ICU plurals and formatting; JSON catalogs per namespace for ten languages, chosen in Settings or from the system ([guide](ui-text.md), [translating](translating.md)) |
 | `components/ListRow.tsx`, `components/InfoHint.tsx` | The Android row pattern; ⓘ explanations that replace long notes |
 | `styles/mobile-native.css` | Android tokens (colour, type, radius), card/row system, touch targets and bottom navigation |
 | `styles/` | Component styles and concept theme; import order remains explicit in `styles.css` |

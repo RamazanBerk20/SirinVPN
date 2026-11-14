@@ -107,7 +107,9 @@ mostly created members, and five words named the same role.
   `remove-person`, `change-role`, `save-limits`, `make-owner`, `cancel-code`).
   The demo's people follow `sessionStorage["sirin.demo.role"]` (owner, admin,
   member); `sessionStorage["sirin.demo.future"] = "1"` adds the server features
-  not released yet.
+  that older servers lack (named join codes, renaming people, Admins adding their
+  own devices). Current servers have them, so `future=1` shows what a current
+  server offers.
 
 ## Long operations
 
@@ -163,6 +165,10 @@ expandable rows. `tests/ui/android_tv_dpad.py` drives the Devices sheets with a
 D-pad. Four reviewers
 compared every changed family before and after; their findings were fixed
 before the final run.
+
+These images are a record of 2026-11-03. The Devices page was redesigned
+afterwards (see above), so its two images show the earlier menus; the README
+has current screenshots.
 
 In each image the top row is before and the bottom row is after; desktop dark
 comes first in each row, then Android dark.

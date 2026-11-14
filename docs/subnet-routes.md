@@ -11,7 +11,7 @@ Only the Owner, and only on the Owner's own devices. Forwarding opens the
 device's own network, so nobody can open another member's LAN. Moving
 ownership clears every route; the new Owner decides again.
 
-- **Desktop and Android:** **Devices → the device's menu → Advanced → Local networks**.
+- **Desktop and Android:** **Devices →** the device → **Network → Local networks**.
   One network per line; an empty list stops sharing. The action appears when
   the VPS advertises `subnet_routes_enabled`.
 - **CLI:**

@@ -37,6 +37,15 @@ cd apps/desktop
 pnpm tauri dev
 ```
 
+To work on the interface alone, run `pnpm dev` in `apps/desktop` and open
+`http://127.0.0.1:1420/?demo=1&role=owner&future=1` in a browser. The demo answers every
+command from sample data and never touches the native layer ([details](in-app-help.md#demo));
+add `&platform=android` for the phone layout and `&lang=<tag>` to check a translation.
+A headless Chromium pointed at that address also produces the README screenshots in
+`docs/images/`; add `window.__sirinComponentUpdated = true` in an init script to hide the
+"update the VPN component" notice. `pnpm lint` also runs the translation check
+(`pnpm i18n:check`, see [Translating SirinVPN](translating.md)).
+
 Debug builds may use `SIRINVPN_SERVER_BINARY` and `SIRINVPN_HELPER_PATH` to select local development binaries. Release builds deliberately ignore these variables before invoking privileged operations.
 
 ## Android

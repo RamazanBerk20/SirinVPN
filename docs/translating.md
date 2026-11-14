@@ -4,6 +4,11 @@ SirinVPN's client is offered in English, Turkish, Spanish, French, German, Russi
 Chinese (Simplified), Japanese and Korean. English is the source. This guide is everything you
 need to translate one language; no code changes are needed.
 
+The nine translations besides English are machine translations that no native speaker has
+reviewed yet. Corrections to them are as welcome as new languages: edit the values in the
+files below and run the check. People pick a language in Settings → General → Language, or
+leave it on System default, which follows the operating system.
+
 ## Files for one language
 
 Language codes: `tr`, `es`, `fr`, `de`, `ru`, `ar`, `zh-Hans`, `ja`, `ko`.
@@ -16,10 +21,12 @@ Language codes: `tr`, `es`, `fr`, `de`, `ru`, `ar`, `zh-Hans`, `ja`, `ko`.
 Android folders: `values-tr`, `values-es`, `values-fr`, `values-de`, `values-ru`, `values-ar`,
 `values-b+zh+Hans`, `values-ja`, `values-ko`.
 
-Each folder starts as an exact copy of English and is marked as untranslated: the web folder
-contains a file named `UNTRANSLATED`, the Android file starts with a `<!-- UNTRANSLATED … -->`
-comment. Translate the values, then **delete the `UNTRANSLATED` file and the comment** so the
-check treats any remaining English as a mistake.
+The ten languages above have no `UNTRANSLATED` marker, so the check treats any remaining
+English as a mistake. A brand-new language starts as an exact copy of English and carries the
+marker: the web folder contains a file named `UNTRANSLATED`, the Android file starts with a
+`<!-- UNTRANSLATED … -->` comment. Translate the values, then **delete the `UNTRANSLATED`
+file and the comment**. A new language also needs an entry in `LANGUAGES` in
+`apps/desktop/src/i18n/index.ts` and in `android/src/main/res/xml/locales_config.xml`.
 
 Translate only the text values. Never change keys (`"label":`), `name="…"` attributes, the file
 structure, or `translatable="false"` strings (they are not in the copies).
@@ -46,7 +53,7 @@ its key to `apps/desktop/src/locales/allowlist.json` under your language code:
 
 To see your language in the app while you work: `pnpm dev`, open
 `http://localhost:1420/?demo=1&role=owner&future=1&lang=<code>` (add `&platform=android` for the
-phone layout), or choose it in Settings → Language.
+phone layout), or choose it in Settings → General → Language.
 
 ## Message syntax
 

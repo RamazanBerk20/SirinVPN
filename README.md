@@ -17,17 +17,22 @@ directly with your VPS, with no built-in analytics or traffic-history database.
 **Version 1.0 release candidate 1** · `1.0.0-rc.1` · [AGPL-3.0-only](LICENSE)
 
 This is the first public release candidate, a preview for testing before 1.0.
-Linux packages (Debian `.deb` and AppImage) are published with the GitHub
-pre-release, and Arch Linux users can install `sirinvpn`, `sirinvpn-bin` or
-`sirinvpn-git` from the AUR. Windows and Android have no release packages yet.
+Linux packages (Debian `.deb` and AppImage) and the VPS server are published,
+signed, with the [GitHub pre-release](https://github.com/RamazanBerk20/SirinVPN/releases/tag/v1.0.0-rc.1),
+and Arch Linux users can install `sirinvpn`, `sirinvpn-bin` or `sirinvpn-git`
+from the AUR. Windows and Android have no release packages yet.
 See the [release notes](docs/release-notes-1.0.0-rc.1.md).
 
-[Getting started](#getting-started) · [Build from source](#build-from-source) ·
+[Getting started](#getting-started) · [Install](#install) · [Build from source](#build-from-source) ·
 [Platform status](#platform-status) · [Documentation](#documentation)
 
 ## A look at the app
 
 <img src="docs/images/desktop.png" alt="SirinVPN desktop Home: connect button, connection method and kill switch status, this device's traffic, and server stats" width="960" />
+
+The Devices page groups devices under the people they belong to, with **My devices** first:
+
+<img src="docs/images/desktop-devices.png" alt="SirinVPN desktop Devices: people with their roles and devices, and an Add device button" width="960" />
 
 <details>
 <summary>Android interface</summary>
@@ -36,7 +41,13 @@ See the [release notes](docs/release-notes-1.0.0-rc.1.md).
 </p>
 </details>
 
-Screenshots use fictional profiles and example data.
+Screenshots come from the app's demo mode and use fictional profiles and example data.
+
+The interface is available in English, Turkish, Spanish, French, German, Russian,
+Arabic, Simplified Chinese, Japanese and Korean, or follows your system language
+(**Settings → General**). The nine translations besides English are machine
+translations that native speakers have not reviewed yet; corrections are welcome
+([how to help](docs/translating.md)).
 
 ## What it does
 
@@ -104,7 +115,7 @@ You need a VPS you administer, running Debian 13 or Ubuntu 24.04 LTS with IPv4 o
 reachable ports for the connection methods you choose. SirinVPN does not provide
 servers or a VPN subscription.
 
-1. **Build the client** for your platform using the instructions below.
+1. **Install the client** for your platform ([Install](#install)) or build it from source.
 2. **Set up your VPS.** On the first screen choose **My VPS** (**Set up my VPS** on
    Android), enter the server address and an SSH login, and select **Verify server**.
    Compare the fingerprint with your hosting provider's web console or another
@@ -144,6 +155,26 @@ local network to the VPS service, and offers the matching fix where the app has
 one. To look around before you have a VPS, choose **Explore the demo** on the
 first screen: it runs on sample data, contacts nothing, saves nothing, and
 **Exit demo** returns to setup ([details](docs/in-app-help.md)).
+
+## Install
+
+The 1.0.0-rc.1 pre-release is the first published version. Linux on x86_64 is the
+tested path.
+
+- **Debian and Ubuntu:** download `SirinVPN_1.0.0-rc.1_amd64.deb` from the
+  [release page](https://github.com/RamazanBerk20/SirinVPN/releases/tag/v1.0.0-rc.1)
+  and install it with `sudo apt install ./SirinVPN_1.0.0-rc.1_amd64.deb`. It brings the
+  app, CLI, privileged helper, Polkit policy and systemd units.
+- **AppImage:** `SirinVPN_1.0.0-rc.1_amd64.AppImage`, the same app as a portable file.
+- **Arch Linux (AUR):** `sirinvpn` (built from the release source), `sirinvpn-bin`
+  (the release `.deb`, repackaged) or `sirinvpn-git` (the latest source). They conflict
+  with each other, so install one. Updates are left to pacman. If you ever ran
+  `install-system` by hand, see the one-time `--overwrite` note in the
+  [release notes](docs/release-notes-1.0.0-rc.1.md#known-limitations).
+- **Check a download:** the release lists a signed manifest and `SHA256SUMS`; the
+  [release notes](docs/release-notes-1.0.0-rc.1.md) show the commands and the root key ID.
+- **Windows and Android:** no installer or APK is published yet. Build them
+  yourself (below); neither is qualified for everyday use.
 
 ## Build from source
 
@@ -251,7 +282,7 @@ protection. See [Security](SECURITY.md) and [Privacy](PRIVACY.md) for the bounda
 A VPN does not remove trust in your device, VPS operator, hosting provider, or
 chosen DNS resolver. Alternative transports cannot guarantee connectivity when
 the server address or required ports are blocked. No independent security audit
-is claimed for version 0.1.
+has been done.
 
 For ordinary bugs, [open an issue](https://github.com/RamazanBerk20/SirinVPN/issues)
 with your platform, build, and reproduction steps. Do not attach real invitation
@@ -267,7 +298,7 @@ codes, keys, passwords, backups, or private VPS details.
 - [Interface text and localization](docs/ui-text.md) — writing guide and how to add a language
 - [Windows integration](docs/windows-integration-2026-09-07.md)
 - [Hetzner VPS creation](docs/hetzner-vps-creation.md) — one-click servers with a pre-pinned SSH host key
-- [Signed update design](docs/releases.md) — implementation documentation; no published releases yet
+- [Release notes for 1.0.0-rc.1](docs/release-notes-1.0.0-rc.1.md) and the [signed release design](docs/releases.md)
 
 ## Support
 
