@@ -186,7 +186,6 @@
     "turnOff": "끄기",
     "lastBackup": "마지막 백업: {{age}}",
     "noBackup": "아직 백업이 없습니다",
-    "failed": "마지막 시도가 끝나지 않았습니다: {{message}}",
     "stale": "백업 기한이 지났습니다. SirinVPN을 연 상태에서 이 기기의 연결을 끊거나 ‘지금 백업’을 선택하세요.",
     "summary": {
       "off": "꺼짐",
@@ -213,7 +212,8 @@
     "turnedOff": "예약 백업을 껐습니다.",
     "missing": {
       "folder": "백업 폴더를 선택하세요."
-    }
+    },
+    "lastFailed": "마지막 시도가 끝나지 않았습니다."
   },
   "restore": {
     "title": "{{name}} 복원",

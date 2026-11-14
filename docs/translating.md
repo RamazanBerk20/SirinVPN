@@ -43,7 +43,7 @@ pnpm test           # the same checks run inside the test suite
 
 A language passes when it has the same keys as English, the same placeholders and rich-text tags,
 valid plural syntax with every plural form the language needs, no empty values, and (once the
-`UNTRANSLATED` marker is gone) no value longer than three words left identical to English. If a
+`UNTRANSLATED` marker is gone) no value left identical to English that has a word to translate (names, protocols and units such as WireGuard, IPv6 and ms do not count). If a
 value really is the same in your language (a product name, "WireGuard", an example command), add
 its key to `apps/desktop/src/locales/allowlist.json` under your language code:
 

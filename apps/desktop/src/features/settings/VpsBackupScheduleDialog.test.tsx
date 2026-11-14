@@ -68,7 +68,8 @@ it("runs only due schedules, only while disconnected, and keeps the reported fai
   unmount();
 
   render(<VpsBackupScheduleDialog profile={{ ...profile, id: "b" }} open onOpenChange={vi.fn()} disconnected />);
-  expect(screen.getByText(t("vps.schedule.failed", { message: "SSH timed out." }))).toBeTruthy();
+  expect(screen.getByText(t("vps.schedule.lastFailed"))).toBeTruthy();
+  expect(screen.getByText("SSH timed out.")).toBeTruthy();
   expect(scheduleSummary(failed)).toBe(t("vps.schedule.summary.failed"));
 });
 

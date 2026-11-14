@@ -1,6 +1,6 @@
 //! Explicit current-condition report. A timed-out native read cannot queue more diagnostic work.
 use sirinvpn_core::SecretStore;
-use sirinvpn_core::diagnostics::{self as core, CurrentConnection, check};
+use sirinvpn_core::diagnostics::{self as core, CurrentConnection, Text, check, text};
 use sirinvpn_protocol::{API_VERSION, DiagnosticLevel, DiagnosticReport};
 use std::sync::{
     Arc, LazyLock,
@@ -22,7 +22,7 @@ pub(super) async fn run(
         return Ok(message(
             "local_diagnostics_busy",
             "Current diagnostics",
-            "A previous check is still finishing. Wait a moment or cancel any connection attempt, then try again.",
+            text("local_diagnostics_busy", "A previous check is still finishing. Wait a moment or cancel any connection attempt, then try again."),
         ));
     };
     let cancelled = Arc::new(AtomicBool::new(false));
@@ -36,20 +36,20 @@ pub(super) async fn run(
         Ok(Err(_)) => Ok(message(
             "local_diagnostics_unavailable",
             "Current diagnostics",
-            "The checks couldn’t finish. Refresh the connection status and try again.",
+            text("local_diagnostics_unavailable", "The checks couldn’t finish. Refresh the connection status and try again."),
         )),
         Err(_) => {
             cancelled.store(true, Ordering::Release);
             Ok(message(
                 "local_diagnostics_timeout",
                 "Current diagnostics",
-                "The checks didn’t finish within 16 seconds; another connection or server request may still be running. Wait a moment or cancel any connection attempt, then try again.",
+                text("local_diagnostics_timeout", "The checks didn’t finish within {seconds} seconds; another connection or server request may still be running. Wait a moment or cancel any connection attempt, then try again.").with("seconds", 16),
             ))
         }
     }
 }
 
-fn message(code: &str, label: &str, text: &str) -> DiagnosticReport {
+fn message(code: &str, label: &str, text: Text) -> DiagnosticReport {
     DiagnosticReport {
         api_version: API_VERSION.into(),
         checks: vec![check(code, label, DiagnosticLevel::Warning, text)],

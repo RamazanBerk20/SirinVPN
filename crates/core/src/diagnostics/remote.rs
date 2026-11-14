@@ -1,4 +1,4 @@
-use super::{caused, check, report};
+use super::{Text, caused, check, report, text};
 use sirinvpn_protocol::{DiagnosticCheck, DiagnosticLevel, DiagnosticReport};
 use std::collections::HashSet;
 use zeroize::Zeroize;
@@ -26,7 +26,7 @@ pub(crate) fn sanitize(mut incoming: DiagnosticReport) -> DiagnosticReport {
     }
     if omitted || checks.is_empty() {
         checks.push(check("server_report_format", "VPS diagnostic compatibility", DiagnosticLevel::Warning,
-            "Some server checks could not be safely interpreted. Use compatible app and server versions and rerun diagnostics."));
+            text("report_format", "Some server checks could not be safely interpreted. Use compatible app and server versions and rerun diagnostics.")));
     }
     report(checks)
 }
@@ -38,89 +38,160 @@ fn sanitize_check(value: &DiagnosticCheck) -> Option<DiagnosticCheck> {
     }
     if let Some(label) = dns_label(&value.code) {
         let message = match value.level {
-            DiagnosticLevel::Pass => dns_success(&value.message)
-                .unwrap_or_else(|| "The resolver returned a valid DNS response.".into()),
+            DiagnosticLevel::Pass => dns_success(&value.message).unwrap_or_else(|| {
+                text("dns_valid", "The resolver returned a valid DNS response.")
+            }),
             DiagnosticLevel::Warning | DiagnosticLevel::NotApplicable => {
                 return Some(caused(
                     check(
                         &value.code,
                         &label,
                         value.level.clone(),
-                        "A current DNS response check is unavailable. Try again after other diagnostics finish.",
+                        text(
+                            "dns_unavailable",
+                            "A current DNS response check is unavailable. Try again after other diagnostics finish.",
+                        ),
                     ),
                     "not_measured",
                 ));
             }
             DiagnosticLevel::Fail => {
-                if DNS_ERRORS.contains(&value.message.as_str()) {
-                    value.message.clone()
-                } else {
-                    "The resolver did not return a usable DNS response. Check its route, port, upstream configuration, TLS identity and clock.".into()
-                }
+                // The VPS's words are kept only when they are one of these known causes.
+                DNS_ERRORS
+                    .iter()
+                    .find(|(_, english)| *english == value.message)
+                    .map(|(key, english)| text(key, english))
+                    .unwrap_or_else(|| text("dns_failed", "The resolver did not return a usable DNS response. Check its route, port, upstream configuration, TLS identity and clock."))
             }
         };
-        return Some(check(&value.code, &label, value.level.clone(), &message));
+        return Some(check(&value.code, &label, value.level.clone(), message));
     }
     let (label, success, failure) = match value.code.as_str() {
         "interface" => (
             "VPS VPN interface",
-            "The configured VPS VPN interface exists.",
-            "The VPS VPN interface is missing. Use server repair to restore it.",
+            text("interface_pass", "The configured VPS VPN interface exists."),
+            text(
+                "interface_fail",
+                "The VPS VPN interface is missing. Use server repair to restore it.",
+            ),
         ),
         "wireguard" => (
             "VPS WireGuard",
-            "The server reports its configured WireGuard interface as active.",
-            "The running WireGuard identity, interface or port does not match the server configuration. Use server repair.",
+            text(
+                "wireguard_pass",
+                "The server reports its configured WireGuard interface as active.",
+            ),
+            text(
+                "wireguard_fail",
+                "The running WireGuard identity, interface or port does not match the server configuration. Use server repair.",
+            ),
         ),
         "dns" => (
             "VPS private DNS service",
-            "The configured private resolver services are active.",
-            "A private resolver service is inactive. Use server repair, then rerun diagnostics.",
+            text(
+                "dns_pass",
+                "The configured private resolver services are active.",
+            ),
+            text(
+                "dns_fail",
+                "A private resolver service is inactive. Use server repair, then rerun diagnostics.",
+            ),
         ),
         "forwarding" => (
             "VPS IPv4 forwarding",
-            "IPv4 forwarding is enabled.",
-            "IPv4 forwarding is disabled. Use server repair to restore forwarding.",
+            text("forwarding_pass", "IPv4 forwarding is enabled."),
+            text(
+                "forwarding_fail",
+                "IPv4 forwarding is disabled. Use server repair to restore forwarding.",
+            ),
         ),
         "ipv6" => (
             "VPS IPv6 tunnel",
-            "The server reports IPv6 forwarding and tunnel addressing as available.",
-            "IPv6 forwarding, addressing or NAT is unavailable. Use server repair.",
+            text(
+                "ipv6_pass",
+                "The server reports IPv6 forwarding and tunnel addressing as available.",
+            ),
+            text(
+                "ipv6_fail",
+                "IPv6 forwarding, addressing or NAT is unavailable. Use server repair.",
+            ),
         ),
         "server_process" => (
             "VPS system service",
-            "The SirinVPN system service is active.",
-            "The SirinVPN system service is inactive. Check its installation or use server repair.",
+            text(
+                "server_process_pass",
+                "The SirinVPN system service is active.",
+            ),
+            text(
+                "server_process_fail",
+                "The SirinVPN system service is inactive. Check its installation or use server repair.",
+            ),
         ),
         "server_routes" => (
             "VPS routes",
-            "The main routing table has an external IPv4 or IPv6 default route and the configured tunnel subnet route.",
-            "The external default route or tunnel subnet route is missing. Check VPS networking and use server repair for the tunnel route.",
+            text(
+                "server_routes_pass",
+                "The main routing table has an external IPv4 or IPv6 default route and the configured tunnel subnet route.",
+            ),
+            text(
+                "server_routes_fail",
+                "The external default route or tunnel subnet route is missing. Check VPS networking and use server repair for the tunnel route.",
+            ),
         ),
         "server_firewall" => (
             "VPS firewall structure",
-            "SirinVPN firewall hooks and tunnel isolation rules are present. Other firewall policies can still affect connectivity.",
-            "SirinVPN firewall hooks or tunnel isolation rules are missing. Use server repair to restore its owned rules.",
+            text(
+                "server_firewall_pass",
+                "SirinVPN firewall hooks and tunnel isolation rules are present. Other firewall policies can still affect connectivity.",
+            ),
+            text(
+                "server_firewall_fail",
+                "SirinVPN firewall hooks or tunnel isolation rules are missing. Use server repair to restore its owned rules.",
+            ),
         ),
         "server_nat4" => (
             "VPS IPv4 NAT",
-            "A source masquerade rule exists for the configured tunnel subnet.",
-            "The configured tunnel subnet has no source masquerade rule. Use server repair to restore IPv4 NAT.",
+            text(
+                "server_nat4_pass",
+                "A source masquerade rule exists for the configured tunnel subnet.",
+            ),
+            text(
+                "server_nat4_fail",
+                "The configured tunnel subnet has no source masquerade rule. Use server repair to restore IPv4 NAT.",
+            ),
         ),
         "server_nat6" => (
             "VPS IPv6 NAT",
-            "A source masquerade rule exists for the private IPv6 tunnel subnet.",
-            "The private IPv6 subnet has no source masquerade rule. Use server repair to restore IPv6 NAT.",
+            text(
+                "server_nat6_pass",
+                "A source masquerade rule exists for the private IPv6 tunnel subnet.",
+            ),
+            text(
+                "server_nat6_fail",
+                "The private IPv6 subnet has no source masquerade rule. Use server repair to restore IPv6 NAT.",
+            ),
         ),
         "server_ports" => (
             "VPS listening ports",
-            "Configured VPN transport, private management and DNS listening sockets are present. This does not verify the provider firewall.",
-            "A configured transport, private management or DNS listener is missing. Check server services or use server repair.",
+            text(
+                "server_ports_pass",
+                "Configured VPN transport, private management and DNS listening sockets are present. This does not verify the provider firewall.",
+            ),
+            text(
+                "server_ports_fail",
+                "A configured transport, private management or DNS listener is missing. Check server services or use server repair.",
+            ),
         ),
         "server_mtu" => (
             "VPS interface MTU",
-            "The VPS interface MTU meets the IP protocol minimum. Client probes determine the usable path MTU.",
-            "The VPS tunnel interface MTU is below the IP protocol minimum. Use server repair.",
+            text(
+                "server_mtu_pass",
+                "The VPS interface MTU meets the IP protocol minimum. Client probes determine the usable path MTU.",
+            ),
+            text(
+                "server_mtu_fail",
+                "The VPS tunnel interface MTU is below the IP protocol minimum. Use server repair.",
+            ),
         ),
         "server_cpu" | "server_memory" | "server_disk" => return Some(resource(value)),
         "external_reachability" => {
@@ -128,7 +199,10 @@ fn sanitize_check(value: &DiagnosticCheck) -> Option<DiagnosticCheck> {
                 "external_reachability",
                 "Provider firewall and public reachability",
                 DiagnosticLevel::Warning,
-                "Local listeners cannot establish public reachability. If a transport fails, check the VPS provider firewall and configured public ports.",
+                text(
+                    "external_reachability",
+                    "Local listeners cannot establish public reachability. If a transport fails, check the VPS provider firewall and configured public ports.",
+                ),
             ));
         }
         "dns_blocklist" => {
@@ -141,9 +215,15 @@ fn sanitize_check(value: &DiagnosticCheck) -> Option<DiagnosticCheck> {
                     DiagnosticLevel::Warning
                 },
                 if value.level == DiagnosticLevel::Pass {
-                    "DNS blocking uses the latest refreshed list."
+                    text(
+                        "dns_blocklist_pass",
+                        "DNS blocking uses the latest refreshed list.",
+                    )
                 } else {
-                    "The latest blocklist refresh failed, so DNS blocking keeps the last good list. Check the list addresses and the VPS internet access."
+                    text(
+                        "dns_blocklist_failed",
+                        "The latest blocklist refresh failed, so DNS blocking keeps the last good list. Check the list addresses and the VPS internet access.",
+                    )
                 },
             ));
         }
@@ -158,9 +238,15 @@ fn sanitize_check(value: &DiagnosticCheck) -> Option<DiagnosticCheck> {
                     DiagnosticLevel::Warning
                 },
                 if on {
-                    "Automatic security updates for the VPS operating system are on."
+                    text(
+                        "os_security_updates_on",
+                        "Automatic security updates for the VPS operating system are on.",
+                    )
                 } else {
-                    "Automatic security updates are off or could not be confirmed. Repair VPS with “Turn on automatic security updates” selected switches them on."
+                    text(
+                        "os_security_updates_off",
+                        "Automatic security updates are off or could not be confirmed. Repair VPS with “Turn on automatic security updates” selected switches them on.",
+                    )
                 },
             ));
         }
@@ -175,9 +261,15 @@ fn sanitize_check(value: &DiagnosticCheck) -> Option<DiagnosticCheck> {
                     DiagnosticLevel::Warning
                 },
                 if current {
-                    "The VPS runs its newest installed kernel."
+                    text(
+                        "os_reboot_current",
+                        "The VPS runs its newest installed kernel.",
+                    )
                 } else {
-                    "An installed update may wait for a VPS restart. Restart the VPS when a short VPN interruption is acceptable."
+                    text(
+                        "os_reboot_pending",
+                        "An installed update may wait for a VPS restart. Restart the VPS when a short VPN interruption is acceptable.",
+                    )
                 },
             ));
         }
@@ -186,7 +278,10 @@ fn sanitize_check(value: &DiagnosticCheck) -> Option<DiagnosticCheck> {
                 "diagnostics_busy",
                 "VPS current diagnostics",
                 DiagnosticLevel::Warning,
-                "Another current-state check is running. Try again in a few seconds.",
+                text(
+                    "diagnostics_busy",
+                    "Another current-state check is running. Try again in a few seconds.",
+                ),
             ));
         }
         _ => return None,
@@ -199,7 +294,10 @@ fn sanitize_check(value: &DiagnosticCheck) -> Option<DiagnosticCheck> {
                 &value.code,
                 label,
                 value.level.clone(),
-                "This current state could not be read. Check server tools and service permissions, then rerun diagnostics.",
+                text(
+                    "state_unreadable",
+                    "This current state could not be read. Check server tools and service permissions, then rerun diagnostics.",
+                ),
             ),
             "not_measured",
         ),
@@ -234,21 +332,19 @@ fn resource(value: &DiagnosticCheck) -> DiagnosticCheck {
             } else {
                 DiagnosticLevel::Pass
             },
-            &format!(
-                "Current usage: {number}%. {}",
-                if number >= 90 {
-                    "Capacity is limited. Free resources or increase the VPS capacity."
-                } else {
-                    "Capacity is available."
-                }
-            ),
+            if number >= 90 {
+                text("resource_limited", "Current usage: {percent}%. Capacity is limited. Free resources or increase the VPS capacity.")
+            } else {
+                text("resource_available", "Current usage: {percent}%. Capacity is available.")
+            }
+            .with("percent", number),
         ),
         None => caused(
             check(
                 &value.code,
                 label,
                 DiagnosticLevel::Warning,
-                "A current resource reading is unavailable.",
+                text("resource_unavailable", "A current resource reading is unavailable."),
             ),
             "not_measured",
         ),
@@ -285,38 +381,96 @@ fn dns_label(code: &str) -> Option<String> {
     }
 }
 
-fn dns_success(message: &str) -> Option<String> {
+fn dns_success(message: &str) -> Option<Text> {
     let millis = message
         .strip_prefix("Valid DNS response in ")?
         .strip_suffix(" ms. No query history is retained.")?
         .parse::<u16>()
         .ok()?;
-    (millis <= 5000)
-        .then(|| format!("Valid DNS response in {millis} ms. No query history is retained."))
+    (millis <= 5000).then(|| {
+        text(
+            "dns_valid_time",
+            "Valid DNS response in {millis} ms. No query history is retained.",
+        )
+        .with("millis", millis)
+    })
 }
 
-const DNS_ERRORS: &[&str] = &[
-    "TCP connection failed. Check the resolver address, route and port 53 firewall.",
-    "Authenticated HTTPS DNS failed. Check the resolver address, TLS name, HTTPS path and outbound port 443.",
-    "No DNS reply within three seconds. Check upstream reachability and firewall rules; DNS protection remains enabled.",
-    "The VPS certificate trust bundle is unavailable. Repair the CA certificates package.",
-    "The VPS certificate trust bundle is invalid.",
-    "The TLS resolver authentication name is invalid.",
-    "The TLS resolver could not be reached. Check its IP, route and outbound port 853.",
-    "TLS authentication failed. Check the resolver's certificate, configured TLS name and VPS clock.",
-    "The DNS request could not be sent.",
-    "The DNS resolver closed the connection without a reply.",
-    "The DNS response had an invalid size.",
-    "The DNS reply was incomplete.",
-    "The DNS reply did not match the request or was truncated.",
-    "The resolver returned SERVFAIL. Check its upstream reachability, DNSSEC validation and clock.",
-    "The resolver refused this query. Check its client access policy and zone forwarding rules.",
-    "The resolver returned a DNS error. Check its configured zone and upstream policy.",
+/// The VPS's DNS failure causes the app shows, with the key it translates each by.
+const DNS_ERRORS: &[(&str, &str)] = &[
+    (
+        "dns_error_tcp",
+        "TCP connection failed. Check the resolver address, route and port 53 firewall.",
+    ),
+    (
+        "dns_error_https",
+        "Authenticated HTTPS DNS failed. Check the resolver address, TLS name, HTTPS path and outbound port 443.",
+    ),
+    (
+        "dns_error_timeout",
+        "No DNS reply within three seconds. Check upstream reachability and firewall rules; DNS protection remains enabled.",
+    ),
+    (
+        "dns_error_trust_unavailable",
+        "The VPS certificate trust bundle is unavailable. Repair the CA certificates package.",
+    ),
+    (
+        "dns_error_trust_invalid",
+        "The VPS certificate trust bundle is invalid.",
+    ),
+    (
+        "dns_error_tls_name",
+        "The TLS resolver authentication name is invalid.",
+    ),
+    (
+        "dns_error_tls_unreachable",
+        "The TLS resolver could not be reached. Check its IP, route and outbound port 853.",
+    ),
+    (
+        "dns_error_tls_auth",
+        "TLS authentication failed. Check the resolver's certificate, configured TLS name and VPS clock.",
+    ),
+    ("dns_error_send", "The DNS request could not be sent."),
+    (
+        "dns_error_closed",
+        "The DNS resolver closed the connection without a reply.",
+    ),
+    ("dns_error_size", "The DNS response had an invalid size."),
+    ("dns_error_incomplete", "The DNS reply was incomplete."),
+    (
+        "dns_error_mismatch",
+        "The DNS reply did not match the request or was truncated.",
+    ),
+    (
+        "dns_error_servfail",
+        "The resolver returned SERVFAIL. Check its upstream reachability, DNSSEC validation and clock.",
+    ),
+    (
+        "dns_error_refused",
+        "The resolver refused this query. Check its client access policy and zone forwarding rules.",
+    ),
+    (
+        "dns_error_other",
+        "The resolver returned a DNS error. Check its configured zone and upstream policy.",
+    ),
 ];
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// A check as the VPS words it: free text, no message key.
+    fn check(code: &str, label: &str, level: DiagnosticLevel, message: &str) -> DiagnosticCheck {
+        DiagnosticCheck {
+            code: code.into(),
+            label: label.into(),
+            level,
+            message: message.into(),
+            cause: None,
+            message_key: None,
+            message_params: Default::default(),
+        }
+    }
     #[test]
     fn free_text_and_unknown_or_duplicate_remote_checks_cannot_enter_a_report() {
         let secret =
@@ -402,7 +556,12 @@ mod tests {
                 DiagnosticLevel::Pass,
                 "Current usage: 95%. Capacity is available.",
             ),
-            check("dns_tls_0", "ignored", DiagnosticLevel::Fail, DNS_ERRORS[7]),
+            check(
+                "dns_tls_0",
+                "ignored",
+                DiagnosticLevel::Fail,
+                DNS_ERRORS[7].1,
+            ),
             check(
                 "dns_resolver_response",
                 "ignored",
@@ -411,7 +570,11 @@ mod tests {
             ),
         ]));
         assert_eq!(report.checks[0].level, DiagnosticLevel::Warning);
-        assert_eq!(report.checks[1].message, DNS_ERRORS[7]);
+        assert_eq!(report.checks[1].message, DNS_ERRORS[7].1);
+        assert_eq!(
+            report.checks[1].message_key.as_deref(),
+            Some(DNS_ERRORS[7].0)
+        );
         assert!(report.checks[2].message.contains("82 ms"));
         assert!(dns_label("dns_zone_01").is_none());
         assert!(dns_label("dns_zone_32").is_none());

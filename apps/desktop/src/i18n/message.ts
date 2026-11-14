@@ -162,16 +162,25 @@ export type LocaleReport = {
   extra: string[];
   /** Structural problems: always fail the check. */
   failures: string[];
-  /** Values identical to English (longer than a few words), not on the allow-list. */
+  /** Values identical to English that have a translatable word, not on the allow-list. */
   untranslated: string[];
 };
 
-const words = (text: string) => text.replace(/<[^>]+>|\{\{[^}]*\}\}/g, " ").trim().split(/\s+/).filter(Boolean).length;
+/** Words every language writes as English does: names, protocols and units. */
+const INVARIANT = new Set(["SirinVPN", "WireGuard", "Android", "Linux", "Windows", "GitHub", "Hetzner", "DNS", "HTTPS", "HTTP", "IPv4", "IPv6", "CPU", "VPS",
+  "UDP", "TCP", "TLS", "QUIC", "MTU", "SSH", "NAT", "ms", "kB", "KB", "MB", "GB", "TB", "B", "Mbit", "Webhook"]);
+/**
+ * The words of a message a translator could translate: no placeholders, tags, plural syntax,
+ * numbers, punctuation or invariant names. A value identical to English that still has such a word
+ * was left in English, however short (“Kill switch”), unless its key is allow-listed.
+ */
+export const translatableWords = (text: string) => text.replace(/<[^>]+>|\{\{[^}]*\}\}|\{\w+,\s*plural,|#/g, " ")
+  .split(/[^\p{L}\p{N}]+/u).filter(word => /^\p{L}{2,}$/u.test(word) && !INVARIANT.has(word));
 
 /**
  * Compares one locale's flattened catalog with English. A value identical to English is treated as
- * not yet translated: it skips the plural-category check, and is listed in `untranslated` when it is
- * longer than three words and its key is not allow-listed.
+ * not yet translated: it skips the plural-category check, and is listed in `untranslated` when it has
+ * a translatable word and its key is not allow-listed.
  */
 export function checkLocale(locale: string, english: Flat, translated: Flat, allowed: ReadonlySet<string> = new Set()): LocaleReport {
   const report: LocaleReport = { missing: [], extra: [], failures: [], untranslated: [] };
@@ -191,7 +200,7 @@ export function checkLocale(locale: string, english: Flat, translated: Flat, all
       problem(`placeholders differ: ${messageArguments(parsed).join(", ") || "none"} instead of ${messageArguments(original).join(", ") || "none"}`);
     if (messageTags(text).join() !== messageTags(source).join() || !tagsBalanced(text)) problem("rich-text tags differ or are unbalanced");
     if (text === source) {
-      if (words(text) > 3 && !allowed.has(key)) report.untranslated.push(key);
+      if (translatableWords(text).length && !allowed.has(key)) report.untranslated.push(key);
       continue;
     }
     for (const { name, forms } of messagePlurals(parsed)) {

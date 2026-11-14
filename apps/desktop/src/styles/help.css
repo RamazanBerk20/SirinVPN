@@ -19,8 +19,23 @@
 }
 .demo-banner > button { flex-shrink: 0; min-height: 32px; margin: 0; padding: 4px 14px; border-radius: 999px; }
 html:has(.demo-banner) .workspace { padding-bottom: 96px; }
-html.android .demo-banner { bottom: calc(92px + env(safe-area-inset-bottom)); }
-html.android:has(.demo-banner) .workspace { padding-bottom: 184px; }
+/* Keyboard focus scrolls a control clear of the banner. (The workspace's padding already keeps a sticky bar above it.) */
+html:has(.demo-banner) .app-shell .workspace, html:has(.demo-banner):not(:has(.app-shell)) { scroll-padding-bottom: calc(40px + 2.5rem); }
+html:has(.demo-banner) .onboarding-shell { padding-bottom: calc(48px + 3rem); }
+/* With the bottom navigation (Android, or a narrow desktop window) the banner sits above it, and on a
+   narrow screen or at large text its message wraps inside a card instead of a pill (up to four lines). */
+html.android .demo-banner { bottom: calc(92px + env(safe-area-inset-bottom)); flex-wrap: wrap; justify-content: center; border-radius: 16px; }
+html.android:has(.demo-banner), html.android:has(.demo-banner):not(:has(.app-shell)) { scroll-padding-bottom: calc(96px + 8rem); }
+html.android:has(.demo-banner) :is(.workspace, .onboarding-shell) { padding-bottom: calc(100px + 8rem); }
+/* Large text gives the bottom navigation two rows. */
+html.android[data-font-scale=large] .demo-banner { bottom: calc(132px + env(safe-area-inset-bottom)); }
+html.android:has(.demo-banner) .connection-save-state.has-unsaved-preferences { bottom: calc(100px + 3.5rem); }
+@media (max-width: 760px) {
+  .demo-banner { bottom: calc(92px + env(safe-area-inset-bottom)); flex-wrap: wrap; justify-content: center; border-radius: 16px; }
+  html:has(.demo-banner), html:has(.demo-banner):not(:has(.app-shell)) { scroll-padding-bottom: calc(96px + 8rem); }
+  html:has(.demo-banner) :is(.workspace, .onboarding-shell) { padding-bottom: calc(100px + 8rem); }
+  html:has(.demo-banner) .connection-save-state.has-unsaved-preferences { bottom: calc(100px + 3.5rem); }
+}
 .onboarding-demo { display: grid; justify-items: start; gap: 12px; margin-top: 28px; }
 .onboarding-demo > p { margin: 0; color: var(--muted); }
 .troubleshoot-step { display: grid; gap: 12px; }
@@ -83,7 +98,7 @@ html.android:has(.demo-banner) .workspace { padding-bottom: 184px; }
     grid-template-columns: minmax(0, 1fr);
   }
   .troubleshoot-steps {
-    grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 9.5rem), 1fr));
   }
 }
 .android .troubleshoot-step-link {

@@ -37,3 +37,6 @@ Thumbs.db
 
 # pnpm store created by the container build
 .pnpm-store/
+
+# Layout audit reports (apps/desktop/scripts/ui-audit.mjs)
+/apps/desktop/.audit/

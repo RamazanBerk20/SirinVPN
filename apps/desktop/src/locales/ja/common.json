@@ -41,7 +41,8 @@
     "withDetail": "{{summary}} {{detail}}",
     "needsConnection": "先にこのサーバーに接続してください。",
     "localSave": "このデバイスに保存できませんでした。もう一度お試しください。",
-    "passwordsDiffer": "パスワードが一致しません。"
+    "passwordsDiffer": "パスワードが一致しません。",
+    "technicalDetails": "技術的な詳細"
   },
   "errorCode": {
     "hetzner_create_uncertain": "Hetzner でサーバー {{server}} が作成された可能性があります。再試行する前に、Hetzner Cloud Console を確認してください。",
@@ -66,7 +67,8 @@
     "release_rate_limited": "GitHub がお使いのネットワークからの更新確認を制限しています。1 時間後にもう一度試すか、カスタムソースを使用してください。",
     "release_offline": "リリースソースに接続できませんでした。インターネット接続を確認して、もう一度お試しください。",
     "android_install_permission": "開いた Android の設定で SirinVPN にアプリのインストールを許可してから、もう一度「アップデートをインストール」をタップしてください。",
-    "release_none": "GitHub にはこのチャンネルの公開済みリリースがまだありません。もう一方のチャンネルを試すか、後でもう一度確認してください。"
+    "release_none": "GitHub にはこのチャンネルの公開済みリリースがまだありません。もう一方のチャンネルを試すか、後でもう一度確認してください。",
+    "install_input_rejected": "SirinVPN は、VPS を何も変更する前にこのリクエストを拒否しました。入力した値とファイルを確認して、もう一度お試しください。"
   },
   "maintenanceBlocker": {
     "not_owner": "この VPS をメンテナンスできるのはオーナーのデバイスだけです",

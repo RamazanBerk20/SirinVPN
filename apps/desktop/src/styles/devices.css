@@ -260,7 +260,7 @@ details[open] > summary > .disclosure-chevron {
 .member-group-title h3 {
   margin: 0;
   font-size: var(--text-section);
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 .member-group-meta {
   display: flex;
@@ -825,6 +825,13 @@ details[open] > summary > .disclosure-chevron {
 .person-chips { display: inline-flex; flex-wrap: wrap; gap: 6px; }
 .compact-button { min-height: 34px; padding-block: 6px; padding-inline: 12px; font-size: var(--text-secondary); white-space: normal; text-align: start; }
 .member-group-actions { margin-inline-start: auto; }
+/* On a phone the actions take their own row under the name, so a long name or "Add my device" never squeezes the other. */
+@media (max-width: 600px) {
+  .member-group-header:has(.member-group-actions > *) { grid-template-columns: 36px minmax(0, 1fr); }
+  .member-group-header > .member-group-actions { grid-column: 2; margin-inline-start: 0; }
+}
+.android .member-group-header:has(.member-group-actions > *) { grid-template-columns: var(--tile-size) minmax(0, 1fr); }
+.android .member-group-header > .member-group-actions { grid-column: 2; margin-inline-start: 0; }
 ul.member-device-list { margin: 0; padding: 0; list-style: none; }
 ul.member-device-list > li + li { border-top: 1px solid color-mix(in srgb, var(--line) 70%, transparent); }
 
@@ -903,7 +910,7 @@ html[data-window-chrome="custom"] .dialog-content.devices-panel.dialog-layout { 
 .week-grid {
   display: grid;
   gap: 2px;
-  max-width: 420px;
+  max-width: 26.25rem; /* grows with the text size, so day names keep fitting */
   user-select: none;
 }
 .week-grid-row { display: grid; grid-template-columns: 52px repeat(7, minmax(0, 1fr)); gap: 2px; }
@@ -919,7 +926,7 @@ html[data-window-chrome="custom"] .dialog-content.devices-panel.dialog-layout { 
   cursor: pointer;
 }
 .week-grid-row > [role="rowheader"] { text-align: end; padding-inline-end: 6px; }
-.week-grid-days > button { text-align: center; font-weight: 600; overflow: hidden; text-overflow: clip; }
+.week-grid-days > button { padding-inline: 0; text-align: center; font-weight: 600; overflow: hidden; text-overflow: clip; }
 .week-grid-row > button:hover:not(:disabled) { color: var(--text); }
 .week-grid [role="gridcell"] {
   height: 20px;
@@ -929,7 +936,7 @@ html[data-window-chrome="custom"] .dialog-content.devices-panel.dialog-layout { 
   touch-action: pan-y;
 }
 .week-grid [role="gridcell"][data-on] { background: var(--cyan); }
-.week-grid [role="gridcell"]:focus-visible { outline: 2px solid var(--text); outline-offset: 1px; }
+.week-grid [role="gridcell"]:focus-visible { outline: 2px solid var(--text); outline-offset: -2px; }
 .week-grid[aria-disabled="true"] [role="gridcell"] { cursor: default; opacity: 0.6; }
 .android .week-grid [role="gridcell"] { height: 28px; }
 /* Questions read top to bottom: one choice per line. */

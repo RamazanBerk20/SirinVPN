@@ -1,1 +1,68 @@
-{ "*": [] }
+{
+  "*": [
+    "ssh.login.keyPathPlaceholder",
+    "ssh.transport.hostnamePlaceholder",
+    "ssh.transport.certificatePlaceholder",
+    "ssh.transport.privateKeyPlaceholder",
+    "dns.resolver.mode.dnsOverTls",
+    "dns.resolver.mode.dnsOverHttps"
+  ],
+  "tr": [
+    "connection.launcher.executable",
+    "connection.options.conditions.normal.title",
+    "connection.options.policy.kill_switch.label",
+    "connection.options.status.killSwitch",
+    "home.details.killSwitch",
+    "maintenance.health.killSwitch",
+    "release.candidate.detailTarget",
+    "ssh.login.savedSummary"
+  ],
+  "es": [
+    "connection.differences.mtu.manual",
+    "connection.launcher.dialogFilter",
+    "connection.options.conditions.automatic.title",
+    "connection.options.conditions.normal.title",
+    "format.transport.direct_udp",
+    "settings.category.general.label",
+    "vps.update.review.compatible"
+  ],
+  "fr": [
+    "connection.options.conditions.automatic.title",
+    "connection.options.conditions.normal.title",
+    "connection.options.protection.title",
+    "devices.share.code",
+    "release.form.stable",
+    "ssh.login.savedSummary",
+    "vps.update.channel.stable",
+    "vps.update.review.compatible"
+  ],
+  "de": [
+    "common.role.admin",
+    "connection.launcher.dialogFilter",
+    "connection.options.android.status",
+    "connection.options.conditions.automatic.title",
+    "connection.options.conditions.normal.title",
+    "connection.options.status.routing",
+    "devices.add.whose.pick",
+    "devices.person.name",
+    "devices.policy.limits",
+    "devices.share.code",
+    "dns.resolver.endpoint",
+    "dns.resolver.endpointOptional",
+    "dns.review.resolver.term",
+    "home.details.routing",
+    "home.details.server",
+    "home.details.status",
+    "home.server.freshness.live",
+    "home.server.title",
+    "home.traffic.download",
+    "home.traffic.upload",
+    "maintenance.speedTest.download",
+    "maintenance.speedTest.upload",
+    "onboarding.setup.progress.server",
+    "servers.picker.eyebrow",
+    "settings.general.notifications.theme.system",
+    "vps.endpoint.number",
+    "vps.update.review.title"
+  ]
+}

@@ -22,6 +22,13 @@ pub struct DiagnosticCheck {
     /// (for example `not_measured` or `management_unreachable`); never taken from a VPS report.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub cause: Option<String>,
+    /// Stable key of `message` for translation (`maintenance.diagnostics.message.<key>` in the
+    /// app), set only by the client that wrote the message; never taken from a VPS report.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub message_key: Option<String>,
+    /// Values the keyed message inserts (`{name}` in `message`), already formatted as text.
+    #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
+    pub message_params: std::collections::BTreeMap<String, String>,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]

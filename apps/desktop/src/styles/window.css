@@ -139,6 +139,13 @@ html[data-window-chrome="custom"] .skip-link:focus {
   scroll-margin-top: calc(var(--titlebar-height, 0px) + 90px);
   scroll-margin-bottom: 90px;
 }
+/* Keyboard focus scrolls a control clear of the fixed bottom navigation (phones, narrow windows)
+   and of the sticky unsaved-changes bar, which can take three lines in long languages. */
+@media (max-width: 760px) { html { scroll-padding-bottom: 88px; } }
+html.android { scroll-padding-bottom: 88px; }
+.settings-panel:has(.connection-save-state.has-unsaved-preferences) :is(button, input, textarea, select, summary, [tabindex]) {
+  scroll-margin-bottom: 160px;
+}
 .window-resize-edge {
   position: fixed;
   z-index: 1100;

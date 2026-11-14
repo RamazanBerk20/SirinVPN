@@ -92,6 +92,8 @@ fn typed_code(error: &(dyn std::error::Error + 'static)) -> Option<(&'static str
             InstallerError::ServerBackup(ServerBackupError::AuthenticationFailed) => {
                 Some(("backup_wrong_password", json!({})))
             }
+            // Every invalid-input error is raised before the action changes anything on the VPS.
+            InstallerError::InvalidInput(_) => Some(("install_input_rejected", json!({}))),
             InstallerError::TransactionUnresolved { host } => {
                 Some(("transaction_unresolved", json!({ "host": host })))
             }
@@ -405,6 +407,10 @@ mod tests {
             (
                 InstallerError::ExistingInstallation.into(),
                 "install_incompatible",
+            ),
+            (
+                InstallerError::InvalidInput("x".into()).into(),
+                "install_input_rejected",
             ),
             (
                 BackupError::AuthenticationFailed.into(),

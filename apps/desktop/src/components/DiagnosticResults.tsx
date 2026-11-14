@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowClockwise, Check, CheckCircle, Copy, Info, Warning } from "@phosphor-icons/react";
 import type { DiagnosticCheck, DiagnosticReport } from "../types";
-import { t } from "../i18n";
+import { getLocale, sourceLocale, t } from "../i18n";
 import { en } from "../i18n/en";
 import { diagnosticCause } from "../lib/errors";
 import { diagnosticEvidence, diagnosticGroup, groupDiagnostics } from "./diagnosticEvidence";
-import { InlineError } from "./ui";
+import { InlineError, TechnicalDetail } from "./ui";
 import { SettingsDisclosure, SettingsNotice } from "../features/settings/SettingsParts";
 import { OperationProgress } from "./OperationResult";
 
@@ -31,15 +31,40 @@ const causeText = (check: DiagnosticCheck) => {
   const cause = diagnosticCause(check);
   return cause ? t(`maintenance.diagnostics.cause.${cause}`) : null;
 };
+const messages = en.maintenance.diagnostics.message;
+type MessageKey = keyof typeof messages;
+type SizeKey = keyof typeof en.maintenance.diagnostics.mtuSize;
+
+/**
+ * A check's finding in the interface language: its keyed message (`message_key`, set by the native
+ * diagnostics), or for a message this version doesn't know, its cause or a sentence for its group.
+ * `detail` is the native English text, shown only as technical detail and only when untranslated.
+ */
+export function checkMessage(check: DiagnosticCheck): { text: string; detail: string } {
+  const key = check.message_key;
+  if (key && Object.hasOwn(messages, key)) {
+    // Digit-only values are numbers, formatted for the language; an MTU size stays as typed, like other technical values.
+    const params = Object.fromEntries(Object.entries(check.message_params ?? {})
+      .map(([name, value]) => [name, /^\d+$/.test(value) && name !== "size" ? Number(value) : value]));
+    const text = t(`maintenance.diagnostics.message.${key as MessageKey}`, params);
+    const policy = check.message_params?.policy;
+    // A path MTU finding starts with the configured size.
+    if (policy && Object.hasOwn(en.maintenance.diagnostics.mtuSize, policy) && check.message_params?.size)
+      return { text: t("maintenance.diagnostics.sentences", { first: t(`maintenance.diagnostics.mtuSize.${policy as SizeKey}`, params), second: text }), detail: "" };
+    return { text, detail: "" };
+  }
+  if (getLocale() === sourceLocale) return { text: check.message, detail: "" };
+  return { text: causeText(check) ?? t(`maintenance.diagnostics.messageUnknown.${diagnosticGroup(check)}`), detail: check.message };
+}
 
 export function diagnosticText(report: DiagnosticReport): string {
   return [t("maintenance.diagnostics.report.title"), t("maintenance.diagnostics.report.scope"), "",
     ...Object.values(groupDiagnostics(report.checks)).flat().map((check) => [
       t("maintenance.diagnostics.report.check", { level: t(`maintenance.diagnostics.report.level.${check.level}`), label: checkLabel(check) }),
       t("maintenance.diagnostics.report.evidence", { evidence: evidenceLabel(check) }),
-      causeText(check),
-      // The copied report is for support: the backend's own (English) message is kept verbatim.
-      check.message,
+      checkMessage(check).text,
+      // The copied report is for support: the native English text is kept too.
+      check.message !== checkMessage(check).text && check.message,
     ].filter(Boolean).join("\n"))].join("\n\n");
 }
 
@@ -65,9 +90,8 @@ function DiagnosticRows({ checks, fixes = {} }: { checks: DiagnosticCheck[]; fix
         {group === "passed" ? <Check weight="bold" /> : group === "unavailable" ? <Info /> : <Warning weight="fill" />}
       </span>
       <div><strong lang={checkTitle(check.code) ? undefined : "en"} dir={checkTitle(check.code) ? undefined : "auto"}>{checkLabel(check)}</strong>
-        {causeText(check) && <p>{causeText(check)}</p>}
-        {/* The native diagnostics word their findings in English only: secondary detail under the translated name. */}
-        <p className="error-detail" lang="en" dir="auto">{check.message}</p><span className="diagnostic-evidence">{evidenceLabel(check)}</span>
+        {(() => { const { text, detail } = checkMessage(check); return <p>{text}<TechnicalDetail text={detail} /></p>; })()}
+        <span className="diagnostic-evidence">{evidenceLabel(check)}</span>
         {fix && <button type="button" className="secondary-button diagnostic-fix" onClick={fix.run}>{fix.label}</button>}</div>
     </div>;
   })}</div>;

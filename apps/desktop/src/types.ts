@@ -272,6 +272,9 @@ export interface DiagnosticCheck {
   message: string;
   /** A stable cause the message names; absent from older servers and native layers. */
   cause?: import("./lib/errors").DiagnosticCause;
+  /** Key of the message's text in `maintenance.diagnostics.message`, and the values it inserts. */
+  message_key?: string;
+  message_params?: Record<string, string>;
 }
 
 export interface DiagnosticReport {

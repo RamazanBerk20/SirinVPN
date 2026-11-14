@@ -114,13 +114,53 @@ fn known_messages_carry_their_cause_and_a_vps_cannot_set_one() {
     );
     assert_eq!(cause(mtu(MtuProbeOutcome::Measured, Some(1320))), None);
     assert_eq!(cause(mtu_check(None)).as_deref(), Some("not_measured"));
-    let mut sent = check("interface", "x", DiagnosticLevel::Warning, "x");
+    let mut sent = check("interface", "x", DiagnosticLevel::Warning, text("x", "x"));
     sent.cause = Some("management_clock".into());
-    let mut passed = check("forwarding", "x", DiagnosticLevel::Pass, "x");
+    sent.message_key = Some("protection_armed".into());
+    let mut passed = check("forwarding", "x", DiagnosticLevel::Pass, text("x", "x"));
     passed.cause = Some("not_measured".into());
     let report = sanitize(report(vec![sent, passed]));
     assert_eq!(report.checks[0].cause.as_deref(), Some("not_measured"));
     assert_eq!(report.checks[1].cause, None);
+    // Message keys, like causes, are the client's own: a VPS cannot pick which text is shown.
+    assert_eq!(
+        report.checks[0].message_key.as_deref(),
+        Some("state_unreadable")
+    );
+    assert_eq!(
+        report.checks[1].message_key.as_deref(),
+        Some("forwarding_pass")
+    );
     let json = serde_json::to_value(&report.checks[1]).unwrap();
     assert!(json.get("cause").is_none());
+}
+
+#[test]
+fn every_local_message_has_a_key_and_its_values_fill_the_english_text() {
+    let mut state = current();
+    state.quality = Some(TransportQualitySample {
+        transport: TransportKind::DirectUdp,
+        probes_sent: 8,
+        probes_received: 7,
+        latency_micros: 27_400,
+        jitter_micros: 1_200,
+    });
+    let checks = local_checks(Some(&state));
+    assert!(checks.iter().all(|check| check.message_key.is_some()));
+    let quality = checks.iter().find(|c| c.code == "local_quality").unwrap();
+    assert!(
+        quality
+            .message
+            .starts_with("7 of 8 probes returned; average latency 27 ms")
+    );
+    assert_eq!(quality.message_params["latency"], "27");
+    let mtu = checks.iter().find(|c| c.code == "local_mtu").unwrap();
+    assert_eq!(mtu.message_key.as_deref(), Some("mtu_smaller"));
+    assert!(
+        mtu.message
+            .starts_with("Automatic MTU: 1420 bytes. The path supports")
+    );
+    assert_eq!(mtu.message_params["policy"], "automatic");
+    assert_eq!(mtu.message_params["size"], "1420");
+    assert!(!mtu.message.contains('{'));
 }

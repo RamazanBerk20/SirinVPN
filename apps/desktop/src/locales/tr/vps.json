@@ -186,7 +186,6 @@
     "turnOff": "Kapat",
     "lastBackup": "Son yedek: {{age}}",
     "noBackup": "Henüz yedek yok",
-    "failed": "Son deneme tamamlanmadı: {{message}}",
     "stale": "Yedekler gecikti. SirinVPN açıkken bu cihazın bağlantısını kesin veya Şimdi yedekle’yi seçin.",
     "summary": {
       "off": "Kapalı",
@@ -213,7 +212,8 @@
     "turnedOff": "Zamanlanmış yedekler kapatıldı.",
     "missing": {
       "folder": "Bir yedek klasörü seçin."
-    }
+    },
+    "lastFailed": "Son deneme tamamlanmadı."
   },
   "restore": {
     "title": "{{name}} sunucusunu geri yükle",

@@ -90,11 +90,23 @@ inline) or into documentation. Never stack more than one note paragraph under a 
 
 ### Errors from the backend
 
-Rust commands and the server return English error text. `errorMessage(error, fallback)`
-shows that specific text when the interface is in English; in any other language it shows
-`fallback`, the caller's localized summary of what failed. Always pass a fallback that
-stands on its own (“Couldn’t save the backup. Try again.”). Backend messages follow the
-same writing rules as interface text.
+Rust commands and the server return English error text. A failure the interface must word
+itself crosses the boundary as a stable code (`{"message", "code", "params"}`, from
+`command_error.rs` on the desktop and `commands/rules.rs` on Android, listed in `ERROR_CODES` in
+`src/lib/errors.ts`), with its text in `common.errorCode.<code>`. `errorMessage(error, fallback)`
+shows the caller's localized `fallback`, plus the code's text when there is one. Always pass a
+fallback that stands on its own (“Couldn’t save the backup. Try again.”). The backend's own English
+text is never the main message outside English: `ErrorText`/`TechnicalDetail` show it as a
+secondary line in English and behind a **Technical details** toggle in every other language.
+Render any backend string that has no code the same way (`<TechnicalDetail text={…} />`), never
+inline. Backend messages follow the same writing rules as interface text.
+
+Diagnostic findings are written by the client's own native code (`crates/core/src/diagnostics`,
+which also rewrites every VPS check from a fixed vocabulary). Each message is
+`text("key", "English with {value}")` there and `maintenance.diagnostics.message.<key>` here;
+the check carries `message_key` and `message_params`, and `errorCodes.test.ts` fails when the
+English differs between the two. A message this version doesn't know shows its cause, or a sentence
+for its group, with the English as technical detail.
 
 ### Desktop tray and notifications
 
@@ -114,7 +126,11 @@ JSX. In development builds (`pnpm dev`), add `?lang=en-XA` to the address to see
 pseudo-locale: accented, ~35% longer text that exposes anything not translated and any
 layout that clips. `?lang=ar-XB` mirrors the layout right to left. Any other tag in
 `?lang=` shows that language.
-`pnpm i18n:check` (also part of `pnpm lint`) compares every translation with English.
+`pnpm i18n:check` (also part of `pnpm lint`) compares every translation with English and fails on
+any value left identical to English that has a word to translate, however short; names,
+protocols and units don't count, and deliberate loanwords go in `src/locales/allowlist.json`.
+`scripts/ui-audit.mjs --text` renders every demo screen in `en-XA` and lists visible text that
+bypassed the catalog ([Layout audit](development.md#layout-audit)).
 
 ## Languages
 

@@ -5,7 +5,7 @@
 }
 
 .workspace-header h1 {
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word; /* not anywhere: the header wraps its actions to a new row before a word is split */
 }
 .servers-page {
   width: min(1160px, 100%);

@@ -19,6 +19,9 @@ const profile = {
   obfuscated_udp: { port: 443, server_public_key: "fixture" }, tcp_fallback: { port: 443, server_public_key: "fixture" },
   tls_like: { port: 443, server_public_key: "fixture", certificate_sha256: "fixture" },
 };
+// The keyring policy is on and the one profile still sits in a private file, so the consent row, Move and cleanup all show.
+const credentialStorage = {supported:true, policy:"secure_store_required", pending_cleanup:1,
+  profiles:[{server_id:id, name:profile.name, storage:{backend:"file", protection:"permissions_only", availability:"available", cleanup_pending:false}}]};
 const sampleStarted = performance.now();
 let connected = window.__sirinScenario !== "disconnected";
 const local = () => ({state: connected ? "connected" : "disconnected", interface_name: "sirinvpn0", server_id: connected ? id : null,
@@ -38,7 +41,16 @@ const internals = {
     window.__sirinCommandArguments.push({command, args});
     switch (command) {
       case "client_platform": return window.__sirinPlatform || "desktop";
-      case "credential_storage": return {supported:false};
+      case "credential_storage": {
+        // Set __sirinCredentialStorage = false to hide the section, as on a desktop without a keyring backend.
+        if (window.__sirinCredentialStorage === false) return {supported:false};
+        const storage = credentialStorage, profileStorage = storage.profiles[0].storage;
+        if (args?.action === "allow_private_file") storage.policy = "allow_private_file";
+        if (args?.action === "require_secure") storage.policy = "secure_store_required";
+        if (args?.action === "migrate") Object.assign(profileStorage, {backend:"keyring", protection:"system_secure_store", cleanup_pending:false});
+        if (args?.action === "retry_cleanup") storage.pending_cleanup = 0;
+        return structuredClone(storage);
+      }
       case "get_connection_preferences": if (window.__sirinConnectionLoadFails) throw new Error("Saved connection preferences are unavailable"); return connectionPreferences[typeof args === "string" ? args : args.serverId] || defaultConnectionPreferences;
       case "set_connection_preferences": if (window.__sirinConnectionSaveFails) throw new Error("Connection preference save failed"); connectionPreferences[args.serverId] = args.preferences; localStorage.setItem("sirin-fixture-connection-preferences",JSON.stringify(connectionPreferences)); return args.preferences;
       case "get_app_preferences": return preferencesSnapshot();
@@ -81,7 +93,8 @@ const internals = {
         if (args.input.operation.action !== "status") throw new Error("Only release status is available in this visual fixture.");
         return { release: { installed: null, rollback_version: null, recovery_pending: false }, security_updates: { schema_version: 1, enabled: false, source: null, channel: "stable" }, automatic_outcome: "disabled", installed_binary_matches: false };
       case "repair_server": return { artifact_sha256: "synthetic-artifact", dns_upstream: { mode: "recursive" }, private_dns_records: [], events: [] };
-      case "provision_server": return new Promise(() => {});
+      // __sirinProvisionFails: the installer refuses its input before changing the server (a coded rejection, as the desktop shell sends it).
+      case "provision_server": if (window.__sirinProvisionFails) throw { message: "invalid installation input: server artifact is empty or exceeds 64 MiB", code: "install_input_rejected", params: {} }; return new Promise(() => {});
       case "key_rotation_pending": return false;
       case "preshared_key_rotation_recommended": return false;
       case "subscribe_server_status": {
@@ -114,6 +127,8 @@ const internals = {
         return structuredClone(snapshot);
       }
       case "discard_release_update": return;
+      // Native screens and a speed test the demo has nothing to show for.
+      case "android_vpn_settings": case "cancel_speed_test": return;
       case "plugin:dialog|message": {
         // plugin-dialog's confirm()/ask() resolve true only when the pressed button's label comes back.
         // Accepts by default; set __sirinDeclineDialog to press the last (cancel/no) button once.
@@ -121,6 +136,8 @@ const internals = {
         const declined = Boolean(window.__sirinDeclineDialog); window.__sirinDeclineDialog = false;
         return declined ? labels.at(-1) : labels[0];
       }
+      // A sample report as the native diagnostics word it (tests/ui/demo_diagnostics.js).
+      case "run_diagnostics": return (await import("./demo_diagnostics.js")).diagnostics(connected);
       default: throw new Error("Unexpected visual fixture command: " + command);
     }
   }

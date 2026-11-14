@@ -123,7 +123,7 @@
   color: var(--muted);
   font-size: var(--text-secondary);
 }
-.server-list {
+.server-list { /* a scroll box: rings inside it are drawn inset (below; Android in base.css) */
   flex: 1;
   min-height: 0;
   display: grid;
@@ -134,6 +134,9 @@
   /* A visible thumb says the list goes on below the window. */
   scrollbar-width: thin;
   scrollbar-color: var(--line-strong) transparent;
+}
+.server-list :is(button, a, [role="button"], [role="gridcell"]):focus-visible {
+  outline-offset: -2px;
 }
 .server-row {
   min-width: 0;

@@ -106,7 +106,7 @@ html.android[data-theme="light"] {
 .android .bottom-navigation button[aria-current] { color: var(--text-strong); background: transparent; box-shadow: none; }
 .android .bottom-navigation button[aria-current] > svg { background: var(--nav-pill); color: var(--nav-ink); }
 .android .bottom-navigation strong { font-size: var(--fs-caption); font-weight: 500; line-height: 1.4; }
-.android .bottom-navigation button > span { min-width: 0; overflow-wrap: anywhere; }
+.android .bottom-navigation button > span { min-width: 0; overflow-wrap: break-word; }
 .android .mobile-home-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
 .android .mobile-home-header .brand-mark, .android .onboarding-header .brand-mark { width: 36px; height: 36px; }
 .android .mobile-home-header .brand strong, .android .onboarding-header .brand strong { font-size: var(--fs-subtitle); font-weight: 600; }
@@ -210,9 +210,8 @@ html.android[data-theme="light"] {
 .android .field > span { font-size: var(--fs-small); color: var(--text-strong); }
 .android .field small { font-size: var(--fs-small); line-height: 1.5; }
 .android .dns-policy { min-width: 0; overflow-wrap: anywhere; }
-.android .dns-segmented:not(.with-preserve) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.android .dns-segmented.with-preserve { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.android .dns-segmented button { height: auto; min-height: 48px; min-width: 0; overflow-wrap: anywhere; }
+.android .dns-segmented.with-preserve > * { flex-basis: calc(50% - 2px); }
+.android .dns-segmented button { height: auto; min-height: 48px; }
 .android .field .private-dns-record-input { field-sizing: content; min-width: 0; max-height: 24rem; }
 
 /* Settings are separate pages. Sections are separated by a rule, not boxed. */
@@ -251,7 +250,7 @@ html.android[data-theme="light"] {
 .android .collection-row:last-child { border-bottom: 0; }
 .android .mobile-server-open { display: grid; grid-template-columns: var(--tile-size) minmax(0,1fr) auto; align-items: center; gap: 14px; min-width: 0; flex: 1; border: 0; background: transparent; padding-block: 12px 12px; padding-inline: var(--inset) 4px; min-height: 64px; text-align: start; }
 .android .mobile-server-open > span:nth-child(2) { display: grid; min-width: 0; gap: 3px; }
-.android .mobile-server-open strong { display: flex; align-items: center; gap: 6px; font-size: var(--fs-row); font-weight: 500; overflow-wrap: anywhere; }
+.android .mobile-server-open strong { display: flex; align-items: center; gap: 6px; font-size: var(--fs-row); font-weight: 500; overflow-wrap: break-word; }
 .android .mobile-server-open strong > svg { flex-shrink: 0; color: var(--warning); }
 .android .mobile-server-open small { color: var(--muted); font-size: var(--fs-small); }
 .android .mobile-server-open > .row-check { color: var(--tile-ink); }
@@ -311,7 +310,7 @@ html.android[data-theme="light"] {
 .android[data-font-scale=large] .mobile-row-icon { display: none; }
 .android[data-font-scale=large] .mobile-list-row { grid-template-columns: minmax(0,1fr) auto; }
 .android[data-font-scale=large] .device-traffic-grid { grid-template-columns: 1fr; }
-.android[data-font-scale=large] .dns-segmented { grid-template-columns: minmax(0,1fr); }
+.android[data-font-scale=large] .dns-segmented > * { flex-basis: 100%; }
 .android[data-font-scale=large] .device-traffic .metric:last-child > div { display: grid; }
 .android[data-font-scale=large] .detail-list > div { flex-direction: column; gap: 4px; }
 .android[data-font-scale=large] .detail-list dd { justify-items: start; text-align: start; }

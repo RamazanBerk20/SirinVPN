@@ -24,7 +24,8 @@ export function describeInstallFailure(error: AppError): { stage: InstallStage |
   // SSH and compatibility failures are raised before anything is written to the server.
   const stage = error.code === "install_phase_failed" ? phases[error.params.phase as string]
     : error.code === "install_ssh_failed" ? "connect" : error.code === "install_incompatible" ? "check" : undefined;
-  if (!stage) return { stage: null, change: error.code === "install_rolled_back" ? "rolledBack" : "unknown" };
+  // Invalid input is refused before the installer changes anything on the server.
+  if (!stage) return { stage: null, change: error.code === "install_rolled_back" ? "rolledBack" : error.code === "install_input_rejected" ? "unchanged" : "unknown" };
   return { stage, change: stage === "configure" ? "rolledBack" : "unchanged" };
 }
 
@@ -75,7 +76,8 @@ export function InstallFailure({ error, fallback, fingerprint, steps, canRetry, 
       <div><dt>{t("onboarding.setup.failed.server")}</dt><dd>{t(`onboarding.setup.failed.change.${change}`)}</dd></div>
       <div><dt>{t("onboarding.setup.failed.fingerprint")}</dt><dd><code>{fingerprint}</code></dd></div>
     </dl>
-    <ServerChangeFailure reason={error} message={errorMessage(error.detail, fallback)} />
+    {/* With its code, so the message names the cause in the interface language. */}
+    <ServerChangeFailure reason={error} message={errorMessage({ message: error.detail, code: error.code, params: error.params }, fallback)} />
     {!canRetry && <p className="settings-note">{t("onboarding.setup.failed.signInAgain")}</p>}
     <div className="install-failure-actions">
       <button type="button" className="secondary-button" onClick={onBack}>{t("onboarding.setup.failed.back")}</button>

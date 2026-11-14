@@ -21,7 +21,8 @@ export function OperationPlan({ load }: { load: () => Promise<InstallPlan> }) {
         <ol className="operation-plan-steps">{plan.steps.map((step, index) => <li key={index}>
           {step.kind === "run" ? <><code>{step.command}</code>{step.privileged && <small> {t("vps.change.plan.asRoot")}</small>}</>
             : step.kind === "upload" ? t("vps.change.plan.upload", { path: step.path, mode: step.mode })
-            : step.description}
+            // The dry run's own (English) words for a step that is neither a command nor an upload.
+            : <span lang="en" dir="auto">{step.description}</span>}
         </li>)}</ol>
         {plan.managed_paths.length > 0 && <>
           <h4>{t("vps.change.plan.files")}</h4>

@@ -186,7 +186,6 @@
     "turnOff": "关闭",
     "lastBackup": "上次备份：{{age}}",
     "noBackup": "尚无备份",
-    "failed": "上一次尝试未完成：{{message}}",
     "stale": "备份已逾期。请在 SirinVPN 打开时断开此设备的连接，或选择“立即备份”。",
     "summary": {
       "off": "关",
@@ -213,7 +212,8 @@
     "turnedOff": "计划备份已关闭。",
     "missing": {
       "folder": "请选择备份文件夹。"
-    }
+    },
+    "lastFailed": "上一次尝试未完成。"
   },
   "restore": {
     "title": "还原 {{name}}",

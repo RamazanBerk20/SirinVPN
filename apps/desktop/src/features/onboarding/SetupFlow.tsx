@@ -225,7 +225,7 @@ export function SetupFlow({
       dispatch({ type: "installed", result: provisioned });
     } catch (reason) {
       login.clearSecrets();
-      dispatch({ type: "installFailed", error: appError(reason, ["install_phase_failed", "install_ssh_failed", "install_incompatible", "install_outcome_unknown", "install_rolled_back", "maintenance_blocked"]) });
+      dispatch({ type: "installFailed", error: appError(reason, ["install_phase_failed", "install_ssh_failed", "install_incompatible", "install_input_rejected", "install_outcome_unknown", "install_rolled_back", "maintenance_blocked"]) });
     }
   };
 

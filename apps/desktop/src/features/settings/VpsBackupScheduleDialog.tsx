@@ -5,7 +5,7 @@ import { DialogContent } from "../../components/DialogContent";
 import { Busy } from "../../components/OperationResult";
 import { SecretInput } from "../../components/SecretInput";
 import { notify } from "../../components/Toasts";
-import { Field, InlineError } from "../../components/ui";
+import { Field, InlineError, TechnicalDetail } from "../../components/ui";
 import { t } from "../../i18n";
 import { errorMessage } from "../../lib/errors";
 import { open as openDialog } from "../../lib/nativeDialog";
@@ -198,7 +198,7 @@ function ScheduleForm({
                   : t("vps.schedule.noBackup")}
               </p>
               {schedule.last_failure && (
-                <p className="vps-backup-failure">{t("vps.schedule.failed", { message: schedule.last_failure.message })}</p>
+                <p className="vps-backup-failure">{t("vps.schedule.lastFailed")}<TechnicalDetail text={schedule.last_failure.message} /></p>
               )}
               {schedule.stale && !schedule.last_failure && <p>{t("vps.schedule.stale")}</p>}
             </div>

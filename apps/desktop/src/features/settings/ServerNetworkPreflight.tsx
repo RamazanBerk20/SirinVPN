@@ -1,3 +1,4 @@
+import { TechnicalDetail } from "../../components/ui";
 import type { NetworkPreflight } from "../../types";
 import { t, type MessageKey } from "../../i18n";
 import { Rich } from "../../i18n/Rich";
@@ -37,8 +38,8 @@ const valueLabels: Partial<Record<string, MessageKey>> = {
 /** A known issue in the catalog's words, keeping the backend's text as its detail. */
 function Issue({ issue }: { issue: NetworkPreflight["issues"][number] }) {
   const label = issueLabels[issue.code] ?? (issue.params ? valueLabels[issue.code] : undefined);
-  if (label) return <li title={issue.message}>{t(label, { ...issue.params, protocol: issue.params?.protocol?.toUpperCase() ?? "" })}</li>;
-  return <li>{t(summaryLabels[issue.code] ?? "ssh.network.issue.other")}<br /><small className="error-detail" lang="en" dir="auto">{issue.message}</small></li>;
+  if (label) return <li>{t(label, { ...issue.params, protocol: issue.params?.protocol?.toUpperCase() ?? "" })}</li>;
+  return <li>{t(summaryLabels[issue.code] ?? "ssh.network.issue.other")}<TechnicalDetail text={issue.message} /></li>;
 }
 
 export function ServerNetworkPreflight({ report }: { report: NetworkPreflight }) {

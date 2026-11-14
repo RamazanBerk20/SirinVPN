@@ -403,7 +403,7 @@ html[data-window-chrome="custom"] .dialog-content.dialog-layout {
 .release-preview-note { margin: 0; color: color-mix(in srgb, var(--warning) 60%, var(--text)); font-size: var(--text-secondary); }
 
 /* The endpoint tabs pick a task, so they look like tabs, not like two primary buttons. */
-.dialog-layout .endpoint-update-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0 0 20px; }
+.dialog-layout .endpoint-update-tabs { margin: 0 0 20px; }
 .dialog-layout .endpoint-update-tabs button[aria-pressed="true"] {
   background: var(--surface-3);
   color: var(--text);
@@ -456,5 +456,5 @@ html[data-window-chrome="custom"] .dialog-content.dialog-layout {
   .dialog-footer > button { flex: 1 1 auto; }
   .dialog-footer-note { flex-basis: 100%; order: -2; }
   .result-facts > div { grid-template-columns: 1fr; gap: 4px; }
-  .dialog-layout .dns-segmented.with-preserve { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dialog-layout .dns-segmented.with-preserve > * { flex-basis: calc(50% - 2px); }
 }

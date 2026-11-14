@@ -63,6 +63,9 @@ describe("Translations", () => {
     const report = checkLocale("ru", source, new Map([["a.b", "{count, plural, one {# устройство} other {# устройств}} для {{label}}"], ["a.c", "Open <b>the settings</b> now please"], ["a.d", "x"]]));
     expect(report.extra).toEqual(["a.d"]);
     expect(report.untranslated).toEqual(["a.c"]);
+    // Short values count too, unless they are only names, protocols, units and values.
+    const short: Flat = new Map([["a.e", "Kill switch"], ["a.f", "IPv6"], ["a.g", "{{value}} ms"]]);
+    expect(checkLocale("tr", short, short).untranslated).toEqual(["a.e"]);
     expect(report.failures.join("\n")).toMatch(/placeholders differ/);
     expect(report.failures.join("\n")).toMatch(/lacks few, many/);
     expect(checkLocale("ja", source, new Map([["a.b", "{count, plural, one {#台} other {#台}} {{name}}"]])).failures.join()).toMatch(/one, which ja never uses/);

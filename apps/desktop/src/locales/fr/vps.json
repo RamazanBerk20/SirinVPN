@@ -186,7 +186,6 @@
     "turnOff": "Désactiver",
     "lastBackup": "Dernière sauvegarde : {{age}}",
     "noBackup": "Pas encore de sauvegarde",
-    "failed": "La dernière tentative ne s’est pas terminée : {{message}}",
     "stale": "Les sauvegardes sont en retard. Déconnectez cet appareil pendant que SirinVPN est ouvert, ou choisissez Sauvegarder maintenant.",
     "summary": {
       "off": "Désactivées",
@@ -213,7 +212,8 @@
     "turnedOff": "Sauvegardes planifiées désactivées.",
     "missing": {
       "folder": "Choisissez un dossier de sauvegarde."
-    }
+    },
+    "lastFailed": "La dernière tentative ne s’est pas terminée."
   },
   "restore": {
     "title": "Restaurer {{name}}",

@@ -76,8 +76,8 @@
 }
 
 .privacy-promises {
-  display: grid;
-  grid-template-columns: repeat(3, max-content);
+  display: flex;
+  flex-wrap: wrap; /* three promises in a row only where they fit */
   gap: 18px 26px;
   margin-top: 44px;
   color: color-mix(in srgb, var(--line-strong) 25%, var(--text));
@@ -536,10 +536,7 @@
   margin-top: 12px;
 }
 
-/* DNS choices: a destructive Clear, field-level notes, and three equal segments. */
-.private-dns-policy .dns-segmented.with-preserve {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
+/* DNS choices: a destructive Clear, field-level notes, and equal segments. */
 .dns-segmented .danger-choice[aria-pressed="true"] {
   background: color-mix(in srgb, var(--danger) 80%, var(--surface));
   color: var(--text);
@@ -581,7 +578,7 @@
 .android .onboarding-shell .onboarding-demo {
   order: 1;
   justify-items: center;
-  gap: 2px;
+  gap: 10px; /* room for the link's focus ring above the note */
   margin: 8px 0 0;
   text-align: center;
 }

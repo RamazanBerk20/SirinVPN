@@ -21,6 +21,8 @@ export const ERROR_CODES = [
   "install_ssh_failed",
   /** The server is incompatible or runs another installation, found before writing anything. */
   "install_incompatible",
+  /** The installer refused its input (a value, a file, saved state) before changing anything on the VPS. */
+  "install_input_rejected",
   "backup_wrong_password",
   "invitation_expired",
   "invitation_used",

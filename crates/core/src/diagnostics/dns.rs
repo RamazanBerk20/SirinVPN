@@ -1,4 +1,4 @@
-use super::check;
+use super::{check, text};
 use sirinvpn_protocol::{DiagnosticCheck, DiagnosticLevel};
 use std::{
     net::{IpAddr, SocketAddr},
@@ -62,31 +62,52 @@ pub(super) fn result(outcome: &str) -> DiagnosticCheck {
     let (level, message) = match outcome {
         "available" => (
             DiagnosticLevel::Pass,
-            "The private VPS resolver returned a matching DNS response through the current VPN.",
+            text(
+                "local_dns_available",
+                "The private VPS resolver returned a matching DNS response through the current VPN.",
+            ),
         ),
         "servfail" => (
             DiagnosticLevel::Fail,
-            "The private resolver returned SERVFAIL. Check VPS upstream DNS, DNSSEC validation and the VPS clock.",
+            text(
+                "local_dns_servfail",
+                "The private resolver returned SERVFAIL. Check VPS upstream DNS, DNSSEC validation and the VPS clock.",
+            ),
         ),
         "refused" => (
             DiagnosticLevel::Fail,
-            "The private resolver refused the query. Check resolver access policy and server DNS configuration.",
+            text(
+                "local_dns_refused",
+                "The private resolver refused the query. Check resolver access policy and server DNS configuration.",
+            ),
         ),
         "timeout" => (
             DiagnosticLevel::Fail,
-            "The private resolver did not reply within three seconds. Check the tunnel's DNS route, port 53 rules and VPS resolver service.",
+            text(
+                "local_dns_timeout",
+                "The private resolver did not reply within three seconds. Check the tunnel's DNS route, port 53 rules and VPS resolver service.",
+            ),
         ),
         "connect_failed" => (
             DiagnosticLevel::Fail,
-            "The private resolver's TCP port 53 could not be reached through the VPN. Check the included DNS route and VPS resolver service.",
+            text(
+                "local_dns_connect_failed",
+                "The private resolver's TCP port 53 could not be reached through the VPN. Check the included DNS route and VPS resolver service.",
+            ),
         ),
         "invalid_reply" => (
             DiagnosticLevel::Fail,
-            "The private resolver returned an invalid or mismatched DNS reply. Check VPS DNS configuration and rerun diagnostics.",
+            text(
+                "local_dns_invalid_reply",
+                "The private resolver returned an invalid or mismatched DNS reply. Check VPS DNS configuration and rerun diagnostics.",
+            ),
         ),
         _ => (
             DiagnosticLevel::Warning,
-            "The current VPN network or source address was unavailable for a private DNS probe. Connect or wait for recovery, then retry.",
+            text(
+                "local_dns_unavailable",
+                "The current VPN network or source address was unavailable for a private DNS probe. Connect or wait for recovery, then retry.",
+            ),
         ),
     };
     check(

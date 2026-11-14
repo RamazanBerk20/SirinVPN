@@ -1,7 +1,7 @@
 //! On-demand leak checks that use only this device's own VPS. Internet-bound IPv4/IPv6 test
 //! requests go to documentation addresses the VPS answers only through the tunnel; the DNS test
 //! looks up a one-off name only the VPS resolver answers. Nothing is stored on either side.
-use super::{CurrentConnection, check};
+use super::{CurrentConnection, Text, check, text};
 use crate::{ManagementClient, SecretIdentity};
 use sirinvpn_protocol::{
     DiagnosticCheck,
@@ -28,10 +28,13 @@ pub async fn checks(
         return Vec::new();
     };
     if !configuration.leak_test_enabled {
-        let message = "Your VPS can't run the leak test yet. Update or repair the VPS, then run diagnostics again.";
+        let message = text(
+            "leak_unsupported",
+            "Your VPS can't run the leak test yet. Update or repair the VPS, then run diagnostics again.",
+        );
         return vec![
-            check(IPV4.0, IPV4.1, NotApplicable, message),
-            check(IPV6.0, IPV6.1, NotApplicable, message),
+            check(IPV4.0, IPV4.1, NotApplicable, message.clone()),
+            check(IPV6.0, IPV6.1, NotApplicable, message.clone()),
             check(DNS.0, DNS.1, NotApplicable, message),
         ];
     }
@@ -67,12 +70,12 @@ async fn family(
     profile: &ServerProfile,
     identity: &SecretIdentity,
     current: &CurrentConnection,
-    (code, label, family): (&str, &str, &str),
+    (code, label, family): (&str, &str, &'static str),
     destination: IpAddr,
     expected: Option<IpAddr>,
 ) -> DiagnosticCheck {
     if let Some(message) = selected_only(current, family) {
-        return check(code, label, NotApplicable, &message);
+        return check(code, label, NotApplicable, message);
     }
     let route = route_source(destination);
     let Some(expected) = expected else {
@@ -91,13 +94,17 @@ async fn family(
 
 /// Selected routing sends other traffic outside the VPN on purpose; testing it would only send
 /// a test request to the normal network.
-fn selected_only(current: &CurrentConnection, family: &str) -> Option<String> {
+fn selected_only(current: &CurrentConnection, family: &'static str) -> Option<Text> {
     if current.split_applications {
-        Some("Only the selected applications use this VPN, so this check doesn't apply to this device's own traffic.".into())
-    } else if current.split_routes && family != "DNS" {
-        Some(format!(
-            "Only the selected subnets use this VPN, so other {family} traffic uses your normal network by design."
+        Some(text(
+            "leak_applications_only",
+            "Only the selected applications use this VPN, so this check doesn't apply to this device's own traffic.",
         ))
+    } else if current.split_routes && family != "DNS" {
+        Some(text(
+            "leak_subnets_only",
+            "Only the selected subnets use this VPN, so other {family} traffic uses your normal network by design.",
+        ).with("family", family))
     } else {
         None
     }
@@ -123,30 +130,34 @@ fn tunneled(
     let (level, message) = match observed {
         Some(source) if source == expected => (
             Pass,
-            format!(
-                "A request to an internet {family} address went through the VPN: your VPS received it from this device's VPN address."
+            text(
+                "leak_tunneled",
+                "A request to an internet {family} address went through the VPN: your VPS received it from this device's VPN address.",
             ),
         ),
         Some(_) => (
             Fail,
-            format!(
-                "Your VPS received the {family} test request from an address other than this device's VPN address. Reconnect, then run diagnostics again."
+            text(
+                "leak_other_source",
+                "Your VPS received the {family} test request from an address other than this device's VPN address. Reconnect, then run diagnostics again.",
             ),
         ),
         None if route.is_some_and(|source| source != expected) => (
             Fail,
-            format!(
-                "This device sends internet {family} traffic outside the VPN, so websites can see your normal address unless the kill switch blocks it. Reconnect with full-tunnel routing and the kill switch on, then run diagnostics again."
+            text(
+                "leak_outside",
+                "This device sends internet {family} traffic outside the VPN, so websites can see your normal address unless the kill switch blocks it. Reconnect with full-tunnel routing and the kill switch on, then run diagnostics again.",
             ),
         ),
         None => (
             Fail,
-            format!(
-                "The {family} test request didn't reach your VPS through the VPN, so this device's internet {family} traffic isn't confirmed to use it. Reconnect and run diagnostics again; if it keeps failing, repair the VPS."
+            text(
+                "leak_unconfirmed",
+                "The {family} test request didn't reach your VPS through the VPN, so this device's internet {family} traffic isn't confirmed to use it. Reconnect and run diagnostics again; if it keeps failing, repair the VPS.",
             ),
         ),
     };
-    check(code, label, level, &message)
+    check(code, label, level, message.with("family", family))
 }
 
 /// Without an IPv6 tunnel the VPS cannot observe IPv6, so only a clear local leak fails.
@@ -154,15 +165,24 @@ fn untunneled_ipv6(route: Option<IpAddr>, blocked: bool) -> DiagnosticCheck {
     let (level, message) = match route {
         None => (
             NotApplicable,
-            "This VPN doesn't carry IPv6, and this device has no IPv6 internet route, so no IPv6 traffic can leave outside the VPN.",
+            text(
+                "leak_ipv6_no_route",
+                "This VPN doesn't carry IPv6, and this device has no IPv6 internet route, so no IPv6 traffic can leave outside the VPN.",
+            ),
         ),
         Some(_) if blocked => (
             NotApplicable,
-            "This VPN doesn't carry IPv6. The kill switch reports IPv6 blocked, but your VPS has no IPv6 tunnel to confirm it.",
+            text(
+                "leak_ipv6_blocked",
+                "This VPN doesn't carry IPv6. The kill switch reports IPv6 blocked, but your VPS has no IPv6 tunnel to confirm it.",
+            ),
         ),
         Some(_) => (
             Fail,
-            "This device can send IPv6 outside the VPN, which doesn't carry IPv6, so IPv6 websites can see your normal address. Turn on the kill switch to block IPv6.",
+            text(
+                "leak_ipv6_outside",
+                "This device can send IPv6 outside the VPN, which doesn't carry IPv6, so IPv6 websites can see your normal address. Turn on the kill switch to block IPv6.",
+            ),
         ),
     };
     check(IPV6.0, IPV6.1, level, message)
@@ -170,7 +190,7 @@ fn untunneled_ipv6(route: Option<IpAddr>, blocked: bool) -> DiagnosticCheck {
 
 async fn dns(profile: &ServerProfile, current: &CurrentConnection) -> DiagnosticCheck {
     if let Some(message) = selected_only(current, "DNS") {
-        return check(DNS.0, DNS.1, NotApplicable, &message);
+        return check(DNS.0, DNS.1, NotApplicable, message);
     }
     // A fresh random label cannot be answered from any cache.
     let name = format!("{:032x}.{LEAK_TEST_DNS_ZONE}", rand::random::<u128>());
@@ -192,14 +212,20 @@ fn dns_result(answers: &[IpAddr], server: IpAddr) -> DiagnosticCheck {
             DNS.0,
             DNS.1,
             Pass,
-            "A one-off name looked up through this device's normal DNS was answered by your VPS resolver.",
+            text(
+                "leak_dns_pass",
+                "A one-off name looked up through this device's normal DNS was answered by your VPS resolver.",
+            ),
         )
     } else {
         check(
             DNS.0,
             DNS.1,
             Fail,
-            "A one-off name looked up through this device's normal DNS wasn't answered by your VPS resolver, so DNS queries go to another resolver, possibly outside the VPN. Check for a manually set DNS server or a local DNS service, then reconnect.",
+            text(
+                "leak_dns_fail",
+                "A one-off name looked up through this device's normal DNS wasn't answered by your VPS resolver, so DNS queries go to another resolver, possibly outside the VPN. Check for a manually set DNS server or a local DNS service, then reconnect.",
+            ),
         )
     }
 }

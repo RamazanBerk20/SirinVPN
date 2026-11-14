@@ -101,8 +101,12 @@
 .wifi-settings .settings-action-row > .text-button {
   flex-shrink: 0;
 }
+/* The label keeps at least 10rem: a wide control (language list, theme choice) moves under it rather
+   than squeezing it to a word per line. */
+.preference-row { flex-wrap: wrap; }
 .preference-row > span {
   display: grid;
+  flex: 1 1 10rem;
   gap: 5px;
   min-width: 0;
 }

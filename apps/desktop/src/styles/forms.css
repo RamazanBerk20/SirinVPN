@@ -150,9 +150,12 @@ input[type="checkbox"]:not([role="switch"]):disabled {
   line-height: 1.45;
 }
 
+/* Options share a row equally but never get narrower than their label: when the labels don't fit
+   (long languages, large text, phones) options wrap to another row instead of wrapping or
+   breaking their words. */
 .segmented-control {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
+  flex-wrap: wrap;
   gap: 3px;
   padding: 3px;
   border: 1px solid var(--line);
@@ -160,13 +163,12 @@ input[type="checkbox"]:not([role="switch"]):disabled {
   background: var(--bg);
 }
 
-/* One equal column per option: two options fill the track, four never leave an empty cell. */
-.segmented-control:where(:has(> button:nth-child(2):last-child)) {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+.segmented-control > * {
+  flex: 1 1 0;
+  min-width: fit-content; /* its label on one line, or the full row when even that is too narrow */
+  overflow-wrap: break-word;
 }
-.segmented-control:where(:has(> button:nth-child(4):last-child)) {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
+/* Two per row, where a layout asks for a 2 x 2 grid. */
 
 .segmented-control button {
   min-height: 36px;

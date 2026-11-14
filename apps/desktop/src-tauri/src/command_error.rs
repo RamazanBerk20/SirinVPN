@@ -162,6 +162,8 @@ fn code_of(error: &(dyn Error + 'static)) -> Option<(&'static str, Value)> {
             InstallerError::ServerBackup(ServerBackupError::AuthenticationFailed) => {
                 Some(("backup_wrong_password", none()))
             }
+            // Every invalid-input error is raised before the action changes anything on the VPS.
+            InstallerError::InvalidInput(_) => Some(("install_input_rejected", none())),
             InstallerError::TransactionUnresolved { host } => {
                 Some(("transaction_unresolved", json!({"host": host})))
             }
@@ -256,9 +258,9 @@ mod tests {
             serde_json::to_value(&error).unwrap(),
             json!("Enter the SSH password.")
         );
-        let (code, value) = code(InstallerError::InvalidInput("bad".into()));
+        let (code, value) = code(anyhow::anyhow!("bad"));
         assert_eq!(code, None);
-        assert_eq!(value, json!("invalid installation input: bad"));
+        assert_eq!(value, json!("bad"));
     }
 
     #[test]
@@ -309,6 +311,11 @@ mod tests {
             (
                 InstallerError::AuthenticationFailed.into(),
                 "install_ssh_failed",
+            ),
+            (
+                InstallerError::InvalidInput("server artifact is empty or exceeds 64 MiB".into())
+                    .into(),
+                "install_input_rejected",
             ),
             (
                 InstallerError::Incompatible("old".into()).into(),

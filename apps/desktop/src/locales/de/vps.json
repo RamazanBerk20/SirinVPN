@@ -186,7 +186,6 @@
     "turnOff": "Ausschalten",
     "lastBackup": "Letztes Backup: {{age}}",
     "noBackup": "Noch kein Backup",
-    "failed": "Der letzte Versuch wurde nicht abgeschlossen: {{message}}",
     "stale": "Backups sind überfällig. Trenne dieses Gerät, während SirinVPN geöffnet ist, oder wähle Jetzt sichern.",
     "summary": {
       "off": "Aus",
@@ -213,7 +212,8 @@
     "turnedOff": "Geplante Backups ausgeschaltet.",
     "missing": {
       "folder": "Wähle einen Backup-Ordner."
-    }
+    },
+    "lastFailed": "Der letzte Versuch wurde nicht abgeschlossen."
   },
   "restore": {
     "title": "{{name}} wiederherstellen",

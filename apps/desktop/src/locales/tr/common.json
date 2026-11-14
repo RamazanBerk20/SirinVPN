@@ -41,7 +41,8 @@
     "withDetail": "{{summary}} {{detail}}",
     "needsConnection": "Önce bu sunucuya bağlanın.",
     "localSave": "Bu cihaza kaydedilemedi. Tekrar deneyin.",
-    "passwordsDiffer": "Parolalar eşleşmiyor."
+    "passwordsDiffer": "Parolalar eşleşmiyor.",
+    "technicalDetails": "Teknik ayrıntılar"
   },
   "errorCode": {
     "hetzner_create_uncertain": "Hetzner, {{server}} sunucusunu oluşturmuş olabilir. Tekrar denemeden önce Hetzner Cloud Console’u kontrol edin.",
@@ -66,7 +67,8 @@
     "release_rate_limited": "GitHub ağınızdan gelen güncelleme denetimlerini sınırlıyor. Bir saat sonra yeniden deneyin ya da özel bir kaynak kullanın.",
     "release_offline": "Sürüm kaynağına ulaşılamadı. İnternet bağlantınızı denetleyip yeniden deneyin.",
     "android_install_permission": "Açılan Android ayarlarında SirinVPN’in uygulama yüklemesine izin verin, ardından yeniden Güncellemeyi yükle’ye dokunun.",
-    "release_none": "GitHub’da bu kanal için henüz yayımlanmış bir sürüm yok. Diğer kanalı deneyin ya da daha sonra yeniden denetleyin."
+    "release_none": "GitHub’da bu kanal için henüz yayımlanmış bir sürüm yok. Diğer kanalı deneyin ya da daha sonra yeniden denetleyin.",
+    "install_input_rejected": "SirinVPN, VPS’te hiçbir şeyi değiştirmeden bu isteği reddetti. Girilen değerleri ve dosyaları denetleyip tekrar deneyin."
   },
   "maintenanceBlocker": {
     "not_owner": "bu VPS’in bakımını yalnızca Sahip cihazı yapabilir",

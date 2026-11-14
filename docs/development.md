@@ -46,6 +46,44 @@ A headless Chromium pointed at that address also produces the README screenshots
 "update the VPN component" notice. `pnpm lint` also runs the translation check
 (`pnpm i18n:check`, see [Translating SirinVPN](translating.md)).
 
+### Layout audit
+
+`scripts/ui-audit.mjs` drives the same demo in headless Chromium. It first clicks through every
+page, dialog, menu and wizard step (owner, admin and member; connected, disconnected, onboarding
+and the fixture's failure switches; desktop and Android) and records the click paths, then replays
+each state in every language and the `en-XA`/`ar-XB` pseudo-locales at the minimum, typical and
+large window sizes (a phone size for Android) and at 100 % and 150 % text size. It reports
+controls or focus rings that run into other controls or text, clipped or overflowing text,
+ellipses without a tooltip, horizontal scrolling, controls hidden under fixed bars when focused,
+and words broken mid-word in buttons, tabs and headings. In `en-XA` it also lists text that is
+outside the pseudo-locale's `⟦…⟧` brackets, i.e. text that bypassed translation; sample data
+from `tests/ui/fixtures.js` and `demoDevices.ts` is ignored.
+
+Playwright is not a project dependency. Point `PLAYWRIGHT_MODULE` at a directory whose
+`node_modules` holds it and, if its own browser is missing, `CHROMIUM_PATH` at a Chromium binary:
+
+```sh
+pnpm dev &   # or any port, given with --url
+PLAYWRIGHT_MODULE=~/tools/pw CHROMIUM_PATH=/path/to/chrome \
+  node scripts/ui-audit.mjs --quick            # 6 languages, minimum and phone size
+node scripts/ui-audit.mjs                       # the full matrix: about 1.5 hours
+node scripts/ui-audit.mjs --reuse --lang de,ar  # ~5 minutes a language once the click paths exist
+node scripts/ui-audit.mjs --text                # untranslated text only (en-XA)
+node scripts/ui-audit.mjs --reuse --lang tr --size min --state owner/settings/general
+```
+
+Filters: `--lang`, `--size min,typical,large,phone`, `--zoom 1,1.5`, `--role`, `--platform`,
+`--state <name part>`, `--workers` (default 4; more pages per machine run Chromium out of shared memory); `--reuse` skips the crawl and replays the paths saved by the
+previous run; `--ignore <file>` adds sample values (one per line) for `--text`. Reports go to
+`.audit/ui/report.txt` and `report.json` (or `--out`); the exit code is 1 when anything is found.
+Sizes and text zoom are applied to a page after it is replayed, and 150 % text is emulated by a
+150 % root font size (plus the Android large-font layout), which is what system text scaling does
+to this rem-based CSS. The first crawl takes about 25 minutes. Page loads are several times faster
+from a static development build than from `pnpm dev`:
+`NODE_ENV=development npx vite build --mode development --outDir <dir> && npx vite preview --outDir <dir> --port 1422`
+then `--url http://127.0.0.1:1422/` (rebuild after each change; `NODE_ENV=development` keeps `?lang=`).
+The run is too slow for `pnpm lint`/CI and is not wired into them.
+
 Debug builds may use `SIRINVPN_SERVER_BINARY` and `SIRINVPN_HELPER_PATH` to select local development binaries. Release builds deliberately ignore these variables before invoking privileged operations.
 
 ## Android

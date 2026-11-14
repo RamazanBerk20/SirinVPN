@@ -186,7 +186,6 @@
     "turnOff": "Turn off",
     "lastBackup": "Last backup: {{age}}",
     "noBackup": "No backup yet",
-    "failed": "The last attempt didn’t finish: {{message}}",
     "stale": "Backups are overdue. Disconnect this device while SirinVPN is open, or choose Back up now.",
     "summary": {
       "off": "Off",
@@ -213,7 +212,8 @@
     "turnedOff": "Scheduled backups turned off.",
     "missing": {
       "folder": "Choose a backup folder."
-    }
+    },
+    "lastFailed": "The last attempt didn’t finish."
   },
   "restore": {
     "title": "Restore {{name}}",

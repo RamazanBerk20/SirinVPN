@@ -186,7 +186,6 @@
     "turnOff": "Desactivar",
     "lastBackup": "Última copia de seguridad: {{age}}",
     "noBackup": "Todavía no hay copias de seguridad",
-    "failed": "El último intento no terminó: {{message}}",
     "stale": "Las copias de seguridad están atrasadas. Desconecta este dispositivo mientras SirinVPN está abierta, o elige Hacer copia ahora.",
     "summary": {
       "off": "Desactivado",
@@ -213,7 +212,8 @@
     "turnedOff": "Copias de seguridad programadas desactivadas.",
     "missing": {
       "folder": "Elige una carpeta para las copias de seguridad."
-    }
+    },
+    "lastFailed": "El último intento no terminó."
   },
   "restore": {
     "title": "Restaurar {{name}}",

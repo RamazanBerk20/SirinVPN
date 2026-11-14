@@ -63,6 +63,11 @@ p, small, .inline-error, .warning-note {
 /* Stack rhythm: a message and the control or form that follows it never touch. */
 :is(.inline-error, .settings-notice, .warning-note, .danger-callout) + :is(button, form, .field, .card-save-row, .preference-actions) { margin-top: 12px; }
 :is(.launcher-actions, .preference-actions, .card-save-row) + .inline-error { margin-top: 12px; }
+/* In a card, dialog or panel that stacks blocks without a gap, a button or button row never sits flush
+   against the block above it, whose focus ring or text it would otherwise touch. */
+/* (Block-flow containers only: grid ones such as the devices panel already have a gap.) */
+:is(.settings-card, .dialog-body:not(.devices-panel *), .dialog-body > form) > :not(h2, h3, .settings-section-heading) + :is(.primary-button, .secondary-button, .text-button, .settings-action-row),
+:is(.settings-card, .dialog-body:not(.devices-panel *), .dialog-body > form) > :is(.primary-button, .secondary-button, .settings-action-row) + :is(p, small) { margin-top: 12px; }
 /* Sticky dialog and save bars must not cover an error that scrolled itself into view. */
 .inline-error { scroll-margin: 16px 0 120px; }
 
@@ -87,7 +92,6 @@ p, small, .inline-error, .warning-note {
 .confirmation-row > span { display: grid; min-width: 0; gap: 6px; }
 .confirmation-row small { color: var(--muted); line-height: 1.5; font-style: normal; }
 .confirmation-row:has(input:disabled) { opacity: .6; cursor: default; }
-.confirmation-row:focus-within { border-radius: 4px; }
 /* A dialog moves focus to its heading while its controls are busy; keyboard users must see where it went. */
 [role="dialog"] :is(h1, h2)[tabindex]:focus-visible { outline: 2px solid var(--cyan); outline-offset: 4px; border-radius: 4px; }
 p > svg.spin { display: inline-block; margin-inline-end: 6px; vertical-align: -3px; }

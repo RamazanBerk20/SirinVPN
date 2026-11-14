@@ -69,3 +69,22 @@ describe("Codes the native layers send", () => {
     expect(DIAGNOSTIC_CAUSES.filter((cause) => !causes.has(cause))).toEqual([]);
   });
 });
+
+describe("Diagnostic messages", () => {
+  // text("key", "English") in the native diagnostics (shared core and the desktop shell).
+  const messages = [...[...diagnostics, ...desktop].flatMap(([, text]) => [...text.matchAll(/\btext\(\s*"([a-z0-9_]+)",\s*"((?:[^"\\]|\\.)*)"/gs)])]
+    .map((match) => [match[1], match[2]] as const);
+  const catalog = en.maintenance.diagnostics.message as Record<string, string>;
+
+  it("are found in the Rust sources", () => {
+    expect(messages.map(([key]) => key)).toEqual(expect.arrayContaining(["external_reachability", "quality_unavailable", "report_format", "leak_dns_fail", "local_diagnostics_busy"]));
+  });
+
+  it("each have the same English text in the catalog", () => {
+    // The catalog writes ’ for ' and {{name}} for {name}; anything else must match exactly.
+    const differ = messages.filter(([key, english]) => catalog[key] !== english.replace(/'/g, "’").replace(/\{(\w+)\}/g, "{{$1}}"))
+      .map(([key, english]) => `${key}: ${english}`);
+    expect(differ).toEqual([]);
+    expect(new Set(messages.map(([key]) => key)).size).toBe(messages.length);
+  });
+});

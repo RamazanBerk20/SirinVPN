@@ -5,7 +5,7 @@
 // "<!-- UNTRANSLATED" comment (Android) is a fresh copy of English: identical text is reported, not failed.
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { checkLocale, checkSource, flattenCatalog, type Flat } from "../src/i18n/message.ts";
+import { checkLocale, checkSource, flattenCatalog, translatableWords, type Flat } from "../src/i18n/message.ts";
 
 const root = join(import.meta.dirname, "..");
 const locales = join(root, "src/locales");
@@ -42,7 +42,7 @@ for (const locale of webLocales) {
   const translated = [...catalog].filter(([key, value]) => english.has(key) && (value !== english.get(key) || allowed(locale).has(key))).length;
   const broken = report.missing.length + report.extra.length + report.failures.length + (marked ? 0 : report.untranslated.length) > 0;
   failed ||= broken;
-  console.log(`${broken ? "FAIL" : "ok  "} ${locale}: ${marked ? "marked UNTRANSLATED, " : ""}${translated} of ${english.size} differ from English (${Math.round(translated / english.size * 100)}%), ${report.untranslated.length} longer values still identical`
+  console.log(`${broken ? "FAIL" : "ok  "} ${locale}: ${marked ? "marked UNTRANSLATED, " : ""}${translated} of ${english.size} differ from English (${Math.round(translated / english.size * 100)}%), ${report.untranslated.length} values still identical`
     + list("missing keys", report.missing) + list("extra keys", report.extra) + list("failures", report.failures, 50)
     + (marked ? "" : list("identical to English (translate, or add to src/locales/allowlist.json)", report.untranslated)));
 }
@@ -94,7 +94,7 @@ for (const [locale, folder] of Object.entries(ANDROID_FOLDERS)) {
     if (source === undefined || !translatable.includes(name)) continue;
     if (!value.trim()) failures.push(`${name}: empty`);
     if (formatArgs(value) !== formatArgs(source)) failures.push(`${name}: format arguments differ`);
-    if (value === source) { if (value.split(/\s+/).length > 3) untranslated.push(name); continue; }
+    if (value === source) { if (translatableWords(value.replace(/%(\d+\$)?[-#+ 0,(]*\d*(\.\d+)?[sdfxXc]/g, " ")).length) untranslated.push(name); continue; }
     const forms = target.plurals.get(name);
     if (forms) for (const category of categories) if (!forms.includes(category)) failures.push(`${name}: plural lacks quantity="${category}"`);
   }

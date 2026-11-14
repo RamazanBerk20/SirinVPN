@@ -33,6 +33,9 @@ body {
   min-height: 100dvh;
   overflow-x: hidden;
   background: var(--bg);
+  /* A word longer than its whole line (a German compound at large text on a phone) breaks instead of
+     spilling out of its box; shorter words still wrap between words, and layout sizes are unaffected. */
+  overflow-wrap: break-word;
 }
 
 button,
@@ -52,6 +55,18 @@ select:focus-visible,
 textarea:focus-visible {
   outline: 2px solid var(--accent-strong);
   outline-offset: 2px;
+}
+/* A focus ring never reaches a neighbour. Fields draw it over their own border; controls packed
+   edge to edge (list rows, segmented options, menus, grids, tab and navigation bars) inside their box. */
+:is(input:not([type="checkbox"], [type="radio"], [type="range"]), select, textarea, .native-secret-field):focus-visible,
+:is(.segmented-control, .settings-action-list, .mobile-choice-list, .bottom-navigation, .action-menu-panel, .troubleshoot-steps,
+  .week-grid, .removal-choices, .collection-row, .settings-tabs, .member-device-list) :is(button, a, [role="button"], [role="gridcell"]):focus-visible {
+  outline-offset: -2px;
+}
+html.android :is(input:not([type="checkbox"], [type="radio"], [type="range"]), select, textarea, .native-secret-field):focus-visible,
+html.android :is(.segmented-control, .settings-action-list, .mobile-choice-list, .bottom-navigation, .action-menu-panel, .troubleshoot-steps,
+  .week-grid, .removal-choices, .collection-row, .settings-tabs, .member-device-list, .server-list) :is(button, a, [role="button"], [role="gridcell"]):focus-visible {
+  outline-offset: -3px; /* Android rings are 3px wide */
 }
 
 .loading-screen {
@@ -119,6 +134,9 @@ textarea:focus-visible {
   opacity: 0.85;
   unicode-bidi: isolate;
 }
+/* "Technical details": untranslated backend text, opened on request. */
+.technical-detail { display: block; margin-block-start: 2px; }
+.technical-detail-toggle.text-button { min-height: 0; padding: 4px 0; font-size: 0.86em; font-weight: 500; }
 /* Code-like values (IPs, keys, fingerprints, commands) stay LTR inside RTL text. */
 .mono,
 code,

@@ -1,10 +1,10 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { t } from "../i18n";
+import { pseudoLocales, setLocale, sourceLocale, t } from "../i18n";
 import type { DiagnosticReport } from "../types";
 import { DiagnosticResults, DiagnosticRunFailed } from "./DiagnosticResults";
 
-afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
+afterEach(() => { cleanup(); vi.unstubAllGlobals(); setLocale(sourceLocale); });
 
 it("copies only the displayed report after an explicit click", async () => {
   const writeText = vi.fn().mockResolvedValue(undefined);
@@ -100,19 +100,39 @@ it("offers a check's fix only while the check needs attention", () => {
   expect(screen.queryByRole("button", { name: "Fix MTU" })).toBeNull();
 });
 
-it("names a check and its cause in the interface language, with the backend's English text as marked detail", () => {
+it("says each finding in the interface language from its message key, and an unknown one by its cause, the English behind Technical details", () => {
+  setLocale(pseudoLocales.expanded);
   const report = { api_version: "v1", checks: [
     { code: "management", label: "VPS authentication and connectivity", level: "fail" as const, message: "The private TLS handshake failed.", cause: "management_clock" as const },
+    { code: "external_reachability", label: "Provider firewall and public reachability", level: "warning" as const, message: "Local listeners cannot establish public reachability.", message_key: "external_reachability" },
+    { code: "server_cpu", label: "VPS CPU", level: "warning" as const, message: "Current usage: 95%. Capacity is limited.", message_key: "resource_limited", message_params: { percent: "95" } },
+    { code: "local_mtu", label: "Current path MTU", level: "warning" as const, message: "Automatic MTU: 1420 bytes. Path probing is pending.", message_key: "mtu_pending", message_params: { policy: "automatic", size: "1420" } },
     { code: "dns_zone_0_1", label: "VPS split DNS zone 1, upstream 2", level: "fail" as const, message: "No answer." },
     { code: "brand_new_check", label: "Brand new check", level: "fail" as const, message: "Something new." },
-  ] };
+  ] } as DiagnosticReport;
   const { container } = render(<DiagnosticResults report={report} />);
   const rows = Array.from(container.querySelectorAll(".diagnostic-row"));
+  const row = (code: string) => rows.find((element) => element.querySelector("strong")?.textContent === code)!;
   expect(rows[0].querySelector("strong")?.textContent).toBe(t("maintenance.diagnostics.checkTitle.management"));
+  // No key: the cause in the interface language; the English only after "Technical details".
   expect(rows[0].textContent).toContain(t("maintenance.diagnostics.cause.management_clock"));
+  expect(rows[0].textContent).not.toContain("The private TLS handshake failed.");
+  fireEvent.click(rows[0].querySelector("button")!);
   expect(rows[0].querySelector(".error-detail")?.getAttribute("lang")).toBe("en");
-  expect(rows[1].querySelector("strong")?.textContent).toBe(t("maintenance.diagnostics.numberedCheck.dnsZoneUpstream", { zone: 1, upstream: 2 }));
-  // A check this version doesn't know keeps the backend's label, marked as English.
-  expect(rows[2].querySelector("strong")?.getAttribute("lang")).toBe("en");
-  expect(rows[2].querySelector("strong")?.textContent).toBe("Brand new check");
+  expect(rows[0].textContent).toContain("The private TLS handshake failed.");
+  expect(container.textContent).toContain(t("maintenance.diagnostics.message.external_reachability"));
+  expect(container.textContent).not.toContain("Local listeners");
+  expect(container.textContent).toContain(t("maintenance.diagnostics.message.resource_limited", { percent: 95 }));
+  expect(container.textContent).toContain(t("maintenance.diagnostics.sentences", { first: t("maintenance.diagnostics.mtuSize.automatic", { size: "1420" }), second: t("maintenance.diagnostics.message.mtu_pending") }));
+  expect(row(t("maintenance.diagnostics.numberedCheck.dnsZoneUpstream", { zone: 1, upstream: 2 }))).toBeTruthy();
+  // A check this version doesn't know keeps the backend's label, marked as English, and a sentence for its group.
+  const unknown = row("Brand new check");
+  expect(unknown.querySelector("strong")?.getAttribute("lang")).toBe("en");
+  expect(unknown.textContent).toContain(t("maintenance.diagnostics.messageUnknown.attention"));
+});
+
+it("shows the native English text as is in English", () => {
+  const { container } = render(<DiagnosticResults report={{ api_version: "v1", checks: [{ code: "brand_new_check", label: "Brand new check", level: "fail" as const, message: "Something new." }] }} />);
+  expect(container.textContent).toContain("Something new.");
+  expect(container.querySelector(".technical-detail")).toBeNull();
 });

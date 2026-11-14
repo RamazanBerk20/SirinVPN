@@ -129,6 +129,8 @@ pub(crate) fn check(
         level,
         message: message.into(),
         cause: None,
+        message_key: None,
+        message_params: Default::default(),
     }
 }
 

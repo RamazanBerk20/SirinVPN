@@ -30,7 +30,7 @@ export default defineConfig(({ mode }) => ({
     host: "127.0.0.1",
     // Outside the app root: the demo's sample data, and Rust sources tests read (core messages a
     // troubleshooting test pins; the error codes, diagnostic causes and blockers errorCodes.test.ts checks).
-    fs: { allow: [".", "../../tests/ui/fixtures.js", "../../crates/core/src", "../../crates/android-runtime/src", "../../crates/installer/src"] },
+    fs: { allow: [".", "../../tests/ui/fixtures.js", "../../tests/ui/demo_diagnostics.js", "../../crates/core/src", "../../crates/android-runtime/src", "../../crates/installer/src"] },
   },
   envPrefix: ["VITE_", "TAURI_"],
   test: {

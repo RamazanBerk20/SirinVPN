@@ -1,3 +1,4 @@
+import { TechnicalDetail } from "../../components/ui";
 import { useEffect, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Check, Info, Warning } from "@phosphor-icons/react";
@@ -78,7 +79,7 @@ export function Troubleshooter({ model, onOpenSettings, onRestoreDevice }: {
                   <div>
                     <strong>{t(`help.troubleshoot.step.${step.id}`)}</strong>
                     <p>{t(step.message)}</p>
-                    {step.evidence && <p className="troubleshoot-evidence">{t("help.troubleshoot.seen")}<span className="error-detail" lang="en" dir="auto">{step.evidence}</span></p>}
+                    {step.evidence && <p className="troubleshoot-evidence">{t("help.troubleshoot.seen")}<TechnicalDetail text={step.evidence} /></p>}
                     {fix && <div className="settings-action-row"><button type="button" className="secondary-button" onClick={() => { setOpen(false); fix.run(); }}>{fix.label}</button></div>}
                   </div>
                 </div>

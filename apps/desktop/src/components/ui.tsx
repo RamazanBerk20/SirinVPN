@@ -1,5 +1,5 @@
-import { t } from "../i18n";
-import { cloneElement, isValidElement, useEffect, useId, useRef, type InputHTMLAttributes } from "react";
+import { sourceLocale, t, useLocale } from "../i18n";
+import { cloneElement, isValidElement, useEffect, useId, useRef, useState, type InputHTMLAttributes } from "react";
 import { Warning } from "@phosphor-icons/react";
 import { Brand, SirinMark } from "./Brand";
 import { SecretInput, SecretTextarea } from "./SecretInput";
@@ -75,12 +75,28 @@ export function Metric({
 }
 
 /**
- * An `errorMessage` string: the translated summary, then the backend's own text (English this
- * release) as a smaller secondary line marked as English and isolated from the surrounding direction.
+ * Backend text that has no translation (it is English): in English a smaller secondary line; in any
+ * other language hidden behind “Technical details”, so the visible message is always translated.
+ * Phrasing content only, so it fits inside a <p> or <small>.
  */
+export function TechnicalDetail({ text }: { text: string }) {
+  const english = useLocale() === sourceLocale;
+  const [open, setOpen] = useState(false);
+  const id = useId();
+  if (!text) return null;
+  const detail = <small id={id} className="error-detail" lang="en" dir="auto">{text}</small>;
+  if (english) return detail;
+  return <span className="technical-detail">
+    <button type="button" className="text-button technical-detail-toggle" aria-expanded={open} aria-controls={open ? id : undefined}
+      onClick={() => setOpen(!open)}>{t("common.error.technicalDetails")}</button>
+    {open && detail}
+  </span>;
+}
+
+/** An `errorMessage` string: the translated summary, then the backend's own text as `TechnicalDetail`. */
 export function ErrorText({ message }: { message: string }) {
   const { summary, detail } = splitErrorMessage(message);
-  return <>{summary}{detail && <small className="error-detail" lang="en" dir="auto">{detail}</small>}</>;
+  return <>{summary}{detail && <TechnicalDetail text={detail} />}</>;
 }
 
 /** A failure next to the control that caused it; it scrolls itself into view so it is never off screen. */
