@@ -31,6 +31,7 @@ class NativePlatform(private val context: Context) {
     fun installedApk(): String = context.applicationInfo.sourceDir
     fun installApk(path: String) = ApkInstaller.install(context,path)
     fun abandonApk() = ApkInstaller.abandon(context)
+    fun ensureInstallPermission(): Boolean = ApkInstaller.ensurePermission(context)
     private val vault = SecretVault(context)
     fun secretGet(reference: String): ByteArray? = vault.get(reference)
     fun secretPut(reference: String, value: ByteArray) = vault.put(reference, value)

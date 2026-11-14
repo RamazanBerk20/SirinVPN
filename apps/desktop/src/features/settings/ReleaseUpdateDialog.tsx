@@ -16,9 +16,9 @@ import { useEffect, useId } from "react";
 import { api } from "../../api";
 import { formatBytes, formatTarget } from "../../format";
 import { Field, InlineError } from "../../components/ui";
-import { errorMessage } from "../../lib/errors";
+import { appError, errorCodeText, errorMessage } from "../../lib/errors";
 import { ReleaseRecovery } from "./ReleaseRecovery";
-import { completeReleaseSource, rememberAppReleaseSource, rememberedAppReleaseSource, validReleaseSource } from "./vpsRelease";
+import { completeReleaseSource, GITHUB_RELEASE_SOURCE, installedChannel, releaseSourceLabel, rememberAppReleaseSource, rememberedAppReleaseSource, validReleaseSource } from "./vpsRelease";
 import { SettingsDisclosure } from "./SettingsParts";
 import { notify } from "../../components/Toasts";
 import { releaseBusy } from "./releaseUpdateMachine";
@@ -66,7 +66,7 @@ export function ReleaseUpdateDialog({
   const reset = () => {
     // Back to the remembered address, not an empty field: discarding a download isn't forgetting the source.
     setSource(rememberedAppReleaseSource());
-    setChannel("stable");
+    setChannel(installedChannel);
     dispatch({ type: "reset" });
   };
 
@@ -91,6 +91,12 @@ export function ReleaseUpdateDialog({
     catch (reason) { dispatch({ type: "discardFailed", error: { message: errorMessage(reason, t("release.error.discard")), retry: "discard" } }); }
   };
 
+  // A rate limit or a lost connection says so on its own; anything else names the source.
+  const checkError = (reason: unknown) => {
+    const coded = appError(reason, ["release_rate_limited", "release_offline", "release_none"]);
+    return coded.code === "unknown" ? errorMessage(reason, t("release.error.check")) : errorCodeText(coded);
+  };
+
   const check = async () => {
     if (!sourceValid || locked) return;
     dispatch({ type: "check" });
@@ -100,7 +106,7 @@ export function ReleaseUpdateDialog({
       rememberAppReleaseSource(releaseSource);
     } catch (reason) {
       // The footer's Check release button is the retry.
-      dispatch({ type: "checkFailed", message: errorMessage(reason, t("release.error.check")) });
+      dispatch({ type: "checkFailed", message: checkError(reason) });
     }
   };
 
@@ -113,7 +119,7 @@ export function ReleaseUpdateDialog({
     try {
       dispatch({ type: "checked", candidate: await api.checkReleaseUpdate(releaseSource, channel) });
     } catch (reason) {
-      dispatch({ type: "checkFailed", message: errorMessage(reason, t("release.error.check")) });
+      dispatch({ type: "checkFailed", message: checkError(reason) });
     }
   };
 
@@ -126,6 +132,7 @@ export function ReleaseUpdateDialog({
       dispatch({ type: "installFailed", message: errorMessage(
         reason,
         binding ? t("release.error.bind")
+          : android ? t("release.error.installAndroid")
           : windows ? t("release.error.installWindows")
           : appimage ? t("release.error.installAppImage")
           : t("release.error.installDebian"),
@@ -240,7 +247,7 @@ export function ReleaseUpdateDialog({
               {/* "What's new" only for a release that would be installed; a verify or the current version just has notes. */}
               {candidate.release_notes && <p className="release-notes"><strong>{t(installable && !binding ? "release.candidate.whatsNew" : "release.candidate.notes")}</strong> <span lang="en" dir="auto">{candidate.release_notes}</span></p>}
               <p>{t("release.candidate.package", { size: formatBytes(candidate.artifact_size_bytes) })}</p>
-              <p className="settings-note">{t("release.candidate.source", { source })}</p>
+              <p className="settings-note">{t("release.candidate.source", { source: releaseSourceLabel(source) })}</p>
 
               {binding ? <p className="settings-note">{t("release.candidate.verifyOnce")}</p> : !candidate.newer_than_running ? (
                 <div className="warning-note replacement-warning">
@@ -313,24 +320,33 @@ export function ReleaseUpdateDialog({
                 </button>
               </div>
               {channel === "preview" && <p className="release-preview-note">{t("release.form.previewHint")}</p>}
-              <Field
-                label={t("release.form.source")}
-                hint={t("release.form.sourceHint")}
-                error={releaseSource && !sourceValid ? t("vps.update.source.invalid") : undefined}
-              >
-                <input
-                  type="url"
-                  value={source}
-                  onChange={(event) => setSource(event.target.value)}
-                  onBlur={() => setSource(releaseSource)}
-                  autoComplete="off"
-                  autoCapitalize="none"
-                  autoCorrect="off"
-                  spellCheck={false}
-                  disabled={locked}
-                  required
-                />
-              </Field>
+              {source === GITHUB_RELEASE_SOURCE ? (
+                <div className="update-source-saved">
+                  <span>{t("release.form.source")}</span>
+                  <p>{t("release.form.sourceGitHub")}</p>
+                  <button type="button" className="text-button" disabled={locked} onClick={() => setSource("")}>{t("release.form.useCustom")}</button>
+                </div>
+              ) : <>
+                <Field
+                  label={t("release.form.source")}
+                  hint={t("release.form.sourceHint")}
+                  error={releaseSource && !sourceValid ? t("vps.update.source.invalid") : undefined}
+                >
+                  <input
+                    type="url"
+                    value={source}
+                    onChange={(event) => setSource(event.target.value)}
+                    onBlur={() => setSource(releaseSource)}
+                    autoComplete="off"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    disabled={locked}
+                    required
+                  />
+                </Field>
+                <button type="button" className="text-button" disabled={locked} onClick={() => setSource(GITHUB_RELEASE_SOURCE)}>{t("release.form.useGitHub")}</button>
+              </>}
               <SettingsDisclosure boxed summary={t("release.form.sourceInfoLabel")}><p className="settings-note">{t("release.form.sourceInfo")}</p></SettingsDisclosure>
               <div className="release-download-notice">
                 <DownloadSimple size={20} />

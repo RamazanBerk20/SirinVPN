@@ -41,6 +41,14 @@ export const ERROR_CODES = [
   "person_has_join_codes",
   /** Another person on the server already has this name. */
   "person_name_taken",
+  /** GitHub refused the release list (HTTP 403/429): its hourly limit for unauthenticated requests per IP address. */
+  "release_rate_limited",
+  /** The release source couldn't be reached: no connection, or no answer in time. */
+  "release_offline",
+  /** GitHub has no published release for the requested channel. */
+  "release_none",
+  /** Android: "Install unknown apps" is off for SirinVPN; its settings page was opened. */
+  "android_install_permission",
 ] as const;
 export type ErrorCode = typeof ERROR_CODES[number] | "unknown";
 
@@ -62,7 +70,7 @@ export type DiagnosticCause = typeof DIAGNOSTIC_CAUSES[number] | null;
 
 const codes = new Set<string>(ERROR_CODES);
 /** Codes whose catalog text says everything the backend's text does, so no detail is shown under it. */
-const complete = new Set<ErrorCode>(["backup_wrong_password", "invitation_expired", "invitation_used", "invitation_invalid",
+const complete = new Set<ErrorCode>(["release_rate_limited", "release_offline", "release_none", "android_install_permission", "backup_wrong_password", "invitation_expired", "invitation_used", "invitation_invalid",
   "operation_in_progress", "install_rolled_back", "transaction_unresolved", "maintenance_blocked", "hetzner_create_uncertain", "hetzner_provision_pending"]);
 
 function detailOf(reason: unknown): string {

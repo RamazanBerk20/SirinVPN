@@ -150,6 +150,16 @@ impl TestHttpsServer {
         let listener = TcpListener::bind(("127.0.0.1", 0)).unwrap();
         listener.set_nonblocking(true).unwrap();
         let port = listener.local_addr().unwrap().port();
+        // Redirect targets may name this server's port as "{PORT}".
+        let routes: HashMap<_, _> = routes
+            .into_iter()
+            .map(|(path, mut response)| {
+                for (_, value) in &mut response.extra_headers {
+                    *value = value.replace("{PORT}", &port.to_string());
+                }
+                (path, response)
+            })
+            .collect();
         let requests = Arc::new(Mutex::new(Vec::new()));
         let recorded = Arc::clone(&requests);
         let worker = thread::spawn(move || {
@@ -227,8 +237,9 @@ impl TestHttpsServer {
         format!("{}://127.0.0.1:{}/stable/", "https", self.port)
     }
 
+    /// The client production picks for this server's typed source.
     fn client(&self) -> Client {
-        secure_client_builder()
+        client_builder(&validate_source_url(&self.source()).unwrap())
             .add_root_certificate(self.certificate.clone())
             .build()
             .unwrap()
@@ -519,7 +530,11 @@ async fn redirect_is_not_followed() {
             status: "302 Found",
             body: Vec::new(),
             declared_length: None,
-            extra_headers: vec![("Location", stable_path(TRUST_POLICY_FILE_NAME))],
+            // Even a GitHub host is not followed for a typed source.
+            extra_headers: vec![(
+                "Location",
+                format!("{}://github.com/RamazanBerk20/SirinVPN/", "https"),
+            )],
         },
     );
     let server = TestHttpsServer::start(routes, 1);
@@ -655,4 +670,320 @@ fn staging_commit_is_no_replace_on_every_linux_and_android_libc() {
     ));
     assert_eq!(fs::read(destination.join("marker")).unwrap(), b"first");
     assert_eq!(fs::read_dir(parent.path()).unwrap().count(), 1);
+}
+
+// The built-in GitHub source, against a local server standing in for both GitHub hosts.
+const RELEASES_PATH: &str = "/repos/owner/project/releases?per_page=10";
+const LATEST_PATH: &str = "/repos/owner/project/releases/latest";
+const LATEST: &str =
+    r#"{"tag_name": "v0.2.0", "draft": false, "prerelease": false, "body": "Notes."}"#;
+const RELEASE_LIST: &str = r#"[
+    {"tag_name": "v9.0.0", "draft": true, "prerelease": false},
+    {"tag_name": "v0.3.0-rc.1", "draft": false, "prerelease": true, "assets": [{"name": "ignored"}]},
+    {"tag_name": "v0.2.0", "draft": false, "prerelease": false, "body": "Notes GitHub shows."}
+]"#;
+
+fn github_endpoints(port: u16) -> GitHubEndpoints {
+    let leak = |value: String| -> &'static str { Box::leak(value.into_boxed_str()) };
+    GitHubEndpoints {
+        releases: leak(format!("https://127.0.0.1:{port}{RELEASES_PATH}")),
+        latest: leak(format!("https://127.0.0.1:{port}{LATEST_PATH}")),
+        downloads: leak(format!("https://127.0.0.1:{port}/download/")),
+        redirect_hosts: &["127.0.0.1"],
+    }
+}
+
+fn github_client(server: &TestHttpsServer) -> Client {
+    github_client_builder(&["127.0.0.1"], Some(server.port))
+        .add_root_certificate(server.certificate.clone())
+        .build()
+        .unwrap()
+}
+
+fn redirect(location: String) -> TestResponse {
+    TestResponse {
+        status: "302 Found",
+        body: Vec::new(),
+        declared_length: None,
+        extra_headers: vec![("Location", location)],
+    }
+}
+
+fn status(status: &'static str) -> TestResponse {
+    TestResponse {
+        status,
+        body: Vec::new(),
+        declared_length: None,
+        extra_headers: Vec::new(),
+    }
+}
+
+fn github_request(channel: ReleaseChannel, destination: PathBuf) -> ReleaseFetchRequest {
+    let mut request = request(GITHUB_SOURCE.to_owned(), destination);
+    request.expected_channel = channel;
+    request
+}
+
+/// The six release files under `/download/{tag}/`, each redirecting to `/storage/{tag}/`.
+fn redirected_release(fixture: &SignedFixture, tag: &str) -> HashMap<String, TestResponse> {
+    let mut routes = HashMap::from([(LATEST_PATH.to_owned(), TestResponse::ok(LATEST.into()))]);
+    for (path, response) in fixture.routes() {
+        let name = path.trim_start_matches("/stable/");
+        routes.insert(
+            format!("/download/{tag}/{name}"),
+            redirect(format!("/storage/{tag}/{name}")),
+        );
+        routes.insert(format!("/storage/{tag}/{name}"), response);
+    }
+    routes
+}
+
+#[tokio::test]
+async fn github_source_fetches_the_stable_release_through_allowlisted_redirects() {
+    let fixture = SignedFixture::new(ReleaseChannel::Stable);
+    let server = TestHttpsServer::start(redirected_release(&fixture, "v0.2.0"), 13);
+    let parent = tempfile::tempdir().unwrap();
+    let destination = parent.path().join("candidate");
+    let fetched = fetch_release_via(
+        github_request(ReleaseChannel::Stable, destination.clone()),
+        &github_client(&server),
+        &fixture.root_public_key,
+        &github_endpoints(server.port),
+    )
+    .await
+    .unwrap();
+    assert_eq!(fetched.release_version, "0.2.0");
+    assert_eq!(
+        fs::read(
+            destination
+                .join(ARTIFACT_DIRECTORY_NAME)
+                .join(TEST_ARTIFACT_NAME)
+        )
+        .unwrap(),
+        fixture.artifact
+    );
+    let requests = server.finish();
+    assert!(requests[0].starts_with(&format!("GET {LATEST_PATH} HTTP/1.1")));
+    assert!(requests[1].starts_with(&format!("GET /download/v0.2.0/{TRUST_POLICY_FILE_NAME} ")));
+    assert!(requests[2].starts_with(&format!("GET /storage/v0.2.0/{TRUST_POLICY_FILE_NAME} ")));
+    for request in requests {
+        let lower = request.to_ascii_lowercase();
+        assert!(lower.contains("user-agent: sirinvpn-release-fetch/1\r\n"));
+        assert!(!lower.contains("referer:") && !lower.contains("authorization:"));
+    }
+}
+
+#[tokio::test]
+async fn github_source_picks_the_newest_pre_release_for_the_preview_channel() {
+    let fixture = SignedFixture::new(ReleaseChannel::Preview);
+    let mut routes = HashMap::from([(
+        RELEASES_PATH.to_owned(),
+        TestResponse::ok(RELEASE_LIST.into()),
+    )]);
+    for (path, response) in fixture.routes() {
+        routes.insert(path.replace("/stable/", "/download/v0.3.0-rc.1/"), response);
+    }
+    let server = TestHttpsServer::start(routes, 7);
+    let parent = tempfile::tempdir().unwrap();
+    let fetched = fetch_release_via(
+        github_request(ReleaseChannel::Preview, parent.path().join("candidate")),
+        &github_client(&server),
+        &fixture.root_public_key,
+        &github_endpoints(server.port),
+    )
+    .await
+    .unwrap();
+    assert_eq!(fetched.channel, ReleaseChannel::Preview);
+    assert!(server.finish()[1].starts_with("GET /download/v0.3.0-rc.1/"));
+}
+
+async fn github_failure(routes: HashMap<String, TestResponse>, requests: usize) -> FetchError {
+    let fixture = SignedFixture::new(ReleaseChannel::Stable);
+    let server = TestHttpsServer::start(routes, requests);
+    let parent = tempfile::tempdir().unwrap();
+    let destination = parent.path().join("candidate");
+    let error = fetch_release_via(
+        github_request(ReleaseChannel::Stable, destination.clone()),
+        &github_client(&server),
+        &fixture.root_public_key,
+        &github_endpoints(server.port),
+    )
+    .await
+    .unwrap_err();
+    assert!(!destination.exists());
+    assert_no_staging_directory(parent.path());
+    assert_eq!(server.finish().len(), requests);
+    error
+}
+
+fn list_and_first_file(first: TestResponse) -> HashMap<String, TestResponse> {
+    HashMap::from([
+        (LATEST_PATH.to_owned(), TestResponse::ok(LATEST.into())),
+        (format!("/download/v0.2.0/{TRUST_POLICY_FILE_NAME}"), first),
+    ])
+}
+
+fn is_refused_redirect(error: &FetchError) -> bool {
+    matches!(error, FetchError::Request { source, .. } if source.is_redirect())
+}
+
+#[tokio::test]
+async fn github_redirects_to_other_hosts_plain_http_or_too_many_hops_are_refused() {
+    let elsewhere = github_failure(
+        list_and_first_file(redirect(
+            "https://localhost:{PORT}/storage/policy".to_owned(),
+        )),
+        2,
+    )
+    .await;
+    assert!(is_refused_redirect(&elsewhere), "{elsewhere:?}");
+
+    for (label, location) in [
+        ("port", "https://127.0.0.1:1/storage/policy"),
+        (
+            "credentials",
+            "https://user:secret@127.0.0.1:{PORT}/storage/policy",
+        ),
+    ] {
+        let error = github_failure(list_and_first_file(redirect(location.to_owned())), 2).await;
+        assert!(is_refused_redirect(&error), "{label}: {error:?}");
+    }
+
+    let downgrade = github_failure(
+        list_and_first_file(redirect(
+            "http://127.0.0.1:{PORT}/storage/policy".to_owned(),
+        )),
+        2,
+    )
+    .await;
+    assert!(is_refused_redirect(&downgrade), "{downgrade:?}");
+
+    let mut hops = list_and_first_file(redirect("/hop/1".to_owned()));
+    for hop in 1..=3 {
+        hops.insert(format!("/hop/{hop}"), redirect(format!("/hop/{}", hop + 1)));
+    }
+    hops.insert(
+        "/hop/4".to_owned(),
+        TestResponse::ok(b"never reached".to_vec()),
+    );
+    let looping = github_failure(hops, 5).await;
+    assert!(is_refused_redirect(&looping), "{looping:?}");
+}
+
+#[tokio::test]
+async fn github_rate_limits_and_bad_release_lists_fail_with_their_own_errors() {
+    let limited = |answer: &'static str, header: Option<(&'static str, String)>| TestResponse {
+        extra_headers: header.into_iter().collect(),
+        ..status(answer)
+    };
+    for (answer, header, code) in [
+        ("429 Too Many Requests", None, 429),
+        (
+            "403 Forbidden",
+            Some(("x-ratelimit-remaining", "0".to_owned())),
+            403,
+        ),
+        ("403 Forbidden", Some(("Retry-After", "60".to_owned())), 403),
+    ] {
+        let routes = HashMap::from([(LATEST_PATH.to_owned(), limited(answer, header))]);
+        let error = github_failure(routes, 1).await;
+        assert!(matches!(error, FetchError::GitHubRateLimited(c) if c == code));
+        assert_eq!(error.failure(), FetchFailure::RateLimited);
+    }
+    // Any other 403 (a blocked network, a captive portal) is not called a rate limit.
+    let error = github_failure(
+        HashMap::from([(LATEST_PATH.to_owned(), status("403 Forbidden"))]),
+        1,
+    )
+    .await;
+    assert!(
+        matches!(error, FetchError::HttpStatus { status: 403, .. }),
+        "{error:?}"
+    );
+    for body in [
+        r#"{"tag_name": "../../evil", "prerelease": false}"#,
+        r#"{"message": "No tag"}"#,
+        r#"[{"tag_name": "v1.0.0", "prerelease": false}]"#,
+    ] {
+        let error = github_failure(
+            HashMap::from([(LATEST_PATH.to_owned(), TestResponse::ok(body.into()))]),
+            1,
+        )
+        .await;
+        assert!(
+            matches!(error, FetchError::GitHubResponseInvalid),
+            "{error:?}"
+        );
+    }
+    // No full release yet (404), or a "latest" that claims to be a pre-release: nothing to offer.
+    let marked_preview = r#"{"tag_name": "v1.0.0-rc.1", "prerelease": true}"#;
+    for answer in [
+        status("404 Not Found"),
+        TestResponse::ok(marked_preview.into()),
+    ] {
+        let error = github_failure(HashMap::from([(LATEST_PATH.to_owned(), answer)]), 1).await;
+        assert!(matches!(
+            error,
+            FetchError::GitHubReleaseUnavailable(ReleaseChannel::Stable)
+        ));
+        assert_eq!(error.failure(), FetchFailure::NoRelease);
+    }
+}
+
+#[tokio::test]
+async fn github_preview_with_only_full_releases_listed_finds_nothing() {
+    let fixture = SignedFixture::new(ReleaseChannel::Preview);
+    let only_stable = r#"[{"tag_name": "v1.1.0", "prerelease": false}, {"tag_name": "v1.0.0", "prerelease": false}]"#;
+    let server = TestHttpsServer::start(
+        HashMap::from([(
+            RELEASES_PATH.to_owned(),
+            TestResponse::ok(only_stable.into()),
+        )]),
+        1,
+    );
+    let parent = tempfile::tempdir().unwrap();
+    let error = fetch_release_via(
+        github_request(ReleaseChannel::Preview, parent.path().join("candidate")),
+        &github_client(&server),
+        &fixture.root_public_key,
+        &github_endpoints(server.port),
+    )
+    .await
+    .unwrap_err();
+    assert_eq!(error.failure(), FetchFailure::NoRelease);
+    assert_eq!(server.finish().len(), 1);
+}
+
+#[tokio::test]
+async fn an_unreachable_github_reads_as_offline() {
+    let port = {
+        let listener = TcpListener::bind(("127.0.0.1", 0)).unwrap();
+        listener.local_addr().unwrap().port()
+    };
+    let parent = tempfile::tempdir().unwrap();
+    let error = fetch_release_via(
+        github_request(ReleaseChannel::Stable, parent.path().join("candidate")),
+        &github_client_builder(&["127.0.0.1"], Some(port))
+            .build()
+            .unwrap(),
+        &SignedFixture::new(ReleaseChannel::Stable).root_public_key,
+        &github_endpoints(port),
+    )
+    .await
+    .unwrap_err();
+    assert_eq!(error.failure(), FetchFailure::Offline, "{error:?}");
+}
+
+#[test]
+fn only_the_exact_built_in_name_selects_github() {
+    assert_eq!(
+        validate_source_url(GITHUB_SOURCE).unwrap(),
+        ReleaseSource::GitHub
+    );
+    for near in ["GitHub", "github/", " github", "https://github.com/"] {
+        assert!(!matches!(
+            validate_source_url(near),
+            Ok(ReleaseSource::GitHub)
+        ));
+    }
 }

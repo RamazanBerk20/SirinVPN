@@ -1,5 +1,5 @@
 import { ArrowClockwise, CheckCircle, CloudArrowUp, MagnifyingGlass, ShieldCheck, Trash, Warning } from "@phosphor-icons/react";
-import { useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from "react";
 import { api } from "../../api";
 import { CopyButton } from "../../components/CopyButton";
 import { SecretInput } from "../../components/SecretInput";
@@ -68,7 +68,8 @@ export function HetznerFlow({ onComplete, onDone, onStepChange, compact = false 
   // While the server is being created the flow can't be left, so the parent hides its back link.
   const reportedStep = state.kind === "creating" || state.kind === "waiting" ? "installing" : state.kind === "install" ? setupStep : "details";
   useEffect(() => onStepChange?.(reportedStep), [reportedStep, onStepChange]);
-  useEffect(() => {
+  // Layout effect: the guard must track the committed state, not lag it until passive effects flush.
+  useLayoutEffect(() => {
     if (!unresolved) return;
     return registerNavigationGuard(() => !blocking && window.confirm(uncertainName
       ? t("onboarding.hetzner.uncertain.leaveWarning", { name: uncertainName }) : t("onboarding.hetzner.leaveWarning")));

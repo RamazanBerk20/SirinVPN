@@ -39,6 +39,56 @@ const READ_TIMEOUT: Duration = Duration::from_secs(30);
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(15 * 60);
 const USER_AGENT: &str = "SirinVPN-release-fetch/1";
 
+/// The `source` value that selects the built-in source: this project's GitHub Releases.
+pub const GITHUB_SOURCE: &str = "github";
+/// Where the built-in source looks. GitHub's answer only chooses which release folder to try;
+/// everything fetched from that folder is verified exactly like a custom source's files.
+const GITHUB: GitHubEndpoints = GitHubEndpoints {
+    releases: "https://api.github.com/repos/RamazanBerk20/SirinVPN/releases?per_page=10",
+    latest: "https://api.github.com/repos/RamazanBerk20/SirinVPN/releases/latest",
+    downloads: "https://github.com/RamazanBerk20/SirinVPN/releases/download/",
+    redirect_hosts: &[
+        // A renamed or transferred repository answers with a redirect on the API host.
+        "api.github.com",
+        "github.com",
+        "objects.githubusercontent.com",
+        "release-assets.githubusercontent.com",
+    ],
+};
+/// GitHub answers an asset download with one redirect to its storage host.
+const MAX_GITHUB_REDIRECTS: usize = 3;
+const MAX_GITHUB_RELEASE_LIST_BYTES: u64 = 1024 * 1024;
+const MAX_GITHUB_TAG_BYTES: usize = 128;
+
+struct GitHubEndpoints {
+    /// Preview: the newest releases, of which the first pre-release is used.
+    releases: &'static str,
+    /// Stable: GitHub's newest full release, however many pre-releases follow it.
+    latest: &'static str,
+    downloads: &'static str,
+    /// HTTPS redirects are followed only to these hosts, and only for the built-in source.
+    redirect_hosts: &'static [&'static str],
+}
+
+/// A validated `source`: the built-in GitHub source, or a typed HTTPS folder.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum ReleaseSource {
+    GitHub,
+    Directory(Url),
+}
+
+/// Why a fetch failed, coarsely, for callers that word their own messages.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum FetchFailure {
+    /// GitHub refused the release list (HTTP 403 or 429): its hourly limit per IP address.
+    RateLimited,
+    /// No connection, or the source didn't answer in time.
+    Offline,
+    /// GitHub has no published release for the requested channel.
+    NoRelease,
+    Other,
+}
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ReleaseFetchRequest {
     pub source: String,
@@ -125,10 +175,29 @@ pub enum FetchError {
     Io(#[from] io::Error),
     #[error("release authenticity verification failed: {0}")]
     Release(#[from] ReleaseError),
+    #[error("GitHub is limiting release checks from this network (HTTP {0}); try again later")]
+    GitHubRateLimited(u16),
+    #[error("GitHub lists no {0} release")]
+    GitHubReleaseUnavailable(ReleaseChannel),
+    #[error("GitHub's release list is malformed or too large")]
+    GitHubResponseInvalid,
+}
+
+impl FetchError {
+    pub fn failure(&self) -> FetchFailure {
+        match self {
+            Self::GitHubRateLimited(_) => FetchFailure::RateLimited,
+            Self::GitHubReleaseUnavailable(_) => FetchFailure::NoRelease,
+            Self::Request { source, .. } if source.is_connect() || source.is_timeout() => {
+                FetchFailure::Offline
+            }
+            _ => FetchFailure::Other,
+        }
+    }
 }
 
 pub async fn fetch_release(request: ReleaseFetchRequest) -> Result<FetchedRelease, FetchError> {
-    let client = secure_client_builder()
+    let client = client_builder(&validate_source_url(&request.source)?)
         .build()
         .map_err(FetchError::ClientConfiguration)?;
     fetch_release_with_client_and_root(request, &client, BUNDLED_RELEASE_TRUST_ROOT_PEM).await
@@ -165,14 +234,60 @@ fn secure_client_builder() -> reqwest::ClientBuilder {
         .user_agent(USER_AGENT)
 }
 
+/// The one place a source picks its client: only the built-in source may follow redirects.
+fn client_builder(source: &ReleaseSource) -> reqwest::ClientBuilder {
+    match source {
+        ReleaseSource::GitHub => github_client_builder(GITHUB.redirect_hosts, None),
+        ReleaseSource::Directory(_) => secure_client_builder(),
+    }
+}
+
+/// The built-in source's client: as strict as `secure_client_builder`, except that it follows
+/// up to `MAX_GITHUB_REDIRECTS` HTTPS redirects to the listed GitHub hosts.
+/// `port` is the only explicit port allowed: none in production, the mock server's in tests.
+fn github_client_builder(
+    hosts: &'static [&'static str],
+    port: Option<u16>,
+) -> reqwest::ClientBuilder {
+    secure_client_builder().redirect(reqwest::redirect::Policy::custom(move |attempt| {
+        let url = attempt.url();
+        let allowed = url.scheme() == "https"
+            && url.host_str().is_some_and(|host| hosts.contains(&host))
+            && url.port() == port
+            && url.username().is_empty()
+            && url.password().is_none()
+            && attempt.previous().len() <= MAX_GITHUB_REDIRECTS;
+        if allowed {
+            attempt.follow()
+        } else {
+            attempt.error("redirect refused")
+        }
+    }))
+}
+
 async fn fetch_release_with_client_and_root(
     request: ReleaseFetchRequest,
     client: &Client,
     root_public_key_pem: &str,
 ) -> Result<FetchedRelease, FetchError> {
+    fetch_release_via(request, client, root_public_key_pem, &GITHUB).await
+}
+
+async fn fetch_release_via(
+    request: ReleaseFetchRequest,
+    client: &Client,
+    root_public_key_pem: &str,
+    github: &GitHubEndpoints,
+) -> Result<FetchedRelease, FetchError> {
     let source = validate_source_url(&request.source)?;
     validate_artifact_target(&request.artifact_target)?;
     let destination = validate_destination(&request.destination)?;
+    let source = match source {
+        ReleaseSource::Directory(source) => source,
+        ReleaseSource::GitHub => {
+            github_release_directory(client, github, request.expected_channel).await?
+        }
+    };
     let parent = destination.parent().ok_or(FetchError::InvalidDestination)?;
     let staging = TempBuilder::new()
         .prefix(".sirinvpn-release-fetch.")
@@ -301,7 +416,10 @@ async fn fetch_release_with_client_and_root(
     })
 }
 
-pub fn validate_source_url(value: &str) -> Result<Url, FetchError> {
+pub fn validate_source_url(value: &str) -> Result<ReleaseSource, FetchError> {
+    if value == GITHUB_SOURCE {
+        return Ok(ReleaseSource::GitHub);
+    }
     if value.is_empty() || value.len() > MAX_SOURCE_URL_BYTES {
         return Err(FetchError::InvalidSourceUrl);
     }
@@ -322,7 +440,102 @@ pub fn validate_source_url(value: &str) -> Result<Url, FetchError> {
     if !source.path().ends_with('/') {
         return Err(FetchError::SourceIsNotDirectory);
     }
-    Ok(source)
+    Ok(ReleaseSource::Directory(source))
+}
+
+/// The release folder of the newest published GitHub release for `channel`: preview releases
+/// are GitHub pre-releases (the newest of the last ten releases), stable ones the full release
+/// GitHub marks latest. Only the tag name is used, to build the folder URL; the files in it are
+/// then verified like any source's, including the signed channel.
+async fn github_release_directory(
+    client: &Client,
+    github: &GitHubEndpoints,
+    channel: ReleaseChannel,
+) -> Result<Url, FetchError> {
+    #[derive(serde::Deserialize)]
+    struct GitHubRelease {
+        tag_name: String,
+        #[serde(default)]
+        draft: bool,
+        #[serde(default)]
+        prerelease: bool,
+    }
+    let preview = channel == ReleaseChannel::Preview;
+    let wanted = |release: &GitHubRelease| !release.draft && release.prerelease == preview;
+    let tag = if preview {
+        let bytes = github_api(client, github.releases, channel).await?;
+        serde_json::from_slice::<Vec<GitHubRelease>>(&bytes)
+            .map_err(|_| FetchError::GitHubResponseInvalid)?
+            .into_iter()
+            .find(wanted)
+    } else {
+        let bytes = github_api(client, github.latest, channel).await?;
+        Some(
+            serde_json::from_slice::<GitHubRelease>(&bytes)
+                .map_err(|_| FetchError::GitHubResponseInvalid)?,
+        )
+        .filter(wanted)
+    }
+    .ok_or(FetchError::GitHubReleaseUnavailable(channel))?
+    .tag_name;
+    let safe_tag = !tag.is_empty()
+        && tag.len() <= MAX_GITHUB_TAG_BYTES
+        && tag != "."
+        && tag != ".."
+        && tag
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'_' | b'-' | b'+'));
+    if !safe_tag {
+        return Err(FetchError::GitHubResponseInvalid);
+    }
+    Url::parse(github.downloads)
+        .and_then(|base| base.join(&format!("{tag}/")))
+        .map_err(|_| FetchError::InvalidSourceUrl)
+}
+
+/// One bounded GitHub API answer. 429, or 403 with GitHub's rate-limit headers, is a rate
+/// limit; 404 means the repository has no such release.
+async fn github_api(
+    client: &Client,
+    url: &str,
+    channel: ReleaseChannel,
+) -> Result<Vec<u8>, FetchError> {
+    let resource = "GitHub release list";
+    let url = Url::parse(url).map_err(|_| FetchError::InvalidSourceUrl)?;
+    let response = client
+        .get(url)
+        .header(ACCEPT, "application/vnd.github+json")
+        .header(ACCEPT_ENCODING, "identity")
+        .send()
+        .await
+        .map_err(|source| FetchError::Request {
+            resource: resource.to_owned(),
+            source,
+        })?;
+    let status = response.status();
+    let headers = response.headers();
+    let limited = status == StatusCode::TOO_MANY_REQUESTS
+        || (status == StatusCode::FORBIDDEN
+            && (headers
+                .get("x-ratelimit-remaining")
+                .is_some_and(|value| value.as_bytes() == b"0")
+                || headers.contains_key(reqwest::header::RETRY_AFTER)));
+    if limited {
+        return Err(FetchError::GitHubRateLimited(status.as_u16()));
+    }
+    if status == StatusCode::NOT_FOUND {
+        return Err(FetchError::GitHubReleaseUnavailable(channel));
+    }
+    read_bounded(
+        checked_response(response, resource)?,
+        resource,
+        MAX_GITHUB_RELEASE_LIST_BYTES,
+    )
+    .await
+    .map_err(|error| match error {
+        FetchError::ResponseTooLarge { .. } => FetchError::GitHubResponseInvalid,
+        other => other,
+    })
 }
 
 fn validate_artifact_target(value: &str) -> Result<(), FetchError> {
@@ -372,7 +585,19 @@ async fn fetch_bounded(
     resource: &str,
     maximum_bytes: u64,
 ) -> Result<Vec<u8>, FetchError> {
-    let mut response = request(client, url, resource).await?;
+    read_bounded(
+        request(client, url, resource).await?,
+        resource,
+        maximum_bytes,
+    )
+    .await
+}
+
+async fn read_bounded(
+    mut response: reqwest::Response,
+    resource: &str,
+    maximum_bytes: u64,
+) -> Result<Vec<u8>, FetchError> {
     if response
         .content_length()
         .is_some_and(|length| length > maximum_bytes)
@@ -467,6 +692,13 @@ async fn request(
             resource: resource.to_owned(),
             source,
         })?;
+    checked_response(response, resource)
+}
+
+fn checked_response(
+    response: reqwest::Response,
+    resource: &str,
+) -> Result<reqwest::Response, FetchError> {
     if response.status() != StatusCode::OK {
         return Err(FetchError::HttpStatus {
             resource: resource.to_owned(),

@@ -69,6 +69,15 @@ pub fn error_response(error: &anyhow::Error, message: String) -> Value {
 fn typed_code(error: &(dyn std::error::Error + 'static)) -> Option<(&'static str, Value)> {
     use sirinvpn_core::{BackupError, InvitationError, ManagementError, ServerBackupError};
     use sirinvpn_installer::{InstallerError, hetzner::HetznerError};
+    use sirinvpn_release_fetch::{FetchError, FetchFailure};
+    if let Some(error) = error.downcast_ref::<FetchError>() {
+        return match error.failure() {
+            FetchFailure::RateLimited => Some(("release_rate_limited", json!({}))),
+            FetchFailure::Offline => Some(("release_offline", json!({}))),
+            FetchFailure::NoRelease => Some(("release_none", json!({}))),
+            FetchFailure::Other => None,
+        };
+    }
     if let Some(error) = error.downcast_ref::<InstallerError>() {
         return match error {
             InstallerError::PhaseFailed { phase, .. } => {

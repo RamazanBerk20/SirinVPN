@@ -1,7 +1,7 @@
 {
   "dialog": {
     "title": "Uygulama güncellemeleri",
-    "description": "Yalnızca sizin girdiğiniz kaynağa bağlanır ve hiçbir tanımlayıcı göndermez.",
+    "description": "Yalnızca seçilen sürüm kaynağına bağlanır ve hiçbir tanımlayıcı göndermez.",
     "close": "Uygulama güncellemelerini kapat"
   },
   "done": {
@@ -81,15 +81,18 @@
     "source": "Sürüm kaynağı",
     "sourceHint": "SirinVPN sürümlerinizin yayınlandığı HTTPS klasörü. Bir dahaki sefere için bu cihazda kaydedilir.",
     "sourceInfoLabel": "Bunu nereden bulurum?",
-    "sourceInfo": "Sunucunuzu kuran kişiye sorun ya da VPS’inizin güncellemeleri aldığı adresi kullanın (VPS bakımı › VPS yazılımını güncelle). SirinVPN’in yerleşik bir adresi yoktur: yalnızca sizin girdiğiniz adrese bağlanır.",
+    "sourceInfo": "SirinVPN varsayılan olarak GitHub sürümlerini denetler. Özel kaynak, aynı imzalı dosyaları içeren bir HTTPS klasörüdür; örneğin kendi barındırdığınız bir yansı. Size bir kaynak verildiyse sunucunuzu kuran kişiye sorun.",
     "noticeTitle": "Denetim tam güncellemeyi indirir",
     "noticeBody": "İmzalı sürüm bilgileri önce doğrulanır.",
     "checking": "Doğrulanıyor ve indiriliyor…",
     "check": "Sürümü denetle",
-    "privacy": "Kaynak ve ağınız IP adresinizi ve istediğiniz paketi görebilir.",
+    "privacy": "Denetim GitHub’a (api.github.com, github.com ve GitHub’ın indirme sunucuları) ya da özel kaynağınıza bağlanır. Onlar ve ağınız IP adresinizi ve istediğiniz paketi görebilir.",
     "channel": "Sürüm kanalı",
     "previewHint": "Önizleme sürümleri erken çıkar ve daha az kararlı olabilir.",
-    "sourceFirst": "Denetlemek için sürüm kaynağını girin."
+    "sourceFirst": "Denetlemek için sürüm kaynağını girin.",
+    "sourceGitHub": "GitHub’daki SirinVPN sürümleri",
+    "useCustom": "Özel kaynak kullan",
+    "useGitHub": "Yerleşik GitHub kaynağını kullan"
   },
   "error": {
     "discard": "İndirme silinemedi. Tekrar deneyin.",
@@ -97,7 +100,8 @@
     "installWindows": "Windows güncellemesi tamamlanmadı. Tekrar deneyin; kurtarma verileri saklanır.",
     "installAppImage": "AppImage’in değiştirildiği doğrulanamadı. Kontrol etmek için Uygulama güncellemelerini yeniden açın.",
     "installDebian": "Güncelleme tamamlanmadı ve mümkünse geri alındı. Tekrar deneyin.",
-    "bind": "Kurulu sürüm doğrulanamadı. Hiçbir şey değişmedi. Tekrar deneyin."
+    "bind": "Kurulu sürüm doğrulanamadı. Hiçbir şey değişmedi. Tekrar deneyin.",
+    "installAndroid": "Android güncellemesi başlamadı. Yeniden deneyin."
   },
   "recovery": {
     "androidNote": "Android, kurulumları onaylamanızı ister ve sürüm düşürmeyi engelleyebilir.",

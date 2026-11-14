@@ -1,7 +1,7 @@
 {
   "dialog": {
     "title": "Actualizaciones de la aplicación",
-    "description": "Solo contacta con el origen que introduces y no envía ningún identificador.",
+    "description": "Solo contacta con la fuente de versiones elegida y no envía identificadores.",
     "close": "Cerrar actualizaciones de la aplicación"
   },
   "done": {
@@ -81,15 +81,18 @@
     "source": "Origen de las versiones",
     "sourceHint": "La carpeta HTTPS donde se publican tus versiones de SirinVPN. Se guarda en este dispositivo para la próxima vez.",
     "sourceInfoLabel": "¿Dónde encuentro esto?",
-    "sourceInfo": "Pregúntale a quien configuró tu servidor, o usa la dirección desde la que tu VPS se actualiza (Mantenimiento del VPS › Actualizar VPS). SirinVPN no tiene una dirección integrada: solo contacta con la que introduces.",
+    "sourceInfo": "SirinVPN comprueba sus versiones de GitHub de forma predeterminada. Una fuente personalizada es una carpeta HTTPS con los mismos archivos firmados, como un espejo que alojes tú. Pregunta a quien configuró tu servidor si te dio una.",
     "noticeTitle": "La comprobación descarga la actualización completa",
     "noticeBody": "Los metadatos firmados de la versión se verifican primero.",
     "checking": "Verificando y descargando…",
     "check": "Comprobar versión",
-    "privacy": "El origen y tu red pueden ver tu dirección IP y qué paquete solicitas.",
+    "privacy": "Una comprobación contacta con GitHub (api.github.com, github.com y los servidores de descarga de GitHub) o con tu fuente personalizada. Ellos y tu red pueden ver tu dirección IP y el paquete que solicitas.",
     "channel": "Canal de versiones",
     "previewHint": "Las versiones de prueba llegan antes y pueden ser menos estables.",
-    "sourceFirst": "Introduce el origen de las versiones para comprobarlo."
+    "sourceFirst": "Introduce el origen de las versiones para comprobarlo.",
+    "sourceGitHub": "Versiones de SirinVPN en GitHub",
+    "useCustom": "Usar una fuente personalizada",
+    "useGitHub": "Usar la fuente integrada de GitHub"
   },
   "error": {
     "discard": "No se pudo eliminar la descarga. Inténtalo de nuevo.",
@@ -97,7 +100,8 @@
     "installWindows": "La actualización de Windows no terminó. Inténtalo de nuevo; los datos de recuperación se conservan.",
     "installAppImage": "No se pudo confirmar que el AppImage se sustituyó. Vuelve a abrir las actualizaciones de la aplicación para comprobarlo.",
     "installDebian": "La actualización no terminó y se revirtió siempre que fue posible. Inténtalo de nuevo.",
-    "bind": "No se pudo verificar la versión instalada. No se cambió nada. Inténtalo de nuevo."
+    "bind": "No se pudo verificar la versión instalada. No se cambió nada. Inténtalo de nuevo.",
+    "installAndroid": "La actualización de Android no se inició. Vuelve a intentarlo."
   },
   "recovery": {
     "androidNote": "Android te pide que apruebes las instalaciones y puede bloquear las versiones anteriores.",

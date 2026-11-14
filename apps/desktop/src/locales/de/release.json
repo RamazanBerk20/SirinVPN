@@ -1,7 +1,7 @@
 {
   "dialog": {
     "title": "App-Updates",
-    "description": "Kontaktiert nur die Quelle, die du eingibst, und sendet keine Kennungen.",
+    "description": "Kontaktiert nur die gewählte Release-Quelle und sendet keine Kennungen.",
     "close": "App-Updates schließen"
   },
   "done": {
@@ -81,15 +81,18 @@
     "source": "Release-Quelle",
     "sourceHint": "Der HTTPS-Ordner, in dem deine SirinVPN-Releases veröffentlicht werden. Wird für das nächste Mal auf diesem Gerät gespeichert.",
     "sourceInfoLabel": "Wo finde ich das?",
-    "sourceInfo": "Frag bei der Person nach, die deinen Server eingerichtet hat, oder nutze die Adresse, von der dein VPS Updates bezieht (VPS-Wartung › VPS aktualisieren). SirinVPN hat keine eingebaute Adresse: Es kontaktiert nur die, die du eingibst.",
+    "sourceInfo": "SirinVPN prüft standardmäßig seine GitHub-Releases. Eine eigene Quelle ist ein HTTPS-Ordner mit denselben signierten Dateien, etwa ein selbst gehosteter Spiegel. Frag die Person, die deinen Server eingerichtet hat, ob du eine bekommen hast.",
     "noticeTitle": "Die Prüfung lädt das vollständige Update herunter",
     "noticeBody": "Die signierten Release-Daten werden zuerst geprüft.",
     "checking": "Wird geprüft und heruntergeladen…",
     "check": "Release prüfen",
-    "privacy": "Die Quelle und dein Netzwerk können deine IP-Adresse und das angeforderte Paket sehen.",
+    "privacy": "Eine Prüfung kontaktiert GitHub (api.github.com, github.com und die Download-Server von GitHub) oder deine eigene Quelle. Diese und dein Netzwerk können deine IP-Adresse und das angeforderte Paket sehen.",
     "channel": "Release-Kanal",
     "previewHint": "Vorschau-Builds erscheinen früh und sind möglicherweise weniger stabil.",
-    "sourceFirst": "Gib die Release-Quelle ein, um zu prüfen."
+    "sourceFirst": "Gib die Release-Quelle ein, um zu prüfen.",
+    "sourceGitHub": "SirinVPN-Releases auf GitHub",
+    "useCustom": "Eigene Quelle verwenden",
+    "useGitHub": "Integrierte GitHub-Quelle verwenden"
   },
   "error": {
     "discard": "Der Download konnte nicht gelöscht werden. Versuche es erneut.",
@@ -97,7 +100,8 @@
     "installWindows": "Das Windows-Update wurde nicht abgeschlossen. Versuche es erneut; die Wiederherstellungsdaten bleiben erhalten.",
     "installAppImage": "Es konnte nicht bestätigt werden, dass das AppImage ersetzt wurde. Öffne App-Updates, um es zu prüfen.",
     "installDebian": "Das Update wurde nicht abgeschlossen und nach Möglichkeit zurückgesetzt. Versuche es erneut.",
-    "bind": "Die installierte Version konnte nicht geprüft werden. Nichts wurde verändert. Versuche es erneut."
+    "bind": "Die installierte Version konnte nicht geprüft werden. Nichts wurde verändert. Versuche es erneut.",
+    "installAndroid": "Das Android-Update wurde nicht gestartet. Versuch es erneut."
   },
   "recovery": {
     "androidNote": "Android fragt dich, Installationen zu bestätigen, und kann Downgrades blockieren.",

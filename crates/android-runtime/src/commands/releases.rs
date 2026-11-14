@@ -96,6 +96,19 @@ pub async fn dispatch(runtime: &Runtime, command: &str, input: &Value) -> Result
                 candidate["artifact_sha256"] == bundle.verified.artifact.sha256,
                 "The reviewed artifact changed"
             );
+            // Before any state changes: without "install unknown apps" Android refuses the
+            // session, so open that setting and let the user tap Install again.
+            // Only a newer APK reaches Android's installer; binding or an already bound release doesn't.
+            let installs = candidate["newer_than_running"].as_bool() == Some(true)
+                && candidate["baseline_bind_available"].as_bool() != Some(true);
+            if installs && !runtime.platform.ensure_install_permission()? {
+                return Err(rules::CommandError::new(
+                    "android_install_permission",
+                    "Allow SirinVPN to install apps in the Android settings that opened, then install again.",
+                    json!({}),
+                )
+                .into());
+            }
             let store = store(runtime);
             let installed = runtime.platform.installed_apk()?;
             store.apply_trust_policy(&bundle.trust_policy_bytes, &bundle.trust_signature_bytes)?;

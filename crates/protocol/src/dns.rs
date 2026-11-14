@@ -267,11 +267,11 @@ pub(super) fn usable_dns_endpoint_address(address: IpAddr) -> bool {
 }
 
 pub(super) fn valid_dns_authentication_name(name: &str) -> bool {
-    if name.is_empty()
-        || name.len() > 253
-        || name.ends_with('.')
-        || name != name.to_ascii_lowercase()
-        || !name.split('.').all(|label| {
+    !name.is_empty()
+        && name.len() <= 253
+        && !name.ends_with('.')
+        && name == name.to_ascii_lowercase()
+        && name.split('.').all(|label| {
             !label.is_empty()
                 && label.len() <= 63
                 && !label.starts_with('-')
@@ -280,10 +280,6 @@ pub(super) fn valid_dns_authentication_name(name: &str) -> bool {
                     .chars()
                     .all(|character| character.is_ascii_alphanumeric() || character == '-')
         })
-    {
-        return false;
-    }
-    true
 }
 
 pub(super) fn valid_dns_over_https_path(path: &str) -> bool {

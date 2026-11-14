@@ -183,6 +183,14 @@ impl Platform {
             Ok(())
         })
     }
+    /// True when Android lets this app install packages; otherwise opens that setting.
+    pub fn ensure_install_permission(&self) -> Result<bool> {
+        self.with_env(|env| {
+            Ok(env
+                .call_method(&self.object, "ensureInstallPermission", "()Z", &[])?
+                .z()?)
+        })
+    }
     pub fn abandon_apk(&self) -> Result<()> {
         self.with_env(|env| {
             env.call_method(&self.object, "abandonApk", "()V", &[])?;

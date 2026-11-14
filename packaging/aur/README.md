@@ -18,7 +18,7 @@ After publishing a release, run `scripts/update-aur-checksums.sh`: it fills the
 `makepkg --printsrcinfo`. Build-test each package, then push `PKGBUILD`,
 `.SRCINFO` and `sirinvpn.install` to its AUR repository. Never publish a
 placeholder checksum. The full sequence is in
-[the release checklist](../../docs/release-checklist-1.0.0-rc.1.md).
+[the release checklist](../../docs/release-checklist-1.0.0-rc.2.md).
 
 ## Installing over a hand-installed helper
 

@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::Parser;
 use sirinvpn_release::{ArtifactKind, ReleaseChannel};
-use sirinvpn_release_fetch::{ReleaseFetchRequest, fetch_release};
+use sirinvpn_release_fetch::{FetchError, FetchFailure, ReleaseFetchRequest, fetch_release};
 use std::path::PathBuf;
 
 #[derive(Parser)]
@@ -11,7 +11,8 @@ use std::path::PathBuf;
     about = "Fetch one root-authorized SirinVPN release artifact over bounded HTTPS"
 )]
 struct Cli {
-    /// HTTPS directory containing the four fixed metadata files, optional signed notes and artifacts.
+    /// `github` for this project's GitHub Releases, or an HTTPS directory containing the four
+    /// fixed metadata files, optional signed notes and artifacts.
     #[arg(long)]
     source: String,
     #[arg(long, default_value = "stable")]
@@ -34,7 +35,16 @@ struct Cli {
 async fn main() {
     if let Err(error) = run().await {
         eprintln!("{error:#}");
-        std::process::exit(1);
+        // The desktop app words its own message from the exit status: 3 rate limited, 4 offline,
+        // 5 no release for the channel.
+        std::process::exit(
+            match error.downcast_ref::<FetchError>().map(FetchError::failure) {
+                Some(FetchFailure::RateLimited) => 3,
+                Some(FetchFailure::Offline) => 4,
+                Some(FetchFailure::NoRelease) => 5,
+                _ => 1,
+            },
+        );
     }
 }
 

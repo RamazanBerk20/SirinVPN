@@ -299,7 +299,7 @@ fn parse_listeners(text: &str, state: &str) -> Option<Vec<(IpAddr, u16)>> {
         let mut address = hex::decode(address).ok()?;
         // Linux exposes each native-endian 32-bit address word in hexadecimal.
         if cfg!(target_endian = "little") {
-            for word in address.chunks_exact_mut(4) {
+            for word in address.as_chunks_mut::<4>().0 {
                 word.reverse();
             }
         }

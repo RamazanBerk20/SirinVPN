@@ -117,6 +117,20 @@ if printf '%s\n' \
   exit 1
 fi
 
+# The built-in update source: this repository's GitHub Releases, contacted only when
+# the user checks for updates. Its tests use a loopback mock.
+GITHUB_RELEASES='release-fetch/src/lib[.]rs:[0-9]+:    (releases: "https://api[.]github[.]com/repos/RamazanBerk20/SirinVPN/releases[?]per_page=10"|latest: "https://api[.]github[.]com/repos/RamazanBerk20/SirinVPN/releases/latest"|downloads: "https://github[.]com/RamazanBerk20/SirinVPN/releases/download/"),$'
+GITHUB_RELEASE_FIXTURES='release-fetch/src/tests[.]rs:[0-9]+:.*"(https?://((user:secret@)?127[.]0[.]0[.]1|localhost)[:/]|https://github[.]com/")'
+if printf '%s\n' \
+  'release-fetch/src/lib.rs:1:    releases: "https://api.github.com/repos/attacker/SirinVPN/releases?per_page=10",' \
+  'release-fetch/src/lib.rs:1:    downloads: "https://github.com.attacker.test/RamazanBerk20/SirinVPN/releases/download/",' \
+  'core/src/lib.rs:1:    downloads: "https://github.com/RamazanBerk20/SirinVPN/releases/download/",' \
+  'release-fetch/src/tests.rs:1:        redirect("https://objects.attacker.test/storage".to_owned())' \
+  | rg -q "$GITHUB_RELEASES|$GITHUB_RELEASE_FIXTURES"; then
+  echo "privacy check failed: GitHub release URL exception accepted another location" >&2
+  exit 1
+fi
+
 # VPS alerts go only to addresses the Owner enters. The URL-validation and delivery tests
 # use reserved names, loopback, private and fixed example IP literals.
 ALERT_FIXTURES='(protocol/src/alerts[.]rs|server/src/(alerts/tests|tests/member_lifecycle/alerts|authorization/tests/ownership_transfer_is_atomic_and_keeps_a_single_owner)[.]rs|features/settings/VpsAlertSettings[.]test[.]tsx):[0-9]+:.*"https?://(user:pass@)?((([a-z]+[.])+example|([a-z]+[.])?localhost|ntfy|[0-9.]+|[0-9a-f:]+|\[[0-9a-f:.]+\]|\[[a-z.]+\])[:/]|/)'
@@ -147,7 +161,7 @@ URL_MATCHES=$(rg -n -g '!THIRD-PARTY-NOTICES' 'https?://' \
   "$DESKTOP_DIR/src-tauri/src" || true)
 # These URL-validation fixtures use a reserved .example domain. Production
 # release destinations still come only from explicit user input.
-UNEXPECTED_URLS=$(printf '%s\n' "$URL_MATCHES" | rg -v "$NON_NETWORK_URLS" | rg -v "$DNS_BLOCKLISTS" | rg -v "$DNS_BLOCKLIST_FIXTURES" | rg -v "$HETZNER_API" | rg -v "$HETZNER_FIXTURES" | rg -v "$SPONSOR_PAGE" | rg -v "$ALERT_FIXTURES" | rg -v 'windows-service/src/wireguard.rs:[0-9]+://! ABI source: https://git[.]zx2c4[.]com/wireguard-nt/tree/api/wireguard[.]h$' | rg -v '(features/settings/VpsUpdateDialog.test.tsx|installer/src/release_update/tests.rs|server/src/release_update/policy/tests.rs):[0-9]+:.*https?://(user:pass@)?releases[.]example/' | rg -v 'src/format.ts:[0-9]+:      const address = new URL\(`http://\[\$\{host\}\]`\).hostname;$' | rg -v \
+UNEXPECTED_URLS=$(printf '%s\n' "$URL_MATCHES" | rg -v "$NON_NETWORK_URLS" | rg -v "$DNS_BLOCKLISTS" | rg -v "$DNS_BLOCKLIST_FIXTURES" | rg -v "$HETZNER_API" | rg -v "$HETZNER_FIXTURES" | rg -v "$GITHUB_RELEASES" | rg -v "$GITHUB_RELEASE_FIXTURES" | rg -v "$SPONSOR_PAGE" | rg -v "$ALERT_FIXTURES" | rg -v 'windows-service/src/wireguard.rs:[0-9]+://! ABI source: https://git[.]zx2c4[.]com/wireguard-nt/tree/api/wireguard[.]h$' | rg -v '(features/settings/VpsUpdateDialog.test.tsx|installer/src/release_update/tests.rs|server/src/release_update/policy/tests.rs):[0-9]+:.*https?://(user:pass@)?releases[.]example/' | rg -v 'src/format.ts:[0-9]+:      const address = new URL\(`http://\[\$\{host\}\]`\).hostname;$' | rg -v \
   'features/devices/demoDevices[.]ts:[0-9]+:const qr = .<svg xmlns="http://www[.]w3[.]org/2000/svg" viewBox="0 0 21 21">|management.rs:.*https://\{\}:8443|installer/src/lib.rs:.*https://\{SERVER_TUNNEL_ADDRESS\}|freedesktop.org/standards/PolicyKit|src/assets/mountains.svg:1:<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 660" fill="none">$|core/src/management/tests.rs:[0-9]+:.*format!\("https://\{address\}"\)|core/src/management/status_stream/tests.rs:[0-9]+:.*format!\("https://\{\}", listener.local_addr\(\).unwrap\(\)\)' || true)
 if [ -n "$UNEXPECTED_URLS" ]; then
   printf '%s\n' "$UNEXPECTED_URLS" >&2

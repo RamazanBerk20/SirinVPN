@@ -6,7 +6,7 @@
 # release's SHA256SUMS and must equal the sha256 the release's signed manifest
 # declares. The source archive and LICENSE are GitHub-generated, so they are
 # downloaded and hashed here. Verify the manifest's signature separately
-# (docs/release-checklist-1.0.0-rc.1.md); this script only binds the AUR sums
+# (docs/release-checklist-1.0.0-rc.2.md); this script only binds the AUR sums
 # to its contents.
 set -euo pipefail
 

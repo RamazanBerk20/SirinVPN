@@ -189,7 +189,7 @@ pub(crate) async fn check_release_update(
     app: tauri::AppHandle,
     runtime: State<'_, ReleaseUpdateRuntime>,
     input: CheckReleaseUpdateInput,
-) -> Result<ReleaseUpdateCandidate, String> {
+) -> Result<ReleaseUpdateCandidate, crate::command_error::CommandError> {
     validate_source_input(&input.source)?;
     let fetcher = super::resolve_binary(
         "SIRINVPN_RELEASE_FETCH_PATH",
@@ -213,7 +213,7 @@ pub(crate) async fn check_release_update(
         Ok(outcome) => outcome,
         Err(_) => {
             runtime.complete_check(None)?;
-            return Err("The update check was interrupted. Try again.".to_owned());
+            return Err("The update check was interrupted. Try again.".into());
         }
     };
 
@@ -225,7 +225,7 @@ pub(crate) async fn check_release_update(
             }
             Err(error) => {
                 runtime.complete_check(None)?;
-                Err(error)
+                Err(error.into())
             }
         },
         Err(error) => {
@@ -401,6 +401,9 @@ impl ReleaseUpdateRuntime {
 }
 
 fn validate_source_input(source: &str) -> Result<(), String> {
+    if source == sirinvpn_release_fetch::GITHUB_SOURCE {
+        return Ok(());
+    }
     if source.is_empty()
         || source.len() > MAX_SOURCE_BYTES
         || source.trim() != source
@@ -426,7 +429,7 @@ fn fetch_candidate(
     channel: String,
     artifact_target: String,
     appimage: Option<appimage::Context>,
-) -> Result<PendingReleaseUpdate, String> {
+) -> Result<PendingReleaseUpdate, crate::command_error::CommandError> {
     let temporary_directory = TempBuilder::new()
         .prefix("sirinvpn-desktop-release.")
         .tempdir()
@@ -460,10 +463,7 @@ fn fetch_candidate(
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
         .stderr(Stdio::null());
-    let output = successful_bounded_output(
-        command,
-        "No verified release for this device was found at this source. Check the URL and channel.",
-    )?;
+    let output = fetch_output(command)?;
     let fetched = parse_fetch_output_kind(
         &output,
         &destination,
@@ -483,31 +483,53 @@ fn fetch_candidate(
     })
 }
 
-fn successful_bounded_output(mut command: Command, failure: &str) -> Result<Vec<u8>, String> {
-    let mut child = command.spawn().map_err(|_| failure.to_owned())?;
+/// The fetcher's output, or an error coded from its exit status (see its `main`).
+fn fetch_output(command: Command) -> Result<Vec<u8>, crate::command_error::CommandError> {
+    use crate::command_error::CommandError;
+    let failure =
+        "No verified release for this device was found at this source. Check the URL and channel.";
+    successful_bounded_output(command).map_err(|status| match status {
+        Some(3) => CommandError::coded(
+            "release_rate_limited",
+            "GitHub is limiting update checks from this network. Try again later.",
+            serde_json::Value::Null,
+        ),
+        Some(4) => CommandError::coded(
+            "release_offline",
+            "The release source couldn’t be reached. Check your internet connection.",
+            serde_json::Value::Null,
+        ),
+        Some(5) => CommandError::coded(
+            "release_none",
+            "GitHub has no published release for this channel yet.",
+            serde_json::Value::Null,
+        ),
+        _ => failure.into(),
+    })
+}
+
+/// Err carries the exit code of a fetcher that ran and failed, or None.
+fn successful_bounded_output(mut command: Command) -> Result<Vec<u8>, Option<i32>> {
+    let mut child = command.spawn().map_err(|_| None)?;
     let Some(stdout) = child.stdout.take() else {
         let _ = child.kill();
         let _ = child.wait();
-        return Err(failure.to_owned());
+        return Err(None);
     };
     let mut output = Vec::new();
     if stdout
         .take(MAX_FETCH_OUTPUT_BYTES + 1)
         .read_to_end(&mut output)
         .is_err()
+        || output.len() as u64 > MAX_FETCH_OUTPUT_BYTES
     {
         let _ = child.kill();
         let _ = child.wait();
-        return Err(failure.to_owned());
+        return Err(None);
     }
-    if output.len() as u64 > MAX_FETCH_OUTPUT_BYTES {
-        let _ = child.kill();
-        let _ = child.wait();
-        return Err(failure.to_owned());
-    }
-    let status = child.wait().map_err(|_| failure.to_owned())?;
+    let status = child.wait().map_err(|_| None)?;
     if !status.success() {
-        return Err(failure.to_owned());
+        return Err(status.code());
     }
     Ok(output)
 }
@@ -903,9 +925,24 @@ mod tests {
     #[test]
     fn source_input_is_bounded_and_not_normalized_implicitly() {
         assert!(validate_source_input(&test_source("stable/")).is_ok());
+        assert!(validate_source_input(sirinvpn_release_fetch::GITHUB_SOURCE).is_ok());
+        assert!(validate_source_input("GitHub").is_err());
         assert!(validate_source_input(&format!(" {}", test_source("stable/"))).is_err());
         assert!(validate_source_input(&test_source("stable")).is_err());
         assert!(validate_source_input(&"x".repeat(MAX_SOURCE_BYTES + 1)).is_err());
+    }
+
+    #[test]
+    fn fetcher_exit_status_names_rate_limits_and_lost_connections() {
+        let code = |status: &str| {
+            let mut command = Command::new("/bin/sh");
+            command.args(["-c", &format!("exit {status}")]).stdout(Stdio::piped());
+            serde_json::to_value(fetch_output(command).unwrap_err()).unwrap()
+        };
+        assert_eq!(code("3")["code"], "release_rate_limited");
+        assert_eq!(code("4")["code"], "release_offline");
+        assert_eq!(code("5")["code"], "release_none");
+        assert!(code("1").is_string());
     }
 
     #[test]

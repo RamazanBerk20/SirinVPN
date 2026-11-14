@@ -34,6 +34,11 @@ impl CommandError {
         }
     }
 
+    #[cfg(windows)]
+    pub(crate) fn has_code(&self) -> bool {
+        self.code.is_some()
+    }
+
     pub(crate) fn into_message(self) -> String {
         self.message
     }
@@ -133,6 +138,16 @@ fn code_of(error: &(dyn Error + 'static)) -> Option<(&'static str, Value)> {
     use sirinvpn_core::{BackupError, ServerBackupError};
     use sirinvpn_core::{EndpointTransitionError as Endpoint, KeyRotationError as Rotation};
     let none = || json!({});
+    #[cfg(not(target_os = "android"))]
+    if let Some(error) = error.downcast_ref::<sirinvpn_release_fetch::FetchError>() {
+        use sirinvpn_release_fetch::FetchFailure;
+        return match error.failure() {
+            FetchFailure::RateLimited => Some(("release_rate_limited", none())),
+            FetchFailure::Offline => Some(("release_offline", none())),
+            FetchFailure::NoRelease => Some(("release_none", none())),
+            FetchFailure::Other => None,
+        };
+    }
     if let Some(error) = error.downcast_ref::<InstallerError>() {
         return match error {
             InstallerError::PhaseFailed { phase, .. } => {

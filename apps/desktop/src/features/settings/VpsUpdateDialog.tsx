@@ -15,7 +15,7 @@ import type { InspectedSshHost } from "../../hooks/useSshHostTrust";
 import { SshLoginFields } from "./SshLoginFields";
 import { SshHostVerification } from "./SshHostVerification";
 import type { ServerProfile, SshCredentials } from "../../types";
-import { completeReleaseSource, rememberAppReleaseSource, rememberedReleaseSource, rememberReleaseSource, validReleaseSource, type VpsBaselineCandidate, type VpsReleaseCandidate, type VpsReleaseOperation, type VpsReleaseStatus } from "./vpsRelease";
+import { completeReleaseSource, GITHUB_RELEASE_SOURCE, installedChannel, releaseSourceLabel, rememberAppReleaseSource, rememberedReleaseSource, rememberReleaseSource, validReleaseSource, type VpsBaselineCandidate, type VpsReleaseCandidate, type VpsReleaseOperation, type VpsReleaseStatus } from "./vpsRelease";
 import { SettingsDisclosure } from "./SettingsParts";
 
 /** What the VPS reported about its release; unknown until read, or when a legacy VPS can't say. */
@@ -48,7 +48,7 @@ export function VpsUpdateDialog({ profile, open, onOpenChange, disconnected, onC
   // A folder address typed without its trailing "/" still counts; the field shows it once left.
   const source = completeReleaseSource(sourceText);
   const [editingSource, setEditingSource] = useState(false);
-  const [channel, setChannel] = useState<"stable" | "preview">("stable");
+  const [channel, setChannel] = useState<"stable" | "preview">(installedChannel);
   const [automatic, setAutomatic] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [verifying, setVerifying] = useState(false);
@@ -80,7 +80,7 @@ export function VpsUpdateDialog({ profile, open, onOpenChange, disconnected, onC
     resetOperation();
     setReleaseStatus({ kind: "unknown" }); setReview({ kind: "none" }); setSource(rememberedReleaseSource(profile.id)); typedSource.current = false;
     void api.discardVpsBaseline(profile.id).catch(() => {});
-    setChannel("stable"); setAutomatic(false); setVerifying(false);
+    setChannel(installedChannel); setAutomatic(false); setVerifying(false);
     setBusy(null); setOutcome({ kind: "none" });
     setEditingSource(false); setScheduleOutcome({ kind: "none" });
   }, [open, profile.id, resetOperation]);
@@ -140,7 +140,7 @@ export function VpsUpdateDialog({ profile, open, onOpenChange, disconnected, onC
     if (signedIn.status) {
       showStatus(signedIn.status);
       setSource(signedIn.status.security_updates.source ?? rememberedReleaseSource(profile.id));
-      setChannel(signedIn.status.release.installed?.channel ?? "stable");
+      setChannel(signedIn.status.release.installed?.channel ?? installedChannel);
     } else {
       setReleaseStatus({ kind: "unknown" });
       fail(epoch, signedIn.error, t("vps.update.error.status"), () => void retryStatus());
@@ -363,11 +363,12 @@ export function VpsUpdateDialog({ profile, open, onOpenChange, disconnected, onC
           </section>}
           <fieldset className="ssh-operation-fields" disabled={working}>
             <section className="update-section">
-              {!configured || editingSource || !source ? <>
+              {(!configured && source !== GITHUB_RELEASE_SOURCE) || editingSource || !source ? <>
                 <Field label={t("vps.update.source.label")} hint={t("vps.update.source.help")} error={sourceError}>
-                  <input type="url" value={sourceText} placeholder={t("vps.update.source.placeholder")} autoCapitalize="none" spellCheck={false} onChange={(event) => { setSource(event.target.value); typedSource.current = true; clearReview(); }} onBlur={() => setSource(source)} />
+                  <input type="url" value={sourceText === GITHUB_RELEASE_SOURCE ? "" : sourceText} placeholder={t("vps.update.source.placeholder")} autoCapitalize="none" spellCheck={false} onChange={(event) => { setSource(event.target.value); typedSource.current = true; clearReview(); }} onBlur={() => setSource(source)} />
                 </Field>
-              </> : <div className="update-source-saved"><span>{t("vps.update.source.label")}</span><p>{source}</p><button type="button" className="text-button" onClick={() => setEditingSource(true)}>{t("vps.update.source.change")}</button></div>}
+                <button type="button" className="text-button" onClick={() => { setSource(GITHUB_RELEASE_SOURCE); setEditingSource(false); clearReview(); }}>{t("release.form.useGitHub")}</button>
+              </> : <div className="update-source-saved"><span>{t("vps.update.source.label")}</span><p>{releaseSourceLabel(source)}</p><button type="button" className="text-button" onClick={() => setEditingSource(true)}>{t("vps.update.source.change")}</button></div>}
               <Field label={t("vps.update.channel.label")} hint={channel === "preview" ? t("vps.update.channel.previewHint") : undefined}>
                 <select value={channel} onChange={(event) => { setChannel(event.target.value as typeof channel); clearReview(); }}><option value="stable">{t("vps.update.channel.stable")}</option><option value="preview">{t("vps.update.channel.preview")}</option></select>
               </Field>
@@ -379,7 +380,7 @@ export function VpsUpdateDialog({ profile, open, onOpenChange, disconnected, onC
                   disabled={!automatic && (!configured || !sourceValid)}
                   onChange={(event) => void saveSchedule(event.target.checked)} />
               </label>
-              {sourceDiffers && <p className="settings-note">{t("vps.update.schedule.otherSource", { source: savedSchedule!.source! })}{" "}
+              {sourceDiffers && <p className="settings-note">{t("vps.update.schedule.otherSource", { source: releaseSourceLabel(savedSchedule!.source!) })}{" "}
                 <button type="button" className="text-button" onClick={() => void saveSchedule(true)}>{t("vps.update.schedule.useSource")}</button></p>}
               {scheduleOutcome.kind === "failed" && <InlineError message={scheduleOutcome.message} onRetry={() => void saveSchedule(scheduleOutcome.requested)} retryDisabled={working} />}
               {scheduleOutcome.kind === "done" && <p className="update-saved" role="status"><Check size={16} weight="bold" />{scheduleOutcome.message}</p>}

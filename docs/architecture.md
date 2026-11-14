@@ -415,8 +415,11 @@ Signed release transitions require compatible readers in both directions, exact
 artifact authentication and monotonic policy/release high watermarks. Linux
 Debian updates use an offline root-owned package transaction with authenticated
 rollback; Windows uses a protected installer worker and service health check.
-The unprivileged fetcher has no default source and runs only after an explicit
-client request. AppImage replacement uses the private signed client transaction.
+The unprivileged fetcher runs only after an explicit client request. Its
+default source is this project's GitHub Releases: GitHub's release list only
+picks the release folder (the newest pre-release for preview, full release for
+stable), redirects are followed only to fixed GitHub hosts, and every file is
+verified as from a typed HTTPS source, which remains available. AppImage replacement uses the private signed client transaction.
 See [release ownership](releases.md).
 
 [VPS signed updates](signed-vps-updates-2026-09-06.md) use a separate executable

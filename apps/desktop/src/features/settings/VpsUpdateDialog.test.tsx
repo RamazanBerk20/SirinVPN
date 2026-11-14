@@ -4,7 +4,7 @@ import { api } from "../../api";
 import type { ServerProfile } from "../../types";
 import { VpsUpdateDialog } from "./VpsUpdateDialog";
 import { t } from "../../i18n";
-import { rememberedAppReleaseSource, type VpsReleaseCandidate, type VpsReleaseStatus } from "./vpsRelease";
+import { GITHUB_RELEASE_SOURCE, rememberedAppReleaseSource, type VpsReleaseCandidate, type VpsReleaseStatus } from "./vpsRelease";
 
 vi.mock("../../api", () => ({ api: {
   getSshLogin: vi.fn(), saveSshLogin: vi.fn(), forgetSshLogin: vi.fn(), inspectSshHost: vi.fn(), trustSshHost: vi.fn(),
@@ -137,9 +137,11 @@ it("prepares a first baseline for a legacy VPS and waits for its separate instal
   fireEvent.click(agent);
   fireEvent.click(screen.getByRole("button", { name: t("common.action.continue") }));
   await screen.findByText(t("vps.update.description.setup"));
-  fireEvent.change(screen.getByLabelText(new RegExp(`^${t("vps.update.source.label")}`)), { target: { value: source } });
+  // The built-in GitHub source is the default; nothing to type.
+  expect(screen.getByText(t("release.form.sourceGitHub"))).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: t("vps.update.action.verify") }));
   const install = await screen.findByRole("button", { name: t("vps.update.action.installAndFinish") });
+  expect(api.prepareVpsBaseline).toHaveBeenCalledWith(expect.objectContaining({ source: GITHUB_RELEASE_SOURCE }));
   expect(api.installVpsBaseline).not.toHaveBeenCalled();
   fireEvent.click(install);
   await screen.findByText(t("vps.update.done.setUp", { version: "1.0.2" }));
@@ -287,8 +289,9 @@ it("remembers only a verified source for this VPS and never carries it to anothe
   const agent = await screen.findByRole("button", { name: t("ssh.auth.agent") });
   await waitFor(() => expect(agent.matches(":disabled")).toBe(false));
   fireEvent.click(agent); fireEvent.click(screen.getByRole("button", { name: t("common.action.continue") }));
-  const input = await screen.findByRole("textbox", { name: new RegExp(`^${t("vps.update.source.label")}`) });
-  expect((input as HTMLInputElement).value).toBe("");
+  // Another server starts from the built-in default, not this one's source.
+  expect(await screen.findByText(t("release.form.sourceGitHub"))).toBeTruthy();
+  expect(screen.queryByText(source)).toBeNull();
 });
 
 it("does not claim installation when the VPS cannot confirm the reviewed version", async () => {
@@ -306,7 +309,8 @@ it("gives the app's own source only an address typed here, never the one the VPS
   await setup();
   fireEvent.click(screen.getByRole("button", { name: t("vps.update.action.check") }));
   await screen.findByRole("button", { name: t("vps.update.action.install", { version: "1.0.2" }) });
-  expect(rememberedAppReleaseSource()).toBe("");
+  // Nothing typed here: the app keeps its built-in default.
+  expect(rememberedAppReleaseSource()).toBe(GITHUB_RELEASE_SOURCE);
   cleanup();
   vi.mocked(api.manageVpsRelease).mockImplementation(async ({ operation }) => operation.action === "check" ? candidate
     : { ...status, security_updates: { ...status.security_updates, source: null } });

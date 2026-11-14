@@ -1,6 +1,7 @@
 import { defineConfig, type Plugin } from "vitest/config";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
+import { version as appVersion } from "./package.json";
 
 // Vitest loads a fresh module graph for every test file, and the icon barrel alone is
 // about 4,500 modules (1.6 s per file). Tests import each icon's own module instead.
@@ -21,6 +22,8 @@ function iconsPerModule(): Plugin {
 export default defineConfig(({ mode }) => ({
   plugins: [react(), tailwindcss(), mode === "test" ? iconsPerModule() : null],
   clearScreen: false,
+  // The installed version picks the default update channel: a prerelease installs from preview.
+  define: { __APP_VERSION__: JSON.stringify(appVersion) },
   server: {
     port: 1420,
     strictPort: true,

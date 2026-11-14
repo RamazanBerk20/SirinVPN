@@ -14,14 +14,14 @@ in the same app.
 There is no SirinVPN account or hosted control service. The clients communicate
 directly with your VPS, with no built-in analytics or traffic-history database.
 
-**Version 1.0 release candidate 1** · `1.0.0-rc.1` · [AGPL-3.0-only](LICENSE)
+**Version 1.0 release candidate 2** · `1.0.0-rc.2` · [AGPL-3.0-only](LICENSE)
 
-This is the first public release candidate, a preview for testing before 1.0.
-Linux packages (Debian `.deb` and AppImage) and the VPS server are published,
-signed, with the [GitHub pre-release](https://github.com/RamazanBerk20/SirinVPN/releases/tag/v1.0.0-rc.1),
+This is the second public release candidate, a preview for testing before 1.0.
+Linux packages (Debian `.deb` and AppImage), an Android APK and the VPS server are
+published, signed, with the [GitHub pre-release](https://github.com/RamazanBerk20/SirinVPN/releases/tag/v1.0.0-rc.2),
 and Arch Linux users can install `sirinvpn`, `sirinvpn-bin` or `sirinvpn-git`
-from the AUR. Windows and Android have no release packages yet.
-See the [release notes](docs/release-notes-1.0.0-rc.1.md).
+from the AUR. Windows has no release package yet.
+See the [release notes](docs/release-notes-1.0.0-rc.2.md).
 
 [Getting started](#getting-started) · [Install](#install) · [Build from source](#build-from-source) ·
 [Platform status](#platform-status) · [Documentation](#documentation)
@@ -158,23 +158,32 @@ first screen: it runs on sample data, contacts nothing, saves nothing, and
 
 ## Install
 
-The 1.0.0-rc.1 pre-release is the first published version. Linux on x86_64 is the
+The current version is the 1.0.0-rc.2 pre-release. Linux on x86_64 is the
 tested path.
 
-- **Debian and Ubuntu:** download `SirinVPN_1.0.0-rc.1_amd64.deb` from the
-  [release page](https://github.com/RamazanBerk20/SirinVPN/releases/tag/v1.0.0-rc.1)
-  and install it with `sudo apt install ./SirinVPN_1.0.0-rc.1_amd64.deb`. It brings the
+- **Debian and Ubuntu:** download `SirinVPN_1.0.0-rc.2_amd64.deb` from the
+  [release page](https://github.com/RamazanBerk20/SirinVPN/releases/tag/v1.0.0-rc.2)
+  and install it with `sudo apt install ./SirinVPN_1.0.0-rc.2_amd64.deb`. It brings the
   app, CLI, privileged helper, Polkit policy and systemd units.
-- **AppImage:** `SirinVPN_1.0.0-rc.1_amd64.AppImage`, the same app as a portable file.
+- **AppImage:** `SirinVPN_1.0.0-rc.2_amd64.AppImage`, the same app as a portable file.
+- **Android 12+:** `SirinVPN_1.0.0-rc.2_android.apk` (ARM64 and x86_64 in one APK),
+  published for testing. Uninstall a development build first: it has another signer.
 - **Arch Linux (AUR):** `sirinvpn` (built from the release source), `sirinvpn-bin`
   (the release `.deb`, repackaged) or `sirinvpn-git` (the latest source). They conflict
   with each other, so install one. Updates are left to pacman. If you ever ran
   `install-system` by hand, see the one-time `--overwrite` note in the
-  [release notes](docs/release-notes-1.0.0-rc.1.md#known-limitations).
+  [rc.1 release notes](docs/release-notes-1.0.0-rc.1.md#known-limitations).
 - **Check a download:** the release lists a signed manifest and `SHA256SUMS`; the
-  [release notes](docs/release-notes-1.0.0-rc.1.md) show the commands and the root key ID.
-- **Windows and Android:** no installer or APK is published yet. Build them
-  yourself (below); neither is qualified for everyday use.
+  [release notes](docs/release-notes-1.0.0-rc.2.md) show the commands and the root key ID.
+- **Updates:** Settings › General › App updates › Check release finds the newest
+  signed release for your channel on this project's GitHub Releases, verifies it
+  against the offline root key and installs it in the app (Debian package, AppImage,
+  Android; AUR installs update through pacman). It runs only when you ask, contacts
+  api.github.com, github.com and GitHub's download servers (which see your IP
+  address), and can use your own HTTPS mirror instead. 1.0.0-rc.1 installs must
+  update once by hand.
+- **Windows:** no installer is published yet. Build it yourself (below); it is not
+  qualified for everyday use.
 
 ## Build from source
 
@@ -213,7 +222,7 @@ development server alone does not install them.
 
 ### Android
 
-Android builds require JDK 17, Android SDK 36, NDK `30.0.16248370`, Go 1.27.3,
+Android builds require JDK 17, Android SDK 36, NDK `30.0.16248370`, Go 1.27.4,
 the Android Rust targets, and both bundled VPS server payloads. Follow the
 [Android build guide](docs/android/build-and-test.md) to prepare those inputs.
 With them in place:
@@ -298,7 +307,7 @@ codes, keys, passwords, backups, or private VPS details.
 - [Interface text and localization](docs/ui-text.md) — writing guide and how to add a language
 - [Windows integration](docs/windows-integration-2026-09-07.md)
 - [Hetzner VPS creation](docs/hetzner-vps-creation.md) — one-click servers with a pre-pinned SSH host key
-- [Release notes for 1.0.0-rc.1](docs/release-notes-1.0.0-rc.1.md) and the [signed release design](docs/releases.md)
+- [Release notes for 1.0.0-rc.2](docs/release-notes-1.0.0-rc.2.md) (and [1.0.0-rc.1](docs/release-notes-1.0.0-rc.1.md)) and the [signed release design](docs/releases.md)
 
 ## Support
 

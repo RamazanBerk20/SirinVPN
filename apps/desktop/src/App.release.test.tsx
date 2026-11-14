@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { installedChannel } from "./features/settings/vpsRelease";
 import {
   cleanup,
   fireEvent,
@@ -103,8 +104,8 @@ describe("Desktop release update boundary", () => {
     apiMocks.discardReleaseUpdate.mockImplementationOnce(async()=>{apiMocks.releaseUpdateStatus.mockResolvedValue(status);});
     render(<App />);
     fireEvent.click(await screen.findByRole("button",{name:t("app.onboarding.checkUpdates")}));
-    fireEvent.change(await screen.findByLabelText(new RegExp(`^${t("release.form.source")}`)),{target:{value:["https","://updates.example/sirinvpn/"].join("")}});
-    fireEvent.click(screen.getByRole("button",{name:t("release.form.check")}));
+    // The built-in GitHub source needs no typing.
+    fireEvent.click(await screen.findByRole("button",{name:t("release.form.check")}));
     fireEvent.click(await screen.findByRole("checkbox",{name:startsWith(t("release.candidate.confirmAndroid"))}));
     fireEvent.click(screen.getByRole("button",{name:t("release.candidate.install")}));
     await screen.findByText(t("release.done.titleAndroid"));
@@ -125,6 +126,7 @@ describe("Desktop release update boundary", () => {
     });
     expect(apiMocks.checkReleaseUpdate).not.toHaveBeenCalled();
     fireEvent.click(openUpdates);
+    fireEvent.click(await screen.findByRole("button", { name: t("release.form.useCustom") }));
     fireEvent.change(await screen.findByLabelText(new RegExp(`^${t("release.form.source")}`)), {
       target: { value: `  ${source}  ` },
     });
@@ -135,7 +137,7 @@ describe("Desktop release update boundary", () => {
     await waitFor(() =>
       expect(apiMocks.checkReleaseUpdate).toHaveBeenCalledWith(
         source,
-        "stable",
+        installedChannel,
       ),
     );
     expect(
@@ -184,10 +186,7 @@ describe("Desktop release update boundary", () => {
       auto_reconnect_enabled: true, rx_bytes: 0, tx_bytes: 0, routing_mode: "full_tunnel" });
     render(<App />);
     fireEvent.click(await screen.findByRole("button", { name: t("app.onboarding.checkUpdates") }));
-    fireEvent.change(await screen.findByLabelText(new RegExp(`^${t("release.form.source")}`)), {
-      target: { value: ["https", "://updates.example/sirinvpn/stable/"].join("") },
-    });
-    fireEvent.click(screen.getByRole("button", { name: t("release.form.check") }));
+    fireEvent.click(await screen.findByRole("button", { name: t("release.form.check") }));
     const confirmation = await screen.findByRole("checkbox", {
       name: startsWith(t("release.candidate.confirmWindows")),
     });
@@ -222,13 +221,8 @@ describe("Desktop release update boundary", () => {
     fireEvent.click(
       await screen.findByRole("button", { name: t("app.onboarding.checkUpdates") }),
     );
-    fireEvent.change(await screen.findByLabelText(new RegExp(`^${t("release.form.source")}`)), {
-      target: {
-        value: ["https", "://updates.example/sirinvpn/stable/"].join(""),
-      },
-    });
     fireEvent.click(
-      screen.getByRole("button", { name: t("release.form.check") }),
+      await screen.findByRole("button", { name: t("release.form.check") }),
     );
 
     expect(

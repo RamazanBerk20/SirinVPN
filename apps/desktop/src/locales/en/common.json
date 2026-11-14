@@ -62,7 +62,11 @@
     "install_rolled_back": "The VPS rolled the change back, so nothing changed.",
     "person_has_join_codes": "This person still has device join codes. Cancel them first.",
     "person_name_taken": "Another person on this server already uses this name. Choose a different name.",
-    "transaction_unresolved": "An earlier change to {{host}} from this device is unresolved. Resolve it, or forget it, before starting another."
+    "transaction_unresolved": "An earlier change to {{host}} from this device is unresolved. Resolve it, or forget it, before starting another.",
+    "release_rate_limited": "GitHub is limiting update checks from your network. Try again in an hour, or use a custom source.",
+    "release_offline": "Couldn’t reach the release source. Check your internet connection and try again.",
+    "android_install_permission": "Allow SirinVPN to install apps in the Android settings that opened, then tap Install update again.",
+    "release_none": "GitHub has no published release for this channel yet. Try the other channel, or check again later."
   },
   "maintenanceBlocker": {
     "not_owner": "only the Owner device can maintain this VPS",

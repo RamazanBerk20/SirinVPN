@@ -80,7 +80,7 @@ impl ReleaseUpdateRuntime {
 pub(crate) async fn check_release_update(
     runtime: State<'_, ReleaseUpdateRuntime>,
     input: CheckReleaseUpdateInput,
-) -> Result<ReleaseUpdateCandidate, String> {
+) -> Result<ReleaseUpdateCandidate, crate::command_error::CommandError> {
     sirinvpn_release_fetch::validate_source_url(&input.source)
         .map_err(|_| "Enter an HTTPS folder URL ending in /.".to_owned())?;
     {
@@ -107,12 +107,18 @@ pub(crate) async fn check_release_update(
             release_notes: true,
         })
         .await
-        .map_err(|_| {
-            "No verified release for this device was found at this source. Check the URL and channel."
-                .to_owned()
+        .map_err(|error| {
+            // Rate limits and lost connections keep their code; everything else says the same.
+            let coded = crate::command_error::command_error(error);
+            if coded.has_code() {
+                coded
+            } else {
+                "No verified release for this device was found at this source. Check the URL and channel."
+                    .into()
+            }
         })?;
         let candidate = summary(&fetched)?;
-        Ok::<_, String>((
+        Ok::<_, crate::command_error::CommandError>((
             Pending {
                 _temporary: temporary,
                 fetched,

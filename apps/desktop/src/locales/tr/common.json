@@ -62,7 +62,11 @@
     "install_rolled_back": "VPS değişikliği geri aldı, bu yüzden hiçbir şey değişmedi.",
     "person_has_join_codes": "Bu kişinin hâlâ cihaz katılım kodları var. Önce bunları iptal edin.",
     "person_name_taken": "Bu sunucudaki başka bir kişi bu adı zaten kullanıyor. Farklı bir ad seçin.",
-    "transaction_unresolved": "Bu cihazdan {{host}} sunucusuna yapılan önceki bir değişiklik çözülmemiş. Başka bir işlem başlatmadan önce bunu çözün veya unutun."
+    "transaction_unresolved": "Bu cihazdan {{host}} sunucusuna yapılan önceki bir değişiklik çözülmemiş. Başka bir işlem başlatmadan önce bunu çözün veya unutun.",
+    "release_rate_limited": "GitHub ağınızdan gelen güncelleme denetimlerini sınırlıyor. Bir saat sonra yeniden deneyin ya da özel bir kaynak kullanın.",
+    "release_offline": "Sürüm kaynağına ulaşılamadı. İnternet bağlantınızı denetleyip yeniden deneyin.",
+    "android_install_permission": "Açılan Android ayarlarında SirinVPN’in uygulama yüklemesine izin verin, ardından yeniden Güncellemeyi yükle’ye dokunun.",
+    "release_none": "GitHub’da bu kanal için henüz yayımlanmış bir sürüm yok. Diğer kanalı deneyin ya da daha sonra yeniden denetleyin."
   },
   "maintenanceBlocker": {
     "not_owner": "bu VPS’in bakımını yalnızca Sahip cihazı yapabilir",

@@ -13,6 +13,7 @@ parser=argparse.ArgumentParser()
 parser.add_argument("apk",type=Path)
 parser.add_argument("--abis",default="arm64-v8a,x86_64")
 parser.add_argument("--unsigned",action="store_true")
+parser.add_argument("--expect-version",help="Release gate: require this versionName, a release (non-debuggable) build and a signature")
 args=parser.parse_args()
 sdk=Path(os.environ.get("ANDROID_HOME",str(Path.home()/"Android/Sdk")))
 build=sdk/"build-tools/36.0.0"
@@ -54,6 +55,11 @@ assert "minSdkVersion:'31'" in badging and "targetSdkVersion:'36'" in badging
 assert "leanback-launchable-activity: name='org.sirinvpn.client.MainActivity'" in badging and "banner='res/" in badging
 assert "uses-feature-not-required: name='android.hardware.touchscreen'" in badging and "\n  uses-feature: " not in badging
 debuggable="application-debuggable" in badging
+if args.expect_version:
+    assert not args.unsigned, "A release APK must be signed"
+    assert f"package: name='org.sirinvpn.client' " in badging, "Not the SirinVPN package"
+    assert f"versionName='{args.expect_version}'" in badging, f"APK is not version {args.expect_version}"
+    assert not debuggable, "A debuggable APK cannot be released"
 certificates=[]
 if not args.unsigned:
     verified=subprocess.check_output([str(build/"apksigner"),"verify","--print-certs","--min-sdk-version","31",str(args.apk)],timeout=60).decode()

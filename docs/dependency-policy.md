@@ -67,6 +67,17 @@ their review summary, including on failure. A green result means this scoped
 policy passed; it does not mean the scanner returned no notices or that release
 qualification is complete.
 
+On 14 November 2026 two npm license findings were reviewed. They entered the
+lockfile with ESLint in 1.0.0-rc.1: `argparse` 2.0.1 (Python-2.0, through
+`js-yaml` in ESLint's config loader) and `caniuse-lite` 1.0.30001826 (CC-BY-4.0
+data, through `browserslist` in Babel under `eslint-plugin-react-hooks`). Both
+licenses are permissive and need only attribution, and both packages are
+development tools that never reach the built app. They are accepted through
+exact-version `license.ignore` entries in `osv-scanner.toml`; advisories for
+them stay enabled, and any other version blocks again. The same day the
+blocking `quinn-proto`, `quinn-udp`, `rustix` and Go standard library advisories
+were cleared by updating to 0.11.19, 0.5.16, 1.1.6 and Go 1.27.4.
+
 The [fuzz targets](testing.md#fuzzing) are a separate, never-shipped crate outside
 this scan. Their lockfile is a copy of `Cargo.lock` plus `libfuzzer-sys` and
 `arbitrary`. `libfuzzer-sys` bundles LLVM libFuzzer under

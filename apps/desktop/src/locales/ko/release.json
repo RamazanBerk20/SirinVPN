@@ -1,7 +1,7 @@
 {
   "dialog": {
     "title": "앱 업데이트",
-    "description": "입력한 소스에만 연결하며, 식별자는 전송하지 않습니다.",
+    "description": "선택한 릴리스 소스에만 연결하며 식별자를 보내지 않습니다.",
     "close": "앱 업데이트 닫기"
   },
   "done": {
@@ -81,15 +81,18 @@
     "source": "릴리스 소스",
     "sourceHint": "SirinVPN 릴리스가 게시되는 HTTPS 폴더입니다. 다음을 위해 이 기기에 저장됩니다.",
     "sourceInfoLabel": "이 정보는 어디서 찾나요?",
-    "sourceInfo": "서버를 설정한 사람에게 문의하거나, VPS가 업데이트를 받는 주소를 사용하세요(VPS 관리 › VPS 업데이트). SirinVPN에는 내장된 주소가 없으며, 입력한 주소에만 연결합니다.",
+    "sourceInfo": "SirinVPN은 기본적으로 GitHub 릴리스를 확인합니다. 사용자 지정 소스는 같은 서명된 파일이 있는 HTTPS 폴더로, 직접 호스팅하는 미러 등이 있습니다. 받은 소스가 있다면 서버를 설정한 사람에게 문의하세요.",
     "noticeTitle": "확인 시 전체 업데이트를 다운로드합니다",
     "noticeBody": "서명된 릴리스 메타데이터를 먼저 검증합니다.",
     "checking": "검증하고 다운로드하는 중…",
     "check": "릴리스 확인",
-    "privacy": "소스와 네트워크에서 IP 주소와 요청한 패키지를 볼 수 있습니다.",
+    "privacy": "확인 시 GitHub(api.github.com, github.com 및 GitHub 다운로드 서버) 또는 사용자 지정 소스에 연결합니다. 이들과 네트워크는 IP 주소와 요청한 패키지를 볼 수 있습니다.",
     "channel": "릴리스 채널",
     "previewHint": "미리 보기 빌드는 먼저 제공되며 안정성이 낮을 수 있습니다.",
-    "sourceFirst": "확인하려면 릴리스 소스를 입력하세요."
+    "sourceFirst": "확인하려면 릴리스 소스를 입력하세요.",
+    "sourceGitHub": "GitHub의 SirinVPN 릴리스",
+    "useCustom": "사용자 지정 소스 사용",
+    "useGitHub": "기본 제공 GitHub 소스 사용"
   },
   "error": {
     "discard": "다운로드 파일을 삭제하지 못했습니다. 다시 시도하세요.",
@@ -97,7 +100,8 @@
     "installWindows": "Windows 업데이트가 끝나지 않았습니다. 다시 시도하세요. 복구 데이터는 유지됩니다.",
     "installAppImage": "AppImage가 교체되었는지 확인하지 못했습니다. 앱 업데이트를 다시 열어 확인하세요.",
     "installDebian": "업데이트가 끝나지 않아 가능한 경우 롤백되었습니다. 다시 시도하세요.",
-    "bind": "설치된 버전을 검증하지 못했습니다. 아무것도 변경되지 않았습니다. 다시 시도하세요."
+    "bind": "설치된 버전을 검증하지 못했습니다. 아무것도 변경되지 않았습니다. 다시 시도하세요.",
+    "installAndroid": "Android 업데이트가 시작되지 않았습니다. 다시 시도하세요."
   },
   "recovery": {
     "androidNote": "Android는 설치를 승인하도록 요청하며, 이전 버전으로 되돌리는 것을 차단할 수 있습니다.",

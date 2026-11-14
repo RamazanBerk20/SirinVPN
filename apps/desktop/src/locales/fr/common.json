@@ -62,7 +62,11 @@
     "install_rolled_back": "Le VPS a annulé la modification, donc rien n’a changé.",
     "person_has_join_codes": "Cette personne a encore des codes d’adhésion d’appareil. Annulez-les d’abord.",
     "person_name_taken": "Une autre personne de ce serveur utilise déjà ce nom. Choisissez un autre nom.",
-    "transaction_unresolved": "Une modification précédente de {{host}} depuis cet appareil n’est pas résolue. Résolvez-la ou oubliez-la avant d’en lancer une autre."
+    "transaction_unresolved": "Une modification précédente de {{host}} depuis cet appareil n’est pas résolue. Résolvez-la ou oubliez-la avant d’en lancer une autre.",
+    "release_rate_limited": "GitHub limite les vérifications de mise à jour depuis votre réseau. Réessayez dans une heure ou utilisez une source personnalisée.",
+    "release_offline": "Impossible de joindre la source de versions. Vérifiez votre connexion Internet et réessayez.",
+    "android_install_permission": "Autorisez SirinVPN à installer des applications dans les paramètres Android qui se sont ouverts, puis touchez à nouveau Installer la mise à jour.",
+    "release_none": "GitHub n’a encore aucune version publiée pour ce canal. Essayez l’autre canal ou vérifiez plus tard."
   },
   "maintenanceBlocker": {
     "not_owner": "seul l’appareil Propriétaire peut entretenir ce VPS",

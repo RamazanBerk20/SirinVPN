@@ -5,6 +5,7 @@ import { ReleaseUpdateSession } from "./ReleaseUpdateSession";
 import { api } from "../../api";
 import type { ReleaseUpdateCandidate } from "../../types";
 import { t } from "../../i18n";
+import { GITHUB_RELEASE_SOURCE, installedChannel } from "./vpsRelease";
 
 vi.mock("../../api", () => ({ api: {
   checkReleaseUpdate: vi.fn(), installReleaseUpdate: vi.fn(), discardReleaseUpdate: vi.fn(),
@@ -18,8 +19,11 @@ const candidate: ReleaseUpdateCandidate = {
   installer_kind: "appimage", appimage_install_available: true,
 };
 const startsWith = (text: string) => (name: string) => name.startsWith(text);
-async function check() {
-  fireEvent.change(screen.getByLabelText(t("release.form.source"), { exact: false }), { target: { value: ["https", "://release.example/stable/"].join("") } });
+async function check(custom = false) {
+  if (custom) {
+    fireEvent.click(screen.getByRole("button", { name: t("release.form.useCustom") }));
+    fireEvent.change(screen.getByLabelText(t("release.form.source"), { exact: false }), { target: { value: ["https", "://release.example/stable/"].join("") } });
+  }
   fireEvent.click(screen.getByRole("button", { name: t("release.form.check") }));
   await screen.findByText(t("release.candidate.verified"));
 }
@@ -39,10 +43,26 @@ describe("portable app updates", () => {
       removeItem: (key: string) => { values.delete(key); }, clear: () => values.clear(),
     });
     render(<ReleaseUpdateDialog open onOpenChange={vi.fn()} installationReady={false} />);
-    await check();
+    await check(true);
     fireEvent.click(screen.getByRole("button", { name: t("release.candidate.discard") }));
     const field = await screen.findByLabelText(t("release.form.source"), { exact: false }) as HTMLInputElement;
     expect(field.value).toBe(["https", "://release.example/stable/"].join(""));
+  });
+  it("checks the built-in GitHub source for the installed channel without typing", async () => {
+    render(<ReleaseUpdateDialog open onOpenChange={vi.fn()} installationReady={false} />);
+    expect(screen.getByText(t("release.form.sourceGitHub"))).toBeTruthy();
+    await check();
+    expect(api.checkReleaseUpdate).toHaveBeenCalledWith(GITHUB_RELEASE_SOURCE, installedChannel);
+    expect(screen.getByText(t("release.candidate.source", { source: t("release.form.sourceGitHub") }))).toBeTruthy();
+  });
+  it("says GitHub's rate limit and a lost connection in the interface language", async () => {
+    render(<ReleaseUpdateDialog open onOpenChange={vi.fn()} installationReady={false} />);
+    for (const code of ["release_rate_limited", "release_offline", "release_none"] as const) {
+      vi.mocked(api.checkReleaseUpdate).mockRejectedValueOnce({ message: "English detail", code, params: {} });
+      fireEvent.click(screen.getByRole("button", { name: t("release.form.check") }));
+      expect(await screen.findByText(t(`common.errorCode.${code}`))).toBeTruthy();
+      expect(screen.queryByText("English detail", { exact: false })).toBeNull();
+    }
   });
   it("allows confirmed AppImage replacement while the service is connected", async () => {
     render(<ReleaseUpdateDialog open onOpenChange={vi.fn()} installationReady={false} />);

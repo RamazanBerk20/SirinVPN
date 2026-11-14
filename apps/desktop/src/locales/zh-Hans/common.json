@@ -62,7 +62,11 @@
     "install_rolled_back": "VPS 已回滚此更改，因此没有任何内容被更改。",
     "person_has_join_codes": "此用户仍有设备加入码。请先取消它们。",
     "person_name_taken": "此服务器上已有其他用户使用此名称。请选择其他名称。",
-    "transaction_unresolved": "此设备之前对 {{host}} 的一项更改尚未解决。请先解决或放弃它，然后再开始其他更改。"
+    "transaction_unresolved": "此设备之前对 {{host}} 的一项更改尚未解决。请先解决或放弃它，然后再开始其他更改。",
+    "release_rate_limited": "GitHub 正在限制来自你网络的更新检查。请一小时后重试，或使用自定义来源。",
+    "release_offline": "无法连接版本来源。请检查互联网连接后重试。",
+    "android_install_permission": "请在已打开的 Android 设置中允许 SirinVPN 安装应用，然后再次点按“安装更新”。",
+    "release_none": "GitHub 上暂时没有此渠道的已发布版本。请尝试另一个渠道，或稍后再检查。"
   },
   "maintenanceBlocker": {
     "not_owner": "只有所有者设备可以维护此 VPS",

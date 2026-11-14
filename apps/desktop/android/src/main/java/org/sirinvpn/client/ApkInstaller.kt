@@ -8,6 +8,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageInstaller
 import android.content.pm.PackageManager
+import android.net.Uri
+import android.provider.Settings
 import java.io.File
 
 object ApkInstaller {
@@ -42,6 +44,14 @@ object ApkInstaller {
                 session.commit(result.intentSender)
             }
         } catch (error:Exception) { installer.abandonSession(id);throw error }
+    }
+    /** Android asks once per app: "Install unknown apps". Opens that setting when it's off. */
+    fun ensurePermission(context:Context):Boolean {
+        if(context.packageManager.canRequestPackageInstalls()) return true
+        val settings=Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,Uri.parse("package:"+context.packageName))
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        try { context.startActivity(settings) } catch (_:Exception) { /* The error text names the setting. */ }
+        return false
     }
     fun abandon(context:Context) {
         val installer=context.packageManager.packageInstaller

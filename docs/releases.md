@@ -98,6 +98,8 @@ env \
 
 The sequence is a positive, globally monotonic number for that channel. Mark a release that contains a security fix by adding `security` as the final argument. Preview versions must use the `preview` channel; stable manifests reject SemVer prereleases.
 
+To ship Android in the same release, set `SIRINVPN_ANDROID_APK` to the owner-signed universal APK (see [Build and sign the Android APK](#build-and-sign-the-android-apk)). The script then also stages it as `SirinVPN_<version>_android.apk` (`android_apk`, `aarch64-linux-android`) and an identical copy `SirinVPN_<version>_android_x86_64.apk` (`android_apk`, `x86_64-linux-android`): a manifest names every file once, and the app looks up the artifact for its own processor. Without the variable it prints a note and signs a release without Android.
+
 The signing script refuses an existing destination, copies exactly one `.deb`, one AppImage and the two VPS server payloads (`target/server-payloads/{x86_64,aarch64}-unknown-linux-gnu/release/sirinvpn-server`, built by `packaging/Dockerfile.server-payloads`, which `package-linux-container.sh` now runs) into a staging directory as `sirinvpn-server-x86_64` and `sirinvpn-server-aarch64`, declares them as `server_elf` artifacts for their targets so the same release serves "Install signed VPS baseline" and the VPS updater, hashes their complete bytes, and creates `sirinvpn-release.json` plus `sirinvpn-release.sig.json`. When both public trust-policy environment paths are set, it also stages them under their canonical names and proves the bundled root authenticates the policy and that the policy authorizes the release signer. Supplying only one path fails. It does not copy or print either private key. Omitting both trust paths retains the legacy externally pinned engineering bundle format; do not publish that form as a production update.
 
 ## Add release notes
@@ -134,7 +136,7 @@ Verification first authenticates the policy with the compiled root, rejects a re
 
 ## Fetch a candidate over HTTPS
 
-Linux packages include `/usr/lib/sirinvpn/sirinvpn-release-fetch` as a separate unprivileged process. SirinVPN has no compiled default update host: provide an explicit HTTPS directory that represents the desired channel and contains the four canonical metadata files, optional signed notes, and every artifact named by its manifest. The URL must end in `/` and cannot contain credentials, a query, or a fragment:
+Linux packages include `/usr/lib/sirinvpn/sirinvpn-release-fetch` as a separate unprivileged process. `--source github` selects the built-in source, this project's GitHub Releases (below). Otherwise provide an explicit HTTPS directory that represents the desired channel and contains the four canonical metadata files, optional signed notes, and every artifact named by its manifest. The URL must end in `/` and cannot contain credentials, a query, or a fragment:
 
 ```sh
 /usr/lib/sirinvpn/sirinvpn-release-fetch --json \
@@ -156,7 +158,28 @@ sirinvpn-release-notes.json (optional)
 <the selected signed artifact filename>
 ```
 
-It authenticates the first pair with the bundled root and the second pair with an active, non-revoked policy key before requesting the artifact. It also requires the requested channel and exact artifact kind/target. The client uses native CA verification, direct HTTPS with no environment/system proxy, no redirects or referer, identity response encoding, a 10-second connect timeout, 30-second per-read timeout, and 15-minute total timeout per request. Metadata retains its existing 256 KiB/128 KiB/8 KiB limits and notes are limited to 4 KiB; an artifact cannot exceed the signed length or the global 1 GiB release limit. HTTP status other than 200 fails.
+It authenticates the first pair with the bundled root and the second pair with an active, non-revoked policy key before requesting the artifact. It also requires the requested channel and exact artifact kind/target. The client uses native CA verification, direct HTTPS with no environment/system proxy, no redirects (except for the built-in source, below) or referer, identity response encoding, a 10-second connect timeout, 30-second per-read timeout, and 15-minute total timeout per request. Metadata retains its existing 256 KiB/128 KiB/8 KiB limits and notes are limited to 4 KiB; an artifact cannot exceed the signed length or the global 1 GiB release limit. HTTP status other than 200 fails.
+
+### The built-in GitHub source
+
+With `--source github` (the default in every app's update dialog since 1.0.0-rc.2) the fetcher first sends one unauthenticated request, which depends on the channel:
+
+```text
+stable:  GET https://api.github.com/repos/RamazanBerk20/SirinVPN/releases/latest
+preview: GET https://api.github.com/repos/RamazanBerk20/SirinVPN/releases?per_page=10
+```
+
+Stable uses the full release GitHub marks as latest, however many pre-releases follow it; a 404 there, or an answer marked as a pre-release or draft, means there is no stable release. Preview uses the first non-draft pre-release among the ten newest releases. The fetcher checks that its `tag_name` is at most 128 characters of `A–Z a–z 0–9 . _ - +`, and uses `https://github.com/RamazanBerk20/SirinVPN/releases/download/<tag>/` as the source directory. Nothing else in GitHub's answer is used, and the list is limited to 1 MiB. The six file requests and every check above are then exactly as for a typed source, so GitHub's answer can only choose which signed release is tried, never what is accepted.
+
+GitHub answers each asset URL with a redirect to its storage host. For this source only, the client follows at most three redirects, each to an `https` URL with no explicit port or user name on `api.github.com` (a renamed or transferred repository), `github.com`, `objects.githubusercontent.com` or `release-assets.githubusercontent.com`; any other host, a plain-HTTP target or a fourth hop fails the check. The choice of client is made in one function for every source, and a typed source, even one on `github.com`, still follows no redirect.
+
+The unauthenticated GitHub API allows about 60 requests per hour per IP address. HTTP 429, or 403 with `x-ratelimit-remaining: 0` or `Retry-After`, is reported as a rate limit (CLI exit status 3); a connection failure or timeout as offline (exit status 4); no release for the channel as exit status 5. The apps show their own translated message for each. Other failures, including any other 403, exit with status 1. No token is sent or supported.
+
+### Publishing a final release for preview users
+
+The installed state binds every installation to its signed channel: the transition planner refuses a candidate from another channel (`ReleaseTrackMismatch`), and release sequences count per channel. A preview installation (any `1.0.0-rc.N`) therefore cannot install a stable-signed `1.0.0`, and relaxing that would weaken the rollback and track guarantees. Instead, publish each final release twice from the same build: once as a GitHub **full release** with a `stable` manifest (stable sequence), and once as a GitHub **pre-release** (for example tag `v1.0.0-preview`) with a `preview` manifest over the same artifact files and the next preview sequence. Preview manifests accept a final version, so rc users who press **Check release** are offered `1.0.0` on their own channel without changing a setting, and later pre-releases continue from there.
+
+A check with the built-in source reveals the IP address, time, release and artifact filename to GitHub and its storage hosts. Use a typed mirror to avoid that.
 
 `--output` must be a normalized absolute path below an existing real directory and must not exist. Bytes first enter a random private sibling staging directory. Only after the selected artifact's signed size and SHA-256 pass are every file and directory synced and the complete tree atomically renamed without replacement. The resulting bundle directory and its `artifact/` child have mode `0700`; all four metadata files, verified notes and the artifact have mode `0600`. Ordinary errors remove staging and never expose the requested output. Forced process or machine termination may leave only a mode-`0700` `.sirinvpn-release-fetch.*` staging directory in that parent; it is not a valid candidate and may be removed after confirming no fetch process owns it.
 
@@ -166,7 +189,7 @@ One explicit fetch necessarily reveals the client's source IP, request timing, c
 
 ## Check and install from the Linux desktop
 
-Open **App updates**, select Stable or Preview, and enter the same explicit HTTPS directory described above. The application performs no launch or background check and stores no source. It invokes the packaged unprivileged fetcher, retains one verified candidate in a private session temporary directory, and displays its authenticated version, release/policy sequences, target, root/release signer IDs, package name, size, and SHA-256. Discarding the dialog, starting another check, or ordinary exit removes that candidate. Hard termination can leave only a private `sirinvpn-desktop-release.*` tree in the system temporary directory; after confirming no check is active, it can be removed like the fetcher staging residue described above.
+Open **App updates** and select **Check release**. The source defaults to the built-in GitHub source and the channel to the installed build's channel (a prerelease version such as `1.0.0-rc.2` checks Preview); **Use a custom source** switches to a typed HTTPS directory, which is remembered on this device. The application performs no launch or background check. It invokes the packaged unprivileged fetcher, retains one verified candidate in a private session temporary directory, and displays its authenticated version, release/policy sequences, target, root/release signer IDs, package name, size, and SHA-256. Discarding the dialog, starting another check, or ordinary exit removes that candidate. Hard termination can leave only a private `sirinvpn-desktop-release.*` tree in the system temporary directory; after confirming no check is active, it can be removed like the fetcher staging residue described above.
 
 The Debian **Install authenticated update** action is deliberately separate. It is enabled only for a newer candidate while SirinVPN is fully disconnected with persistent protection disabled, and only when the running app is `/usr/bin/sirinvpn-desktop` from the installed Debian package with a safe root-owned coordinator. The user confirms the exact candidate, then the desktop invokes fixed `/usr/bin/pkexec` and `/usr/lib/sirinvpn/sirinvpn-release` paths without a shell. The coordinator independently applies the root-signed trust policy and runs `state install-debian`; it does not trust the webview's summary. Supported user-owned AppImages use the separate rootless replacement flow described in [client update completion](feature-completion-2026-09-08.md).
 
@@ -285,7 +308,7 @@ The opt-in full-package gate in [Testing](testing.md#full-package-release-interr
 
 ## Current boundary
 
-P2T/P2U/P2V/P2W/P2X/P2Y prove offline provenance, root-authorized release-key rotation/revocation, explicit bounded HTTPS retrieval, manual desktop review/confirmation, compatibility planning, exact package-artifact binding, durable policy/release high-watermark behavior, and transaction/recovery ordering for an already bound Debian package. Existing legacy installations without policy state remain usable through the explicit-key engineering path, but the first production trust baseline must be initialized before policy-authorized replacement. The fetcher has no default source and the desktop invokes it only on demand. The desktop Debian updater remains manual. AppImage destination ownership/replacement is implemented in the 8 September client-update follow-up. Immutable-root migration, dependency retrieval, desktop update notifications and download resumption remain outside the current manual update flow. VPS signed updates, compatible server rollback, repair version preservation, recovery before VPS network startup and opt-in VPS security updates are implemented separately; their behavior and focused evidence are recorded in [signed VPS updates](signed-vps-updates-2026-09-06.md).
+P2T/P2U/P2V/P2W/P2X/P2Y prove offline provenance, root-authorized release-key rotation/revocation, explicit bounded HTTPS retrieval, manual desktop review/confirmation, compatibility planning, exact package-artifact binding, durable policy/release high-watermark behavior, and transaction/recovery ordering for an already bound Debian package. Existing legacy installations without policy state remain usable through the explicit-key engineering path, but the first production trust baseline must be initialized before policy-authorized replacement. The fetcher's only default is the built-in GitHub source, and the apps invoke it only on demand. The desktop Debian updater remains manual. AppImage destination ownership/replacement is implemented in the 8 September client-update follow-up. Immutable-root migration, dependency retrieval, desktop update notifications and download resumption remain outside the current manual update flow. VPS signed updates, compatible server rollback, repair version preservation, recovery before VPS network startup and opt-in VPS security updates are implemented separately; their behavior and focused evidence are recorded in [signed VPS updates](signed-vps-updates-2026-09-06.md).
 
 
 ## Windows and Android delivery
@@ -299,10 +322,31 @@ Windows cross-built debug packages are engineering artifacts and do not establis
 MSVC, Authenticode or platform runtime acceptance.
 
 Android's in-app coordinator verifies a root-authorized release and an exact
-installed baseline before requesting the system APK installer. Native code
+installed baseline before requesting the system APK installer. If Android's
+"Install unknown apps" permission is off for SirinVPN, the app opens that
+setting before changing any update state and asks the user to tap Install
+again. Native code
 independently revalidates the journal, package identity, version code and existing
 Android signing certificate. AppImage updates atomically replace a verified,
 user-owned file and retain one compatible signed rollback. See the
 [8 September client update implementation](feature-completion-2026-09-08.md). Exact current
 state-family declarations are in `release/state-compatibility.json`; historical
 P2 schema descriptions above are not a substitute for that complete current set.
+
+## Build and sign the Android APK
+
+The release APK is built unsigned and signed by the owner, outside the
+repository, with a keystore that never enters it:
+
+```sh
+./scripts/build-android.sh all release
+# → apps/desktop/src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release-unsigned.apk
+```
+
+Sign it with `zipalign` and `apksigner` from Android build-tools 36.0.0 (the
+release checklist has the exact commands) and pass the signed file to
+`sign-linux-release.sh` as `SIRINVPN_ANDROID_APK`. Every later release must be
+signed with the same key: Android installs an update only when its signer
+matches the installed app, and SirinVPN's installer checks that too. An APK
+signed with any other key (including a debug build) has to be uninstalled once
+before the release APK can be installed.

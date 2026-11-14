@@ -1,11 +1,11 @@
 import { createContext, useContext, useReducer, useState, type ReactNode } from "react";
 import type { ReleaseUpdateChannel } from "../../types";
 import { initialRelease, releaseReducer } from "./releaseUpdateMachine";
-import { rememberedAppReleaseSource } from "./vpsRelease";
+import { installedChannel, rememberedAppReleaseSource } from "./vpsRelease";
 
 function useSessionState() {
   const [source, setSource] = useState(rememberedAppReleaseSource);
-  const [channel, setChannel] = useState<ReleaseUpdateChannel>("stable");
+  const [channel, setChannel] = useState<ReleaseUpdateChannel>(installedChannel);
   const [state, dispatch] = useReducer(releaseReducer, initialRelease);
   return { source, setSource, channel, setChannel, state, dispatch };
 }

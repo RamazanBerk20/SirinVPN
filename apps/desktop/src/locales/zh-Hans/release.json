@@ -1,7 +1,7 @@
 {
   "dialog": {
     "title": "应用更新",
-    "description": "仅联系你输入的来源，不发送任何标识信息。",
+    "description": "只联系所选的版本来源，不发送任何标识符。",
     "close": "关闭应用更新"
   },
   "done": {
@@ -81,15 +81,18 @@
     "source": "发布来源",
     "sourceHint": "用于发布 SirinVPN 版本的 HTTPS 文件夹。已保存在此设备上，供下次使用。",
     "sourceInfoLabel": "在哪里找到它？",
-    "sourceInfo": "请询问设置你服务器的人，或使用你的 VPS 更新所用的地址（VPS 维护 › 更新 VPS）。SirinVPN 没有内置地址：它只会联系你输入的地址。",
+    "sourceInfo": "SirinVPN 默认检查其 GitHub 版本。自定义来源是包含相同已签名文件的 HTTPS 文件夹，例如你自己托管的镜像。如果有人给过你来源，请询问为你设置服务器的人。",
     "noticeTitle": "检查时会下载完整的更新",
     "noticeBody": "会先验证已签名的发布元数据。",
     "checking": "正在验证并下载…",
     "check": "检查版本",
-    "privacy": "来源和你的网络可以看到你的 IP 地址，以及你请求的是哪个安装包。",
+    "privacy": "检查会联系 GitHub（api.github.com, github.com 及 GitHub 的下载服务器）或你的自定义来源。它们和你的网络可以看到你的 IP 地址以及你请求的软件包。",
     "channel": "发布通道",
     "previewHint": "预览版构建发布较早，稳定性可能较低。",
-    "sourceFirst": "请输入发布来源以进行检查。"
+    "sourceFirst": "请输入发布来源以进行检查。",
+    "sourceGitHub": "GitHub 上的 SirinVPN 版本",
+    "useCustom": "使用自定义来源",
+    "useGitHub": "使用内置的 GitHub 来源"
   },
   "error": {
     "discard": "无法删除下载的文件。请重试。",
@@ -97,7 +100,8 @@
     "installWindows": "Windows 更新未完成。请重试；恢复数据已保留。",
     "installAppImage": "无法确认 AppImage 已被替换。请重新打开应用更新进行检查。",
     "installDebian": "更新未完成，并已尽可能回滚。请重试。",
-    "bind": "无法验证已安装的版本。未更改任何内容。请重试。"
+    "bind": "无法验证已安装的版本。未更改任何内容。请重试。",
+    "installAndroid": "Android 更新未开始。请重试。"
   },
   "recovery": {
     "androidNote": "Android 会要求你批准安装，并可能阻止降级。",

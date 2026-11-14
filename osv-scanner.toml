@@ -38,105 +38,119 @@ reason = "Official POM: https://dl.google.com/dl/android/maven2/com/google/andro
 
 [[PackageOverrides]]
 name = "stdlib"
-version = "1.27.3"
+version = "1.27.4"
 ecosystem = "Go"
 license.override = ["BSD-3-Clause"]
 reason = "Go distribution LICENSE, https://go.dev/LICENSE; reviewed local toolchain copy SHA256 911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad."
 
 [[PackageOverrides]]
 name = "sirinvpn-android-runtime"
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.2"
 ecosystem = "crates.io"
 license.override = ["AGPL-3.0-only"]
 reason = "Local workspace crate inherits Cargo.toml workspace license; see LICENSE."
 
 [[PackageOverrides]]
 name = "sirinvpn-protocol"
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.2"
 ecosystem = "crates.io"
 license.override = ["AGPL-3.0-only"]
 reason = "Local workspace crate inherits Cargo.toml workspace license; see LICENSE."
 
 [[PackageOverrides]]
 name = "sirinvpn-platform"
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.2"
 ecosystem = "crates.io"
 license.override = ["AGPL-3.0-only"]
 reason = "Local workspace crate inherits Cargo.toml workspace license; see LICENSE."
 
 [[PackageOverrides]]
 name = "sirinvpn-tunnel-model"
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.2"
 ecosystem = "crates.io"
 license.override = ["AGPL-3.0-only"]
 reason = "Local workspace crate inherits Cargo.toml workspace license; see LICENSE."
 
 [[PackageOverrides]]
 name = "sirinvpn-windows-service"
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.2"
 ecosystem = "crates.io"
 license.override = ["AGPL-3.0-only"]
 reason = "Local workspace crate inherits Cargo.toml workspace license; see LICENSE."
 
 [[PackageOverrides]]
 name = "sirinvpn-release"
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.2"
 ecosystem = "crates.io"
 license.override = ["AGPL-3.0-only"]
 reason = "Local workspace crate inherits Cargo.toml workspace license; see LICENSE."
 
 [[PackageOverrides]]
 name = "sirinvpn-release-fetch"
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.2"
 ecosystem = "crates.io"
 license.override = ["AGPL-3.0-only"]
 reason = "Local workspace crate inherits Cargo.toml workspace license; see LICENSE."
 
 [[PackageOverrides]]
 name = "sirinvpn-transport"
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.2"
 ecosystem = "crates.io"
 license.override = ["AGPL-3.0-only"]
 reason = "Local workspace crate inherits Cargo.toml workspace license; see LICENSE."
 
 [[PackageOverrides]]
 name = "sirinvpn-core"
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.2"
 ecosystem = "crates.io"
 license.override = ["AGPL-3.0-only"]
 reason = "Local workspace crate inherits Cargo.toml workspace license; see LICENSE."
 
 [[PackageOverrides]]
 name = "sirinvpn-server"
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.2"
 ecosystem = "crates.io"
 license.override = ["AGPL-3.0-only"]
 reason = "Local workspace crate inherits Cargo.toml workspace license; see LICENSE."
 
 [[PackageOverrides]]
 name = "sirinvpn-installer"
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.2"
 ecosystem = "crates.io"
 license.override = ["AGPL-3.0-only"]
 reason = "Local workspace crate inherits Cargo.toml workspace license; see LICENSE."
 
 [[PackageOverrides]]
 name = "sirinvpn-linux-helper"
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.2"
 ecosystem = "crates.io"
 license.override = ["AGPL-3.0-only"]
 reason = "Local workspace crate inherits Cargo.toml workspace license; see LICENSE."
 
 [[PackageOverrides]]
 name = "sirinvpn-cli"
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.2"
 ecosystem = "crates.io"
 license.override = ["AGPL-3.0-only"]
 reason = "Local workspace crate inherits Cargo.toml workspace license; see LICENSE."
 
 [[PackageOverrides]]
 name = "sirinvpn-desktop"
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.2"
 ecosystem = "crates.io"
 license.override = ["AGPL-3.0-only"]
 reason = "Local workspace crate inherits Cargo.toml workspace license; see LICENSE."
+
+[[PackageOverrides]]
+name = "argparse"
+version = "2.0.1"
+ecosystem = "npm"
+license.ignore = true
+reason = "Python-2.0 (a port of CPython's argparse; permissive, attribution only). Development-only: js-yaml under eslint's config loader, never in the built app. Accept only this version's license finding; advisories remain enabled."
+
+[[PackageOverrides]]
+name = "caniuse-lite"
+version = "1.0.30001826"
+ecosystem = "npm"
+license.ignore = true
+reason = "CC-BY-4.0 browser-support data (attribution only). Development-only: browserslist under Babel inside eslint-plugin-react-hooks, never in the built app. Accept only this version's license finding; advisories remain enabled."

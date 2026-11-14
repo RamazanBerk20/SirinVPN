@@ -62,7 +62,11 @@
     "install_rolled_back": "El VPS revirtió el cambio, así que no cambió nada.",
     "person_has_join_codes": "Esta persona todavía tiene códigos para unirse de dispositivos. Cancélalos primero.",
     "person_name_taken": "Otra persona de este servidor ya usa este nombre. Elige un nombre diferente.",
-    "transaction_unresolved": "Un cambio anterior en {{host}} desde este dispositivo no se ha resuelto. Resuélvelo o olvídalo antes de empezar otro."
+    "transaction_unresolved": "Un cambio anterior en {{host}} desde este dispositivo no se ha resuelto. Resuélvelo o olvídalo antes de empezar otro.",
+    "release_rate_limited": "GitHub está limitando las comprobaciones de actualizaciones desde tu red. Vuelve a intentarlo en una hora o usa una fuente personalizada.",
+    "release_offline": "No se pudo contactar con la fuente de versiones. Comprueba tu conexión a internet y vuelve a intentarlo.",
+    "android_install_permission": "Permite que SirinVPN instale aplicaciones en los ajustes de Android que se abrieron y vuelve a tocar Instalar actualización.",
+    "release_none": "GitHub aún no tiene ninguna versión publicada para este canal. Prueba el otro canal o vuelve a comprobarlo más tarde."
   },
   "maintenanceBlocker": {
     "not_owner": "solo el dispositivo del propietario puede mantener este VPS",

@@ -1,6 +1,6 @@
 module org.sirinvpn/wireguard
 
-go 1.27.3
+go 1.27.4
 
 require golang.zx2c4.com/wireguard v0.0.0-20250521234502-f333402bd9cb
 

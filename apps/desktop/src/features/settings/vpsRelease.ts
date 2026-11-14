@@ -1,3 +1,4 @@
+import { t } from "../../i18n";
 import type { SshLoginInput } from "../../types";
 
 export type VpsReleaseOperation =
@@ -44,12 +45,27 @@ export interface VpsReleaseCandidate {
   baseline_required: boolean;
 }
 
+/**
+ * The built-in source: this project's GitHub Releases. Every native layer (and the VPS) resolves
+ * this exact value itself; its files are verified like any other source's.
+ */
+export const GITHUB_RELEASE_SOURCE = "github";
+
+/** The channel this build came from: a prerelease version (1.0.0-rc.2) is a preview build. */
+export const installedChannel: "stable" | "preview" = __APP_VERSION__.includes("-") ? "preview" : "stable";
+
 export function validReleaseSource(source: string) {
+  if (source === GITHUB_RELEASE_SOURCE) return true;
   if (!source || source.length > 2048) return false;
   try {
     const url = new URL(source);
     return url.protocol === "https:" && !url.username && !url.password && !url.search && !url.hash && url.pathname.endsWith("/");
   } catch { return false; }
+}
+
+/** A source as people read it: the built-in one by name, a typed one by its address. */
+export function releaseSourceLabel(source: string) {
+  return source === GITHUB_RELEASE_SOURCE ? t("release.form.sourceGitHub") : source;
 }
 
 /** Adds the trailing "/" a release folder needs, when that is all that is missing. */
@@ -67,7 +83,7 @@ const stored = (key: string | null) => {
   return validReleaseSource(value) ? value : "";
 };
 export function rememberedReleaseSource(serverId: string): string {
-  try { return stored(sourceKey(serverId)) || stored(APP_SOURCE_KEY); } catch { return ""; }
+  try { return stored(sourceKey(serverId)) || stored(APP_SOURCE_KEY) || GITHUB_RELEASE_SOURCE; } catch { return GITHUB_RELEASE_SOURCE; }
 }
 /**
  * The app's own source. It holds only addresses typed on this device that then served a signed
@@ -75,7 +91,7 @@ export function rememberedReleaseSource(serverId: string): string {
  * address its user didn't give it. One release folder holds the app and server packages.
  */
 export function rememberedAppReleaseSource(): string {
-  try { return stored(APP_SOURCE_KEY); } catch { return ""; }
+  try { return stored(APP_SOURCE_KEY) || GITHUB_RELEASE_SOURCE; } catch { return GITHUB_RELEASE_SOURCE; }
 }
 export function rememberAppReleaseSource(source: string) {
   if (!validReleaseSource(source)) return;

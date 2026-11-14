@@ -1,7 +1,7 @@
 {
   "dialog": {
     "title": "App updates",
-    "description": "Contacts only the source you enter and sends no identifiers.",
+    "description": "Contacts only the chosen release source and sends no identifiers.",
     "close": "Close app updates"
   },
   "done": {
@@ -81,15 +81,18 @@
     "source": "Release source",
     "sourceHint": "The HTTPS folder your SirinVPN releases are published in. Saved on this device for next time.",
     "sourceInfoLabel": "Where do I find this?",
-    "sourceInfo": "Ask whoever set up your server, or use the address your VPS updates from (VPS maintenance › Update VPS). SirinVPN has no built-in address: it contacts only the one you enter.",
+    "sourceInfo": "SirinVPN checks its GitHub releases by default. A custom source is an HTTPS folder with the same signed files, such as a mirror you host. Ask whoever set up your server if you were given one.",
     "noticeTitle": "The check downloads the full update",
     "noticeBody": "Signed release metadata is verified first.",
     "checking": "Verifying and downloading…",
     "check": "Check release",
-    "privacy": "The source and your network can see your IP address and which package you request.",
+    "privacy": "A check contacts GitHub (api.github.com, github.com and GitHub’s download servers) or your custom source. They and your network can see your IP address and which package you request.",
     "channel": "Release channel",
     "previewHint": "Preview builds come early and may be less stable.",
-    "sourceFirst": "Enter the release source to check."
+    "sourceFirst": "Enter the release source to check.",
+    "sourceGitHub": "SirinVPN releases on GitHub",
+    "useCustom": "Use a custom source",
+    "useGitHub": "Use the built-in GitHub source"
   },
   "error": {
     "discard": "Couldn’t delete the download. Try again.",
@@ -97,7 +100,8 @@
     "installWindows": "The Windows update didn’t finish. Try again; recovery data is kept.",
     "installAppImage": "Couldn’t confirm the AppImage was replaced. Reopen App updates to check it.",
     "installDebian": "The update didn’t finish and was rolled back where possible. Try again.",
-    "bind": "Couldn’t verify the installed version. Nothing was changed. Try again."
+    "bind": "Couldn’t verify the installed version. Nothing was changed. Try again.",
+    "installAndroid": "The Android update didn’t start. Try again."
   },
   "recovery": {
     "androidNote": "Android asks you to approve installs and may block downgrades.",

@@ -97,7 +97,7 @@ version = "1.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "40c48f72fd53cd289104fc64099abca73db4166ad86ea0b4341abe65af83dadc"
 dependencies = [
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -108,7 +108,7 @@ checksum = "291e6a250ff86cd4a820112fb8898808a366d8f9f58ce16d1f538353ad55747d"
 dependencies = [
  "anstyle",
  "once_cell_polyfill",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -1455,7 +1455,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.52.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -2826,7 +2826,7 @@ dependencies = [
  "png 0.18.1",
  "serde",
  "thiserror 2.0.20",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -3616,9 +3616,9 @@ dependencies = [
 
 [[package]]
 name = "quinn-proto"
-version = "0.11.18"
+version = "0.11.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a9746dbde176634f4f2f1faf2404e30a31b2bc1e9cafb5329c95d8177a18c9fc"
+checksum = "0e750cca55fe4f0439a15d0bb529da9651e79993e8e72c61a899a36d462befbe"
 dependencies = [
  "aws-lc-rs",
  "bytes",
@@ -3639,16 +3639,16 @@ dependencies = [
 
 [[package]]
 name = "quinn-udp"
-version = "0.5.15"
+version = "0.5.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "35a133f956daabe89a61a685c2649f13d82d5aa4bd5d12d1277e1072a21c0694"
+checksum = "af66907df18639dcf4db56ca65490cabc4b27a97dbadd96f2926cca73298f016"
 dependencies = [
  "cfg_aliases",
  "libc",
  "once_cell",
  "socket2",
  "tracing",
- "windows-sys 0.52.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -4004,15 +4004,15 @@ dependencies = [
 
 [[package]]
 name = "rustix"
-version = "1.1.4"
+version = "1.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b6fe4565b9518b83ef4f91bb47ce29620ca828bd32cb7e408f0062e9930ba190"
+checksum = "e5e76742e5294153d4dde1207dbec5bdd81eef6fabdc0d2118babadabfd858aa"
 dependencies = [
  "bitflags 2.13.1",
  "errno",
  "libc",
  "linux-raw-sys",
- "windows-sys 0.52.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -4463,7 +4463,7 @@ checksum = "8ee5873ec9cce0195efcb7a4e9507a04cd49aec9c83d0389df45b1ef7ba2e649"
 
 [[package]]
 name = "sirinvpn-android-runtime"
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.2"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -4490,7 +4490,7 @@ dependencies = [
 
 [[package]]
 name = "sirinvpn-cli"
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.2"
 dependencies = [
  "anyhow",
  "clap",
@@ -4514,7 +4514,7 @@ dependencies = [
 
 [[package]]
 name = "sirinvpn-core"
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.2"
 dependencies = [
  "anyhow",
  "argon2",
@@ -4551,7 +4551,7 @@ dependencies = [
 
 [[package]]
 name = "sirinvpn-desktop"
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.2"
 dependencies = [
  "anyhow",
  "dbus-secret-service",
@@ -4585,7 +4585,7 @@ dependencies = [
 
 [[package]]
 name = "sirinvpn-installer"
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.2"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -4612,7 +4612,7 @@ dependencies = [
 
 [[package]]
 name = "sirinvpn-linux-helper"
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.2"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -4639,7 +4639,7 @@ dependencies = [
 
 [[package]]
 name = "sirinvpn-platform"
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.2"
 dependencies = [
  "libc",
  "socket2",
@@ -4651,7 +4651,7 @@ dependencies = [
 
 [[package]]
 name = "sirinvpn-protocol"
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.2"
 dependencies = [
  "serde",
  "serde_json",
@@ -4661,7 +4661,7 @@ dependencies = [
 
 [[package]]
 name = "sirinvpn-release"
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.2"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -4684,7 +4684,7 @@ dependencies = [
 
 [[package]]
 name = "sirinvpn-release-fetch"
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.2"
 dependencies = [
  "anyhow",
  "clap",
@@ -4703,7 +4703,7 @@ dependencies = [
 
 [[package]]
 name = "sirinvpn-server"
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.2"
 dependencies = [
  "anyhow",
  "axum",
@@ -4741,7 +4741,7 @@ dependencies = [
 
 [[package]]
 name = "sirinvpn-transport"
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.2"
 dependencies = [
  "base64 0.22.1",
  "futures-util",
@@ -4766,7 +4766,7 @@ dependencies = [
 
 [[package]]
 name = "sirinvpn-tunnel-model"
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.2"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -4784,7 +4784,7 @@ dependencies = [
 
 [[package]]
 name = "sirinvpn-windows-service"
-version = "1.0.0-rc.1"
+version = "1.0.0-rc.2"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -4847,7 +4847,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c3d1e2c7f27f8d4cb10542a02c49005dbd6e93095799d6f3be745fae9f8fedd4"
 dependencies = [
  "libc",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -5422,7 +5422,7 @@ dependencies = [
  "getrandom 0.3.4",
  "once_cell",
  "rustix",
- "windows-sys 0.52.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -5809,7 +5809,7 @@ dependencies = [
  "png 0.18.1",
  "serde",
  "thiserror 2.0.20",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -5854,7 +5854,7 @@ checksum = "f2f6fb2847f6742cd76af783a2a2c49e9375d0a111c7bef6f71cd9e738c72d6e"
 dependencies = [
  "memoffset",
  "tempfile",
- "windows-sys 0.60.2",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -6259,7 +6259,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.52.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
