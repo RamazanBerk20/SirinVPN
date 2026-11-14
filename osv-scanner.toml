@@ -45,98 +45,98 @@ reason = "Go distribution LICENSE, https://go.dev/LICENSE; reviewed local toolch
 
 [[PackageOverrides]]
 name = "sirinvpn-android-runtime"
-version = "1.0.0-rc.2"
+version = "1.0.0-rc.3"
 ecosystem = "crates.io"
 license.override = ["AGPL-3.0-only"]
 reason = "Local workspace crate inherits Cargo.toml workspace license; see LICENSE."
 
 [[PackageOverrides]]
 name = "sirinvpn-protocol"
-version = "1.0.0-rc.2"
+version = "1.0.0-rc.3"
 ecosystem = "crates.io"
 license.override = ["AGPL-3.0-only"]
 reason = "Local workspace crate inherits Cargo.toml workspace license; see LICENSE."
 
 [[PackageOverrides]]
 name = "sirinvpn-platform"
-version = "1.0.0-rc.2"
+version = "1.0.0-rc.3"
 ecosystem = "crates.io"
 license.override = ["AGPL-3.0-only"]
 reason = "Local workspace crate inherits Cargo.toml workspace license; see LICENSE."
 
 [[PackageOverrides]]
 name = "sirinvpn-tunnel-model"
-version = "1.0.0-rc.2"
+version = "1.0.0-rc.3"
 ecosystem = "crates.io"
 license.override = ["AGPL-3.0-only"]
 reason = "Local workspace crate inherits Cargo.toml workspace license; see LICENSE."
 
 [[PackageOverrides]]
 name = "sirinvpn-windows-service"
-version = "1.0.0-rc.2"
+version = "1.0.0-rc.3"
 ecosystem = "crates.io"
 license.override = ["AGPL-3.0-only"]
 reason = "Local workspace crate inherits Cargo.toml workspace license; see LICENSE."
 
 [[PackageOverrides]]
 name = "sirinvpn-release"
-version = "1.0.0-rc.2"
+version = "1.0.0-rc.3"
 ecosystem = "crates.io"
 license.override = ["AGPL-3.0-only"]
 reason = "Local workspace crate inherits Cargo.toml workspace license; see LICENSE."
 
 [[PackageOverrides]]
 name = "sirinvpn-release-fetch"
-version = "1.0.0-rc.2"
+version = "1.0.0-rc.3"
 ecosystem = "crates.io"
 license.override = ["AGPL-3.0-only"]
 reason = "Local workspace crate inherits Cargo.toml workspace license; see LICENSE."
 
 [[PackageOverrides]]
 name = "sirinvpn-transport"
-version = "1.0.0-rc.2"
+version = "1.0.0-rc.3"
 ecosystem = "crates.io"
 license.override = ["AGPL-3.0-only"]
 reason = "Local workspace crate inherits Cargo.toml workspace license; see LICENSE."
 
 [[PackageOverrides]]
 name = "sirinvpn-core"
-version = "1.0.0-rc.2"
+version = "1.0.0-rc.3"
 ecosystem = "crates.io"
 license.override = ["AGPL-3.0-only"]
 reason = "Local workspace crate inherits Cargo.toml workspace license; see LICENSE."
 
 [[PackageOverrides]]
 name = "sirinvpn-server"
-version = "1.0.0-rc.2"
+version = "1.0.0-rc.3"
 ecosystem = "crates.io"
 license.override = ["AGPL-3.0-only"]
 reason = "Local workspace crate inherits Cargo.toml workspace license; see LICENSE."
 
 [[PackageOverrides]]
 name = "sirinvpn-installer"
-version = "1.0.0-rc.2"
+version = "1.0.0-rc.3"
 ecosystem = "crates.io"
 license.override = ["AGPL-3.0-only"]
 reason = "Local workspace crate inherits Cargo.toml workspace license; see LICENSE."
 
 [[PackageOverrides]]
 name = "sirinvpn-linux-helper"
-version = "1.0.0-rc.2"
+version = "1.0.0-rc.3"
 ecosystem = "crates.io"
 license.override = ["AGPL-3.0-only"]
 reason = "Local workspace crate inherits Cargo.toml workspace license; see LICENSE."
 
 [[PackageOverrides]]
 name = "sirinvpn-cli"
-version = "1.0.0-rc.2"
+version = "1.0.0-rc.3"
 ecosystem = "crates.io"
 license.override = ["AGPL-3.0-only"]
 reason = "Local workspace crate inherits Cargo.toml workspace license; see LICENSE."
 
 [[PackageOverrides]]
 name = "sirinvpn-desktop"
-version = "1.0.0-rc.2"
+version = "1.0.0-rc.3"
 ecosystem = "crates.io"
 license.override = ["AGPL-3.0-only"]
 reason = "Local workspace crate inherits Cargo.toml workspace license; see LICENSE."

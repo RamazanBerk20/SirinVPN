@@ -14,14 +14,14 @@ in the same app.
 There is no SirinVPN account or hosted control service. The clients communicate
 directly with your VPS, with no built-in analytics or traffic-history database.
 
-**Version 1.0 release candidate 2** · `1.0.0-rc.2` · [AGPL-3.0-only](LICENSE)
+**Version 1.0 release candidate 3** · `1.0.0-rc.3` · [AGPL-3.0-only](LICENSE)
 
-This is the second public release candidate, a preview for testing before 1.0.
+This is the third public release candidate, a preview for testing before 1.0.
 Linux packages (Debian `.deb` and AppImage), an Android APK and the VPS server are
-published, signed, with the [GitHub pre-release](https://github.com/RamazanBerk20/SirinVPN/releases/tag/v1.0.0-rc.2),
+published, signed, with the [GitHub pre-release](https://github.com/RamazanBerk20/SirinVPN/releases/tag/v1.0.0-rc.3),
 and Arch Linux users can install `sirinvpn`, `sirinvpn-bin` or `sirinvpn-git`
 from the AUR. Windows has no release package yet.
-See the [release notes](docs/release-notes-1.0.0-rc.2.md).
+See the [release notes](docs/release-notes-1.0.0-rc.3.md).
 
 [Getting started](#getting-started) · [Install](#install) · [Build from source](#build-from-source) ·
 [Platform status](#platform-status) · [Documentation](#documentation)
@@ -158,15 +158,15 @@ first screen: it runs on sample data, contacts nothing, saves nothing, and
 
 ## Install
 
-The current version is the 1.0.0-rc.2 pre-release. Linux on x86_64 is the
+The current version is the 1.0.0-rc.3 pre-release. Linux on x86_64 is the
 tested path.
 
-- **Debian and Ubuntu:** download `SirinVPN_1.0.0-rc.2_amd64.deb` from the
-  [release page](https://github.com/RamazanBerk20/SirinVPN/releases/tag/v1.0.0-rc.2)
-  and install it with `sudo apt install ./SirinVPN_1.0.0-rc.2_amd64.deb`. It brings the
+- **Debian and Ubuntu:** download `SirinVPN_1.0.0-rc.3_amd64.deb` from the
+  [release page](https://github.com/RamazanBerk20/SirinVPN/releases/tag/v1.0.0-rc.3)
+  and install it with `sudo apt install ./SirinVPN_1.0.0-rc.3_amd64.deb`. It brings the
   app, CLI, privileged helper, Polkit policy and systemd units.
-- **AppImage:** `SirinVPN_1.0.0-rc.2_amd64.AppImage`, the same app as a portable file.
-- **Android 12+:** `SirinVPN_1.0.0-rc.2_android.apk` (ARM64 and x86_64 in one APK),
+- **AppImage:** `SirinVPN_1.0.0-rc.3_amd64.AppImage`, the same app as a portable file.
+- **Android 12+:** `SirinVPN_1.0.0-rc.3_android.apk` (ARM64 and x86_64 in one APK),
   published for testing. Uninstall a development build first: it has another signer.
 - **Arch Linux (AUR):** `sirinvpn` (built from the release source), `sirinvpn-bin`
   (the release `.deb`, repackaged) or `sirinvpn-git` (the latest source). They conflict
@@ -174,7 +174,7 @@ tested path.
   `install-system` by hand, see the one-time `--overwrite` note in the
   [rc.1 release notes](docs/release-notes-1.0.0-rc.1.md#known-limitations).
 - **Check a download:** the release lists a signed manifest and `SHA256SUMS`; the
-  [release notes](docs/release-notes-1.0.0-rc.2.md) show the commands and the root key ID.
+  [release notes](docs/release-notes-1.0.0-rc.3.md) show the commands and the root key ID.
 - **Updates:** Settings › General › App updates › Check release finds the newest
   signed release for your channel on this project's GitHub Releases, verifies it
   against the offline root key and installs it in the app (Debian package, AppImage,
@@ -307,7 +307,7 @@ codes, keys, passwords, backups, or private VPS details.
 - [Interface text and localization](docs/ui-text.md) — writing guide and how to add a language
 - [Windows integration](docs/windows-integration-2026-09-07.md)
 - [Hetzner VPS creation](docs/hetzner-vps-creation.md) — one-click servers with a pre-pinned SSH host key
-- [Release notes for 1.0.0-rc.2](docs/release-notes-1.0.0-rc.2.md) (and [1.0.0-rc.1](docs/release-notes-1.0.0-rc.1.md)) and the [signed release design](docs/releases.md)
+- [Release notes for 1.0.0-rc.3](docs/release-notes-1.0.0-rc.3.md) (and [1.0.0-rc.2](docs/release-notes-1.0.0-rc.2.md), [1.0.0-rc.1](docs/release-notes-1.0.0-rc.1.md)) and the [signed release design](docs/releases.md)
 
 ## Support
 
