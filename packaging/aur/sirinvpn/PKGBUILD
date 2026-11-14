@@ -28,9 +28,9 @@ source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/$_tag.tar.gz"
         "sirinvpn-server-x86_64-$pkgver::$url/releases/download/$_tag/sirinvpn-server-x86_64"
         "sirinvpn-server-aarch64-$pkgver::$url/releases/download/$_tag/sirinvpn-server-aarch64")
 # Filled from the published release by scripts/update-aur-checksums.sh.
-sha256sums=('FILL_FROM_RELEASE'
-            'FILL_FROM_RELEASE'
-            'FILL_FROM_RELEASE')
+sha256sums=('16bb8a320347865cdc5ed1589cdf43c2467429b50404c04c9051c5813ac4e016'
+            'f38ab9351f03e2b7624659ac783db4f5a446cda6f6fd17f8a962ac7099df34c8'
+            '1d68af4c623470f836c1c26b408e7896453c4110880cc09016446c6195b3ffbf')
 
 prepare() {
   cd "$_srcname"
